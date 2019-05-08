@@ -1,0 +1,89 @@
+---
+title: "Fusion release document"
+author: "Guillaume Kugener"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('~/Documents/Analysis/RScripts/load_libraries_and_annotations.R')
+```
+
+# Overview
+
+This document contains the code used to generate the unfiltered and filtered versions of the fusion datasets for the release. The bottom of the document also contains some comparisons between the release fusion dataset, CCLE2 fusion calls, and the translocation data from CCLE2.
+
+```{r}
+release <- '19Q2'
+directory_to_save_files_to <- '/Volumes/xchip_datasci/gkugener/DepMap_Omics/RNAseq/Fusions/data/'
+
+# Make directory for release if it does not exist
+dir.create(paste0(directory_to_save_files_to), showWarnings = T)
+dir.create(paste0(directory_to_save_files_to, release), showWarnings = T)
+
+# Path to fusion calls from FireCloud
+tentative_new_release_unfiltered_fusions_path <- '~/Downloads/Fusions.aggregated (1).tsv'
+```
+
+## Generate filtered fusion table
+
+Release: `r release`
+
+We want to apply filters to the fusion table to reduce the number of artifacts in the dataset. Specifically, we filter the following:
+
+* Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes
+* Remove red herring fusions (from STAR-Fusion annotations column)
+* Remove recurrent in CCLE (>= 25 samples)
+* Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
+* Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
+
+```{r eval=TRUE}
+tentative_new_release_unfiltered_fusions <- read_tsv(tentative_new_release_unfiltered_fusions_path, col_types = cols(.default = 'c'))
+
+ccle_totals <- tentative_new_release_unfiltered_fusions %>%
+  group_by(LeftBreakpoint, RightBreakpoint) %>%
+  dplyr::summarise(count=n()) %>%
+  arrange(-count)
+
+# Add number of times observed in CCLE
+tentative_new_release_unfiltered_fusions %<>% left_join(., ccle_totals %>% dplyr::rename(CCLE_count=count), by=c('LeftBreakpoint', 'RightBreakpoint'))
+
+# Filters we use
+tentative_new_release_filtered_fusions <- tentative_new_release_unfiltered_fusions %>%
+  # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes, 
+  filter(!grepl('^HLA\\-', `#FusionName`)) %>%
+  filter(!grepl('chrM', LeftBreakpoint), !grepl('chrM', RightBreakpoint)) %>%
+  # (2) Remove red herring fusions
+  filter(!grepl('GTEx_recurrent', annots, ignore.case = T)) %>%
+  filter(!grepl('DGD_PARALOGS', annots)) %>%
+  filter(!grepl('HGNC_GENEFAM', annots)) %>%
+  filter(!grepl('Greger_Normal', annots)) %>%
+  filter(!grepl('Babiceanu_Normal', annots)) %>%
+  filter(!grepl('ConjoinG', annots)) %>%
+  filter(!grepl('NEIGHBORS', annots)) %>%
+  # (3) Remove recurrent in this dataset (>= 25 samples)
+  filter(CCLE_count < 25) %>%
+  # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and minFAF<0.02), or 
+  filter(!(SpliceType=="INCL_NON_REF_SPLICE" & LargeAnchorSupport=="NO_LDAS" & FFPM < 0.1)) %>%
+  filter(FFPM > 0.05) # STAR-Fusion suggests using 0.1, but after looking at the translocation data, this looks like it might be too aggressive
+```
+
+Dimensions of unfiltered dataset: `r dim(tentative_new_release_unfiltered_fusions)`
+Dimensions of the filtered dataset: `r dim(tentative_new_release_filtered_fusions)`
+
+```{r}
+# Save the files (to be uploaded to taiga)
+write.table(
+  tentative_new_release_unfiltered_fusions,
+  file = paste0('~/Documents/Analysis/DepMap_omics/FC_PostProcessing/RNAseq/Fusions/data/', release, '/', release, '_unfiltered_fusions.tsv'),
+  sep = '\t', quote = F, row.names = F
+)
+
+write.table(
+  tentative_new_release_filtered_fusions,
+  file = paste0('~/Documents/Analysis/DepMap_omics/FC_PostProcessing/RNAseq/Fusions/data/', release, '/', release, '_filtered_fusions.tsv'),
+  sep = '\t', quote = F, row.names = F
+)
+```
+

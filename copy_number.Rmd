@@ -1,0 +1,964 @@
+---
+title: "Quarterly copy number processing"
+author: "Guillaume Kugener"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('~/Documents/Analysis/RScripts/load_libraries_and_annotations.R')
+```
+
+TODO: clean up paths to new downloaded file, loading of previous release so it is not so far down
+
+## CCLE quarterly copy number processing
+
+This documents outlines the steps run for the quarterly processing of copy number data for the DepMap release. An overview of the steps:
+
+1. Download new processed data from FireCloud (https://portal.firecloud.org/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38). This includes Broad WES and Sanger WES and save to a taiga repo.
+2. For the Sanger data, we are combining the autosomal calls from the Sanger PON based calls with the X calls from the Agilent based PON (using the Sanger WES normals as the PON for Sanger results is much less noisey it appears)
+3. Download the previously processed data (both genes and segments)
+4. In the segmented data file, add the newly processed data. Remove any samples that were included previously with Sanger WES or Broad SNP with Broad WGS or WES samples
+
+* Priority rules: Broad WES over everything, Broad WGS, Sanger WES (unless the correlation with Achilles LFC is worse AND the sample is too different from the Broad SNP sample), Broad SNP.
+
+5. Interpolate segment regions: fill in gaps in the segments, pad the ends for genes outside the target regions
+6. Generate the gene level data: map genes to the segments.
+7. Upload to taiga
+
+## Download new data
+
+The first thing we need to do is download the newly processed data from FireCloud. 
+
+* hg19 aligned data can be found at: https://portal.firecloud.org/#workspaces/broad-firecloud-ccle/DepMap_CN_GATK4/
+* hg38 (starting 19Q2) can be found at: https://portal.firecloud.org/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
+
+```{r}
+genome_version <- 'hg38'
+release <- '19Q2'
+directory_to_save_files_to <- '/Volumes/xchip_datasci/gkugener/DepMap_Omics/WES/CN/data'
+hg38_cyto_band_reference <- '~/Documents/Analysis/RScripts/Common_annotations/hg38_cytoband.gz'
+
+# Make directory for release if it does not exist
+dir.create(paste0(directory_to_save_files_to), showWarnings = T)
+dir.create(paste0(directory_to_save_files_to, release), showWarnings = T)
+
+# Path to Broad WES copy number calls from FireCloud
+# This can include new calls only or all calls from Broad WES
+new_samples_copy_number_broad_wes <- '~/Downloads/DM19Q1.called.seg'
+
+# Previous release copy number profiles. This line will need to be updated as well
+wes.priority.cn.seg.profiles <- taigr::load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=20, data.file='wes_priority_cn_seg_profiles') %>%
+  dplyr::select(DepMap_ID, Chromosome, Start, End, Num_Probes, Segment_Mean, Source)
+wes.priority.cn.gene.profiles <- taigr::load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=20, data.file='wes_priority_cn_gene_matrix')
+```
+
+```{r eval=FALSE}
+# This chunk is kept in here for reference, but does not need to be run for the release
+# This was used to combine the copy number calls from Sanger and the Broad from WES
+# For the Broad samples, we want the calls that use the ICE/AGILENT PON for chr1-22,X
+# For Sanger samples we want the calls that use the SANGER specific AGILENT PON for chr1-22 and then the AGILENT PONT for X
+# This is what this chunk accomplished and then saved to a tsv for upload to taiga
+
+# Format for upload to taiga
+agilent_ice_pon_based_calls <- readr::read_tsv('~/Downloads/DM19Q2_COMPLETE.called.seg', col_types = cols(
+  Sample = col_character(), 
+  CONTIG=col_character(), 
+  START=col_double(), END=col_double(), 
+  NUM_POINTS_COPY_RATIO=col_double(), MEAN_LOG2_COPY_RATIO=col_double(), 
+  CALL=col_character()
+)) %>% dplyr::select(Sample, Chromosome=CONTIG, Start=START, End=END, Num_Probes=NUM_POINTS_COPY_RATIO, Segment_Mean=MEAN_LOG2_COPY_RATIO) %>%
+  dplyr::mutate(Source=ifelse(grepl('sanger', Sample), 'Sanger WES', ifelse(grepl('chordoma', Sample), 'Chordoma WES', 'Broad WES'))) %>%
+  # We only keep the X calls from here 
+  filter((Source %in% c('Chordoma WES', 'Broad WES')) | (Source == 'Sanger WES' & gsub('chr', '', Chromosome) == 'X'))
+
+sanger_pon_based_calls <- readr::read_tsv('~/Downloads/Sanger.called.seg', col_types = cols(
+  Sample = col_character(), 
+  CONTIG=col_character(), 
+  START=col_double(), END=col_double(), 
+  NUM_POINTS_COPY_RATIO=col_double(), MEAN_LOG2_COPY_RATIO=col_double(), 
+  CALL=col_character()
+)) %>% dplyr::select(Sample, Chromosome=CONTIG, Start=START, End=END, Num_Probes=NUM_POINTS_COPY_RATIO, Segment_Mean=MEAN_LOG2_COPY_RATIO) %>%
+  dplyr::mutate(Source='Sanger WES') %>%
+  # We remove the sex chromosomes from here as this was a mixed panel
+  filter(gsub('chr', '', Chromosome) %in% seq(1,22))
+
+# Combine two datasets above, validate that only one cell line per source, change the DepMap_ID column to have only the DepMap_ID
+combined_copynumber_calls <- rbind(sanger_pon_based_calls, agilent_ice_pon_based_calls)
+
+counts_unique_by_source <- combined_copynumber_calls %>%
+  mutate(DepMap_ID=stringr::str_extract(string=Sample, pattern='ACH\\-[0-9]+')) %>%
+  distinct(Source, DepMap_ID, Sample) %>%
+  group_by(Source, DepMap_ID) %>%
+  dplyr::summarise(count=n()) %>%
+  filter(count > 1)
+
+if (nrow(counts_unique_by_source) != 0) {
+  print('ERROR. THERE IS A DUPLICATE SAMPLE IN THE SET FOR A SINGLE SOURCE')
+}
+
+combined_copynumber_calls %<>% mutate(DepMap_ID=stringr::str_extract(pattern='ACH\\-[0-9]+', string=Sample)) %>%
+  dplyr::select(-Sample) %>%
+  mutate(Chromosome=gsub('chr', '', Chromosome)) %>%
+  arrange(DepMap_ID, Chromosome)
+
+write.table(combined_copynumber_calls, file = '~/Downloads/all_wes_data_19q2_v2.tsv', sep = '\t', quote = F, row.names = F) # What we upload to taiga
+```
+
+```{r}
+new_copy_number <- readr::read_tsv(new_samples_copy_number_broad_wes, col_types = cols(
+  DepMap_ID = col_character(), 
+  CONTIG=col_character(), 
+  START=col_double(), END=col_double(), 
+  NUM_POINTS_COPY_RATIO=col_double(), MEAN_LOG2_COPY_RATIO=col_double(), 
+  CALL=col_character()
+)) %>% dplyr::select(DepMap_ID, Chromosome=CONTIG, Start=START, End=END, Num_Probes=NUM_POINTS_COPY_RATIO, Segment_Mean=MEAN_LOG2_COPY_RATIO) %>%
+  dplyr::mutate(Source=case_when(
+    grepl('^(dm|ccle2)_', DepMap_ID) ~ 'Broad WES',
+    grepl('^chordoma_', DepMap_ID) ~ 'Chordoma WES'),
+    TRUE ~ 'Other WES')
+
+# We shouldn't have anything labelled other, so check this
+if (nrow(new_copy_number %>% filter(Source=='Other WES')) > 0) {
+  print('ERROR. THERE IS A SAMPLE NOT FROM BROAD OR THE CHORDOMA FOUNDATION')
+}
+
+# Make sure there are no duplicates
+counts_unique_by_source <- new_copy_number %>%
+  mutate(DepMap_ID=stringr::str_extract(string=Sample, pattern='ACH\\-[0-9]+')) %>%
+  distinct(Source, DepMap_ID, Sample) %>%
+  group_by(Source, DepMap_ID) %>%
+  dplyr::summarise(count=n()) %>%
+  filter(count > 1)
+
+if (nrow(counts_unique_by_source) != 0) {
+  print('ERROR. THERE IS A DUPLICATE SAMPLE IN THE SET FOR A SINGLE SOURCE')
+}
+
+# If it passes above, then can remove prefix from DepMap IDs
+new_copy_number %<>% dplyr::mutate(DepMap_ID=stringr::str_extract(pattern='ACH\\-[0-9]+', string = DepMap_ID))
+
+# Untransform data if it is log2 transformed (which it will be if from the FireCloud pipeline)
+if (min(new_copy_number$Segment_Mean) < 0) {
+  new_copy_number %<>% mutate(Segment_Mean=2^Segment_Mean)
+}
+```
+
+## Download previously processed data
+
+```{r}
+# For the previous releases copy number file, see if it needs to be untransformed or not
+if (min(wes.priority.cn.seg.profiles$Segment_Mean) < 0) {
+  wes.priority.cn.seg.profiles %<>% mutate(Segment_Mean=2^Segment_Mean)
+}
+```
+
+## Reprioritize processed data
+
+Here, we combine the previous release segments with the additional segments we have processed this quarter. We replace Sanger WES and Broad SNP prioritized cell lines with the Broad WES version if it is now available in the newly downloaded data.
+
+```{r eval=TRUE}
+broad_wes_cell_lines_in_new <- new_copy_number %>% filter(Source=='Broad WES') %$% unique(DepMap_ID)
+replaced_cell_lines <- wes.priority.cn.seg.profiles %>%
+  distinct(DepMap_ID, Source) %>%
+  dplyr::filter(Source != 'Broad WES') %$%
+  intersect(DepMap_ID, broad_wes_cell_lines_in_new)
+
+new_cell_lines <- broad_wes_cell_lines_in_new %>%
+  setdiff(., wes.priority.cn.seg.profiles$DepMap_ID)
+
+# Use from previous release
+sanger_lines_using <- wes.priority.cn.seg.profiles %>% filter(Source=='Sanger WES') %$% DepMap_ID %>% unique()
+```
+
+```{r eval=TRUE}
+# So we only keep the Sanger lines that were previously used
+new_copy_number %<>% dplyr::filter(Source=='Broad WES' | (Source=='Sanger WES' & (DepMap_ID %in% sanger_lines_using)) | (Source == 'Chordoma WES' & !(DepMap_ID %in% broad_wes_cell_lines_in_new)))
+new_copy_number %<>% filter(!(Source=='Sanger WES' & DepMap_ID %in% broad_wes_cell_lines_in_new))
+
+# Use this snippet if simply adding new Broad WES samples to the previous release dataset
+# Add the Broad WES data to the new dataset
+combined_new_prioritized_dataset <- rbind(
+  wes.priority.cn.seg.profiles %>% dplyr::filter(!(DepMap_ID %in% new_copy_number$DepMap_ID)),
+  new_copy_number
+)
+
+# Check that all cell lines only represented once (this should be empty)
+combined_new_prioritized_dataset %>%
+  distinct(Source, DepMap_ID) %>%
+  group_by(DepMap_ID) %>%
+  dplyr::mutate(count=n()) %>%
+  # filter(Source=='Broad SNP')
+  filter(count > 1)
+
+# Check the combined matrix contains all same samples
+if (length(setdiff(unique(wes.priority.cn.seg.profiles$DepMap_ID), unique(combined_new_prioritized_dataset$DepMap_ID))) > 0) {
+  print('THERE IS A CELL LINE MISSING IN THE NEW RELEASE SET THAT WAS PREVIOUSLY INCLUDED')
+}
+
+# Quick check that we added all the new cell lines
+if ((length(unique(combined_new_prioritized_dataset$DepMap_ID)) - length(unique(wes.priority.cn.seg.profiles$DepMap_ID))) != length(new_cell_lines)) {
+  print('FAILED COMBINING NEW AND PREVIOUS RELEASE DATA')
+}
+```
+
+In this release, the following changes were made:
+
+* Number of new cell lines: `r length(new_cell_lines)`
+* Number of cell lines moving from Sanger WES/Broad SNP -> Broad WES CN: `r length(replaced_cell_lines)`
+* Total cell lines with CN this release: `r length(unique(combined_new_prioritized_dataset$DepMap_ID))`
+
+## Interpolate segments
+
+In this section we perform to operations on the segment level data
+
+1. Fill in the gaps: there may be gaps between segments in the copy number data, leading to the possibility genes mapping to these gaps and being NAed further downstream.
+2. Extend the ends: there are genes that map outside the targeting regions (in WES). To address these cases, we can extend the ends of the segments so that these genes are not NAed.
+
+```{r}
+######################
+# The function below fills in the gaps in the segmented level data
+#
+# @args:
+#   - segments: 
+#       data.frame with DepMap_ID (what samples are separated on), 
+#       Chromosome, Start, End, Segment_Mean, Num_Probes
+#
+# @returns: a segments data.frame of the same size with gaps in ranges filled
+######################
+interpolate_gaps_in_segmented <- function(segment_file) {
+  segments_as_granges <- GenomicRanges::makeGRangesFromDataFrame(segment_file, keep.extra.columns = T)
+  segments_as_granges_list <- split(segments_as_granges, segments_as_granges$DepMap_ID)
+  
+  # Determine which ones have too many gaps
+  segments_gaps_filled <- NULL
+  count <- 0
+  disjoin_different_cls <- c()
+  for (cl in names(segments_as_granges_list)) {
+    if (count %% 100 == 0) {
+      print(count/length(names(segments_as_granges_list))* 100)
+    }
+    count <- count + 1
+    
+    if (length(segments_as_granges_list[[cl]] %>% disjoin()) != length(segments_as_granges_list[[cl]])) {
+      disjoin_different_cls %<>% c(., cl)
+      source_using_current <- unique(segments_as_granges_list[[cl]]$Source)
+      
+      if (source_using_current != 'Broad SNP') {
+        print(paste0('Disjoin different for: ', cl, ' source: ', source_using_current))
+      }
+      
+      ttt <- segments_as_granges_list[[cl]] %>%
+        as.data.frame() %>%
+        dplyr::select(-Source, -width, -DepMap_ID)
+      
+      ddd <- segments_as_granges_list[[cl]] %>% 
+        disjoin() %>%
+        as.data.frame()
+      
+      get_missing_in_disjoined <- ddd %>%
+        left_join(., ttt, by=c('seqnames', 'start', 'end', 'strand')) %>%
+        dplyr::rename(SM_start_end=Segment_Mean, Num_Probes_start_end=Num_Probes) %>%
+        left_join(., ttt %>% dplyr::select(-end), by=c('seqnames', 'start', 'strand')) %>%
+        dplyr::rename(SM_start=Segment_Mean, Num_Probes_start=Num_Probes) %>%
+        left_join(., ttt %>% dplyr::select(-start), by=c('seqnames','end', 'strand')) %>%
+        dplyr::rename(SM_end=Segment_Mean, Num_Probes_end=Num_Probes) %>%
+        filter(!(is.na(SM_start_end) & !is.na(SM_start) & !is.na(SM_end))) %>%
+        mutate(SM_final=case_when(!is.na(SM_start_end) ~ SM_start_end,
+          !is.na(SM_start) ~ SM_start,
+          !is.na(SM_end) ~ SM_end,
+          TRUE ~ 1)) %>%
+        mutate(Num_Probes_final=case_when(!is.na(Num_Probes_start_end) ~ Num_Probes_start_end,
+          !is.na(Num_Probes_start) ~ Num_Probes_start,
+          !is.na(Num_Probes_end) ~ Num_Probes_end,
+          TRUE ~ as.integer(1))) %>%
+        mutate(DepMap_ID=cl, Source=source_using_current) %>%
+        dplyr::select(seqnames, start, end, Num_Probes=Num_Probes_final, Segment_Mean=SM_final, DepMap_ID, Source) %>%
+        GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
+      
+      segments_as_granges_list[[cl]] <- get_missing_in_disjoined
+    }
+    # We want to extend the ranges to fill in any gaps. We use GenomicRanges gaps function to identify
+    # the gaps in the segmented data that are present per cell line. If there is a gap between
+    # two segments, we extend the ends to meet halfway between the gap. This is what the code snippet below
+    # is performing
+    segments_gaps_filled %<>% rbind(segments_as_granges_list[[cl]] %>%
+      GenomicRanges::as.data.frame() %>%
+      dplyr::select(-strand, -width) %>%
+      left_join(., 
+        gaps(segments_as_granges_list[[cl]]) %>% 
+          GenomicRanges::as.data.frame() %>%
+          dplyr::select(-strand, -width) %>%
+          dplyr::mutate(right_start=start, right_end=end) %>%
+          dplyr::mutate(end=start-1) %>%
+          dplyr::select(-start),
+        by=c('seqnames', 'end')) %>%
+      left_join(., 
+          gaps(segments_as_granges_list[[cl]]) %>% 
+          GenomicRanges::as.data.frame() %>%
+          dplyr::select(-strand, -width) %>%
+          dplyr::mutate(left_start=start, left_end=end) %>%
+          dplyr::mutate(start=end+1) %>%
+          dplyr::select(-end),
+        by=c('seqnames', 'start')) %>%
+      # Edit the range values if needed
+      dplyr::mutate(
+        start=case_when(
+          !is.na(left_end) ~ (left_start + floor((left_end-left_start)/2)+1),
+          TRUE ~ start
+        ),
+        end=case_when(
+          !is.na(right_end) ~ (right_start + floor((right_end-right_start)/2)),
+          TRUE ~ end
+      )) %>% dplyr::select(DepMap_ID, seqnames, start, end, Num_Probes, Segment_Mean, Source))
+  } 
+  return(list(segs=segments_gaps_filled, disjoin_different_cls=disjoin_different_cls))
+}
+```
+
+```{r}
+# We use this method to extend the ends of the segments
+extend_ends_of_segments <- function(segments) {
+  # Starts to 1
+  segments %<>%
+    group_by(DepMap_ID, seqnames) %>%
+    dplyr::mutate(m=min(start)) %>%
+    dplyr::mutate(start=ifelse(start==m, 1, start)) %>%
+    ungroup() %>%
+    dplyr::select(-m)
+  
+  # Ends to max of chromosome value
+  chromosome_maxes <- read_tsv(hg38_cyto_band_reference, col_names = F) %>%
+    group_by(X1) %>% dplyr::summarise(max=max(X3)) %$% setNames(max, X1)
+  
+  segments %<>%
+    group_by(DepMap_ID, seqnames) %>%
+    dplyr::mutate(m=max(end)) %>%
+    dplyr::mutate(end=ifelse(end==m, chromosome_maxes[paste0('chr', seqnames)], end)) %>%
+    ungroup() %>%
+    dplyr::select(-m)
+  return(segments)
+}
+```
+
+```{r}
+# Fill in the gaps on the entire dataset
+segments_gaps_filled_object <- interpolate_gaps_in_segmented(segment_file = combined_new_prioritized_dataset)
+segments_gaps_filled <- segments_gaps_filled_object$segs
+
+# Extend start sites to 1, end sites to the end of the chromosome?
+extend_ends <- TRUE
+if (extend_ends) {
+  # Starts to 1
+  segments_gaps_filled %<>% extend_ends_of_segments(.)
+}
+```
+
+## Add the genes
+
+```{r}
+# This is how Achilles maps genes to chromosomes. However, for CCLE, we use a different reference.
+# I am leaving this snippet here just for reference but we do not use it
+# Pull the gene coordindates from ftp://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_human
+cds_gene_paths <- list(
+  hg19='ftp://ftp.ncbi.nlm.nih.gov/pub/CCDS/archive/Hs105/CCDS.current.txt',
+  hg38-'ftp://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_human/CCDS.20180614.txt'
+)
+
+gene_mapping_ccds <- read_tsv(url(cds_gene_paths[[genome_version]]), col_types = cols(.default = 'c')) # This is how Achilles gets the genes. There are far fewer genes than using org.Hs.eg.db
+```
+
+```{r}
+# Previously how we obtained coordinates in CCLE (from Mahmoud)
+## BE SURE TO CHECK WHAT VERSION OF THE GENOME THIS IS USING ##
+# It could depend on when you last updated this package
+library(org.Hs.eg.db) # This is using hg38 
+
+## Filter coordinates to exclude multiple transcripts that are too spread out
+filter.coordinates <- function(loc, coordinate.end, max.spread=2000000) {
+  ## Only keep coordinates on propper chromosomes
+  loc <- as.numeric(loc[names(loc) %in% c(as.character(1:22), "X", "Y")])
+  if (length(loc)==0) {
+    return(NA)
+  } else if (coordinate.end=="start") {
+    ## start coordinate
+    if (diff(range(loc)) > max.spread) {
+      # print(loc)
+    }
+    return(ifelse(diff(range(loc))>max.spread, NA, min(abs(loc))))
+  } else {
+    ## end coordinate
+    return(ifelse(diff(range(loc))>max.spread, NA, max(abs(loc))))
+  }
+}
+
+## Only keep proper chromosomes
+filter.chromosomes <- function(chrom) {
+  chrom <- intersect(chrom, c(as.character(1:22), "X", "Y"))
+  ifelse(length(chrom)>0, chrom, NA)
+}
+
+allENTREZG <- data.frame(array(NA, dim=c(length(mappedkeys(org.Hs.egSYMBOL)),5)))
+colnames(allENTREZG) <- c("EGID", "SYMBOL", "CHR", "CHRLOC", "CHRLOCEND")
+
+allENTREZG$EGID <- mappedkeys(org.Hs.egSYMBOL)
+allENTREZG$SYMBOL <- unlist(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egSYMBOL))
+
+allENTREZG$CHR <- unlist(lapply(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egCHR), filter.chromosomes))
+
+allENTREZG$CHRLOC <- unlist(lapply(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egCHRLOC), filter.coordinates, coordinate.end="start" ))
+allENTREZG$CHRLOCEND <- unlist(lapply(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egCHRLOCEND), filter.coordinates, coordinate.end="end"))
+
+allENTREZG <- subset(allENTREZG, !is.na(CHR) & !is.na(CHRLOC) & !is.na(CHRLOCEND))
+
+if (genome_version=='hg19') {
+  allENTREZG <- load.from.taiga(data.name='depmap-wes-cn-data--08f3', data.version=12, data.file='WES_CN_gene.depMap_18q4b') %>%
+    dplyr::select(EGID, SYMBOL, CHR, CHRLOC, CHRLOCEND)
+}
+
+# Remove chromosome Y genes, as currently we do not call CN on the Y chromosome
+allENTREZG %<>% filter(gsub('chr', '', CHR) != 'Y')
+```
+
+
+```{r}
+######################
+# The function below generates the gene level matrix from a gene mapping
+#
+# @args:
+#   - gene_mapping: 
+#       data.frame with EGID, SYMBOL, CHR, CHRLOC, CHRLOCEND
+#   - segments: 
+#       data.frame with DepMap_ID (what samples are separated on), 
+#       Chromosome, Start, End, Segment_Mean, Num_Probes
+#
+# @returns: a data.frame with EGID, SYMBOL, CHR, CHRLOC, CHRLOCEND followed 
+#           by one column for each sample containing the Segment_Mean of the 
+#           gene
+######################
+generate_gene_level_matrix_from_segments <- function(gene_mapping, segments) {
+  # However we decide to get the gene annotations... we now do the below to map genes to segments to get gene level calls
+  # This is very fast (~2 minutes)
+  allENTREZG_as_granges <- gene_mapping %>% 
+    dplyr::select(start=CHRLOC, end=CHRLOCEND, seqnames=CHR, everything()) %>%
+    GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
+  
+  # Now overlap segments and genes to get gene level data
+  # unique_samples <- segments_gaps_filled$DepMap_ID %>% sample(size = 100)
+  segments_gaps_filled_as_granges <- GenomicRanges::makeGRangesFromDataFrame(segments, keep.extra.columns = T)
+  segments_gaps_filled_as_granges_list <- split(segments_gaps_filled_as_granges, segments_gaps_filled_as_granges$DepMap_ID)
+  
+  # Shamelessly stolen from CERES
+  single_cell_line <- length(names(segments_gaps_filled_as_granges_list)) == 1
+  gene_level_data <- laply(segments_gaps_filled_as_granges_list, function(seg) {
+    hits <- GenomicRanges::findOverlaps(allENTREZG_as_granges, seg) %>% as.data.frame %>%
+      dplyr::distinct(queryHits, .keep_all = T)
+      CN <- rep(NA, length(allENTREZG_as_granges))
+      CN[hits$queryHits] <- as.data.frame(seg)[hits$subjectHits,'Segment_Mean']
+        return(CN)
+    }, .parallel = FALSE) %>% 
+    {if(single_cell_line) as.matrix(.) else t(.)} %>%
+    set_colnames(names(segments_gaps_filled_as_granges_list)) %>%
+    as.data.frame()
+  
+  # Add the annotations back
+  gene_level_mat_columns_to_add <- c('SYMBOL', 'EGID', 'seqnames', 'start', 'end')
+  gene_level_data[,gene_level_mat_columns_to_add] <- allENTREZG_as_granges %>% 
+    GenomicRanges::as.data.frame() %>%
+    dplyr::select(gene_level_mat_columns_to_add)
+  gene_level_data %<>% dplyr::rename(Chromosome=seqnames, CHRLOC=start, CHRLOCEND=end) 
+  
+  return(gene_level_data)
+}
+```
+
+```{r}
+gene_level_data <- generate_gene_level_matrix_from_segments(allENTREZG, segments_gaps_filled)
+```
+
+## Upload to taiga
+
+These snippets create the matrices that are ultimately uploaded to taiga. I would suggest running the 'result validation' snippets first to ensure that there are not huge changes to the results from the previous release. If there are, validate that they are expected.
+
+```{r eval=TRUE}
+# Remove the internally embargoed lines
+black_listed_lines <- read_xlsx('~/Documents/Analysis/DepMap_omics/Embargo_and_blacklists/19Q2 Omics Blacklist and Embargo.xlsx', sheet = 'Blacklist') %>%
+  magrittr::set_colnames(c('Blacklist', 'Type')) %$% Blacklist
+```
+
+<!-- The lines below will be removed as they are in the blacklist -->
+
+```{r eval=FALSE}
+segments_gaps_filled %>% filter(DepMap_ID %in% black_listed_lines) %>% distinct(DepMap_ID, Source) %>% mutate(CCLE_name=arxspan.to.ccle(DepMap_ID)) %>% datatable(rownames = F)
+```
+
+```{r eval=TRUE}
+# Save the segmented level data (untransformed)
+segments_gaps_filled %>%
+  filter(!(DepMap_ID %in% black_listed_lines)) %>%
+  dplyr::select(DepMap_ID, Chromosome=seqnames, Start=start, End=end, Num_Probes, Segment_Mean, Source) %>%
+  write.table(., file = paste0(directory_to_save_files_to, release, '/CCLE_internal_19q2_segmented_cn.tsv'), sep = '\t', quote = F, row.names = F)
+
+# log2(CN + 1) to deal with small differences in low CN (differences in 0.01 and 0.02 will no longer be emphasized)
+log2(gene_level_data_hg38[setdiff(row.names(gene_level_data_hg38), black_listed_lines),]+1) %>%
+  write.table(., file = paste0(directory_to_save_files_to, release, '/CCLE_internal_19q2_gene_cn.tsv'), sep = '\t', quote = F, row.names = T)
+```
+
+## Result validation
+
+Validation that results didn't change too much from previous release. This is a sanity check in case there are major changes to the pipeline.
+
+1. Compare to previous release
+
+We compare the gene level copy number data to previous releases. The changes we expect to see:
+
+* Changes in pipeline: involving realignment or new parameters in the pipeline. We expect that 99% of all genes will be unaffected by this
+* Changes in copy number source: often, we will get sequencing for a sample that previously was using SNP or Sanger WES. We would expect to see some changes in these cell lines copy number profiles
+
+```{r}
+# Generate the new hg38-cn based gene level matrix
+gene_level_data_hg38 <- gene_level_data %>%
+  dplyr::mutate(rn=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  dplyr::select(c('rn', colnames(.)[grep('ACH\\-[0-9]+', colnames(.))])) %>%
+  column_to_rownames(var='rn') %>% t()
+```
+
+```{r}
+# Comparison function
+gene_level_comparison_matrix_gen <- function(new_mat, old_mat, cell_lines, genes_using) {
+  # Get overlapping genes
+  overlapping_genes <- intersect(colnames(new_mat), colnames(old_mat)) %>% intersect(genes_using)
+  overlapping_cell_lines <- intersect(row.names(new_mat), row.names(old_mat)) %>% intersect(cell_lines)
+  
+  # Calculate differences (cell line level, gene level)
+  differences <- log2(new_mat[overlapping_cell_lines, overlapping_genes]) - log2(old_mat[overlapping_cell_lines, overlapping_genes])
+  
+  # cell overview
+  cl_diffs <- apply(differences, 1, FUN = function(x) length(x[!is.na(x) & abs(x) > 0.5])/length(x[!is.na(x)]))
+  gene_diffs <- apply(differences, 2, FUN = function(x) length(x[!is.na(x) & abs(x) > 0.5]))
+  
+  return(list(gene=gene_diffs, cl=cl_diffs))
+}
+```
+
+```{r}
+x_only <- gene_level_data %>% filter(Chromosome=='X') %$% paste0(SYMBOL, ' (', EGID, ')') 
+autosomal_genes <- gene_level_data %>% filter(Chromosome %in% seq(1,22)) %$% paste0(SYMBOL, ' (', EGID, ')')
+```
+
+```{r}
+# I used this chunk to try and identify where there were NAs for gene level copy number. Now that we extend the segment ends, we should not see NAs any more.
+common_na_genes <- apply(gene_level_data_hg38, 2, FUN = function(x) length(x[is.na(x)])) %>% .[order(-.)]
+
+position_annotated_nas <- allENTREZG %>%
+  mutate(SYMBOL_ID=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  mutate(total_nas=common_na_genes[SYMBOL_ID]) %>%
+  # filter(total_nas > 1) %>%
+  arrange(-total_nas)
+
+# ggplot(position_annotated_nas, aes(CHRLOC, total_nas)) +
+#   geom_point() +
+#   facet_wrap(~CHR)
+```
+
+### Broad WES
+
+```{r}
+# Split comparisons by source
+broad_wes_cls <- new_copy_number %>% filter(Source=='Broad WES') %$% unique(DepMap_ID)
+
+new_mat = gene_level_data_hg38
+old_mat = wes.priority.cn.gene.profiles
+cell_lines = broad_wes_cls
+genes_using = autosomal_genes 
+
+# Compare gene level calls
+broad_wes_diffs <- gene_level_comparison_matrix_gen(
+  new_mat = new_mat, 
+  old_mat = old_mat,
+  cell_lines = cell_lines,
+  genes_using = genes_using
+)
+
+# Look at the differences
+broad_cl_diffs <- data.frame(DepMap_ID=broad_wes_cls, stringsAsFactors = F) %>%
+  mutate(diff=broad_wes_diffs$cl[DepMap_ID]) %>%
+  mutate(case=case_when(
+    DepMap_ID %in% replaced_cell_lines ~ 'Replaced',
+    DepMap_ID %in% c('ACH-001957', 'ACH-001955', 'ACH-001956', 'ACH-002204', 'ACH-002335') ~ 'Chordoma',
+    TRUE ~ 'Other'
+  ))
+```
+
+```{r include=TRUE}
+ggplot(broad_cl_diffs, aes(case, diff, fill=case)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0.025, linetype=2) +
+  ylab('Fraction gene level diff > 0.5') +
+  theme_Publication()
+```
+
+```{r}
+# 1. Chordomas look totally different with new pipeline so will want to do side by side
+# 2. Samples replaced look different -> makes sense since we are going from Sanger WES to Broad WES
+
+# Now let's see where the genes fall that are different (or all 0 differences, meaning, NA)
+# Join with coordinates
+broad_wes_diffs_locations <- allENTREZG %>% 
+  mutate(SYMBOL_ID=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  as.data.frame() %>%
+  mutate(d=broad_wes_diffs$gene[SYMBOL_ID])
+
+# ggplot(broad_wes_diffs_locations %>% filter(!is.na(d), d > 10), aes(CHRLOC, d)) +
+#   geom_point() +
+#   facet_wrap(~CHR, scales = 'free_x')
+
+gene_meds_old <- apply(old_mat, 2, FUN = function(x) mean(x, na.rm = T))
+gene_meds_new <- apply(new_mat, 2, FUN = function(x) mean(x, na.rm = T))
+
+broad_wes_diffs_locations %>%
+  filter(!is.na(d)) %>%
+  filter(d > 10) %>%
+  arrange(-d) %>%
+  mutate(med_old=gene_meds_old[paste0(SYMBOL, ' (', EGID, ')')]) %>%
+  mutate(med_new=gene_meds_new[paste0(SYMBOL, ' (', EGID, ')')])
+
+# Check individual genes here
+plot(log2(new_mat[overlapping_cell_lines,"UGT2B17 (7367)"]+1), log2(old_mat[overlapping_cell_lines, "UGT2B17 (7367)"]+1))
+```
+
+### Chordoma WES
+
+```{r}
+# Split comparisons by source
+chordoma_wes_cls <- c('ACH-001957', 'ACH-001955', 'ACH-001956', 'ACH-002204', 'ACH-002335')
+
+# Compare gene level calls
+chordoma_wes_diffs <- gene_level_comparison_matrix_gen(
+  new_mat = gene_level_data_hg38, 
+  old_mat = wes.priority.cn.gene.profiles,
+  cell_lines = chordoma_wes_cls,
+  genes_using = autosomal_genes
+)
+
+# Look at the differences
+chordoma_cl_diffs <- data.frame(DepMap_ID=chordoma_wes_cls, stringsAsFactors = F) %>%
+  mutate(diff=chordoma_wes_diffs$cl[DepMap_ID]) %>%
+  mutate(case=case_when(
+    DepMap_ID %in% replaced_cell_lines ~ 'Replaced',
+    DepMap_ID %in% c('ACH-001957', 'ACH-001955', 'ACH-001956', 'ACH-002204', 'ACH-002335') ~ 'Chordoma',
+    TRUE ~ 'Other'
+  ))
+```
+
+```{r}
+# Now let's see where the genes fall that are different (or all 0 differences, meaning, NA)
+# Join with coordinates
+chordoma_wes_diffs_locations <- allENTREZG %>% 
+  mutate(SYMBOL_ID=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  as.data.frame() %>%
+  mutate(d=chordoma_wes_diffs$gene[SYMBOL_ID])
+
+chordoma_combined_segments <- rbind(
+  combined_new_prioritized_dataset %>% filter(DepMap_ID %in% chordoma_wes_cls) %>% mutate(Source='NEW_PIPELINE'),
+  wes.priority.cn.seg.profiles %>% filter(DepMap_ID %in% chordoma_wes_cls) %>% mutate(Source='OLD_PIPELINE')
+)
+```
+
+```{r}
+# Look fairly different although both pipeline outputs are incredibly noisy
+ggplot(chordoma_combined_segments %>% 
+         mutate(Source=factor(Source)) %>%
+         mutate(cn=log2(Segment_Mean)) %>%
+         mutate(cn=ifelse(cn > 3, 3, ifelse(cn < -3, -3, cn))), 
+       aes(xmin=Start, xmax=End, ymin=as.integer(Source), ymax=as.integer(Source)+1, fill=cn)) +
+  geom_rect() +
+  scale_fill_gradient2(low='blue', high='red', mid = 'white', midpoint=0) +
+  facet_wrap(~DepMap_ID)
+```
+
+```{r}
+chr_bp_hg38 <- read_tsv(hg38_cyto_band_reference, col_names = F) %>%
+  filter(X1 %in% paste0('chr', c(seq(1,22), 'X', 'Y'))) %>%
+  group_by(X1) %>% 
+  dplyr::summarise(m=max(X3)) %$% 
+  setNames(m, X1)
+chr_bp_sum <- cumsum(chr_bp_hg38[paste0('chr', c(seq(1,22), 'X', 'Y'))])
+new_chr_bp_sum <- chr_bp_sum[paste0('chr', c(seq(1,22), 'X'))]
+names(new_chr_bp_sum) <- paste0('chr', c(seq(2,22), 'X', 'Y'))
+new_chr_bp_sum['chr1'] <- 0
+```
+
+```{r eval=FALSE}
+# I was interested to see if the differenes in the Chordoma samples that we see was due to genome changes or 
+# if the samples had always been very noisy when using our pipeline. It appears the samples had always been very noisy.
+chr_bp_hg19 <- read_tsv('~/Documents/Analysis/RScripts/Common_annotations/cytoBand.txt.gz', col_names = F) %>%
+  filter(X1 %in% paste0('chr', c(seq(1,22), 'X', 'Y'))) %>%
+  group_by(X1) %>% 
+  dplyr::summarise(m=max(X3)) %$% 
+  setNames(m, X1)
+chr_bp_sum_hg19 <- cumsum(chr_bp_hg19[paste0('chr', c(seq(1,22), 'X', 'Y'))])
+new_chr_bp_sum_h19 <- chr_bp_sum_hg19[paste0('chr', c(seq(1,22), 'X'))]
+names(new_chr_bp_sum_h19) <- paste0('chr', c(seq(2,22), 'X', 'Y'))
+new_chr_bp_sum_h19['chr1'] <- 0
+
+older_wes.priority.cn.seg.profiles <- load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=15, data.file='wes_priority_cn_seg_profiles') %>%
+  filter(Broad_ID %in% c('ACH-001957', 'ACH-001955', 'ACH-001956', 'ACH-002204', 'ACH-002335')) %>%
+  mutate(Chromosome=gsub('chr', '', Chromosome))
+
+ggplot(older_wes.priority.cn.seg.profiles %>%
+         mutate(sn=Start+new_chr_bp_sum_h19[paste0('chr', Chromosome)], en=End+new_chr_bp_sum_h19[paste0('chr', Chromosome)]) %>%
+         mutate(cn=log2(Segment_Mean)) %>%
+         mutate(cn=ifelse(cn > 3, 3, ifelse(cn < -3, -3, cn))), 
+       aes(x=sn, xend=en, y=cn, yend=cn, color=Source)) +
+  geom_segment() +
+  facet_wrap(~CCLE_name) +
+  xlab('Position (bp)') +
+  theme(
+    axis.text.x = element_blank()
+  )
+
+same_chordoma_genes <- intersect(colnames(new_mat), colnames(old_mat)) %>% intersect(autosomal_genes)
+plot(log2(new_mat[chordoma_wes_cls[5],same_chordoma_genes]+1), log2(old_mat[chordoma_wes_cls[5],same_chordoma_genes]+1))
+```
+
+```{r}
+ggplot(chordoma_combined_segments %>%
+         mutate(sn=Start+new_chr_bp_sum[paste0('chr', Chromosome)], en=End+new_chr_bp_sum[paste0('chr', Chromosome)]) %>%
+         mutate(cn=log2(Segment_Mean)) %>%
+         mutate(cn=ifelse(cn > 3, 3, ifelse(cn < -3, -3, cn))), 
+       aes(x=sn, xend=en, y=cn, yend=cn, color=Source)) +
+  geom_segment() +
+  facet_wrap(~DepMap_ID) +
+  xlab('Position (bp)') +
+  theme(
+    axis.text.x = element_blank()
+  )
+
+same_chordoma_genes <- intersect(colnames(new_mat), colnames(old_mat)) %>% intersect(autosomal_genes)
+plot(log2(new_mat[chordoma_wes_cls[5],same_chordoma_genes]+1), log2(old_mat[chordoma_wes_cls[5],same_chordoma_genes]+1))
+```
+
+### Sanger WES
+
+```{r}
+# Split comparisons by source
+sanger_wes_cls <- new_copy_number %>% filter(Source=='Sanger WES') %$% unique(DepMap_ID)
+
+# Compare gene level calls
+sanger_wes_diffs <- gene_level_comparison_matrix_gen(
+  new_mat = gene_level_data_hg38, 
+  old_mat = wes.priority.cn.gene.profiles,
+  cell_lines = sanger_wes_cls,
+  genes_using = autosomal_genes
+)
+
+# Look at the differences
+sanger_cl_diffs <- data.frame(DepMap_ID=sanger_wes_cls, stringsAsFactors = F) %>%
+  mutate(diff=sanger_wes_diffs$cl[DepMap_ID]) %>%
+  mutate(r=rank(diff)) %>%
+  mutate(case=case_when(
+    DepMap_ID %in% replaced_cell_lines ~ 'Replaced',
+    grepl('MATCHED_NORMAL', arxspan.to.ccle(DepMap_ID)) ~ 'Normal', 
+    # DepMap_ID %in% c('ACH-001957', 'ACH-001955', 'ACH-001956', 'ACH-002204', 'ACH-002335') ~ 'Chordoma',
+    TRUE ~ 'Other'
+  ))
+
+sanger_cl_diffs %>% arrange(-diff)
+
+ggplot(sanger_cl_diffs, aes(r, diff, color=case)) +
+  geom_point() +
+  geom_text_repel(data=sanger_cl_diffs %>% filter(case!='Normal', diff > 0.025), aes(label=arxspan.to.ccle(DepMap_ID))) +
+  geom_hline(yintercept = 0.025, linetype=2)
+
+# 1. Chordomas look totally different with new pipeline so will want to do side by side
+# 2. Samples replaced look different?
+
+# Now let's see where the genes fall that are different (or all 0 differences, meaning, NA)
+# Join with coordinates
+sanger_wes_diffs_locations <- allENTREZG %>% 
+  mutate(SYMBOL_ID=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  as.data.frame() %>%
+  mutate(d=sanger_wes_diffs$gene[SYMBOL_ID])
+
+# ggplot(sanger_wes_diffs_locations %>% filter(!is.na(d), d > 10), aes(CHRLOC, d)) +
+#   geom_point() +
+#   facet_wrap(~CHR, scales = 'free_x')
+
+sanger_wes_diffs_locations %>%
+  filter(!is.na(d)) %>%
+  filter(d > 10) %>%
+  arrange(-d)
+
+# Check individual genes here
+plot(log2((new_mat[overlapping_cell_lines,"PMS2P1 (5379)"]+1)), log2((old_mat[overlapping_cell_lines, "PMS2P1 (5379)"]+1)))
+plot(log2((new_mat[ccle.to.arxspan('FUOV1_OVARY'),overlapping_genes]+1)), log2((old_mat[ccle.to.arxspan('FUOV1_OVARY'),overlapping_genes]+1)))
+
+# Will want to do some follow up on this, as it looks like the PON is normalizing out some potentially true variation observed in the normal samples. However for cell lines, it seems to do a better job for denoising.
+```
+
+```{r}
+# Compare the Sanger WES PON alignment vs. the Agilent PON alignment
+sanger_agilent_ice_pon_based_calls <- readr::read_tsv('~/Downloads/DM19Q2_COMPLETE.called.seg', col_types = cols(
+  Sample = col_character(), 
+  CONTIG=col_character(), 
+  START=col_double(), END=col_double(), 
+  NUM_POINTS_COPY_RATIO=col_double(), MEAN_LOG2_COPY_RATIO=col_double(), 
+  CALL=col_character()
+)) %>% dplyr::select(Sample, Chromosome=CONTIG, Start=START, End=END, Num_Probes=NUM_POINTS_COPY_RATIO, Segment_Mean=MEAN_LOG2_COPY_RATIO) %>%
+  dplyr::mutate(Source=ifelse(grepl('sanger', Sample), 'Sanger WES', ifelse(grepl('chordoma', Sample), 'Chordoma WES', 'Broad WES'))) %>%
+  # We only keep the X calls from here 
+  filter(Source=='Sanger WES') %>%
+  mutate(DepMap_ID=stringr::str_extract(pattern='ACH\\-[0-9]+', string=Sample)) %>%
+  dplyr::select(-Sample) %>% mutate(Chromosome=gsub('chr', '', Chromosome))
+
+# To avoid the wait, take a sample of the sanger samples and all the normals
+sanger_evaluate_pon_samples <- segments_gaps_filled %>% filter(Source=='Sanger WES') %$% sample(DepMap_ID, size = 60)
+# sanger_evaluate_pon_samples %<>% c(., (segments_gaps_filled %>% filter(grepl('MATCHED_NORMAL', arxspan.to.ccle(DepMap_ID))) %$% DepMap_ID)) %>% unique()
+
+sanger_agilent_ice_pon_based_calls <- interpolate_gaps_in_segmented(segment_file = sanger_agilent_ice_pon_based_calls %>% filter(DepMap_ID %in% sanger_evaluate_pon_samples))$segs
+sanger_agilent_ice_pon_based_calls %<>% extend_ends_of_segments(.)
+sanger_agilent_pon_gene <- generate_gene_level_matrix_from_segments(gene_mapping = allENTREZG, segments = sanger_agilent_ice_pon_based_calls)
+
+new_mat = gene_level_data_hg38
+old_mat = sanger_agilent_pon_gene %>%
+  dplyr::mutate(rn=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  dplyr::select(c('rn', colnames(.)[grep('ACH\\-[0-9]+', colnames(.))])) %>%
+  column_to_rownames(var='rn') %>% t()
+old_mat <- 2^old_mat
+cell_lines = sanger_evaluate_pon_samples
+genes_using = autosomal_genes 
+
+# Compare gene level calls
+sanger_pon_wes_diffs <- gene_level_comparison_matrix_gen(
+  new_mat = new_mat, 
+  old_mat = old_mat,
+  cell_lines = cell_lines,
+  genes_using = genes_using
+)
+
+# Look at the differences
+sanger_pon_cl_diffs <- data.frame(DepMap_ID=sanger_evaluate_pon_samples, stringsAsFactors = F) %>%
+  mutate(diff=sanger_pon_wes_diffs$cl[DepMap_ID]) %>%
+  mutate(r=rank(diff)) %>%
+  mutate(case=case_when(
+    DepMap_ID %in% replaced_cell_lines ~ 'Replaced',
+    grepl('MATCHED_NORMAL', arxspan.to.ccle(DepMap_ID)) ~ 'Normal', 
+    # DepMap_ID %in% c('ACH-001957', 'ACH-001955', 'ACH-001956', 'ACH-002204', 'ACH-002335') ~ 'Chordoma',
+    TRUE ~ 'Other'
+  ))
+
+ggplot(sanger_pon_cl_diffs, aes(r, diff, color=case)) +
+  geom_point() +
+  geom_text_repel(data=sanger_pon_cl_diffs %>% filter(case!='Normal', diff > 0.025), aes(label=arxspan.to.ccle(DepMap_ID))) +
+  geom_hline(yintercept = 0.025, linetype=2)
+
+# 1. Chordomas look totally different with new pipeline so will want to do side by side
+# 2. Samples replaced look different?
+
+# Now let's see where the genes fall that are different (or all 0 differences, meaning, NA)
+# Join with coordinates
+sanger_pon_wes_diffs_locations <- allENTREZG %>% 
+  mutate(SYMBOL_ID=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  as.data.frame() %>%
+  mutate(d=sanger_pon_wes_diffs$gene[SYMBOL_ID])
+
+# ggplot(sanger_pon_wes_diffs_locations %>% filter(!is.na(d), d > 10), aes(CHRLOC, d)) +
+#   geom_point() +
+#   facet_wrap(~CHR, scales = 'free_x')
+
+gene_meds_old <- apply(old_mat, 2, FUN = function(x) mean(x, na.rm = T))
+gene_meds_new <- apply(new_mat, 2, FUN = function(x) mean(x, na.rm = T))
+
+sanger_pon_wes_diffs_locations %<>% filter(!is.na(d)) %>%
+  # filter(d > 10) %>%
+  arrange(-d) %>%
+  mutate(med_old=gene_meds_old[paste0(SYMBOL, ' (', EGID, ')')]) %>%
+  mutate(med_new=gene_meds_new[paste0(SYMBOL, ' (', EGID, ')')])
+
+sanger_pon_wes_diffs_locations %>% 
+  filter(d > 10)
+
+ggplot(sanger_pon_wes_diffs_locations, aes(med_old, med_new)) +
+  geom_point()
+
+# Check individual genes here
+plot(log2((new_mat[sanger_evaluate_pon_samples,"TOP2A (7153)"])), log2((old_mat[sanger_evaluate_pon_samples,"TOP2A (7153)"])))
+plot(log2((new_mat[ccle.to.arxspan('FUOV1_OVARY'),overlapping_genes])), log2((old_mat[ccle.to.arxspan('FUOV1_OVARY'),overlapping_genes])))
+
+```
+
+### SNP
+
+```{r}
+# Split comparisons by source
+broad_snp_cls <- combined_new_prioritized_dataset %>% filter(Source=='Broad SNP') %$% unique(DepMap_ID)
+
+new_mat = gene_level_data_hg38
+old_mat = wes.priority.cn.gene.profiles
+cell_lines = broad_snp_cls
+genes_using = autosomal_genes
+
+# Compare gene level calls
+broad_snp_diffs <- gene_level_comparison_matrix_gen(
+  new_mat = gene_level_data_hg38, 
+  old_mat = wes.priority.cn.gene.profiles,
+  cell_lines = broad_snp_cls,
+  genes_using = autosomal_genes
+)
+
+# Look at the differences
+snp_broad_cl_diffs <- data.frame(DepMap_ID=broad_snp_cls, stringsAsFactors = F) %>%
+  mutate(diff=broad_snp_diffs$cl[DepMap_ID]) %>%
+  mutate(case=case_when(
+    DepMap_ID %in% replaced_cell_lines ~ 'Replaced',
+    DepMap_ID %in% c('ACH-001957', 'ACH-001955', 'ACH-001956', 'ACH-002204', 'ACH-002335') ~ 'Chordoma',
+    TRUE ~ 'Other'
+  ))
+
+ggplot(snp_broad_cl_diffs, aes(case, diff, fill=case)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0.025, linetype=2)
+
+# 1. Chordomas look totally different with new pipeline so will want to do side by side
+# 2. Samples replaced look different?
+
+# Now let's see where the genes fall that are different (or all 0 differences, meaning, NA)
+# Join with coordinates
+broad_snp_diffs_locations <- allENTREZG %>% 
+  mutate(SYMBOL_ID=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  as.data.frame() %>%
+  mutate(d=broad_snp_diffs$gene[SYMBOL_ID])
+```
+
+```{r}
+ggplot(broad_snp_diffs_locations %>% filter(!is.na(d), d > 10), aes(CHRLOC, d)) +
+  geom_point() +
+  facet_wrap(~CHR, scales = 'free_x')
+```
+
+```{r}
+gene_meds_old <- apply(old_mat, 2, FUN = function(x) mean(x, na.rm = T))
+gene_meds_new <- apply(new_mat, 2, FUN = function(x) mean(x, na.rm = T))
+
+broad_snp_diffs_locations %>%
+  filter(!is.na(d)) %>%
+  filter(d > 10) %>%
+  arrange(-d) %>%
+  mutate(med_old=gene_meds_old[paste0(SYMBOL, ' (', EGID, ')')]) %>%
+  mutate(med_new=gene_meds_new[paste0(SYMBOL, ' (', EGID, ')')])
+
+# Check individual genes here
+plot(log2(new_mat[cell_lines,"CDKN2B (1030)"]+1), log2(old_mat[cell_lines, "CDKN2B (1030)"]+1))
+```
+
+```{r eval=FALSE}
+# Test download of the uploaded data
+CCLE.internal.19q2.segmented.cn <- load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=22, data.file='CCLE_internal_19q2_segmented_cn')
+CCLE.internal.19q2.gene.cn <- load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=22, data.file='CCLE_internal_19q2_gene_cn')
+```
+
+
+
+

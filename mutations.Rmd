@@ -1,0 +1,906 @@
+---
+title: "Generating DepMap mutation dataset"
+author: "Guillaume Kugener"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+releaseName = '19Q2'
+directory_to_save_files_to <- '/Volumes/xchip_datasci/gkugener/DepMap_Omics/WES/Mutations/data'
+
+# Make directory for release if it does not exist
+dir.create(paste0(directory_to_save_files_to), showWarnings = T)
+dir.create(paste0(directory_to_save_files_to, release), showWarnings = T)
+
+# We assume that this MAF contains one sample id for each cell line. For example, some cell lines have Sanger and Broad samples
+# in the Tumor_Sample_Barcode column, those would be denote as sanger_ARXSPANID, dm_ARXSPANID. However, this script will
+# download the file and remove the prefix, so care needs to be take in these cases (the best way is to make sure that every cell line in the set on
+# FireCloud is represented by only one sample and that Sanger, Broad WES are processed separately)
+tentative_release_cga_wes_pipeline_merged_maf <- '~/Downloads/DM19Q2_COMPLETE_SET.mergedMAF.txt'
+```
+
+## Overview
+
+This markdown outlines the process to generate the MAF that is used on DepMap, starting from the aggregated results from the FireCloud pipeline. It combines WES based calls with previous mutation calling datasets into a single MAF.
+
+For 19Q1, we are using both the CGA and VA pipeline to generate mutation calls. Starting 19Q2, we only use the CGA pipeline for WES from the Broad.
+
+### Set up
+
+The code chunk below defines necessary functions and packages that we need to run this pipeline
+
+```{r}
+load('/Volumes/xchip_datasci/gkugener/DM_OMICS/Annotations.RData') # There are some cell lines the celllinemapr does not know how to map so we need to load this data object for now (from old datasets)
+library(tidyverse)
+library(data.table)
+library(magrittr)
+library(celllinemapr) # To pull out DepMap_IDs from CCLE_names where needed
+```
+
+```{r}
+# We will replace these functions with cleaned versions later
+varstr = function(maf){mafcp = paste(gsub('-Tumor','', gsub('fh_','',maf$Tumor_Sample_Barcode)), maf$Chromosome,maf$Start_position,maf$End_position,maf$Reference_Allele, maf$Tumor_Seq_Allele2, sep='_')}
+varlocstr = function(maf){mafcp = paste(maf$Chromosome,maf$Start_position, sep='_')}
+varcellocstr = function(maf){mafcp = paste(gsub('-Tumor','', gsub('fh_','',maf$Tumor_Sample_Barcode)),maf$Chromosome,maf$Start_position, sep='_')}
+varonlystr = function(maf){mafcp = paste( maf$Chromosome,maf$Start_position,maf$End_position,maf$Reference_Allele, maf$Tumor_Seq_Allele2, sep='_')}
+
+# This should not make a new maf
+fixSampleName = function(Tumor_Sample_Barcode) { 
+  Tumor_Sample_Barcode %<>% gsub('(dm|ccle2|fh|SANGER|chordoma)_', '', .) %>%
+    gsub('\\-Tumor', '', .) %>%
+    CleanCellLineName(.) %>%
+    ccle.to.arxspan(check.unique.mapping = F)
+  return(Tumor_Sample_Barcode)
+}
+
+
+removeRec = function(maf, thrCCLErat = 0.05, tcgathr=5, rescueListFN='/Volumes/xchip_cle/Resources/variantFilter/snp_indels_rescue_list.txt') {
+  
+  
+  vlstr = varlocstr(maf)
+  vclstr = varcellocstr(maf)
+  
+  
+  frq = table(vlstr[!duplicated(vclstr)])
+
+#  hsi = which(maf$TCGAhsCnt<=20)
+#  thr = max(frq[match(vlstr[hsi],names(frq))]) +1; ## at this frequency, all the tcga_hs mutations have freq >20 
+#  hsi = which((maf$TCGAhsCnt<=20)&(maf$TCGAhsCnt>=5))
+#  thr = max(frq[match(vlstr[hsi],names(frq))]) +1; ## at this frequency, all the tcga_hs mutations have freq >20 
+#  blacklist = names(which(frq>thr))
+#  blacklist = setdiff(blacklist, vlstr[which(maf$TCGAhsCnt>0)])
+  
+  N = length(unique(maf$Tumor_Sample_Barcode))
+  thr = thrCCLErat * N; 
+  blacklist = names(which(frq>thr))
+  blacklist = setdiff(blacklist, vlstr[which(maf$TCGAhsCnt>=tcgathr)])
+
+  if(rescueListFN!=''){
+    mafRescue = read.delim(rescueListFN, sep='\t', header=TRUE, stringsAsFactors = FALSE, comment.char = '#', colClasses='character'); 
+    vlstrRescue = varlocstr(mafRescue)
+    blacklist = setdiff(blacklist,vlstrRescue)
+  } 
+  
+  pass = !(vlstr %in% blacklist)
+  #sort(table(maf$Hugo_Symbol[!pass]))
+  #subset(maf, !pass & Hugo_Symbol=='AKT1')
+  maf$pass = pass; # we will just mark the duplicates and not remove them 
+  
+  #  res= list(res=subset(maf,pass),pass=pass, blacklist=blacklist, thr=thr)
+  res= list(res=maf,pass=pass, blacklist=blacklist, thr=thr)
+}
+
+removeLowQ = function(maf){
+  maf = subset(maf, i_qual+i_read_depth > 50)  ## filter GATK indels based on quality
+}
+
+intersectmafs = function(maf1, maf2, retainTCGAhs=TRUE){
+  cls = intersect(unique(maf1$Tumor_Sample_Barcode), unique(maf2$Tumor_Sample_Barcode))
+  maf1 = subset(maf1, Tumor_Sample_Barcode %in% cls)
+  maf2 = subset(maf2, Tumor_Sample_Barcode %in% cls)
+  
+  v1 = varstr(maf1)
+  v2 = varstr(maf2)
+  
+  m1 = match(v1, v2)  
+  m2 = match(v2, v1)  
+  
+  maf2 = maf2[,match(colnames(maf1), colnames(maf2))] 
+  
+  if(retainTCGAhs){
+    maf3 = rbind(maf1[maf1$isTCGAhotspot | !is.na(m1), ], maf2[ maf2$isTCGAhotspot & is.na(m2),])
+  }else{
+    maf3 = maf1[!is.na(m1), ]
+  }
+  maf3=maf3
+}
+
+makeBlacklistFile = function(wessnp,wessnp_blcklist,current_blacklist_FN, new_blcklist_FN){
+  blacklist = read.delim(current_blacklist_FN, sep='\t', stringsAsFactors = FALSE)
+  a=subset(wessnp, !is.na(match(paste(wessnp$Chromosome, wessnp$Start_position, sep='_'), wessnp_blcklist)))
+  a=subset(a, !duplicated(a$Genome_Change))
+  a= a[,c('Hugo_Symbol','Chromosome','Start_position','End_position','Variant_Classification','Variant_Type','Reference_Allele','Tumor_Seq_Allele2','Protein_Change','Tumor_Sample_Barcode')]
+  colnames(a)=colnames(blacklist)
+  write.table(rbind(blacklist,a), 
+              sep='\t', quote=FALSE, row.names=FALSE, file = new_blcklist_FN)
+}
+
+addAC = function(snp, snpc, maf, mafnam){
+  mafcls=unique(maf$Tumor_Sample_Barcode)
+  mafc=varstr(maf); 
+    maf = subset(maf, mafc%in%snpc)
+    mafc=varstr(maf); 
+  res = rep('',length(snpc))
+  res[match(mafc, snpc)]= paste(maf$t_alt_count, maf$t_ref_count, sep=':')
+  res[!(snp$Tumor_Sample_Barcode %in% mafcls)]=NA
+  snp[[mafnam]]=res
+  snp
+}
+
+polish = function(maf){
+  mafc = varonlystr(maf)
+  umafc = unique(mafc[duplicated(mafc)])
+  mtch = match(mafc,umafc)
+
+  maf[is.na(maf)]='NA'
+  colnames(maf)[match("Tumor_Seq_Allele2", colnames(maf))]='Tumor_Seq_Allele1'
+  maf
+}
+```
+
+```{r cleaned_add_AC_function}
+addAC_cleaned <- function(given, to_add, given_name) {
+  res <- given %>%
+    left_join(.,
+      to_add %>% 
+        dplyr::select(c(distinct_columns_to_keep, 't_alt_count', 't_ref_count')) %>%
+        mutate(!!given_name := paste0(t_alt_count, ':', t_ref_count)) %>%
+        dplyr::select(-t_alt_count, -t_ref_count),
+      by = distinct_columns_to_keep
+    )
+  return(res)
+}
+```
+
+### (1) Load FireCloud calls
+
+```{r}
+# This is the universe of the fields that we want to load from the MAF. Not all of these columns will be present in the CGA MAF
+desired_fields <- c(
+  'Hugo_Symbol', 'Entrez_Gene_Id',
+  'Center', 'NCBI_Build',
+  'Chromosome', 'Start_position', 'End_position', 'Strand',
+  'Variant_Classification', 'Variant_Type',
+  'Reference_Allele', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2', 
+  'dbSNP_RS', 'dbSNP_Val_Status',
+  'Genome_Change',
+  'Annotation_Transcript',
+  'Tumor_Sample_Barcode',
+  'cDNA_Change', 'Codon_Change', 'Protein_Change',
+  't_alt_count', 't_ref_count', 'tumor_f',
+  'isDeleterious','isTCGAhotspot', 'TCGAhsCnt','isCOSMIChotspot','COSMIChsCnt',
+  'ExAC_AF', 'i_ExAC_AF', 'exac_af', 'PASS')
+
+CGA_based_calls <- fread(tentative_release_cga_wes_pipeline_merged_maf, select = desired_fields) %>%
+  dplyr::rename(ExAC_AF=i_ExAC_AF) %>%
+  # We should validate that there are not duplicate types
+  mutate(Tumor_Sample_Barcode=stringr::str_extract(string=Tumor_Sample_Barcode, pattern='ACH\\-[0-9]+'))
+```
+
+```{r}
+# Create separate SNP and INDEL matrices
+CGA_SNP <- CGA_based_calls %>% filter(!(Variant_Type %in% c('DEL', 'INS')))
+CGA_IND <- CGA_based_calls %>% filter((Variant_Type %in% c('DEL', 'INS')))
+
+# Remove the recurrent mutations
+CGA_SNP <- removeRec(CGA_SNP)$res
+CGA_IND <- removeRec(CGA_IND)$res
+```
+
+### (1.5) Quick adding
+
+Here, rather than rerunning the entire analysis, because we know we are adding only WES samples, we can download the previous release's MAF, add the samples, update any annotations, and perform any global filters at the end.
+
+First we need to do an additional step of filtering on coverage and number 
+
+```{r}
+library(taigr)
+distinct_columns_to_keep <- c("Tumor_Sample_Barcode", "Chromosome", "Start_position", "End_position", "Reference_Allele", "Tumor_Seq_Allele2")
+previous.release.maf <- load.from.taiga(data.name='depmap-mutation-calls-9be3', data.version=12, data.file='depmap_19Q1_mutation_calls')
+if (colnames(previous.release.maf)[1] == 'X1') {
+ previous.release.maf[,1] <- NULL 
+}
+
+# We are adding the CGA_WES_AC back
+# starting in 19Q2, we no longer CCLE_WES_AC, so this will error
+merged_latest_release <- previous.release.maf %>% dplyr::select(-CCLE_WES_AC, -CGA_WES_AC)
+
+additional_columns_to_keep <- c('t_alt_count', 't_ref_count', 'ExAC_AF','isDeleterious', 'isCOSMIChotspot', 'COSMIChsCnt', 'isTCGAhotspot', 'TCGAhsCnt')
+
+# Merge in CGA data. We join the previous release MAF on the distinct columns to keep above
+merged_latest_release %<>%
+  # In the CGA pipeline, Tumor_Seq_Allele2 is is the tumor allele. In the release MAF, Tumor_Seq_Allele1 is the tumor allele
+  dplyr::rename(Tumor_Seq_Allele2=Tumor_Seq_Allele1) %>%
+  merge(.,
+    rbind(CGA_SNP, CGA_IND) %>% 
+      dplyr::select(c(distinct_columns_to_keep, additional_columns_to_keep)) %>%
+      mutate(CGA_WES_AC=paste0(t_alt_count, ':', t_ref_count)) %>%
+      dplyr::select(-t_alt_count, -t_ref_count) %>%
+      dplyr::rename(
+        CGA_ExAC_AF=ExAC_AF, 
+        CGA_isDeleterious=isDeleterious, 
+        CGA_isCOSMIChotspot=isCOSMIChotspot, CGA_COSMIChsCnt=COSMIChsCnt, 
+        CGA_isTCGAhotspot=isTCGAhotspot, CGA_TCGAhsCnt=TCGAhsCnt
+      ),
+    by = distinct_columns_to_keep,
+    all = TRUE
+  ) %>%
+  dplyr::rename(Tumor_Seq_Allele1=Tumor_Seq_Allele2)
+```
+
+Now we add a filter to ensure that the allelic fraction of a mutation is greater than 5% in any of the filters (excluding RD) or greater than 10% in RD.
+
+```{r}
+ac_columns <- colnames(merged_latest_release) %>% .[grep('_AC$', .)]
+merged_latest_release[,paste0('PERC_', ac_columns)] <- apply(merged_latest_release[,ac_columns], 2, function(x) {
+  alt <- as.numeric(gsub(':.*', '', x))
+  total <- as.numeric(gsub('.*:', '', x)) + alt
+  return(alt/(total))
+})
+
+merged_latest_release[,'MAX_AF'] <- apply(merged_latest_release[,paste0('PERC_', c('WGS_AC','HC_AC','SangerRecalibWES_AC', 'RNAseq_AC', 'CGA_WES_AC'))], 1, function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) > 0) {
+    return(max(x))
+  }
+  return(-Inf)
+})
+
+# Keep track of the removed variants
+removed_from_maf <- merged_latest_release %>% 
+  mutate(INCLUDE=MAX_AF > 0.05 | PERC_SangerWES_AC > 0.05 | PERC_RD_AC > 0.1) %>% 
+  filter(!INCLUDE) %>% 
+  mutate(Reason='AF filter')
+
+merged_latest_release %<>% filter(MAX_AF > 0.05 | PERC_SangerWES_AC > 0.05 | PERC_RD_AC > 0.1 | CGA_WES_AC == '0:0') # Last part is to rescue a mis-annotated TP53 mutation
+```
+
+We also require that the total coverage of that site (aggregated across methods) > 8 and that there are at least 4 alternate alleles.
+
+```{r}
+# merged_latest_release %<>% mutate(WES_AC_FOR_COV=ifelse(is.na(VA_WES_AC), CGA_WES_AC, VA_WES_AC))
+merged_latest_release[,'TOTAL_COV'] <- apply(merged_latest_release[,c('CGA_WES_AC','WGS_AC','HC_AC','SangerRecalibWES_AC', 'RNAseq_AC')], 1, function(x) {
+  total <- as.numeric(gsub(':.*', '', x)) + as.numeric(gsub('.*:', '', x))
+  total[is.na(total)] <- 0
+  return(sum(total))
+})
+
+merged_latest_release[,'TOTAL_ALTS'] <- apply(merged_latest_release[,c('CGA_WES_AC','WGS_AC','HC_AC','SangerRecalibWES_AC', 'RNAseq_AC')], 1, function(x) {
+  total <- as.numeric(gsub(':.*', '', x))
+  total[is.na(total)] <- 0
+  return(sum(total))
+})
+
+merged_latest_release$ALTS_SANGER_UNCALIB <- as.numeric(gsub(':.*', '', merged_latest_release$SangerWES_AC)) %>% ifelse(is.na(.), 0, .)
+merged_latest_release$TOTAL_SANGER_UNCALIB <- (as.numeric(gsub(':.*', '', merged_latest_release$SangerWES_AC)) + as.numeric(gsub('.*:', '', merged_latest_release$SangerWES_AC))) %>% 
+  ifelse(is.na(.), 0, .)
+
+removed_from_maf %<>% rbind(., merged_latest_release %>% 
+  mutate(INCLUDE=!((TOTAL_COV >= 8 & TOTAL_ALTS >= 4) | (TOTAL_SANGER_UNCALIB >= 8 & ALTS_SANGER_UNCALIB >= 4))) %>%
+  filter(INCLUDE) %>% 
+  mutate(Reason='Coverage, alt alleles'))
+
+# These is an error in the CGA_WES_AC filtering out TP53 mutations as they appear misannotated. This also saves a few other cases
+merged_latest_release %<>% filter((TOTAL_COV >= 8 & TOTAL_ALTS >= 4) | (TOTAL_SANGER_UNCALIB >= 8 & ALTS_SANGER_UNCALIB >= 4) | CGA_WES_AC == '0:0')
+```
+
+```{r}
+# We have to deal with inconsistent annotations between the previous MAF and the new MAF. We do that here
+
+# Now for every Chromosome, Start_position, End_position, Reference_Allele, Tumor_Seq_Allele1 we want to generate the unique symbols, entrez gene ids, build, strand, variant classification, etc...
+
+# Get the distinct values from every set
+selectFields=c(
+  "Hugo_Symbol", "Entrez_Gene_Id",
+  "Chromosome","Start_position","End_position",
+  "Variant_Classification","Variant_Type",
+  "Reference_Allele","Tumor_Seq_Allele2",
+  "dbSNP_RS","dbSNP_Val_Status",
+  "Genome_Change",
+  "Annotation_Transcript",
+  "cDNA_Change","Codon_Change","Protein_Change",
+  "isDeleterious","isTCGAhotspot","TCGAhsCnt",'isCOSMIChotspot', 'COSMIChsCnt',"ExAC_AF")
+
+annotations_previous <- previous.release.maf %>% dplyr::rename(Tumor_Seq_Allele2=Tumor_Seq_Allele1) %>% dplyr::select(selectFields) %>% distinct()
+annotations_CGA <- CGA_based_calls %>% dplyr::select(selectFields) %>% distinct()
+```
+
+```{r}
+# Join on Chromosome, positions, reference allele and tumor allele and then deal with differences
+annotations_final <- merge(
+  annotations_previous, annotations_CGA, 
+  by=c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2'), all = T)
+
+# Now consolidate all the fields to reach a consensus of annotations
+fields_to_consolidate <- selectFields %>% .[which(!(. %in% c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2')))]
+```
+
+```{r eval=TRUE}
+# Determine where the conflicts are (the way this is written now, this takes a while...)
+for (f in fields_to_consolidate) {
+  start_time <- Sys.time()
+  annotations_final[,paste0('PROPOSED_', f)] <- apply(annotations_final[,paste0(f, c('.x', '.y'))], 1, function(x) {
+    res <- unique(x) %>% .[!is.na(.)]
+    
+    # If all 3 are NA then we can leave as NA potentially?
+    if (length(res) > 1) {
+      res <- 'CONFLICT'
+    }
+    if (length(res) == 0) {
+      return(NA)
+    }
+    return(res)
+  })
+  print(paste0(Sys.time()-start_time, ' for ', f))
+}
+```
+
+```{r eval=FALSE}
+# This snippet below was previously used to determine where the annotation conflicts were when first merging VA and CGA results. Moving forward it will be unnessary (unless there are changes to the pipeline annotations)
+# It would be good to clean this up and allow a user to quickly check any potential conflicts
+# Go one by one and determine how to resolve
+# (1) use the VA, CGA Entrez_IDs; use the VA, CGA Hugo_Symbol
+# (2) use the VA, CGA Variant_Classification; 
+# (3) They all agree on variant type
+# (4) dbSNP_RS -> collapse all three columns and split values by '|'
+# (5) dbSNP_Val_Status -> looks like it's NA for everything...
+# (6) Genome_Change -> some are marked as '' rather than NA - remove these and it should be fine
+# (7) Annotation transcript -> this depends... will look more closely into it/pick one
+# (8) cDNA_Change -> there are some differences here as well between CGA and VA. These are the same ones that are wrong with Codon_Change and Protein_Change
+# isDeleterious has some cases where the old annotations have it flipped so should flip to newer ones?
+# isTCGAhotspot one case where VA and previous are marking a TCGA hotspot (TCGAhsCnt are all set)
+# use the newer COSMIC counts and isCOSMIC
+# ExAC_AF look good
+
+# annotations_final %>%
+#   filter(PROPOSED_cDNA_Change=='CONFLICT') %>%
+#   dplyr::select(c(
+#     'Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2', 
+#     colnames(.)[grep('cDNA_Change', colnames(.))]
+#   )) %>%
+#   filter(!(is.na(cDNA_Change) & is.na(cDNA_Change.x) & is.na(cDNA_Change.y))) #%>%
+#   #filter(cDNA_Change.x!=cDNA_Change.y)
+# annotations_final <- read_tsv('~/Downloads/annotations_final.tsv', col_types = cols(.default = "c"))
+
+```
+
+```{r}
+# For dbSNP_RS, we are combining the unique ones with '|'
+annotations_final$PROPOSED_dbSNP_RS <- apply(annotations_final[,c("dbSNP_RS.x", "dbSNP_RS.y", "PROPOSED_dbSNP_RS")], 1, function(x) {
+  res <- NA
+  if (is.na(x[['PROPOSED_dbSNP_RS']]) | x[['PROPOSED_dbSNP_RS']] != 'CONFLICT') {
+    res <- x[['PROPOSED_dbSNP_RS']]
+  } else {
+    res <- c(x[['dbSNP_RS.x']], x[['dbSNP_RS.y']]) %>%
+      .[!is.na(.)] %>% strsplit(., split='|', fixed = TRUE) %>%  
+      unlist() %>% unique() %>%
+      paste(., collapse ='|')
+  }
+  return(res)
+})
+
+# Use the CGA annotations in cases of conflict as it appears that this resolves most of the conflicts
+for (f in fields_to_consolidate) {
+  col_n <- paste0('PROPOSED_', f)
+  ii <- which(!is.na(annotations_final[,col_n]) & annotations_final[,col_n]=='CONFLICT')
+  annotations_final[ii,col_n] <- annotations_final[ii, paste0(f, '.y')]
+  
+  if (f %in% c('Hugo_Symbol', 'Entrez_Gene_Id')) {
+    jj = which(is.na(annotations_final[,col_n]))
+    annotations_final[jj,col_n] <- annotations_final[jj, paste0(f, '.x')]
+  }
+}
+
+cleaned_annotations <- annotations_final %>% dplyr::select(
+  Chromosome, Start_position, End_position, Reference_Allele, Tumor_Seq_Allele2, colnames(.)[grep('PROPOSED_', colnames(.))]
+)
+colnames(cleaned_annotations) %<>% gsub('PROPOSED_', '', .)
+cleaned_annotations <- cleaned_annotations %>% distinct()
+```
+
+```{r}
+# Remove the remaining duplicates
+cleaned_annotations <- cleaned_annotations[!duplicated(cleaned_annotations[,c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2')]),]
+```
+
+```{r}
+# Finish up by adding the annotations in, set the build and strand parameters and then should be good to go
+ready_for_upload <- merged_latest_release %>%
+  # mutate(Start_position=as.character(Start_position), End_position=as.character(End_position)) %>%
+  dplyr::select('Tumor_Sample_Barcode', 'Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele1', paste0(c('CGA_WES', 'SangerWES', 'SangerRecalibWES', 'RNAseq', 'HC', 'RD', 'WGS'), '_AC')) %>%
+  left_join(.,
+    cleaned_annotations %>% dplyr::rename(Tumor_Seq_Allele1=Tumor_Seq_Allele2),
+    by = c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele1')
+  )
+
+# Add the strand and build columns. Also, we should add '' in the places of NAs? To differentiate between missed sites and just not screened sites
+ready_for_upload$NCBI_Build = '37'
+ready_for_upload$Strand = '+'
+```
+
+```{r}
+# Save the MAF, ready for upload to taiga
+field_order <- colnames(previous.release.maf) %>% .[which((. %in% colnames(ready_for_upload)))] %>% .[!grepl('_AC$', .)]
+field_order <- c(field_order, paste0(c('CGA_WES', 'SangerWES', 'SangerRecalibWES', 'RNAseq', 'HC', 'RD', 'WGS'), '_AC'))
+```
+
+```{r}
+# Save the ready to upload file to upload to taiga
+write.table(
+  ready_for_upload[,field_order], 
+  paste0('~/Documents/Analysis/DepMap_omics/FC_PostProcessing/WES/Mutations/data/', releaseName, '/mutations.', releaseName, '.tsv'), 
+  sep = '\t', quote = F, row.names = F)
+```
+
+#### Compare to previous release
+
+I would run some checks here comparing the results to the previous releases MAF. Namely:
+
+- Count the total number of mutations per cell line, split by type (SNP, INS, DEL)
+- Count the total number of mutations observed by position (group by chromosome, start position, end position and count the number of mutations)
+- Look at specific differences between the two MAFs (join on DepMap_ID, Chromosome, Start position, End position, Variant_Type). I would do this for WES only
+
+### (2) Load previous datasets with calls 
+
+If we want to reconstruct the MAF from the filtered CCLE2 data, we can run the code chunks below
+
+```{r eval=TRUE}
+# Hybrid capture files. This is the MAF where the pre-filtered counts come from
+hcsnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/HC1650_snp_stringent.maf', select = desired_fields)
+hcind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/HC1650_indel_stringent.maf', select = desired_fields)
+
+# Remove ALEXANDERCELLS_LIVER from HC, because this is the same as PCLF5_LIVER
+hcsnp %<>% filter(Tumor_Sample_Barcode != 'ALEXANDERCELLS_LIVER-Tumor')
+hcind %<>% filter(Tumor_Sample_Barcode != 'ALEXANDERCELLS_LIVER-Tumor')
+
+# Remove recurrent mutations
+hcsnp <- removeRec(hcsnp)$res
+hcind <- removeRec(hcind)$res
+
+# Fix samples names
+hcsnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+hcind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+
+# Ready to be merged
+```
+
+```{r eval=TRUE}
+# Sanger based data
+sangersnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/Sanger_snp_stringent.maf', select = desired_fields)
+sangerind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/Sanger_indel_stringent.maf', select = desired_fields)
+
+# Remove recurrent mutations
+sangersnp <- removeRec(sangersnp)$res
+sangerind <- removeRec(sangerind)$res
+
+# Fix samples names
+sangersnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+sangerind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+
+# remove failed Sanger samples (8+1 samples) 
+a=load('/Volumes/xchip_datasci/gkugener/DM_OMICS/SangerWESvsCCLE.RData')
+sangerind = subset(sangerind,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(sFail))))
+sangersnp = subset(sangersnp,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(sFail))))
+```
+
+```{r eval=TRUE}
+# This is the Recalibrated Sanger data
+sangerRecalibsnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/SangerRecalib_snp_stringent.maf', select = desired_fields)
+sangerRecalibind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/SangerRecalib_indel_stringent.maf', select = desired_fields)
+
+# Remove recurrent mutations
+sangerRecalibsnp <- removeRec(sangerRecalibsnp)$res
+sangerRecalibind <- removeRec(sangerRecalibind)$res
+
+# Fix samples names
+sangerRecalibsnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+sangerRecalibind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+
+# Remove failed Sanger samples
+a=load(file='/Volumes/xchip_datasci/gkugener/DM_OMICS/SangerRecalibWESvsCCLE.RData')
+sangerRecalibind = subset(sangerRecalibind,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(Sanger_mismatchCLS))))
+sangerRecalibsnp = subset(sangerRecalibsnp,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(Sanger_mismatchCLS))))
+```
+
+```{r eval=TRUE}
+# Raindance
+rdsnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RD_snp_stringent.maf', select = desired_fields)
+rdind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RD_indel_stringent.maf', select = desired_fields)
+
+# Remove recurrent
+rdsnp = removeRec(rdsnp)$res
+rdind = removeRec(rdind)$res
+rdind = removeRec(rdind)$res  #only for RD, some samples are completely filtered so in the second time, some more indels reach the 5% thr
+
+# Remove RD indels outside target genes 
+bed = read.table('/Volumes/xchip_cle/Resources/Raindance/targetsInRaindance.bed', sep='\t', comment.char = '@', stringsAsFactors = FALSE)
+chr = match(bed[,1],c(1:22,'X','Y'))
+fpos = chr*1E9 +bed[,2]
+tpos = chr*1E9 +bed[,3]
+indpos = match(rdind$Chromosome,c(1:22,'X','Y')) *1E9 +rdind$Start_position
+covered = sapply(indpos, function(x){sum((x>=fpos)&(x<=tpos))})
+rdind = subset(rdind, covered>0)
+
+rdsnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+rdind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+```
+
+```{r eval=FALSE}
+ccle2_mutations_all <- fread('/Volumes/xchip_cle/analysis/mghandi/CCLE2/txt/mutations/ccle2maf_ExcludSangerDriftedSubset_20180820.txt', select = desired_fields)
+```
+
+```{r eval=TRUE}
+# WGS
+wgssnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/WGS_snp_stringent.maf', select = desired_fields)
+wgsind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/WGS_indel_stringent.maf', select = desired_fields)
+
+# Remove recurrent mutations
+wgssnp <- removeRec(wgssnp)$res
+wgsind <- removeRec(wgsind)$res
+
+# Fix samples names
+wgssnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+wgsind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+```
+
+```{r eval=TRUE}
+rna1snp =fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RNAgtx_snp_stringent.maf', select = c(desired_fields, 'i_qual'))
+rna2=fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RNAth_extvcf_stringent_unfilt.maf', select = c(desired_fields, 'i_qual', 'i_read_depth'))
+
+rna2$tumor_f=as.numeric(rna2$t_alt_count)/(as.numeric(rna2$t_ref_count)+as.numeric(rna2$t_alt_count))
+
+rna2snp <- rna2 %>% filter(Variant_Type %in% c('SNP','DNP','TNP','ONP'))
+rna2ind <- rna2 %>% filter(Variant_Type %in% c('INS','DEL'))
+
+rna1snp = removeRec(rna1snp)$res
+rna2snp = removeRec(rna2snp)$res
+rna3snp = intersectmafs(rna1snp,rna2snp)
+
+rna2ind = removeRec(rna2ind)$res
+rna3ind = removeLowQ(rna2ind)
+rna3ind = rna3ind[,match(colnames(VA_IND), colnames(rna3ind))]
+
+# Fix samples names
+rna3snp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+rna3ind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
+```
+
+```{r eval=TRUE}
+# We can save these matrices so we can just start from here in future releases and save (hopefully) on loading time and processing time above
+snp = plyr::rbind.fill(wgssnp,sangersnp,sangerRecalibsnp,rna3snp,hcsnp,rdsnp)
+ind = plyr::rbind.fill(wgsind,sangerind,sangerRecalibind,rna3ind,hcind,rdind)
+
+# write.table(snp, '/Volumes/xchip_datasci/gkugener/DM_OMICS/Mutations/SNP_other_sources_ready_for_join.tsv', sep='\t', quote=F, row.names=F)
+# write.table(ind, '/Volumes/xchip_datasci/gkugener/DM_OMICS/Mutations/INDELS_other_sources_ready_for_join.tsv', sep ='\t', quote=F, row.names=F)
+```
+
+```{r}
+# snp <- fread('/Volumes/xchip_datasci/gkugener/DM_OMICS/Mutations/SNP_other_sources_ready_for_join.tsv')
+# ind <- fread('/Volumes/xchip_datasci/gkugener/DM_OMICS/Mutations/INDELS_other_sources_ready_for_join.tsv')
+
+selectFields=c(
+  "Hugo_Symbol", "Entrez_Gene_Id",
+  "NCBI_Build",
+  "Chromosome","Start_position","End_position","Strand",
+  "Variant_Classification","Variant_Type",
+  "Reference_Allele","Tumor_Seq_Allele2",
+  "dbSNP_RS","dbSNP_Val_Status",
+  "Genome_Change",
+  "Annotation_Transcript",
+  "Tumor_Sample_Barcode",
+  "cDNA_Change","Codon_Change","Protein_Change",
+  "isDeleterious","isTCGAhotspot","TCGAhsCnt",'isCOSMIChotspot', 'COSMIChsCnt',"ExAC_AF")
+
+snp = plyr::rbind.fill(CGA_SNP, snp)
+ind = plyr::rbind.fill(CGA_IND, ind)
+```
+
+```{r eval=FALSE}
+# We need to have unique values for the following columns:
+# isDeleterious, isCOSMIChotspot, isTCGAhotspot, TCGAcnt, COSMICcnt, ExAC_AF (and some others actually as well)
+distinct_snps <- snp %>% 
+  filter(pass) %>%
+  dplyr::select(c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2')) %>%
+  distinct()
+
+isDeleterious_mapping <- snp %>% 
+  filter(pass) %>%
+  dplyr::select(c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2', 'isDeleterious')) %>%
+  distinct()
+
+# We can ignore NAs, because if we merge NAs will remain NAs
+isCOSMIChotspot_mapping <- snp %>% 
+  filter(pass) %>%
+  filter(!is.na(isCOSMIChotspot)) %>%
+  dplyr::select(c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2', 'isCOSMIChotspot', 'COSMIChsCnt')) %>%
+  distinct()
+
+isTCGAhotspot_mapping <- snp %>% 
+  filter(pass) %>%
+  # filter(!is.na(isTCGAhotspot)) %>%
+  dplyr::select(c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2', 'isTCGAhotspot', 'TCGAhsCnt')) %>%
+  distinct()
+
+# ExAC_AF
+ExAC_AF_mapping <- snp %>% 
+  filter(pass) %>%
+  filter(!is.na(ExAC_AF)) %>%
+  dplyr::select(c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2', 'ExAC_AF')) %>%
+  distinct()
+```
+
+```{r}
+# Remove recurrent mutations
+distinct_columns_to_keep <- c(
+  'Tumor_Sample_Barcode', 
+  'Chromosome', 'Start_position', 'End_position', 
+  'Reference_Allele', 'Tumor_Seq_Allele2'
+)
+
+# Here we find the unique mutation combinations and create a new data frame. We then will add the AC at that position for each screening method used
+# The keep all argument is not the best but this is currently what Mahmoud's script does as well (removing the duplicated)
+# snp %<>% filter(pass) %>% dplyr::select(distinct_columns_to_keep) %>% distinct()
+# ind %<>% filter(pass) %>% dplyr::select(distinct_columns_to_keep) %>% distinct()
+
+snp %<>% filter(pass) %>% dplyr::select(selectFields) %>%
+  distinct(Tumor_Sample_Barcode, Chromosome, Start_position, End_position, Reference_Allele, Tumor_Seq_Allele2, .keep_all = T)
+ind %<>% filter(pass) %>% dplyr::select(selectFields) %>%
+  distinct(Tumor_Sample_Barcode, Chromosome, Start_position, End_position, Reference_Allele, Tumor_Seq_Allele2, .keep_all = T)
+```
+
+```{r}
+# Now we want to add the AF form each type (we will use a left join, since that makes the most sense)
+snp %<>% addAC_cleaned(given = ., to_add = CGA_SNP, given_name = 'CGA_WES_AC')
+snp %<>% addAC_cleaned(given = ., to_add = sangersnp, given_name = 'SangerWES_AC')
+snp %<>% addAC_cleaned(given = ., to_add = sangerRecalibsnp, given_name = 'SangerRecalibWES_AC')
+snp %<>% addAC_cleaned(given = ., to_add = rna3snp, given_name = 'RNAseq_AC')
+snp %<>% addAC_cleaned(given = ., to_add = hcsnp, given_name = 'HC_AC')
+snp %<>% addAC_cleaned(given = ., to_add = rdsnp, given_name = 'RD_AC')
+snp %<>% addAC_cleaned(given = ., to_add = wgssnp, given_name = 'WGS_AC')
+
+ind %<>% addAC_cleaned(given = ., to_add = CGA_IND, given_name = 'CGA_WES_AC')
+ind %<>% addAC_cleaned(given = ., to_add = sangerind, given_name = 'SangerWES_AC')
+ind %<>% addAC_cleaned(given = ., to_add = sangerRecalibind, given_name = 'SangerRecalibWES_AC')
+ind %<>% addAC_cleaned(given = ., to_add = rna3ind, given_name = 'RNAseq_AC')
+ind %<>% addAC_cleaned(given = ., to_add = hcind, given_name = 'HC_AC')
+ind %<>% addAC_cleaned(given = ., to_add = rdind, given_name = 'RD_AC')
+ind %<>% addAC_cleaned(given = ., to_add = wgsind, given_name = 'WGS_AC')
+```
+
+```{r}
+# A subset of data (WGS, RNAseq, Sanger(not recalib) data), did not go through the latest version of oncotator, so some of the ExAC frequencies are wrong and need to be filtered. Here we filter those: 
+load(file = '/Volumes/xchip_datasci/gkugener/DM_OMICS/maf18q1sub.RData')
+
+maf18q1sub$vstr = varstr(maf18q1sub) # CL + variant
+maf18q1sub$vonlystr = varonlystr(maf18q1sub) # variant only
+
+snp.vstr = varstr(snp)
+ind.vstr = varstr(ind)
+snp.vonlystr = varonlystr(snp)
+ind.vonlystr = varonlystr(ind)
+
+# Determine which allele frequencies match and which presumably would need to be changed
+i1 = match(snp.vonlystr, maf18q1sub$vonlystr)
+table(snp$ExAC_AF== maf18q1sub$i_ExAC_AF[i1])
+i1 = match(ind.vonlystr, maf18q1sub$vonlystr)
+table(ind$ExAC_AF!= maf18q1sub$i_ExAC_AF[i1]) # Four are not consistent
+ind$ExAC_AF[which(ind$ExAC_AF != maf18q1sub$i_ExAC_AF[i1])]
+maf18q1sub$i_ExAC_AF[i1][which(maf18q1sub$i_ExAC_AF[i1] != ind$ExAC_AF)]
+
+cbind(ind$ExAC_AF,maf18q1sub$i_ExAC_AF[i1], maf18q1sub$PASS[i1])[which(!(ind$ExAC_AF== maf18q1sub$i_ExAC_AF[i1])),]
+  
+maf18q1sub= subset(maf18q1sub, (!PASS)&filtExAC)
+dim(maf18q1sub)
+
+i1 = match(snp.vonlystr, maf18q1sub$vonlystr)
+table(is.na(i1))
+jj = which(!is.na(i1))
+table(snp$WES_AC[jj])  # this should be empty -- assuming that WES filters worked -- empty means " " (some number) -- , 
+  # Above should not necessarily be empty with depmap (18q4+) data 
+  #View(snp[which(!is.na(i1)),])
+
+i1 = match(ind.vonlystr, maf18q1sub$vonlystr)
+table(is.na(i1))
+jj = which(!is.na(i1))
+table(ind$WES_AC[jj])  # this should be empty -- assuming that WES filters worked, This should not necessarily be empty with depmap (18q4+) data 
+  
+  
+snp.del = subset(snp, !is.na(match(varonlystr(snp), maf18q1sub$vonlystr)))
+snp = subset(snp, is.na(match(varonlystr(snp), maf18q1sub$vonlystr)))
+ind.del = subset(ind, !is.na(match(varonlystr(ind), maf18q1sub$vonlystr)))
+ind = subset(ind, is.na(match(varonlystr(ind), maf18q1sub$vonlystr)))
+```
+
+```{r}
+## Update RSid and prot change and transcript information from  maf18q1sub -- WGS was processed with older ver of Oncotator and has inconsistent annots (eg. for hotspot indel in EGFR)
+load('/Volumes/xchip_datasci/gkugener/DM_OMICS/maf18q1fakefrq.RData')
+
+maf18q1fakefrq$vonlystr=varonlystr(maf18q1fakefrq)
+snp.vonlystr = varonlystr(snp)
+ind.vonlystr = varonlystr(ind)
+ii = match(ind.vonlystr, maf18q1fakefrq$vonlystr)
+    
+    
+table(ind$Variant_Classification==maf18q1fakefrq$Variant_Classification[ii])
+    
+    
+flds =c(
+  'Hugo_Symbol', 'Entrez_Gene_Id', 
+  'Variant_Classification', 'Variant_Type',
+  'dbSNP_RS', 'dbSNP_Val_Status',
+  'Annotation_Transcript', 'cDNA_Change','Codon_Change', 'Protein_Change')
+    
+j.ind = match(c(flds,'ExAC_AF'), colnames(ind))
+j.snp = match(c(flds,'ExAC_AF'), colnames(snp))
+j.maf = match(c(flds,'i_ExAC_AF'), colnames(maf18q1fakefrq))
+
+i.ind = match(ind.vonlystr, maf18q1fakefrq$vonlystr)
+jj = which(!is.na(i.ind))
+table(ind[jj, j.ind]==maf18q1fakefrq[i.ind[jj], j.maf])
+ind[jj, j.ind]=maf18q1fakefrq[i.ind[jj], j.maf]
+
+i.snp = match(snp.vonlystr, maf18q1fakefrq$vonlystr)
+jj = which(!is.na(i.snp))
+table(snp[jj, j.snp]==maf18q1fakefrq[i.snp[jj], j.maf])
+snp[jj, j.snp]=maf18q1fakefrq[i.snp[jj], j.maf]
+
+## remove ExAC counts for RPL22 K16fs## latest version of ExAC does not have them, indel in this locus is commonly mistaken with sequencing error
+ii = which(ind$Hugo_Symbol =='RPL22' & ind$Start_position %in% c(6257784,6257785))
+if(length(ii)>0){ind$ExAC_AF[ii] = NA}
+ii = which(ind$Hugo_Symbol =='RPL22' & ind$Start_position==6257784)
+ind$TCGAhsCnt[ii] =10
+ii = which(ind$Hugo_Symbol =='RPL22' & ind$Start_position==6257785)
+ind$TCGAhsCnt[ii] =20
+```
+
+
+```{r}
+snp = polish(snp)
+ind = polish(ind)
+maf = rbind(snp,ind)
+```
+
+```{r}
+# mark regions outside HC as NA
+bed = read.table('/Volumes/xchip_cle/Resources/HC1650/novartis_ncle_1650_genes.Homo_sapiens_assembly19.targets.plus300nt_flanks.interval_list', sep='\t', comment.char = '@', stringsAsFactors = FALSE)
+
+chr = match(bed[,1],c(1:22,'X','Y'));
+fpos = chr*1E9 +bed[,2];
+tpos = chr*1E9 +bed[,3]
+pos = match(maf$Chromosome,c(1:22,'X','Y')) *1E9 +maf$Start_position
+covered = sapply(pos, function(x){sum((x>=fpos)&(x<=tpos))})
+maf$HC_AC[which(covered==0)] = 'NA'
+```
+
+```{r}
+# mark regions outside RD as NA
+bed = read.table('/Volumes/xchip_cle/Resources/Raindance/targetsInRaindance.bed', sep='\t', comment.char = '@', stringsAsFactors = FALSE)
+chr = match(bed[,1],c(1:22,'X','Y'));fpos = chr*1E9 +bed[,2]; tpos = chr*1E9 +bed[,3]
+pos = match(maf$Chromosome,c(1:22,'X','Y')) *1E9 +maf$Start_position
+covered = sapply(pos, function(x){sum((x>=fpos)&(x<=tpos))})
+maf$RD_AC[which(covered==0)] = 'NA'
+```
+
+```{r}
+# if only in 1 set and wes,hc,wgs ='', then require at least 8 reads, and 5 alt reads 
+## this filter is for reducing RNAseq false positives 
+notdet = (maf$WES_AC=='' | maf$WGS_AC=='' | maf$HC_AC=='')
+
+z = cbind(maf$WES_AC,maf$WGS_AC,maf$HC_AC,maf$SangerRecalibWES_AC, maf$RNAseq_AC, maf$RD_AC)
+ndet = rowSums(z!='NA' & z!='')
+```
+
+```{r}
+#some comparison of Sanger Recalib and Sanger vcfs, and copying data from vcfs for samples missing recalib
+tmp =subset(maf, ndet==0)
+tmp[order(-as.numeric(tmp$TCGAhsCnt))[1:10],]  
+tmp = subset(maf, maf$SangerRecalibWES_AC=='NA' & maf$SangerWES_AC!='NA')
+q = unique(tmp$Tumor_Sample_Barcode)
+tmp = subset(maf, maf$Tumor_Sample_Barcode %in% q)
+table(tmp$SangerRecalibWES_AC)
+tmp = subset(tmp,SangerRecalibWES_AC!='NA')  
+table(tmp$Tumor_Sample_Barcode)  # why for these two cell lines, in some rows there is NA for SangerRecalibWES_AC ?? -- most likely because no indels where detected in recalib so it was assumed as missing
+cls = names(table(tmp$Tumor_Sample_Barcode))
+
+ii = which(maf$SangerRecalibWES_AC=='NA' & maf$SangerWES_AC!='NA' & maf$Tumor_Sample_Barcode %in% cls)
+maf$SangerRecalibWES_AC[ii]=''  ## instead of NA, we use "", because the samples were present but no indels passed filters 
+
+tmp = subset(maf, maf$SangerRecalibWES_AC=='NA' & maf$SangerWES_AC!='NA')
+q = unique(tmp$Tumor_Sample_Barcode)
+inSangerVcfBUTnotRecalib = setdiff(q, Sanger_mismatchCLS)
+ii = which(maf$Tumor_Sample_Barcode %in% inSangerVcfBUTnotRecalib)
+table(maf$SangerRecalibWES_AC[ii])
+table(maf$Tumor_Sample_Barcode[ii])
+maf$SangerRecalibWES_AC[ii] = maf$SangerWES_AC[ii] ## For these 19 samples, we are copying variant calls from the Sanger vcfs (these are the samples with missing bams -- probably the compressed bam files that we did not processe)
+```
+
+```{r}
+# Need to look at this a little more closely to determine what is going on here
+notdet = (maf$WES_AC=='' | maf$WGS_AC=='' | maf$HC_AC=='')
+
+z =cbind(maf$CGA_WES_AC, maf$WES_AC,maf$WGS_AC,maf$HC_AC,maf$SangerRecalibWES_AC, maf$RNAseq_AC, maf$RD_AC, maf$SangerWES_AC)
+
+head(maf %>% filter(!is.na(CGA_WES_AC), CGA_WES_AC != '', CGA_WES_AC != 'NA'))
+
+head(z)
+
+ndet = rowSums((z!='NA' & z!='')[,1:6])
+table(ndet)
+ii = ((ndet==1)&notdet)
+  
+# This part here takes a long time (the coverage function specifically). So we may want to rewrite it
+coverage = function(x){sum(as.numeric(unlist(strsplit(paste(x,':'), ':', fixed=TRUE))), na.rm=TRUE)}
+nalt = function(x){as.numeric(unlist(strsplit(paste(x,':'), ':', fixed=TRUE))[[1]])}
+
+apply(head(z), 2, function(x) {sapply(x, coverage)})
+
+
+covs = apply(z,2, function(x){sapply(x,coverage)})
+nalts = apply(z,2, function(x){sapply(x,nalt)})
+
+scovs = rowSums(covs[,1:5], na.rm=TRUE)
+salts = rowSums(nalts[,1:5], na.rm=TRUE)
+
+afs = nalts/covs
+afsm=apply(afs[,1:5], 1, max, na.rm=TRUE)
+afshc=afs[,6]; afshc[is.na(afshc)]= -Inf;
+afsSang=afs[,7]; afsSang[is.na(afsSang)]= -Inf;
+covSang=covs[,7]; covSang[is.na(covSang)]= -Inf;
+altSang=nalts[,7]; altSang[is.na(altSang)]= -Inf;
+maf$ndet = ndet
+```
+
+```{r}
+AF_pass = ((afsm>=0.05)|(afsSang>=0.05)|(afshc>=0.10))  ## allelic fraction must be greater than 5% (and greater than 10% for raindance)
+
+COV_pass = (scovs>=8 & salts>=4) | (covSang>=8 & altSang>=4)
+
+pass = ((COV_pass | !notdet) & AF_pass)
+
+
+tmp = subset(maf,!pass )
+tmp[order(-as.numeric(tmp$TCGAhsCnt))[1:10],]  
+
+maf = subset(maf, pass)
+
+jj = which(maf$COSMIChsCnt=='NA' )
+maf$COSMIChsCnt[jj]=0
+maf$isCOSMIChotspot[jj]='FALSE'
+jj = which(maf$TCGAhsCnt=='NA' )
+maf$TCGAhsCnt[jj]=0
+
+jj = which(maf$ExAC_AF=='NA' )
+maf$ExAC_AF[jj]=''
+
+ndet = maf$ndet; 
+maf= maf[,-which(colnames(maf)=='ndet')]
+
+maf = subset(maf, ndet>0)
+
+maf$DepMap_ID = maf$Tumor_Sample_Barcode
+```
+
+```{r}
+# Fix mutect2 oncotator issue 
+maf$NCBI_Build = 37 
+maf$Strand = '+' 
+```
+
+```{r}
+write.table(maf,file = paste0('/Volumes/xchip_datasci/gkugener/DM_OMICS/WES/Mutations/data/CCLE_',releaseName,'_maf_',format(Sys.time(), "%Y%m%d"),'.txt'), quote=FALSE, row.names=FALSE, sep='\t')
+```
