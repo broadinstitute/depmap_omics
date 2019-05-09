@@ -38,7 +38,7 @@ We want to apply filters to the fusion table to reduce the number of artifacts i
 * Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
 * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
 
-```{r eval=TRUE}
+```{r, eval=TRUE}
 tentative_new_release_unfiltered_fusions <- read_tsv(tentative_new_release_unfiltered_fusions_path, col_types = cols(.default = 'c'))
 
 ccle_totals <- tentative_new_release_unfiltered_fusions %>%

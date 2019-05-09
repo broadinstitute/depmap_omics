@@ -20,7 +20,7 @@ This document outlines how we process the RNAseq data from FireCloud in preparat
 * Quality control: look at the number of genes that have 0 TPM values (proxy for low read count)
 * Remove failed samples and save counts, transcripts, and gene files to be uploaded to taiga
 
-```{r include=FALSE}
+```{r, include=FALSE}
 release <- '19Q2'
 directory_to_save_files_to <- '/Volumes/xchip_datasci/gkugener/DepMap_Omics/RNAseq/Expression/data/'
 
@@ -124,7 +124,7 @@ if (length(transcripts_samples_to_add_one_off) > 0) {
 }
 ```
 
-```{r eval=FALSE}
+```{r, eval=FALSE}
 # This is where we would process the exons in future releaes...
 ```
 
@@ -212,7 +212,7 @@ tpm_genes %<>% dplyr::select(c("gene_id","transcript_id(s)", pass))
 transcripts %<>% dplyr::select("transcript_id", "gene_id", pass)
 ```
 
-```{r eval=TRUE}
+```{r, eval=TRUE}
 # Save files for taiga
 write.table(
   counts_genes, 
