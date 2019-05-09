@@ -477,6 +477,14 @@ generate_gene_level_matrix_from_segments <- function(gene_mapping, segments) {
 gene_level_data <- generate_gene_level_matrix_from_segments(allENTREZG, segments_gaps_filled)
 ```
 
+```{r}
+# Generate the new hg38-cn based gene level matrix
+gene_level_data_hg38 <- gene_level_data %>%
+  dplyr::mutate(rn=paste0(SYMBOL, ' (', EGID, ')')) %>%
+  dplyr::select(c('rn', colnames(.)[grep('ACH\\-[0-9]+', colnames(.))])) %>%
+  column_to_rownames(var='rn') %>% t()
+```
+
 ## Upload to taiga
 
 These snippets create the matrices that are ultimately uploaded to taiga. I would suggest running the 'result validation' snippets first to ensure that there are not huge changes to the results from the previous release. If there are, validate that they are expected.
@@ -515,14 +523,6 @@ We compare the gene level copy number data to previous releases. The changes we 
 
 * Changes in pipeline: involving realignment or new parameters in the pipeline. We expect that 99% of all genes will be unaffected by this
 * Changes in copy number source: often, we will get sequencing for a sample that previously was using SNP or Sanger WES. We would expect to see some changes in these cell lines copy number profiles
-
-```{r}
-# Generate the new hg38-cn based gene level matrix
-gene_level_data_hg38 <- gene_level_data %>%
-  dplyr::mutate(rn=paste0(SYMBOL, ' (', EGID, ')')) %>%
-  dplyr::select(c('rn', colnames(.)[grep('ACH\\-[0-9]+', colnames(.))])) %>%
-  column_to_rownames(var='rn') %>% t()
-```
 
 ```{r}
 # Comparison function
