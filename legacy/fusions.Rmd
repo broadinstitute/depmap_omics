@@ -17,13 +17,11 @@ This document contains the code used to generate the unfiltered and filtered ver
 ```{r}
 release <- '19Q2'
 directory_to_save_files_to <- '/Volumes/xchip_datasci/gkugener/DepMap_Omics/RNAseq/Fusions/data/'
-filtepath = 
 # Make directory for release if it does not exist
 dir.create(paste0(directory_to_save_files_to), showWarnings = T)
 dir.create(paste0(directory_to_save_files_to, release), showWarnings = T)
-
 # Path to fusion calls from FireCloud
-
+tentative_new_release_unfiltered_fusions_path <- '~/Downloads/Fusions.aggregated (1).tsv'
 ```
 
 ## Generate filtered fusion table
@@ -39,7 +37,31 @@ We want to apply filters to the fusion table to reduce the number of artifacts i
 * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
 
 ```{r eval=TRUE}
-filtered_fusion <- filter_fusion()
+tentative_new_release_unfiltered_fusions <- read_tsv(tentative_new_release_unfiltered_fusions_path, col_types = cols(.default = 'c'))
+ccle_totals <- tentative_new_release_unfiltered_fusions %>%
+  group_by(LeftBreakpoint, RightBreakpoint) %>%
+  dplyr::summarise(count=n()) %>%
+  arrange(-count)
+# Add number of times observed in CCLE
+tentative_new_release_unfiltered_fusions %<>% left_join(., ccle_totals %>% dplyr::rename(CCLE_count=count), by=c('LeftBreakpoint', 'RightBreakpoint'))
+# Filters we use
+tentative_new_release_filtered_fusions <- tentative_new_release_unfiltered_fusions %>%
+  # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes, 
+  filter(!grepl('^HLA\\-', `#FusionName`)) %>%
+  filter(!grepl('chrM', LeftBreakpoint), !grepl('chrM', RightBreakpoint)) %>%
+  # (2) Remove red herring fusions
+  filter(!grepl('GTEx_recurrent', annots, ignore.case = T)) %>%
+  filter(!grepl('DGD_PARALOGS', annots)) %>%
+  filter(!grepl('HGNC_GENEFAM', annots)) %>%
+  filter(!grepl('Greger_Normal', annots)) %>%
+  filter(!grepl('Babiceanu_Normal', annots)) %>%
+  filter(!grepl('ConjoinG', annots)) %>%
+  filter(!grepl('NEIGHBORS', annots)) %>%
+  # (3) Remove recurrent in this dataset (>= 25 samples)
+  filter(CCLE_count < 25) %>%
+  # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and minFAF<0.02), or 
+  filter(!(SpliceType=="INCL_NON_REF_SPLICE" & LargeAnchorSupport=="NO_LDAS" & FFPM < 0.1)) %>%
+  filter(FFPM > 0.05) # STAR-Fusion suggests using 0.1, but after looking at the translocation data, this looks like it might be too aggressive
 ```
 
 Dimensions of unfiltered dataset: `r dim(tentative_new_release_unfiltered_fusions)`

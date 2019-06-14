@@ -3,7 +3,7 @@ title: "Generating DepMap mutation dataset"
 author: "Guillaume Kugener"
 ---
 
-```{r, include=FALSE}
+```{r include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -18,6 +18,8 @@ dir.create(paste0(directory_to_save_files_to, release), showWarnings = T)
 # download the file and remove the prefix, so care needs to be take in these cases (the best way is to make sure that every cell line in the set on
 # FireCloud is represented by only one sample and that Sanger, Broad WES are processed separately)
 tentative_release_cga_wes_pipeline_merged_maf <- '~/Downloads/DM19Q2_COMPLETE_SET.mergedMAF.txt'
+
+
 ```
 
 ## Overview
@@ -298,7 +300,7 @@ annotations_final <- merge(
 fields_to_consolidate <- selectFields %>% .[which(!(. %in% c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2')))]
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # Determine where the conflicts are (the way this is written now, this takes a while...)
 for (f in fields_to_consolidate) {
   start_time <- Sys.time()
@@ -318,7 +320,7 @@ for (f in fields_to_consolidate) {
 }
 ```
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 # This snippet below was previously used to determine where the annotation conflicts were when first merging VA and CGA results. Moving forward it will be unnessary (unless there are changes to the pipeline annotations)
 # It would be good to clean this up and allow a user to quickly check any potential conflicts
 # Go one by one and determine how to resolve
@@ -422,7 +424,7 @@ I would run some checks here comparing the results to the previous releases MAF.
 
 If we want to reconstruct the MAF from the filtered CCLE2 data, we can run the code chunks below
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # Hybrid capture files. This is the MAF where the pre-filtered counts come from
 hcsnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/HC1650_snp_stringent.maf', select = desired_fields)
 hcind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/HC1650_indel_stringent.maf', select = desired_fields)
@@ -438,7 +440,7 @@ hcind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 # Ready to be merged
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # Sanger based data
 sangersnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/Sanger_snp_stringent.maf', select = desired_fields)
 sangerind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/Sanger_indel_stringent.maf', select = desired_fields)
@@ -454,7 +456,7 @@ sangerind = subset(sangerind,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCe
 sangersnp = subset(sangersnp,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(sFail))))
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # This is the Recalibrated Sanger data
 sangerRecalibsnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/SangerRecalib_snp_stringent.maf', select = desired_fields)
 sangerRecalibind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/SangerRecalib_indel_stringent.maf', select = desired_fields)
@@ -470,7 +472,7 @@ sangerRecalibind = subset(sangerRecalibind,!(Tumor_Sample_Barcode %in% ccle.to.a
 sangerRecalibsnp = subset(sangerRecalibsnp,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(Sanger_mismatchCLS))))
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # Raindance
 rdsnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RD_snp_stringent.maf', select = desired_fields)
 rdind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RD_indel_stringent.maf', select = desired_fields)
@@ -490,11 +492,11 @@ rdsnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 rdind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 ```
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ccle2_mutations_all <- fread('/Volumes/xchip_cle/analysis/mghandi/CCLE2/txt/mutations/ccle2maf_ExcludSangerDriftedSubset_20180820.txt', select = desired_fields)
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # WGS
 wgssnp = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/WGS_snp_stringent.maf', select = desired_fields)
 wgsind = fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/WGS_indel_stringent.maf', select = desired_fields)
@@ -506,7 +508,7 @@ wgssnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 wgsind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 rna1snp =fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RNAgtx_snp_stringent.maf', select = c(desired_fields, 'i_qual'))
 rna2=fread('/Volumes/xchip_cle/analysis/mghandi/CCLE/txt/RNAth_extvcf_stringent_unfilt.maf', select = c(desired_fields, 'i_qual', 'i_read_depth'))
 rna2$tumor_f=as.numeric(rna2$t_alt_count)/(as.numeric(rna2$t_ref_count)+as.numeric(rna2$t_alt_count))
@@ -523,7 +525,7 @@ rna3snp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 rna3ind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # We can save these matrices so we can just start from here in future releases and save (hopefully) on loading time and processing time above
 snp = plyr::rbind.fill(wgssnp,sangersnp,sangerRecalibsnp,rna3snp,hcsnp,rdsnp)
 ind = plyr::rbind.fill(wgsind,sangerind,sangerRecalibind,rna3ind,hcind,rdind)
@@ -550,7 +552,7 @@ snp = plyr::rbind.fill(CGA_SNP, snp)
 ind = plyr::rbind.fill(CGA_IND, ind)
 ```
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 # We need to have unique values for the following columns:
 # isDeleterious, isCOSMIChotspot, isTCGAhotspot, TCGAcnt, COSMICcnt, ExAC_AF (and some others actually as well)
 distinct_snps <- snp %>% 

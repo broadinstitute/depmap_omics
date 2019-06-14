@@ -1,0 +1,223 @@
+---
+title: "Process RNAseq from FireCloud"
+author: "Guillaume Kugener"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+source('~/Documents/Analysis/RScripts/load_libraries_and_annotations.R')
+```
+
+## Overview
+
+This document outlines how we process the RNAseq data from FireCloud in preparation for the DepMap release. The steps are:
+
+* Download the rsem_genes_tpm.txt.gz and rsem_transcripts_tpm.txt.gz files from FireCloud (https://portal.firecloud.org/#workspaces/broad-firecloud-ccle/DepMap_hg38_RNAseq)
+* Fix the column names (they are prefixed with ccle2_, ibm_, dm_ and then ARXSPAN_ID. We remove the prefix)
+* Compare to the previous release (correlations)
+* Quality control: look at the number of genes that have 0 TPM values (proxy for low read count)
+* Remove failed samples and save counts, transcripts, and gene files to be uploaded to taiga
+
+```{r include=FALSE}
+release <- '19Q2'
+directory_to_save_files_to <- '/Volumes/xchip_datasci/gkugener/DepMap_Omics/RNAseq/Expression/data/'
+# Make directory for release if it does not exist
+dir.create(paste0(directory_to_save_files_to), showWarnings = T)
+dir.create(paste0(directory_to_save_files_to, release), showWarnings = T)
+# These files are downloaded from FireCloud/Terra
+download_paths <- list(
+  tpm_genes='~/Downloads/DM19Q2_PATHS_CORRECTED_V2.rsem_genes_tpm.txt.gz',
+  tpm_transcripts='~/Downloads/DM19Q2_PATHS_CORRECTED_V2.rsem_transcripts_tpm.txt.gz',
+  counts_gene='~/Downloads/DM19Q2_PATHS_CORRECTED_V2.rsem_genes_expected_count.txt.gz',
+  exons='~/Downloads/DM19Q2_PATHS_CORRECTED_V2.mergedExonUsage.RData'
+)
+previous_release_tpm <- load.from.taiga(data.name='depmap-rnaseq-expression-data-363a',
+  data.version=15, 
+  data.file='CCLE_depMap_19Q1_TPM') %>% 
+  set_colnames(stringr::str_extract(string=colnames(.), pattern='ENSG[0-9]+'))
+```
+
+Release: `r release`
+
+```{r}
+# Process counts
+counts_genes <- read_tsv(
+  file = download_paths$counts_gene
+  # col_types = cols(.default = "c")
+)
+# loop to add one offs (in the case that a subset of the samples didn't run in time as happened in 19Q2)
+counts_samples_to_add_one_off <- c('~/Downloads/dm_ACH-000309.rsem.genes.results', '~/Downloads/ibm_ACH-001852.rsem.genes.results')
+if (length(counts_samples_to_add_one_off) > 0) {
+  for (f in counts_samples_to_add_one_off) {
+    s_id <- stringr::str_extract(pattern = '(dm|ibm|ccle2)_ACH\\-[0-9]+', string = f)
+    
+    # Check that these samples are not already present in the dataset
+    if (s_id %in% colnames(counts_genes)) {
+      print(paste0(s_id, ' is already in the dataset, skipping...'))
+      next
+    }
+    
+    data_to_add <- read_tsv(f) %>%
+      dplyr::select(gene_id, `transcript_id(s)`, expected_count) %>%
+      set_colnames(c('gene_id', 'transcript_id(s)', s_id))
+    
+    counts_genes %<>% left_join(., data_to_add, by=c('gene_id', 'transcript_id(s)'))
+  }
+}
+```
+
+```{r}
+# TPM (genes)
+tpm_genes <- read_tsv(
+  file = download_paths$tpm_genes
+  # col_types = cols(.default = "c")
+)
+# loop to add one offs (in the case that a subset of the samples didn't run in time as happened in 19Q2)
+samples_to_add_one_off <- c('~/Downloads/dm_ACH-000309.rsem.genes.results', '~/Downloads/ibm_ACH-001852.rsem.genes.results')
+if (length(samples_to_add_one_off) > 0) {
+  for (f in samples_to_add_one_off) {
+    s_id <- stringr::str_extract(pattern = '(dm|ibm|ccle2)_ACH\\-[0-9]+', string = f)
+    
+    # Check that these samples are not already present in the dataset
+    if (s_id %in% colnames(counts_genes)) {
+      print(paste0(s_id, ' is already in the dataset, skipping...'))
+      next
+    }
+    
+    data_to_add <- read_tsv(f) %>%
+      dplyr::select(gene_id, `transcript_id(s)`, TPM) %>%
+      set_colnames(c('gene_id', 'transcript_id(s)', s_id))
+    
+    tpm_genes %<>% left_join(., data_to_add, by=c('gene_id', 'transcript_id(s)'))
+  }
+}
+```
+
+```{r}
+# Transcripts (genes)
+transcripts <- read_tsv(
+  file = download_paths$tpm_transcripts,
+  # col_types = cols(.default = "c")
+)
+# loop to add one offs (in the case that a subset of the samples didn't run in time as happened in 19Q2)
+transcripts_samples_to_add_one_off <- c('~/Downloads/dm_ACH-000309.rsem.isoforms.results', '~/Downloads/ibm_ACH-001852.rsem.isoforms.results')
+if (length(transcripts_samples_to_add_one_off) > 0) {
+  for (f in transcripts_samples_to_add_one_off) {
+    s_id <- stringr::str_extract(pattern = '(dm|ibm|ccle2)_ACH\\-[0-9]+', string = f)
+    data_to_add <- read_tsv(f) %>%
+      dplyr::select(gene_id, transcript_id, TPM) %>%
+      set_colnames(c('gene_id', 'transcript_id', s_id))
+    
+    transcripts %<>% left_join(., data_to_add, by=c('gene_id', 'transcript_id'))
+  }
+}
+```
+
+```{r eval=FALSE}
+# This is where we would process the exons in future releaes...
+```
+
+```{r}
+# Fix the colnames (for cases where there are mixed values (CCLE_name and DepMap_IDs))
+rename_function <- function(columns) {
+  columns_new <- ifelse(columns %in% c('Name', 'Description', 'gene_id', 'transcript_id', "transcript_id(s)"), columns, ifelse(
+    grepl('ACH\\-[0-9]+$', columns), 
+    stringr::str_extract(string=columns, pattern='ACH\\-[0-9]+'), ccle.to.arxspan(columns, ignore.problems = T)
+  ))
+  
+  return(columns_new)
+}
+colnames(counts_genes) %<>% rename_function(.)
+colnames(tpm_genes) %<>% rename_function(.)
+colnames(transcripts) %<>% rename_function(.)
+```
+
+```{r}
+# Compare the previous release to the current release (using correlations)
+tentative_new_release_tpm <- tpm_genes %>% 
+  mutate(gene=stringr::str_extract(string=gene_id, pattern='ENSG[0-9]+')) %>%
+  filter(!grepl('PAR_Y', gene_id)) %>% # Not sure what these are
+  filter(!grepl('ERCC', gene_id)) %>% # These are the ERCC spike ins
+  dplyr::select(c('gene', colnames(.)[grepl('ACH\\-[0-9]+', colnames(.))])) %>%
+  column_to_rownames(var='gene') %>%
+  t() %>%
+  # If we have two samples with the same arx span id (we shouldn't if the sample set is designed correctly) then it will complain below
+  set_rownames(stringr::str_extract(string=row.names(.), pattern = 'ACH\\-[0-9]+'))
+# Now do correlations (of log2+1 TPM)
+overlap_genes <- intersect(colnames(previous_release_tpm), colnames(tentative_new_release_tpm))
+overlap_cell_lines <- intersect(row.names(previous_release_tpm), row.names(tentative_new_release_tpm))
+# Check to see if any cell lines from the previous release are not present in this dataset (this should not be the case unless there is a known processing error, so this list should be empty)
+row.names(previous_release_tpm) %>% setdiff(row.names(tentative_new_release_tpm))
+# Correlations of samples (could also just look at the set of most variable )
+# Intersect the top 2000 most variable in both
+tpm_19q1_most_variable <- apply(previous_release_tpm, 2, sd) %>% .[order(-.)] %>% names() %>% .[1:2000]
+tpm_19q2_most_variable <- apply(log2(tentative_new_release_tpm+1), 2, sd) %>% .[order(-.)] %>% names() %>% .[1:2000]
+# 95% overlap
+most_variable_for_correlations <- intersect(tpm_19q1_most_variable, tpm_19q2_most_variable)
+length(most_variable_for_correlations)/2000
+correlation_rnaseq_data_releases <- cor(
+  t(previous_release_tpm[overlap_cell_lines, most_variable_for_correlations]),
+  t(log2(tentative_new_release_tpm[overlap_cell_lines, most_variable_for_correlations]+1)),
+)
+```
+
+```{r}
+# Plot the diagonal to see same sample correlations (which should be at or near 1)
+# diag(correlation_rnaseq_data_releases)[names(head(number_of_zeros))]
+hist(diag(correlation_rnaseq_data_releases), 100)
+```
+
+```{r}
+# Quick QC
+# We are looking for samples with a worrying amount of zeros
+zero_threshold <- 39000
+number_zeros <- apply(tpm_genes[,3:ncol(tpm_genes)], 2, FUN = function(x) length(x[x == 0]))
+nzdf <- data.frame(CL=names(number_zeros), nz=number_zeros, stringsAsFactors = F)
+```
+
+```{r}
+# Plot of the samples that fail
+ggplot(nzdf, aes(nz)) +
+  geom_histogram(bins = 100, color='black', fill='white') +
+  geom_vline(xintercept = zero_threshold, linetype=2) +
+  geom_label_repel(data = nzdf %>% filter(nz > zero_threshold), aes(x=nz, y=0, label=arxspan.to.ccle(CL)), size=2, fill=rgb(1,1,1,0.5))
+```
+
+```{r}
+pass <- number_zeros[order(-number_zeros)] %>% .[. < zero_threshold] %>% names()
+# These samples failed
+setdiff(colnames(tpm_genes), pass) %>% .[!(. %in% c('gene_id', 'transcript_id(s)'))]
+counts_genes %<>% dplyr::select(c("gene_id","transcript_id(s)", pass))
+tpm_genes %<>% dplyr::select(c("gene_id","transcript_id(s)", pass))
+transcripts %<>% dplyr::select("transcript_id", "gene_id", pass)
+```
+
+```{r eval=TRUE}
+# Save files for taiga
+write.table(
+  counts_genes, 
+  file = paste0(directory_to_save_files_to, release,'/DM',release,'.counts.tsv'), 
+  sep = '\t', row.names = F, quote = F)
+write.table(
+  tpm_genes, 
+  file = paste0(directory_to_save_files_to, release,'/DM',release,'.tpm.tsv'), 
+  sep = '\t', row.names = F, quote = F)
+write.table(
+  transcripts, 
+  file = paste0(directory_to_save_files_to, release,'/DM',release,'.transcripts.tsv'),
+  sep = '\t', row.names = F, quote = F)
+```
+
+
+
+
+
+
+
+
+
+
+
+
