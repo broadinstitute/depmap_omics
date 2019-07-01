@@ -59,8 +59,6 @@ removeRec = function(maf, thrCCLErat = 0.05, tcgathr=5, rescueListFN='/Volumes/x
   
   vlstr = varlocstr(maf)
   vclstr = varcellocstr(maf)
-  
-  
   frq = table(vlstr[!duplicated(vclstr)])
 #  hsi = which(maf$TCGAhsCnt<=20)
 #  thr = max(frq[match(vlstr[hsi],names(frq))]) +1; ## at this frequency, all the tcga_hs mutations have freq >20 
@@ -158,20 +156,6 @@ addAC_cleaned <- function(given, to_add, given_name) {
 
 ```{r}
 # This is the universe of the fields that we want to load from the MAF. Not all of these columns will be present in the CGA MAF
-desired_fields <- c(
-  'Hugo_Symbol', 'Entrez_Gene_Id',
-  'Center', 'NCBI_Build',
-  'Chromosome', 'Start_position', 'End_position', 'Strand',
-  'Variant_Classification', 'Variant_Type',
-  'Reference_Allele', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2', 
-  'dbSNP_RS', 'dbSNP_Val_Status',
-  'Genome_Change',
-  'Annotation_Transcript',
-  'Tumor_Sample_Barcode',
-  'cDNA_Change', 'Codon_Change', 'Protein_Change',
-  't_alt_count', 't_ref_count', 'tumor_f',
-  'isDeleterious','isTCGAhotspot', 'TCGAhsCnt','isCOSMIChotspot','COSMIChsCnt',
-  'ExAC_AF', 'i_ExAC_AF', 'exac_af', 'PASS')
 CGA_based_calls <- fread(tentative_release_cga_wes_pipeline_merged_maf, select = desired_fields) %>%
   dplyr::rename(ExAC_AF=i_ExAC_AF) %>%
   # We should validate that there are not duplicate types
@@ -195,17 +179,18 @@ First we need to do an additional step of filtering on coverage and number
 
 ```{r}
 library(taigr)
+
 distinct_columns_to_keep <- c("Tumor_Sample_Barcode", "Chromosome", "Start_position", "End_position", "Reference_Allele", "Tumor_Seq_Allele2")
+additional_columns_to_keep <- c('t_alt_count', 't_ref_count', 'ExAC_AF','isDeleterious', 'isCOSMIChotspot', 'COSMIChsCnt', 'isTCGAhotspot', 'TCGAhsCnt')
+
 previous.release.maf <- load.from.taiga(data.name='depmap-mutation-calls-9be3', data.version=12, data.file='depmap_19Q1_mutation_calls')
 if (colnames(previous.release.maf)[1] == 'X1') {
  previous.release.maf[,1] <- NULL 
 }
 # We are adding the CGA_WES_AC back
-merged_latest_release <- previous.release.maf %>% dplyr::select(-CCLE_WES_AC, -CGA_WES_AC)
-additional_columns_to_keep <- c('t_alt_count', 't_ref_count', 'ExAC_AF','isDeleterious', 'isCOSMIChotspot', 'COSMIChsCnt', 'isTCGAhotspot', 'TCGAhsCnt')
+merged_latest_release <- previous.release.maf %>% dplyr::select(-CCLE_WES_AC, -CGA_WES_AC) >%
 # Merge in CGA data. We join the previous release MAF on the distinct columns to keep above
-merged_latest_release %<>%
-  # In the CGA pipeline, Tumor_Seq_Allele2 is is the tumor allele. In the release MAF, Tumor_Seq_Allele1 is the tumor allele
+# In the CGA pipeline, Tumor_Seq_Allele2 is is the tumor allele. In the release MAF, Tumor_Seq_Allele1 is the tumor allele
   dplyr::rename(Tumor_Seq_Allele2=Tumor_Seq_Allele1) %>%
   merge(.,
     rbind(CGA_SNP, CGA_IND) %>% 
@@ -418,7 +403,13 @@ I would run some checks here comparing the results to the previous releases MAF.
 
 - Count the total number of mutations per cell line, split by type (SNP, INS, DEL)
 - Count the total number of mutations observed by position (group by chromosome, start position, end position and count the number of mutations)
-- Look at specific differences between the two MAFs (join on DepMap_ID, Chromosome, Start position, End position, Variant_Type). I would do this for WES only
+- Look at specific differences between the two MAFs (join on DepMap_ID, Chromosome, Start position, End position, Variant_Type). I would do this for WES only@
+
+```{r}
+
+```
+
+## Previous version from Mahmoud
 
 ### (2) Load previous datasets with calls 
 
@@ -451,7 +442,7 @@ sangerind <- removeRec(sangerind)$res
 sangersnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 sangerind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 # remove failed Sanger samples (8+1 samples) 
-a=load('/Volumes/xchip_datasci/gkugener/DM_OMICS/SangerWESvsCCLE.RData')
+a = load('/Volumes/xchip_datasci/gkugener/DM_OMICS/SangerWESvsCCLE.RData')
 sangerind = subset(sangerind,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(sFail))))
 sangersnp = subset(sangersnp,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(sFail))))
 ```
@@ -467,7 +458,7 @@ sangerRecalibind <- removeRec(sangerRecalibind)$res
 sangerRecalibsnp %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 sangerRecalibind %<>% mutate(Tumor_Sample_Barcode=fixSampleName(Tumor_Sample_Barcode))
 # Remove failed Sanger samples
-a=load(file='/Volumes/xchip_datasci/gkugener/DM_OMICS/SangerRecalibWESvsCCLE.RData')
+a = load(file='/Volumes/xchip_datasci/gkugener/DM_OMICS/SangerRecalibWESvsCCLE.RData')
 sangerRecalibind = subset(sangerRecalibind,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(Sanger_mismatchCLS))))
 sangerRecalibsnp = subset(sangerRecalibsnp,!(Tumor_Sample_Barcode %in% ccle.to.arxspan(CleanCellLineName(Sanger_mismatchCLS))))
 ```

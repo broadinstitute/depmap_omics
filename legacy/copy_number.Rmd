@@ -51,7 +51,7 @@ wes.priority.cn.seg.profiles <- taigr::load.from.taiga(data.name='segmented-cn-w
 wes.priority.cn.gene.profiles <- taigr::load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=20, data.file='wes_priority_cn_gene_matrix')
 ```
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 # This chunk is kept in here for reference, but does not need to be run for the release
 # This was used to combine the copy number calls from Sanger and the Broad from WES
 # For the Broad samples, we want the calls that use the ICE/AGILENT PON for chr1-22,X
@@ -143,7 +143,7 @@ if (min(wes.priority.cn.seg.profiles$Segment_Mean) < 0) {
 
 Here, we combine the previous release segments with the additional segments we have processed this quarter. We replace Sanger WES and Broad SNP prioritized cell lines with the Broad WES version if it is now available in the newly downloaded data.
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 broad_wes_cell_lines_in_new <- new_copy_number %>% filter(Source=='Broad WES') %$% unique(DepMap_ID)
 replaced_cell_lines <- wes.priority.cn.seg.profiles %>%
   distinct(DepMap_ID, Source) %>%
@@ -155,7 +155,7 @@ new_cell_lines <- broad_wes_cell_lines_in_new %>%
 sanger_lines_using <- wes.priority.cn.seg.profiles %>% filter(Source=='Sanger WES') %$% DepMap_ID %>% unique()
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # So we only keep the Sanger lines that were previously used
 new_copy_number %<>% dplyr::filter(Source=='Broad WES' | (Source=='Sanger WES' & (DepMap_ID %in% sanger_lines_using)) | (Source == 'Chordoma WES' & !(DepMap_ID %in% broad_wes_cell_lines_in_new)))
 new_copy_number %<>% filter(!(Source=='Sanger WES' & DepMap_ID %in% broad_wes_cell_lines_in_new))
@@ -457,7 +457,7 @@ gene_level_data_hg38 <- gene_level_data %>%
 
 These snippets create the matrices that are ultimately uploaded to taiga. I would suggest running the 'result validation' snippets first to ensure that there are not huge changes to the results from the previous release. If there are, validate that they are expected.
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # Remove the internally embargoed lines
 black_listed_lines <- read_xlsx('~/Documents/Analysis/DepMap_omics/Embargo_and_blacklists/19Q2 Omics Blacklist and Embargo.xlsx', sheet = 'Blacklist') %>%
   magrittr::set_colnames(c('Blacklist', 'Type')) %$% Blacklist
@@ -465,11 +465,11 @@ black_listed_lines <- read_xlsx('~/Documents/Analysis/DepMap_omics/Embargo_and_b
 
 <!-- The lines below will be removed as they are in the blacklist -->
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 segments_gaps_filled %>% filter(DepMap_ID %in% black_listed_lines) %>% distinct(DepMap_ID, Source) %>% mutate(CCLE_name=arxspan.to.ccle(DepMap_ID)) %>% datatable(rownames = F)
 ```
 
-```{r, eval=TRUE}
+```{r eval=TRUE}
 # Save the segmented level data (untransformed)
 segments_gaps_filled %>%
   filter(!(DepMap_ID %in% black_listed_lines)) %>%
@@ -510,7 +510,6 @@ gene_level_comparison_matrix_gen <- function(new_mat, old_mat, cell_lines, genes
 ```
 
 ```{r}
-x_only <- gene_level_data %>% filter(Chromosome=='X') %$% paste0(SYMBOL, ' (', EGID, ')') 
 autosomal_genes <- gene_level_data %>% filter(Chromosome %in% seq(1,22)) %$% paste0(SYMBOL, ' (', EGID, ')')
 ```
 
@@ -553,7 +552,7 @@ broad_cl_diffs <- data.frame(DepMap_ID=broad_wes_cls, stringsAsFactors = F) %>%
   ))
 ```
 
-```{r, include=TRUE}
+```{r include=TRUE}
 ggplot(broad_cl_diffs, aes(case, diff, fill=case)) +
   geom_boxplot() +
   geom_hline(yintercept = 0.025, linetype=2) +
@@ -644,7 +643,7 @@ names(new_chr_bp_sum) <- paste0('chr', c(seq(2,22), 'X', 'Y'))
 new_chr_bp_sum['chr1'] <- 0
 ```
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 # I was interested to see if the differenes in the Chordoma samples that we see was due to genome changes or 
 # if the samples had always been very noisy when using our pipeline. It appears the samples had always been very noisy.
 chr_bp_hg19 <- read_tsv('~/Documents/Analysis/RScripts/Common_annotations/cytoBand.txt.gz', col_names = F) %>%
@@ -870,7 +869,7 @@ broad_snp_diffs_locations %>%
 plot(log2(new_mat[cell_lines,"CDKN2B (1030)"]+1), log2(old_mat[cell_lines, "CDKN2B (1030)"]+1))
 ```
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 # Test download of the uploaded data
 CCLE.internal.19q2.segmented.cn <- load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=22, data.file='CCLE_internal_19q2_segmented_cn')
 CCLE.internal.19q2.gene.cn <- load.from.taiga(data.name='segmented-cn-wes-prioritzed-7fe1', data.version=22, data.file='CCLE_internal_19q2_gene_cn')
