@@ -3,6 +3,13 @@
 ## in 2017
 
 # Jérémie Kalfon edited 2019
+
+library(org.Hs.eg.db) # This is using hg38 
+library(plyr)
+library(dplyr)
+library(readr)
+library(stringr)
+
 ####
 #
 # HELPER FUNC  ######################################
@@ -34,11 +41,7 @@ filterChromosomes <- function(chrom) {
 }
 
 
-library(org.Hs.eg.db) # This is using hg38 
-library(plyr)
-library(dplyr)
-library(readr)
-library(stringr)
+
 
 fusionFusions <- function(input_file_names,output_file_name){
   ## reads selected fields from maf files and aggregates them 
@@ -168,7 +171,7 @@ processSegments <- function(segment_file) {
   Num_Probes=NUM_POINTS_COPY_RATIO, Segment_Mean=MEAN_LOG2_COPY_RATIO) %>%
     
     dplyr::mutate(Source=case_when(
-      grepl('^(dm|ccle2|ibm)_', Sample) ~ 'Broad WES',
+      grepl('^(dm|ccle2|ibm|ccle)_', Sample) ~ 'Broad WES',
       grepl('^chordoma_', Sample) ~ 'Chordoma WES',
       TRUE ~ "Other WES"))
 
@@ -492,7 +495,8 @@ generateGeneLevelMatrixFromSegments <- function(gene_mapping, segments) {
     GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
   
   # Just in case we remove the prefix chr to make it work with genemapping table
-  segments %<>% mutate(seqnames=gsub('chr', '', seqnames)) 
+  segments %<>% mutate(Chromosome=gsub('chr', '', Chromosome)) 
+  segments %<>% dplyr::rename(seqnames=Chromosome, start=Start, end=End) 
 
   # Now overlap segments and genes to get gene level data
   # unique_samples <- segments_gaps_filled$DepMap_ID %>% sample(size = 100)
@@ -545,12 +549,12 @@ generateEntrezGenes <- function(genome_version='hg38'){
   allENTREZG$EGID <- mappedkeys(org.Hs.egSYMBOL)
   allENTREZG$SYMBOL <- unlist(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egSYMBOL))
 
-  allENTREZG$CHR <- unlist(lapply(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egCHR), filter.chromosomes))
+  allENTREZG$CHR <- unlist(lapply(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egCHR), filterChromosomes))
 
   allENTREZG$CHRLOC <- unlist(lapply(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egCHRLOC), 
-    filter.coordinates, coordinate.end="start" ))
+    filterCoordinates, coordinate.end="start" ))
   allENTREZG$CHRLOCEND <- unlist(lapply(mget(mappedkeys(org.Hs.egSYMBOL), org.Hs.egCHRLOCEND), 
-    filter.coordinates, coordinate.end="end"))
+    filterCoordinates, coordinate.end="end"))
 
   allENTREZG <- subset(allENTREZG, !is.na(CHR) & !is.na(CHRLOC) & !is.na(CHRLOCEND))
 
@@ -565,17 +569,16 @@ generateEntrezGenes <- function(genome_version='hg38'){
   return(allENTREZG)
 }
 
-filterSegs <- function(blacklist_url='', segments_gaps_filled){
+filterBlackListedLine <- function(filepath='', segments_gaps_filled){
   # Remove the internally embargoed lines
-  black_listed_lines <- read_xlsx(, sheet = 'Blacklist') %>%
-    magrittr::set_colnames(c('Blacklist', 'Type')) %$% Blacklist
+  black_listed_lines <- scan(file=filepath, character(), quote = "")
+  black_listed_lines 
   # Save the segmented level data (untransformed)
   segments_gaps_filled %<>%
     filter(!(DepMap_ID %in% black_listed_lines)) %>%
-    dplyr::select(DepMap_ID, Chromosome=seqnames, Start=start, End=end, Num_Probes, Segment_Mean, Source)
+    dplyr::select(DepMap_ID, Chromosome=Chromosome, Start=Start, End=End, Num_Probes, Segment_Mean, Source)
   return(segments_gaps_filled)
 }
-
 
 
 #######
@@ -583,6 +586,7 @@ filterSegs <- function(blacklist_url='', segments_gaps_filled){
 # Expression # ####################
 #
 ########
+#
 
 readCounts <- function(filepath, counts_samples_to_add_one_off=c()){
   # Process counts
@@ -831,7 +835,7 @@ addToMainMutation = function(previous.release.maf,snps_indels){
   additional_columns_to_keep <- c('t_alt_count', 't_ref_count', 'ExAC_AF','isDeleterious', 
     'isCOSMIChotspot', 'COSMIChsCnt', 'isTCGAhotspot', 'TCGAhsCnt')
   
-  merged_latest_release <- previous.release.maf %>% dplyr::select(-CCLE_WES_AC, -CGA_WES_AC) %>%
+  merged_latest_release <- previous.release.maf %>% dplyr::select(-CGA_WES_AC) %>%
   # Merge in CGA data. We join the previous release MAF on the distinct columns to keep above
   # In the CGA pipeline, Tumor_Seq_Allele2 is is the tumor allele. In the release MAF, Tumor_Seq_Allele1 is the tumor allele
     dplyr::rename(Tumor_Seq_Allele2=Tumor_Seq_Allele1) %>%
@@ -849,7 +853,6 @@ addToMainMutation = function(previous.release.maf,snps_indels){
       by = distinct_columns_to_keep,
       all = TRUE
     ) %>%
-    dplyr::rename(Tumor_Seq_Allele1=Tumor_Seq_Allele2)
   return(merged_latest_release)
 }
 
