@@ -825,34 +825,30 @@ createSNPs = function(CGA_based_calls){
   # Remove the recurrent mutations
   CGA_SNP <- removeRec(CGA_SNP)$res
   CGA_IND <- removeRec(CGA_IND)$res
-  return(list(CGA_SNP=CGA_SNP,CGA_IND=CGA_IND))
+  return(rbind(CGA_SNP, CGA_IND))
 }
 
-addToMainMutation = function(previous.release.maf,snps_indels){
+addToMainMutation = function(previous.release.maf,newrelease){
   # We are adding the CGA_WES_AC back
   distinct_columns_to_keep <- c("Tumor_Sample_Barcode", "Chromosome", "Start_position", 
-    "End_position", "Reference_Allele", "Tumor_Seq_Allele2")
+    "End_position", "Reference_Allele", "Tumor_Seq_Allele2", "ExAC_AF", "isDeleterious","isCOSMIChotspot",
+    "COSMIChsCnt", "isTCGAhotspot", "TCGAhsCnt","CGA_WES_AC")
   additional_columns_to_keep <- c('t_alt_count', 't_ref_count', 'ExAC_AF','isDeleterious', 
     'isCOSMIChotspot', 'COSMIChsCnt', 'isTCGAhotspot', 'TCGAhsCnt')
   
-  merged_latest_release <- previous.release.maf %>% dplyr::select(-CGA_WES_AC) %>%
+  merged_latest_release <- previous.release.maf %>%
   # Merge in CGA data. We join the previous release MAF on the distinct columns to keep above
   # In the CGA pipeline, Tumor_Seq_Allele2 is is the tumor allele. In the release MAF, Tumor_Seq_Allele1 is the tumor allele
-    dplyr::rename(Tumor_Seq_Allele2=Tumor_Seq_Allele1) %>%
+    dplyr::rename(Tumor_Seq_Allele2=Tumor_Seq_Allele1) %>% 
     merge(.,
-      rbind(snps_indels$CGA_SNP, snps_indels$CGA_IND) %>% 
-        dplyr::select(c(distinct_columns_to_keep, additional_columns_to_keep)) %>%
+       newrelease %>%
         mutate(CGA_WES_AC=paste0(t_alt_count, ':', t_ref_count)) %>%
-        dplyr::select(-t_alt_count, -t_ref_count) %>%
-        dplyr::rename(
-          CGA_ExAC_AF=ExAC_AF, 
-          CGA_isDeleterious=isDeleterious, 
-          CGA_isCOSMIChotspot=isCOSMIChotspot, CGA_COSMIChsCnt=COSMIChsCnt, 
-          CGA_isTCGAhotspot=isTCGAhotspot, CGA_TCGAhsCnt=TCGAhsCnt
-        ),
+        dplyr::select(c(distinct_columns_to_keep, additional_columns_to_keep)) %>%
+        dplyr::select(-t_alt_count, -t_ref_count),
       by = distinct_columns_to_keep,
       all = TRUE
     ) %>%
+    dplyr::rename(Tumor_Seq_Allele1=Tumor_Seq_Allele2)
   return(merged_latest_release)
 }
 
@@ -1002,7 +998,7 @@ filterAllelicFraction = function(merged_latest_release){
       return(alt/(total))
     })
   merged_latest_release[,'MAX_AF'] <- apply(merged_latest_release[,paste0('PERC_', 
-    c('WGS_AC','HC_AC','SangerRecalibWES_AC', 'RNAseq_AC', 'CGA_WES_AC'))], 1,
+    ac_columns)], 1,
     function(x) {
       x <- x[!is.na(x)]
       if (length(x) > 0) {
@@ -1010,15 +1006,17 @@ filterAllelicFraction = function(merged_latest_release){
       }
       return(-Inf)
     })
+  print('hey')
+  filt <- merged_latest_release[merged_latest_release[,"MAX_AF"]<0.05,]
   # Keep track of the removed variants
   removed_from_maf <- merged_latest_release %>% 
-    mutate(INCLUDE=MAX_AF > 0.05 | PERC_SangerWES_AC > 0.05 | PERC_RD_AC > 0.1) %>% 
-    filter(!INCLUDE) %>% 
-    mutate(Reason='AF filter')
-  merged_latest_release %<>% filter(
-    MAX_AF > 0.05 | PERC_SangerWES_AC > 0.05 | PERC_RD_AC > 0.1 | CGA_WES_AC == '0:0') 
+    mutate(INCLUDE=MAX_AF < 0.05 & PERC_SangerWES_AC < 0.05 & PERC_RD_AC < 0.1 & CGA_WES_AC != '0:0') %>% 
+    filter(INCLUDE)
+  print(dim(merged_latest_release))
+  merged_latest_release %<>% mutate(INCLUDE=MAX_AF > 0.05 | PERC_SangerWES_AC > 0.05 | 
+    PERC_RD_AC > 0.1 | CGA_WES_AC == '0:0') %>% filter(INCLUDE)
     # Last part is to rescue a mis-annotated TP53 mutation
-  return(list(removed_from_maf=removed_from_maf,merged_latest_release=merged_latest_release))
+  return(list(removed_from_maf=removed_from_maf,merged=merged_latest_release, filt=filt))
 }
 
 filterMinCoverage = function(merged_latest_release,removed_from_maf){
@@ -1054,7 +1052,7 @@ filterMinCoverage = function(merged_latest_release,removed_from_maf){
   # they appear misannotated. This also saves a few other cases
   merged_latest_release %<>% filter((TOTAL_COV >= 8 & TOTAL_ALTS >= 4) | (TOTAL_SANGER_UNCALIB >= 8 & 
     ALTS_SANGER_UNCALIB >= 4) | CGA_WES_AC == '0:0')
-  return(list(removed_from_maf=removed_from_maf,merged_latest_release=merged_latest_release))
+  return(list(removed_from_maf=removed_from_maf,merged=merged_latest_release))
 }
 
 mergeAnnotations = function(CGA_based_calls,previous.release.maf){
