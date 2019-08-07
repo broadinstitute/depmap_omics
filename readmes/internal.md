@@ -1,4 +1,4 @@
-# consortium_19Q
+# public_19Q3
 
 ## Dataset contents
 
@@ -6,7 +6,7 @@ This DepMap release contains data from CRISPR knockout screens from project Achi
 
 ### Achilles data
 
-This Achilles dataset contains the results of genome-scale CRISPR knockout screens for 18,333 genes in 729 cell lines. It was processed using the following steps:
+This Achilles dataset contains the results of genome-scale CRISPR knockout screens for 18,333 genes in 766 cell lines. It was processed using the following steps:
 
 - Sum raw readcounts by replicate and guide
 - Remove the list of guides with suspected off-target activity
@@ -14,8 +14,8 @@ This Achilles dataset contains the results of genome-scale CRISPR knockout scree
 - Remove replicates that fail fingerprinting match to parent or derivative lines
 - Remove replicates with total reads less than 15 million
 - Calculate log2-fold-change from pDNA counts for each replicate
+- Calculate the NNMD for each replicate using genes targeting the Hart reference non-essentials and the intersection of the Hart and Blomen essentials, and remove those with values more positive than -1.0. See Hart et al., Mol. Syst. Biol, 2014 and Blomen et al., Science, 2015
 - Remove replicates that do not have a Pearson coefficient > .61 with at least one other replicate for the line when looking at genes with the highest variance (top 3%) in gene effect across cell lines
-- Calculate the NNMD for each cell line using genes targeting the Hart reference non-essentials and the intersection of the Hart and Biomen essentials, and remove those with values more positive than -1.0. See Hart et al., Mol. Syst. Biol, 2014 and Blomen et al., Science, 2015
 - Calculate the NNMD for each cell line after averaging remaining replicates, and remove those more positive than -1.0
 - Run CERES to generate gene-level scores
 - Scale so the median of common essentials in each cell lines is -1
@@ -32,7 +32,7 @@ The source for copy number data varies by cell line. Copy number data  indicated
 - Sanger WES in all other cases
 
 
-More details about data processing will be published on bioRxiv in summer 2019.
+More details about data processing will be published on bioRxiv in summer 19Q3.
 
 ### CCLE data
 
@@ -63,6 +63,32 @@ Quarterly WES-based mutation calls are added to the existing mutation calls from
 CCLE generates RNAseq based fusion calls using the STAR-Fusion pipeline. A comprehensive overview of how the STAR-Fusion pipeline works can be found here: https://github.com/STAR-Fusion/STAR-Fusion/wiki. We run STAR-Fusion version 1.6.0 using the plug-n-play resources available in the STAR-Fusion docs for gencode v29. We run the fusion calling with default parameters except we add the --no_annotation_filter and --min_FFPM 0 arguments to prevent filtering.
 
 # Files
+
+## File: sample_info
+
+Cell line information definitions    
+
+- DepMap_ID:  Static primary key assigned by DepMap
+- stripped_cell_line_name:  Cell line name with alphanumeric characters only
+- CCLE_name:  Stripped cell line name followed by underscore and tissue assignment
+- alias:  Additional cell line identifiers (not a comprehensive list)
+- COSMIC_ID:  Cell line ID used in Cosmic cancer database
+- lineage, lineage_subtype, lineage_sub_subtype:  Cancer type classifications
+- sex:  Sex of tissue donor if known
+- source:  Source of cell line vial used by DepMap
+- Achilles_n_replicates:  Number of replicates used in Achilles CRISPR screen passing QC
+- cell_line_NNMD:  Difference in the means of positive and negative controls normalized by the standard deviation of the negative control distribution
+- culture_type:  Growth pattern of cell line (Adherent, Suspension, Mixed adherent and suspension, 3D, or Adherent (requires laminin coating))
+- culture_medium:  Medium used to grow cell line
+- cas9_activity:  Percentage of cells remaining GFP positive on days 12-14 of cas9 activity assay as measured by FACs
+- RRID:  Cellosaurus research resource identifier
+- sample_collection_site:  Tissue collection site
+- primary_or_metastasis:  Indicates whether tissue sample is from primary or metastatic site
+- disease:  General cancer lineage category
+- disease_subtype:  Subtype of disease; specific disease name
+- age:  If known, age of tissue donor at time of sample collection
+- Sanger_model_ID:  Sanger Institute Cell Model Passport ID
+- additional_info:  Further information about cell line modifications and drug resistance
 
 ## File: Achilles_gene_effect_unscaled
 

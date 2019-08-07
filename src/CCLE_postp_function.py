@@ -20,6 +20,16 @@ CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr21', 'chr22', 'chrX']
 
 
+extract_defaults = {
+    'name': 'sample_alias',
+    'bai_path': 'crai_or_bai_path',
+    'bam_path': 'cram_or_bam_path',
+    'source': 'source',
+    'id': 'individual_alias',
+    'participant': 'individual_alias'
+}
+
+
 def read(filename):
   f = open(filename, 'r')
   x = f.read().splitlines()
@@ -28,47 +38,72 @@ def read(filename):
 
 
 def createDatasetWithNewCellLines(wto, samplesetname,
-                                  wfrom1, source1, wfrom2=None, source2='U', wfrom3=None, source3='U', forcekeep=[], other_to_add=[]):
+                                  wfrom1, source1, wfrom2=None, source2='U', wfrom3=None, source3='U',
+                                  forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract=extract_defaults,
+                                  slicepos=10):
   """
+  wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
+  samplesetname: String the name of the sample set created by this new set of samples updated
+  wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
+  source1: the corresponding source name
+  Can add as much as one wants
+  forcekeep: list of sample id that you want to keep even if already in the previous workspace (will
+  cause an overwrite)
+  addonly: list of sample id that you only want to add
+  match: substring that has to be matched against the id of the samples to add them
+  other_to_add:
+  extract: if you want to specify what values should refer to what
+    dict{    'name': 
+    'bai_path': 
+    'bam_path': 
+    'source': 
+    'id':
+    ...}
 
   """
   refsamples = wto.get_samples()
   refids = refsamples['participant'].tolist()
   refids = [val[val.index('ACH'):] for val in refids if 'ACH' in val]
 
-  samples1 = wfrom1.get_samples().replace(np.nan, '', regex=True)
-  samples1 = samples1[samples1['individual_alias'].str.contains('ACH')][
-      (~samples1['individual_alias'].str.slice(0, 10).isin(refids)) |
-      (samples1['individual_alias'].str.slice(0, 10).isin(forcekeep))]
-  samples1['source'] = [source1] * samples1.shape[0]
+  samples1 = wfrom1.get_samples().replace(np.nan, '', regex=True).reset_index()
+  if len(addonly) > 0:
+    samples1 = samples1
+  samples1 = samples1[samples1[extract['id']].str.contains(match)][
+      (~samples1[extract['id']].str.slice(0, slicepos).isin(refids)) |
+      (samples1[extract['id']].isin(forcekeep))]
+  samples1[extract['source']] = [source1] * samples1.shape[0]
   if wfrom2 is not None:
-    samples2 = wfrom2.get_samples().replace(np.nan, '', regex=True)
-    samples2 = samples2[samples2['individual_alias'].str.contains('ACH')][
-        (~samples2['individual_alias'].str.slice(0, 10).isin(refids)) |
-        (samples2['individual_alias'].str.slice(0, 10).isin(forcekeep))]
-    samples2['source'] = [source2] * samples2.shape[0]
+    samples2 = wfrom2.get_samples().replace(np.nan, '', regex=True).reset_index()
+    samples2 = samples2[samples2[extract['id']].str.contains(match)][
+        (~samples2[extract['id']].str.slice(0, slicepos).isin(refids)) |
+        (samples2[extract['id']].isin(forcekeep))][samples1[extract['id']].isin(addonly)]
+    samples2[extract['source']] = [source2] * samples2.shape[0]
   else:
     samples2 = pd.DataFrame()
   if wfrom3 is not None:
-    samples3 = wfrom3.get_samples().replace(np.nan, '', regex=True)
-    samples3 = samples3[samples3['individual_alias'].str.contains('ACH')][
-        (~samples3['individual_alias'].str.slice(0, 10).isin(refids)) |
-        (samples3['individual_alias'].str.slice(0, 10).isin(forcekeep))]
-    samples3['source'] = [source3] * samples3.shape[0]
+    samples3 = wfrom3.get_samples().replace(np.nan, '', regex=True).reset_index()
+    samples3 = samples3[samples3[extract['id']].str.contains(match)][
+        (~samples3[extract['id']].str.slice(0, slicepos).isin(refids)) |
+        (samples3[extract['id']].isin(forcekeep))][samples1[extract['id']].isin(addonly)]
+    samples3[extract['source']] = [source3] * samples3.shape[0]
   else:
     samples3 = pd.DataFrame()
+  pdb.set_trace()
   samples = pd.concat([samples1, samples2, samples3], sort=False)
-
+  notfound = set(samples.index.tolist()) - set(addonly)
+  if len(notfound) > 0:
+    print('we did not found:' + str(notfound))
   sample_ids = []
   for ind, val in samples.iterrows():
-    name = val['source'] + '_' + val['individual_alias'][:10]
+    name = val[extract['source']] + '_' + val[extract['id']][:slicepos]
     refsamples = refsamples.append(pd.Series(
         {
-            "CCLE_name": val['sample_alias'],
-            "WES_bai": val['crai_or_bai_path'],
-            "WES_bam": val['cram_or_bam_path'],
-            "Source": val['source'],
-            "participant": val['individual_alias'][:10],
+            "CCLE_name": val[extract['name']],
+            "WES_bai": val[extract['bai']],
+            "WES_bam": val[extract['bam']],
+            "Source": val[extract['source']],
+            "participant": val[extract['participant']][:slicepos],
+
         }, name=name))
     sample_ids.append(name)
 
@@ -181,6 +216,7 @@ def addToMainFusion(input_filenames, main_filename):
       cols = cols[-1:] + cols[:-1]
       df = df[cols]
       df.to_csv(f, header=False, sep='\t', index=False)
+
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
   """

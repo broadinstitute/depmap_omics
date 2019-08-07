@@ -40,9 +40,6 @@ filterChromosomes <- function(chrom) {
   ifelse(length(chrom)>0, chrom, NA)
 }
 
-
-
-
 fusionFusions <- function(input_file_names,output_file_name){
   ## reads selected fields from maf files and aggregates them 
   # Load files and ensure that we are only reading in files that exist
@@ -976,7 +973,6 @@ addACCleaned <- function(given, to_add, given_name){
       by = distinct_columns_to_keep
     )
   return(res)
-
 }
 
 polish = function(maf){
