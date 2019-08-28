@@ -1,0 +1,4 @@
+firecloud-dalmatian
+numpy
+pandas
+rpy2

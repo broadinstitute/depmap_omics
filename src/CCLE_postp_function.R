@@ -18,7 +18,7 @@ library(stringr)
 
 
 filterCoordinates <- function(loc, coordinate.end, max.spread=2000000) {
-  ## Only keep coordinates on propper chromosomes
+  ## Only keep coordinates on propper  chromosomes
   loc <- as.numeric(loc[names(loc) %in% c(as.character(1:22), "X", "Y")])
   if (length(loc)==0) {
     return(NA)
