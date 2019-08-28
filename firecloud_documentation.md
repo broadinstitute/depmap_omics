@@ -142,14 +142,14 @@ There are several other tasks in this workspace. In brief:
 
 #### broad-firecloud-ccle/CCLE_implementation_CGA_WES_Characterization_TCGAControlledAccess {#broad-firecloud-ccle-ccle_implementation_cga_wes_characterization_tcgacontrolledaccess}
 
-In order to run the CGA pipeline, you need to have TCGA access. To get TCGA access, follow the instructions here: [https://docs.google.com/document/d/1xKcaQo89TmMfxCistaov7_HTctXH8WmjkGTgVCz26nU/edit](https://docs.google.com/document/d/1xKcaQo89TmMfxCistaov7_HTctXH8WmjkGTgVCz26nU/edit)
+In order to run the CGA pipeline, you need to have TCGA access. To get TCGA access, follow the instructions here: [https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit](https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit)
 
 The CGA mutations pipeline we have used in 19Q1 and 19Q2 is a copy of the CGA pipeline adapted to cell lines. CGA published their official pipeline recently on FireCloud, so I wanted to clone this version and run the samples through so that the samples are using the exact same pipeline as the CGA one. However, a subset of the samples failed when trying to use this implementation and I was not able to debug the reasons, so for now we are still using the cell line adapted version, but it may be worth looking into what caused the cell lines to fail this implementation of the pipeline, as it should be almost identical to the version we are currently using (main differences appear to be in output naming). 
 
 
 #### broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline {#broad-firecloud-ccle-depmap_mutation_calling_cga_pipeline}
 
-In order to run the CGA pipeline, you need to have TCGA access. To get TCGA access, follow the instructions here: [https://docs.google.com/document/d/1xKcaQo89TmMfxCistaov7_HTctXH8WmjkGTgVCz26nU/edit](https://docs.google.com/document/d/1xKcaQo89TmMfxCistaov7_HTctXH8WmjkGTgVCz26nU/edit)
+In order to run the CGA pipeline, you need to have TCGA access. To get TCGA access, follow the instructions here: [https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit](https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit)
 
 
 ##### Mutations {#mutations}
