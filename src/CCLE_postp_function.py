@@ -22,8 +22,8 @@ CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
 
 extract_defaults = {
     'name': 'sample_alias',
-    'bai_path': 'crai_or_bai_path',
-    'bam_path': 'cram_or_bam_path',
+    'bai': 'crai_or_bai_path',
+    'bam': 'cram_or_bam_path',
     'source': 'source',
     'id': 'individual_alias',
     'participant': 'individual_alias'
@@ -53,10 +53,10 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   match: substring that has to be matched against the id of the samples to add them
   other_to_add:
   extract: if you want to specify what values should refer to what
-    dict{    'name': 
-    'bai_path': 
-    'bam_path': 
-    'source': 
+    dict{    'name':
+    'bai_path': # changed to bai
+    'bam_path': # changed to bam
+    'source':
     'id':
     ...}
 
@@ -90,9 +90,9 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     samples3 = pd.DataFrame()
   pdb.set_trace()
   samples = pd.concat([samples1, samples2, samples3], sort=False)
-  notfound = set(samples.index.tolist()) - set(addonly)
+  notfound = set(samples.index.tolist()) - (set(samples.index.tolist()) & set(addonly))
   if len(notfound) > 0:
-    print('we did not found:' + str(notfound))
+    print('we did not find:' + str(notfound)) # samples not found in the wto workspace so will be adding them now
   sample_ids = []
   for ind, val in samples.iterrows():
     name = val[extract['source']] + '_' + val[extract['id']][:slicepos]
