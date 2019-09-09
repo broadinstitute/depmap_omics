@@ -90,7 +90,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     samples3 = pd.DataFrame()
   pdb.set_trace()
   samples = pd.concat([samples1, samples2, samples3], sort=False)
-  notfound = set(samples.index.tolist()) - set(addonly)
+  notfound = set(samples.index.tolist()) - (set(samples.index.tolist()) & set(addonly))
   if len(notfound) > 0:
     print('we did not found:' + str(notfound))
   sample_ids = []
