@@ -40,7 +40,7 @@ def read(filename):
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wfrom1, source1, wfrom2=None, source2='U', wfrom3=None, source3='U',
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract=extract_defaults,
-                                  slicepos=10):
+                                  slicepos=10, **kwargs):
   """
   wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
   samplesetname: String the name of the sample set created by this new set of samples updated
@@ -72,27 +72,44 @@ def createDatasetWithNewCellLines(wto, samplesetname,
       (~samples1[extract['id']].str.slice(0, slicepos).isin(refids)) |
       (samples1[extract['id']].isin(forcekeep))]
   samples1[extract['source']] = [source1] * samples1.shape[0]
-  if wfrom2 is not None:
-    samples2 = wfrom2.get_samples().replace(np.nan, '', regex=True).reset_index()
-    samples2 = samples2[samples2[extract['id']].str.contains(match)][
-        (~samples2[extract['id']].str.slice(0, slicepos).isin(refids)) |
-        (samples2[extract['id']].isin(forcekeep))][samples1[extract['id']].isin(addonly)]
-    samples2[extract['source']] = [source2] * samples2.shape[0]
-  else:
-    samples2 = pd.DataFrame()
-  if wfrom3 is not None:
-    samples3 = wfrom3.get_samples().replace(np.nan, '', regex=True).reset_index()
-    samples3 = samples3[samples3[extract['id']].str.contains(match)][
-        (~samples3[extract['id']].str.slice(0, slicepos).isin(refids)) |
-        (samples3[extract['id']].isin(forcekeep))][samples1[extract['id']].isin(addonly)]
-    samples3[extract['source']] = [source3] * samples3.shape[0]
-  else:
-    samples3 = pd.DataFrame()
-  pdb.set_trace()
-  samples = pd.concat([samples1, samples2, samples3], sort=False)
+
+  samples = []
+  for key, val in kwargs.iteritems():
+    if key[:-1] == "source":
+      sample = val.get_samples().replace(np.nan, '', regex=True).reset_index()
+      sample = samples[samples[extract['id']].str.contains(match)][
+          (~samples[extract['id']].str.slice(0, slicepos).isin(refids)) |
+          (samples[extract['id']].isin(forcekeep))]
+        [samples[extract['id']].isin(addonly)]
+
+      sample[extract['source']] = [kwargs["source" + key[-1]]] * samples2.shape[0]
+      if 'sample_type' in sample.columns.tolist():
+        sample = sample[sample['sample_type'] == 'Tumor']
+      samples.append(sample)
+
+  samples.append(samples1)
+  samples = pd.concat(samples, sort=False)
+
+  # if wfrom2 is not None:
+  #   samples2 = wfrom2.get_samples().replace(np.nan, '', regex=True).reset_index()
+  #   samples2 = samples2[samples2[extract['id']].str.contains(match)][
+  #       (~samples2[extract['id']].str.slice(0, slicepos).isin(refids)) |
+  #       (samples2[extract['id']].isin(forcekeep))][samples2[extract['id']].isin(addonly)]
+  #   samples2[extract['source']] = [source2] * samples2.shape[0]
+  # else:
+  #   samples2 = pd.DataFrame()
+  # if wfrom3 is not None:
+  #   samples3 = wfrom3.get_samples().replace(np.nan, '', regex=True).reset_index()
+  #   samples3 = samples3[samples3[extract['id']].str.contains(match)][
+  #       (~samples3[extract['id']].str.slice(0, slicepos).isin(refids)) |
+  #       (samples3[extract['id']].isin(forcekeep))][samples3[extract['id']].isin(addonly)]
+  #   samples3[extract['source']] = [source3] * samples3.shape[0]
+  # else:
+  #   samples3 = pd.DataFrame()
+  # samples = pd.concat([samples1, samples2, samples3], sort=False)
   notfound = set(samples.index.tolist()) - (set(samples.index.tolist()) & set(addonly))
   if len(notfound) > 0:
-    print('we did not find:' + str(notfound)) # samples not found in the wto workspace so will be adding them now
+    print('we did not find:' + str(notfound))  # samples not found in the wto workspace so will be adding them now
   sample_ids = []
   for ind, val in samples.iterrows():
     name = val[extract['source']] + '_' + val[extract['id']][:slicepos]
