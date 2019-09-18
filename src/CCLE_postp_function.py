@@ -79,8 +79,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
       sample = val.get_samples().replace(np.nan, '', regex=True).reset_index()
       sample = samples[samples[extract['id']].str.contains(match)][
           (~samples[extract['id']].str.slice(0, slicepos).isin(refids)) |
-          (samples[extract['id']].isin(forcekeep))]
-        [samples[extract['id']].isin(addonly)]
+          (samples[extract['id']].isin(forcekeep))][samples[extract['id']].isin(addonly)]
 
       sample[extract['source']] = [kwargs["source" + key[-1]]] * samples2.shape[0]
       if 'sample_type' in sample.columns.tolist():
