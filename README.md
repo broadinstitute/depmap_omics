@@ -85,9 +85,15 @@ each:
 - Uploads them to taiga.
 
 __data/__ contains important information used for processing
+
 __src__ contains the location of function files
-__\*\_pipeline__ contains some of the pipeline wdl files and script files  
+
+__\*\_pipeline__ contains some of the pipeline wdl files and script files 
+
 __ccle_tasks__ contains a notebook for each of the different additional processing that the CCLE team has to perform
+
 __legacy__ contains the previous R markdown files that were used as templates for the previous pipeline's postprocessing
+
 __readmes__ contains the readmes that are updated at each depmap releases 
+
 __temp__ contains the temp file that can get removed after processing (should be empty)
