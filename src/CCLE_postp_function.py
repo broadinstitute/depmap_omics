@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 from taigapy import TaigaClient
 tc = TaigaClient()
+import os
 
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
@@ -38,9 +39,10 @@ def read(filename):
 
 
 def createDatasetWithNewCellLines(wto, samplesetname,
-                                  wfrom1, source1, wfrom2=None, source2='U', wfrom3=None, source3='U',
+                                  wmfroms, sources,
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract=extract_defaults,
-                                  slicepos=10, **kwargs):
+                                  participantslicepos=10, accept_unknowntypes=False,
+                                  gsfolderto=None):
   """
   wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
   samplesetname: String the name of the sample set created by this new set of samples updated
@@ -64,70 +66,56 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   refsamples = wto.get_samples()
   refids = refsamples['participant'].tolist()
   refids = [val[val.index('ACH'):] for val in refids if 'ACH' in val]
+  if type(sources) is str:
+    sources = [sources]
+  if type(wmfroms) is str:
+    wmfroms = [wmfroms]
+  sampless = pd.DataFrame()
+  for source, wmfrom in zip(sources, wmfroms):
+    samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
+    samples = samples[samples[extract['id']].str.contains(match)][
+        (~samples[extract['id']].str.slice(0, participantslicepos).isin(refids)) |
+        (samples[extract['id']].isin(forcekeep))]
+    if len(addonly) > 0:
+      samples = samples[samples[extract['id']].isin(addonly)]
 
-  samples1 = wfrom1.get_samples().replace(np.nan, '', regex=True).reset_index()
-  if len(addonly) > 0:
-    samples1 = samples1
-  samples1 = samples1[samples1[extract['id']].str.contains(match)][
-      (~samples1[extract['id']].str.slice(0, slicepos).isin(refids)) |
-      (samples1[extract['id']].isin(forcekeep))]
-  samples1[extract['source']] = [source1] * samples1.shape[0]
-
-  samples = []
-  for key, val in kwargs.iteritems():
-    if key[:-1] == "source":
-      sample = val.get_samples().replace(np.nan, '', regex=True).reset_index()
-      sample = samples[samples[extract['id']].str.contains(match)][
-          (~samples[extract['id']].str.slice(0, slicepos).isin(refids)) |
-          (samples[extract['id']].isin(forcekeep))][samples[extract['id']].isin(addonly)]
-
-      sample[extract['source']] = [kwargs["source" + key[-1]]] * samples2.shape[0]
-      if 'sample_type' in sample.columns.tolist():
-        sample = sample[sample['sample_type'] == 'Tumor']
-      samples.append(sample)
-
-  samples.append(samples1)
-  samples = pd.concat(samples, sort=False)
-
-  # if wfrom2 is not None:
-  #   samples2 = wfrom2.get_samples().replace(np.nan, '', regex=True).reset_index()
-  #   samples2 = samples2[samples2[extract['id']].str.contains(match)][
-  #       (~samples2[extract['id']].str.slice(0, slicepos).isin(refids)) |
-  #       (samples2[extract['id']].isin(forcekeep))][samples2[extract['id']].isin(addonly)]
-  #   samples2[extract['source']] = [source2] * samples2.shape[0]
-  # else:
-  #   samples2 = pd.DataFrame()
-  # if wfrom3 is not None:
-  #   samples3 = wfrom3.get_samples().replace(np.nan, '', regex=True).reset_index()
-  #   samples3 = samples3[samples3[extract['id']].str.contains(match)][
-  #       (~samples3[extract['id']].str.slice(0, slicepos).isin(refids)) |
-  #       (samples3[extract['id']].isin(forcekeep))][samples3[extract['id']].isin(addonly)]
-  #   samples3[extract['source']] = [source3] * samples3.shape[0]
-  # else:
-  #   samples3 = pd.DataFrame()
-  # samples = pd.concat([samples1, samples2, samples3], sort=False)
-  notfound = set(samples.index.tolist()) - (set(samples.index.tolist()) & set(addonly))
+    samples[extract['source']] = source
+    if 'sample_type' in samples.columns:
+      if not accept_unknowntypes:
+        samples = samples[samples['sample_type'].isin(['Tumor'])]
+    sampless = pd.concat([sampless, samples], sort=False)
+  notfound = set(addonly) - set(sampless.index.tolist())
   if len(notfound) > 0:
     print('we did not find:' + str(notfound))  # samples not found in the wto workspace so will be adding them now
   sample_ids = []
-  for ind, val in samples.iterrows():
-    name = val[extract['source']] + '_' + val[extract['id']][:slicepos]
+  if gsfolderto is not None:
+    for i, val in sampless.iterrows():
+      res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
+      if res == 256:
+        sampless.drop(i)
+        print('we got sample ' + str(i) + ' that had inexistant bam path')
+    sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
+    sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
+  print(sampless)
+  if len(sampless) == 0:
+    raise Error("no new samples in this matrix")
+  for ind, val in sampless.iterrows():
+    name = val[extract['source']] + '_' + val[extract['id']][:participantslicepos]
     refsamples = refsamples.append(pd.Series(
         {
             "CCLE_name": val[extract['name']],
             "WES_bai": val[extract['bai']],
             "WES_bam": val[extract['bam']],
             "Source": val[extract['source']],
-            "participant": val[extract['participant']][:slicepos],
+            "participant": val[extract['participant']][:participantslicepos],
 
         }, name=name))
     sample_ids.append(name)
-
   print("uploading new samples")
   wto.upload_samples(refsamples)
   print("creating a sample set")
   wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
-  return sample_ids
+  return sample_ids, refsamples['WES_bam'].values
 #################
 #
 # VALIDATION

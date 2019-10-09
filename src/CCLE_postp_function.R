@@ -566,17 +566,14 @@ generateEntrezGenes <- function(genome_version='hg38'){
   return(allENTREZG)
 }
 
-filterBlackListedLine <- function(filepath='', segments_gaps_filled){
+filterBlackListedLine <- function(black_listed_lines, segments_gaps_filled){
   # Remove the internally embargoed lines
-  black_listed_lines <- scan(file=filepath, character(), quote = "")
-  black_listed_lines 
   # Save the segmented level data (untransformed)
   segments_gaps_filled %<>%
     filter(!(DepMap_ID %in% black_listed_lines)) %>%
     dplyr::select(DepMap_ID, Chromosome=Chromosome, Start=Start, End=End, Num_Probes, Segment_Mean, Source)
   return(segments_gaps_filled)
 }
-
 
 #######
 #
