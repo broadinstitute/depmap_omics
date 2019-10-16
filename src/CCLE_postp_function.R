@@ -419,9 +419,7 @@ reprioritizeData <- function(new_copy_number, wes.priority.cn.seg.profiles){
   new_copy_number %<>% magrittr::set_colnames(
     c('DepMap_ID','Chromosome','Start','End','Num_Probes','Segment_Mean','Source'))
   print(new_copy_number)
-  if (min(wes.priority.cn.seg.profiles$Segment_Mean) < 0) {
-    wes.priority.cn.seg.profiles %<>% mutate(Segment_Mean=2^Segment_Mean)
-  }
+  wes.priority.cn.seg.profiles %<>% mutate(Segment_Mean=(2^Segment_Mean)+1)
 
   broad_wes_cell_lines_in_new <- new_copy_number %>% filter(Source=='Broad WES') %$% unique(DepMap_ID)
   replaced_cell_lines <- wes.priority.cn.seg.profiles %>%
