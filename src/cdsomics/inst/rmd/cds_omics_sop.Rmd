@@ -1,0 +1,152 @@
+---
+title: "CDS Omics SOP"
+author: "Allie Warren, Jordan Bryan"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    theme: flatly
+    highlight: default
+    toc: false
+    toc_float: false
+    code_folding: hide
+bibliography: ../bib/bibliography.bib
+---
+
+# Genomics datasets {.tabset .tabset-pills .tabset-fade}
+
+## Gene expression
+
+## Gene mutations
+
+## Gene copy number
+
+## Gene methylation
+
+## Protein expression
+
+# Taiga locations for Omics data
+
+# Format for Omics data on Taiga
+
+## Entity ID
+
+### Genes
+
+Genes are identified by their **Entrez ID**s. Entrez IDs are integer identifiers that look like this:
+
+`673`
+
+#### Other common identifiers
+
+- HUGO gene symbol
+    - Character identifier; most human-readable format, e.g. `BRAF`
+
+- Ensembl ID
+    - Mixed character/digit identifier with the format ENS[species prefix][feature type prefix][a unique eleven digit number], e.g. `ENSG00000157764`
+
+### Cell lines
+
+Cell lines are identified by their **Arxspan Broad ID**s. These are mixed character/integer identifiers that look like this: 
+
+`ACH-001270`
+
+#### Other common identifiers
+
+- Cancer Cell Line Encyclopedia (CCLE) name
+    - All-caps human-readable identifier with cell line name and lineage, e.g. `A375_SKIN`
+
+### Compounds
+
+Compounds are identified by their **Broad ID**s. A Broad ID is a 22-character identifier that looks like this:
+
+`BRD-K50691590-001-04-8`
+
+The first 13 characters identify the structure of the compound. The following 8 characters encode extra information having to do with the compound batch and the vendor / supplier.
+
+#### Other common identifiers
+
+- Compound name
+    - Human-readable character name, e.g. `Nutlin-3`
+    - Note: *not necessarily unique to particular compound / batch screened*
+
+### Template file structure for taiga upload
+
+```
++-- matrix
++-- row_metadata
++-- col_metadata
+```
+
+- `matrix`
+    - Data in 2D array
+    - Row and column identifiers map to entities, e.g. cell lines and genes
+- `row_metadata`
+    - Tabular metadata
+    - Minimum requirement is one column with header name `row_id`
+    - Other headers refer to metadata associated with row entities
+- `col_metadata`
+    - Tabular metadata
+    - Minimum requirement is one column with header name `col_id`
+    - Other headers refer to metadata associated with column entities
+
+### Template description for taiga upload
+
+```
+### File title ###
+
+Insert title here
+
+### Original file source ###
+
+- path/to/file(s) on Broad server (if applicable)
+- taiga URL(s) for original data source(s) (if applicable)
+
+### Code ###
+
+- Code snippet used to transform original data to uploaded form (if applicable)
+- Link to code repository + script used to transform original data to uploaded form (if applicable)
+
+### Notes ###
+
+- Additional notes / description of dataset...
+
+
+```
+
+## Tabular data
+
+### Template file structure for taiga upload
+
+```
++-- table
+```
+
+- `table`
+    - Tabular data
+    - First line of each column (header) labels the contents of each column
+
+### Template description for taiga upload
+
+```
+### File title ###
+
+Insert title here
+
+### Original file source ###
+
+- path/to/file(s) on Broad server (if applicable)
+- taiga URL(s) for original data source(s) (if applicable)
+
+### Code ###
+
+- Code snippet used to transform original data to uploaded form (if applicable)
+- Link to code repository + script used to transform original data to uploaded form (if applicable)
+
+### Notes ###
+
+- Additional notes / description of dataset...
+
+
+```
+
+# References
