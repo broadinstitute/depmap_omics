@@ -27,7 +27,16 @@ extract_defaults = {
     'bam': 'cram_or_bam_path',
     'source': 'source',
     'id': 'individual_alias',
-    'participant': 'individual_alias'
+    'participant': 'individual_alias',
+    'bait_set': 'bait_set',
+    'hs_hs_library_size': 'hs_hs_library_size',
+    'hs_het_snp_sensitivity': 'hs_het_snp_sensitivity',
+    'hs_mean_bait_coverage': 'hs_mean_bait_coverage',
+    'hs_mean_target_coverage': 'hs_mean_target_coverage',
+    'hs_on_target_bases': 'hs_on_target_bases',
+    'total_reads': 'total_reads',
+    'release_date': 'release_date',
+    'mean_depth': 'mean_depth'
 }
 
 
@@ -73,8 +82,9 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   sampless = pd.DataFrame()
   for source, wmfrom in zip(sources, wmfroms):
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
-    samples = samples[samples[extract['id']].str.contains(match)][
-        (~samples[extract['id']].str.slice(0, participantslicepos).isin(refids)) |
+    samples = samples[samples[extract['id']].str.contains(match)]
+    samples[samples[extract['id']].str.slice(0, participantslicepos).isin(refids)]
+    [(~samples[extract['id']].str.slice(0, participantslicepos).isin(refids)) |
         (samples[extract['id']].isin(forcekeep))]
     if len(addonly) > 0:
       samples = samples[samples[extract['id']].isin(addonly)]
