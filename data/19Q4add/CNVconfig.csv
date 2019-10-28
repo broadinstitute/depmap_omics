@@ -1,0 +1,9 @@
+,methodName,methodNamespace,methodUri,methodVersion,sourceRepo,name,namespace,rootEntityType
+0,CNV_Somatic_Pair_Workflow,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/9,9,agora,CNV_sample_XY,broad-firecloud-ccle,sample
+1,CNV_Somatic_Pair_Workflow,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/9,9,agora,CNV_sample_XX,gatk,sample
+2,PreProcessingForVariantDiscovery_GATK4,gatk,agora://gatk/PreProcessingForVariantDiscovery_GATK4/8,8,agora,Realign_WES_GATK4,gatk,sample
+3,CNV_Somatic_Pair_Workflow,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/9,9,agora,SANGER_PON_CNV_sample_XX,gatk,sample
+4,Aggregate_CN_seg_files,gkugener,agora://gkugener/Aggregate_CN_seg_files/2,2,agora,Aggregate_CN_seg_files,gkugener,sample_set
+5,ArrayOfFilesToTxt,gkugener,agora://gkugener/ArrayOfFilesToTxt/1,1,agora,Generate_uBAM_File_List,gkugener,sample
+6,Aggregate_CN_seg_files,gkugener,agora://gkugener/Aggregate_CN_seg_files/2,2,agora,Sanger_PON_Aggregate_CN_seg_files,gkugener,sample_set
+7,BamToUnmappedRGBams,vdauwera,agora://vdauwera/BamToUnmappedRGBams/4,4,agora,BamToUnmappedRGBams_MC,vdauwera,sample
