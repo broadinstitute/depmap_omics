@@ -2,6 +2,17 @@
 What you need to process the Quarterly DepMap-Omics releases from Terra
 Here is a presentation of the pipeline: https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116
 
+## Previous PiPeline
+
+https://docs.google.com/document/d/1O6ZWGAnG6CO_smtaA-fqQmSqV64TF1GHFbj-ZeIqD6U/edit?usp=sharing
+
+https://docs.google.com/document/d/1qHnqO3QGdubu8IvB9zI13Z48EbKwDTpgRg0TnT6GULw/edit?usp=sharing
+
+https://docs.google.com/document/d/189K81MOIYlvg4ePvtHPBSfMen1sgYm7G1EncG5N8tFk/edit?usp=sharing
+
+https://docs.google.com/document/d/19MvCIpRID12vfIlc5i2XmJB8yT2jJ2xwNM_PI1HRC0A/edit?usp=sharing
+
+
 ## Instalation
 
 if you are not familiar with these notions, we will first recommand you get more knowledge into each:
