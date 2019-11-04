@@ -46,6 +46,18 @@ def read(filename):
   f.close()
   return x
 
+def get_all_bai_size(folder):
+  # get ls of all bai files in the folder
+  samples = os.popen('gsutil -m ls -al ' + folder + '**.bai').read().split('\n')
+  # compute size filepath
+  sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(val.split("2019-")[0]) for val in samples[:-2]}
+  names = {}
+  for k, val in sizes.items():
+    if val in names:
+      names[val].append(k)
+    else:
+      names[val] = [k]
+  return names
 
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
@@ -60,7 +72,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   Can add as much as one wants
   dry_run: whether to perform a dry run without actually uploading anything to Terra
   forcekeep: list of sample id that you want to keep even if already in the previous workspace (will
-  cause an overwrite)
+  cause an overwrite) NOTE: currently this functionality is broken due to the implementation of checking for duplicates
   addonly: list of sample id that you only want to add
   match: substring that has to be matched against the id of the samples to add them
   other_to_add:
@@ -75,7 +87,12 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   """
   refsamples = wto.get_samples()
   refids = refsamples['participant'].tolist()
+  # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
   refids = [val[val.index('ACH'):] for val in refids if 'ACH' in val]
+  print("Getting sizes of all bai files we have to we can check for duplicates later...")
+  bai_sizes = get_all_bai_size(folder = gsfolderto)
+
+  print("Getting sample infos...")
   if type(sources) is str:
     sources = [sources]
   if type(wmfroms) is str:
@@ -83,10 +100,38 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   sampless = pd.DataFrame()
   for source, wmfrom in zip(sources, wmfroms):
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
+    # keep samples that contain the match requirement (e.g. ACH for DepMap IDs)
     samples = samples[samples[extract['id']].str.contains(match)]
-    samples[samples[extract['id']].str.slice(0, participantslicepos).isin(refids)]
-    [(~samples[extract['id']].str.slice(0, participantslicepos).isin(refids)) |
-        (samples[extract['id']].isin(forcekeep))]
+
+    # remove true duplicates from consideration
+    print("Identifying any true duplicates by checking file sizes (this happens for each data source)...")
+    dups_to_remove = []
+    for k, rowinfo in samples.iterrows():
+      bai_filepath = rowinfo[extract['bai']]
+      sample_to_check = os.popen('gsutil -m ls -al ' + bai_filepath).read().split('\n')
+      # sample_size is a dict with one key only
+      sample_size = {'gs://' + val.split('gs://')[1].split('#')[0]: int(val.split("2019-")[0]) for val in sample_to_check[:-2]}
+      for k, val in sample_size.items():
+        # if seen this size bai file before, it's a duplicate
+        if val in bai_sizes:
+          dups_to_remove += [rowinfo[extract['id']]]
+    # check: currently, below lines prevent forcekeep from working on true duplicates (aka same size bai file). Is this a problem?
+    samples = samples[(samples[extract['id']].str.slice(0, participantslicepos).isin(dups_to_remove))]
+
+    # add number to sample ID so runs of same participant have unique sample ID
+    new_samples = samples[extract['id']].str.slice(0, participantslicepos)
+    for iSample in range(len(new_samples)):
+      new_sample_id = new_samples.values[iSample]
+      num_to_add = refids.count(new_sample_id) + 1
+      # update the sample dataframe with the new sample ID
+      # check: fix the column name; should be in same order I believe
+      samples[extract['id']][iSample] = new_sample_id + '_' + str(num_to_add)
+
+    ## no longer using this stuff, but need to think about how to bring back the forcekeep functionality:
+    # samples[samples[extract['id']].str.slice(0, participantslicepos).isin(refids)]
+    # [(~samples[extract['id']].str.slice(0, participantslicepos).isin(refids)) |
+    # (samples[extract['id']].isin(forcekeep))]
+
     if len(addonly) > 0:
       samples = samples[samples[extract['id']].isin(addonly)]
 
@@ -97,7 +142,8 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     sampless = pd.concat([sampless, samples], sort=False)
   notfound = set(addonly) - set(sampless.index.tolist())
   if len(notfound) > 0:
-    print('we did not find:' + str(notfound))  # samples not found in the wto workspace so will be adding them now
+    # samples not found in the wto workspace so will be adding them now
+    print('we did not find:' + str(notfound))
   sample_ids = []
   # to do the download to the new dataspace
   if gsfolderto is not None:
@@ -105,14 +151,14 @@ def createDatasetWithNewCellLines(wto, samplesetname,
       res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
       if res == 256:
         sampless.drop(i)
-        print('we got sample ' + str(i) + ' that had inexistant bam path')
+        print('we got sample ' + str(i) + ' that had nonexistant bam path')
     sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
     sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
   print(sampless)
   if len(sampless) == 0:
-    raise Error("no new samples in this matrix")
+    raise Exception("no new samples in this matrix")
   for ind, val in sampless.iterrows():
-    name = val[extract['source']] + '_' + val[extract['id']][:participantslicepos]
+    name = val[extract['id']]
     refsamples = refsamples.append(pd.Series(
         {
             "CCLE_name": val[extract['name']],
