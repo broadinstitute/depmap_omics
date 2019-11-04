@@ -98,6 +98,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   if len(notfound) > 0:
     print('we did not find:' + str(notfound))  # samples not found in the wto workspace so will be adding them now
   sample_ids = []
+  # to do the download to the new dataspace
   if gsfolderto is not None:
     for i, val in sampless.iterrows():
       res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
