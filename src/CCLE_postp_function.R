@@ -419,9 +419,7 @@ reprioritizeData <- function(new_copy_number, wes.priority.cn.seg.profiles){
   new_copy_number %<>% magrittr::set_colnames(
     c('DepMap_ID','Chromosome','Start','End','Num_Probes','Segment_Mean','Source'))
   print(new_copy_number)
-  if (min(wes.priority.cn.seg.profiles$Segment_Mean) < 0) {
-    wes.priority.cn.seg.profiles %<>% mutate(Segment_Mean=2^Segment_Mean)
-  }
+  wes.priority.cn.seg.profiles %<>% mutate(Segment_Mean=(2^Segment_Mean)+1)
 
   broad_wes_cell_lines_in_new <- new_copy_number %>% filter(Source=='Broad WES') %$% unique(DepMap_ID)
   replaced_cell_lines <- wes.priority.cn.seg.profiles %>%
@@ -566,17 +564,14 @@ generateEntrezGenes <- function(genome_version='hg38'){
   return(allENTREZG)
 }
 
-filterBlackListedLine <- function(filepath='', segments_gaps_filled){
+filterBlackListedLine <- function(black_listed_lines, segments_gaps_filled){
   # Remove the internally embargoed lines
-  black_listed_lines <- scan(file=filepath, character(), quote = "")
-  black_listed_lines 
   # Save the segmented level data (untransformed)
   segments_gaps_filled %<>%
     filter(!(DepMap_ID %in% black_listed_lines)) %>%
     dplyr::select(DepMap_ID, Chromosome=Chromosome, Start=Start, End=End, Num_Probes, Segment_Mean, Source)
   return(segments_gaps_filled)
 }
-
 
 #######
 #

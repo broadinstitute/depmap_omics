@@ -1,0 +1,12 @@
+Package: cdsomics
+Title: Dataset curation for CDS
+Version: 0.0.0.9000
+Authors@R: person("Jordan", "Bryan", email = "jbryan@broadinstitute.org", role = c("aut", "cre"))
+Description: Curates available datasets for CDS + DepMap efforts. Contains simple preprocessing methods for upload to Taiga.
+Depends: R (>= 3.3.3)
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+biocViews:
+Imports: tidyverse, taigr
+RoxygenNote: 6.1.1
