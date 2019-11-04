@@ -38,7 +38,7 @@ def read(filename):
 
 
 def createDatasetWithNewCellLines(wto, samplesetname,
-                                  wfrom1, source1, wfrom2=None, source2='U', wfrom3=None, source3='U',
+                                  wfrom1, source1, wfrom2=None, source2='U', wfrom3=None, source3='U', dry_run = False,
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract=extract_defaults,
                                   slicepos=10, **kwargs):
   """
@@ -47,6 +47,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
   source1: the corresponding source name
   Can add as much as one wants
+  dry_run: whether to perform a dry run without actually uploading anything to Terra
   forcekeep: list of sample id that you want to keep even if already in the previous workspace (will
   cause an overwrite)
   addonly: list of sample id that you only want to add
@@ -54,8 +55,8 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   other_to_add:
   extract: if you want to specify what values should refer to what
     dict{    'name':
-    'bai_path': # changed to bai
-    'bam_path': # changed to bam
+    'bai':
+    'bam':
     'source':
     'id':
     ...}
@@ -64,24 +65,28 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   refsamples = wto.get_samples()
   refids = refsamples['participant'].tolist()
   refids = [val[val.index('ACH'):] for val in refids if 'ACH' in val]
-
   samples1 = wfrom1.get_samples().replace(np.nan, '', regex=True).reset_index()
   if len(addonly) > 0:
     samples1 = samples1
+  # since we tack on numbers, can't use "isin". Must use str.contains instead, or str starts with etc.
+  pdb.set_trace()
+  samples1[extract['id']].str.contains('|'.join(pd.Series(forcekeep).str.slice(0, slicepos)))
+
   samples1 = samples1[samples1[extract['id']].str.contains(match)][
       (~samples1[extract['id']].str.slice(0, slicepos).isin(refids)) |
-      (samples1[extract['id']].isin(forcekeep))]
+      # (samples1[extract['id']].isin(forcekeep))]
+      # (samples1[extract['id']].str.slice(0, slicepos).isin(forcekeep))]
+      (samples1[extract['id']].str.contains('|'.join(pd.Series(forcekeep).str.slice(0, slicepos))))] ## check: need to fix this.
   samples1[extract['source']] = [source1] * samples1.shape[0]
 
   samples = []
-  for key, val in kwargs.iteritems():
+  for key, val in kwargs.items():
     if key[:-1] == "source":
       sample = val.get_samples().replace(np.nan, '', regex=True).reset_index()
       sample = samples[samples[extract['id']].str.contains(match)][
           (~samples[extract['id']].str.slice(0, slicepos).isin(refids)) |
-          (samples[extract['id']].isin(forcekeep))][samples[extract['id']].isin(addonly)]
 
-      sample[extract['source']] = [kwargs["source" + key[-1]]] * samples2.shape[0]
+      sample[extract['source']] = [kwargs["source" + key[-1]]] * sample.shape[0]
       if 'sample_type' in sample.columns.tolist():
         sample = sample[sample['sample_type'] == 'Tumor']
       samples.append(sample)
@@ -123,13 +128,15 @@ def createDatasetWithNewCellLines(wto, samplesetname,
         }, name=name))
     sample_ids.append(name)
 
-  print("uploading new samples")
-  wto.upload_samples(refsamples)
-  print("creating a sample set")
-  wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
+  if not dry_run:
+      pdb.set_trace()
+      print("uploading new samples")
+      wto.upload_samples(refsamples)
+      print("creating a sample set")
+      wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
   return sample_ids
-#################
-#
+
+#####################
 # VALIDATION
 #####################
 
