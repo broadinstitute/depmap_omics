@@ -37,8 +37,7 @@ extract_defaults = {
     'hs_on_target_bases': 'hs_on_target_bases',
     'total_reads': 'total_reads',
     'release_date': 'release_date',
-    'mean_depth': 'mean_depth',
-    'ref_bams':'bam'
+    'mean_depth': 'mean_depth'
 }
 
 
