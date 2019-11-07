@@ -101,10 +101,11 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   # to do the download to the new dataspace
   if gsfolderto is not None:
     for i, val in sampless.iterrows():
-      res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
-      if res == 256:
-        sampless.drop(i)
-        print('we got sample ' + str(i) + ' that had inexistant bam path')
+      if os.system('gsutil ls ' + val[extract['bam']]) != 256:
+        res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
+        if res == 256:
+          sampless.drop(i)
+          print('we got sample ' + str(i) + ' that had inexistant bam path')
     sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
     sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
   print(sampless)
