@@ -1,0 +1,49 @@
+V2 
+De_novo_Start_OutOfFrame - NonCoding
+Nonstop_Mutation -NonCoding
+Nonsense_Mutation - NonCoding
+Missense_Mutation -NonCoding
+Silent - NonCoding
+Splice_Site - NonCoding
+Start_Codon_SNP - NonCoding
+Frame_Shift_Del - NonCoding
+Frame_Shift_Ins - NonCoding
+In_Frame_Del - NonCoding
+In_Frame_Ins - NonCoding
+Start_Codon_Del - NonCoding
+Start_Codon_Ins - NonCoding
+Stop_Codon_Del - NonCoding
+Stop_Codon_Ins - NonCoding
+
+De_novo_Start_OutOfFrame -isDeleterious
+Nonsense_Mutation - isDeleterious
+Nonstop_Mutation - isDeleterious
+Splice_Site - isDeleterious
+Frame_Shift_Del - isDeleterious
+Frame_Shift_Ins - isDeleterious
+Start_Codon_Del - isDeleterious
+Start_Codon_Ins - isDeleterious
+Stop_Codon_Del - isDeleterious
+Stop_Codon_Ins - isDeleterious
+
+  
+V1Silent - silent
+Splice_Site - damaging
+Missense_Mutation - other non-conserving
+Nonsense_Mutation - damaging
+De_novo_Start_OutOfFrame - damaging
+Nonstop_Mutation - other non-conserving
+Frame_Shift_Del - damaging
+Frame_Shift_Ins - damaging
+In_Frame_Del - other non-conserving
+In_Frame_Ins - other non-conserving
+Stop_Codon_Del - other non-conserving
+Stop_Codon_Ins - other non-conserving
+Start_Codon_SNP - damaging
+Start_Codon_Del - damaging
+Start_Codon_Ins - damaging
+5'Flank - other conserving
+Intron - other conserving
+IGR - other conserving
+3'UTR - other conserving
+5'UTR - other conserving

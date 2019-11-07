@@ -48,8 +48,9 @@ if you are not familiar with these notions, we will first recommand you get more
 
 
 ### /!\ this repository needs other repos 
-some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener)
+some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener) and [cdsomics]
 Go to the repos and pull them to the same parent folder as ccle_processing.
+
 
 ### /!\ you would need the approriate R packages and python packages:
 - for R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
