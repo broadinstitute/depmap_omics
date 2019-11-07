@@ -78,6 +78,35 @@ def get_GS_file_sizes(file_list):
   return names
 
 
+def get_all_sizes(folder, suffix):
+  # get ls of all files in the folder with the specified suffix
+  samples = os.popen('gsutil -m ls -al ' + folder + '**.' + suffix).read().split('\n')
+  # compute size filepath
+  sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in samples[:-2]}
+  names = {}
+  for k, val in sizes.items():
+    if val in names:
+      names[val].append(k)
+    else:
+      names[val] = [k]
+  return names
+
+
+def get_GS_file_sizes(file_list):
+  # get size of each file in the input list of files (assumed to be in google storage)
+  for file in file_list:
+    samples = os.popen('gsutil -m ls -al ' + file).read().split('\n')
+    # compute size filepath
+    sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in samples[:-2]}
+    names = {}
+    for k, val in sizes.items():
+      if val in names:
+        names[val].append(k)
+      else:
+        names[val] = [k]
+  return names
+
+
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
                                   forcekeep=[], addonly=[], match=['ACH'], other_to_add=[], extract=extract_defaults,
