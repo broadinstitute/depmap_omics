@@ -140,6 +140,8 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
   # filter refids to only include those that include the strings in the 'match' argument
   refids = []
+  if type(match) is str:
+    match = [match]
   for match_substring in match:
     refids += [val[val.index(match_substring):] for val in refids_full if match_substring in val]
 
