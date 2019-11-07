@@ -78,7 +78,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
                                   forcekeep=[], addonly=[], match=['ACH'], other_to_add=[], extract=extract_defaults,
                                   participantslicepos=10, accept_unknowntypes=False,
-                                  gsfolderto=None, dry_run = False):
+                                  gsfolderto=None, dry_run=False):
   """
   ## check: will need to change slicepos based on match;
   ## may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
@@ -107,8 +107,10 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
   # filter refids to only include those that include the strings in the 'match' argument
   refids = []
+  if type(match) is str:
+    match = [match]
   for match_substring in match:
-      refids += [val[val.index(match_substring):] for val in refids_full if match_substring in val]
+    refids += [val[val.index(match_substring):] for val in refids_full if match_substring in val]
 
   print("Getting sample infos...")
   if type(sources) is str:
@@ -122,7 +124,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     samples = samples[samples[extract['id']].str.contains('|'.join(match))]
     print("\nThe shape of the sample tsv from " + str(wmfrom) + ": " + str(samples.shape))
 
-    ## remove true duplicates from consideration
+    # remove true duplicates from consideration
     print("Identifying any true duplicates by checking file sizes (this runs for each data source)...")
     print("This step can take a while as we need to use gsutil to check the size of each potential duplicate...")
     dups_to_remove = []
@@ -156,7 +158,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     samples.reset_index(drop=True, inplace=True)
     print("Len of samples after removal: " + str(len(samples)))
 
-    ## add number to sample ID so runs of same participant have unique sample ID
+    # add number to sample ID so runs of same participant have unique sample ID
     new_samples = samples[extract['id']].str.slice(0, participantslicepos)
     for iSample in range(len(new_samples)):
       new_sample_id = new_samples.values[iSample]
@@ -183,10 +185,11 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   if not dry_run:
     if gsfolderto is not None:
       for i, val in sampless.iterrows():
-        res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
-        if res == 256:
-          sampless.drop(i)
-          print('we got sample ' + str(i) + ' that had nonexistant bam path')
+        if os.system('gsutil ls ' + val[extract['bam']]) != 256:
+          res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
+          if res == 256:
+            sampless.drop(i)
+            print('we got sample ' + str(i) + ' that had nonexistant bam path')
       sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
       sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
     print(sampless)
@@ -206,10 +209,10 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     sample_ids.append(name)
 
   if not dry_run:
-      print("uploading new samples")
-      wto.upload_samples(refsamples)
-      print("creating a sample set")
-      wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
+    print("uploading new samples")
+    wto.upload_samples(refsamples)
+    print("creating a sample set")
+    wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
   return sample_ids, refsamples['WES_bam'].values, refsamples
 
 #####################
