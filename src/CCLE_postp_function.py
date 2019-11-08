@@ -14,7 +14,7 @@ import numpy as np
 from taigapy import TaigaClient
 tc = TaigaClient()
 import os
-import re  # for re.split
+import re # for re.split
 
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
@@ -37,8 +37,7 @@ extract_defaults = {
     'hs_on_target_bases': 'hs_on_target_bases',
     'total_reads': 'total_reads',
     'release_date': 'release_date',
-    'mean_depth': 'mean_depth',
-    'ref_bams': 'bam'
+    'mean_depth': 'mean_depth'
 }
 
 
@@ -48,7 +47,6 @@ def read(filename):
   f.close()
   return x
 
-
 def get_all_sizes(folder, suffix):
   # get ls of all files in the folder with the specified suffix
   samples = os.popen('gsutil -m ls -al ' + folder + '**.' + suffix).read().split('\n')
@@ -61,7 +59,6 @@ def get_all_sizes(folder, suffix):
     else:
       names[val] = [k]
   return names
-
 
 def get_GS_file_sizes(file_list):
   # get size of each file in the input list of files (assumed to be in google storage)
@@ -76,36 +73,6 @@ def get_GS_file_sizes(file_list):
       else:
         names[val] = [k]
   return names
-
-
-def get_all_sizes(folder, suffix):
-  # get ls of all files in the folder with the specified suffix
-  samples = os.popen('gsutil -m ls -al ' + folder + '**.' + suffix).read().split('\n')
-  # compute size filepath
-  sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in samples[:-2]}
-  names = {}
-  for k, val in sizes.items():
-    if val in names:
-      names[val].append(k)
-    else:
-      names[val] = [k]
-  return names
-
-
-def get_GS_file_sizes(file_list):
-  # get size of each file in the input list of files (assumed to be in google storage)
-  for file in file_list:
-    samples = os.popen('gsutil -m ls -al ' + file).read().split('\n')
-    # compute size filepath
-    sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in samples[:-2]}
-    names = {}
-    for k, val in sizes.items():
-      if val in names:
-        names[val].append(k)
-      else:
-        names[val] = [k]
-  return names
-
 
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
@@ -222,7 +189,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
           res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
           if res == 256:
             sampless.drop(i)
-            print('we got sample ' + str(i) + ' that had inexistant bam path')
+            print('we got sample ' + str(i) + ' that had nonexistant bam path')
       sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
       sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
     print(sampless)
