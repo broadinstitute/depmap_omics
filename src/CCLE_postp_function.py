@@ -82,7 +82,7 @@ def get_GS_file_sizes(file_list):
 
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
-                                  forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract=extract_defaults,
+                                  forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={}, extract_defaults=extract_defaults,
                                   participantslicepos=10, accept_unknowntypes=False,
                                   gsfolderto=None, dry_run=False):
   """
@@ -99,13 +99,14 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   addonly: list of sample id that you only want to add
   match: list of substring(s) that has to be matched against the id of the samples to add them
   other_to_add:
-  extract: if you want to specify what values should refer to what
+  extract: if you want to specify what values should refer to which column names
     dict{    'name':
     'bai':
     'bam':
     'source':
     'id':
     ...}
+  extract_defaults: the full default dict to specificy what values should refer to which column names
 
   """
   refsamples = wto.get_samples()
@@ -117,6 +118,13 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     match = [match]
   for match_substring in match:
     refids += [val[val.index(match_substring):] for val in refids_full if match_substring in val]
+
+  # update extract dict with user-defined values
+  for key, value in extract.items():
+    if key not in extract_defaults.keys() and key != 'ref_bams':
+      print("We did not find the key '" + str(key) + "' in the full extraction dict. This key-value mapping may do nothing...")
+  extract_defaults.update(extract)
+  extract = extract_defaults
 
   print("Getting sample infos...")
   if type(sources) is str:
@@ -418,3 +426,68 @@ def AddToVirtual(virtualname, folderfrom, files):
 
   files.extend(keep)
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
+
+
+def compareToCuratedGS(url, sample, samplesetname, colname = 'CN New to internal'):
+  from gsheets import Sheets
+  sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
+  # Cell Line Profiling Status google sheet
+  gsheet = sheets.get(url).sheets[0].to_frame()
+  gsheet.index = gsheet['DepMap ID']
+  new_cn = gsheet[gsheet[colname] == samplesetname+'tent']
+  data_not_ready_cn = gsheet[gsheet[colname] == 'no data yet']
+
+  # these are the "new" samples discovered by our function, createDatasetsFromNewCellLines
+  sample_ids = [id[0:10] for id in sample]
+  print("We found data for " + str(len(sorted(sample))) + " samples.\n")
+
+  print("Sanity check: Since we have the tacked on number, we should only have 1 each per sample ID:\n")
+  from collections import Counter
+  Counter(sample)
+
+  in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
+  if len(in_sheet_not_found) > 0:
+    print("We have not found " + str(len(in_sheet_not_found)) +" of the samples we're supposed to have this release:\n" + str(sorted(list(in_sheet_not_found))))
+  else:
+    print("We aren't missing any samples that we're supposed to have this release!")
+
+  #
+  # # goal: answer where these extra cell lines are from
+  # # note: This is a very rough, quick and dirty approach. It could be easily improved.
+  # print(len(sorted(list(found_unexpected))))
+  # print(sorted(list(found_unexpected)))
+  # for wm in wmfroms:
+  #   print(str(wm))
+  #   # goal: answer where these extra cell lines are from
+  #   if wm == refwm:
+  #     wm_samples_full = wm.get_samples()['participant'].tolist()
+  #   else:
+  #     wm_samples_full = wm.get_samples()['individual_alias'].tolist()
+  #   wm_samples = [val[val.index('ACH'):][0:10] for val in wm_samples_full if type(val)==str and 'ACH' in val]
+  #
+  #   # does the number missing change?
+  #   print(len(set(found_unexpected) - set(wm_samples)))
+  #   print(sorted(list(set(found_unexpected) - set(wm_samples))))
+  #   print("\n")
+  #
+  # # these are the lines we have set to process that aren't in Emily's list of lines we expect
+  # found_unexpected = set(sample_ids) - set(new_cn.index.tolist())
+  # print("We found " + str(len(found_unexpected)) + " unexpected lines: \n" + str(found_unexpected))
+  #
+  # print("The following can be used to start figuring out where these lines came from: ")
+  # # goal: answer where these extra cell lines are from
+  # # This is very rough, and could easily be improved. I just needed something quick and dirty.
+  # wmfroms = [wm1, wm2, wm3, refwm]
+  # print(sorted(list(found_unexpected)))
+  # for wm in wmfroms:
+  #   print(str(wm))
+  #   # goal: answer where these extra cell lines are from
+  #   if wm == refwm:
+  #     wm_samples_full = wm.get_samples()['participant'].tolist()
+  #   else:
+  #     wm_samples_full = wm.get_samples()['individual_alias'].tolist()
+  #   wm_samples = [val[val.index('ACH'):][0:10] for val in wm_samples_full if type(val)==str and 'ACH' in val]
+  #
+  #   # does the number missing change?
+  #   print(len(set(found_unexpected) - set(wm_samples)))
+  #   print(sorted(list(set(found_unexpected) - set(wm_samples))))
