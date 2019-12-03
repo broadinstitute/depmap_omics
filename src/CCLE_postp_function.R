@@ -182,8 +182,9 @@ processSegments <- function(segment_file) {
 filterForCCLE <- function(new_copy_number){
 
   # We shouldn't have anything labelled other, so check this
-  if (nrow(new_copy_number %>% filter(Source=='Other WES')) > 0) {
-    print('ERROR. THERE IS A SAMPLE NOT FROM BROAD OR THE CHORDOMA FOUNDATION')
+  sampl_num = nrow(new_copy_number %>% filter(Source=='Other WES'))
+  if (sampl_num > 0) {
+    print('ERROR. THERE ARE SAMPLES NOT FROM BROAD OR THE CHORDOMA FOUNDATION')
   }
 
   # Make sure there are no duplicates
