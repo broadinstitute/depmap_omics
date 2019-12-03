@@ -58,25 +58,31 @@ def get_all_sizes(folder, suffix):
       names[val].append(k)
     else:
       names[val] = [k]
+  if names == {}:
+    # we didn't find any valid file paths
+    print("We didn't find any valid file paths in folder: " + str(folder))
   return names
 
 def get_GS_file_sizes(file_list):
   # get size of each file in the input list of files (assumed to be in google storage)
+  names = {}
   for file in file_list:
     samples = os.popen('gsutil -m ls -al ' + file).read().split('\n')
     # compute size filepath
     sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in samples[:-2]}
-    names = {}
     for k, val in sizes.items():
       if val in names:
         names[val].append(k)
       else:
         names[val] = [k]
+  if names == {}:
+    # we didn't find any valid file paths
+    print("We didn't find any valid file paths in the list of files: " + str(file_list))
   return names
 
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
-                                  forcekeep=[], addonly=[], match=['ACH'], other_to_add=[], extract=extract_defaults,
+                                  forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={}, extract_defaults=extract_defaults,
                                   participantslicepos=10, accept_unknowntypes=False,
                                   gsfolderto=None, dry_run=False):
   """
@@ -93,13 +99,14 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   addonly: list of sample id that you only want to add
   match: list of substring(s) that has to be matched against the id of the samples to add them
   other_to_add:
-  extract: if you want to specify what values should refer to what
+  extract: if you want to specify what values should refer to which column names
     dict{    'name':
     'bai':
     'bam':
     'source':
     'id':
     ...}
+  extract_defaults: the full default dict to specificy what values should refer to which column names
 
   """
   refsamples = wto.get_samples()
@@ -112,6 +119,13 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   for match_substring in match:
     refids += [val[val.index(match_substring):] for val in refids_full if match_substring in val]
 
+  # update extract dict with user-defined values
+  for key, value in extract.items():
+    if key not in extract_defaults.keys() and key != 'ref_bams':
+      print("We did not find the key '" + str(key) + "' in the full extraction dict. This key-value mapping may do nothing...")
+  extract_defaults.update(extract)
+  extract = extract_defaults
+
   print("Getting sample infos...")
   if type(sources) is str:
     sources = [sources]
@@ -119,6 +133,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     wmfroms = [wmfroms]
   sampless = pd.DataFrame()
   for source, wmfrom in zip(sources, wmfroms):
+    broken_bams = []
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
     # keep samples that contain the match requirement (e.g. ACH for DepMap IDs)
     samples = samples[samples[extract['id']].str.contains('|'.join(match))]
@@ -128,25 +143,44 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     print("Identifying any true duplicates by checking file sizes (this runs for each data source)...")
     print("This step can take a while as we need to use gsutil to check the size of each potential duplicate...")
     dups_to_remove = []
+    broken_to_remove = []
     for k, rowinfo in samples.iterrows():
+      # check for broken bam files; if broken, then remove from consideration
+      # need to check for broken filepaths before checking if the sample is in Terra so that we don't add a broken file path for a new participant
+      filepath = rowinfo[extract['bam']]
+      sample_to_check = os.popen('gsutil -m ls -al ' + filepath).read().split('\n')
+      if sample_to_check  == ['']:
+          # this bam file doesn't exist at this filepath
+          print("The bam file path we have in data workspace is broken, so we will remove it from consideration:\n " + str(filepath))
+          broken_bams += [filepath]
+          broken_to_remove += [rowinfo[extract['bam']]]
+
       # if this sample is in Terra already, need to check for duplicates
       if rowinfo[extract['id']][0:participantslicepos] in refids:
-        filepath = rowinfo[extract['bam']]
-        sample_to_check = os.popen('gsutil -m ls -al ' + filepath).read().split('\n')
         # better regex for yyyy-mm-dd ([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))
         sample_size = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in sample_to_check[:-2]}
         for file, val in sample_size.items():
-          # get list of the pre-existing entries for the same participant
+          # get list of the pre-existing entries for the same participant (only include if the bam file path is valid; aka the filepath exists)
           same_participant = refsamples[refsamples['participant'] == rowinfo[extract['id']][0:participantslicepos]]
           same_participant_bams = []
           for samp, entry in same_participant.iterrows():
             if entry[extract['ref_bams']] != 'NA':
-              same_participant_bams += [entry[extract['ref_bams']]]
+              try:
+                os.system('gsutil -m ls -al ' + entry[extract['ref_bams']])
+                same_participant_bams += [entry[extract['ref_bams']]]
+              except CommandException:
+                  # this bam file doesn't exist at this filepath
+                  print("The bam file path for " + str(rowinfo[extract['id']]) + " in the processing workspace is broken:\n " + str(entry[extract['ref_bams']]))
+                  broken_bams += [entry[extract['ref_bams']]]
+          if len(same_participant_bams) == 0:
+              # in this case, had no valid bam paths in the processing workspace, so no potential for duplicates
+              continue
+
           # get sizes of these pre-existing bams
           same_participant_bams_sizes = get_GS_file_sizes(same_participant_bams)
           # if new sample size is in this dict of sizes, then the sample is a duplicate
           if val in same_participant_bams_sizes:
-            dups_to_remove += [rowinfo[extract['id']]]
+            dups_to_remove += [rowinfo[extract['bam']]]
           # print("The new sample: " + str(file))
           # print("The pre-existing sample of the same size: " + str(same_participant_bams_sizes[val]))
 
@@ -154,7 +188,9 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     print("Dups from " + str(wmfrom) + " has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
     print("Len of samples before removal: " + str(len(samples)))
     # remove the duplicates from consideration
-    samples = samples[(~samples[extract['id']].isin(dups_to_remove))]
+    samples = samples[(~samples[extract['bam']].isin(dups_to_remove))]
+    # remove the samples with broken bam filepaths from consideration
+    samples = samples[(~samples[extract['bam']].isin(broken_to_remove))]
     samples.reset_index(drop=True, inplace=True)
     print("Len of samples after removal: " + str(len(samples)))
 
@@ -162,7 +198,17 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     new_samples = samples[extract['id']].str.slice(0, participantslicepos)
     for iSample in range(len(new_samples)):
       new_sample_id = new_samples.values[iSample]
-      num_to_add = refids.count(new_sample_id) + 1
+      num_in_workspace = refids.count(new_sample_id)
+      # need to keep track of whether we're adding more than one new entry for a given sample id
+      num_per_sample_dict = {}
+      try:
+        num_already_seen_here = num_per_sample_dict[new_sample_id]
+        num_to_add = num_in_workspace + num_already_seen_here + 1
+        num_per_sample_dict[new_sample_id] += 1
+      except:
+        num_per_sample_dict[new_sample_id] = 1
+        num_to_add = num_in_workspace + 1
+
       # update the sample dataframe with the new sample ID
       samples[extract['id']][iSample] = new_sample_id + '_' + str(num_to_add)
 
@@ -174,6 +220,8 @@ def createDatasetWithNewCellLines(wto, samplesetname,
       if not accept_unknowntypes:
         samples = samples[samples['sample_type'].isin(['Tumor'])]
     sampless = pd.concat([sampless, samples], sort=False)
+
+    print('These bam file path do not exist: ' + str(broken_bams))
   # ## currently, we don't do anything with notfound. Therefore addonly functionality is broken.
   # notfound = set(addonly) - set(sampless.index.tolist())
   # if len(notfound) > 0:
@@ -378,3 +426,68 @@ def AddToVirtual(virtualname, folderfrom, files):
 
   files.extend(keep)
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
+
+
+def compareToCuratedGS(url, sample, samplesetname, colname = 'CN New to internal'):
+  from gsheets import Sheets
+  sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
+  # Cell Line Profiling Status google sheet
+  gsheet = sheets.get(url).sheets[0].to_frame()
+  gsheet.index = gsheet['DepMap ID']
+  new_cn = gsheet[gsheet[colname] == samplesetname+'tent']
+  data_not_ready_cn = gsheet[gsheet[colname] == 'no data yet']
+
+  # these are the "new" samples discovered by our function, createDatasetsFromNewCellLines
+  sample_ids = [id[0:10] for id in sample]
+  print("We found data for " + str(len(sorted(sample))) + " samples.\n")
+
+  print("Sanity check: Since we have the tacked on number, we should only have 1 each per sample ID:\n")
+  from collections import Counter
+  Counter(sample)
+
+  in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
+  if len(in_sheet_not_found) > 0:
+    print("We have not found " + str(len(in_sheet_not_found)) +" of the samples we're supposed to have this release:\n" + str(sorted(list(in_sheet_not_found))))
+  else:
+    print("We aren't missing any samples that we're supposed to have this release!")
+
+  #
+  # # goal: answer where these extra cell lines are from
+  # # note: This is a very rough, quick and dirty approach. It could be easily improved.
+  # print(len(sorted(list(found_unexpected))))
+  # print(sorted(list(found_unexpected)))
+  # for wm in wmfroms:
+  #   print(str(wm))
+  #   # goal: answer where these extra cell lines are from
+  #   if wm == refwm:
+  #     wm_samples_full = wm.get_samples()['participant'].tolist()
+  #   else:
+  #     wm_samples_full = wm.get_samples()['individual_alias'].tolist()
+  #   wm_samples = [val[val.index('ACH'):][0:10] for val in wm_samples_full if type(val)==str and 'ACH' in val]
+  #
+  #   # does the number missing change?
+  #   print(len(set(found_unexpected) - set(wm_samples)))
+  #   print(sorted(list(set(found_unexpected) - set(wm_samples))))
+  #   print("\n")
+  #
+  # # these are the lines we have set to process that aren't in Emily's list of lines we expect
+  # found_unexpected = set(sample_ids) - set(new_cn.index.tolist())
+  # print("We found " + str(len(found_unexpected)) + " unexpected lines: \n" + str(found_unexpected))
+  #
+  # print("The following can be used to start figuring out where these lines came from: ")
+  # # goal: answer where these extra cell lines are from
+  # # This is very rough, and could easily be improved. I just needed something quick and dirty.
+  # wmfroms = [wm1, wm2, wm3, refwm]
+  # print(sorted(list(found_unexpected)))
+  # for wm in wmfroms:
+  #   print(str(wm))
+  #   # goal: answer where these extra cell lines are from
+  #   if wm == refwm:
+  #     wm_samples_full = wm.get_samples()['participant'].tolist()
+  #   else:
+  #     wm_samples_full = wm.get_samples()['individual_alias'].tolist()
+  #   wm_samples = [val[val.index('ACH'):][0:10] for val in wm_samples_full if type(val)==str and 'ACH' in val]
+  #
+  #   # does the number missing change?
+  #   print(len(set(found_unexpected) - set(wm_samples)))
+  #   print(sorted(list(set(found_unexpected) - set(wm_samples))))
