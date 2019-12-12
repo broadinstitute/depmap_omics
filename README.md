@@ -54,7 +54,9 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
 
 ### /!\ you would need the approriate R packages and python packages:
 - for R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
+- another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd ../..`
 - for Python use the requirements.txt file `pip install -r requirements.txt`
+
 
 
 ### Get Terra Access
