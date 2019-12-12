@@ -14,7 +14,11 @@ import numpy as np
 from taigapy import TaigaClient
 tc = TaigaClient()
 import os
-import re # for re.split
+import re  # for re.split
+import sys
+print("you need to have installed JKBio in the same folder as ccle_processing")
+sys.path.insert(0, '../JKBio/')
+import TerraFunction as terra
 
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
@@ -41,53 +45,14 @@ extract_defaults = {
 }
 
 
-def read(filename):
-  f = open(filename, 'r')
-  x = f.read().splitlines()
-  f.close()
-  return x
-
-def get_all_sizes(folder, suffix):
-  # get ls of all files in the folder with the specified suffix
-  samples = os.popen('gsutil -m ls -al ' + folder + '**.' + suffix).read().split('\n')
-  # compute size filepath
-  sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in samples[:-2]}
-  names = {}
-  for k, val in sizes.items():
-    if val in names:
-      names[val].append(k)
-    else:
-      names[val] = [k]
-  if names == {}:
-    # we didn't find any valid file paths
-    print("We didn't find any valid file paths in folder: " + str(folder))
-  return names
-
-def get_GS_file_sizes(file_list):
-  # get size of each file in the input list of files (assumed to be in google storage)
-  names = {}
-  for file in file_list:
-    samples = os.popen('gsutil -m ls -al ' + file).read().split('\n')
-    # compute size filepath
-    sizes = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in samples[:-2]}
-    for k, val in sizes.items():
-      if val in names:
-        names[val].append(k)
-      else:
-        names[val] = [k]
-  if names == {}:
-    # we didn't find any valid file paths
-    print("We didn't find any valid file paths in the list of files: " + str(file_list))
-  return names
-
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={}, extract_defaults=extract_defaults,
                                   participantslicepos=10, accept_unknowntypes=False,
                                   gsfolderto=None, dry_run=False):
   """
-  ## check: will need to change slicepos based on match;
-  ## may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
+  # check: will need to change slicepos based on match;
+  # may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
   wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
   samplesetname: String the name of the sample set created by this new set of samples updated
   wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
@@ -123,8 +88,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   for key, value in extract.items():
     if key not in extract_defaults.keys() and key != 'ref_bams':
       print("We did not find the key '" + str(key) + "' in the full extraction dict. This key-value mapping may do nothing...")
-  extract_defaults.update(extract)
-  extract = extract_defaults
+  extract.update(extract_defaults)
 
   print("Getting sample infos...")
   if type(sources) is str:
@@ -132,6 +96,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   if type(wmfroms) is str:
     wmfroms = [wmfroms]
   sampless = pd.DataFrame()
+  names = [a.split('_') for a in refsamples[extract['ref_bams']] if type(a) is str]
   for source, wmfrom in zip(sources, wmfroms):
     broken_bams = []
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
@@ -143,75 +108,37 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     print("Identifying any true duplicates by checking file sizes (this runs for each data source)...")
     print("This step can take a while as we need to use gsutil to check the size of each potential duplicate...")
     dups_to_remove = []
-    broken_to_remove = []
-    for k, rowinfo in samples.iterrows():
-      # check for broken bam files; if broken, then remove from consideration
-      # need to check for broken filepaths before checking if the sample is in Terra so that we don't add a broken file path for a new participant
-      filepath = rowinfo[extract['bam']]
-      sample_to_check = os.popen('gsutil -m ls -al ' + filepath).read().split('\n')
-      if sample_to_check  == ['']:
-          # this bam file doesn't exist at this filepath
-          print("The bam file path we have in data workspace is broken, so we will remove it from consideration:\n " + str(filepath))
-          broken_bams += [filepath]
-          broken_to_remove += [rowinfo[extract['bam']]]
+    # check for broken bam files; if broken, then remove from consideration
+    # need to check for broken filepaths before checking if the sample is in Terra so that we don't add a broken file path for a new participant
+    foundfiles = terra.lsFiles(samples[extract['bam']])
+    broken_bams = set(samples[extract['bam']]) - set(foundfiles)
 
-      # if this sample is in Terra already, need to check for duplicates
-      if rowinfo[extract['id']][0:participantslicepos] in refids:
-        # better regex for yyyy-mm-dd ([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))
-        sample_size = {'gs://' + val.split('gs://')[1].split('#')[0]: int(re.split("\d{4}-\d{2}-\d{2}", val)[0]) for val in sample_to_check[:-2]}
-        for file, val in sample_size.items():
-          # get list of the pre-existing entries for the same participant (only include if the bam file path is valid; aka the filepath exists)
-          same_participant = refsamples[refsamples['participant'] == rowinfo[extract['id']][0:participantslicepos]]
-          same_participant_bams = []
-          for samp, entry in same_participant.iterrows():
-            if entry[extract['ref_bams']] != 'NA':
-              try:
-                os.system('gsutil -m ls -al ' + entry[extract['ref_bams']])
-                same_participant_bams += [entry[extract['ref_bams']]]
-              except CommandException:
-                  # this bam file doesn't exist at this filepath
-                  print("The bam file path for " + str(rowinfo[extract['id']]) + " in the processing workspace is broken:\n " + str(entry[extract['ref_bams']]))
-                  broken_bams += [entry[extract['ref_bams']]]
-          if len(same_participant_bams) == 0:
-              # in this case, had no valid bam paths in the processing workspace, so no potential for duplicates
-              continue
-
-          # get sizes of these pre-existing bams
-          same_participant_bams_sizes = get_GS_file_sizes(same_participant_bams)
-          # if new sample size is in this dict of sizes, then the sample is a duplicate
-          if val in same_participant_bams_sizes:
-            dups_to_remove += [rowinfo[extract['bam']]]
-          # print("The new sample: " + str(file))
-          # print("The pre-existing sample of the same size: " + str(same_participant_bams_sizes[val]))
-
-    # check: currently, below lines prevent forcekeep from working on true duplicates (aka same size  file). Need to think about how to bring back the forcekeep functionality
-    print("Dups from " + str(wmfrom) + " has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
-    print("Len of samples before removal: " + str(len(samples)))
+    tolookfor = [val[extract['bam']] for _, val in samples.iterrows() if val[extract['id']][0:participantslicepos] in set(refids)]
+    sample_size = {int(re.split("\d{4}-\d{2}-\d{2}", val)[0]):
+                   'gs://' + val.split('gs://')[1].split('#')[0] for val in terra.lsFiles(tolookfor, "-al", len(tolookfor))}
+    ref_size = {int(re.split("\d{4}-\d{2}-\d{2}", val)[0]):
+                'gs://' + val.split('gs://')[1].split('#')[0] for val in terra.lsFiles(
+        [i for i in refsamples[extract["ref_bams"]] if type(i) is str], "-al", 200)}
+    dups_to_remove = [ref_size[a] for a in set(ref_size.keys()) & set(sample_size.keys())]
+    import pdb
+    pdb.set_trace()
     # remove the duplicates from consideration
-    samples = samples[(~samples[extract['bam']].isin(dups_to_remove))]
-    # remove the samples with broken bam filepaths from consideration
-    samples = samples[(~samples[extract['bam']].isin(broken_to_remove))]
-    samples.reset_index(drop=True, inplace=True)
-    print("Len of samples after removal: " + str(len(samples)))
+    print("Len of samples before removal: " + str(len(samples)))
+    print('These bam file path do not exist: ' + str(broken_bams))
+    print("Dups from " + str(wmfrom) + " has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
 
+    # remove the samples with broken bam filepaths from consideration
+    samples = samples[(~samples[extract['bam']].isin(dups_to_remove)) & (~samples[extract['bam']].isin(broken_bams))]
+    samples.reset_index(drop=True, inplace=True)
     # add number to sample ID so runs of same participant have unique sample ID
     new_samples = samples[extract['id']].str.slice(0, participantslicepos)
-    for iSample in range(len(new_samples)):
-      new_sample_id = new_samples.values[iSample]
-      num_in_workspace = refids.count(new_sample_id)
-      # need to keep track of whether we're adding more than one new entry for a given sample id
-      num_per_sample_dict = {}
-      try:
-        num_already_seen_here = num_per_sample_dict[new_sample_id]
-        num_to_add = num_in_workspace + num_already_seen_here + 1
-        num_per_sample_dict[new_sample_id] += 1
-      except:
-        num_per_sample_dict[new_sample_id] = 1
-        num_to_add = num_in_workspace + 1
-
-      # update the sample dataframe with the new sample ID
-      samples[extract['id']][iSample] = new_sample_id + '_' + str(num_to_add)
-
+    # check: currently, below lines prevent forcekeep from working on true duplicates (aka same size  file). Need to think about how to bring back the forcekeep functionality
+    print("Len of samples after removal: " + str(len(samples)))
+    # need to keep track of whether we're adding more than one new entry for a given sample id
+    for i, val in enumerate(new_samples):
+      num_in_workspace = names.count(val)
+      samples[extract['id']][i] = val + '_' + str(num_in_workspace + 1)
+      names.append(val)
     if len(addonly) > 0:
       samples = samples[samples[extract['id']].isin(addonly)]
 
@@ -221,25 +148,19 @@ def createDatasetWithNewCellLines(wto, samplesetname,
         samples = samples[samples['sample_type'].isin(['Tumor'])]
     sampless = pd.concat([sampless, samples], sort=False)
 
-    print('These bam file path do not exist: ' + str(broken_bams))
   # ## currently, we don't do anything with notfound. Therefore addonly functionality is broken.
   # notfound = set(addonly) - set(sampless.index.tolist())
   # if len(notfound) > 0:
   #   # samples not found in the wto workspace so will be adding them now
   #   print('we did not find:' + str(notfound))
-
   sample_ids = []
   # to do the download to the new dataspace
   if not dry_run:
     if gsfolderto is not None:
       for i, val in sampless.iterrows():
-        if os.system('gsutil ls ' + val[extract['bam']]) != 256:
-          res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
-          if res == 256:
-            sampless.drop(i)
-            print('we got sample ' + str(i) + ' that had nonexistant bam path')
-      sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
-      sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
+        res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
+        sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
+        sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
     print(sampless)
   if len(sampless) == 0:
     raise Exception("no new samples in this matrix")
@@ -261,7 +182,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     wto.upload_samples(refsamples)
     print("creating a sample set")
     wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
-  return sample_ids, refsamples['WES_bam'].values, refsamples
+  return sample_ids, refsamples
 
 #####################
 # VALIDATION
@@ -415,8 +336,8 @@ def AddToVirtual(virtualname, folderfrom, files):
   assert type(files[0]) is tuple
   versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
   versionb = max([int(i['name']) for i in tc.get_dataset_metadata(virtualname)['versions']])
-  keep = [(i['name'], i['underlying_file_id']) for i in tc.get_dataset_metadata(
-      virtualname, version=versionb)['datasetVersion']['datafiles']]
+  keep = [(i['name'], i['underlying_file_id']) for i in tc.get_dataset_metadata(virtualname, version=versionb)
+          ['datasetVersion']['datafiles'] if 'underlying_file_id' in i]
 
   for i, val in enumerate(files):
     files[i] = (val[0], folderfrom + '.' + str(versiona) + '/' + val[1])
@@ -425,16 +346,17 @@ def AddToVirtual(virtualname, folderfrom, files):
         keep.pop(j)
 
   files.extend(keep)
+  print(files)
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
 
 
-def compareToCuratedGS(url, sample, samplesetname, colname = 'CN New to internal'):
+def compareToCuratedGS(url, sample, samplesetname, colname='CN New to internal'):
   from gsheets import Sheets
   sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
   # Cell Line Profiling Status google sheet
   gsheet = sheets.get(url).sheets[0].to_frame()
   gsheet.index = gsheet['DepMap ID']
-  new_cn = gsheet[gsheet[colname] == samplesetname+'tent']
+  new_cn = gsheet[gsheet[colname] == samplesetname + 'tent']
   data_not_ready_cn = gsheet[gsheet[colname] == 'no data yet']
 
   # these are the "new" samples discovered by our function, createDatasetsFromNewCellLines
@@ -447,7 +369,7 @@ def compareToCuratedGS(url, sample, samplesetname, colname = 'CN New to internal
 
   in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
   if len(in_sheet_not_found) > 0:
-    print("We have not found " + str(len(in_sheet_not_found)) +" of the samples we're supposed to have this release:\n" + str(sorted(list(in_sheet_not_found))))
+    print("We have not found " + str(len(in_sheet_not_found)) + " of the samples we're supposed to have this release:\n" + str(sorted(list(in_sheet_not_found))))
   else:
     print("We aren't missing any samples that we're supposed to have this release!")
 
