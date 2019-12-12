@@ -166,11 +166,7 @@ processSegments <- function(segment_file) {
   
   new_copy_number %<>% dplyr::select(Sample, Chromosome=CONTIG, Start=START, End=END, 
   Num_Probes=NUM_POINTS_COPY_RATIO, Segment_Mean=MEAN_LOG2_COPY_RATIO) %>%
-    
-    dplyr::mutate(Source=case_when(
-      grepl('^(dm|ccle2|ibm|ccle)_', Sample) ~ 'Broad WES',
-      grepl('^chordoma_', Sample) ~ 'Chordoma WES',
-      TRUE ~ "Other WES"))
+    dplyr::mutate(Source='Broad WES')
 
   # Untransform data if it is log2 transformed (which it will be if from the FireCloud pipeline)
   if (min(new_copy_number$Segment_Mean) < 0) {
@@ -999,7 +995,6 @@ filterAllelicFraction = function(merged_latest_release){
       }
       return(-Inf)
     })
-  print('hey')
   filt <- merged_latest_release[merged_latest_release[,"MAX_AF"]<0.05,]
   # Keep track of the removed variants
   removed_from_maf <- merged_latest_release %>% 
