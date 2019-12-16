@@ -13,7 +13,7 @@ https://docs.google.com/document/d/189K81MOIYlvg4ePvtHPBSfMen1sgYm7G1EncG5N8tFk/
 https://docs.google.com/document/d/19MvCIpRID12vfIlc5i2XmJB8yT2jJ2xwNM_PI1HRC0A/edit?usp=sharing
 
 
-## Instalation
+## Installation
 
 if you are not familiar with these notions, we will first recommand you get more knowledge into each:
 - python https://www.learnpython.org/
@@ -46,18 +46,18 @@ if you are not familiar with these notions, we will first recommand you get more
 
 
 
-
 ### /!\ this repository needs other repos 
-some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener) and [cdsomics]
+some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener)
 Go to the repos and pull them to the same parent folder as ccle_processing.
 
 
 ### /!\ you would need the approriate R packages and python packages:
+- you will need to install jupyter notetbooks and google cloud sdk
+  - install Google Cloud SDK (see https://cloud.google.com/sdk/docs/downloads-interactive and https://cloud.google.com/sdk/docs/quickstart-macos)
+  - authenticate my SDK account by running "gcloud auth application-default login" in terminal
 - for R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
 - another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd ../..`
 - for Python use the requirements.txt file `pip install -r requirements.txt`
-
-
 
 ### Get Terra Access
 
@@ -65,6 +65,7 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_hg38_RNAseq
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
+The current owners of these workspaces should give you access.
 2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows): https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit?usp=sharing
 3. Ask Sarah Young for access to required billing projects (e.g. broad-firecloud-ccle)
 4. get access to the following Terra groups:
@@ -79,9 +80,14 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
   - __rna__ [IBM](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/Getz_IBM_CellLines_RNASeqData/data)
   - __rna__ [Broad](https://firecloud.terra.bio/#workspaces/broad-firecloud-ccle/CCLE_DepMap_RNAseq)
   - __rna__ [Broad](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/CCLE_DepMap_RNAseq)
-6. request access to the metadata bucket `gs://ccle_default_params/`
+6. request access to the data bucket `gs://ccle_bams/`
+7. you will need also access to the billing project `broad-firecloud-ccle`
+
 
 *more information on the firecloud workspaces and what they might contain is available on this [document](https://www.github.com/broadinstitute/ccle_processing/firecloud_documentation.html)
+
+### additional logins:
+- in order to run the imports [gsheets](https://pypi.org/project/gsheets/) and [taigapy](https://pypi.org/project/taigapy/), you will need to create a [taiga](https://cds.team/taiga) account and link your broad google account to access the cell line sheets.
 
 ## File structure
 
@@ -102,12 +108,13 @@ __data/__ contains important information used for processing
 
 __src__ contains the location of function files
 
-__\*\_pipeline__ contains some of the pipeline wdl files and script files 
+__\*\_pipeline__ contains some of the pipeline's workflows' wdl files and script files used by these workflows 
 
 __ccle_tasks__ contains a notebook for each of the different additional processing that the CCLE team has to perform
 
 __legacy__ contains the previous R markdown files that were used as templates for the previous pipeline's postprocessing
 
-__readmes__ contains the readmes that are updated at each depmap releases 
+__readmes__ contains some of the depmap readmes 
 
 __temp__ contains the temp file that can get removed after processing (should be empty)
+
