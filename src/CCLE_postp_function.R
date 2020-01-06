@@ -416,7 +416,6 @@ reprioritizeData <- function(new_copy_number, wes.priority.cn.seg.profiles){
   new_copy_number %<>% magrittr::set_colnames(
     c('DepMap_ID','Chromosome','Start','End','Num_Probes','Segment_Mean','Source'))
   print(new_copy_number)
-  wes.priority.cn.seg.profiles %<>% mutate(Segment_Mean=(2^Segment_Mean)+1)
 
   broad_wes_cell_lines_in_new <- new_copy_number %>% filter(Source=='Broad WES') %$% unique(DepMap_ID)
   replaced_cell_lines <- wes.priority.cn.seg.profiles %>%
@@ -695,7 +694,7 @@ compareReleases <- function(tpm_genes, previous_release_tpm){
 # TODO: process the exons in future releaes...
 
 renameFunction <- function(columns) {
-  columns_new <- ifelse(columns %in% c('Name', 'Description', 'gene_id', 'transcript_id',
+  columns_new <- ifelse(columns %in% c('Name', 'Description', 'gene', 'transcript', 'gene_id', 'transcript_id',
     "transcript_id(s)"), columns, ifelse(grepl('ACH\\-[0-9]+$', columns), 
     stringr::str_extract(string=columns, pattern='ACH\\-[0-9]+'), ccle.to.arxspan(columns, ignore.problems = T)
   ))

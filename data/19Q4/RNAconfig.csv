@@ -1,0 +1,15 @@
+,methodName,methodNamespace,methodUri,methodVersion,sourceRepo,name,namespace,rootEntityType
+0,markduplicates_v1-0_BETA,broadinstitute_gtex,agora://broadinstitute_gtex/markduplicates_v1-0_BETA/2,2,agora,markduplicates_v1-0_BETA_cfg,broadinstitute_gtex,sample
+1,rnaseqc2_v1-0_BETA,broadinstitute_gtex,agora://broadinstitute_gtex/rnaseqc2_v1-0_BETA/2,2,agora,rnaseqc2_v1-0_BETA_cfg,broadinstitute_gtex,sample
+2,rsem_aggregate_results_v1-0_BETA,broadinstitute_gtex,agora://broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA/3,3,agora,rsem_aggregate_results_v1-0_BETA_cfg,broadinstitute_gtex,sample_set
+3,rsem_v1-0_BETA,broadinstitute_gtex,agora://broadinstitute_gtex/rsem_v1-0_BETA/4,4,agora,rsem_v1-0_BETA_cfg,broadinstitute_gtex,sample
+4,samtofastq_v1-0_BETA,broadinstitute_gtex,agora://broadinstitute_gtex/samtofastq_v1-0_BETA/6,6,agora,samtofastq_v1-0_BETA_cfg,broadinstitute_gtex,sample
+5,star_v1-0_BETA,broadinstitute_gtex,agora://broadinstitute_gtex/star_v1-0_BETA/7,7,agora,star_v1-0_BETA_cfg,broadinstitute_gtex,sample
+6,ExonUsage,CCLE,agora://CCLE/ExonUsage/15,15,agora,ExonUsage_hg38,CCLE,sample
+7,AggregateExonUsageRObj,ccle_mg,agora://ccle_mg/AggregateExonUsageRObj/2,2,agora,AggregateExonUsageRObj_hg38,ccle_mg,sample_set
+8,Aggregate_files_set,gkugener,agora://gkugener/Aggregate_files_set/2,2,agora,Aggregate_Fusion_Calls,gkugener,sample_set
+9,ExonUsage_fixed,gkugener,agora://gkugener/ExonUsage_fixed/1,1,agora,ExonUsage_hg38_fixed,gkugener,sample
+10,STAR_Fusion_after_STAR,gkugener,agora://gkugener/STAR_Fusion_after_STAR/4,4,agora,EXPENSIVE_STAR_Fusion_after_STAR,gkugener,sample
+11,STAR_fusion,gkugener,agora://gkugener/STAR_fusion/14,14,agora,hg38_STAR_fusion,gkugener,sample
+12,rnaseq-germline-snps-indels_copy,jkobject,agora://jkobject/rnaseq-germline-snps-indels_copy/4,4,agora,rnaseq-germline-snps-indels_copy,jkobject,sample
+13,rsem_aggregate_results,jkobject,agora://jkobject/rsem_aggregate_results/4,4,agora,rsem_aggregate_results,jkobject,sample_set

@@ -4,7 +4,7 @@
 #' @param rnaseq_data: rnaseq file, assumes rows are genes, gene_id and transcript_id columns, and rest of columns are samples
 #' @param log_transform: whether or not to log2 transform the data
 #' @param just_protein_coding: whether or not to just subset to protein coding genes and use entrez ids
-#' @param gencode_file: path to the gencode file with Ensembl ID and HGNC symbol pairings
+#' @param gencode_annotations: path to the gencode file with Ensembl ID and HGNC symbol pairings
 #' 
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang "!!"
@@ -16,11 +16,11 @@
 prepare_depmap_TPM_for_taiga <- function(rnaseq_data, 
                                             log_transform=F,
                                             just_protein_coding=F,
-                                            gencode_file = "~/data_files/gene_annotations/gencode.v19.annotation.gtf"){
+                                            gencode_annotations = "~/data_files/gene_annotations/gencode.v19.annotation.gtf"){
   
   require(magrittr)
   
-  gene_map <- ensembl_hgnc_gene_pairing(gencode_file)
+  gene_map <- ensembl_hgnc_gene_pairing(gencode_annotations)
   row_metadata <- rnaseq_data %>% 
     dplyr::select(gene_id, `transcript_id(s)`) %>%
     dplyr::mutate(ensembl_gene_id=gsub("\\..*", "", gene_id)) %>% as.data.frame(.)
@@ -81,7 +81,7 @@ prepare_depmap_TPM_for_taiga <- function(rnaseq_data,
 #' Prepare DepMap TPM transcript RNAseq data for upload to Taiga
 #'
 #' @param rnaseq_data: rnaseq file, assumes rows are genes, gene_id and transcript_id columns, and rest of columns are samples
-#' @param gencode_file: path to the gencode file with Ensembl ID and HGNC symbol pairings
+#' @param gencode_annotations: path to the gencode file with Ensembl ID and HGNC symbol pairings
 #' 
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang "!!"
@@ -90,11 +90,11 @@ prepare_depmap_TPM_for_taiga <- function(rnaseq_data,
 #' 
 #' @export prepare_depmap_transcripts_for_taiga
 prepare_depmap_transcripts_for_taiga <- function(rnaseq_data, 
-                                         gencode_file = "~/data_files/gene_annotations/gencode.v19.annotation.gtf"){
+                                         gencode_annotations = "~/data_files/gene_annotations/gencode.v19.annotation.gtf"){
   
   require(magrittr)
   
-  gene_map <- rtracklayer::readGFF(gencode_file, tags=c("gene_id", "gene_name", "transcript_id"))
+  gene_map <- rtracklayer::readGFF(gencode_annotations, tags=c("gene_id", "gene_name", "transcript_id"))
   gene_map$transcript_id <- gsub("\\..*", "", gene_map$transcript_id)
   duplicate_or_missing_genes <- which(duplicated(gene_map$transcript_id)==T | is.na(gene_map$transcript_id)==T)
   if(length(duplicate_or_missing_genes) >0 ){
@@ -141,7 +141,7 @@ prepare_depmap_transcripts_for_taiga <- function(rnaseq_data,
 #' @param log_transform: whether or not to log2 transform the data
 #' @param noisy_floor: if using a noisy floor, what value should be used
 #' @param just_protein_coding: whether or not to just subset to protein coding genes and use entrez ids
-#' @param gencode_file: path to the gencode file with Ensembl ID and HGNC symbol pairings
+#' @param gencode_annotations: path to the gencode file with Ensembl ID and HGNC symbol pairings
 #' 
 #' @importFrom magrittr "%>%"
 #' @importFrom rlang "!!"
@@ -156,11 +156,11 @@ prepare_depmap_rnaseq_for_taiga <- function(rnaseq_data,
                                             log_transform=F,
                                             noisy_floor=NULL,
                                             just_protein_coding=F,
-                                            gencode_file = "~/data_files/gene_annotations/gencode.v19.annotation.gtf"){
+                                            gencode_annotations = "~/data_files/gene_annotations/gencode.v19.annotation.gtf"){
   
   require(magrittr)
   set.seed(4)
-  gene_map <- ensembl_hgnc_gene_pairing(gencode_file)
+  gene_map <- ensembl_hgnc_gene_pairing(gencode_annotations)
 
   row_metadata <- rnaseq_data %>% 
     dplyr::select(Name, Description) %>%
