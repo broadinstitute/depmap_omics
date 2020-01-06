@@ -51,27 +51,34 @@ def createDatasetWithNewCellLines(wto, samplesetname,
                                   participantslicepos=10, accept_unknowntypes=False,
                                   gsfolderto=None, dry_run=False):
   """
-  # check: will need to change slicepos based on match;
-  # may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
-  wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
-  samplesetname: String the name of the sample set created by this new set of samples updated
-  wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
-  source1: the corresponding source name
-  Can add as much as one wants
-  dry_run: whether to perform a dry run without actually uploading anything to Terra
-  forcekeep: list of sample id that you want to keep even if already in the previous workspace (will
-  cause an overwrite) NOTE: currently this functionality is broken due to the implementation of checking for duplicates
-  addonly: list of sample id that you only want to add
-  match: list of substring(s) that has to be matched against the id of the samples to add them
-  other_to_add:
-  extract: if you want to specify what values should refer to which column names
-    dict{    'name':
-    'bai':
-    'bam':
-    'source':
-    'id':
-    ...}
-  extract_defaults: the full default dict to specificy what values should refer to which column names
+  As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
+
+  Will merge samples from a set of data workspaces to a processing workspace on Terra. Will only get a subset of the metadata and rename it.
+  Will find out the duplicates based on the file size. Can also upload the bam files to a google storage bucket
+
+  Args:
+  -----
+    check: will need to change slicepos based on match;
+    may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
+    wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
+    samplesetname: String the name of the sample set created by this new set of samples updated
+    wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
+    source1: the corresponding source name
+    Can add as much as one wants
+    dry_run: whether to perform a dry run without actually uploading anything to Terra
+    forcekeep: list of sample id that you want to keep even if already in the previous workspace (will
+    cause an overwrite) NOTE: currently this functionality is broken due to the implementation of checking for duplicates
+    addonly: list of sample id that you only want to add
+    match: list of substring(s) that has to be matched against the id of the samples to add them
+    other_to_add:
+    extract: if you want to specify what values should refer to which column names
+      dict{    'name':
+      'bai':
+      'bam':
+      'source':
+      'id':
+      ...}
+    extract_defaults: the full default dict to specificy what values should refer to which column names
 
   """
   refsamples = wto.get_samples()
@@ -189,36 +196,60 @@ def createDatasetWithNewCellLines(wto, samplesetname,
 #####################
 
 
-def checkAmountOfSegments(segmentcn, thresh=850):
+def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
   """
   if there is too many segments, something might be wrong
-  segmentcn: segment dataframe
-  thresh: max ok amount
+
+  will compute the number of segments for each samples from a df of segments from RSEM
+
+  Args:
+  ----
+    segmentcn: segment dataframe
+    thresh: max ok amount
   """
   segmentcn = renameColumns(segmentcn)
-  celllines = set(segmentcn["DepMap_ID"].tolist())
+  celllines = set(segmentcn[samplecol].tolist())
   for cellline in celllines:
-    if segmentcn[segmentcn["DepMap_ID"] == cellline].shape[0] > thresh:
-      print(cellline, segmentcn[segmentcn["DepMap_ID"] == cellline].shape[0])
+    if segmentcn[segmentcn[samplecol] == cellline].shape[0] > thresh:
+      print(cellline, segmentcn[segmentcn[samplecol] == cellline].shape[0])
 
 
 def checkGeneChangeAccrossAll(genecn, thresh=1.5):
   """
-  genecn: gene cn data frame
-  thresh: threshold in logfold change accross all of them
+  used to find poor quality genes in CN data
+
+  compute given a df of gene x sample CN counts, how much change there is accross samples for
+  a same gene and returns ones that are below the threshold
+  Args:
+  -----
+    genecn: gene cn data frame
+    thresh: threshold in logfold change accross all of them
   """
   pos = genecn.where((genecn > thresh) & (genecn < 1 / thresh), 0).all(0)
   return pos.loc[pos == True].index.values
 
 
 def renameColumns(df):
+  """
+  rename some of the main columns names from RSEM, GATK.. to more readable column names
+
+  Args:
+  -----
+    df
+  """
   return(df.rename(columns={'Sample': 'DepMap_ID', 'CONTIG': 'Chromosome', 'START': 'Start',
                             'END': 'End', 'seqnames': 'Chromosome', 'start': 'Start', 'end': 'End'}))
 
 
 def checkDifferencesWESWGS(segmentcn_wes, segmentcn_wgs, chromlist=CHROMLIST):
   """
-  if the similarity between WES and WGS on same cell line is different there might be problems.
+  if the similarity between WES and WGS on same cell line is low there might be problems.
+
+  Args:
+  ----
+    segmentcn_wes: df the RSEM segment data from WES
+    segmentcn_wgs: df the RSEM segment data from WGS
+    chromlist: list off chromosome to compute on
   """
 
   # function for overlap between two segments 1D
@@ -268,9 +299,12 @@ def checkDifferencesWESWGS(segmentcn_wes, segmentcn_wgs, chromlist=CHROMLIST):
 
 def addToMainFusion(input_filenames, main_filename):
   """
+  given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
 
-  input_filenames: a set of filepath to input the files should be c|tsv from Terra fusion pipeline
-  main_filename: a filepath to input the files should be c|tsv from Terra aggregation pipeline
+  Args:
+  ----
+    input_filenames: a set of filepath to input the files should be c|tsv from Terra fusion pipeline
+    main_filename: a filepath to input the files should be c|tsv from Terra aggregation pipeline
   """
   maindata = pd.read_csv(main_filename, sep='\t')
   if '.' in maindata["DepMap_ID"][0]:
@@ -291,8 +325,12 @@ def addToMainFusion(input_filenames, main_filename):
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
   """
-  input_filenames: a list of dict like file path in Terra gs://, outputs from the rsem pipeline
-  main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
+  given a tsv RNA files from RSEM algorithm, merge it to a tsv set of RNA data
+
+  Args:
+  ----
+    input_filenames: a list of dict like file path in Terra gs://, outputs from the rsem pipeline
+    main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
   """
   genes_count = pd.read_csv('temp/' + main_filename['rsem_genes_expected_count'].split('/')[-1],
                             sep='\t', compression='gzip')
@@ -317,10 +355,18 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
                    index=False, index_label=False, compression='gzip')
 
 
-def ExtractStarQualityInfo(samplesetname, wm):
+def ExtractStarQualityInfo(samplesetname, workspace, release='temp'):
   """
+  put all of the Star Quality results from Terra Star Workflow into one file
+
+  Args:
+  -----
+    samplesetname:
+    wm: the terra workspace
+    release: the name of the folder where it will be stored
   """
-  a = wm.get_samples().loc[wm.get_sample_sets().loc[samplesetname].samples].star_logs
+  a = dm.WorkspaceManager(workspace).get_samples().loc[
+      dm.WorkspaceManager(workspace).get_sample_sets().loc[samplesetname].samples].star_logs
   for i, sample in enumerate(a):
     if sample is None:
       print("no log file found for: " + a.index[i])
@@ -328,11 +374,20 @@ def ExtractStarQualityInfo(samplesetname, wm):
       if 'final.out' in log:
         print("copying " + a.index[i])
         os.system('gsutil cp ' + log + ' temp/')
-  os.system("cat temp/*.Log.final.out > temp/" + samplesetname + ".txt")
-  os.system("rm temp/*.Log.final.out")
+  os.system("cat data/" + release + "/*.Log.final.out > temp/" + samplesetname + ".txt")
+  os.system("rm data/" + release + "/*.Log.final.out")
 
 
 def AddToVirtual(virtualname, folderfrom, files):
+  """
+  will add some files from a taiga folder to a taiga virtual dataset folder and preserve the previous files
+
+  Args:
+  ----
+    virtualname: the taiga virtual dataset name
+    folderfrom: the taiga folder wher the files are
+    files: a list(tuples(newfilename,prevfilename))
+  """
   assert type(files[0]) is tuple
   versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
   versionb = max([int(i['name']) for i in tc.get_dataset_metadata(virtualname)['versions']])
@@ -350,7 +405,72 @@ def AddToVirtual(virtualname, folderfrom, files):
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
 
 
+def removeColDuplicates(a, prepended=['dm_', 'ibm_', 'ccle_']):
+  """
+  This function is used to subset a df to only the columns with the most up to date names
+
+  We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
+  """
+  values = []
+  for i in a.columns:
+    i = i.split('_')
+    if i[0] in prepended:
+      values.append('_'.join(i[1:]))
+    else:
+      values.append('_'.join(i))
+    if i[-1] == '2':
+      print(i)
+  a.columns = values
+  a = a[a.columns[np.argsort(values)]]
+  todrop = []
+  for i in range(len(a.columns) - 1):
+    e = a.columns[i + 1].split('_')
+    if len(e[-1]) == 1:
+      if int(e[-1]) > 1 and e[0] == a.columns[i].split('_')[0]:
+        todrop.append(a.columns[i])
+        print(a.columns[i])
+        print(e)
+  a = a.drop(todrop, 1)
+  return a
+
+
+def removeDuplicates(a, loc, prepended=['dm_', 'ibm_', 'ccle_']):
+  """
+  This function is used to subset a df to only the columns with the most up to date names
+
+  We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
+  """
+  values = []
+  if len(prepended) > 0:
+    print('heyyy')
+    for i in a[loc]:
+      i = i.split('_')
+      if i[0] in prepended:
+        values.append('_'.join(i[1:]))
+      else:
+        values.append('_'.join(i))
+      if i[-1] == '2':
+        print(i)
+    a[loc] = values
+  a = a.sort_values(by=[loc])
+  todrop = []
+  for i in range(len(a[loc]) - 1):
+    e = a[loc][i + 1].split('_')
+    if len(e[-1]) == 1:
+      if int(e[-1]) > 1 and e[0] == a[loc][i].split('_')[0]:
+        todrop.append(a[loc][i])
+        print(a[loc][i])
+        print(e)
+
+  a = a.set_index(loc).drop(todrop).reset_index()
+  return a
+
+
 def compareToCuratedGS(url, sample, samplesetname, colname='CN New to internal'):
+  """
+
+  @gmiller
+  """
   from gsheets import Sheets
   sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
   # Cell Line Profiling Status google sheet
@@ -372,8 +492,6 @@ def compareToCuratedGS(url, sample, samplesetname, colname='CN New to internal')
     print("We have not found " + str(len(in_sheet_not_found)) + " of the samples we're supposed to have this release:\n" + str(sorted(list(in_sheet_not_found))))
   else:
     print("We aren't missing any samples that we're supposed to have this release!")
-
-  #
   # # goal: answer where these extra cell lines are from
   # # note: This is a very rough, quick and dirty approach. It could be easily improved.
   # print(len(sorted(list(found_unexpected))))
