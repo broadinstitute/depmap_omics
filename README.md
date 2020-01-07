@@ -5,7 +5,7 @@ __have a look at [DepMap](https://www.depmap.org)__
 ![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/depmap-logo.png)
 
 What you need to process the Quarterly DepMap-Omics releases from Terra
-Here is a presentation of the pipeline: https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116
+[Here](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116) is a presentation of the pipeline.
 
 We are using a set of tools to 
 - __star__:
@@ -122,6 +122,8 @@ To run the CCLE pipeline we follow the installation process above and then boot 
 
 You can find more documentation about the range of workspaces that have been created: [here](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/firecloud_documentation.md)
 
+Note: Slide 7 of the [CCLE pipelines and datasets presentation](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_240) provides another good view of what the pipeline is doing.
+
 _What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
 
 ### boot up
@@ -192,7 +194,6 @@ This outputs to be downloaded will be saved in the sample set that was run. The 
 There are several other tasks in this workspace. In brief:
 
 
-
 *   **CGA_Production_Analysis_Pipeline_Cell_Lines** (lelagina/CGA_Production_Analysis_Pipeline_Cell_LinesSnapshot ID: 12). This task is the same as the ICE and AGILENT prefixed version above, except that it relied on pulling the baits and targets to use from the metadata stored for the samples. Having AGILENT and ICE versions specified made the uploading and running process easier.
 *   **SANGER_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22). This task was trying to run the CGA pipeline on the Sanger WES data, using a Sanger pseudo normal. In its current implementation, this task fails to complete for the samples.
 *   **UNFILTERED_aggregateMAFs_selectFields** (ccle_mg/aggregateMAFs_selectFieldsSnapshot ID: 1). Aggregates the MAF outputted by the CGA cell line pipeline prior to the common variant filter and germline filtering tasks. This can give us insight to which mutations are getting filtered out when. We may want to potentially include this MAF in the release so people can see why certain mutations of interest may be getting filtered out.
@@ -256,7 +257,6 @@ The outputs to be downloaded will be saved under the sample set you ran. The out
 This task uses the same samtofastq_v1-0_BETA_cfg task as in the expression pipeline, although in the current implementation, this task will be run twice. It might be worth combing the expression/fusion calling into a single workflow. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs). 
 
 There are several other tasks in this workspace. In brief:
-
 
 
 *   Tasks prefixed with **EXPENSIVE** or **CHEAP** are identical to their non-prefixed version, except that they specify different memory, disk space, etc. parameters. These versions can be used when samples fail the normal version of the task due to memory errors.
