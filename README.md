@@ -41,41 +41,41 @@ If you are not familiar with these notions, we will first recommend you get more
 
 
 ### /!\ this repository needs other repos 
-some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener)
+Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener)
 Go to the repos and pull them to the same parent folder as ccle_processing.
 
 
 ### /!\ you would need the approriate R packages and python packages:
-- you will need to install jupyter notetbooks and google cloud sdk
+- You will need to install jupyter notetbooks and google cloud sdk
   - install Google Cloud SDK (see https://cloud.google.com/sdk/docs/downloads-interactive and https://cloud.google.com/sdk/docs/quickstart-macos)
   - authenticate my SDK account by running "gcloud auth application-default login" in terminal
-- for R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
-- another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd ../..`
-- for Python use the requirements.txt file `pip install -r requirements.txt`
+- For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
+- Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd ../..`
+- For Python use the requirements.txt file `pip install -r requirements.txt`
 
 ### Getting Terra Access
 
-1. you will need to request access to the following terra workspaces:
+1. You will need to request access to the following terra workspaces:
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_hg38_RNAseq
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
 The current owners of these workspaces should give you access.
 2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows): https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit?usp=sharing
 3. Ask Sarah Young for access to required billing projects (e.g. broad-firecloud-ccle)
-4. get access to the following Terra groups:
+4. Get access to the following Terra groups:
   - DEPMAP_CCLE_DATA
   - DEPMAP-PIPELINES
   - CCLE2-DATA
   - CCLE-PIPELINE
-5. if you need to get access to the depmap data:
+5. If you need to get access to the depmap data:
   - __Exome__ [IBM](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/Getz_IBM_CellLines_Exomes/data)
   - __Exome__ [Broad](https://firecloud.terra.bio/#workspaces/broad-firecloud-ccle/CCLE_DepMap_WES)
   - __Exome__ [Broad](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/CCLE_DepMap_WES)
   - __rna__ [IBM](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/Getz_IBM_CellLines_RNASeqData/data)
   - __rna__ [Broad](https://firecloud.terra.bio/#workspaces/broad-firecloud-ccle/CCLE_DepMap_RNAseq)
   - __rna__ [Broad](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/CCLE_DepMap_RNAseq)
-6. request access to the data bucket `gs://ccle_bams/`
-7. you will need also access to the billing project `broad-firecloud-ccle`
+6. Request access to the data bucket `gs://ccle_bams/`
+7. You will need also access to the billing project `broad-firecloud-ccle`
 
 
 *more information on the firecloud workspaces and what they might contain is available on this [document](https://www.github.com/broadinstitute/ccle_processing/firecloud_documentation.html)
@@ -85,34 +85,34 @@ The current owners of these workspaces should give you access.
 
 ## File structure
 
-there is for now 3 computation pipeline for depmap omics:
-- expression
-- mutations
-- copy number
+There is for now 3 computation pipeline for depmap omics:
+- Expression
+- Mutations
+- Copy number
 
-each:
+Each:
 - is contained in an jupyter notebook file
 - gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
 - updates the sample TSVs on Terra with path to the files, 
 - compute the results for each samples by running workflows, 
 - download the results, post process them with additional local functions and QC them.
-- Uploads them to taiga.
+- uploads them to taiga.
 
-__data/__ contains important information used for processing
+__data/__ Contains important information used for processing
 
-__src__ contains the location of function files
+__src__ Contains the location of function files
 
-__\*\_pipeline__ contains some of the pipeline's workflows' wdl files and script files used by these workflows 
+__\*\_pipeline__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
 
-__ccle_tasks__ contains a notebook for each of the different additional processing that the CCLE team has to perform
+__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform
 
-__legacy__ contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
+__legacy__ Contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
 
-__readmes__ contains some of the depmap readmes 
+__readmes__ Contains some of the depmap readmes 
 
-__temp__ contains the temp file that can get removed after processing (should be empty)
+__temp__ Contains the temp file that can get removed after processing (should be empty)
 
-__documentation__ contains some additional files for documenting the pipelines
+__documentation__ Contains some additional files for documenting the pipelines
 
 # CCLE Pipelines inner workings:
 
@@ -120,13 +120,13 @@ __documentation__ contains some additional files for documenting the pipelines
 
 To run the CCLE pipeline we follow the installation process above and then boot up a GCP instance to run the notebooks from it.
 
-you can find more documentation about the range of workspaces that have been created: [here](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/firecloud_documentation.md)
+You can find more documentation about the range of workspaces that have been created: [here](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/firecloud_documentation.md)
 
 ### boot up
 
-- you first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
+- You first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
 
-we are instantiating all the parameters needed for this pipeline to run
+We are instantiating all the parameters needed for this pipeline to run
 
 #### Adding new data
 
@@ -150,7 +150,7 @@ We are using Dalmatian to send request to Terra,
 
 #### CN
 
-we are running a set of 5 functions/workflows To generate the copy number dataset:
+We are running a set of 5 functions/workflows To generate the copy number dataset:
 
 *   **BamToUnmappedRGBams_MC** vdauwera/BamToUnmappedRGBamsSnapshot ID: 3
 *   **Generate_uBAM_File_List** gkugener/ArrayOfFilesToTxtSnapshot ID: 1
@@ -169,7 +169,7 @@ There are several other tasks in this workspace. In brief:
 
 #### Mutation
 
-we are running a set of 6 functions/workflows To generate the mutation dataset:
+We are running a set of 6 functions/workflows To generate the mutation dataset:
 
 *   For new samples in DepMap, run the ICE version of this task. CCLE2 samples used Agilent targets, so this pipeline should be used instead. The pipelines are identical in terms of their outputs, but the proper targets, baits, and pseudo normal should be used based on how the samples were sequenced.
 
@@ -202,7 +202,7 @@ There are several other tasks in this workspace. In brief:
 
 #### RNA
 
-we are running a set of 6 functions/workflows To generate the expression/fusion dataset:
+We are running a set of 6 functions/workflows To generate the expression/fusion dataset:
 
 
 We use the GTEx pipeline ([https://github.com/broadinstitute/gtex-pipeline/blob/v9/TOPMed_RNAseq_pipeline.md](https://github.com/broadinstitute/gtex-pipeline/blob/v9/TOPMed_RNAseq_pipeline.md)).
@@ -327,7 +327,7 @@ __check important mutations__
 
 Here we get all data and remove the duplicates directly with the function `removeDuplicates`
 
-we then run:
+We then run:
 
 - readTranscripts
 - readCounts
@@ -354,16 +354,16 @@ We want to apply filters to the fusion table to reduce the number of artifacts i
 * Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
 * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
 
-with the functions:
+With the functions:
 - readFusions
 - filterFusions
 - prepare_depmap_fusion_data_for_taiga
 
 ### Upload to taiga
 
-- we load the blacklisted/embargoed sample ids
-- we log2 transform and create a file for each release (and one containing everything)
-- we upload the files using taigapy in a corresponding taiga dataset with the corresponding description and also upload it to its virtual dataset
+- We load the blacklisted/embargoed sample ids
+- We log2 transform and create a file for each release (and one containing everything)
+- We upload the files using taigapy in a corresponding taiga dataset with the corresponding description and also upload it to its virtual dataset
 
 
 # Previous PiPelines
