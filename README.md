@@ -124,6 +124,8 @@ You can find more documentation about the range of workspaces that have been cre
 
 Note: Slide 7 of the [CCLE pipelines and datasets presentation](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_240) provides another good view of what the pipeline is doing.
 
+![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/slide7.png)
+
 _What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
 
 ### boot up
