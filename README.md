@@ -122,6 +122,8 @@ To run the CCLE pipeline we follow the installation process above and then boot 
 
 You can find more documentation about the range of workspaces that have been created: [here](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/firecloud_documentation.md)
 
+_What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
+
 ### boot up
 
 - You first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
