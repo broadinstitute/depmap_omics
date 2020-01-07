@@ -8,21 +8,21 @@ What you need to process the Quarterly DepMap-Omics releases from Terra
 Here is a presentation of the pipeline: https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116
 
 We are using a set of tools to 
-- star:
+- __star__:
   - https://www.ncbi.nlm.nih.gov/pubmed/23104886
   - https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf
-- rsem: 
+- __rsem__: 
   - https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323
-- star fusion: 
+- __star fusion__: 
   - https://github.com/STAR-Fusion/STAR-Fusion/wiki
   - http://biorxiv.org/content/early/2017/03/24/120295
-- mutect: 
+- __mutect__: 
   - https://software.broadinstitute.org/cancer/cga/mutect
   - https://software.broadinstitute.org/gatk/documentation/tooldocs/4.beta.4/org_broadinstitute_hellbender_tools_walkers_mutect_Mutect2.php
   - https://www.nature.com/articles/nbt.2514
-- gatk cnv 
+- __gatk cnv__:
   - https://software.broadinstitute.org/gatk/documentation/article?id=11682
-- strelka:
+- __strelka__:
   - https://www.nature.com/articles/s41592-018-0051-x
   - https://github.com/Illumina/strelka
 
@@ -92,10 +92,10 @@ there is for now 3 computation pipeline for depmap omics:
 
 each:
 - is contained in an jupyter notebook file
-- gets data from buckets, 
-- updates the TSVs on Terra, 
-- compute the results for each, 
-- QC them and do some more filtering,
+- gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
+- updates the sample TSVs on Terra with path to the files, 
+- compute the results for each samples by running workflows, 
+- download the results, post process them with additional local functions and QC them.
 - Uploads them to taiga.
 
 __data/__ contains important information used for processing
@@ -106,11 +106,13 @@ __\*\_pipeline__ contains some of the pipeline's workflows' wdl files and script
 
 __ccle_tasks__ contains a notebook for each of the different additional processing that the CCLE team has to perform
 
-__legacy__ contains the previous R markdown files that were used as templates for the previous pipeline's postprocessing
+__legacy__ contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
 
 __readmes__ contains some of the depmap readmes 
 
 __temp__ contains the temp file that can get removed after processing (should be empty)
+
+__documentation__ contains some additional files for documenting the pipelines
 
 # CCLE Pipelines inner workings:
 
@@ -124,7 +126,7 @@ you can find more documentation about the range of workspaces that have been cre
 
 - you first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
 
-we are instanciating all the parameters needed for this pipeline to run
+we are instantiating all the parameters needed for this pipeline to run
 
 #### Adding new data
 
@@ -174,7 +176,7 @@ we are running a set of 6 functions/workflows To generate the mutation dataset:
     **ICE_CGA_Production_Analysis_Pipeline_Cell_Lines_copy** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22) OR
 
 
-    **AGILENT_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Anablysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22)
+    **AGILENT_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22)
 
 *   **common_variant_filter** (breardon/common_variant_filterSnapshot ID: 3)
 *   **filterMAF_on_CGA_pipeline** (gkugener/filterMAF_on_CGA_pipelineSnapshot ID: 8)
