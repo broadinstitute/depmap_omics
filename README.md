@@ -2,6 +2,7 @@
 
 __have a look at [DepMap](https://www.depmap.org)__
 
+![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/depmap-logo.png)
 
 What you need to process the Quarterly DepMap-Omics releases from Terra
 Here is a presentation of the pipeline: https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116
