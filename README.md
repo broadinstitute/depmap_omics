@@ -18,6 +18,7 @@ We are using a set of tools to
   - http://biorxiv.org/content/early/2017/03/24/120295
 - __mutect__: 
   - https://software.broadinstitute.org/cancer/cga/mutect
+  - Interesting videos in: https://gatkforums.broadinstitute.org/gatk/discussion/8969/somatic-mutations-of-epithelial-cells-haplotypecaller-vs-mutect
   - https://software.broadinstitute.org/gatk/documentation/tooldocs/4.beta.4/org_broadinstitute_hellbender_tools_walkers_mutect_Mutect2.php
   - https://www.nature.com/articles/nbt.2514
 - __gatk cnv__:
@@ -25,6 +26,7 @@ We are using a set of tools to
 - __strelka__:
   - https://www.nature.com/articles/s41592-018-0051-x
   - https://github.com/Illumina/strelka
+ 
 
 ## Installation
 
