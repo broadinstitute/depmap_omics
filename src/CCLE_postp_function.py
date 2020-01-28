@@ -11,14 +11,15 @@
 import pdb
 import pandas as pd
 import numpy as np
+import dalmatian as dm
 from taigapy import TaigaClient
 tc = TaigaClient()
 import os
-import re  # for re.split
 import sys
 print("you need to have installed JKBio in the same folder as ccle_processing")
 sys.path.insert(0, '../JKBio/')
 import TerraFunction as terra
+import GCPFunction as gcp
 
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
@@ -47,14 +48,17 @@ extract_defaults = {
 
 def createDatasetWithNewCellLines(wto, samplesetname,
                                   wmfroms, sources,
-                                  forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={}, extract_defaults=extract_defaults,
+                                  forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={},
+                                  extract_defaults=extract_defaults,
                                   participantslicepos=10, accept_unknowntypes=False,
-                                  gsfolderto=None, dry_run=False):
+                                  gsfolderto=None, dry_run=False, rename=dict()):
   """
   As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
 
-  Will merge samples from a set of data workspaces to a processing workspace on Terra. Will only get a subset of the metadata and rename it.
-  Will find out the duplicates based on the file size. Can also upload the bam files to a google storage bucket
+  Will merge samples from a set of data workspaces to a processing workspace on Terra. Will only 
+  get a subset of the metadata and rename it.
+  Will find out the duplicates based on the file size. 
+  Can also upload the bam files to a google storage bucket
 
   Args:
   -----
@@ -81,6 +85,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     extract_defaults: the full default dict to specificy what values should refer to which column names
 
   """
+  wto = dm.WorkspaceManager(wto)
   refsamples = wto.get_samples()
   refids_full = refsamples['participant'].tolist()
   # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
@@ -91,10 +96,6 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   for match_substring in match:
     refids += [val[val.index(match_substring):] for val in refids_full if match_substring in val]
 
-  # update extract dict with user-defined values
-  for key, value in extract.items():
-    if key not in extract_defaults.keys() and key != 'ref_bams':
-      print("We did not find the key '" + str(key) + "' in the full extraction dict. This key-value mapping may do nothing...")
   extract.update(extract_defaults)
 
   print("Getting sample infos...")
@@ -103,9 +104,14 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   if type(wmfroms) is str:
     wmfroms = [wmfroms]
   sampless = pd.DataFrame()
-  names = [a.split('_') for a in refsamples[extract['ref_bams']] if type(a) is str]
+  names = [a.split('_')[0] for a in refsamples.index if type(a) is str]
+
+  ref_size = {gcp.extractSize(val): gcp.extractPath(val) for val in gcp.lsFiles(
+      [i for i in refsamples[extract["ref_bams"]] if type(i) is str and str(i) != 'NA'], "-al", 200)}
+
   for source, wmfrom in zip(sources, wmfroms):
     broken_bams = []
+    wmfrom = dm.WorkspaceManager(wmfrom)
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
     # keep samples that contain the match requirement (e.g. ACH for DepMap IDs)
     samples = samples[samples[extract['id']].str.contains('|'.join(match))]
@@ -116,19 +122,15 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     print("This step can take a while as we need to use gsutil to check the size of each potential duplicate...")
     dups_to_remove = []
     # check for broken bam files; if broken, then remove from consideration
-    # need to check for broken filepaths before checking if the sample is in Terra so that we don't add a broken file path for a new participant
-    foundfiles = terra.lsFiles(samples[extract['bam']])
+    # need to check for broken filepaths before checking if the sample is in Terra so that we don't
+    # add a broken file path for a new participant
+    foundfiles = gcp.lsFiles(samples[extract['bam']])
     broken_bams = set(samples[extract['bam']]) - set(foundfiles)
-
     tolookfor = [val[extract['bam']] for _, val in samples.iterrows() if val[extract['id']][0:participantslicepos] in set(refids)]
-    sample_size = {int(re.split("\d{4}-\d{2}-\d{2}", val)[0]):
-                   'gs://' + val.split('gs://')[1].split('#')[0] for val in terra.lsFiles(tolookfor, "-al", len(tolookfor))}
-    ref_size = {int(re.split("\d{4}-\d{2}-\d{2}", val)[0]):
-                'gs://' + val.split('gs://')[1].split('#')[0] for val in terra.lsFiles(
-        [i for i in refsamples[extract["ref_bams"]] if type(i) is str], "-al", 200)}
-    dups_to_remove = [ref_size[a] for a in set(ref_size.keys()) & set(sample_size.keys())]
-    import pdb
-    pdb.set_trace()
+    sample_size = {gcp.extractSize(val): gcp.extractPath(val) for val in gcp.lsFiles(tolookfor, "-al")}
+
+    dups_to_remove = [sample_size[a] for a in set(ref_size.keys()) & set(sample_size.keys())]
+
     # remove the duplicates from consideration
     print("Len of samples before removal: " + str(len(samples)))
     print('These bam file path do not exist: ' + str(broken_bams))
@@ -139,12 +141,15 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     samples.reset_index(drop=True, inplace=True)
     # add number to sample ID so runs of same participant have unique sample ID
     new_samples = samples[extract['id']].str.slice(0, participantslicepos)
-    # check: currently, below lines prevent forcekeep from working on true duplicates (aka same size  file). Need to think about how to bring back the forcekeep functionality
+    # check: currently, below lines prevent forcekeep from working on true duplicates
+    # (aka same size  file). Need to think about how to bring back the forcekeep functionality
     print("Len of samples after removal: " + str(len(samples)))
+
     # need to keep track of whether we're adding more than one new entry for a given sample id
     for i, val in enumerate(new_samples):
       num_in_workspace = names.count(val)
       samples[extract['id']][i] = val + '_' + str(num_in_workspace + 1)
+      samples["version"] = int(num_in_workspace + 1)
       names.append(val)
     if len(addonly) > 0:
       samples = samples[samples[extract['id']].isin(addonly)]
@@ -161,23 +166,31 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   #   # samples not found in the wto workspace so will be adding them now
   #   print('we did not find:' + str(notfound))
   sample_ids = []
+  sampless['version'] = sampless['version'].astype(int)
   # to do the download to the new dataspace
   if not dry_run:
+    pdb.set_trace()
     if gsfolderto is not None:
       for i, val in sampless.iterrows():
-        res = os.system('gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto)
-        sampless[extract['bam']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bam']]]
-        sampless[extract['bai']] = [gsfolderto + a.split('/')[-1] for a in sampless[extract['bai']]]
+        if not gcp.exists(gsfolderto + 'v' + str(val["version"]) + '/' + val[extract['bam']].split('/')[-1]):
+          cmd = 'gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto + 'v' + str(val["version"]) + '/'
+          res = os.system(cmd)
+          if res != 0:
+            print("error in command '" + cmd + "'")
+      sampless[extract['bam']] = [gsfolderto + 'v' + str(a["version"]) + '/' + a[extract['bam']].split('/')[-1] for _, a in sampless.iterrows()]
+      sampless[extract['bai']] = [gsfolderto + 'v' + str(a["version"]) + '/' + a[extract['bai']].split('/')[-1] for _, a in sampless.iterrows()]
     print(sampless)
   if len(sampless) == 0:
     raise Exception("no new samples in this matrix")
   for ind, val in sampless.iterrows():
     name = val[extract['id']]
+    if name in rename.keys():
+      name = rename[name]
     refsamples = refsamples.append(pd.Series(
         {
             "CCLE_name": val[extract['name']],
-            "WES_bai": val[extract['bai']],
-            "WES_bam": val[extract['bam']],
+            extract['ref_bais']: val[extract['bai']],
+            extract['ref_bams']: val[extract['bam']],
             "Source": val[extract['source']],
             "participant": val[extract['participant']][:participantslicepos],
 
@@ -189,7 +202,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     wto.upload_samples(refsamples)
     print("creating a sample set")
     wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
-  return sample_ids, refsamples
+  return sample_ids, refsamples, refsamples[refsamples.index.isin(sample_ids)].CCLE_name.tolist()
 
 #####################
 # VALIDATION
@@ -405,7 +418,7 @@ def AddToVirtual(virtualname, folderfrom, files):
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
 
 
-def removeColDuplicates(a, prepended=['dm_', 'ibm_', 'ccle_']):
+def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
   """
   This function is used to subset a df to only the columns with the most up to date names
 
@@ -418,8 +431,6 @@ def removeColDuplicates(a, prepended=['dm_', 'ibm_', 'ccle_']):
       values.append('_'.join(i[1:]))
     else:
       values.append('_'.join(i))
-    if i[-1] == '2':
-      print(i)
   a.columns = values
   a = a[a.columns[np.argsort(values)]]
   todrop = []
@@ -428,13 +439,12 @@ def removeColDuplicates(a, prepended=['dm_', 'ibm_', 'ccle_']):
     if len(e[-1]) == 1:
       if int(e[-1]) > 1 and e[0] == a.columns[i].split('_')[0]:
         todrop.append(a.columns[i])
-        print(a.columns[i])
-        print(e)
+        print("removing: " + str(a.columns[i]) + " and replacing by: " + str(e))
   a = a.drop(todrop, 1)
   return a
 
 
-def removeDuplicates(a, loc, prepended=['dm_', 'ibm_', 'ccle_']):
+def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
   """
   This function is used to subset a df to only the columns with the most up to date names
 
@@ -489,7 +499,8 @@ def compareToCuratedGS(url, sample, samplesetname, colname='CN New to internal')
 
   in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
   if len(in_sheet_not_found) > 0:
-    print("We have not found " + str(len(in_sheet_not_found)) + " of the samples we're supposed to have this release:\n" + str(sorted(list(in_sheet_not_found))))
+    print("We have not found " + str(len(in_sheet_not_found)) + " of the samples we're supposed to \
+      have this release:\n" + str(sorted(list(in_sheet_not_found))))
   else:
     print("We aren't missing any samples that we're supposed to have this release!")
   # # goal: answer where these extra cell lines are from
