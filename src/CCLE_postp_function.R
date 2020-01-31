@@ -773,24 +773,25 @@ filterFusions <- function(fusions){
 #
 desired_fields <- c(
   'Hugo_Symbol', 'Entrez_Gene_Id',
-  'Center', 'NCBI_Build',
+  'NCBI_Build',
   'Chromosome', 'Start_position', 'End_position', 'Strand',
   'Variant_Classification', 'Variant_Type',
-  'Reference_Allele', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2', 
+  'Reference_Allele', 'Tumor_Seq_Allele2', 
   'dbSNP_RS', 'dbSNP_Val_Status',
   'Genome_Change',
   'Annotation_Transcript',
   'Tumor_Sample_Barcode',
   'cDNA_Change', 'Codon_Change', 'Protein_Change',
-  't_alt_count', 't_ref_count', 'tumor_f',
   'isDeleterious','isTCGAhotspot', 'TCGAhsCnt','isCOSMIChotspot','COSMIChsCnt',
-  'ExAC_AF', 'i_ExAC_AF', 'exac_af', 'PASS')
+  'ExAC_AF')
 
-  selectFields=c(
+additional_columns_to_keep <- c('t_alt_count', 't_ref_count','i_ExAC_AF')
+
+selectFields<-c(
     "Hugo_Symbol", "Entrez_Gene_Id",
     "Chromosome","Start_position","End_position",
     "Variant_Classification","Variant_Type",
-    "Reference_Allele","Tumor_Seq_Allele2",
+    "Reference_Allele","Tumor_Seq_Allele1",
     "dbSNP_RS","dbSNP_Val_Status",
     "Genome_Change",
     "Annotation_Transcript",
@@ -799,7 +800,7 @@ desired_fields <- c(
 
 readMutations = function(newly_merged_maf){
   # This is the universe of the fields that we want to load from the MAF. Not all of these columns will be present in the CGA MAF
-  CGA_based_calls <- fread(newly_merged_maf, select = desired_fields) %>%
+  CGA_based_calls <- fread(newly_merged_maf, select = c(desired_fields, additional_columns_to_keep)) %>%
     dplyr::rename(ExAC_AF=i_ExAC_AF) %>%
     # We should validate that there are not duplicate types
     mutate(Tumor_Sample_Barcode=stringr::str_extract(string=Tumor_Sample_Barcode, pattern='ACH\\-[0-9]+'))
@@ -818,12 +819,6 @@ createSNPs = function(CGA_based_calls){
 
 addToMainMutation = function(previous.release.maf,newrelease){
   # We are adding the CGA_WES_AC back
-  distinct_columns_to_keep <- c("Tumor_Sample_Barcode", "Chromosome", "Start_position", "Entrez_Gene_Id",
-    "End_position", "Reference_Allele", "Tumor_Seq_Allele2", "ExAC_AF", "isDeleterious","isCOSMIChotspot",
-    "COSMIChsCnt", "isTCGAhotspot", "TCGAhsCnt","CGA_WES_AC","Hugo_Symbol")
-  additional_columns_to_keep <- c('t_alt_count', 't_ref_count', 'ExAC_AF','isDeleterious', 
-    'isCOSMIChotspot', 'COSMIChsCnt', 'isTCGAhotspot', 'TCGAhsCnt')
-  
   merged_latest_release <- previous.release.maf %>%
   # Merge in CGA data. We join the previous release MAF on the distinct columns to keep above
   # In the CGA pipeline, Tumor_Seq_Allele2 is is the tumor allele. In the release MAF, Tumor_Seq_Allele1 is the tumor allele
@@ -831,9 +826,8 @@ addToMainMutation = function(previous.release.maf,newrelease){
     merge(.,
        newrelease %>%
         mutate(CGA_WES_AC=paste0(t_alt_count, ':', t_ref_count)) %>%
-        dplyr::select(c(distinct_columns_to_keep, additional_columns_to_keep)) %>%
-        dplyr::select(-t_alt_count, -t_ref_count),
-      by = distinct_columns_to_keep,
+        dplyr::select(-t_alt_count, -t_ref_count,-pass),
+      by = c(desired_fields,'CGA_WES_AC'),
       all = TRUE
     ) %>%
     dplyr::rename(Tumor_Seq_Allele1=Tumor_Seq_Allele2)
@@ -958,10 +952,10 @@ addACCleaned <- function(given, to_add, given_name){
   res <- given %>%
     left_join(.,
       to_add %>% 
-        dplyr::select(c(distinct_columns_to_keep, 't_alt_count', 't_ref_count')) %>%
+        dplyr::select(c(desired_fields, 't_alt_count', 't_ref_count')) %>%
         mutate(!!given_name := paste0(t_alt_count, ':', t_ref_count)) %>%
         dplyr::select(-t_alt_count, -t_ref_count),
-      by = distinct_columns_to_keep
+      by = desired_fields
     )
   return(res)
 }
@@ -1048,20 +1042,20 @@ mergeAnnotations = function(CGA_based_calls,previous.release.maf){
   # Tumor_Seq_Allele1 we want to generate the unique symbols, entrez gene ids, 
   # build, strand, variant classification, etc...
   # Get the distinct values from every set
-  annotations_previous <- previous.release.maf %>% dplyr::rename(Tumor_Seq_Allele2=Tumor_Seq_Allele1) %>% 
+  annotations_previous <- previous.release.maf %>% 
   dplyr::select(selectFields) %>% distinct()
   annotations_CGA <- CGA_based_calls %>% dplyr::select(selectFields) %>% distinct()
 
   # Join on Chromosome, positions, reference allele and tumor allele and then deal with differences
   annotations_final <- merge(
     annotations_previous, annotations_CGA, 
-    by=c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2'), all = T)
+    by=c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele1'), all = T)
   # Now consolidate all the fields to reach a consensus of annotations
   fields_to_consolidate <- selectFields %>% .[which(!(. %in% c('Chromosome', 'Start_position', 
-    'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2')))]
+    'End_position', 'Reference_Allele', 'Tumor_Seq_Allele1')))]
 
   # Determine where the conflicts are (the way this is written now, this takes a while...)
-  print("find conflicts...")
+  print("fNDd conflicts...")
   for (f in fields_to_consolidate) {
     start_time <- Sys.time()
     annotations_final[,paste0('PROPOSED_', f)] <- apply(annotations_final[,paste0(f, c('.x', '.y'))], 1, 
@@ -1109,13 +1103,13 @@ mergeAnnotations = function(CGA_based_calls,previous.release.maf){
     }
   }
   cleaned_annotations <- annotations_final %>% dplyr::select(
-    Chromosome, Start_position, End_position, Reference_Allele, Tumor_Seq_Allele2, colnames(.)[grep('PROPOSED_', colnames(.))])
+    Chromosome, Start_position, End_position, Reference_Allele, Tumor_Seq_Allele1, colnames(.)[grep('PROPOSED_', colnames(.))])
   colnames(cleaned_annotations) %<>% gsub('PROPOSED_', '', .)
   cleaned_annotations <- cleaned_annotations %>% distinct()
 
   # Remove the remaining duplicates
   cleaned_annotations <- cleaned_annotations[!duplicated(cleaned_annotations[,
-    c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele2')]),]
+    c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele1')]),]
   return(cleaned_annotations)
 }
 
@@ -1126,7 +1120,7 @@ addAnnotation <- function(merged_latest_release,cleaned_annotations,colum){
     dplyr::select('Tumor_Sample_Barcode', 'Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 
       'Tumor_Seq_Allele1', paste0(c('CGA_WES', 'SangerWES', 'SangerRecalibWES', 'RNAseq', 'HC', 'RD', 'WGS'), '_AC')) %>%
     left_join(.,
-      cleaned_annotations %>% dplyr::rename(Tumor_Seq_Allele1=Tumor_Seq_Allele2),
+      cleaned_annotations,
       by = c('Chromosome', 'Start_position', 'End_position', 'Reference_Allele', 'Tumor_Seq_Allele1')
     )
   # Add the strand and build columns. Also, we should add '' in the places of NAs? To differentiate 
