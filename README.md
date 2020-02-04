@@ -160,13 +160,18 @@ We are using Dalmatian to send request to Terra,
 
 #### CN
 
-We are running a set of 5 functions/workflows To generate the copy number dataset:
+We are running a set of 5 functions/workflows To generate the copy number dataset in the following order:
 
-*   **BamToUnmappedRGBams_MC** vdauwera/BamToUnmappedRGBamsSnapshot ID: 3
-*   **Generate_uBAM_File_List** gkugener/ArrayOfFilesToTxtSnapshot ID: 1
-*   **Realign_WES_GATK4** gatk/PreProcessingForVariantDiscovery_GATK4Snapshot ID: 7
-*   **CNV_sample_XX** gatk/CNV_Somatic_Pair_WorkflowSnapshot ID: 9
-*   **Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2
+1. **BamToUnmappedRGBams_MC** vdauwera/BamToUnmappedRGBamsSnapshot ID: 3
+2. **Generate_uBAM_File_List** gkugener/ArrayOfFilesToTxtSnapshot ID: 1
+3. **Realign_WES_GATK4** gatk/PreProcessingForVariantDiscovery_GATK4Snapshot ID: 7
+4. **CNV_sample_XX** [gatk/CNV_Somatic_Pair_WorkflowSnapshot ID: 9](https://portal.firecloud.org/?return=terra#methods/gatk/CNV_Somatic_Pair_Workflow/9/wdl): This pipeline applies the following to the read counts :
+    i. [*gatk DenoiseReadCounts*](https://gatk.broadinstitute.org/hc/en-us/articles/360037593691-DenoiseReadCounts)
+    ii. *gatk ModelSegments*
+    iii. *gatk CallCopyRatioSegments*
+    iv. *PlotDenoisedCopyRatios*
+    v. *PlotModeledSegments*
+5. **Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2
 
 This output file for download will be saved under the sample set under the combined_seg_file attribute.
 
