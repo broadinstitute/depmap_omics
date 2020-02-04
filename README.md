@@ -166,11 +166,11 @@ We are running a set of 5 functions/workflows To generate the copy number datase
 2. **Generate_uBAM_File_List** gkugener/ArrayOfFilesToTxtSnapshot ID: 1
 3. **Realign_WES_GATK4** gatk/PreProcessingForVariantDiscovery_GATK4Snapshot ID: 7
 4. **CNV_sample_XX** [gatk/CNV_Somatic_Pair_WorkflowSnapshot ID: 9](https://portal.firecloud.org/?return=terra#methods/gatk/CNV_Somatic_Pair_Workflow/9/wdl): This pipeline applies the following to the read counts :
-   i. [*gatk DenoiseReadCounts*](https://gatk.broadinstitute.org/hc/en-us/articles/360037593691-DenoiseReadCounts)
-   ii. *gatk ModelSegments*
-   iii. *gatk CallCopyRatioSegments*
-   iv. *PlotDenoisedCopyRatios*
-   v. *PlotModeledSegments*
+   1. [*gatk DenoiseReadCounts*](https://gatk.broadinstitute.org/hc/en-us/articles/360037593691-DenoiseReadCounts)
+   2. *gatk ModelSegments*
+   3. *gatk CallCopyRatioSegments*
+   4. *PlotDenoisedCopyRatios*
+   5. *PlotModeledSegments*
 5. **Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2
 
 This output file for download will be saved under the sample set under the combined_seg_file attribute.
