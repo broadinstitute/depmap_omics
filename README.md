@@ -162,16 +162,16 @@ We are using Dalmatian to send request to Terra,
 
 We are running a set of 5 functions/workflows To generate the copy number dataset in the following order:
 
-1. **BamToUnmappedRGBams_MC** vdauwera/BamToUnmappedRGBamsSnapshot ID: 3
-2. **Generate_uBAM_File_List** gkugener/ArrayOfFilesToTxtSnapshot ID: 1
-3. **Realign_WES_GATK4** [gatk/PreProcessingForVariantDiscovery_GATK4Snapshot ID: 7](https://portal.firecloud.org/?return=terra#methods/gatk/PreProcessingForVariantDiscovery_GATK4/7): This pipeline realigns bams to hg38 using BWA-MEM, marks duplicates, and applies Base Quality Score Recalibration ([BQSR](https://gatk.broadinstitute.org/hc/en-us/articles/360035890531-Base-Quality-Score-Recalibration-BQSR-)) to the final bam files.
-4. **CNV_sample_XX** [gatk/CNV_Somatic_Pair_WorkflowSnapshot ID: 9](https://portal.firecloud.org/?return=terra#methods/gatk/CNV_Somatic_Pair_Workflow/9/wdl): This pipeline recieves read counts, which are the output of previous step, and determines the copy number segments and assigns them the deletion/amplification/neutral status. The pipeline requires an input PoN, which currently is defaulted on [hg38 ICE WES capture kit](gs://ccle_default_params/pons/hg38_ice_pon_XX.pon.hdf5). The following tools are run in the order shown:
+1. [**BamToUnmappedRGBams_MC**](https://portal.firecloud.org/?return=terra#methods/vdauwera/BamToUnmappedRGBams/4)
+2. [**Generate_uBAM_File_List**](https://portal.firecloud.org/?return=terra#methods/gkugener/ArrayOfFilesToTxt/1)
+3. [**Realign_WES_GATK4**](https://portal.firecloud.org/?return=terra#methods/gatk/PreProcessingForVariantDiscovery_GATK4/7): This pipeline realigns bams to hg38 using BWA-MEM, marks duplicates, and applies Base Quality Score Recalibration ([BQSR](https://gatk.broadinstitute.org/hc/en-us/articles/360035890531-Base-Quality-Score-Recalibration-BQSR-)) to the final bam files.
+4. [**CNV_sample_XX**](https://portal.firecloud.org/?return=terra#methods/gatk/CNV_Somatic_Pair_Workflow/9/wdl): This pipeline recieves read counts, which are the output of previous step, and determines the copy number segments and assigns them the deletion/amplification/neutral status. The pipeline requires an input PoN, which currently is defaulted on [hg38 ICE WES capture kit](gs://ccle_default_params/pons/hg38_ice_pon_XX.pon.hdf5). The following tools are run in the order shown:
    1. [*gatk DenoiseReadCounts*](https://gatk.broadinstitute.org/hc/en-us/articles/360037593691-DenoiseReadCounts): Denoises read counts to produce denoised copy ratios
    2. [*gatk ModelSegments*](https://gatk.broadinstitute.org/hc/en-us/articles/360036350172-ModelSegments): Models segmented copy ratios from denoised read counts and segmented minor-allele fractions from allelic counts
    3. [*gatk CallCopyRatioSegments*](https://gatk.broadinstitute.org/hc/en-us/articles/360036730311-CallCopyRatioSegments): Calls copy-ratio segments as amplified, deleted, or copy-number neutral
    4. *PlotDenoisedCopyRatios*
    5. *PlotModeledSegments*
-5. **Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2
+5. [**Aggregate_CN_seg_files**](https://portal.firecloud.org/?return=terra#methods/gkugener/Aggregate_CN_seg_files/2)
 
 This output file for download will be saved under the sample set under the combined_seg_file attribute.
 
