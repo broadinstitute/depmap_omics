@@ -158,7 +158,7 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 We are using Dalmatian to send request to Terra, 
 
-#### Copy Number Variations
+#### Copy Numbers
 
 We are running a set of 5 functions/workflows To generate the copy number dataset in the following order:
 
