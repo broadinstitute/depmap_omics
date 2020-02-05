@@ -218,10 +218,10 @@ We are running a set of 6 functions/workflows To generate the expression/fusion 
 
 We use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/v9/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, run the following tasks on all samples that you need, in this order:
 
-   1. **samtofastq_v1-0_BETA_cfg** [broadinstitute_gtex/samtofastq_v1-0_BETA Snapshot ID: 5](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/samtofastq_v1-0_BETA/6): Converts bam files to fastq.
-   2. **star_v1-0_BETA_cfg** [broadinstitute_gtex/star_v1-0_BETA Snapshot ID: 7](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/star_v1-0_BETA/7): aligns fastq files using STAR to [hg38](https://console.cloud.google.com/storage/browser/fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/references/gtex?authuser=2).
-   3. **rsem_v1-0_BETA_cfg** [broadinstitute_gtex/rsem_v1-0_BETA Snapshot ID: 4](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_v1-0_BETA/5): run RSEM to quantify transcript abundances.
-   4. **rsem_aggregate_results_v1-0_BETA_cfg** [broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA Snapshot ID: 3](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA/3)
+   1. [**samtofastq_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/samtofastq_v1-0_BETA/6): Converts bam files to fastq.
+   2. [**star_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/star_v1-0_BETA/7): uses STAR to align fastq files to [hg38 reference genome](https://console.cloud.google.com/storage/browser/fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/references/gtex?authuser=2).
+   3. [**rsem_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_v1-0_BETA/5): run RSEM to quantify transcript abundances.
+   4. [**rsem_aggregate_results_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA/3)
 
 The outputs to be downloaded will be saved under the sample set that you ran. The outputs we use for the release are:
 
