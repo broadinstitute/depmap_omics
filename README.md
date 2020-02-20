@@ -18,6 +18,7 @@ We are using a set of tools to
   - http://biorxiv.org/content/early/2017/03/24/120295
 - __mutect__: 
   - https://software.broadinstitute.org/cancer/cga/mutect
+  - https://youtu.be/rN-cLrb5aGs
   - https://software.broadinstitute.org/gatk/documentation/tooldocs/4.beta.4/org_broadinstitute_hellbender_tools_walkers_mutect_Mutect2.php
   - https://www.nature.com/articles/nbt.2514
 - __gatk cnv__:
@@ -25,6 +26,7 @@ We are using a set of tools to
 - __strelka__:
   - https://www.nature.com/articles/s41592-018-0051-x
   - https://github.com/Illumina/strelka
+ 
 
 ## Installation
 
@@ -50,10 +52,12 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
   - install Google Cloud SDK (see https://cloud.google.com/sdk/docs/downloads-interactive and https://cloud.google.com/sdk/docs/quickstart-macos)
   - authenticate my SDK account by running "gcloud auth application-default login" in terminal
 - For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
-- Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd ../..`
+- Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd -`
+- Also taigr: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`
+- And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`
 - For Python use the requirements.txt file `pip install -r requirements.txt`
 
-### Getting Terra Access
+### Getting Terra Accessls
 
 1. You will need to request access to the following terra workspaces:
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline
@@ -154,15 +158,20 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 We are using Dalmatian to send request to Terra, 
 
-#### CN
+#### Copy Numbers
 
-We are running a set of 5 functions/workflows To generate the copy number dataset:
+We are running a set of 5 functions/workflows To generate the copy number dataset in the following order:
 
-*   **BamToUnmappedRGBams_MC** vdauwera/BamToUnmappedRGBamsSnapshot ID: 3
-*   **Generate_uBAM_File_List** gkugener/ArrayOfFilesToTxtSnapshot ID: 1
-*   **Realign_WES_GATK4** gatk/PreProcessingForVariantDiscovery_GATK4Snapshot ID: 7
-*   **CNV_sample_XX** gatk/CNV_Somatic_Pair_WorkflowSnapshot ID: 9
-*   **Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2
+1. [**BamToUnmappedRGBams_MC**](https://portal.firecloud.org/?return=terra#methods/vdauwera/BamToUnmappedRGBams/4)
+2. [**Generate_uBAM_File_List**](https://portal.firecloud.org/?return=terra#methods/gkugener/ArrayOfFilesToTxt/1)
+3. [**Realign_WES_GATK4**](https://portal.firecloud.org/?return=terra#methods/gatk/PreProcessingForVariantDiscovery_GATK4/7): This pipeline realigns bams to hg38 using BWA-MEM, marks duplicates, and applies Base Quality Score Recalibration ([BQSR](https://gatk.broadinstitute.org/hc/en-us/articles/360035890531-Base-Quality-Score-Recalibration-BQSR-)) to the final bam files.
+4. [**CNV_sample_XX**](https://portal.firecloud.org/?return=terra#methods/gatk/CNV_Somatic_Pair_Workflow/9/wdl): This pipeline recieves read counts, which are the output of previous step, and determines the copy number segments and assigns them the deletion/amplification/neutral status. The pipeline requires an input PoN, which currently is defaulted on [hg38 ICE WES capture kit](gs://ccle_default_params/pons/hg38_ice_pon_XX.pon.hdf5). The following tools are run in the order shown:
+   1. [*gatk DenoiseReadCounts*](https://gatk.broadinstitute.org/hc/en-us/articles/360037593691-DenoiseReadCounts): Denoises read counts to produce denoised copy ratios
+   2. [*gatk ModelSegments*](https://gatk.broadinstitute.org/hc/en-us/articles/360036350172-ModelSegments): Models segmented copy ratios from denoised read counts and segmented minor-allele fractions from allelic counts
+   3. [*gatk CallCopyRatioSegments*](https://gatk.broadinstitute.org/hc/en-us/articles/360036730311-CallCopyRatioSegments): Calls copy-ratio segments as amplified, deleted, or copy-number neutral
+   4. *PlotDenoisedCopyRatios*
+   5. *PlotModeledSegments*
+5. [**Aggregate_CN_seg_files**](https://portal.firecloud.org/?return=terra#methods/gkugener/Aggregate_CN_seg_files/2)
 
 This output file for download will be saved under the sample set under the combined_seg_file attribute.
 
@@ -181,7 +190,6 @@ We are running a set of 6 functions/workflows To generate the mutation dataset:
 
     **ICE_CGA_Production_Analysis_Pipeline_Cell_Lines_copy** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22) OR
 
-
     **AGILENT_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22)
 
 *   **common_variant_filter** (breardon/common_variant_filterSnapshot ID: 3)
@@ -195,7 +203,6 @@ This outputs to be downloaded will be saved in the sample set that was run. The 
 
 There are several other tasks in this workspace. In brief:
 
-
 *   **CGA_Production_Analysis_Pipeline_Cell_Lines** (lelagina/CGA_Production_Analysis_Pipeline_Cell_LinesSnapshot ID: 12). This task is the same as the ICE and AGILENT prefixed version above, except that it relied on pulling the baits and targets to use from the metadata stored for the samples. Having AGILENT and ICE versions specified made the uploading and running process easier.
 *   **SANGER_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22). This task was trying to run the CGA pipeline on the Sanger WES data, using a Sanger pseudo normal. In its current implementation, this task fails to complete for the samples.
 *   **UNFILTERED_aggregateMAFs_selectFields** (ccle_mg/aggregateMAFs_selectFieldsSnapshot ID: 1). Aggregates the MAF outputted by the CGA cell line pipeline prior to the common variant filter and germline filtering tasks. This can give us insight to which mutations are getting filtered out when. We may want to potentially include this MAF in the release so people can see why certain mutations of interest may be getting filtered out.
@@ -205,36 +212,18 @@ There are several other tasks in this workspace. In brief:
 *   summarizeWigFile (breardon/summarizeWigFileSnapshot ID: 5). CCLF ran this task (might be necessary for the mutational burden task). For our workflow, we do not run it.
 
 
-#### RNA
+#### RNAseq
 
 We are running a set of 6 functions/workflows To generate the expression/fusion dataset:
 
+We use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/v9/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, run the following tasks on all samples that you need, in this order:
 
-We use the GTEx pipeline ([https://github.com/broadinstitute/gtex-pipeline/blob/v9/TOPMed_RNAseq_pipeline.md](https://github.com/broadinstitute/gtex-pipeline/blob/v9/TOPMed_RNAseq_pipeline.md)).
-
-To generate the expression dataset, run the following tasks on all samples that you need, in this order:
-
-
-
-*   samtofastq_v1-0_BETA_cfg 
-
-    (broadinstitute_gtex/samtofastq_v1-0_BETA Snapshot ID: 5)
-
-*   star_v1-0_BETA_cfg
-
-(broadinstitute_gtex/star_v1-0_BETA Snapshot ID: 7)
-
-
-
-*   rsem_v1-0_BETA_cfg 
-
-    (broadinstitute_gtex/rsem_v1-0_BETA Snapshot ID: 4)
-
-*   rsem_aggregate_results_v1-0_BETA_cfg (broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA Snapshot ID: 3)
+   1. [**samtofastq_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/samtofastq_v1-0_BETA/6): Converts bam files to fastq.
+   2. [**star_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/star_v1-0_BETA/7): uses STAR to align fastq files to [hg38 reference genome](https://console.cloud.google.com/storage/browser/fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/references/gtex?authuser=2).
+   3. [**rsem_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_v1-0_BETA/5): run RSEM to quantify transcript abundances.
+   4. [**rsem_aggregate_results_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA/3)
 
 The outputs to be downloaded will be saved under the sample set that you ran. The outputs we use for the release are:
-
-
 
 *   rsem_genes_expected_count
 *   rsem_genes_tpm
@@ -242,24 +231,18 @@ The outputs to be downloaded will be saved under the sample set that you ran. Th
 
 ****Make sure that you delete the intermediate files. These files are quite large so cost a lot to store. To delete, you can either write a task that deletes them or use gsutil rm*****
 
+We use [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls by running the following workflows:
 
-We use STAR-Fusion [https://github.com/STAR-Fusion/STAR-Fusion/wiki](https://github.com/STAR-Fusion/STAR-Fusion/wiki). The fusions are generated by running the following tasks
-
-
-
-*   hg38_STAR_fusion (gkugener/STAR_fusion Snapshot ID: 14)
-*   Aggregate_Fusion_Calls (gkugener/Aggregate_files_set Snapshot ID: 2)
+1. [**hg38_STAR_fusion**](https://portal.firecloud.org/?return=terra#methods/gkugener/STAR_fusion/14)
+2. [**Aggregate_Fusion_Calls**](https://portal.firecloud.org/?return=terra#methods/gkugener/Aggregate_files_set/2)
 
 The outputs to be downloaded will be saved under the sample set you ran. The outputs we use for the release are: 
-
-
 
 *   fusions_star
 
 This task uses the same samtofastq_v1-0_BETA_cfg task as in the expression pipeline, although in the current implementation, this task will be run twice. It might be worth combing the expression/fusion calling into a single workflow. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs). 
 
 There are several other tasks in this workspace. In brief:
-
 
 *   Tasks prefixed with **EXPENSIVE** or **CHEAP** are identical to their non-prefixed version, except that they specify different memory, disk space, etc. parameters. These versions can be used when samples fail the normal version of the task due to memory errors.
 *   The following tasks are part of the GTEx pipeline but we do not use them (we use RSEM exclusively): markduplicates_v1-0_BETA_cfg (broadinstitute_gtex/markduplicates_v1-0_BETA Snapshot ID: 2), rnaseqc2_v1-0_BETA_cfg (broadinstitute_gtex/rnaseqc2_v1-0_BETA Snapshot ID: 2)
