@@ -17,8 +17,7 @@ import os
 import re  # for re.split
 import sys
 print("you need to have installed JKBio in the same folder as ccle_processing")
-sys.path.insert(0, '../JKBio/')
-import TerraFunction as terra
+from JKBio import TerraFunction as terra
 
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
