@@ -19,6 +19,8 @@ import sys
 print("you need to have installed JKBio in the same folder as ccle_processing")
 from JKBio import TerraFunction as terra
 from JKBio import GCPFunction as gcp
+from collections import Counter
+from gsheets import Sheets
 
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
@@ -83,6 +85,17 @@ def createDatasetWithNewCellLines(wto, samplesetname,
       ...}
     extract_defaults: the full default dict to specificy what values should refer to which column names
 
+
+  Returns:
+  -------
+    sample_ids: list(str) the SM-id of the samples that were updated
+    refsamples: all of the samples in the data of the workspaces
+    CCLE_name: CCLE names of new samples uploaded
+
+
+  Raise:
+  -----
+    Exception: when no new samples in this matrix
   """
   wto = dm.WorkspaceManager(wto)
   refsamples = wto.get_samples()
@@ -247,7 +260,11 @@ def renameColumns(df):
 
   Args:
   -----
-    df
+    df: the df to rename
+
+  Returns:
+  ------
+    df the renamed df
   """
   return(df.rename(columns={'Sample': 'DepMap_ID', 'CONTIG': 'Chromosome', 'START': 'Start',
                             'END': 'End', 'seqnames': 'Chromosome', 'start': 'Start', 'end': 'End'}))
@@ -255,7 +272,7 @@ def renameColumns(df):
 
 def checkDifferencesWESWGS(segmentcn_wes, segmentcn_wgs, chromlist=CHROMLIST):
   """
-  if the similarity between WES and WGS on same cell line is low there might be problems.
+  if the similarity between WES and WGS on same cell line is low there might be problems. Checks for that
 
   Args:
   ----
@@ -311,7 +328,7 @@ def checkDifferencesWESWGS(segmentcn_wes, segmentcn_wgs, chromlist=CHROMLIST):
 
 def addToMainFusion(input_filenames, main_filename):
   """
-  given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
+  Given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
 
   Args:
   ----
@@ -369,11 +386,11 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
 
 def ExtractStarQualityInfo(samplesetname, workspace, release='temp'):
   """
-  put all of the Star Quality results from Terra Star Workflow into one file
+  put all of the Star Quality results from Terra Star Workflow into one txt file
 
   Args:
   -----
-    samplesetname:
+    samplesetname: the sampleset name for which to grab the samples processed by star. 
     wm: the terra workspace
     release: the name of the folder where it will be stored
   """
@@ -422,6 +439,16 @@ def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
   This function is used to subset a df to only the columns with the most up to date names
 
   We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
+  
+
+  Args:
+  ----
+    a:
+    prepended:
+
+  Returns:
+  ------
+    a:
   """
   values = []
   for i in a.columns:
@@ -448,6 +475,12 @@ def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
   This function is used to subset a df to only the columns with the most up to date names
 
   We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
+  
+  Args:
+  ----
+
+  Returns:
+  -------
   """
   values = []
   if len(prepended) > 0:
@@ -475,25 +508,38 @@ def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
   return a
 
 
-def compareToCuratedGS(url, sample, samplesetname, colname='CN New to internal'):
+def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', clientsecret='~/.client_secret.json',
+                       storagepath='~/.storage.json', colname='CN New to internal', value='no data yet'):
   """
+  from a google spreadsheet, will check that we have all of the samples we should have in our sample
+  set name (will parse NAME_additional for sample_id)
+
+  Args:
+  -----
+    url: str the url of the gsheet
+    sample: list(str) the samples to check
+    samplesetname: str the name of the sampleset in the googlesheet
+    sample_id: str the name of the sample_id column in the google sheet
+    clientsecret: str path to your secret google api account file
+    storagepath: str path to your secret google api storage file
+    colname: str if we need not to include some rows from the spreadsheet that have the value value 
+    value: str the value for which not to include the rows
 
   @gmiller
   """
-  from gsheets import Sheets
-  sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
+  sheets = Sheets.from_files(clientsecret, storagepath)
   # Cell Line Profiling Status google sheet
   gsheet = sheets.get(url).sheets[0].to_frame()
-  gsheet.index = gsheet['DepMap ID']
+  gsheet.index = gsheet[sample_id]
   new_cn = gsheet[gsheet[colname] == samplesetname + 'tent']
-  data_not_ready_cn = gsheet[gsheet[colname] == 'no data yet']
-
+  if colname and value:
+    data_not_ready_cn = gsheet[gsheet[colname] == value]
+    print(data_not_ready_cn)
   # these are the "new" samples discovered by our function, createDatasetsFromNewCellLines
-  sample_ids = [id[0:10] for id in sample]
+  sample_ids = [id.split('_')[0] for id in sample]
   print("We found data for " + str(len(sorted(sample))) + " samples.\n")
 
   print("Sanity check: Since we have the tacked on number, we should only have 1 each per sample ID:\n")
-  from collections import Counter
   Counter(sample)
 
   in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
@@ -502,42 +548,3 @@ def compareToCuratedGS(url, sample, samplesetname, colname='CN New to internal')
       have this release:\n" + str(sorted(list(in_sheet_not_found))))
   else:
     print("We aren't missing any samples that we're supposed to have this release!")
-  # # goal: answer where these extra cell lines are from
-  # # note: This is a very rough, quick and dirty approach. It could be easily improved.
-  # print(len(sorted(list(found_unexpected))))
-  # print(sorted(list(found_unexpected)))
-  # for wm in wmfroms:
-  #   print(str(wm))
-  #   # goal: answer where these extra cell lines are from
-  #   if wm == refwm:
-  #     wm_samples_full = wm.get_samples()['participant'].tolist()
-  #   else:
-  #     wm_samples_full = wm.get_samples()['individual_alias'].tolist()
-  #   wm_samples = [val[val.index('ACH'):][0:10] for val in wm_samples_full if type(val)==str and 'ACH' in val]
-  #
-  #   # does the number missing change?
-  #   print(len(set(found_unexpected) - set(wm_samples)))
-  #   print(sorted(list(set(found_unexpected) - set(wm_samples))))
-  #   print("\n")
-  #
-  # # these are the lines we have set to process that aren't in Emily's list of lines we expect
-  # found_unexpected = set(sample_ids) - set(new_cn.index.tolist())
-  # print("We found " + str(len(found_unexpected)) + " unexpected lines: \n" + str(found_unexpected))
-  #
-  # print("The following can be used to start figuring out where these lines came from: ")
-  # # goal: answer where these extra cell lines are from
-  # # This is very rough, and could easily be improved. I just needed something quick and dirty.
-  # wmfroms = [wm1, wm2, wm3, refwm]
-  # print(sorted(list(found_unexpected)))
-  # for wm in wmfroms:
-  #   print(str(wm))
-  #   # goal: answer where these extra cell lines are from
-  #   if wm == refwm:
-  #     wm_samples_full = wm.get_samples()['participant'].tolist()
-  #   else:
-  #     wm_samples_full = wm.get_samples()['individual_alias'].tolist()
-  #   wm_samples = [val[val.index('ACH'):][0:10] for val in wm_samples_full if type(val)==str and 'ACH' in val]
-  #
-  #   # does the number missing change?
-  #   print(len(set(found_unexpected) - set(wm_samples)))
-  #   print(sorted(list(set(found_unexpected) - set(wm_samples))))
