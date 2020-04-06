@@ -36,10 +36,11 @@ extract_defaults = {
     'name': 'sample_alias',
     'bai': 'crai_or_bai_path',
     'bam': 'cram_or_bam_path',
-    'ref_bams': 'internal_bam_filepath',
+    'ref_bam': 'internal_bam_filepath',
     'ref_type': 'datatype',
-    'ref_bais': "internal_bai_filepath",
+    'ref_bai': "internal_bai_filepath",
     'version': 'version',
+    'primary_disease': 'primary_disease',
     'ref_arxspan_id': 'arxspan_id',
     'ref_name': 'stripped_cell_line_name',
     'source': 'source',
@@ -61,12 +62,11 @@ extract_defaults = {
 }
 
 
-def createDatasetWithNewCellLines(wto, samplesetname,
-                                  wmfroms, sources, refurl="",
+def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={},
                                   extract_defaults=extract_defaults, refsamples=None,
                                   participantslicepos=10, accept_unknowntypes=False,
-                                  gsfolderto=None, dry_run=False, rename=dict(), recomputehash=False,
+                                  rename=dict(), recomputehash=False,
                                   recomputesize=False, recomputedate=False):
   """
   As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
@@ -81,7 +81,6 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     check: will need to change slicepos based on match;
     may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
     wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
-    samplesetname: String the name of the sample set created by this new set of samples updated
     wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
     source1: the corresponding source name
     Can add as much as one wants
@@ -114,6 +113,8 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   """
   extract.update(extract_defaults)
   wto = dm.WorkspaceManager(wto)
+  if type(match) is str and match:
+    match = [match]
   if refurl:
     print('refsamples is overrided by a refurl')
     refsamples = sheets.get(refurl).sheets[0].to_frame()
@@ -123,11 +124,10 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     refids_full = refsamples.index.tolist()
     # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
     # filter refids to only include those that include the strings in the 'match' argument
-    if type(match) is str and match:
-      match = [match]
     refsamples = refsamples[refsamples.index.str.contains('|'.join(match))]
     for match_substring in match:
-      refsamples.index = [match_substring + i.split(match_substring)[-1] for i in refsamples.index]
+      refsamples.index = [match_substring + i.split(match_substring)[-1] if match_substring in i else i for i in refsamples.index]
+    refsamples.index = [i[:participantslicepos] for i in refsamples.index]
     # TODO: update directly the df if data is not already in here)
     refsamples[extract['ref_arxspan_id']] = [a.split('_')[0] for a in refsamples[extract['ref_arxspan_id']] if type(a) is str]
     if extract['hash'] not in refsamples.columns:
@@ -150,8 +150,12 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     wmfrom = dm.WorkspaceManager(wmfrom)
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
     # keep samples that contain the match requirement (e.g. ACH for DepMap IDs)
+    prevlen = len(samples)
     samples = samples[samples[extract['from_arxspan_id']].str.contains('|'.join(match))]
-    samples[extract['ref_arxspan_id']] = [val[0:participantslicepos] for val in samples[extract['from_arxspan_id']]]
+    for match_substring in match:
+      samples[extract['ref_arxspan_id']] = [(match_substring + i.split(match_substring)[-1]) if match_substring in i else i for i in samples[extract['from_arxspan_id']]]
+    samples[extract['ref_arxspan_id']] = [i[:participantslicepos] for i in samples[extract['ref_arxspan_id']]]
+    print('we found and removed ' + str(prevlen - len(samples)) + ' samples which did not match our id names: ' + str(match))
     print("\nThe shape of the sample tsv from " + str(wmfrom) + ": " + str(samples.shape))
 
     # remove true duplicates from consideration
@@ -172,9 +176,12 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     print("Len of samples before removal: " + str(len(samples)))
     print('These bam file path do not exist: ' + str(broken_bams))
     print("Dups from " + str(wmfrom) + " has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
-
     # remove the samples with broken bam filepaths from consideration
     samples = samples[(~samples[extract['bam']].isin(dups_to_remove)) & (~samples[extract['bam']].isin(broken_bams))]
+
+    print("Len of samples after removal: " + str(len(samples)))
+    if len(samples) == 0:
+      continue
     if extract['hash'] not in samples.columns or recomputehash:
       samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
           [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
@@ -182,20 +189,18 @@ def createDatasetWithNewCellLines(wto, samplesetname,
       samples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
     if extract['release_date'] not in samples.columns or recomputedate:
       samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
-    ipdb.set_trace()
     samples[extract['release_date']] = list(h.datetoint(samples[extract['release_date']].values))
     samples[extract['ref_id']] = ['CDS-' + h.randomString(stringLength=6, stype='all', withdigits=True) for _ in range(len(samples))]
     samples[extract['patient_id']] = ['PT-' + h.randomString(stringLength=8, stype='all', withdigits=True) for _ in range(len(samples))]
     samples.reset_index(drop=True, inplace=True)
     # check: currently, below lines prevent forcekeep from working on true duplicates
     # (aka same size  file). Need to think about how to bring back the forcekeep functionality
-    print("Len of samples after removal: " + str(len(samples)))
     names = []
     # need to keep track of whether we're adding more than one new entry for a given sample id
     for k, val in samples.iterrows():
+      val = val[extract['ref_arxspan_id']]
       names.append(val)
-      len(refsamples[extract['ref_arxspan_id'] == val]) + names.count(val)
-      samples[k, extract['version']] = len(refsamples[extract['ref_arxspan_id'] == val]) + names.count(val)
+      samples.loc[k, extract['version']] = len(refsamples[refsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
     # if only add some samples
     if len(addonly) > 0:
       samples = samples[samples[extract['ref_arxspan_id']].isin(addonly)]
@@ -207,41 +212,32 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     sampless = pd.concat([sampless, samples], sort=False)
 
   sample_ids = []
-  sampless[extract['version']] = sampless[extract['version']].astype(int)
-  sampless[extract['type']] = 'wes'
-  # to do the download to the new dataspace
-  if not dry_run:
-    ipdb.set_trace()
-    if gsfolderto is not None:
-      for i, val in sampless.iterrows():
-        if not gcp.exists(gsfolderto + val[extract['bam']].split('/')[-1]):
-          cmd = 'gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto
-          res = os.system(cmd)
-          if res != 0:
-            print("error in command '" + cmd + "'")
-        else:
-          print(val[extract['bam']].split('/')[-1] + ' already exists in the folder: ' + folderto)
-      sampless[extract['bam']] = [gsfolderto + a[extract['bam']].split('/')[-1] for _, a in sampless.iterrows()]
-      sampless[extract['bai']] = [gsfolderto + a[extract['bai']].split('/')[-1] for _, a in sampless.iterrows()]
-    print(sampless)
   if len(sampless) == 0:
-    raise Exception("no new samples in this matrix")
-  sampless.rename(colmumns={extract['bam']: extract['ref_name'],
-                            extract['bai']: extract['ref_bam'],
-                            extract['name']: extract['ref_name'],
-                            extract["from_arxpsan_id"]: extract["ref_arxpsan_id"],
-                            }).set_index(extract["ref_id"], drop=True)
-  sampless = sampless[sampless.columns.isin([extract['bam'], extract['bai'], extract['name'], extract["ref_arxspan_id"],
-                                             extract["release_date"], extract["patient_id"], extract["hash"],
-                                             extract['version'], extract['type']])]
-  sampless[extract['from_arxspan_id']] = [rename[name] if name in rename else name for name in sampless[extract['from_arxspan_id']]]
-  if not dry_run:
-    print("uploading new samples")
-    wto = wto.disable_hound()
-    wto.upload_samples(sampless)
-    print("creating a sample set")
-    wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sampless.index)
-  return sampless
+    print("no new data available")
+    return sampless, pd.DataFrame()
+  sampless[extract['version']] = sampless[extract['version']].astype(int)
+  if stype not in set(refsamples[extract['ref_type']]):
+    h.ask("we have never seen this type: " + stype + ", in the reference, continue?")
+  sampless[extract['ref_type']] = stype
+
+  sampless = sampless.rename(columns={extract['bam']: extract['ref_bam'],
+                                      extract['bai']: extract['ref_bai'],
+                                      extract['name']: extract['ref_name'],
+                                      }).set_index(extract["ref_id"], drop=True)
+  sampless = sampless[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"],
+                       extract["release_date"], extract["patient_id"], extract["hash"], extract['size'],
+                       extract['version'], extract['ref_type']]]
+  sampless[extract['ref_arxspan_id']] = [rename[name] if name in rename else name for name in sampless[extract['ref_arxspan_id']]]
+  normals = refsamples[refsamples[extract['primary_disease']] == 'normal']
+  sampless[extract['patient_id']] = [val[extract['patient_id']] if len(refsamples[refsamples[extract['ref_arxspan_id']] == val[extract['ref_arxspan_id']]]) < 1 else refsamples[refsamples[extract['ref_arxspan_id']]
+                                                                                                                                                                                == val[extract['ref_arxspan_id']]][extract['patient_id']].values[0] for i, val in sampless.iterrows()]
+  pairs = pd.DataFrame()
+  pairs['control_sample'] = ['nan' if len(normals[normals[extract['patient_id']] == val]) < 1 else normals[normals[extract['patient_id']] == val].index.tolist()[0] for val in sampless[extract['patient_id']]]
+  pairs['case_sample'] = sampless.index.tolist()
+  pairs['patient_id'] = sampless[extract['patient_id']]
+  pairs['pair_id'] = [val['case_sample'] + '_' + val['control_sample'] for i, val in pairs.iterrows()]
+  print('found ' + str(len(pairs['control_sample'].unique()) - 1) + ' matched normals')
+  return sampless, pairs
 
 #####################
 # VALIDATION
