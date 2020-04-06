@@ -145,17 +145,13 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
   if type(wmfroms) is str:
     wmfroms = [wmfroms]
   sampless = pd.DataFrame()
+  wrongsamples = pd.DataFrame()
   for source, wmfrom in zip(sources, wmfroms):
     broken_bams = []
     wmfrom = dm.WorkspaceManager(wmfrom)
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
     # keep samples that contain the match requirement (e.g. ACH for DepMap IDs)
-    prevlen = len(samples)
-    samples = samples[samples[extract['from_arxspan_id']].str.contains('|'.join(match))]
-    for match_substring in match:
-      samples[extract['ref_arxspan_id']] = [(match_substring + i.split(match_substring)[-1]) if match_substring in i else i for i in samples[extract['from_arxspan_id']]]
-    samples[extract['ref_arxspan_id']] = [i[:participantslicepos] for i in samples[extract['ref_arxspan_id']]]
-    print('we found and removed ' + str(prevlen - len(samples)) + ' samples which did not match our id names: ' + str(match))
+
     print("\nThe shape of the sample tsv from " + str(wmfrom) + ": " + str(samples.shape))
 
     # remove true duplicates from consideration
@@ -167,6 +163,15 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     # add a broken file path for a new participant
     foundfiles = gcp.lsFiles(samples[extract['bam']])
     broken_bams = set(samples[extract['bam']]) - set(foundfiles)
+    prevlen = len(samples)
+    wrongsamples = pd.concat([wrongsamples, samples[(~samples[extract['bam']].isin(broken_bams)) & (~samples[extract['from_arxspan_id']].str.contains('|'.join(match)))]], sort=False)
+    samples = samples[samples[extract['from_arxspan_id']].str.contains('|'.join(match))]
+    # getting correct arxspan id
+    for match_substring in match:
+      samples[extract['ref_arxspan_id']] = [(match_substring + i.split(match_substring)[-1]) if match_substring in i else i for i in samples[extract['from_arxspan_id']]]
+    samples[extract['ref_arxspan_id']] = [i[:participantslicepos] for i in samples[extract['ref_arxspan_id']]]
+    print('we found and removed ' + str(prevlen - len(samples)) + ' samples which did not match our id names: ' + str(match))
+
     tolookfor = [val[extract['bam']] for _, val in samples.iterrows() if val[extract['ref_arxspan_id']] in set(refsamples[extract['ref_arxspan_id']])]
     print("found " + str(len(tolookfor)) + ' likely replicate')
     sample_hash = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
@@ -174,7 +179,7 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
 
     # remove the duplicates from consideration
     print("Len of samples before removal: " + str(len(samples)))
-    print('These bam file path do not exist: ' + str(broken_bams))
+    print('These ' + str(len(broken_bams)) + ' bam file path do not exist: ' + str(broken_bams))
     print("Dups from " + str(wmfrom) + " has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
     # remove the samples with broken bam filepaths from consideration
     samples = samples[(~samples[extract['bam']].isin(dups_to_remove)) & (~samples[extract['bam']].isin(broken_bams))]
@@ -182,14 +187,20 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     print("Len of samples after removal: " + str(len(samples)))
     if len(samples) == 0:
       continue
+
+    # getting the hash
     if extract['hash'] not in samples.columns or recomputehash:
       samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
           [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
     if extract['size'] not in samples.columns or recomputesize:
       samples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
+
+    # getting the date released
     if extract['release_date'] not in samples.columns or recomputedate:
       samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
     samples[extract['release_date']] = list(h.datetoint(samples[extract['release_date']].values))
+
+    # creating unique ids
     samples[extract['ref_id']] = ['CDS-' + h.randomString(stringLength=6, stype='all', withdigits=True) for _ in range(len(samples))]
     samples[extract['patient_id']] = ['PT-' + h.randomString(stringLength=8, stype='all', withdigits=True) for _ in range(len(samples))]
     samples.reset_index(drop=True, inplace=True)
@@ -200,12 +211,14 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     for k, val in samples.iterrows():
       val = val[extract['ref_arxspan_id']]
       names.append(val)
+      count = len(refsamples[refsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
       samples.loc[k, extract['version']] = len(refsamples[refsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
     # if only add some samples
     if len(addonly) > 0:
       samples = samples[samples[extract['ref_arxspan_id']].isin(addonly)]
 
     samples[extract['source']] = source
+    # unknown types
     if 'sample_type' in samples.columns:
       if not accept_unknowntypes:
         samples = samples[samples['sample_type'].isin(['Tumor'])]
@@ -220,10 +233,24 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     h.ask("we have never seen this type: " + stype + ", in the reference, continue?")
   sampless[extract['ref_type']] = stype
 
+  # renamings
   sampless = sampless.rename(columns={extract['bam']: extract['ref_bam'],
                                       extract['bai']: extract['ref_bai'],
                                       extract['name']: extract['ref_name'],
                                       }).set_index(extract["ref_id"], drop=True)
+
+  # checking no duplicate in the buckets
+  for k, val in sampless.iterrows():
+    withsamesize = sampless[sampless[extract["size"]] == val[extract["size"]]]
+    if len(withsamesize) > 1:
+      if len(withsamesize[withsamesize[extract["ref_name"]] == val[extract["ref_name"]]]) < 2:
+        raise ValueError('we have duplicate samples with different names!')
+      else:
+        for l, v in withsamesize.iloc[1:].iterrows():
+          sampless = sampless.drop(l)
+  print("we had " + str(prevlen - len(sampless)) + " duplicates in the release buckets")
+
+  # subsetting
   sampless = sampless[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"],
                        extract["release_date"], extract["patient_id"], extract["hash"], extract['size'],
                        extract['version'], extract['ref_type']]]
@@ -231,13 +258,14 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
   normals = refsamples[refsamples[extract['primary_disease']] == 'normal']
   sampless[extract['patient_id']] = [val[extract['patient_id']] if len(refsamples[refsamples[extract['ref_arxspan_id']] == val[extract['ref_arxspan_id']]]) < 1 else refsamples[refsamples[extract['ref_arxspan_id']]
                                                                                                                                                                                 == val[extract['ref_arxspan_id']]][extract['patient_id']].values[0] for i, val in sampless.iterrows()]
+  # creating pairs
   pairs = pd.DataFrame()
   pairs['control_sample'] = ['nan' if len(normals[normals[extract['patient_id']] == val]) < 1 else normals[normals[extract['patient_id']] == val].index.tolist()[0] for val in sampless[extract['patient_id']]]
   pairs['case_sample'] = sampless.index.tolist()
   pairs['patient_id'] = sampless[extract['patient_id']]
   pairs['pair_id'] = [val['case_sample'] + '_' + val['control_sample'] for i, val in pairs.iterrows()]
   print('found ' + str(len(pairs['control_sample'].unique()) - 1) + ' matched normals')
-  return sampless, pairs
+  return sampless, pairs, wrongsamples
 
 #####################
 # VALIDATION
