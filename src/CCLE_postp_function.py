@@ -279,7 +279,7 @@ def changeCellLineNameInNewSet(ref, new, datatype, dupdict, toupdate=['stripped_
   datatype = str for a ref with many datatype (to get the right version number)
   """
   for k, v in dupdict.items():
-    new.loc[new[new.arxspan_id == k].index, toupdate] = ref[ref.arxspan_id == v][toupdate]
+    new.loc[new[new.arxspan_id == k].index, toupdate] = ref[ref.arxspan_id == v][toupdate].values[0]
     new.loc[new[new.arxspan_id == v].index, 'version'] = len(ref[(ref.arxspan_id == v) & (ref.datatype == datatype)]) + 1
   return new
 
