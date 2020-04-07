@@ -15,12 +15,16 @@ import dalmatian as dm
 from taigapy import TaigaClient
 tc = TaigaClient()
 import os
+import ipdb
 import sys
 print("you need to have installed JKBio in the same folder as ccle_processing")
 from JKBio import TerraFunction as terra
+from JKBio import Helper as h
 from JKBio import GCPFunction as gcp
 from collections import Counter
 from gsheets import Sheets
+sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
+
 
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
@@ -32,33 +36,44 @@ extract_defaults = {
     'name': 'sample_alias',
     'bai': 'crai_or_bai_path',
     'bam': 'cram_or_bam_path',
+    'ref_bam': 'internal_bam_filepath',
+    'ref_type': 'datatype',
+    'ref_bai': "internal_bai_filepath",
+    'version': 'version',
+    'primary_disease': 'primary_disease',
+    'ref_arxspan_id': 'arxspan_id',
+    'ref_name': 'stripped_cell_line_name',
     'source': 'source',
-    'id': 'individual_alias',
-    'participant': 'individual_alias',
-    'bait_set': 'bait_set',
+    'size': 'size',
+    'from_arxspan_id': 'individual_alias',
+    'ref_id': 'sample_id',
+    'from_patient_id': 'individual_alias',
+    'patient_id': 'patient_id',
+    'ref_date': 'date_sequenc',
     'hs_hs_library_size': 'hs_hs_library_size',
     'hs_het_snp_sensitivity': 'hs_het_snp_sensitivity',
     'hs_mean_bait_coverage': 'hs_mean_bait_coverage',
     'hs_mean_target_coverage': 'hs_mean_target_coverage',
     'hs_on_target_bases': 'hs_on_target_bases',
     'total_reads': 'total_reads',
-    'release_date': 'release_date',
+    'release_date': 'sequencing_date',
+    'hash': 'crc32c_hash',
     'mean_depth': 'mean_depth'
 }
 
 
-def createDatasetWithNewCellLines(wto, samplesetname,
-                                  wmfroms, sources,
+def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={},
-                                  extract_defaults=extract_defaults,
+                                  extract_defaults=extract_defaults, refsamples=None,
                                   participantslicepos=10, accept_unknowntypes=False,
-                                  gsfolderto=None, dry_run=False, rename=dict()):
+                                  rename=dict(), recomputehash=False,
+                                  recomputesize=False, recomputedate=False):
   """
   As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
 
-  Will merge samples from a set of data workspaces to a processing workspace on Terra. Will only 
+  Will merge samples from a set of data workspaces to a processing workspace on Terra. Will only
   get a subset of the metadata and rename it.
-  Will find out the duplicates based on the file size. 
+  Will find out the duplicates based on the file size.
   Can also upload the bam files to a google storage bucket
 
   Args:
@@ -66,7 +81,6 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     check: will need to change slicepos based on match;
     may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
     wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
-    samplesetname: String the name of the sample set created by this new set of samples updated
     wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
     source1: the corresponding source name
     Can add as much as one wants
@@ -81,7 +95,7 @@ def createDatasetWithNewCellLines(wto, samplesetname,
       'bai':
       'bam':
       'source':
-      'id':
+      'from_arxspan_id':
       ...}
     extract_defaults: the full default dict to specificy what values should refer to which column names
 
@@ -97,18 +111,33 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   -----
     Exception: when no new samples in this matrix
   """
-  wto = dm.WorkspaceManager(wto)
-  refsamples = wto.get_samples()
-  refids_full = refsamples['participant'].tolist()
-  # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
-  # filter refids to only include those that include the strings in the 'match' argument
-  refids = []
-  if type(match) is str:
-    match = [match]
-  for match_substring in match:
-    refids += [val[val.index(match_substring):] for val in refids_full if match_substring in val]
-
   extract.update(extract_defaults)
+  wto = dm.WorkspaceManager(wto)
+  if type(match) is str and match:
+    match = [match]
+  if refurl:
+    print('refsamples is overrided by a refurl')
+    refsamples = sheets.get(refurl).sheets[0].to_frame()
+  if refsamples is None:
+    print('we do not have refsamples data. Using the wto workspace sample data instead')
+    refsamples = wto.get_samples()
+    refids_full = refsamples.index.tolist()
+    # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
+    # filter refids to only include those that include the strings in the 'match' argument
+    refsamples = refsamples[refsamples.index.str.contains('|'.join(match))]
+    for match_substring in match:
+      refsamples.index = [match_substring + i.split(match_substring)[-1] if match_substring in i else i for i in refsamples.index]
+    refsamples.index = [i[:participantslicepos] for i in refsamples.index]
+    # TODO: update directly the df if data is not already in here)
+    refsamples[extract['ref_arxspan_id']] = [a.split('_')[0] for a in refsamples[extract['ref_arxspan_id']] if type(a) is str]
+    if extract['hash'] not in refsamples.columns:
+      refsamples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
+          [i for i in refsamples[extract["ref_bams"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
+    if extract['size'] not in refsamples.columns:
+      refsamples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(refsamples[extract['bam']].tolist(), '-al', 200)]
+    if extract['release_date'] not in refsamples.columns:
+      refsamples[extract["ref_bams"]] = h.getBamDate(refsamples[extract["ref_bams"]])
+    refsamples[extract['release_date']] = list(h.datetoint(refsamples[extract["release_date"]].values, '/'))
 
   print("Getting sample infos...")
   if type(sources) is str:
@@ -116,21 +145,17 @@ def createDatasetWithNewCellLines(wto, samplesetname,
   if type(wmfroms) is str:
     wmfroms = [wmfroms]
   sampless = pd.DataFrame()
-  names = [a.split('_')[0] for a in refsamples.index if type(a) is str]
-
-  ref_size = {gcp.extractSize(val): gcp.extractPath(val) for val in gcp.lsFiles(
-      [i for i in refsamples[extract["ref_bams"]] if type(i) is str and str(i) != 'NA'], "-al", 200)}
-
+  wrongsamples = pd.DataFrame()
   for source, wmfrom in zip(sources, wmfroms):
     broken_bams = []
     wmfrom = dm.WorkspaceManager(wmfrom)
     samples = wmfrom.get_samples().replace(np.nan, '', regex=True).reset_index()
     # keep samples that contain the match requirement (e.g. ACH for DepMap IDs)
-    samples = samples[samples[extract['id']].str.contains('|'.join(match))]
+
     print("\nThe shape of the sample tsv from " + str(wmfrom) + ": " + str(samples.shape))
 
     # remove true duplicates from consideration
-    print("Identifying any true duplicates by checking file sizes (this runs for each data source)...")
+    print("Identifying any true duplicates by checking file hashes (this runs for each data source)...")
     print("This step can take a while as we need to use gsutil to check the size of each potential duplicate...")
     dups_to_remove = []
     # check for broken bam files; if broken, then remove from consideration
@@ -138,83 +163,109 @@ def createDatasetWithNewCellLines(wto, samplesetname,
     # add a broken file path for a new participant
     foundfiles = gcp.lsFiles(samples[extract['bam']])
     broken_bams = set(samples[extract['bam']]) - set(foundfiles)
-    tolookfor = [val[extract['bam']] for _, val in samples.iterrows() if val[extract['id']][0:participantslicepos] in set(refids)]
-    sample_size = {gcp.extractSize(val): gcp.extractPath(val) for val in gcp.lsFiles(tolookfor, "-al")}
+    prevlen = len(samples)
+    wrongsamples = pd.concat([wrongsamples, samples[(~samples[extract['bam']].isin(broken_bams)) & (~samples[extract['from_arxspan_id']].str.contains('|'.join(match)))]], sort=False)
+    samples = samples[samples[extract['from_arxspan_id']].str.contains('|'.join(match))]
+    # getting correct arxspan id
+    for match_substring in match:
+      samples[extract['ref_arxspan_id']] = [(match_substring + i.split(match_substring)[-1]) if match_substring in i else i for i in samples[extract['from_arxspan_id']]]
+    samples[extract['ref_arxspan_id']] = [i[:participantslicepos] for i in samples[extract['ref_arxspan_id']]]
+    print('we found and removed ' + str(prevlen - len(samples)) + ' samples which did not match our id names: ' + str(match))
 
-    dups_to_remove = [sample_size[a] for a in set(ref_size.keys()) & set(sample_size.keys())]
+    tolookfor = [val[extract['bam']] for _, val in samples.iterrows() if val[extract['ref_arxspan_id']] in set(refsamples[extract['ref_arxspan_id']])]
+    print("found " + str(len(tolookfor)) + ' likely replicate')
+    sample_hash = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
+    dups_to_remove = [sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['size']])]
 
     # remove the duplicates from consideration
     print("Len of samples before removal: " + str(len(samples)))
-    print('These bam file path do not exist: ' + str(broken_bams))
+    print('These ' + str(len(broken_bams)) + ' bam file path do not exist: ' + str(broken_bams))
     print("Dups from " + str(wmfrom) + " has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
-
     # remove the samples with broken bam filepaths from consideration
     samples = samples[(~samples[extract['bam']].isin(dups_to_remove)) & (~samples[extract['bam']].isin(broken_bams))]
+
+    print("Len of samples after removal: " + str(len(samples)))
+    if len(samples) == 0:
+      continue
+
+    # getting the hash
+    if extract['hash'] not in samples.columns or recomputehash:
+      samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
+          [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
+    if extract['size'] not in samples.columns or recomputesize:
+      samples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
+
+    # getting the date released
+    if extract['release_date'] not in samples.columns or recomputedate:
+      samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
+    samples[extract['release_date']] = list(h.datetoint(samples[extract['release_date']].values))
+
+    # creating unique ids
+    samples[extract['ref_id']] = ['CDS-' + h.randomString(stringLength=6, stype='all', withdigits=True) for _ in range(len(samples))]
+    samples[extract['patient_id']] = ['PT-' + h.randomString(stringLength=8, stype='all', withdigits=True) for _ in range(len(samples))]
     samples.reset_index(drop=True, inplace=True)
-    # add number to sample ID so runs of same participant have unique sample ID
-    new_samples = samples[extract['id']].str.slice(0, participantslicepos)
     # check: currently, below lines prevent forcekeep from working on true duplicates
     # (aka same size  file). Need to think about how to bring back the forcekeep functionality
-    print("Len of samples after removal: " + str(len(samples)))
-
+    names = []
     # need to keep track of whether we're adding more than one new entry for a given sample id
-    for i, val in enumerate(new_samples):
-      num_in_workspace = names.count(val)
-      samples[extract['id']][i] = val + '_' + str(num_in_workspace + 1)
-      samples["version"] = int(num_in_workspace + 1)
+    for k, val in samples.iterrows():
+      val = val[extract['ref_arxspan_id']]
       names.append(val)
+      count = len(refsamples[refsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
+      samples.loc[k, extract['version']] = len(refsamples[refsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
+    # if only add some samples
     if len(addonly) > 0:
-      samples = samples[samples[extract['id']].isin(addonly)]
+      samples = samples[samples[extract['ref_arxspan_id']].isin(addonly)]
 
     samples[extract['source']] = source
+    # unknown types
     if 'sample_type' in samples.columns:
       if not accept_unknowntypes:
         samples = samples[samples['sample_type'].isin(['Tumor'])]
     sampless = pd.concat([sampless, samples], sort=False)
 
-  # ## currently, we don't do anything with notfound. Therefore addonly functionality is broken.
-  # notfound = set(addonly) - set(sampless.index.tolist())
-  # if len(notfound) > 0:
-  #   # samples not found in the wto workspace so will be adding them now
-  #   print('we did not find:' + str(notfound))
   sample_ids = []
-  sampless['version'] = sampless['version'].astype(int)
-  # to do the download to the new dataspace
-  if not dry_run:
-    pdb.set_trace()
-    if gsfolderto is not None:
-      for i, val in sampless.iterrows():
-        if not gcp.exists(gsfolderto + 'v' + str(val["version"]) + '/' + val[extract['bam']].split('/')[-1]):
-          cmd = 'gsutil cp ' + val[extract['bam']] + ' ' + val[extract['bai']] + ' ' + gsfolderto + 'v' + str(val["version"]) + '/'
-          res = os.system(cmd)
-          if res != 0:
-            print("error in command '" + cmd + "'")
-      sampless[extract['bam']] = [gsfolderto + 'v' + str(a["version"]) + '/' + a[extract['bam']].split('/')[-1] for _, a in sampless.iterrows()]
-      sampless[extract['bai']] = [gsfolderto + 'v' + str(a["version"]) + '/' + a[extract['bai']].split('/')[-1] for _, a in sampless.iterrows()]
-    print(sampless)
   if len(sampless) == 0:
-    raise Exception("no new samples in this matrix")
-  for ind, val in sampless.iterrows():
-    name = val[extract['id']]
-    if name in rename.keys():
-      name = rename[name]
-    refsamples = refsamples.append(pd.Series(
-        {
-            "CCLE_name": val[extract['name']],
-            extract['ref_bais']: val[extract['bai']],
-            extract['ref_bams']: val[extract['bam']],
-            "Source": val[extract['source']],
-            "participant": val[extract['participant']][:participantslicepos],
+    print("no new data available")
+    return sampless, pd.DataFrame()
+  sampless[extract['version']] = sampless[extract['version']].astype(int)
+  if stype not in set(refsamples[extract['ref_type']]):
+    h.ask("we have never seen this type: " + stype + ", in the reference, continue?")
+  sampless[extract['ref_type']] = stype
 
-        }, name=name))
-    sample_ids.append(name)
+  # renamings
+  sampless = sampless.rename(columns={extract['bam']: extract['ref_bam'],
+                                      extract['bai']: extract['ref_bai'],
+                                      extract['name']: extract['ref_name'],
+                                      }).set_index(extract["ref_id"], drop=True)
 
-  if not dry_run:
-    print("uploading new samples")
-    wto.upload_samples(refsamples)
-    print("creating a sample set")
-    wto.update_sample_set(sample_set_id=samplesetname, sample_ids=sample_ids)
-  return sample_ids, refsamples, refsamples[refsamples.index.isin(sample_ids)].CCLE_name.tolist()
+  # checking no duplicate in the buckets
+  for k, val in sampless.iterrows():
+    withsamesize = sampless[sampless[extract["size"]] == val[extract["size"]]]
+    if len(withsamesize) > 1:
+      if len(withsamesize[withsamesize[extract["ref_name"]] == val[extract["ref_name"]]]) < 2:
+        raise ValueError('we have duplicate samples with different names!')
+      else:
+        for l, v in withsamesize.iloc[1:].iterrows():
+          sampless = sampless.drop(l)
+  print("we had " + str(prevlen - len(sampless)) + " duplicates in the release buckets")
+
+  # subsetting
+  sampless = sampless[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"],
+                       extract["release_date"], extract["patient_id"], extract["hash"], extract['size'],
+                       extract['version'], extract['ref_type']]]
+  sampless[extract['ref_arxspan_id']] = [rename[name] if name in rename else name for name in sampless[extract['ref_arxspan_id']]]
+  normals = refsamples[refsamples[extract['primary_disease']] == 'normal']
+  sampless[extract['patient_id']] = [val[extract['patient_id']] if len(refsamples[refsamples[extract['ref_arxspan_id']] == val[extract['ref_arxspan_id']]]) < 1 else refsamples[refsamples[extract['ref_arxspan_id']]
+                                                                                                                                                                                == val[extract['ref_arxspan_id']]][extract['patient_id']].values[0] for i, val in sampless.iterrows()]
+  # creating pairs
+  pairs = pd.DataFrame()
+  pairs['control_sample'] = ['nan' if len(normals[normals[extract['patient_id']] == val]) < 1 else normals[normals[extract['patient_id']] == val].index.tolist()[0] for val in sampless[extract['patient_id']]]
+  pairs['case_sample'] = sampless.index.tolist()
+  pairs['patient_id'] = sampless[extract['patient_id']]
+  pairs['pair_id'] = [val['case_sample'] + '_' + val['control_sample'] for i, val in pairs.iterrows()]
+  print('found ' + str(len(pairs['control_sample'].unique()) - 1) + ' matched normals')
+  return sampless, pairs, wrongsamples
 
 #####################
 # VALIDATION
@@ -347,7 +398,7 @@ def addToMainFusion(input_filenames, main_filename):
         print(input_filename + " is Already in main fusions")
       df['DepMap_ID'] = pd.Series([input_filename] * len(df.index.tolist()), index=df.index)
       cols = df.columns.tolist()
-      cols = cols[-1:] + cols[:-1]
+      cols = cols[-1:] + cols[: -1]
       df = df[cols]
       df.to_csv(f, header=False, sep='\t', index=False)
 
@@ -390,7 +441,7 @@ def ExtractStarQualityInfo(samplesetname, workspace, release='temp'):
 
   Args:
   -----
-    samplesetname: the sampleset name for which to grab the samples processed by star. 
+    samplesetname: the sampleset name for which to grab the samples processed by star.
     wm: the terra workspace
     release: the name of the folder where it will be stored
   """
@@ -439,7 +490,7 @@ def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
   This function is used to subset a df to only the columns with the most up to date names
 
   We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
-  
+
 
   Args:
   ----
@@ -475,7 +526,7 @@ def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
   This function is used to subset a df to only the columns with the most up to date names
 
   We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
-  
+
   Args:
   ----
 
@@ -522,7 +573,7 @@ def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', client
     sample_id: str the name of the sample_id column in the google sheet
     clientsecret: str path to your secret google api account file
     storagepath: str path to your secret google api storage file
-    colname: str if we need not to include some rows from the spreadsheet that have the value value 
+    colname: str if we need not to include some rows from the spreadsheet that have the value value
     value: str the value for which not to include the rows
 
   @gmiller
