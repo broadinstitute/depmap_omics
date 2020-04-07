@@ -267,9 +267,25 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
   print('found ' + str(len(pairs['control_sample'].unique()) - 1) + ' matched normals')
   return sampless, pairs, wrongsamples
 
-#####################
-# VALIDATION
-#####################
+
+def changeCellLineNameInNewSet(ref, new, datatype, dupdict, toupdate=['stripped_cell_line_name',
+                                                                      'arxspan_id', "patient_id",
+                                                                      "gender", "primary_disease",
+                                                                      "cellosaurus_id", "age",
+                                                                      "primary_site", "subtype",
+                                                                      "subsubtype"]):
+  """
+  dupdict = dict(tochange,newname)
+  datatype = str for a ref with many datatype (to get the right version number)
+  """
+  for k, v in dupdict.items():
+    new.loc[new[new.arxspan_id == k].index, toupdate] = ref[ref.arxspan_id == v][toupdate]
+    new.loc[new[new.arxspan_id == v].index, 'version'] = len(ref[(ref.arxspan_id == v) & (ref.datatype == datatype)]) + 1
+  return new
+
+  #####################
+  # VALIDATION
+  #####################
 
 
 def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
