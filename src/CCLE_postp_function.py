@@ -615,3 +615,27 @@ def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', client
       have this release:\n" + str(sorted(list(in_sheet_not_found))))
   else:
     print("We aren't missing any samples that we're supposed to have this release!")
+
+
+def removeOlderVersions(data, refsamples, arxspan_id="arxspan_id", version="version"):
+  """
+  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
+
+  refsamples: df[id, version, arxspan_id,...] the reference metadata
+  data: df[id, ...] your dataset
+
+  """
+  if data.index.name == refsamples.index.name:
+    lendata = len(data)
+    result = pd.concat([data, refsamples], axis=1, sort=False, join='inner')
+    if lendata > len(results):
+      raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
+    for arxspan in set(result[arxpsan_id]):
+      allv = results[results[arxpsan_id] == arxspan]
+      for k, val in allv.iterrows():
+        if val[version] < max(allv.version.values):
+          result = result.remove(k)
+    print("removed " + str(lenddata - len(result)) + " duplicate samples")
+    return result.drop(columns=refsamples.columns.tolist()).set_index(arxspan_id, drop=True).reindex()
+  else:
+    raise ValueError('we need both the reference and the data to be indexed with the same index')
