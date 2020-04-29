@@ -637,14 +637,17 @@ def removeOlderVersions(data, refsamples, arxspan_id="arxspan_id", version="vers
   if data.index.name == refsamples.index.name:
     lendata = len(data)
     result = pd.concat([data, refsamples], axis=1, sort=False, join='inner')
-    if lendata > len(results):
+    if lendata > len(result):
       raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
-    for arxspan in set(result[arxpsan_id]):
-      allv = results[results[arxpsan_id] == arxspan]
+    for arxspan in set(result[arxspan_id]):
+      allv = result[result[arxspan_id] == arxspan]
       for k, val in allv.iterrows():
         if val[version] < max(allv.version.values):
           result = result.remove(k)
-    print("removed " + str(lenddata - len(result)) + " duplicate samples")
-    return result.drop(columns=refsamples.columns.tolist()).set_index(arxspan_id, drop=True).reindex()
+    print("removed " + str(lendata - len(result)) + " duplicate samples")
+    # remove all the reference metadata columns except the arxspan ID
+    col_subset = refsamples.columns.tolist()
+    col_subset.remove(arxspan_id)
+    return result.drop(columns=col_subset).set_index(arxspan_id, drop=True).reindex()
   else:
     raise ValueError('we need both the reference and the data to be indexed with the same index')
