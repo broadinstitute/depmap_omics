@@ -626,28 +626,38 @@ def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', client
     print("We aren't missing any samples that we're supposed to have this release!")
 
 
-def removeOlderVersions(data, refsamples, arxspan_id="arxspan_id", version="version"):
+def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="version"):
   """
   Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
 
   refsamples: df[id, version, arxspan_id,...] the reference metadata
-  data: df[id, ...] your dataset
+  names: list[id]
 
   """
-  if data.index.name == refsamples.index.name:
-    lendata = len(data)
-    result = pd.concat([data, refsamples], axis=1, sort=False, join='inner')
-    if lendata > len(result):
-      raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
-    for arxspan in set(result[arxspan_id]):
-      allv = result[result[arxspan_id] == arxspan]
-      for k, val in allv.iterrows():
-        if val[version] < max(allv.version.values):
-          result = result.remove(k)
-    print("removed " + str(lendata - len(result)) + " duplicate samples")
-    # remove all the reference metadata columns except the arxspan ID
-    col_subset = refsamples.columns.tolist()
-    col_subset.remove(arxspan_id)
-    return result.drop(columns=col_subset).set_index(arxspan_id, drop=True).reindex()
-  else:
-    raise ValueError('we need both the reference and the data to be indexed with the same index')
+  lennames = len(names)
+  res = {}
+  refsamples = refsamples[refsamples.index.isin(names)]
+  if lennames > len(refsamples):
+    raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
+  for arxspan in set(refsamples[arxspan_id]):
+    allv = refsamples[refsamples[arxspan_id] == arxspan]
+    for k, val in allv.iterrows():
+      if val[version] == max(allv.version.values):
+        res[k] = arxspan
+        break
+  print("removed " + str(lennames - len(res)) + " duplicate samples")
+  # remove all the reference metadata columns except the arxspan ID
+  return res
+
+
+def getRNAQC(workspace, only=[], qcname="star_logs"):
+  res = {}
+  wm = dm.WorkspaceManager(workspace)
+  sam = wm.get_samples()
+  if len(only) > 0:
+    sam = sam[sam.index.isin(only)]
+  for k, val in sam[qcname].iteritems():
+    for i in val:
+      if '.Log.final.out' in i:
+        res[k] = i
+  return res
