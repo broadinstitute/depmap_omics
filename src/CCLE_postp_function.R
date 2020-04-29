@@ -258,6 +258,7 @@ interpolateGapsInSegmented <- function(segments) {
         disjoin() %>%
         as.data.frame()
       
+      # TODO: getting error "Error: must be a double vector, not an integer vector" for 20Q2 data
       get_missing_in_disjoined <- ddd %>%
         left_join(., ttt, by=c('seqnames', 'start', 'end', 'strand')) %>%
         dplyr::rename(SM_start_end=Segment_Mean, Num_Probes_start_end=Num_Probes) %>%
@@ -270,6 +271,7 @@ interpolateGapsInSegmented <- function(segments) {
           !is.na(SM_start) ~ SM_start,
           !is.na(SM_end) ~ SM_end,
           TRUE ~ 1)) %>%
+        # TODO: the error is stemming from this mutate call:
         mutate(Num_Probes_final=case_when(!is.na(Num_Probes_start_end) ~ Num_Probes_start_end,
           !is.na(Num_Probes_start) ~ Num_Probes_start,
           !is.na(Num_Probes_end) ~ Num_Probes_end,
@@ -278,7 +280,7 @@ interpolateGapsInSegmented <- function(segments) {
         dplyr::select(seqnames, start, end, Num_Probes=Num_Probes_final, 
           Segment_Mean=SM_final, DepMap_ID, Source) %>%
         GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
-      
+
       segments_as_granges_list[[cl]] <- get_missing_in_disjoined
     }
     # We want to extend the ranges to fill in any gaps. We use GenomicRanges gaps function to identify
