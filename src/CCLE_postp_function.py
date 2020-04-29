@@ -61,6 +61,12 @@ extract_defaults = {
     'mean_depth': 'mean_depth'
 }
 
+MINSIZES = {
+    'rna': 2000000000,
+    'wes': 3000000000,
+    'wgs': 50000000000,
+}
+
 
 def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={},
@@ -193,8 +199,11 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
       samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
           [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
     if extract['size'] not in samples.columns or recomputesize:
-      samples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
-
+      samples[extract['size']] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
+    for k, val in samples.iterrows():
+      if val[extract['size']] < MINSIZES[stype]:
+        val = val.drop(k)
+        print("too small size, removing sample: " + str(val[extract["ref_arxspan_id"]]))
     # getting the date released
     if extract['release_date'] not in samples.columns or recomputedate:
       samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
