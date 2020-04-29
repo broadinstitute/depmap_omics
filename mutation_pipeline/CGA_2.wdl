@@ -172,8 +172,6 @@ workflow CGA_Production_Analysis_Workflow {
                 gatk4_jar_size=gatk4_jar_size,
                 db_snp_vcf_size=db_snp_vcf_size,
                 bam_size=tumorBam_size,
-                validationStringencyLevel=runtime_params["PicardMultipleMetrics_Task.validationStringencyLevel"],
-                run_clean_sam=runtime_params["PicardMultipleMetrics_Task.run_clean_sam"],
                 diskGB_buffer=runtime_params["PicardMultipleMetrics_Task.diskGB_buffer"],
                 diskGB_boot=runtime_params["PicardMultipleMetrics_Task.diskGB_boot"],
                 preemptible=runtime_params["PicardMultipleMetrics_Task.preemptible"],
@@ -200,8 +198,6 @@ workflow CGA_Production_Analysis_Workflow {
                 db_snp_vcf_size=db_snp_vcf_size,
                 gatk4_jar_size=gatk4_jar_size,
                 bam_size=normalBam_size,
-                validationStringencyLevel=runtime_params["PicardMultipleMetrics_Task.validationStringencyLevel"],
-                run_clean_sam=runtime_params["PicardMultipleMetrics_Task.run_clean_sam"],
                 diskGB_buffer=runtime_params["PicardMultipleMetrics_Task.diskGB_buffer"],
                 diskGB_boot=runtime_params["PicardMultipleMetrics_Task.diskGB_boot"],
                 memoryGB=runtime_params["PicardMultipleMetrics_Task.memoryGB"], 
@@ -454,8 +450,8 @@ workflow CGA_Production_Analysis_Workflow {
     call OrientationBias_filter_Task as oxoGOBF {
         input:
             stub="oxog",
-            tumorBam=tumorBam,
-            tumorBamIdx=tumorBamIdx,
+            tumorBam=select_first([tumorMM_Task.Bam,tumorBam]),
+            tumorBamIdx=select_first([tumorMM_Task.Bai,tumorBamIdx]),
             pairName=pairName,
             detailMetrics=tumorMM_Task.pre_adapter_detail_metrics,
             MAF=Oncotate_Task.WXS_Mutation_M1_SNV_M2_INDEL_Strelka_INDEL_annotated_maf,
@@ -480,8 +476,8 @@ workflow CGA_Production_Analysis_Workflow {
     call OrientationBias_filter_Task as ffpeOBF {
         input:
             stub="ffpe",
-            tumorBam=tumorBam,
-            tumorBamIdx=tumorBamIdx,
+            tumorBam=select_first([tumorMM_Task.Bam,tumorBam]),
+            tumorBamIdx=select_first([tumorMM_Task.Bai,tumorBamIdx]),
             pairName=pairName,
             detailMetrics=tumorMM_Task.pre_adapter_detail_metrics,
             MAF=Oncotate_Task.WXS_Mutation_M1_SNV_M2_INDEL_Strelka_INDEL_annotated_maf,
@@ -609,7 +605,6 @@ workflow CGA_Production_Analysis_Workflow {
         File copy_number_qc_report_png=CopyNumberReportQC_Task.CopyNumQCReportPNG
         File copy_number_qc_mix_ups=CopyNumberReportQC_Task.CopyNumQCMixUps
         # Picard Multiple Metrics Task - NORMAL BAM
-        File? normal_bam_bam_validation=normalMM_Task.bam_validation
         File? normal_bam_alignment_summary_metrics=normalMM_Task.alignment_summary_metrics
         File? normal_bam_bait_bias_detail_metrics=normalMM_Task.bait_bias_detail_metrics
         File? normal_bam_bait_bias_summary_metrics=normalMM_Task.bait_bias_summary_metrics
@@ -630,7 +625,6 @@ workflow CGA_Production_Analysis_Workflow {
         File? normal_bam_converted_oxog_metrics=normalMM_Task.converted_oxog_metrics
         File? normal_bam_hybrid_selection_metrics=normalMM_Task.hsMetrics
         # Picard Multiple Metrics Task - TUMOR BAM
-        File? tumor_bam_bam_validation=tumorMM_Task.bam_validation
         File? tumor_bam_alignment_summary_metrics=tumorMM_Task.alignment_summary_metrics
         File? tumor_bam_bait_bias_detail_metrics=tumorMM_Task.bait_bias_detail_metrics
         File? tumor_bam_bait_bias_summary_metrics=tumorMM_Task.bait_bias_summary_metrics
@@ -909,7 +903,6 @@ task PicardMultipleMetrics_Task {
     File GATK4_JAR
 
     String validationStringencyLevel
-    String run_clean_sam
 
     # FILE SIZE
     Int bam_size
@@ -931,7 +924,6 @@ task PicardMultipleMetrics_Task {
     String default_diskGB_boot = "15"
     String default_diskGB_buffer = "20"
     String default_stringencyLevel = "LENIENT"
-    String default_run_clean_sam = false
 
     # COMPUTE MEMORY SIZE
     Int machine_memoryGB = if memoryGB != "" then memoryGB else default_memoryGB
@@ -939,10 +931,9 @@ task PicardMultipleMetrics_Task {
     
     # COMPUTE DISK SIZE
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
-    Int diskGB = ceil(bam_size + refFasta_size + gatk4_jar_size + db_snp_vcf_size + machine_diskGB_buffer)
+    Int diskGB = ceil(bam_size + bam_size + refFasta_size + gatk4_jar_size + db_snp_vcf_size + machine_diskGB_buffer)
 
     String stringencyLevel = if validationStringencyLevel != "" then validationStringencyLevel else default_stringencyLevel
-    String clean_sam_flag = if run_clean_sam != "" then run_clean_sam else default_run_clean_sam
 
     parameter_meta {
         bam : "sample (normal or tumor) BAM file"
@@ -956,25 +947,15 @@ task PicardMultipleMetrics_Task {
     command <<<
 
         set -euxo pipefail
-
-        /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} ValidateSamFile \
+        # Run bam through CleanSam to set MAPQ of unmapped reads to zero
+        /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CleanSam \
         --INPUT ${bam} \
-        --OUTPUT "${sampleName}.bam_validation" \
-        --MODE VERBOSE \
-        --IGNORE_WARNINGS true \
-        --REFERENCE_SEQUENCE ${refFasta} \
-        --VALIDATION_STRINGENCY ${stringencyLevel}
-
-        if [ "${clean_sam_flag}" = true ] ;
-        then
-            # Run bam through CleanSam to set MAPQ of unmapped reads to zero
-            /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CleanSam \
-            --INPUT ${bam} \
-            --OUTPUT ${sampleName}.unmapped_reads_cleaned.bam
-        fi
+        --OUTPUT ${sampleName}.cleaned.bam \
+        --CREATE_INDEX true \
+        --VALIDATION_STRINGENCY "STRICT"
 
         /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CollectMultipleMetrics \
-        --INPUT ${bam} \
+        --INPUT ${sampleName}.cleaned.bam \
         --OUTPUT ${sampleName}.multiple_metrics \
         --REFERENCE_SEQUENCE ${refFasta} \
         --DB_SNP ${DB_SNP_VCF} \
@@ -1004,7 +985,7 @@ task PicardMultipleMetrics_Task {
 
         # Collect WES HS metrics
         /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CollectHsMetrics \
-        --INPUT ${bam} \
+        --INPUT ${sampleName}.cleaned.bam \
         --BAIT_INTERVALS ${targetIntervals} \
         --TARGET_INTERVALS ${baitIntervals} \
         --OUTPUT "${sampleName}.HSMetrics.txt" \
@@ -1022,7 +1003,8 @@ task PicardMultipleMetrics_Task {
     }
 
     output {
-        File bam_validation="${sampleName}.bam_validation"
+        File Bam = "${sampleName}.cleaned.bam"
+        File Bai = "${sampleName}.cleaned.bai"
         File metricsReportsZip="picard_multiple_metrics.zip"
         File alignment_summary_metrics="${sampleName}.multiple_metrics.alignment_summary_metrics"
         File bait_bias_detail_metrics="${sampleName}.multiple_metrics.bait_bias_detail_metrics"
@@ -1371,7 +1353,7 @@ task Mutect1_Task {
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
     Int diskGB = ceil(tumorBam_size + normalBam_size + refFasta_size + db_snp_vcf_size
                 + size(mutectIntervals, "G") + size(cosmicVCF, "G") + size(readGroupBlackList, "G")
-                + size(MuTectNormalPanel, "G") + select_first([diskGB_buffer, default_diskGB_buffer]))
+                + size(MuTectNormalPanel, "G") + machine_diskGB_buffer)
 
     String downsample = if downsampleToCoverage != "" then downsampleToCoverage else default_downsampleToCoverage
 
