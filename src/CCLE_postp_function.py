@@ -624,7 +624,7 @@ def removeOlderVersions(data, refsamples, arxspan_id="arxspan_id", version="vers
   refsamples: df[id, version, arxspan_id,...] the reference metadata
   data: df[id, ...] your dataset
 
-  """
+  """ # TODO: output CDS ids kept, to update the spreadsheet
   if data.index.name == refsamples.index.name:
     lendata = len(data)
     result = pd.concat([data, refsamples], axis=1, sort=False, join='inner')
