@@ -638,6 +638,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   res = {}
   refsamples = refsamples[refsamples.index.isin(names)]
   if lennames > len(refsamples):
+    ipdb.set_trace()
     raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
   for arxspan in set(refsamples[arxspan_id]):
     allv = refsamples[refsamples[arxspan_id] == arxspan]
@@ -660,4 +661,20 @@ def getRNAQC(workspace, only=[], qcname="star_logs"):
     for i in val:
       if '.Log.final.out' in i:
         res[k] = i
+  return res
+
+
+def getMutQC(workspace, only=[], qcname=[]):
+  res = {}
+  wm = dm.WorkspaceManager(workspace)
+  sam = wm.get_samples()
+  if len(only) > 0:
+    sam = sam[sam.index.isin(only)]
+  for k, val in sam.iterrows():
+    res[k] = []
+    for i in val[qcname]:
+      if type(i) is list:
+        res[k].extend(i)
+      else:
+        res[k].append(i)
   return res
