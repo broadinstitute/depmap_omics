@@ -664,7 +664,7 @@ def getRNAQC(workspace, only=[], qcname="star_logs"):
   return res
 
 
-def getMutQC(workspace, only=[], qcname=[]):
+def getWESQC(workspace, only=[], qcname=[]):
   res = {}
   wm = dm.WorkspaceManager(workspace)
   sam = wm.get_samples()
