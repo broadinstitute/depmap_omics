@@ -57,7 +57,7 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
 - And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`
 - For Python use the requirements.txt file `pip install -r requirements.txt`
 
-### Getting Terra Accessls
+### Getting Terra Access
 
 1. You will need to request access to the following terra workspaces:
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline
@@ -118,7 +118,26 @@ __temp__ Contains the temp file that can get removed after processing (should be
 
 __documentation__ Contains some additional files for documenting the pipelines
 
-# CCLE Pipelines inner workings:
+
+## Data
+
+
+### PONS
+
+for CN pons are made from a set of ~400 normals from the GTEx project as they were sequenced in the same fashion as CCLE samples with the same set of baits. you can see the ID of the samples in `data/samples_for_pons.csv`.
+We have created pons for each bait set and using XY only.
+We have used workflow from the pipeline:
+`gatk/CNV_Somatic_Panel_Workflow`
+
+
+### targets
+
+The data we are presenting comes from different WES targets/baits/intervals.
+
+We are currently using Illumina ICE intervals and Agilent intervals
+
+
+## CCLE Pipelines inner workings:
 
 ![schema](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/architecture_diagram.png)
 
@@ -179,7 +198,7 @@ There are several other tasks in this workspace. In brief:
 
 *   **CNV_Somatic_Panel_Workflow_Agilent_XX** gatk/CNV_Somatic_Panel_WorkflowSnapshot ID: 11. This task was used in this workspace to generate the Sanger PON. In the Sanger dataset, there is a set of 40 normal cell lines samples (cell lines derived from matched normal tissue). We can use these to generate a PON to normalize to rather than using the Agilent PON we use for the other CCLE cell lines. This leads to less noisy results. HOWEVER, results using the PON from this workflow should not use the X chromosome, as the sanger normals are not exclusively female or male (it is likely a mix).
 *   **SANGER_PON_CNV_sample_XX** gatk/CNV_Somatic_Pair_WorkflowSnapshot ID: 9. Same as the CNV_sample_XX_gatk, except that is uses the Sanger based PON. Should be used only for the Sanger cell lines.
-*   **Sanger_PON_Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2. Aggregates the segment files for the samples that were run using the Sanger PON based CNV workflow.
+*   **Sanger_PON_Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2. Aggregates the segment files for the samples that were run using the Sanger PON based CNV workflow. 
 
 
 #### Mutation
