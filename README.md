@@ -268,6 +268,10 @@ The post processing happens in R using guillaume's and Allie's functions, in bri
 - extendEndsOfSegments
 - reprioritizeData
 
+dataPrioritization is done as explained in fig. 5 of https://www.biorxiv.org/content/10.1101/720243v1.full.pdf
+
+![](documentation/prioritization.png)
+
 ##### creating gene copy number
 
 - generateEntrezGenes
