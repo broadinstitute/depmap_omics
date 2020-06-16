@@ -28,7 +28,7 @@ We are using a set of tools to
   - https://github.com/Illumina/strelka
  
 
-## Installation
+## Installation 
 
 If you are not familiar with these notions, we will first recommend you get more knowledge into each:
 - python https://www.learnpython.org/
@@ -57,7 +57,9 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
 - And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`
 - For Python use the requirements.txt file `pip install -r requirements.txt`
 
-### Getting Terra Access
+### For Broad People
+
+#### Getting Terra Access
 
 1. You will need to request access to the following terra workspaces:
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline
@@ -84,8 +86,47 @@ The current owners of these workspaces should give you access.
 
 *more information on the firecloud workspaces and what they might contain is available on this [document](https://www.github.com/broadinstitute/ccle_processing/firecloud_documentation.html)
 
-### additional logins:
+#### additional logins:
 - in order to run the imports [gsheets](https://pypi.org/project/gsheets/) and [taigapy](https://pypi.org/project/taigapy/), you will need to create a [taiga](https://cds.team/taiga) account and link your broad google account to access the cell line sheets.
+
+
+#### boot up
+
+- You first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
+
+We are instantiating all the parameters needed for this pipeline to run
+
+##### Adding new data
+
+We are looking for new samples in a range of workspaces.
+
+They are quite messy and might contains duplicates, contain broken file paths...
+
+- We are thus looking at the bam files one by one and comparing them with our own bams. 
+- We remove broken files, duplicates and add new version of a cell line's bam if we find some.
+
+##### Check that we have all the cell lines we expect for this release
+
+This involves comparing to the list in the Google sheet "Cell Line Profiling Status."
+
+_As the list cannot be parsed, we are not comparing it for now_
+
+
+### For External Users:
+
+#### Creating your Terra Workspaces:
+
+use the data/xQx/.json:
+- import the workflows, with their parameters listed in here.
+- import the workspace data listed in here in general
+
+if you get big issues feel free to send us an email.
+
+
+#### Adding your data
+
+use JKBio terraFunctions
+
 
 ## File structure
 
@@ -150,27 +191,6 @@ Note: Slide 7 of the [CCLE pipelines and datasets presentation](https://docs.goo
 ![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/slide7.png)
 
 _What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
-
-### boot up
-
-- You first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
-
-We are instantiating all the parameters needed for this pipeline to run
-
-#### Adding new data
-
-We are looking for new samples in a range of workspaces.
-
-They are quite messy and might contains duplicates, contain broken file paths...
-
-- We are thus looking at the bam files one by one and comparing them with our own bams. 
-- We remove broken files, duplicates and add new version of a cell line's bam if we find some.
-
-#### Check that we have all the cell lines we expect for this release
-
-This involves comparing to the list in the Google sheet "Cell Line Profiling Status."
-
-_As the list cannot be parsed, we are not comparing it for now_
 
 
 ### run Terra pipeline
@@ -323,7 +343,7 @@ First we need to do an additional step of filtering on coverage and number
 
 ##### validation
 
-__Compare to previous release__
+__Compare to previous release (broad only)__
 
 I would run some checks here comparing the results to the previous releases MAF. Namely:
 
@@ -331,7 +351,7 @@ I would run some checks here comparing the results to the previous releases MAF.
 - Count the total number of mutations observed by position (group by chromosome, start position, end position and count the number of mutations)
 - Look at specific differences between the two MAFs (join on DepMap_ID, Chromosome, Start position, End position, Variant_Type). I would do this for WES only
 
-__check important mutations__
+__check if important mutations are present or not__
 
 #### RNA
 
@@ -369,7 +389,7 @@ With the functions:
 - filterFusions
 - prepare_depmap_fusion_data_for_taiga
 
-### Upload to taiga
+### Upload to taiga (Broad only)
 
 - We load the blacklisted/embargoed sample ids
 - We log2 transform and create a file for each release (and one containing everything)
@@ -390,3 +410,5 @@ https://docs.google.com/document/d/19MvCIpRID12vfIlc5i2XmJB8yT2jJ2xwNM_PI1HRC0A/
 @gkugener
 @gmiller
 @__[BroadInsitute](https://www.broadinstitute.org)
+
+For any questions/issues, send us an email at ccle-help@broadinstitute.org or write down an issue on the github repo
