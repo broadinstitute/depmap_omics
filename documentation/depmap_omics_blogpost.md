@@ -45,12 +45,12 @@ If you are not familiar with these notions, we will first recommend you get more
 
 Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener).
 
-Go to the repos and pull them to the same parent folder as ccle_processing.
+Go to the repos and pull them to the same parent folder as `ccle_processing`.
 
 
 ### :warning: you would need the approriate R packages and python packages
 
-1. You will need to install jupyter notetbooks and google cloud sdk
+1. You will need to install jupyter notebooks and google cloud sdk
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
   - authenticate my SDK account by running `gcloud auth application-default login` in the terminal.
 2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
@@ -62,7 +62,7 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
 
 ### Creating your Terra Workspaces:
 
-use the `data/xQx/.json` which lists the parameters used for each workflows of each off the 3 workspaces in our pipeline (the csv lists the workflows with their correct name):
+use the `data/xQx/.json` which lists the parameters used for each workflows of each off the 3 workspaces in our pipeline (the CSV lists the workflows with their correct name):
 - import the workflows, with their parameters listed in here.
 - import the workspace parameters/data listed in the `GENERAL` field.
 
@@ -81,7 +81,7 @@ This notebook architecture is as follows:
 
 ### 1. UpLoading and preprocessing 
 
-The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
+The first phase really is about getting samples generated at the BroadInstitute and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
 
 **Remarks:** 
 - in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
@@ -89,7 +89,8 @@ The first phase really is about getting samples generated at the broad and locat
 
 ### 2. Running Terra Pipelines
 
-Before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
+Before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the `submission`functions take as input your workflows' names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name.
+
 You can then run this part for the pipeline to run on your samples. It should take around a day.
 
 **Remarks:**
@@ -102,7 +103,7 @@ You can then run this part for the pipeline to run on your samples. It should ta
 This step will do a set of tasks:
 - clean some of the workspace for large useless files.
 - retrieve from the workspace interesting QC results.
-- copy realigned bam files to some bucket.
+- copy realigned BAM files to some bucket.
 - download the results.
 - remove all duplicate samples from our downloaded file (keeping only thee latest version of each samples).
 - saving the current pipeline configuration.
@@ -137,9 +138,9 @@ So amongst these functions, some of them might be of a lesser interest to an ext
 - `prepare_depmap_\*\_for_taiga`
 
 **Remarks:**
-- in the RNAseq pipeline we have an additional sub-pipeline at the end of the notebook to process the fusion calls from starFusion
-- to get the exact same results as in CCLE, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to the genecn dataframe in the CNV pipeline (present at the end of the validation steps).
-- we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters
+- in the RNAseq pipeline we have an additional sub-pipeline at the end of the notebook to process the fusion calls from starFusion.
+- to get the exact same results as in CCLE, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to the `genecn` dataframe in the CNV pipeline (present at the end of the validation steps).
+- we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters.
 
 
 ### 4. QC, grouping and uploading to the portal
@@ -148,4 +149,4 @@ These tasks should not be very interesting for any outside user as they revolve 
 
 We are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
 
-We are then uploading the data to a server called taiga where it will be used in the depmap portal
+We are then uploading the data to a server called taiga where it will be used in the DepMap portal.
