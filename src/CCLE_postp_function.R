@@ -18,7 +18,7 @@ library(stringr)
 
 
 filterCoordinates <- function(loc, coordinate.end, max.spread=2000000) {
-  ## Only keep coordinates on propper  chromosomes
+  ## Only keep coordinates on propper chromosomes
   loc <- as.numeric(loc[names(loc) %in% c(as.character(1:22), "X", "Y")])
   if (length(loc)==0) {
     return(NA)
@@ -34,14 +34,16 @@ filterCoordinates <- function(loc, coordinate.end, max.spread=2000000) {
   }
 }
 
-## Only keep proper chromosomes
+
 filterChromosomes <- function(chrom) {
+  ## Only keep proper chromosomes
   chrom <- intersect(chrom, c(as.character(1:22), "X", "Y"))
   ifelse(length(chrom)>0, chrom, NA)
 }
 
+
 fusionFusions <- function(input_file_names,output_file_name){
-  ## reads selected fields from maf files and aggregates them 
+  ## reads selected fields from fusion files from star_fusion and aggregates them using their filename as sample name
   # Load files and ensure that we are only reading in files that exist
   fns = as.character(read.csv(input_file_names, header=FALSE)[,])
   fe = sapply(fns, file.exists)
@@ -67,7 +69,9 @@ fusionFusions <- function(input_file_names,output_file_name){
   }
 }
 
+
 addToMainFusion <- function(input_file_names, main_file_name, sep="\\."){
+  ## add additional fusion file to Main Fusion file from star_fusion
   for(inputfile in input_file_names){
     val <- inputfile %>% strsplit(., "\\/")
     depmapid <- val[length(val)] %>% strsplit(., sep)[0]
@@ -79,6 +83,7 @@ addToMainFusion <- function(input_file_names, main_file_name, sep="\\."){
       append = (i>1), col.names = !(i>1))
   }
 }
+
 
 addSamplesTo <- function(dataset, listOfSamples){
   # listOfSamples:
@@ -154,8 +159,7 @@ addSamplesTo <- function(dataset, listOfSamples){
 
 
 processSegments <- function(segment_file) {
-
-
+  ## Read in pseuddo bedFile from GATK pipeline and checks that we are not log transformed
   new_copy_number <- readr::read_tsv(segment_file, col_types = cols(
     Sample = col_character(),
     CONTIG=col_character(), 
@@ -175,8 +179,9 @@ processSegments <- function(segment_file) {
   return(new_copy_number)
 }
 
-filterForCCLE <- function(new_copy_number){
 
+filterForCCLE <- function(new_copy_number){
+  ## Removes duplicates from a GATK merged count file
   # We shouldn't have anything labelled other, so check this
   sampl_num = nrow(new_copy_number %>% filter(Source=='Other WES'))
   if (sampl_num > 0) {
@@ -201,33 +206,32 @@ filterForCCLE <- function(new_copy_number){
 }
 
 
-######################
-# The function below fills in the gaps in the segmented level data
-#
-# In this release, the following changes were made:
-#
-# * Number of new cell lines: `r length(new_cell_lines)`
-# * Number of cell lines moving from Sanger WES/Broad SNP -> Broad WES CN: `r length(replaced_cell_lines)`
-# * Total cell lines with CN this release: `r length(unique(combined_new_prioritized_dataset$DepMap_ID))`
-#
-# ## Interpolate segments
-#
-# In this section we perform to operations on the segment level data
-#
-# 1. Fill in the gaps: there may be gaps between segments in the copy number data, 
-#  leading to the possibility genes mapping to these gaps and being NAed further downstream.
-# 2. Extend the ends: there are genes that map outside the targeting regions (in WES).
-#  To address these cases, we can extend the ends of the segments so that these genes are not NAed.
-# 
-# @args:
-#   - segments: 
-#       data.frame with DepMap_ID (what samples are separated on), 
-#       Chromosome, Start, End, Segment_Mean, Num_Probes
-#
-# @returns: a segments data.frame of the same size with gaps in ranges filled
-######################
-
 interpolateGapsInSegmented <- function(segments) {
+  ######################
+  # fills in the gaps in the segmented level data
+  #
+  # In this release, the following changes were made:
+  #
+  # * Number of new cell lines: `r length(new_cell_lines)`
+  # * Number of cell lines moving from Sanger WES/Broad SNP -> Broad WES CN: `r length(replaced_cell_lines)`
+  # * Total cell lines with CN this release: `r length(unique(combined_new_prioritized_dataset$DepMap_ID))`
+  #
+  # ## Interpolate segments
+  #
+  # In this section we perform to operations on the segment level data
+  #
+  # 1. Fill in the gaps: there may be gaps between segments in the copy number data, 
+  #  leading to the possibility genes mapping to these gaps and being NAed further downstream.
+  # 2. Extend the ends: there are genes that map outside the targeting regions (in WES).
+  #  To address these cases, we can extend the ends of the segments so that these genes are not NAed.
+  # 
+  # @args:
+  #   - segments: 
+  #       data.frame with DepMap_ID (what samples are separated on), 
+  #       Chromosome, Start, End, Segment_Mean, Num_Probes
+  #
+  # @returns: a segments data.frame of the same size with gaps in ranges filled
+  ######################
   colnames(segments)[colnames(segments)=="Sample"] <- "DepMap_ID"
   segments_as_granges <- GenomicRanges::makeGRangesFromDataFrame(segments, keep.extra.columns = T)
   segments_as_granges_list <- split(segments_as_granges, segments_as_granges$DepMap_ID)
@@ -320,8 +324,9 @@ interpolateGapsInSegmented <- function(segments) {
   return(list(segs=segments_gaps_filled, disjoin_different_cls=disjoin_different_cls))
 }
 
-# We use this method to extend the ends of the segments
+
 extendEndsOfSegments <- function(segments, hg38_cyto_band_reference='data/hg38_cytoband.gz') {
+  # We use this method to extend the ends of the segments
   # Starts to 1
   segments %<>%
     group_by(DepMap_ID, seqnames) %>%
@@ -344,17 +349,17 @@ extendEndsOfSegments <- function(segments, hg38_cyto_band_reference='data/hg38_c
 }
 
 
-# This chunk is kept in here for reference, but does not need to be run for the release
-# This was used to combine the copy number calls from Sanger and the Broad from WES
-# For the Broad samples, we want the calls that use the ICE/AGILENT PON for chr1-22,X
-# For Sanger samples we want the calls that use the SANGER specific AGILENT PON for 
-# chr1-22 and then the AGILENT PONT for X
-# This is what this chunk accomplished and then saved to a tsv for upload to taiga
-
-# Format for upload to taiga
-combineBroadSanger <- function(Sanger_filename= 'Downloads/Sanger.called.seg',
+combineBroadSanger <- function(Sanger_filename= 'Downloads/Sanger.called.seg', 
   Broad_filename = '~/Downloads/DM19Q2_COMPLETE.called.seg', 
   outfile="'~/Downloads/all_wes_data_19q2_v2.tsv'"){
+  # This chunk is kept in here for reference, but does not need to be run for the release
+  # This was used to combine the copy number calls from Sanger and the Broad from WES
+  # For the Broad samples, we want the calls that use the ICE/AGILENT PON for chr1-22,X
+  # For Sanger samples we want the calls that use the SANGER specific AGILENT PON for 
+  # chr1-22 and then the AGILENT PONT for X
+  # This is what this chunk accomplished and then saved to a tsv for upload to taiga
+
+  # Format for upload to taiga
   agilent_ice_pon_based_calls <- readr::read_tsv(filename, col_types = cols(
     Sample = col_character(), 
     CONTIG=col_character(), 
@@ -407,14 +412,10 @@ combineBroadSanger <- function(Sanger_filename= 'Downloads/Sanger.called.seg',
 }
 
 
-# ## Reprioritize processed data
-
-# Here, we combine the previous release segments with the additional 
-# segments we have processed this quarter. We replace Sanger WES and Broad SNP prioritized cell 
-# lines with the Broad WES version if it is now available in the newly downloaded data.
-
 reprioritizeData <- function(new_copy_number, wes.priority.cn.seg.profiles){
-  
+  # Here, we combine the previous release segments with the additional 
+  # segments we have processed this quarter. We replace Sanger WES and Broad SNP prioritized cell 
+  # lines with the Broad WES version if it is now available in the newly downloaded data
   new_copy_number %<>% magrittr::set_colnames(
     c('DepMap_ID','Chromosome','Start','End','Num_Probes','Segment_Mean','Source'))
   print(new_copy_number)
@@ -465,21 +466,22 @@ reprioritizeData <- function(new_copy_number, wes.priority.cn.seg.profiles){
   return(combined_new_prioritized_dataset)
 }
 
-######################
-# The function below generates the gene level matrix from a gene mapping
-#
-# @args:
-#   - gene_mapping: 
-#       data.frame with EGID, SYMBOL, CHR, CHRLOC, CHRLOCEND
-#   - segments: 
-#       data.frame with DepMap_ID (what samples are separated on), 
-#       Chromosome, Start, End, Segment_Mean, Num_Probes
-#
-# @returns: a data.frame with EGID, SYMBOL, CHR, CHRLOC, CHRLOCEND followed 
-#           by one column for each sample containing the Segment_Mean of the 
-#           gene
-######################
+
 generateGeneLevelMatrixFromSegments <- function(gene_mapping, segments) {
+  ######################
+  # generates the gene level matrix from a gene mapping
+  #
+  # @args:
+  #   - gene_mapping: 
+  #       data.frame with EGID, SYMBOL, CHR, CHRLOC, CHRLOCEND
+  #   - segments: 
+  #       data.frame with DepMap_ID (what samples are separated on), 
+  #       Chromosome, Start, End, Segment_Mean, Num_Probes
+  #
+  # @returns: a data.frame with EGID, SYMBOL, CHR, CHRLOC, CHRLOCEND followed 
+  #           by one column for each sample containing the Segment_Mean of the 
+  #           gene
+  ######################
   # However we decide to get the gene annotations... we now do the below to map genes 
   # to segments to get gene level calls
   # This is very fast (~2 minutes)
@@ -525,6 +527,7 @@ generateGeneLevelMatrixFromSegments <- function(gene_mapping, segments) {
   autosomal_genes <- gene_level_data %>% filter(Chromosome %in% seq(1,22)) %$% paste0(SYMBOL, ' (', EGID, ')')
   return(list(gene_level_data_hg38=gene_level_data_hg38,autosomal_genes=autosomal_genes))
 }
+
 
 generateEntrezGenes <- function(genome_version='hg38'){
   # This is how Achilles maps genes to chromosomes. However, for CCLE, we use a different reference.
@@ -576,7 +579,7 @@ filterBlackListedLine <- function(black_listed_lines, segments_gaps_filled){
 # Expression # ####################
 #
 ########
-#
+
 
 readCounts <- function(filepath, counts_samples_to_add_one_off=c()){
   # Process counts
@@ -605,6 +608,7 @@ readCounts <- function(filepath, counts_samples_to_add_one_off=c()){
   }
   return(counts_genes)
 }
+
 
 readTPM <- function(filepath, samples_to_add_one_off=c()){
   # TPM (genes)
@@ -635,6 +639,7 @@ readTPM <- function(filepath, samples_to_add_one_off=c()){
   return(tpm_genes)
 }
 
+
 readTranscripts <- function(filepath, transcripts_samples_to_add_one_off=c()){
   # Transcripts (genes)
   transcripts <- read_tsv(
@@ -655,6 +660,7 @@ readTranscripts <- function(filepath, transcripts_samples_to_add_one_off=c()){
   }
   return(transcripts)
 }
+
 
 compareReleases <- function(tpm_genes, previous_release_tpm){
   # Compare the previous release to the current release (using correlations)
@@ -693,7 +699,6 @@ compareReleases <- function(tpm_genes, previous_release_tpm){
   return(correlation_rnaseq_data_releases)
 }
 
-# TODO: process the exons in future releaes...
 
 renameFunction <- function(columns) {
   columns_new <- ifelse(columns %in% c('Name', 'Description', 'gene', 'transcript', 'gene_id', 'transcript_id',
@@ -705,8 +710,8 @@ renameFunction <- function(columns) {
 }
 
 
-# Comparison function
 geneLevelComparisonMatrixGen <- function(new_mat, old_mat, cell_lines, genes_using) {
+  # Comparison function
   # Get overlapping genes
   overlapping_genes <- intersect(colnames(new_mat), colnames(old_mat)) %>% intersect(genes_using)
   overlapping_cell_lines <- intersect(row.names(new_mat), row.names(old_mat)) %>% intersect(cell_lines)
@@ -722,12 +727,12 @@ geneLevelComparisonMatrixGen <- function(new_mat, old_mat, cell_lines, genes_usi
   return(list(gene=gene_diffs, cl=cl_diffs))
 }
 
-
 ####
 #
 # FUSIONS ###############################
 #
 ####
+
 
 readFusions <- function(filepath){
   tentative_new_release_unfiltered_fusions <- read_tsv(filepath, col_types = cols(.default = 'c'))
@@ -772,7 +777,7 @@ filterFusions <- function(fusions){
 # MUTATIONS #########################################################
 #
 ###########
-#
+
 desired_fields <- c(
   'Hugo_Symbol', 'Entrez_Gene_Id',
   'NCBI_Build',
@@ -800,6 +805,7 @@ selectFields<-c(
     "cDNA_Change","Codon_Change","Protein_Change",
     "isDeleterious","isTCGAhotspot","TCGAhsCnt",'isCOSMIChotspot', 'COSMIChsCnt',"ExAC_AF")
 
+
 readMutations = function(newly_merged_maf){
   # This is the universe of the fields that we want to load from the MAF. Not all of these columns will be present in the CGA MAF
   CGA_based_calls <- fread(newly_merged_maf, select = c(desired_fields, additional_columns_to_keep)) %>%
@@ -808,6 +814,7 @@ readMutations = function(newly_merged_maf){
     mutate(Tumor_Sample_Barcode=stringr::str_extract(string=Tumor_Sample_Barcode, pattern='ACH\\-[0-9]+'))
   return(CGA_based_calls)
 }
+
 
 createSNPs = function(CGA_based_calls){
   # Create separate SNP and INDEL matrices
@@ -818,6 +825,7 @@ createSNPs = function(CGA_based_calls){
   CGA_IND <- removeRec(CGA_IND)$res
   return(rbind(CGA_SNP, CGA_IND))
 }
+
 
 addToMainMutation = function(previous.release.maf,newrelease){
   # We are adding the CGA_WES_AC back
@@ -843,6 +851,7 @@ varstr = function(maf){
     maf$Chromosome, maf$Start_position, maf$End_position, maf$Reference_Allele, maf$Tumor_Seq_Allele2, sep='_'))
 }
 
+
 varlocstr = function(maf){return(paste(maf$Chromosome,maf$Start_position, sep='_'))}
 
 varcellocstr = function(maf){
@@ -850,13 +859,15 @@ varcellocstr = function(maf){
     maf$Start_position, sep='_'))
 }
 
+
 varonlystr = function(maf){
   return(paste( maf$Chromosome, maf$Start_position, maf$End_position, maf$Reference_Allele,
     maf$Tumor_Seq_Allele2, sep='_'))
 }
 
-# This should not make a new maf
-fixSampleName = function(Tumor_Sample_Barcode) { 
+
+fixSampleName = function(Tumor_Sample_Barcode) {
+  # This should not make a new maf 
   load('../JKBio/data/Annotations.RData') 
   # There are some cell lines the celllinemapr does not know how to 
   # map so we need to load this data object for now (from old datasets)
@@ -867,6 +878,7 @@ fixSampleName = function(Tumor_Sample_Barcode) {
     ccle.to.arxspan(check.unique.mapping = F)
   return(Tumor_Sample_Barcode)
 }
+
 
 removeRec = function(maf, thrCCLErat = 0.05, tcgathr=5, 
   rescueListFN='../JKBio/data/variantFilter/snp_indels_rescue_list.txt') {
@@ -902,9 +914,11 @@ removeRec = function(maf, thrCCLErat = 0.05, tcgathr=5,
   res= list(res=maf,pass=pass, blacklist=blacklist, thr=thr)
 }
 
+
 removeLowQ = function(maf){
   maf = subset(maf, i_qual+i_read_depth > 50)  ## filter GATK indels based on quality
 }
+
 
 intersectmafs = function(maf1, maf2, retainTCGAhs=TRUE){
   cls = intersect(unique(maf1$Tumor_Sample_Barcode), unique(maf2$Tumor_Sample_Barcode))
@@ -927,6 +941,7 @@ intersectmafs = function(maf1, maf2, retainTCGAhs=TRUE){
   maf3=maf3
 }
 
+
 makeBlacklistFile = function(wessnp,wessnp_blcklist,current_blacklist_FN, new_blcklist_FN){
   blacklist = read.delim(current_blacklist_FN, sep='\t', stringsAsFactors = FALSE)
   a=subset(wessnp, !is.na(match(paste(wessnp$Chromosome, wessnp$Start_position, sep='_'), wessnp_blcklist)))
@@ -937,6 +952,7 @@ makeBlacklistFile = function(wessnp,wessnp_blcklist,current_blacklist_FN, new_bl
   write.table(rbind(blacklist,a), 
               sep='\t', quote=FALSE, row.names=FALSE, file = new_blcklist_FN)
 }
+
 
 addAC = function(snp, snpc, maf, mafnam){
   mafcls=unique(maf$Tumor_Sample_Barcode)
@@ -950,6 +966,7 @@ addAC = function(snp, snpc, maf, mafnam){
   return(snp)
 }
 
+
 addACCleaned <- function(given, to_add, given_name){
   res <- given %>%
     left_join(.,
@@ -962,6 +979,7 @@ addACCleaned <- function(given, to_add, given_name){
   return(res)
 }
 
+
 polish = function(maf){
   mafc = varonlystr(maf)
   umafc = unique(mafc[duplicated(mafc)])
@@ -970,6 +988,7 @@ polish = function(maf){
   colnames(maf)[match("Tumor_Seq_Allele2", colnames(maf))]='Tumor_Seq_Allele1'
   return(maf)
 }
+
 
 filterAllelicFraction = function(merged_latest_release){
   # Now we add a filter to ensure that the allelic fraction of a mutation is greater than 5% 
@@ -1001,6 +1020,7 @@ filterAllelicFraction = function(merged_latest_release){
     # Last part is to rescue a mis-annotated TP53 mutation
   return(list(removed_from_maf=removed_from_maf,merged=merged_latest_release, filt=filt))
 }
+
 
 filterMinCoverage = function(merged_latest_release,removed_from_maf){
   # We also require that the total coverage of that site (aggregated across methods) > 8 
@@ -1037,6 +1057,7 @@ filterMinCoverage = function(merged_latest_release,removed_from_maf){
     ALTS_SANGER_UNCALIB >= 4) | CGA_WES_AC == '0:0')
   return(list(removed_from_maf=removed_from_maf,merged=merged_latest_release))
 }
+
 
 mergeAnnotations = function(CGA_based_calls,previous.release.maf){
   # We have to deal with inconsistent annotations between the previous MAF and the new MAF. We do that here
@@ -1115,6 +1136,7 @@ mergeAnnotations = function(CGA_based_calls,previous.release.maf){
   return(cleaned_annotations)
 }
 
+
 addAnnotation <- function(merged_latest_release,cleaned_annotations,colum){
   # Finish up by adding the annotations in, set the build and strand parameters and then should be good to go
   ready_for_upload <- merged_latest_release %>%
@@ -1135,10 +1157,3 @@ addAnnotation <- function(merged_latest_release,cleaned_annotations,colum){
   field_order <- c(field_order, paste0(c('CGA_WES', 'SangerWES', 'SangerRecalibWES', 'RNAseq', 'HC', 'RD', 'WGS'), '_AC'))
   return(ready_for_upload[,field_order])
 }
-
-
-#######
-#
-# OTHER
-# 
-# #########

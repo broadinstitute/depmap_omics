@@ -519,12 +519,12 @@ def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
 
   Args:
   ----
-    a:
-    prepended:
+    a: the dataframe where columns contain the names
+    prepended: the set of possible prepended values
 
   Returns:
   ------
-    a:
+    a: the subsetted dataframe
   """
   values = []
   for i in a.columns:
@@ -554,9 +554,13 @@ def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
 
   Args:
   ----
+    a: the dataframe where loc contain the names
+    loc: the location of names
+    prepended: the set of possible prepended values
 
   Returns:
   -------
+    a: the subsetted dataframe
   """
   values = []
   if len(prepended) > 0:
@@ -630,8 +634,16 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   """
   Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
 
-  refsamples: df[id, version, arxspan_id,...] the reference metadata
-  names: list[id]
+  Args:
+  -----
+    refsamples: df[id, version, arxspan_id,...] the reference metadata
+    names: list[id] only do it on this set of samples
+    arxspan_id: the name of the id field
+    version: the name of the version field
+
+  Returns:
+  --------
+    the subsetted dataframe
 
   """
   lennames = len(names)
@@ -652,6 +664,19 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
 
 
 def getRNAQC(workspace, only=[], qcname="star_logs"):
+  """
+  Will get from a workspace, the RNAseqQC data for each samples 
+
+  Args:
+  -----
+    workspace: the workspace name
+    only: do it only for this set of samples
+    qcname: col name where the QC is in the workspace samples
+
+  Returns:
+  --------
+    a dict(sample_id:rnaseq_QC_filepath)
+  """
   res = {}
   wm = dm.WorkspaceManager(workspace)
   sam = wm.get_samples()
@@ -665,6 +690,19 @@ def getRNAQC(workspace, only=[], qcname="star_logs"):
 
 
 def getWESQC(workspace, only=[], qcname=[]):
+  """
+  Will get from a workspace, the QC data for each samples 
+
+  Args:
+  -----
+    workspace: the workspace name
+    only: do it only for this set of samples
+    qcname: col name where the QC is in the workspace samples
+
+  Returns:
+  --------
+    a dict(sample_id:list[QC_filepaths])
+  """
   res = {}
   wm = dm.WorkspaceManager(workspace)
   sam = wm.get_samples()
