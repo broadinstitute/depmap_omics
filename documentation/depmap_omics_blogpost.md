@@ -67,7 +67,7 @@ git clone https://github.com/broadinstitute/gkugener.git
 1. You will need to install [Jupyter Notebook](https://jupyter.org/install) and Google Cloud SDK
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
   - authenticate your Google account by running `gcloud auth application-default login` in the terminal.
-2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R)) *how would people use this?*
+2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
 install the following R packages using the provided commands:
   - install `cdsomics`: `cd src/cdsomics && R CMD INSTALL . && cd -`.
   - inst `taigr`: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`.
