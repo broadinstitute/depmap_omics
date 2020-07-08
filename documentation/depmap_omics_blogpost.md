@@ -1,18 +1,15 @@
 # DepMap Omics: How to
 
 ## Introduction
-*Give some introduction here ... Something like this (feel free to change/add):*
 
 DepMap analyzes raw omics data on a quarterly basis... The data consists of RNAseq, etc ... 
 
-*Put a figure pointing to the pipeline itself (I made some tweaks to the old figures. See slides 3 and 6 [here](https://docs.google.com/presentation/d/11xwUTIp2f16VLynk50mFXYVM8q3tJ7kSDTyplkt_QlY/edit?usp=sharing))*
 
 For a more detailed understanding of the pipelines refer to [this presentation](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116).
 
 ![](/assets/images/depmap-logo.png)
 
 The following tools are used in our pipelines:
-*this can be just a list with links converted into hyperlinks*
 
 
 [https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886, https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
