@@ -1,0 +1,1 @@
+cat scatter.*/chr*.$1 > $1 && rm scatter.*/chr*.$1
