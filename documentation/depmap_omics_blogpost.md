@@ -1,4 +1,4 @@
-# The DepMap Portal
+# DepMap Omics: How to
 
 What you need to process the Quarterly DepMap-Omics releases from Terra.
 
