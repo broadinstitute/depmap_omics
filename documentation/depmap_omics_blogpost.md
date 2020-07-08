@@ -151,15 +151,13 @@ _At the least you would require the downloading of results, but other steps coul
 - `prepare_depmap_\*\_for_taiga`
 
 **Remarks:**
-- in the RNAseq pipeline we have an additional sub-pipeline at the end of the notebook to process the fusion calls from starFusion.
-- to get the exact same results as in CCLE, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to the `genecn` dataframe in the CNV pipeline (present at the end of the validation steps).
+- in the RNAseq pipeline we have an additional sub-pipeline at the end of the notebook to process the fusion calls from STAR-Fusion.
+- to get the exact same results as in CCLE, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to produce the `genecn` dataframe in the CNV pipeline (present at the end of the validation steps).
 - we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters.
 
 
 ### 4. QC, grouping and uploading to the portal
 
-These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
+These tasks are unlikely to be of interest for outside users as they revolve around manual checks of the data, comparison to previous releases, etc.
 
-We are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
-
-We are then uploading the data to a server called taiga where it will be used in the DepMap portal.
+In these tasks we also prepare the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public. We then upload the data to a server called taiga where it will be used in the DepMap portal.
