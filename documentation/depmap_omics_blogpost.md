@@ -106,30 +106,28 @@ __You can skip this step and go to part2__.The first step in the notebook is abo
 
 Before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the `submission`functions take as input your workflows' names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name.
 
-You can then run this part for the pipeline to run on your samples. It should take around a day.
+You can then run the pipeline on your samples. It would approximately take a day to run all of the pipelines.
 
 **Remarks:**
 - for the copy number pipeline we have parametrized both an XX version and an XY version, we recommend using the XY version as it covers the entire genome
-- for the mutation pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table. (workflows works as well with or without matched normals.)
+- for the mutation calling pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table (the existing workflows work with or without matched normals).
 - for the expression pipeline, we have an additional set of workflows to call mutations from RNAseq, this might not be relevant to your need.
 
-### 3. DownLoading and postProcessing (often called **2.2-4 on local** in the notebooks)
+### 3. Downloading and postprocessing (often called **2.2-4 on local** in the notebooks)
 
-This step will do a set of tasks:
-- clean some of the workspace for large useless files.
+This step will do the following tasks:
+- delete large intermediary files on the workspace that are not needed
 - retrieve from the workspace interesting QC results.
-- copy realigned BAM files to some bucket.
+- copy realigned BAM files to a target bucket.
 - download the results.
-- remove all duplicate samples from our downloaded file (keeping only thee latest version of each samples).
+- remove all duplicate samples from our downloaded file (keeping only the latest version of each samples).
 - saving the current pipeline configuration.
 
-_You would only be interested here at minima in the result downloading_
+_At the least you would require the downloading of results, but other steps could be useful for some users_
  
-...and post processing tasks.
+...and post processing tasks. 
 
-> Unfortunately for now the postProcessing tasks are not all made to be easily run outside of the CCLE pipeline. Most of them are in R and are run with the Rpy2 tool.
-
-So amongst these functions, some of them might be of a lesser interest to an external user. The most important ones for each pipelines are:
+> Unfortunately for now the postProcessing tasks are not all made to be easily run outside of the CCLE pipelines. Most of them are in R and are run with the Rpy2 tool. So amongst these functions, some of them might be of a lesser interest to an external user. The most important ones for each pipelines are:
 
 - `processSegments`
 - `interpolateGapsInSegmented`
