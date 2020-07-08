@@ -80,30 +80,30 @@ install the following R packages using the provided commands:
 
 ### Creating your Terra Workspaces:
 
-use the `data/xQx/.json` which lists the parameters used for each workflows of each off the 3 workspaces in our pipeline (the CSV lists the workflows with their correct name):
+use the `data/xQx/.json` which lists the parameters used for each workflow of each off the 3 workspaces in our pipelines (the CSV lists the workflows with their correct name): 
 - import the workflows, with their parameters listed in here.
 - import the workspace parameters/data listed in the `GENERAL` field.
 
 Once you have set up your workspace with the corresponding workflows, workspace data and workflow input/output parameters, you can import your data to be processed. __Tools available in `TerraFunction` in the `JKBio` package as well as the `dalmatian` package can be used to automate this process.__
 
-Once this is done, you can run your jupyter notebook server and open one of the 3 `CCLE_\*` jupyter files corresponding to our 3 pipelines.
+Once this is done, you can run your Jupyter Notebook server and open one of the 3 `CCLE_\*` Jupyter files corresponding to our 3 pipelines. These three pipelines are ...
 
-This notebook architecture is as follows:
+Each notebook is structured as follows:
 
-1. UpLoading and preprocessing
-2. Running Terra Pipelines
-3. DownLoading and postProcessing
+1. Uploading and pre-processing
+2. Running the Terra Pipelines
+3. Downloading and post-processing
 4. QC, grouping and uploading to the portal
 
 ## Running the pipeline
 
-### 1. UpLoading and preprocessing 
+### 1. Uploading and preprocessing 
 
-The first phase really is about getting samples generated at the BroadInstitute and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
+__You can skip this step and go to part2__.The first step in the notebook is about getting the samples generated at the the Broad Institute which are located in different Google Cloud storage paths. This section also searches for duplicates and finds/adds the metadata we will need in order to have coherent and complete sample information. 
 
 **Remarks:** 
-- in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
-- feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs.
+- in the initialization step you can remove any imports related to `taiga` and `gsheet` to avoid possible errors.
+- feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs. 
 
 ### 2. Running Terra Pipelines
 
