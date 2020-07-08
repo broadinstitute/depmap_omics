@@ -1,5 +1,12 @@
 # DepMap Omics: How to
 
+## Introduction
+*Give some introduction here ... Something like this (feel free to change/add):
+
+DepMap analyzes raw omics data on a quarterly basis... The data consists of RNAseq, etc ... The following is a detailed description of the pipelines used for getting from bam files to .... By following these instructions the user would be able to run DempMap omics pipelines on the Terra platform. 
+
+## 
+
 What you need to process the Quarterly DepMap-Omics releases from Terra.
 
 ![](/assets/images/depmap-logo.png)
