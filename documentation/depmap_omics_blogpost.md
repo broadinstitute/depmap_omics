@@ -54,9 +54,9 @@ The next sections are a detailed walkthrough to run DempMap omics pipelines on t
 
 ## Installation 
 
-### :warning: this repository has two custom dependencies 
+### clone the required repositories
 
-Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener) are used in this repository. Go to each repo and pull them to the same parent folder as `ccle_processing` using the following commands:
+This repo uses some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener) custom repositories. This repository and the other two dependecy repositories should be cloned into the same path using the following command:
 
 ```bash
 git clone https://github.com/broadinstitute/ccle_processing.git
