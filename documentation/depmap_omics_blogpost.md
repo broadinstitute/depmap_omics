@@ -1,19 +1,22 @@
 # DepMap Omics: How to
 
 ## Introduction
-*Give some introduction here ... Something like this (feel free to change/add):
+*Give some introduction here ... Something like this (feel free to change/add):*
 
-DepMap analyzes raw omics data on a quarterly basis... The data consists of RNAseq, etc ... The following is a detailed description of the pipelines used for getting from bam files to .... By following these instructions the user would be able to run DempMap omics pipelines on the Terra platform. 
+DepMap analyzes raw omics data on a quarterly basis... The data consists of RNAseq, etc ... 
 
-## 
+*Put a figure pointing to the pipeline itself (I made some tweaks to the old figures. See slides 3 and 6 [here](https://docs.google.com/presentation/d/11xwUTIp2f16VLynk50mFXYVM8q3tJ7kSDTyplkt_QlY/edit?usp=sharing))*
 
-What you need to process the Quarterly DepMap-Omics releases from Terra.
+For a more detailed understanding of the pipelines refer to [this presentation](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116).
 
 ![](/assets/images/depmap-logo.png)
 
-[Here](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116) is a presentation of the pipeline.
+The following tools are used in our pipelines:
+*this can be just a list with links converted into hyperlinks*
 
-We are using a set of key tools to process the sequencing output:
+
+[https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886, https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
+
 - __star__:
   - [https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886)
   - [https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
@@ -33,9 +36,7 @@ We are using a set of key tools to process the sequencing output:
   - [https://www.nature.com/articles/s41592-018-0051-x](https://www.nature.com/articles/s41592-018-0051-x)
   - [https://github.com/Illumina/strelka](https://github.com/Illumina/strelka)
 
-## Installation 
-
-If you are not familiar with these notions, we will first recommend you get more knowledge into each:
+Furthermore the pipelines make use of several software development tools. In particular some familiarity with the following tools are recommneded:
 
 - [python](https://www.learnpython.org/)
 - [R](https://www.codecademy.com/learn/learn-r)
@@ -47,6 +48,10 @@ If you are not familiar with these notions, we will first recommend you get more
 - [dalmatian](https://github.com/broadinstitute/dalmatian)
 - [Terra and gcp](https://docs.google.com/document/d/1zTtaN-Px64f8JvgydZNdBbzBpFWyZzEpshSNxQh43Oc/edit#heading=h.dz5wh0l4bu9g)
 
+
+The next sections are a detailed walkthrough to run DempMap omics pipelines on the [Terra](https://app.terra.bio/) platform. 
+
+## Installation 
 
 ### :warning: this repository needs other repos
 
