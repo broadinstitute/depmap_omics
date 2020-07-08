@@ -38,6 +38,7 @@ The following tools are used in our pipelines:
 
 Furthermore the pipelines make use of several software development tools. In particular some familiarity with the following tools are recommneded:
 
+
 - [python](https://www.learnpython.org/)
 - [R](https://www.codecademy.com/learn/learn-r)
 - [jupyter](https://jupyter.org/index.html)
@@ -53,23 +54,28 @@ The next sections are a detailed walkthrough to run DempMap omics pipelines on t
 
 ## Installation 
 
-### :warning: this repository needs other repos
+### :warning: this repository has two custom dependencies 
 
-Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener).
+Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener) are used in this repository. Go to each repo and pull them to the same parent folder as `ccle_processing` using the following commands:
 
-Go to the repos and pull them to the same parent folder as `ccle_processing`.
+```bash
+git clone https://github.com/broadinstitute/ccle_processing.git
+git clone https://github.com/jkobject/JKBio.git
+git clone https://github.com/broadinstitute/gkugener.git
+```
 
 
-### :warning: you would need the approriate R packages and python packages
+### :warning: you would need the approriate R packages and python packages -- what are the appropriate de
 
-1. You will need to install jupyter notebooks and google cloud sdk
+1. You will need to install [Jupyter Notebook](https://jupyter.org/install) and Google Cloud SDK
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
-  - authenticate my SDK account by running `gcloud auth application-default login` in the terminal.
-2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
-  - Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd -`.
-  - Also taigr: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`.
-  - And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`.
-3. For Python use the requirements.txt file `pip install -r requirements.txt`.
+  - authenticate your Google account by running `gcloud auth application-default login` in the terminal.
+2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R)) *how would people use this?*
+install the following R packages using the provided commands:
+  - install `cdsomics`: `cd src/cdsomics && R CMD INSTALL . && cd -`.
+  - inst `taigr`: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`.
+  - And `Celllinemapr`: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`.
+3. Install the Python dependencies: `pip install -r requirements.txt`.
 
 
 ### Creating your Terra Workspaces:
