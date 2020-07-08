@@ -663,33 +663,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   return res
 
 
-def getRNAQC(workspace, only=[], qcname="star_logs"):
-  """
-  Will get from a workspace, the RNAseqQC data for each samples 
-
-  Args:
-  -----
-    workspace: the workspace name
-    only: do it only for this set of samples
-    qcname: col name where the QC is in the workspace samples
-
-  Returns:
-  --------
-    a dict(sample_id:rnaseq_QC_filepath)
-  """
-  res = {}
-  wm = dm.WorkspaceManager(workspace)
-  sam = wm.get_samples()
-  if len(only) > 0:
-    sam = sam[sam.index.isin(only)]
-  for k, val in sam[qcname].iteritems():
-    for i in val:
-      if '.Log.final.out' in i:
-        res[k] = i
-  return res
-
-
-def getWESQC(workspace, only=[], qcname=[]):
+def getQC(workspace, only=[], qcname=[], match=""):
   """
   Will get from a workspace, the QC data for each samples 
 
@@ -698,6 +672,7 @@ def getWESQC(workspace, only=[], qcname=[]):
     workspace: the workspace name
     only: do it only for this set of samples
     qcname: col name where the QC is in the workspace samples
+    match: for example'.Log.final.out' get only that QC if you have a list of QCs in you qcname col
 
   Returns:
   --------
@@ -712,7 +687,10 @@ def getWESQC(workspace, only=[], qcname=[]):
     res[k] = []
     for i in val[qcname]:
       if type(i) is list:
-        res[k].extend(i)
+        if match:
+          res[k].extend([e for e in i if mach in e])
+        else:
+          res[k].extend(i)
       else:
         res[k].append(i)
   return res

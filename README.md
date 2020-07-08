@@ -59,6 +59,7 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
   - Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd -`.
   - Also taigr: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`.
   - And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`.
+  - and GSVA for ssGSEA in R `R` run `if (!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")} BiocManager::install('GSVA')`
 3. For Python use the requirements.txt file `pip install -r requirements.txt`.
 
 ## For Broad People
