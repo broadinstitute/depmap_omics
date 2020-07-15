@@ -45,7 +45,7 @@ If you are not familiar with these notions, we will first recommend you get more
 
 ### :warning: this repository needs other repos
 
-Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener).
+Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio).
 
 Go to the repos and pull them to the same parent folder as ccle_processing.
 
@@ -55,7 +55,7 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
 1. You will need to install jupyter notetbooks and google cloud sdk
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
   - authenticate my SDK account by running `gcloud auth application-default login` in the terminal.
-2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
+2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/ccle_processing/blob/master/src/load_libraries_and_annotations.R))
   - Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd -`.
   - Also taigr: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`.
   - And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`.

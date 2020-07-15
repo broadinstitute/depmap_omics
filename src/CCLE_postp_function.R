@@ -867,7 +867,7 @@ varonlystr = function(maf){
 
 fixSampleName = function(Tumor_Sample_Barcode) {
   # This should not make a new maf 
-  load('../JKBio/data/Annotations.RData') 
+  load('src/Annotations.RData') 
   # There are some cell lines the celllinemapr does not know how to 
   # map so we need to load this data object for now (from old datasets)
   # needed to call cleanCellLineName
