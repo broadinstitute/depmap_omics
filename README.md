@@ -45,7 +45,7 @@ If you are not familiar with these notions, we will first recommend you get more
 
 ### :warning: this repository needs other repos
 
-Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio) and [gkugener](https://github.com/broadinstitute/gkugener).
+Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio).
 
 Go to the repos and pull them to the same parent folder as ccle_processing.
 
@@ -55,7 +55,7 @@ Go to the repos and pull them to the same parent folder as ccle_processing.
 1. You will need to install jupyter notetbooks and google cloud sdk
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
   - authenticate my SDK account by running `gcloud auth application-default login` in the terminal.
-2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/gkugener/blob/master/RScripts/load_libraries_and_annotations.R))
+2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/ccle_processing/blob/master/src/load_libraries_and_annotations.R))
   - Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd -`.
   - Also taigr: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`.
   - And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`.
@@ -313,13 +313,15 @@ We are running a set of 6 functions/workflows To generate the mutation dataset:
 
 *   For new samples in DepMap, run the ICE version of this task. CCLE2 samples used Agilent targets, so this pipeline should be used instead. The pipelines are identical in terms of their outputs, but the proper targets, baits, and pseudo normal should be used based on how the samples were sequenced.
 
-    **ICE_CGA_Production_Analysis_Pipeline_Cell_Lines_copy** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22) OR
+*    **ICE_CGA_Production_Analysis_Pipeline_Cell_Lines_copy** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22) OR
+*    **AGILENT_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22)
 
-    **AGILENT_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22)
+1. [**CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019**](https://portal.firecloud.org/?return=terra#methods/getzlab/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019/1): Run the CGA pipeline for mutation calling.
+2. [**common_variant_filter**](https://portal.firecloud.org/?return=terra#methods/breardon/common_variant_filter/18): Apply common variant filters as described [here](https://github.com/vanallenlab/common_variant_filter).
+3. [**filterMAF_on_CGA_pipeline**](https://portal.firecloud.org/?return=terra#methods/gkugener/filterMAF_on_CGA_pipeline/9): Applies several filters to the maf file including minimum allele frequency, Exac, COSMIC, and TCGA hotspot filters, retainin only coding regions, minimum coverage, and alternative reads filter, etc. Detailed process can be found in *gs://ccle_default_params/scripts/filterMAF.R*. The whitelisted mutations can be found here: *gs://ccle_default_params/references/all_hotspots_for_Mahmoud_083116_ExAC_filt.tsv*. Currently no mutations are blacklisted in this step.
+4. [**aggregateMAFs_selectFields**](https://portal.firecloud.org/?return=terra#methods/gkugener/aggregateMAFs_selectFields_copy/1): Reads selected fields from maf files and aggregates them. Currently these fields are: *Hugo_Symbol, Entrez_Gene_Id, Center, NCBI_Build, Chromosome, Start_position, End_position, Strand, Variant_Classification, Variant_Type, Reference_Allele, Tumor_Seq_Allele1, Tumor_Seq_Allele2, dbSNP_RS, dbSNP_Val_Status, Genome_Change, Annotation_Transcript, Tumor_Sample_Barcode, cDNA_Change, Codon_Change, Protein_Change, t_alt_count, t_ref_count, tumor_f, isDeleterious, isTCGAhotspot, TCGAhsCnt, isCOSMIChotspot, COSMIChsCnt, i_ExAC_AF, PASS*. The script can be found in *gs://ccle_default_params/scripts/scripts_aggregate_selectedFields_MAF.R*
 
-*   **common_variant_filter** (breardon/common_variant_filterSnapshot ID: 3)
-*   **filterMAF_on_CGA_pipeline** (gkugener/filterMAF_on_CGA_pipelineSnapshot ID: 8)
-*   **aggregateMAFs_selectFields** (ccle_mg/aggregateMAFs_selectFieldsSnapshot ID: 1)
+*NOTE:* Some further filtering occurs afterwards within the Jupyter Notebook, including hard filtering of allele frequency and coverage (see the section on local data analysis).
 
 This outputs to be downloaded will be saved in the sample set that was run. The output we use for the release is:
 
