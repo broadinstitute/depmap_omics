@@ -61,6 +61,12 @@ extract_defaults = {
     'mean_depth': 'mean_depth'
 }
 
+MINSIZES = {
+    'rna': 2000000000,
+    'wes': 3000000000,
+    'wgs': 50000000000,
+}
+
 
 def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={},
@@ -193,8 +199,11 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
       samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
           [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
     if extract['size'] not in samples.columns or recomputesize:
-      samples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
-
+      samples[extract['size']] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
+    for k, val in samples.iterrows():
+      if val[extract['size']] < MINSIZES[stype]:
+        val = val.drop(k)
+        print("too small size, removing sample: " + str(val[extract["ref_arxspan_id"]]))
     # getting the date released
     if extract['release_date'] not in samples.columns or recomputedate:
       samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
@@ -617,25 +626,60 @@ def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', client
     print("We aren't missing any samples that we're supposed to have this release!")
 
 
-def removeOlderVersions(data, refsamples, arxspan_id="arxspan_id", version="version"):
+def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="version"):
   """
   Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
 
   refsamples: df[id, version, arxspan_id,...] the reference metadata
-  data: df[id, ...] your dataset
+  names: list[id]
 
-  """ # TODO: output CDS ids kept, to update the spreadsheet
-  if data.index.name == refsamples.index.name:
-    lendata = len(data)
-    result = pd.concat([data, refsamples], axis=1, sort=False, join='inner')
-    if lendata > len(results):
-      raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
-    for arxspan in set(result[arxpsan_id]):
-      allv = results[results[arxpsan_id] == arxspan]
-      for k, val in allv.iterrows():
-        if val[version] < max(allv.version.values):
-          result = result.remove(k)
-    print("removed " + str(lenddata - len(result)) + " duplicate samples")
-    return result.drop(columns=refsamples.columns.tolist()).set_index(arxspan_id, drop=True).reindex()
-  else:
-    raise ValueError('we need both the reference and the data to be indexed with the same index')
+  """
+  lennames = len(names)
+  res = {}
+  refsamples = refsamples[refsamples.index.isin(names)]
+  if lennames > len(refsamples):
+    ipdb.set_trace()
+    raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
+  for arxspan in set(refsamples[arxspan_id]):
+    allv = refsamples[refsamples[arxspan_id] == arxspan]
+    for k, val in allv.iterrows():
+      if val[version] == max(allv.version.values):
+        res[k] = arxspan
+        break
+  print("removed " + str(lennames - len(res)) + " duplicate samples")
+  # remove all the reference metadata columns except the arxspan ID
+  return res
+
+
+def getRNAQC(workspace, only=[], qcname="star_logs"):
+  res = {}
+  wm = dm.WorkspaceManager(workspace)
+  sam = wm.get_samples()
+  if len(only) > 0:
+    sam = sam[sam.index.isin(only)]
+  for k, val in sam[qcname].iteritems():
+    for i in val:
+      if '.Log.final.out' in i:
+        res[k] = i
+  return res
+
+
+def getMutQC(workspace, only=[], qcname=[]):
+  res = {}
+  wm = dm.WorkspaceManager(workspace)
+  sam = wm.get_samples()
+  if len(only) > 0:
+    sam = sam[sam.index.isin(only)]
+  for k, val in sam.iterrows():
+    res[k] = []
+    for i in val[qcname]:
+      if type(i) is list:
+        res[k].extend(i)
+      else:
+        res[k].append(i)
+  return resa
+
+
+def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
+  refsamples.loc[samples, releaseName] = '1'
+  return refsamples

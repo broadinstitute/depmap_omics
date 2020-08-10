@@ -103,8 +103,8 @@ prepare_depmap_transcripts_for_taiga <- function(rnaseq_data,
   }
 
   row_metadata <- rnaseq_data %>% 
-    dplyr::select(gene_id, `transcript_id(s)`) %>%
-    dplyr::mutate(transcript_id=gsub("\\..*", "", `transcript_id(s)`)) %>% as.data.frame(.)
+    dplyr::select(gene_id, `transcript_id`) %>%
+    dplyr::mutate(transcript_id=gsub("\\..*", "", `transcript_id`)) %>% as.data.frame(.)
   
   rownames(row_metadata) <- row_metadata$transcript_id
   rownames(gene_map) <- gene_map$transcript_id
@@ -123,7 +123,7 @@ prepare_depmap_transcripts_for_taiga <- function(rnaseq_data,
   row_metadata$concat_gene_name <- paste0(row_metadata$HGNC_symbol, " (", row_metadata$transcript_id, ")")
   
   data_matrix <- rnaseq_data %>% 
-    dplyr::select(-gene_id, -`transcript_id(s)`) %>%
+    dplyr::select(-gene_id, -`transcript_id`) %>%
     as.matrix() %>%
     magrittr::set_rownames(row_metadata[["concat_gene_name"]]) %>%
     t() 
