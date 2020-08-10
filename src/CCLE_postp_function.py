@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import dalmatian as dm
 from taigapy import TaigaClient
+from time import sleep
 tc = TaigaClient()
 import os
 import ipdb
@@ -508,6 +509,7 @@ def AddToVirtual(virtualname, folderfrom, files):
   files.extend(keep)
   print(files)
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
+  sleep(20000)
 
 
 def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
@@ -519,12 +521,12 @@ def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
 
   Args:
   ----
-    a:
-    prepended:
+    a: the dataframe where columns contain the names
+    prepended: the set of possible prepended values
 
   Returns:
   ------
-    a:
+    a: the subsetted dataframe
   """
   values = []
   for i in a.columns:
@@ -554,9 +556,13 @@ def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
 
   Args:
   ----
+    a: the dataframe where loc contain the names
+    loc: the location of names
+    prepended: the set of possible prepended values
 
   Returns:
   -------
+    a: the subsetted dataframe
   """
   values = []
   if len(prepended) > 0:
@@ -630,8 +636,16 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   """
   Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
 
-  refsamples: df[id, version, arxspan_id,...] the reference metadata
-  names: list[id]
+  Args:
+  -----
+    refsamples: df[id, version, arxspan_id,...] the reference metadata
+    names: list[id] only do it on this set of samples
+    arxspan_id: the name of the id field
+    version: the name of the version field
+
+  Returns:
+  --------
+    the subsetted dataframe
 
   """
   lennames = len(names)
@@ -651,20 +665,21 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   return res
 
 
-def getRNAQC(workspace, only=[], qcname="star_logs"):
-  res = {}
-  wm = dm.WorkspaceManager(workspace)
-  sam = wm.get_samples()
-  if len(only) > 0:
-    sam = sam[sam.index.isin(only)]
-  for k, val in sam[qcname].iteritems():
-    for i in val:
-      if '.Log.final.out' in i:
-        res[k] = i
-  return res
+def getQC(workspace, only=[], qcname=[], match=""):
+  """
+  Will get from a workspace, the QC data for each samples 
 
+  Args:
+  -----
+    workspace: the workspace name
+    only: do it only for this set of samples
+    qcname: col name where the QC is in the workspace samples
+    match: for example'.Log.final.out' get only that QC if you have a list of QCs in you qcname col
 
-def getMutQC(workspace, only=[], qcname=[]):
+  Returns:
+  --------
+    a dict(sample_id:list[QC_filepaths])
+  """
   res = {}
   wm = dm.WorkspaceManager(workspace)
   sam = wm.get_samples()
@@ -674,7 +689,10 @@ def getMutQC(workspace, only=[], qcname=[]):
     res[k] = []
     for i in val[qcname]:
       if type(i) is list:
-        res[k].extend(i)
+        if match:
+          res[k].extend([e for e in i if mach in e])
+        else:
+          res[k].extend(i)
       else:
         res[k].append(i)
   return resa
