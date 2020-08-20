@@ -844,6 +844,15 @@ addToMainMutation = function(previous.release.maf,newrelease){
 }
 
 
+renameAsInMainMutation = function(newrelease){
+  # We are adding the CGA_WES_AC back
+  merged_latest_release <- newrelease %>%
+        mutate(CGA_WES_AC=paste0(t_alt_count, ':', t_ref_count)) %>%
+        dplyr::select(-t_alt_count, -t_ref_count,-pass) %>%
+    dplyr::rename(Tumor_Seq_Allele1=Tumor_Seq_Allele2)
+  return(merged_latest_release)
+}
+
 # We will replace these functions with cleaned versions later
 varstr = function(maf){
   return(paste(gsub('-Tumor', '', gsub('fh_', '', maf$Tumor_Sample_Barcode)), 
@@ -993,14 +1002,14 @@ filterAllelicFraction = function(merged_latest_release){
   # Now we add a filter to ensure that the allelic fraction of a mutation is greater than 5% 
   # in any of the filters (excluding RD) or greater than 10% in RD.
   ac_columns <- colnames(merged_latest_release) %>% .[grep('_AC$', .)]
-  merged_latest_release[,paste0('PERC_', ac_columns)] <- apply(merged_latest_release[,ac_columns], 2, 
+  merged_latest_release[,paste0('PERC_', ac_columns)] <- apply(merged_latest_release[,ac_columns,drop=F],2 ,
     function(x) {
       alt <- as.numeric(gsub(':.*', '', x))
       total <- as.numeric(gsub('.*:', '', x)) + alt
       return(alt/(total))
     })
   merged_latest_release[,'MAX_AF'] <- apply(merged_latest_release[,paste0('PERC_', 
-    ac_columns)], 1,
+    ac_columns),drop=F], 1,
     function(x) {
       x <- x[!is.na(x)]
       if (length(x) > 0) {
@@ -1011,11 +1020,11 @@ filterAllelicFraction = function(merged_latest_release){
   filt <- merged_latest_release[merged_latest_release[,"MAX_AF"]<0.05,]
   # Keep track of the removed variants
   removed_from_maf <- merged_latest_release %>% 
-    mutate(INCLUDE=MAX_AF < 0.05 & PERC_SangerWES_AC < 0.05 & PERC_RD_AC < 0.1 & CGA_WES_AC != '0:0') %>% 
+    mutate(INCLUDE=MAX_AF < 0.05 & CGA_WES_AC != '0:0') %>% 
     filter(INCLUDE)
   print(dim(merged_latest_release))
-  merged_latest_release %<>% mutate(INCLUDE=MAX_AF > 0.05 | PERC_SangerWES_AC > 0.05 | 
-    PERC_RD_AC > 0.1 | CGA_WES_AC == '0:0') %>% filter(INCLUDE)
+  merged_latest_release %<>% mutate(INCLUDE=MAX_AF > 0.05 | 
+    CGA_WES_AC == '0:0') %>% filter(INCLUDE)
     # Last part is to rescue a mis-annotated TP53 mutation
   return(list(removed_from_maf=removed_from_maf,merged=merged_latest_release, filt=filt))
 }

@@ -509,7 +509,7 @@ def AddToVirtual(virtualname, folderfrom, files):
   files.extend(keep)
   print(files)
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
-  sleep(20000)
+  sleep(2000)
 
 
 def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
