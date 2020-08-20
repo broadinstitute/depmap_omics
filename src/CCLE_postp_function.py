@@ -496,20 +496,13 @@ def AddToVirtual(virtualname, folderfrom, files):
   """
   assert type(files[0]) is tuple
   versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
-  versionb = max([int(i['name']) for i in tc.get_dataset_metadata(virtualname)['versions']])
   keep = [(i['name'], i['underlying_file_id']) for i in tc.get_dataset_metadata(virtualname, version=versionb)
           ['datasetVersion']['datafiles'] if 'underlying_file_id' in i]
 
   for i, val in enumerate(files):
     files[i] = (val[0], folderfrom + '.' + str(versiona) + '/' + val[1])
-    for j, v in enumerate(keep):
-      if val[0] == v[0]:
-        keep.pop(j)
-
-  files.extend(keep)
   print(files)
-  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={})
-  sleep(20000)
+  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={}, add_all_existing_files=True)
 
 
 def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
