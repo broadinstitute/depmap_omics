@@ -688,4 +688,8 @@ def getQC(workspace, only=[], qcname=[], match=""):
           res[k].extend(i)
       else:
         res[k].append(i)
-  return res
+
+
+def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
+  refsamples.loc[samples, releaseName] = '1'
+  return refsamples
