@@ -1,5 +1,4 @@
-- 17% of the mutations in WES could not be found in WGS. this is explained by read depth issues?
---> artifacts? low coverage wgs.
+- 17% of the mutations in WES could not be found in WGS. this is explained mainly by read depth issues (eve the somatic mutations pipeline could not have found them. Except for 7 of them that seemed to have been filtered out 2 would not have been called by HC (the rest could be retrieved like CGA does from known mutations), 3 seemed to have only be found on WGS by previous somatic mutation caller and are thus likely artificats/FP.)
 - 60% for rnaseq. what about the opposite?
 
 rnaseq filtering did not filter any mutations on MV411.

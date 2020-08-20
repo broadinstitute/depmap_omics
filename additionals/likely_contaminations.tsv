@@ -1,0 +1,95 @@
+								
+	Table S4. Cell lines pairs demonstrating excess genetic concordance. 							
+								
+	Cell line pairs		DST (CCLE-CCLE)	DST (CCLE-COSMIC)	Analysis	Reference		
+	1321N1,	U-118MG	0,9400	0,9432	U-118MG has been shown to be contaminated, it is  a derivative of U-138MG. U-118MG is the parent cell line for 1321N. 	Cellosaurus, PubMed=20143388		
+	1321N1,	U-138MG	0,9503	NA	U-118MG has been shown to be contaminated, it is  a derivative of U-138MG. U-118MG is the parent cell line for 1321N. 	Cellosaurus, PubMed=20143388		
+	U-118MG,	U-138MG	0,9470	0,9449	U-118MG has been shown to be contaminated, it is  a derivative of U-138MG. U-118MG is the parent cell line for 1321N. 	Cellosaurus, PubMed=20143388		
+	143B,	HOS	0,9635	0,9619	HOS is the parent cell line for 143B, which has been reported to be identical to HTK-. 	Cellosaurus		
+	143B,	HTK-	0,9823	NA	HOS is the parent cell line for 143B, which has been reported to be identical to HTK-. 	Cellosaurus		
+	HTK-,	HOS	0,9617	0,9618	HOS is the parent cell line for 143B, which has been reported to be identical to HTK-. 	Cellosaurus		
+	A101D,	Hs294T	0,9215	0,9132	A101D and Hs 294T originate from the same individual. 	Cellosaurus		
+	AU565,	SK-BR-3	0,9761	0,9512	AU565 and SK-BR-3 originate from the same individual.	Cellosaurus		
+	AZ-521,	HuTu80	0,9919	0,9810	AZ-521 has been shown to be contaminated, it is a derivative of Hutu 80.	Cellosaurus		
+	BGC-823,	GLC-82	0,9723		No report of relationship or contamination.	NA		
+	GLC-82,	HeLa	NA	0,9473	No report of relationship or contamination.	NA		
+	BGC-823,	HeLa	NA	0,9461	BGC-823 has been reported to be contaminated with HeLa.	PubMed=28107433		
+	C2BBe1,	Caco-2	0,9653	0,9528	Caco-2 is the parent cell line for C2BBe1.	Cellosaurus		
+	CGTH-W-1,	SW579	0,9755	0,9731	SW579 is the parent cell line for CGTH-W-1. 	Cellosaurus		
+	CHL-1,	HMCB	0,9809	0,9707	HMCB and RPI-7932 possibly originate from the same individual. RPMI-7932 is the parent cell line for CHL-1. 	Cellosaurus		
+	CMK,	CMK-11-5	0,9694	0,9647	CMK is the parent cell line for CMK-11-5 and CMK-86.  	Cellosaurus		
+	CMK,	CMK-86	0,9774	0,9785	CMK is the parent cell line for CMK-11-5 and CMK-86.  	Cellosaurus		
+	CMK-11-5,	CMK-86	0,9751	NA	CMK is the parent cell line for CMK-11-5 and CMK-86.  	Cellosaurus		
+	COLO201,	COLO205	0,9002	0,8976	COLO 201 and COLO 205 originate from the same individual.	Cellosaurus		
+	COLO320,	COLO320HSR	NA	0,9719	COLO 320DM is the parent cell line for COLO 320HSR. COLO 320 is the parent cell line for COLO 320DM.	Cellosaurus		
+	COLO684,	COLO704	0,9871	0,9827	"BioSample reports COLO 684; COLO 685 and COLO 704 as 'synonymous, misidentified or derivative cell lines'. "	BioSample: SAMN03470977		
+	COLO775,	RPMI-8226	0,9698	0,9579	COLO 775 has been shown to be contaminated, is is a derivative of RPMI-8226.	Cellosaurus		
+	COLO800,	COLO818	0,9830	0,9802	COLO 800 is the parent cell line for COLO 818.	Cellosaurus		
+	COLO829,	COLO849	0,9764	0,9720	COLO 829 and COLO 849 originate from the same individual.	Cellosaurus		
+	DLD-1,	HCT15	0,9756	0,9880	DLD-1 is the parent cell line for HCT 15, and HRT-18.	Cellosaurus		
+	DLD-1,	HRT-18	0,9915	NA	DLD-1 is the parent cell line for HCT 15, and HRT-18.	Cellosaurus		
+	EB1,	EB2	0,99156	0,988046	BioSample reports EB1 and EB2 as 'synonymous, misidentified or derivative cell lines'. 	BioSample: SAMN03472402		
+	EW-8,	Rh1	0,9780	NA	Cellosaurus reports that Rh1 is misidentified, originally thought to be a rhabdomyosarcoma but is an Ewing sarcoma. No evidence of the relationshio between Rh1 and EW-8 but is interesting to note that EW-8 is a Ewing sarcoma. 	Cellosaurus, PubMed=17154184		
+	FTC-133,	FTC-238	0,9531	0,9396	FTC-133 and FTC-238 originate from the same indvidual. 	Cellosaurus		
+	GOS-3,	U-343MGa	0,9593	NA	GOS-3 has been shown to be contaminated, is is a derivative of U-343MGa.	Cellosaurus		
+	GP2d,	GP5d	0,9867	NA	GP2d and GP5s originate from the same individual. 	Cellosaurus		
+	GR-M,	PSN1	0,9612	0,9266	GR-M has been shown to be contaminated, is is a derivative of PSN1.	Cellosaurus		
+	HCT15,	HRT-18	0,9739	0,9864	DLD-1 is the parent cell line for HCT 15, and HRT-18.	Cellosaurus		
+	HEC-1-A,	HEC-1	NA	0,9647	HEC-1 is the parent cell line for HEC-1A, and HEC-1A is the parent cell line for HEC-1B. 	Cellosaurus		
+	HEC-1-A,	HEC-1-B	0,9669	NA	HEC-1 is the parent cell line for HEC-1A, and HEC-1A is the parent cell line for HEC-1B. 	Cellosaurus		
+	HEC-1-B,	HEC-1	NA	0,9657	HEC-1 is the parent cell line for HEC-1A, and HEC-1A is the parent cell line for HEC-1B. 	Cellosaurus		
+	HEL,	HEL92.1.7	0,9749	0,9783	HEL is the parent cell line for HEL 92.1.7.	Cellosaurus		
+	C3Aclone2.5B1,	Hep-G2	0,9752	0,9655	Hep-G2 is the parent cell line for Hep-G2/C3A, which is the parent cell line for C3A clone 2.5B1.	Cellosaurus		
+	HEYA8,	HEY	0,9779	NA	HEY is the parent cell line for HEY A8.	Cellosaurus		
+	HL-60,	PLB-985	0,9846	0,9797	HL-60 is the parent cell line for PLB-985. 	Cellosaurus		
+	HLC-1,	HMC-1-8	0,9232	NA	BioSample reports HLC-1 and HMC-1-8 as 'synonymous, misidentified or derivative cell lines'. 	BioSample: SAMN03470817		
+	HLE,	HLF	0,9631	0,9294	HLE and HLF originate from the same individual. 	Cellosaurus		
+	HPAC,	KCI-MOH1	0,9702	0,9721	HPAC is the parent cell line for KCI-MOH1. 	Cellosaurus		
+	Hs571.T,	TOV-112D	0,9881	0,9870	CCLE reports high SNP similarity between Hs 571.T and TOV-112D.	CCLE		
+	HuH-6,	HuH-6Clone5	0,9650	NA	HuH-6 is the parent cell line for HuH-6Clone5	Cellosaurus		
+	HuT78,	H9	0,9340	NA	HuT78 is the parent cell line for H9. 	Cellosaurus		
+	IGR-37,	IGR-39	0,9724	0,9736	IGR-39 and IGR-37 originate from the same individual. 	Cellosaurus		
+	IMR-32,	IMR-5	0,9778	NA	IMR-32 is the parent cell line for IMR-5	Cellosaurus		
+	Karpas-422,	OCI-Ly10	0,9926	0,9847	CCLE reports high SNP similarity between Karpas-422 and OCI-Ly10.	CCLE		
+	KE-97,	KMS-18	0,9874	NA	CCLE reports high SNP similarity between KE-97 and KMS-18	NA		
+	KLM-1,	PK-1	0,9557	NA	PK-1 is the parent cell line for KLM-1. 	Cellosaurus		
+	KNS-81,	KNS-81-FD	0,9728	NA	KNS-81 is the parent cell line for KNS-81-FD. 	Cellosaurus		
+	KPL1,	MCF-7	0,9613	0,9438	KPL-1 has been shown to be contaminated, is is a derivative of MCF-7.	Cellosaurus, PubMed=20143388		
+	LC-1/sq-SF,	LC-1/sq	NA	0,9588	LC-1F and LC-1/sq originate from the same individual, and LC-1/sq is the parent cell line for LC-1/sq-SF. 	Cellosaurus		
+	LC-1/sq-SF,	LC-1F	0,9438	NA	LC-1F and LC-1/sq originate from the same individual, and LC-1/sq is the parent cell line for LC-1/sq-SF. 	Cellosaurus		
+	LC-1F,	LC-1/sq	NA	0,9406	LC-1F and LC-1/sq originate from the same individual, and LC-1/sq is the parent cell line for LC-1/sq-SF. 	Cellosaurus		
+	LN-308,	LNZTA3WT4	0,9662	NA	LN-308 is the parent cell line for LNZTA3WT4. 	Cellosaurus		
+	Lu-99,	Lu-99A	0,9396	NA	Lu-99 is the parent cell line for Lu-99A.	Cellosaurus		
+	M059K,	M059J	0,9500	NA	M059K and M059J originate from the same individual. 	Cellosaurus		
+	MDA-MB-435S,	M14	0,9506	NA	MDA-MB-435 is the parent cell line for MDA-MB-435S, MDA-MB-435 has been shown to be contaminated, it is a derivative of M14. 	Cellosaurus		
+	MEC-1,	MEC-2	0,9722	NA	MEC-1 and MEC-2 originate from the same individual. 	Cellosaurus		
+	MKN74,	MKN28	0,9757	NA	MKN28 has been shown to be contaminated, it is a derivative of MKN74.  	Cellosaurus		
+	MOLT-3,	MOLT-4	0,9883	0,9843	MOLT-3 and MOLT-4 originate from the same individual. 	Cellosaurus		
+	Mono-Mac-1,	Mono-Mac-6	0,9670	0,9678	Mono-Mac-1 and Mono-Mac-6 originate from the same individual. 	Cellosaurus		
+	NCI-H2073,	NCI-H1993	0,9572	NA	NCI-H2073 and NCI-H1993 originate from the same individual. 	Cellosaurus		
+	NCI-H2106,	NCI-H1770	0,9450	NA	BioSample reports NCI-H2106 and NCI-H1770 as 'synonymous, misidentified or derivative cell lines'. 	BioSample: SAMN03473266		
+	NCI-H322,	NCI-H322M	0,9729	NA	NCI-H322 is the parent cell line for NCI-H322M. However, cellosaurus reports 'we are not certain that NCI-H322 and NCI-H-322M are identical'. 	Cellosaurus		
+	OC314,	OC316	0,9867	0,9692	OC 316 is possibly contaminated, reported to be identical to OC 314.	Cellosaurus, PubMed=15677628		
+	ONCO-DG-1,	OVCAR-3	0,9691	0,9608	ONCO-DG-1 has been shown to be contaminated, is is a derivative of OVCAR-3.	Cellosaurus, PubMed=20143388		
+	OPM-1,	OPM-2	0,9764	0,9770	OPM-1 and OPM-2 originate from the same individual. 	Cellosaurus		
+	P3HR-1,	Jiyoye	0,9585	NA	Jiyoye is the parent cell line for P3HR-1.	Cellosaurus		
+	PANC-1,	KP-1N	0,9719	NA	PANC-1 is the parent cell line for KP-1N. 	Cellosaurus		
+	Panc10.05,	PL45	0,9814	0,9806	PL45 and Panc10.05 originate from the same individual. 	Cellosaurus		
+	PaTu8988s,	PaTu8988t	0,9713	0,9684	PaTu8988s and PaTu8988t originate from the same individual. 	Cellosaurus		
+	Peer,	BE-13	0,9749	NA	Peer is the parent cell line for BE-13. 	Cellosaurus		
+	RCC4,	SLR24	0,9697	NA	No report of relationship or contamination.	NA		
+	RERF-LC-A1,	GT3TKB	0,9780	NA	GT3TKB has been shown to be contaminated, it si a derivative of RERF-LC-A1. 	Cellosaurus, PubMed=16643607, PubMed=20143388		
+	RT-112,	RT112/84	0,9789	0,9761	RT-112 is the parent cell line for RT112/84.	Cellosaurus		
+	SF767,	ME-180	0,9707	NA	ME-180 is the parent cell line for SF767.	Cellosaurus		
+	SH-SY5Y,	SK-N-SH	0,9916	0,9736	Sk-N-Sh is the parent cell line for SH-SY5Y. 	Cellosaurus		
+	SK-N-BE(2),	SK-N-BE(2)-M17	0,9604	NA	SK-N-BE(2) is the parent cell line for SK-N-BE(2)-M17. 	Cellosaurus		
+	SK-N-MC,	SK-N-MC-IXC	0,9650	NA	SK-N-MC is the parent cell line for SK-N-MC-IXC. 	Cellosaurus		
+	SLR20,	T24	0,9565	0,9606	SLR20 was reported as missidentified with a STR profile identical to EJ-1. EJ-1 has been shown to be contaminated, it is a T24 derivative.  	MD Anderson CCLC, cellosaurus, PubMed=20143388		
+	SNB-19,	U-251MG	0,9838	0,9620	SNB-19 has been shown to be contaminated, is is a derivative of U-251MG.	Cellosaurus, PubMed=20143388, PubMed=22570425		
+	SNU-C2A,	SNU-C2B	0,9835	NA	SNU-C2A and SNU-C2B originate from the same individual. 	Cellosaurus		
+	SW480,	SW620	0,9429	0,9531	SW480 and SW620 originate from the same individual. 	Cellosaurus		
+	U-937,	TUR	0,9832	NA	U-937 is the parent cell line for TUR. 	Cellosaurus		
+	WM115,	WM266-4	0,9864	0,9841	WM115 and WM-266-4 originate from the same individual. 	Cellosaurus		
+	YMB-1,	YMB-1-E	0,9716	NA	YMB-1 is the parent cell line for YMB-1-E. YMB-1 has been shown to be contaminated, is is a derivative of ZR-75-1.	Cellosaurus, PubMed=23136038		
+	YMB-1,	ZR-75-1	0,9767	NA	YMB-1 is the parent cell line for YMB-1-E. YMB-1 has been shown to be contaminated, is is a derivative of ZR-75-1.	Cellosaurus, PubMed=23136038		
+	ZR-75-1,	YMB-1-E	0,9792	NA	YMB-1 is the parent cell line for YMB-1-E. YMB-1 has been shown to be contaminated, is is a derivative of ZR-75-1.	Cellosaurus, PubMed=23136038		
