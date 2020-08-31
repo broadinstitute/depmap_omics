@@ -12,9 +12,12 @@
 
 import "https://api.firecloud.org/ga4gh/v1/tools/gatk:cnn-variant-common-tasks/versions/1/plain-WDL/descriptor" as CNNTasks
 
-workflow Cram2FilteredVcf {
-    File input_file                  # Aligned CRAM file or Aligned BAM files
-    File? input_file_index           # Index for an aligned BAM file if that is the input, unneeded if input is a CRAM
+workflow CDS_MutationCalling {
+    File tumor_file                  # Aligned CRAM file or Aligned BAM files
+    File? tumor_file_index           # Index for an aligned BAM file if that is the input, unneeded if input is a CRAM
+    Boolean? tumor_normal_mode
+    File? normal_file_index           # Index for an aligned BAM file if that is the input, unneeded if input is a CRAM
+    File? normal_file           # Index for an aligned BAM file if that is the input, unneeded if input is a CRAM
     File reference_fasta 
     File reference_dict
     File reference_fasta_index
@@ -37,55 +40,130 @@ workflow Cram2FilteredVcf {
     Int scatter_count                # Number of shards for parallelization of HaplotypeCaller and CNNScoreVariants
     String extra_args                # Extra arguments for HaplotypeCaller
 
+    # VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis by some PROGRAMs;
+    # PROGRAMs whose CLP doesn't allow for this argument will quietly ignore it
+    File DB_SNP_VCF
+    # index file of VCF file of DB SNP variants
+    File DB_SNP_VCF_IDX
+
     # Runtime parameters
     Int? mem_gb
     Int? preemptible_attempts
     Float? disk_space_gb
     Int? cpu
 
+    Boolean tumor_normal_mode = select_first([tumor_normal_mode, false])
     Int? increase_disk_size
     Int additional_disk = select_first([increase_disk_size, 20])
     Float ref_size = size(reference_fasta, "GB") + size(reference_fasta_index, "GB") + size(reference_dict, "GB")
+    Int tumor_file_size   = ceil(size(tumor_file,   "GB"))
+    Int normal_file_size  = ceil(size(normal_file,  "GB"))
+    Int db_snp_vcf_size = ceil(size(DB_SNP_VCF, "GB"))
+
 
     # Clunky check to see if the input is a BAM or a CRAM
-    if (basename(input_file) == basename(input_file, ".bam")){
+    if (basename(tumor_file) == basename(tumor_file, ".bam")){
         call CNNTasks.CramToBam {
             input:
               reference_fasta = reference_fasta,
               reference_dict = reference_dict,
               reference_fasta_index = reference_fasta_index,
-              cram_file = input_file,
+              cram_file = tumor_file,
               output_prefix = output_prefix,
-              disk_space_gb = round(4*size(input_file, "GB") + ref_size + additional_disk),
+              
+              disk_space_gb = round(4*size(tumor_file, "GB") + ref_size + additional_disk),
               preemptible_attempts = preemptible_attempts
         }
     }
 
+    # Clunky check to see if the input is a BAM or a CRAM
+    if (basename(normal_file) == basename(normal_file, ".bam")){
+        call CNNTasks.CramToBam as normalToBam {
+            input:
+              reference_fasta = reference_fasta,
+              reference_dict = reference_dict,
+              reference_fasta_index = reference_fasta_index,
+              cram_file = normal_file,
+              output_prefix = output_prefix,
+              
+              disk_space_gb = round(4*size(normal_file, "GB") + ref_size + additional_disk),
+              preemptible_attempts = preemptible_attempts
+        }
+    }
+
+    call CrossCheckLaneFingerprints_Task {
+        input:
+            tumorBam=tumorBam,
+            normalBam=normalBam,
+            tumorBamIdx=tumorBamIdx,
+            normalBamIdx=normalBamIdx,
+            name=name,
+            GATK4_JAR=GATK4_JAR,
+            gatk4_jar_size=gatk4_jar_size,
+            tumorBam_size=tumorBam_size,
+            normalBam_size=normalBam_size,
+    }
+
+    call ContEST_Task {
+        input:
+            tumorBam=tumorBam,
+            tumorBamIdx=tumorBamIdx,
+            normalBam=normalBam,
+            normalBamIdx=normalBamIdx,
+            name=name,
+            refFasta=refFasta,
+            refFastaIdx=refFastaIdx,
+            refFastaDict=refFastaDict,
+            refFasta_size=refFasta_size,
+            targetIntervals=targetIntervals,
+            tumorBam_size=tumorBam_size,
+            normalBam_size=normalBam_size,
+    }
+
+    call PicardMultipleMetrics_Task as tumorMM_Task {
+            input:
+                bam=tumorBam,
+                bamIndex=tumorBamIdx,
+                sampleName=caseName,
+                refFasta=refFasta,
+                DB_SNP_VCF=DB_SNP_VCF,
+                DB_SNP_VCF_IDX=DB_SNP_VCF_IDX,
+                GATK4_JAR=GATK4_JAR,
+                targetIntervals=targetIntervals,
+                baitIntervals=baitIntervals,
+                refFasta_size=refFasta_size,
+                gatk4_jar_size=gatk4_jar_size,
+                db_snp_vcf_size=db_snp_vcf_size,
+                bam_size=tumorBam_size,
+    }
+
     call SplitIntervals {
         input:
-            gatk_override = gatk_override,
             scatter_count = scatter_count,
             intervals = calling_intervals,
             ref_fasta = reference_fasta,
             ref_dict = reference_dict,
             ref_fai = reference_fasta_index,
+            
+            gatk_override = gatk_override,
             gatk_docker = gatk_docker,
             disk_space = round(additional_disk + ref_size)
     }
 
-    String input_bam = select_first([CramToBam.output_bam, input_file])
+    String input_bam = select_first([CramToBam.output_bam, tumor_file])
     Float bam_size = size(input_bam, "GB")
 
     scatter (calling_interval in SplitIntervals.interval_files) {
         call CNNTasks.RunHC4 {
             input:
                 input_bam = input_bam,
-                input_bam_index = select_first([CramToBam.output_bam_index, input_file_index]),
+                input_bam_index = select_first([CramToBam.output_bam_index, tumor_file_index]),
                 reference_fasta = reference_fasta,
                 reference_dict = reference_dict,
                 reference_fasta_index = reference_fasta_index,
                 output_prefix = output_prefix,
                 interval_list = calling_interval,
+                
                 gatk_docker = gatk_docker,
                 gatk_override = gatk_override,
                 preemptible_attempts = preemptible_attempts,
@@ -111,6 +189,7 @@ workflow Cram2FilteredVcf {
                 reference_fasta_index = reference_fasta_index,               
                 output_prefix = output_prefix,
                 interval_list = calling_interval,
+                
                 gatk_override = gatk_override,
                 gatk_docker = gatk_docker,
                 preemptible_attempts = preemptible_attempts,
@@ -123,6 +202,7 @@ workflow Cram2FilteredVcf {
         input: 
             input_vcfs = CNNScoreVariants.cnn_annotated_vcf,
             output_prefix = output_prefix,
+            
             gatk_override = gatk_override,
             preemptible_attempts = preemptible_attempts,
             gatk_docker = gatk_docker,
@@ -139,6 +219,7 @@ workflow Cram2FilteredVcf {
             snp_tranches = snp_tranches,
             indel_tranches = indel_tranches,
             info_key = info_key,
+            
             gatk_override = gatk_override,
             preemptible_attempts = preemptible_attempts,
             gatk_docker = gatk_docker,
@@ -152,71 +233,112 @@ workflow Cram2FilteredVcf {
             disk_space_gb = round(bam_size + ref_size + additional_disk)
     }
     
-    # Oncotator is a tool for annotating human genomic point mutations and indels with data relevant to cancer researchers.
-    call Oncotate_Task {
-        input :            
-            vcf=FilterVariantTranches.
+    call VEP_Task {
+        input:
+            vcf=vcf
+            vcf_id=vcf_id
             pairName=pairName,
             caseName=caseName,
-            ctrlName=ctrlName,
-    }
-    
-    # Detects and screens out OxoG artifacts from a set of SNV calls.
-    # Oxidation of guanine to 8-oxoguanine is one of the most common pre-adapter artifacts associated with genomic library preparation,
-    # arising from a combination of heat, shearing, and metal contaminates in a sample).
-    # The 8-oxoguanine base can pair with either cytosine or adenine, ultimately leading to G→T transversion mutations during PCR amplification.   
-    # CC. -> CA.
-    # .GG -> .TG <= DNA F1R2 (Context - ".GG", REF Allele - "G", ALT Allele - "T")
-    call OrientationBias_filter_Task as oxoGOBF {
-        input:
-            stub="oxog",
-            tumorBam=input_bam,
-            tumorBamIdx=select_first([CramToBam.output_bam_index, input_file_index]),
-            pairName=pairName,
-            detailMetrics=tumorMM_Task.pre_adapter_detail_metrics,
-            MAF=Oncotate_Task.WXS_Mutation_M1_SNV_M2_INDEL_Strelka_INDEL_annotated_maf,
-            GATK4_JAR=GATK4_JAR,
-            refFasta=refFasta,
-            refFasta_size=refFasta_size,
-            tumorBam_size=tumorBam_size,
-            gatk4_jar_size=gatk4_jar_size,
-            diskGB_buffer=runtime_params["OrientationBias_filter_Task.diskGB_buffer"],
-            diskGB_boot=runtime_params["OrientationBias_filter_Task.diskGB_boot"],
-            preemptible=runtime_params["OrientationBias_filter_Task.preemptible"],
-            memoryGB=runtime_params["OrientationBias_filter_Task.memoryGB"],
-            cpu=runtime_params["OrientationBias_filter_Task.cpu"]
+            ctrlName=ctrlName,    
     }
 
-    # Detects and screens out FFPE artifacts from a set of SNV calls.
-    # FFPE introduces multiple types of DNA damage including deamination, which converts cytosine to uracil and leads to downstream mispairing
-    # in PCR: C>T/G>A. Because deamination occurs prior to ligation of palindromic Illumina adapters, likely deamination artifacts will have
-    # a read orientation bias. The FFPE Filter Task uses this read orientation to identify artifacts and calculate a Phred scaled Q-score for FFPE artifacts.
-    # .CG -> .TG <= DNA F1R2 (Context - ".CG", REF Allele - "C", ALT Allele - "T")
-    # CG. -> CA.
-    call OrientationBias_filter_Task as ffpeOBF {
+    # Oncotator is a tool for annotating human genomic point mutations and indels with data relevant to cancer researchers.
+
+    call Funcotate{
         input:
-            stub="ffpe",
-            tumorBam=select_first([tumorMM_Task.Bam,tumorBam]),
-            tumorBamIdx=select_first([tumorMM_Task.Bai,tumorBamIdx]),
-            pairName=pairName,
-            detailMetrics=tumorMM_Task.pre_adapter_detail_metrics,
-            MAF=Oncotate_Task.WXS_Mutation_M1_SNV_M2_INDEL_Strelka_INDEL_annotated_maf,
-            GATK4_JAR=GATK4_JAR,
-            refFasta=refFasta,
-            refFasta_size=refFasta_size,
-            tumorBam_size=tumorBam_size,
-            gatk4_jar_size=gatk4_jar_size,
-            diskGB_buffer=runtime_params["OrientationBias_filter_Task.diskGB_buffer"],
-            diskGB_boot=runtime_params["OrientationBias_filter_Task.diskGB_boot"],
-            preemptible=runtime_params["OrientationBias_filter_Task.preemptible"],
-            memoryGB=runtime_params["OrientationBias_filter_Task.memoryGB"],
-            cpu=runtime_params["OrientationBias_filter_Task.cpu"]
+            gatk_docker               = gatk_docker,
+            ref_fasta                 = ref_fasta,
+            ref_fasta_index           = ref_fasta_index,
+            ref_dict                  = ref_dict,
+            input_vcf                 = variant_vcf_to_funcotate,
+            input_vcf_idx             = variant_vcf_to_funcotate_index,
+            reference_version         = reference_version,
+            output_file_base_name     = output_file_base_name,
+            output_format             = output_format,
+            compress                  = compress,
+            use_gnomad                = use_gnomad,
+
+            interval_list             = interval_list,
+            data_sources_tar_gz       = data_sources_tar_gz,
+            transcript_selection_mode = transcript_selection_mode,
+            transcript_selection_list = transcript_selection_list,
+            annotation_defaults       = annotation_defaults,
+            annotation_overrides      = annotation_overrides,
+            extra_args                = funcotator_extra_args,
+
+            gatk_override             = gatk4_jar_override
     }
 
     output {
-        FilterVariantTranches.*
+        ####### QC Tasks Outputs #######
+        # Copy Number QC Report files
+        File tumor_bam_lane_list=CopyNumberReportQC_Task.tumorBamLaneList
+        File normal_bam_lane_list=CopyNumberReportQC_Task.normalBamLaneList
+        File tumor_bam_read_coverage_lane=CopyNumberReportQC_Task.tumorRCL
+        File normal_bam_read_coverage_lane=CopyNumberReportQC_Task.normalRCL
+        File copy_number_qc_report=CopyNumberReportQC_Task.CopyNumQCReport
+        File copy_number_qc_report_png=CopyNumberReportQC_Task.CopyNumQCReportPNG
+        File copy_number_qc_mix_ups=CopyNumberReportQC_Task.CopyNumQCMixUps
+        # Picard Multiple Metrics Task - NORMAL BAM
+        File? normal_bam_bam_validation=normalMM_Task.bam_validation
+        File? normal_bam_alignment_summary_metrics=normalMM_Task.alignment_summary_metrics
+        File? normal_bam_bait_bias_detail_metrics=normalMM_Task.bait_bias_detail_metrics
+        File? normal_bam_bait_bias_summary_metrics=normalMM_Task.bait_bias_summary_metrics
+        File? normal_bam_base_distribution_by_cycle=normalMM_Task.base_distribution_by_cycle
+        File? normal_bam_base_distribution_by_cycle_metrics=normalMM_Task.base_distribution_by_cycle_metrics
+        File? normal_bam_gc_bias_detail_metrics=normalMM_Task.gc_bias_detail_metrics
+        File? normal_bam_gc_bias=normalMM_Task.gc_bias
+        File? normal_bam_gc_bias_summary_metrics=normalMM_Task.gc_bias_summary_metrics
+        File? normal_bam_insert_size_histogram=normalMM_Task.insert_size_histogram
+        File? normal_bam_insert_size_metrics=normalMM_Task.insert_size_metrics        
+        File? normal_bam_pre_adapter_detail_metrics=normalMM_Task.pre_adapter_detail_metrics
+        File? normal_bam_pre_adapter_summary_metrics=normalMM_Task.pre_adapter_summary_metrics
+        File? normal_bam_quality_by_cycle=normalMM_Task.quality_by_cycle
+        File? normal_bam_quality_by_cycle_metrics=normalMM_Task.quality_by_cycle_metrics
+        File? normal_bam_quality_distribution=normalMM_Task.quality_distribution
+        File? normal_bam_quality_distribution_metrics=normalMM_Task.quality_distribution_metrics
+        File? normal_bam_quality_yield_metrics=normalMM_Task.quality_yield_metrics
+        File? normal_bam_converted_oxog_metrics=normalMM_Task.converted_oxog_metrics
+        File? normal_bam_hybrid_selection_metrics=normalMM_Task.hsMetrics
+        # Picard Multiple Metrics Task - TUMOR BAM
+        File? tumor_bam_bam_validation=tumorMM_Task.bam_validation
+        File? tumor_bam_alignment_summary_metrics=tumorMM_Task.alignment_summary_metrics
+        File? tumor_bam_bait_bias_detail_metrics=tumorMM_Task.bait_bias_detail_metrics
+        File? tumor_bam_bait_bias_summary_metrics=tumorMM_Task.bait_bias_summary_metrics
+        File? tumor_bam_base_distribution_by_cycle=tumorMM_Task.base_distribution_by_cycle
+        File? tumor_bam_base_distribution_by_cycle_metrics=tumorMM_Task.base_distribution_by_cycle_metrics
+        File? tumor_bam_gc_bias_detail_metrics=tumorMM_Task.gc_bias_detail_metrics
+        File? tumor_bam_gc_bias=tumorMM_Task.gc_bias
+        File? tumor_bam_gc_bias_summary_metrics=tumorMM_Task.gc_bias_summary_metrics
+        File? tumor_bam_insert_size_histogram=tumorMM_Task.insert_size_histogram
+        File? tumor_bam_insert_size_metrics=tumorMM_Task.insert_size_metrics
+        File? tumor_bam_pre_adapter_detail_metrics=tumorMM_Task.pre_adapter_detail_metrics
+        File? tumor_bam_pre_adapter_summary_metrics=tumorMM_Task.pre_adapter_summary_metrics
+        File? tumor_bam_quality_by_cycle=tumorMM_Task.quality_by_cycle
+        File? tumor_bam_quality_by_cycle_metrics=tumorMM_Task.quality_by_cycle_metrics
+        File? tumor_bam_quality_distribution=tumorMM_Task.quality_distribution
+        File? tumor_bam_quality_distribution_metrics=tumorMM_Task.quality_distribution_metrics
+        File? tumor_bam_quality_yield_metrics=tumorMM_Task.quality_yield_metrics
+        File? tumor_bam_converted_oxog_metrics=tumorMM_Task.converted_oxog_metrics
+        File? tumor_bam_hybrid_selection_metrics=tumorMM_Task.hsMetrics
+        # Cross-Sample Contamination Task
+        File contamination_data=ContEST_Task.contamDataFile
+        File contestAFFile=ContEST_Task.contestAFFile
+        File contest_base_report=ContEST_Task.contestBaseReport
+        File contest_validation=ContEST_Task.validationOutput
+        Float fracContam=ContEST_Task.fracContam
+        # Cross Check Lane Fingerprints Task
+        File cross_check_fingprt_metrics=CrossCheckLaneFingerprints_Task.crossCheckMetrics
+        File cross_check_fingprt_report=CrossCheckLaneFingerprints_Task.crossCheckReport
+        Float cross_check_fingprt_min_lod_value=CrossCheckLaneFingerprints_Task.crossCheckMinLODValue
+        String cross_check_fingprt_min_lod_lanes=CrossCheckLaneFingerprints_Task.crossCheckMinLODLanes
+        ####### Mutation calling #####
+        
+
+        ###### Annotated ####
     }
 }
+
 
 task SplitIntervals {
     # inputs
@@ -386,7 +508,7 @@ task VEP_Task {
         MUTECT1_VEP_filtered="${pairName}.mutect1.vep_annotated.filtered.vcf"
         /ensembl-tools-release-83/ensembl-tools-release-83/scripts/variant_effect_predictor/variant_effect_predictor.pl \
         --custom ${GNOMAD_FILE},gnomADg,vcf,exact,0,GT,AC,AF,AN,AF_AFR,AF_AMR,AF_ASJ,AF_EAS,AF_FIN,AF_NFE,AF_OTH \
-        --input_file $MUTECT1_VCF \
+        --tumor_file $MUTECT1_VCF \
         --output_file $MUTECT1_VEP \
         --vcf \
         --symbol \
@@ -401,7 +523,7 @@ task VEP_Task {
         MUTECT2_VEP_filtered="${pairName}.mutect2.vep_annotated.filtered.vcf"
         /ensembl-tools-release-83/ensembl-tools-release-83/scripts/variant_effect_predictor/variant_effect_predictor.pl \
         --custom ${GNOMAD_FILE},gnomADg,vcf,exact,0,GT,AC,AF,AN,AF_AFR,AF_AMR,AF_ASJ,AF_EAS,AF_FIN,AF_NFE,AF_OTH \
-        --input_file ${MUTECT2_VCF} \
+        --tumor_file ${MUTECT2_VCF} \
         --output_file $MUTECT2_VEP \
         --vcf \
         --symbol \
@@ -416,7 +538,7 @@ task VEP_Task {
         STRELKA_VEP_filtered="${pairName}.strelka.vep_annotated.filtered.vcf"
         /ensembl-tools-release-83/ensembl-tools-release-83/scripts/variant_effect_predictor/variant_effect_predictor.pl \
         --custom ${GNOMAD_FILE},gnomADg,vcf,exact,0,GT,AC,AF,AN,AF_AFR,AF_AMR,AF_ASJ,AF_EAS,AF_FIN,AF_NFE,AF_OTH \
-        --input_file ${STRELKA_VCF} \
+        --tumor_file ${STRELKA_VCF} \
         --output_file $STRELKA_VEP \
         --vcf \
         --symbol \
@@ -447,17 +569,27 @@ task VEP_Task {
     }
 }
 
-
-task Oncotate_Task {
+task PicardMultipleMetrics_Task {
 
     # TASK INPUT PARAMS
-    File MUTECT1_CS
-    File MUTECT2_INDELS
-    File STRELKA_INDELS
-    String pairName
-    String caseName
-    String ctrlName
-    File oncoDBTarBall
+    File bam
+    File bamIndex
+    String sampleName
+    File targetIntervals
+    File baitIntervals
+    File refFasta
+    File DB_SNP_VCF
+    File DB_SNP_VCF_IDX
+    File GATK4_JAR
+
+    String validationStringencyLevel
+    String run_clean_sam
+
+    # FILE SIZE
+    Int bam_size
+    Int refFasta_size
+    Int gatk4_jar_size
+    Int db_snp_vcf_size
 
     # RUNTIME INPUT PARAMS
     String preemptible
@@ -468,117 +600,89 @@ task Oncotate_Task {
 
     # DEFAULT VALUES
     String default_cpu = "1"
-    String default_memoryGB = "15"
+    String default_memoryGB = "10"
     String default_preemptible = "1"
     String default_diskGB_boot = "15"
     String default_diskGB_buffer = "20"
+    String default_stringencyLevel = "LENIENT"
+    String default_run_clean_sam = false
 
     # COMPUTE MEMORY SIZE
     Int machine_memoryGB = if memoryGB != "" then memoryGB else default_memoryGB
-   
+    Int command_memoryGB = machine_memoryGB - 1
+    
     # COMPUTE DISK SIZE
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
-    Int diskGB = ceil(size(oncoDBTarBall, "G") * 5 + machine_diskGB_buffer)
+    Int diskGB = ceil(bam_size + refFasta_size + gatk4_jar_size + db_snp_vcf_size + machine_diskGB_buffer)
+
+    String stringencyLevel = if validationStringencyLevel != "" then validationStringencyLevel else default_stringencyLevel
+    String clean_sam_flag = if run_clean_sam != "" then run_clean_sam else default_run_clean_sam
 
     parameter_meta {
-        MUTECT1_CS : ""
-        MUTECT2_INDELS : ""
-        STRELKA_INDELS : ""
-        pairName: "a string for the name of the pair under analysis used for naming output files"
-        caseName : "tumor sample name, prefix for output"
-        ctrlName : "normal sample name, prefix for output"
-        oncoDBTarBall : ""
+        bam : "sample (normal or tumor) BAM file"
+        bamIndex : "sample (normal or tumor) BAI file (BAM indexed)"
+        sampleName : "sample (normal or tumor) name, prefix for output"
+        refFasta : "FASTA file for the appropriate genome build (Reference sequence file)"
+        DB_SNP_VCF : "VCF format dbSNP file, used to exclude regions around known polymorphisms from analysis by some PROGRAMs"
+        DB_SNP_VCF_IDX : "dbSNP indexed file"
     }
 
     command <<<
 
-        set -x
+        set -euxo pipefail
 
-        ######## Files #################
+        /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} ValidateSamFile \
+        --INPUT ${bam} \
+        --OUTPUT "${sampleName}.bam_validation" \
+        --MODE VERBOSE \
+        --IGNORE_WARNINGS true \
+        --REFERENCE_SEQUENCE ${refFasta} \
+        --VALIDATION_STRINGENCY ${stringencyLevel}
 
-        # MuTect1 files
-        MUTECT1_CS_PASSED="${pairName}.MuTect1.call_stats.passed.txt"
-        MUTECT1_CS_REJECTED="${pairName}.MuTect1.call_stats.rejected.txt"
-        MUTECT1_CS_MAFLITE="${pairName}.MuTect1.call_stats.maflite"
-        MUTECT1_CS_ANNOTATED_MAF="${pairName}.MuTect1.call_stats.annotated.maf"
+        if [ "${clean_sam_flag}" = true ] ;
+        then
+            # Run bam through CleanSam to set MAPQ of unmapped reads to zero
+            /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CleanSam \
+            --INPUT ${bam} \
+            --OUTPUT ${sampleName}.unmapped_reads_cleaned.bam
+        fi
 
-        # MuTect2 files
-        MUTECT2_INDELS_PASSED="${pairName}.MuTect2.call_stats.passed.vcf"
-        MUTECT2_INDELS_REJECTED="${pairName}.MuTect2.call_stats.rejected.vcf"
-        MUTECT2_INDELS_ANNOTATED_MAF="${pairName}.MuTect2.call_stats.indels.annotated.maf"
+        /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CollectMultipleMetrics \
+        --INPUT ${bam} \
+        --OUTPUT ${sampleName}.multiple_metrics \
+        --REFERENCE_SEQUENCE ${refFasta} \
+        --DB_SNP ${DB_SNP_VCF} \
+        --PROGRAM CollectAlignmentSummaryMetrics \
+        --PROGRAM CollectInsertSizeMetrics \
+        --PROGRAM QualityScoreDistribution \
+        --PROGRAM MeanQualityByCycle \
+        --PROGRAM CollectBaseDistributionByCycle \
+        --PROGRAM CollectSequencingArtifactMetrics \
+        --PROGRAM CollectQualityYieldMetrics \
+        --PROGRAM CollectGcBiasMetrics
         
-        # Strelka files
-        STRELKA_REFORMATTED_VCF="${pairName}.Strelka.call_stats.re_formatted.vcf"
-        STRELKA_ANNOTATED_MAF="${pairName}.Strelka.call_stats.annotated.maf"
+        #Extract OxoG metrics from generalized artifacts metrics. 
+        # This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of CollectSequencingArtifactsMetrics 
+        # (a tool that provides detailed information on a variety of
+        # artifacts found in sequencing libraries) and converts them to the CollectOxoGMetrics tool's output format. This
+        # conveniently eliminates the need to run CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our
+        # pipeline.
+        /usr/local/jre1.8.0_73/bin/java -jar ${GATK4_JAR} ConvertSequencingArtifactToOxoG \
+        --INPUT_BASE "${sampleName}.multiple_metrics" \
+        --OUTPUT_BASE "${sampleName}.multiple_metrics.converted" \
+        --REFERENCE_SEQUENCE ${refFasta} \
+        --VALIDATION_STRINGENCY ${stringencyLevel}
 
-        # Merged files
-        MUTECT2_STRELKA_MERGED_MAF="${pairName}.MuTect2_INDEL.Strelka_INDEL.merged.maf" 
-        MUTECT1_MUTECT2_STRELKA_MERGED_MAF="${pairName}.MuTect1_SNV.MuTect2_INDEL.Strelka_INDEL.annotated.maf"
-        MUTECT1_MUTECT2_STRELKA_ANNOTATED_VCF="${pairName}.MuTect1_SNV.MuTect2_INDEL.Strelka_INDEL.annotated.vcf"
+        #zip up reports for QC Nozzle report
+        zip picard_multiple_metrics.zip ${sampleName}.multiple_metrics.*
 
-        ######## Processing call stats before annotation #################
-
-        # Filter MuTect1 mutation calls that passed filter
-        python /usr/local/bin/filter_passed_mutations.py ${MUTECT1_CS} $MUTECT1_CS_PASSED $MUTECT1_CS_REJECTED "PASS"
-        # Convert MuTect1 call stats to MafLite
-        #
-
-        # Filter MuTect2 mutation calls that passed filter
-        python /usr/local/bin/filter_passed_mutations.py ${MUTECT2_INDELS} $MUTECT2_INDELS_PASSED $MUTECT2_INDELS_REJECTED "PASS"
-
-        # Edit Strelka VCF (adding AD and AF, replacing TUMOR/NORMAL with caseName/ctrlName)
-        python /usr/local/bin/strelka_allelic_count.py ${STRELKA_INDELS} $STRELKA_REFORMATTED_VCF "${caseName}" "${ctrlName}"
-
-        ########################### Unzip Oncotator database ###############################
-
-        #find TARBALL type 
-        # TODO Find better way to get extension
-        TYPE=`echo 'if("${oncoDBTarBall}"=~m/z$/) { print "GZ" ; } else { print "TAR" ; } '| perl` ;
-
-        #obtain the name of the directory for oncodb and unpack based on the TYPE
-        if [ "$TYPE" == "GZ" ] ; then
-        # TODO Find better way to get name of the file
-            ONCO_DB_DIR_NAME=`gunzip -c ${oncoDBTarBall} |tar -tf /dev/stdin|head -1` ;
-            tar -xzf ${oncoDBTarBall}
-        else
-            ONCO_DB_DIR_NAME=`tar -tf ${oncoDBTarBall} |head -1` ;
-            tar -xf ${oncoDBTarBall} ;
-        fi ;
-
-        ################## Annotate MuTect1, MuTect2, Strelka call stats ###########################
-
-        # Annotate MuTect1 call stats (VCF to TCGAMAF)
-        # --infer-onps \        
-        /root/oncotator_venv/bin/oncotator -i VCF --db-dir `pwd`/$ONCO_DB_DIR_NAME \
-        --skip-no-alt \
-        --longer-other-tx \
-        -a normal_barcode:${ctrlName} \
-        -a tumor_barcode:${caseName} \
-        $MUTECT1_CS_PASSED $MUTECT1_CS_ANNOTATED_MAF hg19
-        
-
-        # Annotate MuTect2 call stats (VCF to TCGAMAF)
-        /root/oncotator_venv/bin/oncotator -i VCF --db-dir `pwd`/$ONCO_DB_DIR_NAME \
-        --longer-other-tx \
-        --skip-no-alt \
-        -a normal_barcode:${ctrlName} \
-        -a tumor_barcode:${caseName} \
-        $MUTECT2_INDELS_PASSED $MUTECT2_INDELS_ANNOTATED_MAF hg19
-
-        # Annotate Strelka call stats (VCF to TCGAMAF)
-        /root/oncotator_venv/bin/oncotator -i VCF --db-dir `pwd`/$ONCO_DB_DIR_NAME \
-        --longer-other-tx \
-        --skip-no-alt \
-        -a normal_barcode:${ctrlName} \
-        -a tumor_barcode:${caseName} \
-        $STRELKA_REFORMATTED_VCF $STRELKA_ANNOTATED_MAF hg19
-
-        ####################### Merge MuTect1, MuTect2, Strelka annotated TCGAMAFs into one file ####################
-
-        # Merge Strelka and MuTect2 indels (only Strelka calls selected, MuTect2 and Strelka common calls are annotated)
-        python /usr/local/bin/merge_strelka_mutect2.py $STRELKA_ANNOTATED_MAF $MUTECT2_INDELS_ANNOTATED_MAF $MUTECT2_STRELKA_MERGED_MAF
-        # Merge MuTect1 SNVs and Strelka & MuTect2 indels into one MAF file
-        python /usr/local/bin/maf_merge.py $MUTECT1_CS_ANNOTATED_MAF $MUTECT2_STRELKA_MERGED_MAF $MUTECT1_MUTECT2_STRELKA_MERGED_MAF
+        # Collect WES HS metrics
+        /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CollectHsMetrics \
+        --INPUT ${bam} \
+        --BAIT_INTERVALS ${targetIntervals} \
+        --TARGET_INTERVALS ${baitIntervals} \
+        --OUTPUT "${sampleName}.HSMetrics.txt" \
+        --VALIDATION_STRINGENCY ${stringencyLevel}
 
     >>>
 
@@ -592,26 +696,47 @@ task Oncotate_Task {
     }
 
     output {
-        File WXS_Mutation_M1_SNV_M2_INDEL_Strelka_INDEL_annotated_maf="${pairName}.MuTect1_SNV.MuTect2_INDEL.Strelka_INDEL.annotated.maf"               
+        File bam_validation="${sampleName}.bam_validation"
+        File metricsReportsZip="picard_multiple_metrics.zip"
+        File alignment_summary_metrics="${sampleName}.multiple_metrics.alignment_summary_metrics"
+        File bait_bias_detail_metrics="${sampleName}.multiple_metrics.bait_bias_detail_metrics"
+        File bait_bias_summary_metrics="${sampleName}.multiple_metrics.bait_bias_summary_metrics"
+        File base_distribution_by_cycle="${sampleName}.multiple_metrics.base_distribution_by_cycle.pdf"
+        File base_distribution_by_cycle_metrics="${sampleName}.multiple_metrics.base_distribution_by_cycle_metrics"
+        File gc_bias_detail_metrics="${sampleName}.multiple_metrics.gc_bias.detail_metrics"
+        File gc_bias="${sampleName}.multiple_metrics.gc_bias.pdf"
+        File gc_bias_summary_metrics="${sampleName}.multiple_metrics.gc_bias.summary_metrics"
+        File insert_size_histogram="${sampleName}.multiple_metrics.insert_size_histogram.pdf"
+        File insert_size_metrics="${sampleName}.multiple_metrics.insert_size_metrics"
+        #File oxog_metrics="${sampleName}.multiple_metrics.oxog_metrics"
+        File pre_adapter_detail_metrics="${sampleName}.multiple_metrics.pre_adapter_detail_metrics"
+        File pre_adapter_summary_metrics="${sampleName}.multiple_metrics.pre_adapter_summary_metrics"
+        File quality_by_cycle="${sampleName}.multiple_metrics.quality_by_cycle.pdf"
+        File quality_by_cycle_metrics="${sampleName}.multiple_metrics.quality_by_cycle_metrics"
+        File quality_distribution="${sampleName}.multiple_metrics.quality_distribution.pdf"
+        File quality_distribution_metrics="${sampleName}.multiple_metrics.quality_distribution_metrics"
+        File quality_yield_metrics="${sampleName}.multiple_metrics.quality_yield_metrics"
+        File converted_oxog_metrics="${sampleName}.multiple_metrics.converted.oxog_metrics"
+        File hsMetrics="${sampleName}.HSMetrics.txt"
     }
 }
 
-
-task OrientationBias_filter_Task {
+task CrossCheckLaneFingerprints_Task {
 
     # TASK INPUT PARAMS
     File tumorBam
+    File normalBam
     File tumorBamIdx
-    File? detailMetrics
-    File MAF
+    File normalBamIdx
     String pairName
-    String stub
-    File refFasta
+    File HaplotypeDBForCrossCheck
     File GATK4_JAR
+
+    String validationStringencyLevel
 
     # FILE SIZE
     Int tumorBam_size
-    Int refFasta_size
+    Int normalBam_size
     Int gatk4_jar_size
 
     # RUNTIME INPUT PARAMS
@@ -623,106 +748,57 @@ task OrientationBias_filter_Task {
 
     # DEFAULT VALUES
     String default_cpu = "1"
-    String default_memoryGB = "7"
+    String default_memoryGB = "3"
     String default_preemptible = "1"
     String default_diskGB_boot = "15"
     String default_diskGB_buffer = "20"
-
-    Boolean found_detailMetrics = defined(detailMetrics)
+    String default_stringencyLevel = "LENIENT"
 
     # COMPUTE MEMORY SIZE
     Int machine_memoryGB = if memoryGB != "" then memoryGB else default_memoryGB
     Int command_memoryGB = machine_memoryGB - 1
-
+    
     # COMPUTE DISK SIZE
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
-    Int diskGB = ceil(tumorBam_size + refFasta_size + gatk4_jar_size + size(MAF, "G") 
-                      + machine_diskGB_buffer)
+    Int diskGB = ceil(tumorBam_size + normalBam_size + gatk4_jar_size + size(HaplotypeDBForCrossCheck, "G") 
+                    + machine_diskGB_buffer)
 
-    parameter_meta {        
-        tumorBam: "sample tumor BAM file"
-        tumorBamIdx : "sample tumor BAI file (indexed BAM)"
-        MAF : "filename pointing to a mutation annotation format (MAF) file (data for somatic point mutations)"
-        detailMetrics : "output from the Picard Multiple Metrics CollectSequencingArtifactMetrics run with the settings here; this allows for passthrough instead of recomputing"       
-        refFasta : "Reference that was used to align BAM"
-        stub : "string used to indicate in the output the effect name"
+    String stringencyLevel = if validationStringencyLevel != "" then validationStringencyLevel else default_stringencyLevel
+
+    parameter_meta {
+        tumorBam : "sample tumor BAM file"
+        tumorBamIdx : "sample tumor BAI file (indexed BAM file)"
+        normalBam : "sample normal BAM file"
+        normalBamIdx : "sample normal BAI file (indexed BAM file)"
+        pairName : "a string for the name of the pair under analysis used for naming output files"
+        HaplotypeDBForCrossCheck : ""
+        validationStringencyLevel : ""
     }
 
     command <<<
 
         set -euxo pipefail
 
-        SNV_MAF="${pairName}.snv.maf"
-        INDEL_MAF="${pairName}.indel.maf"
-        python /usr/local/bin/split_maf_indel_snp.py -i ${MAF} -o $SNV_MAF -f Variant_Type -v "SNP|DNP|TNP|MNP"
-        python /usr/local/bin/split_maf_indel_snp.py -i ${MAF} -o $INDEL_MAF -f Variant_Type -v "INS|DEL"
+        #drop from haplotypeDB seq entries which aren't in BAM if there are any found
+        PREPPED_HAPLOTYPE_DB=PreppedHaplotypeDB.txt
+        /usr/local/bin/filter_not_in_bam_dict.pl ${normalBam} ${HaplotypeDBForCrossCheck} $PREPPED_HAPLOTYPE_DB
 
-        ################################
-
-        python /usr/local/bin/get_context_ref_alt_alleles.py -s ${stub} -i ${pairName}
-
-        CONTEXT=$( cat "${pairName}.context.${stub}.txt" )
-        ARTIFACT_ALLELE=$( cat "${pairName}.artifact_allele.${stub}.txt" )
-
-        if [ -s "${detailMetrics}" ] ;
-        then
-            DETAIL_METRICS_FILE=${detailMetrics}
-        else
-            /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CollectSequencingArtifactMetrics \
-            --INPUT ${tumorBam} \
-            --OUTPUT ${pairName} \
-            --REFERENCE_SEQUENCE ${refFasta}
-            DETAIL_METRICS_FILE="${pairName}.pre_adapter_detail_metrics"  
-        fi ;
-
-        # Now parsing metrics for Q value
-        python /usr/local/orientationBiasFilter/annotate_orientationBiasQ.py -i ${pairName} -m $DETAIL_METRICS_FILE -c $CONTEXT -a $ARTIFACT_ALLELE
-
-        Q=$( cat "${pairName}.orientation_BiasQ.txt" )
-
-        # Appending Q value to MAF
-        python /usr/local/orientationBiasFilter/AppendAnnotation2MAF.py -i ${pairName} -m $SNV_MAF -f ${stub}_Q -v $Q
-
-        OUTPUT_INTERVAL_FILE="${pairName}.intervals"
-        OUTPUT_INFO_FILE="${pairName}.orientation_info.txt" 
-
-        python /usr/local/orientationBiasFilter/write_interval_file.py "${pairName}.${stub}_Q.maf.annotated" $OUTPUT_INTERVAL_FILE       
-
-        java "-Xmx${command_memoryGB}g" -jar /usr/local/orientationBiasFilter/GenomeAnalysisTK.jar \
-        --analysis_type OxoGMetrics \
-        -R ${refFasta} \
+        #CrosscheckLaneFingerprints[version=9]
+        mkdir -v tmp
+        /usr/local/jre1.8.0_73/bin/java "-Xmx${command_memoryGB}g" -jar ${GATK4_JAR} CrosscheckFingerprints \
         -I ${tumorBam} \
-        -L $OUTPUT_INTERVAL_FILE \
-        -o $OUTPUT_INFO_FILE
+        -I ${normalBam} \
+        -H $PREPPED_HAPLOTYPE_DB \
+        --TMP_DIR `pwd`/tmp \
+        --QUIET false \
+        --EXIT_CODE_WHEN_MISMATCH 0 \
+        --OUTPUT crosscheck.metrics \
+        --VALIDATION_STRINGENCY ${stringencyLevel} 
 
-        # Now appending orientation bias information to the MAF
-        python /usr/local/orientationBiasFilter/AppendOrientationBiasFields2MAF.py \
-        -i ${pairName} -m "${pairName}.${stub}_Q.maf.annotated" -b ${tumorBam} \
-        -f $OUTPUT_INFO_FILE
-
-        REF_ALLELE_COMP=$( cat "${pairName}.ref_allele_compliment.${stub}.txt" )
-        ARTIFACT_ALLELE_COMP=$( cat "${pairName}.artifact_allele_compliment.${stub}.txt")
-
-        bash -c "source /matlab_source_file_2012a.sh && /usr/local/orientationBiasFilter/orientationBiasFilter ${pairName}.OrientationBiasInfo.maf \
-        ${pairName}.OrientationBiasFilter.maf . '0' '1' '0.96' '0.01' '-1' '30' '1.5' \
-        $REF_ALLELE_COMP $ARTIFACT_ALLELE_COMP i_${stub}" ;
-
-        #########################################
-
-        #merge back indels into OBF output
-        python /usr/local/bin/tsvConcatFiles.py $INDEL_MAF "${pairName}.OrientationBiasFilter.maf" \
-        --outputFilename="${pairName}.OrientationBiasFilter.${stub}.indel_snp_merged.filtered.maf"
-
-        python /usr/local/bin/tsvConcatFiles.py $INDEL_MAF "${pairName}.OrientationBiasFilter.unfiltered.maf" \
-        --outputFilename="${pairName}.OrientationBiasFilter.${stub}.indel_snp_merged.unfiltered.maf"
-
-        python /usr/local/bin/add_judgement_column.py \
-        --input "${pairName}.OrientationBiasFilter.${stub}.indel_snp_merged.unfiltered.maf" \
-        --output "${pairName}.OrientationBiasFilter.${stub}.indel_snp_merged.unfiltered.with_annotations.maf" \
-        --column "i_${stub}_cut" \
-        --pass_flag "0"
+        #Produce crosscheck.stats.txt file for making the html report
+        grep -v "#" crosscheck.metrics | sed 1d > crosscheck.metrics.stripped
         
-        zip -r ${pairName}.${stub}_OBF_figures.zip ./figures
+        python /usr/local/bin/crosscheck_report.py crosscheck.metrics.stripped
 
     >>>
 
@@ -735,13 +811,122 @@ task OrientationBias_filter_Task {
         memory: machine_memoryGB + "GB"
     }
 
-    output {      
-        Float q_val=read_float("${pairName}.orientation_BiasQ.txt")
-        File OBF_figures="${pairName}.${stub}_OBF_figures.zip"
-        Int num_passed_mutations=read_int("${pairName}.OrientationBiasFilter.maf.pass_count.txt")
-        Int num_rejected_mutations=read_int("${pairName}.OrientationBiasFilter.maf.reject_count.txt")
-        File WXS_Mutation_OBF_filtered_maf="${pairName}.OrientationBiasFilter.${stub}.indel_snp_merged.filtered.maf"
-        File WXS_Mutation_OBF_unfiltered_maf="${pairName}.OrientationBiasFilter.${stub}.indel_snp_merged.unfiltered.maf"
-        File WXS_Mutation_OBF_unfiltered_maf_with_annotations="${pairName}.OrientationBiasFilter.${stub}.indel_snp_merged.unfiltered.with_annotations.maf"
+    output {
+        File crossCheckMetrics="crosscheck.metrics"
+        File crossCheckReport="report.html"
+        Float crossCheckMinLODValue=read_float("crosscheck_min_lod_value.txt")
+        String crossCheckMinLODLanes=read_string("crosscheck_min_lod_lanes.txt")
+    }
+}
+
+task ContEST_Task {
+        
+    # TASK INPUT PARAMS
+    File tumorBam
+    File tumorBamIdx
+    File normalBam
+    File normalBamIdx
+    File refFasta
+    File refFastaIdx
+    File refFastaDict
+    File targetIntervals
+    
+    File SNP6Bed
+    File HapMapVCF
+    String pairName
+
+    # FILE SIZE
+    Int tumorBam_size
+    Int normalBam_size
+    Int refFasta_size
+
+    # RUNTIME INPUT PARAMS
+    String preemptible
+    String diskGB_boot
+    String diskGB_buffer
+    String memoryGB
+    String cpu
+
+    # DEFAULT VALUES
+    String default_cpu = "1"
+    String default_memoryGB = "10"
+    String default_preemptible = "1"
+    String default_diskGB_boot = "15"
+    String default_diskGB_buffer = "20"
+
+    # COMPUTE MEMORY SIZE
+    Int machine_memoryGB = if memoryGB != "" then memoryGB else default_memoryGB
+    Int command_memoryGB = machine_memoryGB - 1
+    
+    # COMPUTE DISK SIZE
+    Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
+    Int diskGB = ceil(tumorBam_size + normalBam_size + refFasta_size
+                + size(targetIntervals, "G") + size(SNP6Bed, "G") + size(HapMapVCF, "G")
+                + machine_diskGB_buffer)
+
+    parameter_meta {
+        tumorBam : "sample tumor BAM file"
+        tumorBamIdx : "sample tumor BAI file (indexed BAM file)"
+        normalBam : "sample normal BAM file"
+        normalBamIdx : "sample normal BAI file (indexed BAM file)"
+        pairName : "sample name, prefix for output"
+        refFasta : "the FASTA file for the appropriate genome build (Reference sequence file)"
+        refFastaIdx : "FASTA file index for the reference genome"
+        refFastaDict : "FASTA file dictionary for the reference genome"
+        exomeIntervals : ""
+        SNP6Bed : ""
+        HapMapVCF : "the population allele frequencies for each SNP in HapMap"
+    }
+
+    command <<<
+
+        set -euxo pipefail
+         
+        java "-Xmx${command_memoryGB}g" -Djava.io.tmpdir=/tmp -jar /usr/local/bin/GenomeAnalysisTK.jar \
+        -T ContEst \
+        -I:eval ${tumorBam} \
+        -I:genotype ${normalBam} \
+        -L ${targetIntervals} \
+        -L ${SNP6Bed} \
+        -isr INTERSECTION \
+        -R ${refFasta} \
+        -l INFO \
+        -pf ${HapMapVCF} \
+        -o contamination.af.txt \
+        --trim_fraction 0.03 \
+        --beta_threshold 0.05 \
+        -br contamination.base_report.txt \
+        -mbc 100 \
+        --min_genotype_depth 30 \
+        --min_genotype_ratio 0.8
+
+        python /usr/local/bin/extract_contamination.py contamination.af.txt fraction_contamination.txt \
+        contamination_validation.array_free.txt ${pairName}
+
+        #Contamination validation/consensus
+        python /usr/local/populateConsensusContamination_v26/contaminationConsensus.py \
+        --pass_snp_qc false \
+        --output contest_validation.output.tsv \
+        --annotation contamination_percentage_consensus_capture \
+        --array contamination_validation.array_free.txt \
+        --noarray contamination_validation.array_free.txt
+
+    >>>
+
+    runtime {
+        docker: "gcr.io/broad-getzlab-workflows/cga_production_pipeline:v0.2.ccle"
+        bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
+        preemptible: if preemptible != "" then preemptible else default_preemptible
+        cpu: if cpu != "" then cpu else default_cpu
+        disks: "local-disk ${diskGB} HDD"
+        memory: machine_memoryGB + "GB"
+    }
+
+    output {
+        File contamDataFile="contamination_validation.array_free.txt"
+        File contestAFFile="contamination.af.txt"
+        File contestBaseReport="contamination.base_report.txt"
+        File validationOutput="contest_validation.output.tsv"
+        Float fracContam=read_float("fraction_contamination.txt")
     }
 }
