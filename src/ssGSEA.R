@@ -1,5 +1,7 @@
-countfile = args[1];
-gmtfile = args[2];
+args<-commandArgs(TRUE)
+
+countfile <- args[1];
+gmtfile <- args[2];
 
 library(GSEABase)
 library(GSVA)
