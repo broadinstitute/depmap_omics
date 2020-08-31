@@ -673,6 +673,8 @@ def getQC(workspace, only=[], qcname=[], match=""):
   --------
     a dict(sample_id:list[QC_filepaths])
   """
+  if type(qcname) is str:
+    qcname = [qcname]
   res = {}
   wm = dm.WorkspaceManager(workspace)
   sam = wm.get_samples()
