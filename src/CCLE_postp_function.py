@@ -768,6 +768,8 @@ def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
 
 
 def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Start"):
+  """
+  """
   prevchr = ''
   prevend = 0
   count = 0
@@ -791,48 +793,52 @@ def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Sta
         l[-1][2] += int(sizeofgap / 2) if sizeofgap % 2 == 0 else int(sizeofgap / 2) + 1
         # the rest to the other
         l.append([val[Chromosome], val[Start] - int(sizeofgap / 2), val[End]])
-      elif val[Start] < prevend:
+      elif val[Start] < prevend: #this should never happen
         raise ValueError("start comes after end")
       else:
         l.append([val[Chromosome], val[Start], val[End]])
     prevchr = val[Chromosome]
     prevend = val[End]
-  l[-1][2] = 1000000000
+  l[-1][2] = 1000000000 #we extend the last one
   segments[[Chromosome, Start, End]] = l
   return segments
 
 
-def toGeneMatrix(segments,gene_mapping):
-    samples = list(set(segments.DepMap_ID))
-    data = np.zeros((len(samples),len(gene_mapping)))
-    for i, sample in enumerate(samples):
-        segs = segments[segments.DepMap_ID==sample][['Chromosome','Start','End',"Segment_Mean"]].values
-        pos = 0
-        h.showcount(i,len(samples))
-        for j, loc in enumerate(gene_mapping[['Chromosome','start','end']].values):
-            if loc[0] == segs[pos][0] and loc[1]<segs[pos][2]: #
-                while loc[1] < segs[pos][1]:
-                    pos-=1
-                    #print("decrease loc",loc)
-                if loc[2] <= segs[pos][2]: 
-                    data[i,j] = segs[pos][3]
-                else:
-                    coef = (segs[pos][2] - loc[1]) / (loc[2]-loc[1])
-                    #print('coef',coef)
-                    val = segs[pos][3]*coef
-                    end = segs[pos][2]
-                    # until the end of a segments goes beyon the end of the gene (say if we have X segments within the gene)
-                    while end<loc[2]: 
-                        #pdb.set_trace()
-                        pos+=1
-                        nextend = segs[pos][2] if segs[pos][2]<loc[2] else loc[2]
-                        coef = (nextend - end) / (loc[2]-loc[1])
-                        #print('multi',loc,coef)
-                        val+= segs[pos][3]*coef
-                        end = segs[pos][2]
-                    data[i,j] = val
-            else:
-                #pdb.set_trace()
-                #print("went beyong",loc)
-                pos+=1 
-    return pd.DataFrame(data=data,index=samples,columns=[i['symbol'] + ' ('+str(i['ensembl_id'])+')' for _,i in gene_mapping.iterrows()])
+def toGeneMatrix(segments, gene_mapping):
+  """
+  """
+  samples = list(set(segments.DepMap_ID))
+  data = np.zeros((len(samples), len(gene_mapping)))
+  for i, sample in enumerate(samples):
+    segs = segments[segments.DepMap_ID == sample][['Chromosome', 'Start', 'End', "Segment_Mean"]].values
+    j = 0
+    h.showcount(i, len(samples))
+    for k, gene in enumerate(gene_mapping[['Chromosome', 'start', 'end']].values):
+      if gene[0] == segs[j][0] and gene[1] < segs[j][2]:
+        # some genes are within other genes, we need to go back in the list of segment in that case
+        while gene[1] < segs[j][1]: 
+          j -= 1
+          #print("decrease gene",gene)
+        # we are entirely within the segment
+        if gene[2] <= segs[j][2]:
+          data[i, k] = segs[j][3]
+        else:
+          coef = (segs[j][2] - gene[1]) / (gene[2] - gene[1])
+          # print('coef',coef)
+          val = segs[j][3] * coef
+          end = segs[j][2]
+          # until the end of a segments goes beyon the end of the gene (say if we have X segments within the gene)
+          while end < gene[2]:
+            # pdb.set_trace()
+            j += 1
+            nextend = segs[j][2] if segs[j][2] < gene[2] else gene[2]
+            coef = (nextend - end) / (gene[2] - gene[1])
+            # print('multi',gene,coef)
+            val += segs[j][3] * coef
+            end = segs[j][2]
+          data[i, k] = val
+      else:
+        # pdb.set_trace()
+        #print("went beyong",gene)
+        j += 1
+  return pd.DataFrame(data=data, index=samples, columns=[i['symbol'] + ' (' + str(i['ensembl_id']) + ')' for _, i in gene_mapping.iterrows()])
