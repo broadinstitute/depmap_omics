@@ -378,11 +378,14 @@ def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
     segmentcn: segment dataframe
     thresh: max ok amount
   """
+  failed = []
   segmentcn = renameColumns(segmentcn)
   celllines = set(segmentcn[samplecol].tolist())
   for cellline in celllines:
     if segmentcn[segmentcn[samplecol] == cellline].shape[0] > thresh:
+      failed.append(cellline)
       print(cellline, segmentcn[segmentcn[samplecol] == cellline].shape[0])
+  return failed
 
 
 def checkGeneChangeAccrossAll(genecn, thresh=1.5):
@@ -793,19 +796,23 @@ def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Sta
         l[-1][2] += int(sizeofgap / 2) if sizeofgap % 2 == 0 else int(sizeofgap / 2) + 1
         # the rest to the other
         l.append([val[Chromosome], val[Start] - int(sizeofgap / 2), val[End]])
-      elif val[Start] < prevend: #this should never happen
+      elif val[Start] < prevend:  # this should never happen
         raise ValueError("start comes after end")
       else:
         l.append([val[Chromosome], val[Start], val[End]])
     prevchr = val[Chromosome]
     prevend = val[End]
-  l[-1][2] = 1000000000 #we extend the last one
+  l[-1][2] = 1000000000  # we extend the last one
   segments[[Chromosome, Start, End]] = l
   return segments
 
 
-def toGeneMatrix(segments, gene_mapping):
+def toGeneMatrix(segments, gene_mapping, style='weighted'):
   """
+
+  Args:
+  ----
+    style: one of "weighted","mean","closest"
   """
   samples = list(set(segments.DepMap_ID))
   data = np.zeros((len(samples), len(gene_mapping)))
@@ -816,27 +823,36 @@ def toGeneMatrix(segments, gene_mapping):
     for k, gene in enumerate(gene_mapping[['Chromosome', 'start', 'end']].values):
       if gene[0] == segs[j][0] and gene[1] < segs[j][2]:
         # some genes are within other genes, we need to go back in the list of segment in that case
-        while gene[1] < segs[j][1]: 
+        while gene[1] < segs[j][1]:
           j -= 1
           #print("decrease gene",gene)
         # we are entirely within the segment
+        c = 1
         if gene[2] <= segs[j][2]:
           data[i, k] = segs[j][3]
         else:
           coef = (segs[j][2] - gene[1]) / (gene[2] - gene[1])
           # print('coef',coef)
-          val = segs[j][3] * coef
+          val = segs[j][3] * coef if style == "weighted" else segs[j][3]
           end = segs[j][2]
           # until the end of a segments goes beyon the end of the gene (say if we have X segments within the gene)
           while end < gene[2]:
             # pdb.set_trace()
             j += 1
+            c += 1
             nextend = segs[j][2] if segs[j][2] < gene[2] else gene[2]
-            coef = (nextend - end) / (gene[2] - gene[1])
-            # print('multi',gene,coef)
-            val += segs[j][3] * coef
+            ncoef = (nextend - end) / (gene[2] - gene[1])
+            # print('multi',gene, ncoef)
+            if style == "closest":
+              if ncoef > coef:
+                val = segs[j][3]
+              else:
+                ncoef = coef
+            else:
+              val += segs[j][3] * ncoef if style == "weighted" else segs[j][3]
             end = segs[j][2]
-          data[i, k] = val
+            coef = ncoef
+          data[i, k] = val if style == "weighted" else val / c
       else:
         # pdb.set_trace()
         #print("went beyong",gene)
