@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../JKBio"
+		}
+	],
+	"settings": {
+		"workbench.colorTheme": "Community Material Theme Ocean High Contrast",
+		"python.pythonPath": "/home/jeremie/miniconda3/bin/python"
+	}
+}

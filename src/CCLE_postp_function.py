@@ -18,7 +18,7 @@ tc = TaigaClient()
 import os
 import ipdb
 import sys
-print("you need to have installed JKBio in the same folder as ccle_processing")
+print("you need to have JKBio in your path:\ne.g. have installed JKBio in the same folder as ccle_processing")
 from JKBio import TerraFunction as terra
 from JKBio import Helper as h
 from JKBio import GCPFunction as gcp
@@ -568,6 +568,7 @@ def AddToVirtual(virtualname, folderfrom, files):
   """
   assert type(files[0]) is tuple
   versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
+  versionb = max([int(i['name']) for i in tc.get_dataset_metadata(virtualname)['versions']])
   keep = [(i['name'], i['underlying_file_id']) for i in tc.get_dataset_metadata(virtualname, version=versionb)
           ['datasetVersion']['datafiles'] if 'underlying_file_id' in i]
 
@@ -757,7 +758,7 @@ def getQC(workspace, only=[], qcname=[], match=""):
     for i in val[qcname]:
       if type(i) is list:
         if match:
-          res[k].extend([e for e in i if mach in e])
+          res[k].extend([e for e in i if match in e])
         else:
           res[k].extend(i)
       else:
@@ -858,3 +859,102 @@ def toGeneMatrix(segments, gene_mapping, style='weighted'):
         #print("went beyong",gene)
         j += 1
   return pd.DataFrame(data=data, index=samples, columns=[i['symbol'] + ' (' + str(i['ensembl_id']) + ')' for _, i in gene_mapping.iterrows()])
+
+
+def filterAllelicFraction(maf, loc=['CGA_WES_AC'], sep=':', frac=0.1):
+    muts = np.zeros((len(maf), 2))
+    for val in loc:
+        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
+            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
+    muts = muts[:, 0]/(muts[:, 0]+muts[:, 1])
+    return maf[muts >= frac]
+
+
+def filterCoverage(maf, loc=['CGA_WES_AC'], sep=':', cov=4, altloc=0):
+    muts = np.zeros((len(maf), 2))
+    for val in loc:
+        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
+            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
+    return maf[muts[:, altloc] >= cov]
+
+
+def annotate_likely_immortalized(maf, sample_col="DepMap_ID", genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt',
+                                                                                                           'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5):
+    maf['is_likely_immortalization'] = False
+    leng = len(set(maf[sample_col]))
+    tocheck = []
+    for k, v in Counter(maf[genome_change_col].tolist()).items():
+        if v > max_recurrence*leng:
+            tocheck.append(k)
+    for val in list(set(tocheck)-set([np.nan])):
+        if np.nan_to_num(maf[maf[genome_change_col] == val][TCGAlocs], 0).max() < min_tcga_true_cancer:
+            maf.loc[maf[maf[genome_change_col]
+                                    == val].index, 'is_likely_immortalization'] = True
+    return maf
+
+
+def addAnnotation(maf, NCBI_Build='37', Strand="+"):
+    maf['NCBI_Build'] = NCBI_Build
+    maf['Strand'] = Strand
+    return maf
+
+
+def mafToMat(maf, boolify=False, freqcol='tumor_f', samplesCol="DepMap_ID", mutNameCol="Hugo_Symbol"):
+    maf = maf.sort_values(by=mutNameCol)
+    samples = set(maf[samplesCol])
+    mut = pd.DataFrame(data=np.zeros((len(set(maf[mutNameCol])), 1)), columns=[
+                       'fake'], index=set(maf[mutNameCol])).astype(float)
+    for i, val in enumerate(samples):
+        h.showcount(i, len(samples))
+        mut = mut.join(maf[maf[samplesCol] == val].drop_duplicates(
+            mutNameCol).set_index(mutNameCol)[freqcol].rename(val))
+    return mut.fillna(0).astype(bool if boolify else float).drop(columns=['fake'])
+
+def mergeAnnotations(firstmaf, additionalmaf, Genome_Change="Genome_Change", Start_position= "Start_position", Chromosome="Chromosome", samplename="DepMap_ID", useSecondForConflict=True, dry_run=False):
+    mutations = firstmaf.copy()
+    mutations['ind'] = mutations[samplename]+"_"+mutations[Genome_Change]
+    mutations['loci'] = mutations[samplename]+ "_"+ mutations[Chromosome]+ "_" + mutations[Start_position].astype(str)
+    additionalmaf['ind'] = additionalmaf[samplename]+"_"+additionalmaf[Genome_Change]
+    additionalmaf['loci'] = additionalmaf[samplename]+ "_"+ additionalmaf[Chromosome]+ "_" + additionalmaf[Start_position].astype(str)
+    inboth  = set(additionalmaf['loci']) & set(mutations['loci'])
+    notineach = set(additionalmaf['ind']) ^ set(mutations['ind'])
+    submut = mutations[mutations.loci.isin(inboth) & mutations.ind.isin(notineach)]
+    subother = additionalmaf[additionalmaf.loci.isin(inboth) & additionalmaf.ind.isin(notineach)]
+    issues = None
+    if len(submut) > 0:
+        print("found " +str(len(submut)) + " nonmatching mutations")
+        issues= np.vstack([submut.sort_values(by='loci')[Genome_Change].values, subother.sort_values(by='loci')[Genome_Change].values]).T
+        if dry_run:
+            print(issues)
+    if not dry_run:
+        if issues is not None:
+            if useSecondForConflict:
+                mutations = mutations[~mutations.ind.isin(set(submut.ind))]
+            else: 
+                additionalmaf = additionalmaf[~additionalmaf.ind.isin(set(subother.ind))]
+            mutations = mutations.append(additionalmaf[additionalmaf['ind'].isin(set(additionalmaf['ind']) - set(mutations['ind']))])
+        return mutations.drop(columns=['loci','ind']).sort_values(by =[samplename,Chromosome,Start_position])
+    else:
+        return issues
+
+
+def renameFusionGene(a):
+    return [str(i.split('^')).replace(', ',' (').replace("'","")[1:-1]+')' for i in a]
+
+
+def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, red_herring=['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM', 'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']):
+  fusions = fusions.copy()
+  # remove recurrent
+  fusions = fusions[fusions['CCLE_count']<len(set(fusions['DepMap_ID']))*maxfreq]
+  # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes, 
+  fusions = fusions[~(fusions['LeftBreakpoint'].str.contains('chrM') & fusions['RightBreakpoint'].str.contains('chrM'))]
+  fusions = fusions[~fusions['FusionName'].str.contains('^HLA\\-')]
+  # (2) Remove red herring fusions
+  fusions = fusions[~fusions['annots'].str.contains('|'.join(red_herring), case=False)]
+  # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and 
+  # LargeAnchorSupport="No" and minFAF<0.02), or
+  fusions = fusions[~((fusions['SpliceType'] == "INCL_NON_REF_SPLICE") & (fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < 0.1))]
+  # STAR-Fusion suggests using 0.1, but after looking at the 
+  # translocation data, this looks like it might be too aggressive
+  fusions = fusions[fusions['FFPM']>minffpm]
+  return fusions
