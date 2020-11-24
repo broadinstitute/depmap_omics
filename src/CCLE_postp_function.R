@@ -485,7 +485,7 @@ generateGeneLevelMatrixFromSegments <- function(gene_mapping, segments) {
   # to segments to get gene level calls
   # This is very fast (~2 minutes)
   allENTREZG_as_granges <- gene_mapping %>% 
-    dplyr::select(start=CHRLOC, end=CHRLOCEND, seqnames=CHR, everything()) %>%
+    dplyr::select(start=CHRLOC, end=CHRLOCEND, seqnames=CHR, everything()) %>% #    dplyr::select(start=start, end=end, seqnames=Chromosome, SYMBOL=symbol, EGID=ensembl_id) %>%
     GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
   
   # Just in case we remove the prefix chr to make it work with genemapping table

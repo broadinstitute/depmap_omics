@@ -18,7 +18,7 @@ tc = TaigaClient()
 import os
 import ipdb
 import sys
-print("you need to have installed JKBio in the same folder as ccle_processing")
+print("you need to have JKBio in your path:\ne.g. have installed JKBio in the same folder as ccle_processing")
 from JKBio import TerraFunction as terra
 from JKBio import Helper as h
 from JKBio import GCPFunction as gcp
@@ -49,7 +49,7 @@ extract_defaults = {
     'from_arxspan_id': 'individual_alias',
     'ref_id': 'sample_id',
     'from_patient_id': 'individual_alias',
-    'patient_id': 'patient_id',
+    'patient_id': 'participant_id',
     'ref_date': 'date_sequenc',
     'hs_hs_library_size': 'hs_hs_library_size',
     'hs_het_snp_sensitivity': 'hs_het_snp_sensitivity',
@@ -67,6 +67,17 @@ MINSIZES = {
     'wes': 3000000000,
     'wgs': 50000000000,
 }
+
+# found same patient
+samepatient = [["ACH-000635", "ACH-000717", "ACH-000864", "ACH-001042", "ACH-001547"],
+               ["ACH-002291", "ACH-001672"],
+               ["ACH-001706", "ACH-001707"]]
+
+# duplicate ach-id
+dup = {"ACH-001620": "ACH-001605",
+       "ACH-001621": "ACH-001606"}
+# rename ccle_name TODO: ask becky what to do
+rename = {"PEDS117": "CCLFPEDS0009T"}
 
 
 def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
@@ -124,17 +135,10 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     match = [match]
   if refurl:
     print('refsamples is overrided by a refurl')
-    refsamples = sheets.get(refurl).sheets[0].to_frame()
+    refsamples = sheets.get(refurl).sheets[0].to_frame().set_index("cds_sample_id")
   if refsamples is None:
     print('we do not have refsamples data. Using the wto workspace sample data instead')
     refsamples = wto.get_samples()
-    refids_full = refsamples.index.tolist()
-    # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
-    # filter refids to only include those that include the strings in the 'match' argument
-    refsamples = refsamples[refsamples.index.str.contains('|'.join(match))]
-    for match_substring in match:
-      refsamples.index = [match_substring + i.split(match_substring)[-1] if match_substring in i else i for i in refsamples.index]
-    refsamples.index = [i[:participantslicepos] for i in refsamples.index]
     # TODO: update directly the df if data is not already in here)
     refsamples[extract['ref_arxspan_id']] = [a.split('_')[0] for a in refsamples[extract['ref_arxspan_id']] if type(a) is str]
     if extract['hash'] not in refsamples.columns:
@@ -144,15 +148,22 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
       refsamples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(refsamples[extract['bam']].tolist(), '-al', 200)]
     if extract['release_date'] not in refsamples.columns:
       refsamples[extract["ref_bams"]] = h.getBamDate(refsamples[extract["ref_bams"]])
-    refsamples[extract['release_date']] = list(h.datetoint(refsamples[extract["release_date"]].values, '/'))
-
+  refsamples[extract['release_date']] = list(h.datetoint(refsamples[extract["release_date"]].values, '/'))
+  if stype not in set(refsamples[extract['ref_type']]):
+    h.ask("we have never seen this type: " + stype + ", in the reference, continue?")
+  # do NOT make refids a set; we use the num of occurences as way to determine what number to add to the sample id
+  # filter refids to only include those that include the strings in the 'match' argument
+  refsamples = refsamples[refsamples.index.str.contains('|'.join(match))]
+  for match_substring in match:
+    refsamples.index = [match_substring + i.split(match_substring)[-1] if match_substring in i else i for i in refsamples.index]
+  refsamples.index = [i[:participantslicepos] for i in refsamples.index]
   print("Getting sample infos...")
   if type(sources) is str:
     sources = [sources]
   if type(wmfroms) is str:
     wmfroms = [wmfroms]
   sampless = pd.DataFrame()
-  wrongsamples = pd.DataFrame()
+  wrongsampless = pd.DataFrame()
   for source, wmfrom in zip(sources, wmfroms):
     broken_bams = []
     wmfrom = dm.WorkspaceManager(wmfrom)
@@ -170,84 +181,129 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     # add a broken file path for a new participant
     foundfiles = gcp.lsFiles(samples[extract['bam']])
     broken_bams = set(samples[extract['bam']]) - set(foundfiles)
-    prevlen = len(samples)
-    wrongsamples = pd.concat([wrongsamples, samples[(~samples[extract['bam']].isin(broken_bams)) & (~samples[extract['from_arxspan_id']].str.contains('|'.join(match)))]], sort=False)
-    samples = samples[samples[extract['from_arxspan_id']].str.contains('|'.join(match))]
-    # getting correct arxspan id
-    for match_substring in match:
-      samples[extract['ref_arxspan_id']] = [(match_substring + i.split(match_substring)[-1]) if match_substring in i else i for i in samples[extract['from_arxspan_id']]]
-    samples[extract['ref_arxspan_id']] = [i[:participantslicepos] for i in samples[extract['ref_arxspan_id']]]
-    print('we found and removed ' + str(prevlen - len(samples)) + ' samples which did not match our id names: ' + str(match))
-
-    tolookfor = [val[extract['bam']] for _, val in samples.iterrows() if val[extract['ref_arxspan_id']] in set(refsamples[extract['ref_arxspan_id']])]
-    print("found " + str(len(tolookfor)) + ' likely replicate')
-    sample_hash = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
-    dups_to_remove = [sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['size']])]
-
-    # remove the duplicates from consideration
-    print("Len of samples before removal: " + str(len(samples)))
     print('These ' + str(len(broken_bams)) + ' bam file path do not exist: ' + str(broken_bams))
-    print("Dups from " + str(wmfrom) + " has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
-    # remove the samples with broken bam filepaths from consideration
-    samples = samples[(~samples[extract['bam']].isin(dups_to_remove)) & (~samples[extract['bam']].isin(broken_bams))]
 
-    print("Len of samples after removal: " + str(len(samples)))
-    if len(samples) == 0:
+    wrongsamples = samples[(~samples[extract['bam']].isin(broken_bams)) & (~samples[extract['from_arxspan_id']].str.contains('|'.join(match)))]
+    wrongsamples = extractFromWorkspace(wrongsamples, source, stype, recomputehash, extract)
+    if samples is None:
       continue
-
-    # getting the hash
-    if extract['hash'] not in samples.columns or recomputehash:
-      samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
-          [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
-    if extract['size'] not in samples.columns or recomputesize:
-      samples[extract['size']] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
-    for k, val in samples.iterrows():
-      if val[extract['size']] < MINSIZES[stype]:
-        val = val.drop(k)
-        print("too small size, removing sample: " + str(val[extract["ref_arxspan_id"]]))
-    # getting the date released
-    if extract['release_date'] not in samples.columns or recomputedate:
-      samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
-    samples[extract['release_date']] = list(h.datetoint(samples[extract['release_date']].values))
-
-    # creating unique ids
-    samples[extract['ref_id']] = ['CDS-' + h.randomString(stringLength=6, stype='all', withdigits=True) for _ in range(len(samples))]
-    samples[extract['patient_id']] = ['PT-' + h.randomString(stringLength=8, stype='all', withdigits=True) for _ in range(len(samples))]
-    samples.reset_index(drop=True, inplace=True)
-    # check: currently, below lines prevent forcekeep from working on true duplicates
-    # (aka same size  file). Need to think about how to bring back the forcekeep functionality
-    names = []
-    # need to keep track of whether we're adding more than one new entry for a given sample id
-    for k, val in samples.iterrows():
-      val = val[extract['ref_arxspan_id']]
-      names.append(val)
-      count = len(refsamples[refsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
-      samples.loc[k, extract['version']] = len(refsamples[refsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
-    # if only add some samples
-    if len(addonly) > 0:
-      samples = samples[samples[extract['ref_arxspan_id']].isin(addonly)]
-
-    samples[extract['source']] = source
-    # unknown types
-    if 'sample_type' in samples.columns:
-      if not accept_unknowntypes:
-        samples = samples[samples['sample_type'].isin(['Tumor'])]
+    wrongsampless = pd.concat([wrongsampless, wrongsamples], sort=False)
+    samples = samples[(~samples[extract['bam']].isin(broken_bams)) & (samples[extract['from_arxspan_id']].str.contains('|'.join(match)))]
+    # getting correct arxspan id
+    samples = extractFromWorkspace(samples, source, stype, recomputehash, extract)
+    if samples is None:
+      continue
+    samples = resolveFromWorkspace(samples, refsamples[refsamples[extract['ref_type']] == stype], match, participantslicepos,
+                                   accept_unknowntypes, addonly, extract)
+    if samples is None:
+      continue
     sampless = pd.concat([sampless, samples], sort=False)
 
-  sample_ids = []
   if len(sampless) == 0:
     print("no new data available")
     return sampless, pd.DataFrame()
-  sampless[extract['version']] = sampless[extract['version']].astype(int)
-  if stype not in set(refsamples[extract['ref_type']]):
-    h.ask("we have never seen this type: " + stype + ", in the reference, continue?")
-  sampless[extract['ref_type']] = stype
+
+  sampless = assessAllSamples(sampless, refsamples, stype, rename, extract)
+  # creating pairs
+  pairs = setupPairsFromSamples(sampless, refsamples[refsamples[extract['ref_type']] == stype], extract)
+  # I am trying to remove duplicates from samples without arxspan ids to then look more into them
+  # and see if I have to get data for them or if I should just throw them out
+  toremov = set()
+  for k, val in wrongsampless.iterrows():
+    withsamesize = wrongsampless[wrongsampless[extract["size"]] == val[extract["size"]]]
+    if len(withsamesize) > 1:
+      for l, _ in withsamesize.iloc[1:].iterrows():
+        toremov.add(l)
+    elif len(refsamples[refsamples[extract['size']] == withsamesize[extract["size"]][0]]):
+      toremov.add(l)
+  for i in toremov:
+    wrongsampless = wrongsampless.drop(i)
+  for i, v in wrongsampless.iterrows():
+    if not gcp.exists(v[extract['ref_bam']]):
+      print(v.ccle_name)
+      wrongsampless = wrongsampless.drop(i)
+  return sampless, pairs, wrongsampless
+
+
+def extractFromWorkspace(samples, source, stype, recomputehash=True, extract={}):
+  # getting the hash
+  extract.update(extract_defaults)
+  if extract['hash'] not in samples.columns or recomputehash:
+    samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
+        [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
+  if extract['size'] not in samples.columns or recomputesize:
+    samples[extract['size']] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
+  todrop = []
+  for k, val in samples.iterrows():
+    if val[extract['size']] < MINSIZES[stype]:
+      todrop.append(k)
+      print("too small size, removing sample: " + str(val[extract["from_arxspan_id"]]))
+  samples = samples.drop(index=todrop)
+  # getting the date released
+  if len(samples) == 0:
+    return None
+  if extract['release_date'] not in samples.columns or recomputedate:
+    samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
+  samples[extract['release_date']] = list(h.datetoint(samples[extract['release_date']].values))
+
+  # creating unique ids
+  samples[extract['ref_id']] = ['CDS-' + h.randomString(stringLength=6, stype='all', withdigits=True) for _ in range(len(samples))]
+  samples[extract['patient_id']] = ['PT-' + h.randomString(stringLength=8, stype='all', withdigits=True) for _ in range(len(samples))]
+  samples.reset_index(drop=True, inplace=True)
+  samples[extract['source']] = source
 
   # renamings
-  sampless = sampless.rename(columns={extract['bam']: extract['ref_bam'],
-                                      extract['bai']: extract['ref_bai'],
-                                      extract['name']: extract['ref_name'],
-                                      }).set_index(extract["ref_id"], drop=True)
+  samples = samples.rename(columns={extract['bam']: extract['ref_bam'],
+                                    extract['bai']: extract['ref_bai'],
+                                    extract['name']: extract['ref_name'],
+                                    extract['from_arxspan_id']: extract['ref_arxspan_id']
+                                    }).set_index(extract["ref_id"], drop=True)
+  # subsetting
+  samples = samples[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"],
+                     extract["release_date"], extract["patient_id"], extract["hash"], extract['size']]]
+  return samples
+
+
+def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, accept_unknowntypes=True, addonly=[], extract={}):
+  extract.update(extract_defaults)
+  prevlen = len(samples)
+  for match_substring in match:
+    samples[extract['ref_arxspan_id']] = [(match_substring + i.split(match_substring)[-1]) if match_substring in i else i for i in samples[extract['ref_arxspan_id']]]
+  samples[extract['ref_arxspan_id']] = [i[:participantslicepos] for i in samples[extract['ref_arxspan_id']]]
+  print('we found and removed ' + str(prevlen - len(samples)) + ' samples which did not match our id names: ' + str(match))
+
+  tolookfor = [val[extract['ref_bam']] for _, val in samples.iterrows() if val[extract['ref_arxspan_id']] in set(refsamples[extract['ref_arxspan_id']])]
+  print("found " + str(len(tolookfor)) + ' likely replicate')
+  sample_hash = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
+  dups_to_remove = [sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['size']])]
+
+  # remove the duplicates from consideration
+  print("Len of samples before removal: " + str(len(samples)))
+  print("Dups from this workspace has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
+  # remove the samples with broken bam filepaths from consideration
+  samples = samples[~samples[extract['ref_bam']].isin(dups_to_remove)]
+
+  print("Len of samples after removal: " + str(len(samples)))
+  if len(samples) == 0:
+    return None
+
+  # if only add some samples
+  if len(addonly) > 0:
+    samples = samples[samples[extract['ref_arxspan_id']].isin(addonly)]
+
+  # unknown types
+  if 'sample_type' in samples.columns:
+    if not accept_unknowntypes:
+      samples = samples[samples['sample_type'].isin(['Tumor'])]
+  return samples
+
+
+def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
+  extract.update(extract_defaults)
+  rename.update(dup)
+  sample_ids = []
+  prevlen = len(sampless)
+  sampless[extract['ref_type']] = stype
 
   # checking no duplicate in the buckets
   for k, val in sampless.iterrows():
@@ -259,28 +315,41 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
         for l, v in withsamesize.iloc[1:].iterrows():
           sampless = sampless.drop(l)
   print("we had " + str(prevlen - len(sampless)) + " duplicates in the release buckets")
-
-  # subsetting
-  sampless = sampless[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"],
-                       extract["release_date"], extract["patient_id"], extract["hash"], extract['size'],
-                       extract['version'], extract['ref_type']]]
+  # check: currently, below lines prevent forcekeep from working on true duplicates
+  # (aka same size  file). Need to think about how to bring back the forcekeep functionality
   sampless[extract['ref_arxspan_id']] = [rename[name] if name in rename else name for name in sampless[extract['ref_arxspan_id']]]
-  normals = refsamples[refsamples[extract['primary_disease']] == 'normal']
-  sampless[extract['patient_id']] = [val[extract['patient_id']] if len(refsamples[refsamples[extract['ref_arxspan_id']] == val[extract['ref_arxspan_id']]]) < 1 else refsamples[refsamples[extract['ref_arxspan_id']]
-                                                                                                                                                                                == val[extract['ref_arxspan_id']]][extract['patient_id']].values[0] for i, val in sampless.iterrows()]
-  # creating pairs
+  names = []
+  # need to keep track of whether we're adding more than one new entry for a given sample id
+  subrefsamples = refsamples[refsamples[extract['ref_type']] == stype]
+  for k, val in sampless.iterrows():
+    val = val[extract['ref_arxspan_id']]
+    names.append(val)
+    sampless.loc[k, extract['version']] = len(subrefsamples[subrefsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
+  sampless[extract['version']] = sampless[extract['version']].astype(int)
+
+  sampless[extract['patient_id']] = [val[extract['patient_id']] if
+                                     len(refsamples[refsamples[extract['ref_arxspan_id']] == val[extract['ref_arxspan_id']]]) < 1 else
+                                     refsamples[refsamples[extract['ref_arxspan_id']] == val[extract['ref_arxspan_id']]][extract['patient_id']].values[0]
+                                     for i, val in sampless.iterrows()]
+
+  return sampless
+
+
+def setupPairsFromSamples(sampless, refsamples, extract):
+  extract.update(extract_defaults)
   pairs = pd.DataFrame()
+  normals = refsamples[refsamples[extract['primary_disease']] == 'normal']
   pairs['control_sample'] = ['nan' if len(normals[normals[extract['patient_id']] == val]) < 1 else normals[normals[extract['patient_id']] == val].index.tolist()[0] for val in sampless[extract['patient_id']]]
   pairs['case_sample'] = sampless.index.tolist()
-  pairs['patient_id'] = sampless[extract['patient_id']]
+  pairs['participant_id'] = sampless[extract['patient_id']].tolist()
   pairs['pair_id'] = [val['case_sample'] + '_' + val['control_sample'] for i, val in pairs.iterrows()]
   print('found ' + str(len(pairs['control_sample'].unique()) - 1) + ' matched normals')
-  return sampless, pairs, wrongsamples
+  return pairs.set_index('pair_id')
 
 
 def changeCellLineNameInNewSet(ref, new, datatype, dupdict, toupdate=['stripped_cell_line_name',
                                                                       'arxspan_id', "patient_id",
-                                                                      "gender", "primary_disease",
+                                                                      "sex", "primary_disease",
                                                                       "cellosaurus_id", "age",
                                                                       "primary_site", "subtype",
                                                                       "subsubtype"]):
@@ -309,11 +378,14 @@ def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
     segmentcn: segment dataframe
     thresh: max ok amount
   """
+  failed = []
   segmentcn = renameColumns(segmentcn)
   celllines = set(segmentcn[samplecol].tolist())
   for cellline in celllines:
     if segmentcn[segmentcn[samplecol] == cellline].shape[0] > thresh:
+      failed.append(cellline)
       print(cellline, segmentcn[segmentcn[samplecol] == cellline].shape[0])
+  return failed
 
 
 def checkGeneChangeAccrossAll(genecn, thresh=1.5):
@@ -496,6 +568,7 @@ def AddToVirtual(virtualname, folderfrom, files):
   """
   assert type(files[0]) is tuple
   versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
+  versionb = max([int(i['name']) for i in tc.get_dataset_metadata(virtualname)['versions']])
   keep = [(i['name'], i['underlying_file_id']) for i in tc.get_dataset_metadata(virtualname, version=versionb)
           ['datasetVersion']['datafiles'] if 'underlying_file_id' in i]
 
@@ -685,7 +758,7 @@ def getQC(workspace, only=[], qcname=[], match=""):
     for i in val[qcname]:
       if type(i) is list:
         if match:
-          res[k].extend([e for e in i if mach in e])
+          res[k].extend([e for e in i if match in e])
         else:
           res[k].extend(i)
       else:
@@ -696,3 +769,192 @@ def getQC(workspace, only=[], qcname=[], match=""):
 def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
   refsamples.loc[samples, releaseName] = '1'
   return refsamples
+
+
+def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Start"):
+  """
+  """
+  prevchr = ''
+  prevend = 0
+  count = 0
+  l = []
+  segments = segtocp.copy()
+  le = len(segments)
+  for k, val in segments.iterrows():
+    h.showcount(count, le)
+    count += 1
+    if val[Chromosome] != prevchr:  # we changed chromosome
+            # we extend the previous segment (last of the prev chrom) to.. way enough
+      if len(l) > 0:
+        l[-1][2] = 1000000000
+      # we extend the first segment to 0
+      l.append([val[Chromosome], 0, val[End]])
+
+    else:
+      if val[Start] > prevend + 1:  # we have a gap in the same chrom
+        sizeofgap = val[Start] - prevend
+        # we add to the previous one half of the gap
+        l[-1][2] += int(sizeofgap / 2) if sizeofgap % 2 == 0 else int(sizeofgap / 2) + 1
+        # the rest to the other
+        l.append([val[Chromosome], val[Start] - int(sizeofgap / 2), val[End]])
+      elif val[Start] < prevend:  # this should never happen
+        raise ValueError("start comes after end")
+      else:
+        l.append([val[Chromosome], val[Start], val[End]])
+    prevchr = val[Chromosome]
+    prevend = val[End]
+  l[-1][2] = 1000000000  # we extend the last one
+  segments[[Chromosome, Start, End]] = l
+  return segments
+
+
+def toGeneMatrix(segments, gene_mapping, style='weighted'):
+  """
+
+  Args:
+  ----
+    style: one of "weighted","mean","closest"
+  """
+  samples = list(set(segments.DepMap_ID))
+  data = np.zeros((len(samples), len(gene_mapping)))
+  for i, sample in enumerate(samples):
+    segs = segments[segments.DepMap_ID == sample][['Chromosome', 'Start', 'End', "Segment_Mean"]].values
+    j = 0
+    h.showcount(i, len(samples))
+    for k, gene in enumerate(gene_mapping[['Chromosome', 'start', 'end']].values):
+      if gene[0] == segs[j][0] and gene[1] < segs[j][2]:
+        # some genes are within other genes, we need to go back in the list of segment in that case
+        while gene[1] < segs[j][1]:
+          j -= 1
+          #print("decrease gene",gene)
+        # we are entirely within the segment
+        c = 1
+        if gene[2] <= segs[j][2]:
+          data[i, k] = segs[j][3]
+        else:
+          coef = (segs[j][2] - gene[1]) / (gene[2] - gene[1])
+          # print('coef',coef)
+          val = segs[j][3] * coef if style == "weighted" else segs[j][3]
+          end = segs[j][2]
+          # until the end of a segments goes beyon the end of the gene (say if we have X segments within the gene)
+          while end < gene[2]:
+            # pdb.set_trace()
+            j += 1
+            c += 1
+            nextend = segs[j][2] if segs[j][2] < gene[2] else gene[2]
+            ncoef = (nextend - end) / (gene[2] - gene[1])
+            # print('multi',gene, ncoef)
+            if style == "closest":
+              if ncoef > coef:
+                val = segs[j][3]
+              else:
+                ncoef = coef
+            else:
+              val += segs[j][3] * ncoef if style == "weighted" else segs[j][3]
+            end = segs[j][2]
+            coef = ncoef
+          data[i, k] = val if style == "weighted" else val / c
+      else:
+        # pdb.set_trace()
+        #print("went beyong",gene)
+        j += 1
+  return pd.DataFrame(data=data, index=samples, columns=[i['symbol'] + ' (' + str(i['ensembl_id']) + ')' for _, i in gene_mapping.iterrows()])
+
+
+def filterAllelicFraction(maf, loc=['CGA_WES_AC'], sep=':', frac=0.1):
+    muts = np.zeros((len(maf), 2))
+    for val in loc:
+        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
+            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
+    muts = muts[:, 0]/(muts[:, 0]+muts[:, 1])
+    return maf[muts >= frac]
+
+
+def filterCoverage(maf, loc=['CGA_WES_AC'], sep=':', cov=4, altloc=0):
+    muts = np.zeros((len(maf), 2))
+    for val in loc:
+        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
+            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
+    return maf[muts[:, altloc] >= cov]
+
+
+def annotate_likely_immortalized(maf, sample_col="DepMap_ID", genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt',
+                                                                                                           'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5):
+    maf['is_likely_immortalization'] = False
+    leng = len(set(maf[sample_col]))
+    tocheck = []
+    for k, v in Counter(maf[genome_change_col].tolist()).items():
+        if v > max_recurrence*leng:
+            tocheck.append(k)
+    for val in list(set(tocheck)-set([np.nan])):
+        if np.nan_to_num(maf[maf[genome_change_col] == val][TCGAlocs], 0).max() < min_tcga_true_cancer:
+            maf.loc[maf[maf[genome_change_col]
+                                    == val].index, 'is_likely_immortalization'] = True
+    return maf
+
+
+def addAnnotation(maf, NCBI_Build='37', Strand="+"):
+    maf['NCBI_Build'] = NCBI_Build
+    maf['Strand'] = Strand
+    return maf
+
+
+def mafToMat(maf, boolify=False, freqcol='tumor_f', samplesCol="DepMap_ID", mutNameCol="Hugo_Symbol"):
+    maf = maf.sort_values(by=mutNameCol)
+    samples = set(maf[samplesCol])
+    mut = pd.DataFrame(data=np.zeros((len(set(maf[mutNameCol])), 1)), columns=[
+                       'fake'], index=set(maf[mutNameCol])).astype(float)
+    for i, val in enumerate(samples):
+        h.showcount(i, len(samples))
+        mut = mut.join(maf[maf[samplesCol] == val].drop_duplicates(
+            mutNameCol).set_index(mutNameCol)[freqcol].rename(val))
+    return mut.fillna(0).astype(bool if boolify else float).drop(columns=['fake'])
+
+def mergeAnnotations(firstmaf, additionalmaf, Genome_Change="Genome_Change", Start_position= "Start_position", Chromosome="Chromosome", samplename="DepMap_ID", useSecondForConflict=True, dry_run=False):
+    mutations = firstmaf.copy()
+    mutations['ind'] = mutations[samplename]+"_"+mutations[Genome_Change]
+    mutations['loci'] = mutations[samplename]+ "_"+ mutations[Chromosome]+ "_" + mutations[Start_position].astype(str)
+    additionalmaf['ind'] = additionalmaf[samplename]+"_"+additionalmaf[Genome_Change]
+    additionalmaf['loci'] = additionalmaf[samplename]+ "_"+ additionalmaf[Chromosome]+ "_" + additionalmaf[Start_position].astype(str)
+    inboth  = set(additionalmaf['loci']) & set(mutations['loci'])
+    notineach = set(additionalmaf['ind']) ^ set(mutations['ind'])
+    submut = mutations[mutations.loci.isin(inboth) & mutations.ind.isin(notineach)]
+    subother = additionalmaf[additionalmaf.loci.isin(inboth) & additionalmaf.ind.isin(notineach)]
+    issues = None
+    if len(submut) > 0:
+        print("found " +str(len(submut)) + " nonmatching mutations")
+        issues= np.vstack([submut.sort_values(by='loci')[Genome_Change].values, subother.sort_values(by='loci')[Genome_Change].values]).T
+        if dry_run:
+            print(issues)
+    if not dry_run:
+        if issues is not None:
+            if useSecondForConflict:
+                mutations = mutations[~mutations.ind.isin(set(submut.ind))]
+            else: 
+                additionalmaf = additionalmaf[~additionalmaf.ind.isin(set(subother.ind))]
+            mutations = mutations.append(additionalmaf[additionalmaf['ind'].isin(set(additionalmaf['ind']) - set(mutations['ind']))])
+        return mutations.drop(columns=['loci','ind']).sort_values(by =[samplename,Chromosome,Start_position])
+    else:
+        return issues
+
+
+def renameFusionGene(a):
+    return [str(i.split('^')).replace(', ',' (').replace("'","")[1:-1]+')' for i in a]
+
+
+def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, red_herring=['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM', 'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']):
+  fusions = fusions.copy()
+  # remove recurrent
+  fusions = fusions[fusions['CCLE_count']<len(set(fusions['DepMap_ID']))*maxfreq]
+  # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes, 
+  fusions = fusions[~(fusions['LeftBreakpoint'].str.contains('chrM') & fusions['RightBreakpoint'].str.contains('chrM'))]
+  fusions = fusions[~fusions['FusionName'].str.contains('^HLA\\-')]
+  # (2) Remove red herring fusions
+  fusions = fusions[~fusions['annots'].str.contains('|'.join(red_herring), case=False)]
+  # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and 
+  # LargeAnchorSupport="No" and minFAF<0.02), or
+  fusions = fusions[~((fusions['SpliceType'] == "INCL_NON_REF_SPLICE") & (fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < 0.1))]
+  # STAR-Fusion suggests using 0.1, but after looking at the 
+  # translocation data, this looks like it might be too aggressive
+  fusions = fusions[fusions['FFPM']>minffpm]
+  return fusions
