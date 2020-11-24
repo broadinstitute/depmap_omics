@@ -2,6 +2,7 @@ args<-commandArgs(TRUE)
 
 countfile <- args[1];
 gmtfile <- args[2];
+method <- args[3]
 
 library(GSEABase)
 library(GSVA)
@@ -11,5 +12,5 @@ colnames(mat) <- colnames(counts)
 gsc_obj <- GSEABase::getGmt(gmtfile,
 collectionType = GSEABase::BroadCollection(),
 geneIdType = GSEABase::EntrezIdentifier())
-gsea <- GSVA::gsva(mat, gsc_obj, method = 'ssgsea')
-write.table(gsea, file = "temp/res_ssGSEA.csv", sep = ',', quote = F)
+gsea <- GSVA::gsva(mat, gsc_obj, method = method)
+write.table(gsea, file = "/tmp/res_JKBIO_ssGSEA.csv", sep = ',', quote = F)
