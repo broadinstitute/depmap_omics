@@ -1,0 +1,13 @@
+,name,namespace,rootEntityType,methodName,methodVersion,methodNamespace,methodUri,sourceRepo
+0,Aggregate_CN_seg_files_allelic,broad-firecloud-ccle,sample_set,Aggregate_CN_seg_files,2,gkugener,agora://gkugener/Aggregate_CN_seg_files/2,agora
+1,CNV_sample_XY_agilent,broad-firecloud-ccle,pair,CNV_Somatic_Pair_Workflow,9,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/9,agora
+2,CNV_sample_XY_ice,broad-firecloud-ccle,sample,CNV_Somatic_Pair_Workflow,9,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/9,agora
+3,CNV_sample_XX,gatk,sample,CNV_Somatic_Pair_Workflow,9,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/9,agora
+4,Realign_WES_GATK4,gatk,sample,PreProcessingForVariantDiscovery_GATK4,8,gatk,agora://gatk/PreProcessingForVariantDiscovery_GATK4/8,agora
+5,SANGER_PON_CNV_sample_XX,gatk,sample,CNV_Somatic_Pair_Workflow,9,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/9,agora
+6,Aggregate_CN_seg_files,gkugener,sample_set,Aggregate_CN_seg_files,2,gkugener,agora://gkugener/Aggregate_CN_seg_files/2,agora
+7,Generate_uBAM_File_List,gkugener,sample,ArrayOfFilesToTxt,1,gkugener,agora://gkugener/ArrayOfFilesToTxt/1,agora
+8,Sanger_PON_Aggregate_CN_seg_files,gkugener,sample_set,Aggregate_CN_seg_files,2,gkugener,agora://gkugener/Aggregate_CN_seg_files/2,agora
+9,Manta_SomaticSV,GP-TAG,sample,Manta_SomaticSV,9,GP-TAG,agora://GP-TAG/Manta_SomaticSV/9,agora
+10,aggregate_vcfs,jkobject,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora
+11,BamToUnmappedRGBams_MC,vdauwera,sample,BamToUnmappedRGBams,4,vdauwera,agora://vdauwera/BamToUnmappedRGBams/4,agora
