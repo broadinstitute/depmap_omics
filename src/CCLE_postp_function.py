@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Jérémie Kalfon
 # for BroadInsitute
 # in 2019
@@ -8,6 +9,7 @@
 # HELPER FUNC  ######################################
 #
 #
+from scipy.stats import pearsonr
 import pdb
 import pandas as pd
 import numpy as np
@@ -19,11 +21,15 @@ import os
 import ipdb
 import sys
 print("you need to have JKBio in your path:\ne.g. have installed JKBio in the same folder as ccle_processing")
-from JKBio import TerraFunction as terra
-from JKBio import Helper as h
-from JKBio import GCPFunction as gcp
+from JKBio import terra
+from JKBio import sequencing as seq
+from JKBio.utils import helper as h
+from JKBio.google import gcp
 from collections import Counter
 from gsheets import Sheets
+import seaborn as sns
+from matplotlib import pyplot as plt
+
 sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
 
 
@@ -46,11 +52,14 @@ extract_defaults = {
     'ref_name': 'stripped_cell_line_name',
     'source': 'source',
     'size': 'size',
+    "prev_size":"legacy_size",
     'from_arxspan_id': 'individual_alias',
     'ref_id': 'sample_id',
+    'PDO_id':'PDO',
+    "update_time":"update_time",
     'from_patient_id': 'individual_alias',
     'patient_id': 'participant_id',
-    'ref_date': 'date_sequenc',
+    'ref_date': 'date_sequenced',
     'hs_hs_library_size': 'hs_hs_library_size',
     'hs_het_snp_sensitivity': 'hs_het_snp_sensitivity',
     'hs_mean_bait_coverage': 'hs_mean_bait_coverage',
@@ -80,7 +89,7 @@ dup = {"ACH-001620": "ACH-001605",
 rename = {"PEDS117": "CCLFPEDS0009T"}
 
 
-def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
+def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="",
                                   forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={},
                                   extract_defaults=extract_defaults, refsamples=None,
                                   participantslicepos=10, accept_unknowntypes=False,
@@ -147,7 +156,7 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     if extract['size'] not in refsamples.columns:
       refsamples['size'] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(refsamples[extract['bam']].tolist(), '-al', 200)]
     if extract['release_date'] not in refsamples.columns:
-      refsamples[extract["ref_bams"]] = h.getBamDate(refsamples[extract["ref_bams"]])
+      refsamples[extract["ref_bams"]] = seq.getBamDate(refsamples[extract["ref_bams"]])
   refsamples[extract['release_date']] = list(h.datetoint(refsamples[extract["release_date"]].values, '/'))
   if stype not in set(refsamples[extract['ref_type']]):
     h.ask("we have never seen this type: " + stype + ", in the reference, continue?")
@@ -184,15 +193,18 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
     print('These ' + str(len(broken_bams)) + ' bam file path do not exist: ' + str(broken_bams))
 
     wrongsamples = samples[(~samples[extract['bam']].isin(broken_bams)) & (~samples[extract['from_arxspan_id']].str.contains('|'.join(match)))]
-    wrongsamples = extractFromWorkspace(wrongsamples, source, stype, recomputehash, extract)
-    if samples is None:
-      continue
-    wrongsampless = pd.concat([wrongsampless, wrongsamples], sort=False)
+    wrongsamples = extractFromWorkspace(wrongsamples, stype, recomputehash, extract)
+    if wrongsamples is not None:
+      wrongsamples = mapSamples(wrongsamples, source, extract)
+      wrongsampless = pd.concat([wrongsampless, wrongsamples], sort=False)
     samples = samples[(~samples[extract['bam']].isin(broken_bams)) & (samples[extract['from_arxspan_id']].str.contains('|'.join(match)))]
     # getting correct arxspan id
-    samples = extractFromWorkspace(samples, source, stype, recomputehash, extract)
     if samples is None:
       continue
+    samples = extractFromWorkspace(samples, stype, recomputehash, extract)
+    if samples is None:
+      continue
+    samples = mapSamples(samples, source, extract)
     samples = resolveFromWorkspace(samples, refsamples[refsamples[extract['ref_type']] == stype], match, participantslicepos,
                                    accept_unknowntypes, addonly, extract)
     if samples is None:
@@ -211,28 +223,69 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, refurl="",
   toremov = set()
   for k, val in wrongsampless.iterrows():
     withsamesize = wrongsampless[wrongsampless[extract["size"]] == val[extract["size"]]]
+    if (val[extract["size"]] in sampless[extract["size"]].tolist()) or (val[extract["size"]] in refsamples[extract["size"]]):
+      toremov.add(k)
     if len(withsamesize) > 1:
       for l, _ in withsamesize.iloc[1:].iterrows():
         toremov.add(l)
-    elif len(refsamples[refsamples[extract['size']] == withsamesize[extract["size"]][0]]):
-      toremov.add(l)
+    #elif len(refsamples[refsamples[extract['size']] == withsamesize[extract["size"]][0]]):
+      #toremov.add(k)
   for i in toremov:
     wrongsampless = wrongsampless.drop(i)
   for i, v in wrongsampless.iterrows():
     if not gcp.exists(v[extract['ref_bam']]):
       print(v.ccle_name)
       wrongsampless = wrongsampless.drop(i)
+  a = len(sampless)
+  sampless = deleteClosest(sampless,refsamples, extract['size'], extract['size'], extract['ref_arxspan_id'])
+  sampless = deleteClosest(sampless,refsamples, extract['size'], extract['prev_size'], extract['ref_arxspan_id'])
+  print('removed: '+str(a-len(sampless))+" samples from size alone (too similar to a replicate)")
+  wrongsampless = wrongsampless[~wrongsampless[extract['size']].isin(set(refsamples[extract['size']]))]
+  wrongsampless = wrongsampless[~wrongsampless[extract['size']].isin(set(refsamples[extract['prev_size']]))]
+  wrongsampless = deleteClosest(
+      wrongsampless, refsamples, extract['size'], extract['size'], extract['ref_arxspan_id'])
+  wrongsampless = deleteClosest(
+      wrongsampless, refsamples, extract['size'], extract['prev_size'], extract['ref_arxspan_id'])
+  #removing duplicate PDOs
+  a = len(sampless)
+  wrongsampless = wrongsampless[~wrongsampless[extract['PDO_id']].isin(set(refsamples[extract['PDO_id']]))]
+  sampless = sampless[~sampless[extract['PDO_id']].isin(
+      set(refsamples[extract['PDO_id']]))]
+  print('removed: '+str(a-len(sampless)) +
+        " samples with duplicat PDO ids ")
+  # removing anything too old
+  a = len(sampless)
+  wrongsampless = wrongsampless[wrongsampless[extract['update_time']] > maxage]
+  sampless = sampless[sampless[extract['update_time']]>maxage]
+  print('removed: '+str(a-len(sampless))+" samples that have not changed since last time (likely duplicate having been removed)")
   return sampless, pairs, wrongsampless
 
 
-def extractFromWorkspace(samples, source, stype, recomputehash=True, extract={}):
+def deleteClosest(sampless, refsamples, size='size', ref_size='size', arxspid='arxspan_id'):
+  """
+  for a list of samples and a tracker, will find the index of the sample with the closest size
+
+  if this sample is the same cell line, it will judge it to be a duplicate and remove it
+  """
+  sizes = refsamples[ref_size].tolist()
+  for k,v in sampless.iterrows():
+    if type(v[size]) is int:
+      val = refsamples.iloc[sizes.index(h.closest(sizes, v[size]))]
+      if val[arxspid] == v[arxspid]:
+        sampless = sampless.drop(v.name)
+  return sampless
+
+
+def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True, recomputehash=True, extract={}):
   # getting the hash
   extract.update(extract_defaults)
   if extract['hash'] not in samples.columns or recomputehash:
-    samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(
-        [i for i in samples[extract["bam"]] if type(i) is str and str(i) != 'NA'], "-L", 200)]
+    samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(samples[extract["bam"]].tolist(), "-L", 200)]
+  lis = gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)
   if extract['size'] not in samples.columns or recomputesize:
-    samples[extract['size']] = [gcp.extractSize(i)[1] for i in gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)]
+    samples[extract['size']] = [gcp.extractSize(i)[1] for i in lis]
+  if extract['update_time'] not in samples.columns or recomputeTime:
+    samples[extract['update_time']] = [gcp.extractTime(i) for i in lis]
   todrop = []
   for k, val in samples.iterrows():
     if val[extract['size']] < MINSIZES[stype]:
@@ -243,9 +296,12 @@ def extractFromWorkspace(samples, source, stype, recomputehash=True, extract={})
   if len(samples) == 0:
     return None
   if extract['release_date'] not in samples.columns or recomputedate:
-    samples[extract["release_date"]] = h.getBamDate(samples[extract["bam"]])
+    samples[extract["release_date"]] = seq.getBamDate(samples[extract["bam"]])
   samples[extract['release_date']] = list(h.datetoint(samples[extract['release_date']].values))
+  return samples
 
+
+def mapSamples(samples, source, extract={}):
   # creating unique ids
   samples[extract['ref_id']] = ['CDS-' + h.randomString(stringLength=6, stype='all', withdigits=True) for _ in range(len(samples))]
   samples[extract['patient_id']] = ['PT-' + h.randomString(stringLength=8, stype='all', withdigits=True) for _ in range(len(samples))]
@@ -259,10 +315,11 @@ def extractFromWorkspace(samples, source, stype, recomputehash=True, extract={})
                                     extract['from_arxspan_id']: extract['ref_arxspan_id']
                                     }).set_index(extract["ref_id"], drop=True)
   # subsetting
-  samples = samples[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"],
-                     extract["release_date"], extract["patient_id"], extract["hash"], extract['size']]]
+  samples = samples[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"], extract["release_date"], extract["patient_id"], extract["hash"], extract['size'], extract['PDO_id'], extract['update_time']]]
   return samples
 
+
+# -
 
 def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, accept_unknowntypes=True, addonly=[], extract={}):
   extract.update(extract_defaults)
@@ -276,7 +333,7 @@ def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, acc
   print("found " + str(len(tolookfor)) + ' likely replicate')
   sample_hash = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
   dups_to_remove = [sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['size']])]
-
+  dups_to_remove.extend([sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['prev_size']])])
   # remove the duplicates from consideration
   print("Len of samples before removal: " + str(len(samples)))
   print("Dups from this workspace has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
@@ -347,20 +404,58 @@ def setupPairsFromSamples(sampless, refsamples, extract):
   return pairs.set_index('pair_id')
 
 
-def changeCellLineNameInNewSet(ref, new, datatype, dupdict, toupdate=['stripped_cell_line_name',
+def changeCellLineNameInNew(ref, new, datatype, dupdict, toupdate=['stripped_cell_line_name',
                                                                       'arxspan_id', "patient_id",
                                                                       "sex", "primary_disease",
                                                                       "cellosaurus_id", "age",
                                                                       "primary_site", "subtype",
                                                                       "subsubtype"]):
   """
-  dupdict = dict(tochange,newname)
-  datatype = str for a ref with many datatype (to get the right version number)
+  Args:
+  -----
+    new: change the cell line name in this dataframe
+    dupdict: dict(tochange,newname)
+    datatype: str for a ref with many datatype (to get the right version number)
+
+  Returns:
+  --------
+    the updated dataframe
   """
   for k, v in dupdict.items():
     new.loc[new[new.arxspan_id == k].index, toupdate] = ref[ref.arxspan_id == v][toupdate].values[0]
     new.loc[new[new.arxspan_id == v].index, 'version'] = len(ref[(ref.arxspan_id == v) & (ref.datatype == datatype)]) + 1
   return new
+
+
+def changeCellLineName(ref, datatype, dupdict, toupdate=["stripped_cell_line_name",
+                                                         "participant_id",
+                                                         "cellosaurus_id",
+                                                         "sex",
+                                                         "arxspan_id",
+                                                         "matched_normal",
+                                                         "age",
+                                                         "primary_site",
+                                                         "primary_disease",
+                                                         "subtype",
+                                                         "subsubtype",
+                                                         "origin"]):
+  """
+  Args:
+  -----
+    dupdict: dict(tochange,newname)
+    datatype: str for a ref with many datatype (to get the right version number)
+
+  Returns:
+  --------
+    the updated dataframe
+  """
+  for k, v in dupdict.items():
+    try:
+      ref.loc[k, toupdate] = ref[ref.arxspan_id == v][toupdate].values[0]
+      ref.loc[k, 'version'] = len(ref[(ref.arxspan_id == v) & (ref.datatype == datatype)]) + 1
+    except IndexError:
+      raise IndexError(str(v)+" not found in tracker")
+  return ref
 
   #####################
   # VALIDATION
@@ -381,14 +476,18 @@ def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
   failed = []
   segmentcn = renameColumns(segmentcn)
   celllines = set(segmentcn[samplecol].tolist())
+  amounts = []
   for cellline in celllines:
-    if segmentcn[segmentcn[samplecol] == cellline].shape[0] > thresh:
+    val = segmentcn[segmentcn[samplecol] == cellline].shape[0]
+    amounts.append(val)
+    if val > thresh:
       failed.append(cellline)
-      print(cellline, segmentcn[segmentcn[samplecol] == cellline].shape[0])
+      print(cellline, val)
+  sns.kdeplot(amounts)
   return failed
 
 
-def checkGeneChangeAccrossAll(genecn, thresh=1.5):
+def checkGeneChangeAccrossAll(genecn, thresh=0.2):
   """
   used to find poor quality genes in CN data
 
@@ -399,8 +498,7 @@ def checkGeneChangeAccrossAll(genecn, thresh=1.5):
     genecn: gene cn data frame
     thresh: threshold in logfold change accross all of them
   """
-  pos = genecn.where((genecn > thresh) & (genecn < 1 / thresh), 0).all(0)
-  return pos.loc[pos == True].index.values
+  return genecn.columns[genecn.var()<thresh].tolist()
 
 
 def renameColumns(df):
@@ -771,7 +869,7 @@ def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
   return refsamples
 
 
-def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Start"):
+def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Start", cyto=None):
   """
   """
   prevchr = ''
@@ -784,12 +882,11 @@ def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Sta
     h.showcount(count, le)
     count += 1
     if val[Chromosome] != prevchr:  # we changed chromosome
-            # we extend the previous segment (last of the prev chrom) to.. way enough
+      # we extend the previous segment (last of the prev chrom) to.. way enough
       if len(l) > 0:
-        l[-1][2] = 1000000000
+        l[-1][2] = 1000000000 if cyto is None else cyto[cyto['chrom']==prevchr]['end'].values[-1]
       # we extend the first segment to 0
       l.append([val[Chromosome], 0, val[End]])
-
     else:
       if val[Start] > prevend + 1:  # we have a gap in the same chrom
         sizeofgap = val[Start] - prevend
@@ -803,13 +900,15 @@ def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Sta
         l.append([val[Chromosome], val[Start], val[End]])
     prevchr = val[Chromosome]
     prevend = val[End]
-  l[-1][2] = 1000000000  # we extend the last one
+  # we extend the last one
+  l[-1][2] = 1000000000  if cyto is None else cyto[cyto['chrom']==prevchr]['end'].values[-1]
   segments[[Chromosome, Start, End]] = l
   return segments
 
 
-def toGeneMatrix(segments, gene_mapping, style='weighted'):
+def toGeneMatrix(segments, gene_mapping, style='weighted', missingchrom=['Y']):
   """
+  makes gene matrix from segment level copy number
 
   Args:
   ----
@@ -819,10 +918,16 @@ def toGeneMatrix(segments, gene_mapping, style='weighted'):
   data = np.zeros((len(samples), len(gene_mapping)))
   for i, sample in enumerate(samples):
     segs = segments[segments.DepMap_ID == sample][['Chromosome', 'Start', 'End', "Segment_Mean"]].values
+    hasmissing= set(missingchrom) - set(segs[:,0])
     j = 0
     h.showcount(i, len(samples))
     for k, gene in enumerate(gene_mapping[['Chromosome', 'start', 'end']].values):
-      if gene[0] == segs[j][0] and gene[1] < segs[j][2]:
+        if gene[0] in hasmissing:
+          data[i, k] = np.nan
+          continue
+        while gene[0] != segs[j][0] or gene[1] >= segs[j][2]:
+          #print("went beyong",gene, segs[j])
+          j += 1
         # some genes are within other genes, we need to go back in the list of segment in that case
         while gene[1] < segs[j][1]:
           j -= 1
@@ -832,6 +937,7 @@ def toGeneMatrix(segments, gene_mapping, style='weighted'):
         if gene[2] <= segs[j][2]:
           data[i, k] = segs[j][3]
         else:
+          # how much of the gene is covered by the segment
           coef = (segs[j][2] - gene[1]) / (gene[2] - gene[1])
           # print('coef',coef)
           val = segs[j][3] * coef if style == "weighted" else segs[j][3]
@@ -842,22 +948,20 @@ def toGeneMatrix(segments, gene_mapping, style='weighted'):
             j += 1
             c += 1
             nextend = segs[j][2] if segs[j][2] < gene[2] else gene[2]
+            # here, end (of prevsegment) is the next segment's start
             ncoef = (nextend - end) / (gene[2] - gene[1])
             # print('multi',gene, ncoef)
             if style == "closest":
               if ncoef > coef:
                 val = segs[j][3]
               else:
+                # we switch it back (see line 894)
                 ncoef = coef
             else:
               val += segs[j][3] * ncoef if style == "weighted" else segs[j][3]
             end = segs[j][2]
             coef = ncoef
           data[i, k] = val if style == "weighted" else val / c
-      else:
-        # pdb.set_trace()
-        #print("went beyong",gene)
-        j += 1
   return pd.DataFrame(data=data, index=samples, columns=[i['symbol'] + ' (' + str(i['ensembl_id']) + ')' for _, i in gene_mapping.iterrows()])
 
 
@@ -879,7 +983,7 @@ def filterCoverage(maf, loc=['CGA_WES_AC'], sep=':', cov=4, altloc=0):
 
 
 def annotate_likely_immortalized(maf, sample_col="DepMap_ID", genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt',
-                                                                                                           'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5):
+                            'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5):
     maf['is_likely_immortalization'] = False
     leng = len(set(maf[sample_col]))
     tocheck = []
@@ -958,3 +1062,290 @@ def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, red_herring=['GTEx_recurre
   # translocation data, this looks like it might be too aggressive
   fusions = fusions[fusions['FFPM']>minffpm]
   return fusions
+
+
+def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_id", "datatype", "size", 
+                                                   "ccle_name", "stripped_cell_line_name", "patient_id", "cellosaurus_id",
+"bam_public_sra_path", "internal_bam_filepath", "internal_bai_filepath", 
+"parent_cell_line", "sex", "matched_normal", "age", "primary_site", 
+"primary_disease", "subtype", "subsubtype", "origin", "mediatype", 
+"condition", "sequencing_type", "baits", "source", "legacy_bam_filepath", "legacy_bai_filepath"], rename={'participant_id':'patient_id'}, deleteUnmatched=False):
+  """
+  will used the current sample tracker to update sample annotation in the workspace
+  
+  it can remove samples that are not in the tracker.
+  """
+  wm = dm.WorkspaceManager(workspaceID).disable_hound()
+  sam = wm.get_samples()
+  track = tracker[tracker.index.isin(sam.index)].rename(columns=rename)
+  miss = set(columns) - set(sam.columns)
+  print('found these columns to be missing in workspace: '+str(miss))
+  if len(track)==0:
+      raise ValueError('wrong tracker or index non matching')
+  unmatched = set(sam.index) - (set(tracker.index) | set(['nan']))
+  print("found these to be unmatched: "+str(unmatched))
+  if deleteUnmatched and len(unmatched)>0:
+      terra.removeSamples(workspaceID, unmatched)
+  wm.update_sample_attributes(track[columns])
+
+
+def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
+  """
+  looks at the current sample tracker and updates the pairs in Terra
+  
+  It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
+  """
+
+def cleanVersions(tracker, samplecol='arxspan_id', dryrun=False, datatypecol='datatype', versioncol="version"):
+  """
+  cleans the versions of a sample tracker: 
+  
+  checks that we get 1,2,3 instead of 2,4,5 when samples are renamed or removed
+  """
+  tracker = tracker.copy()
+  tracker['samval']=tracker[samplecol]+tracker[datatypecol]
+  for v in set(tracker['samval']):
+      sams = tracker[tracker['samval']==v]
+      vs = sams[versioncol].tolist()
+      if max(vs)==len(vs):
+          continue
+      print("found issue")
+      if dryrun:
+        continue
+      vs.sort()
+      rn = {}
+      for i,v in enumerate(vs):
+          rn.update({v:i+1})
+      for k, val in sams.iterrows():
+          tracker.loc[k, versioncol] = rn[val[versioncol]]
+  tracker = tracker.drop(columns='samval')
+  return tracker
+
+
+def setRightName(tracker, name='stripped_cell_line_name', signs=['-','_','.',' ']):
+  """
+  cell line name needd to be all uppercase and not contain special signs
+  """
+  new = []
+  for val in tracker[name]:
+      for s in signs:
+          val=val.replace(s,'')
+      new.append(val.upper())
+  tracker[name]=new
+  return tracker
+
+
+def findLikelyDup(tracker, signs=['-', '_', '.', ' '], name='stripped_cell_line_name', arxspid='arxspan_id', looksub=True):
+    """
+    find cell lines that are likely to be duplicates
+
+    will return a list of likly duplicate names as tuples (rh13, RH-13), a list of associated arxspan ids as tuples as well,
+    and a list of arxspan ids that have multiple names associated
+    """
+    names = set(tracker[name])
+    simi = []
+    arxsp = []
+    issues = {}
+    for i, name1 in enumerate(names):
+        h.showcount(i, len(names))
+        n1 = name1
+        for s in signs:
+            name1 = name1.replace(s, '')
+        name1 = name1.upper()
+        for name2 in names-set([n1]):
+            n2 = name2
+            for s in signs:
+                name2 = name2.replace(s, '')
+            name2 = name2.upper()
+            if name1 == name2:
+                if (looksub and (name1 in name2 or name2 in name1) and abs(len(name1)-len(name2)) < 2) or not looksub:
+                    if (n1, n2) not in simi and (n2, n1) not in simi:
+                        simi.append((n1, n2))
+                        arxsp.append(
+                            (tracker[tracker[name] == n1][arxspid][0], tracker[tracker[name] == n2][arxspid][0]))
+    for val in set(tracker[name]):
+        v = set(tracker[tracker[name] == val][arxspid])
+        if len(v) > 1:
+            issues.update({val: v})
+    return simi, arxsp, issues
+
+
+def merge(tracker, new, old, arxspid, cols):
+  """
+  given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
+  """
+  #loc = tracker[tracker[arxspid]==old].index
+    
+
+def resolveIssues(tracker, issus, arxspid, cols):
+  """
+  given a dict of names: [arxp ids] will try to find back the right name for the right
+  arxspan id by looking at their rfequncy of occurance along the tracker
+
+  if we have rh12: [ACH-00001,ACH-0002]
+  and rh12 is associated 1 time with ach-00002 and 3 with ach-00001
+  and rh13 is assocated 2 time with ach-00002, then it associates:
+  ach-00001 : rh12
+  ach-00002 : rh13
+  """
+  #for val in issus:
+      
+        
+def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={},
+stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id", depmappvlink="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"):
+    # find back from cell line name in ccle ref samples
+    noarxspan.arxspan_id = [ccle_refsamples[ccle_refsamples[stripped_cell_line_name] == i].arxspan_id[0] if i in ccle_refsamples[stripped_cell_line_name].tolist() else 0 for i in noarxspan[arxspan_id]]
+    a = [ccle_refsamples[ccle_refsamples[stripped_cell_line_name] == i][arxspan_id][0]
+         if i in ccle_refsamples[stripped_cell_line_name].tolist() else 0 for i in noarxspan[stripped_cell_line_name]]
+    noarxspan[arxspan_id] = [i if i != 0 else a[e]
+                             for e, i in enumerate(noarxspan.arxspan_id)]
+
+    # get depmap pv
+    depmap_pv = sheets.get(depmappvlink).sheets[0].to_frame(header=2)
+    depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
+
+    # find back from depmapPV
+    signs = ['-', '_', '.', ' ']
+    for k, val in noarxspan[noarxspan[arxspan_id] == 0].iterrows():
+        val = val[stripped_cell_line_name].upper()
+        for s in signs:
+            val = val.replace(s, '')
+        a = depmap_pv[depmap_pv['CCLE_name'].str.contains(
+            val) | depmap_pv['Stripped Cell Line Name'].str.contains(val) | depmap_pv['Aliases'].str.contains(val)]
+        if len(a) > 0:
+            noarxspan.loc[k, arxspan_id] = a['DepMap_ID'].values[0]
+    noarxspan[arxspan_id] = noarxspan[arxspan_id].astype(str)
+    new_noarxspan= resolveFromWorkspace(noarxspan[noarxspan[arxspan_id].str.contains('ACH-')], refsamples=ccle_refsamples[ccle_refsamples['datatype'] == datatype], match=[
+                                     'ACH', 'CDS'], participantslicepos=10, accept_unknowntypes=True, extract=extract)
+    return pd.concat([new_noarxspan, noarxspan[~noarxspan[arxspan_id].str.contains('ACH-')]])
+
+
+def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', participant_id='participant_id', toupdate={"sex":[],
+"primary_disease":[],
+"cellosaurus_id":[],
+"age":[],
+"primary_site":[],
+"subtype":[],
+"subsubtype":[],
+"origin":[],
+"parent_cell_line":[],
+"matched_normal":[],
+"comments":[],
+"mediatype":[],
+"condition":[],
+'stripped_cell_line_name':[],
+"participant_id":[]}):
+    # If I have a previous samples I can update unknown data directly
+    index = []
+    notfound = []
+    for k, val in samples.iterrows():
+        dat = ccle_refsamples[ccle_refsamples[arxspan_id] == val[arxspan_id]]
+        if len(dat) > 0:
+            index.append(k)
+            for k, v in toupdate.items():
+                toupdate[k].append(dat[k].tolist()[0])
+        else:
+            notfound.append(k)
+    # doing so..
+    for k, v in toupdate.items():
+        samples.loc[index, k] = v
+    len(samples.loc[notfound][participant_id]
+        ), samples.loc[notfound][participant_id].tolist()
+    return samples, notfound
+
+
+def plotCNchanges(newgenecn, prevgenecn, newsegments, prevsegments, depmap_id="DepMap_ID", source="Source", prevname='prev', newname="new"):
+  """
+  makes a Javad Plot on the gene copy number dataset
+  """
+  grouped = pd.concat(
+      [prevgenecn.stack(), newgenecn.stack()], axis=1)
+  grouped.columns = [prevname, newname]
+
+  grouped.reset_index(inplace=True)
+  grouped.rename(
+    columns={'level_0': depmap_id, 'level_1': 'gene'}, inplace=True)
+  sources = pd.merge(prevsegments[[depmap_id, source]].drop_duplicates(), 
+          newsegments[[depmap_id, source]].drop_duplicates(), 
+          on=depmap_id, suffixes=['_'+prevname, '_'+newname])
+
+  sources['source_change'] = sources.apply(lambda x: '{:s} -> {:s}'.format(x[source+'_'+prevname], x[source+'_'+newname]), axis=1)
+  sources['source_has_changed'] = (sources[source+'_'+prevname] != sources[source+"_"+newname])
+  grouped = pd.merge(grouped, sources, on=depmap_id)
+  plt.figure(figsize=(20,10))
+  sns.scatterplot(data=grouped.sample(1000000, random_state=0), x=prevname, y=newname, 
+                hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
+
+
+def findMissAnnotatedReplicates(repprofiles, goodprofile, names, exactMatch=True):
+  """
+  from a new rnaseq profile on replicate level and a good rnaseq profile on sample level
+  
+  will if some replicates are missanotated based on correlation.
+  
+  Returns:
+  -------
+      notindataset: list[str] replicates not in the good dataset
+      missannotated: dict(str: tuple(str,str)).  dict containing replicates that are missanotated: for each, gives a tuple (old annotation, right annotation)
+  """
+  notindataset = []
+  missannotated = {}
+  unmatched = {}
+  if exactMatch:
+    res = findClosestMatching(repprofiles, goodprofile)
+    for val in repprofiles.index.tolist():
+        if val not in res:
+            notindataset.append(val)
+        elif val not in names:
+            unmatched.update({val: res[val]})
+        elif res[val] != names[val]:
+            missannotated.update({val: (names[val],res[val])})
+    return notindataset, missannotated, unmatched
+  else:
+    corr, closest = findClosestMatching(repprofiles, goodprofile, returncorr=True)
+    for k, v in corr.iterrows():
+      print(k, v.mean())
+      try:
+          if v[names[k]] < 0.75:
+              print(v[[closest[k], names[k]]])
+      except:
+          a = np.argsort(v.values)[-5:]
+          if v.values[a[-1]] > 0.8:
+              print(names[k],
+              corr.columns[a], v.values[a])
+
+def findClosestMatching(repprofiles, goodprofile, closest=False, returncorr=False):
+  """
+  will find what replicate matches best what known profile
+  """
+  match = {}
+  a = set(repprofiles.columns) & set(goodprofile.columns)
+  ind = goodprofile.index.tolist()
+  corr = []
+  for i, (k,v) in enumerate(repprofiles[a].iterrows()):
+      h.showcount(i, len(repprofiles))
+      res = np.array([np.corrcoef(v, w)[0,1] for _,w in goodprofile[a].iterrows()])
+      if max(res)==1 or closest:
+          match[k] = ind[np.argmax(res)]
+      if returncorr:
+        corr.append(res)
+  if returncorr:
+    corr = pd.DataFrame(data=corr,index=repprofiles.index.tolist(),columns=goodprofile.index.tolist())
+    return corr, match
+  else:
+    return match
+
+
+def rnaseqcorrelation(cn, rna, ax=None, name=None):
+  """
+  correlates the copy number to the rnaseq in ccle and shows the plot
+  """
+  a = set(cn.columns) & set(rna.columns)
+  ind = set(cn.index) & set(rna.index)
+  re = rna.loc[ind]
+  ce = cn.loc[ind]
+  print(len(ind),len(a))
+  corr = np.array([pearsonr(ce[j], re[j])[0] for j in a])
+  #corr = pd.DataFrame(data=corr, columns=[name if name is not None else "data"])
+  print(np.mean(corr), len(corr))
+  sns.kdeplot(corr, ax=ax) if ax is not None else sns.kdeplot(corr)
