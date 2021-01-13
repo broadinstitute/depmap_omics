@@ -10,7 +10,7 @@ def tcget(name=None, version=None, file=None):
         arxspan_ids = set(tc_df['DepMap_ID'])
     else:
         arxspan_ids = set(tc_df.index)
-    assert all([x.startswith('ACH-') for x in all_21Q1_gene_cn])    
+    assert all([x.startswith('ACH-') for x in arxspan_ids])    
     return arxspan_ids
 
 def get_all_arxspans(name='internal-20q3-00d0', version=9, 
