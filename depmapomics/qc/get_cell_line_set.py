@@ -25,7 +25,3 @@ def get_all_arxspans(name='internal-20q3-00d0', version=9, verbose=False,
         arxspan_ids = arxspan_ids | tcget(name=name, version=version, file=file)
         
     return arxspan_ids
-
-
-
-
