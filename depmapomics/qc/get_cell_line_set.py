@@ -13,7 +13,7 @@ def tcget(name=None, version=None, file=None):
     assert all([x.startswith('ACH-') for x in arxspan_ids])    
     return arxspan_ids
 
-def get_all_arxspans(name='internal-20q3-00d0', version=9, verbose=False,
+def get_all_arxspans(name=None, version=None, verbose=False,
         files=['CCLE_expression', 'CCLE_expression_full', 'CCLE_fusions',
                'CCLE_fusions_unfiltered', 'CCLE_gene_cn', 'CCLE_mutations',
                'CCLE_RNAseq_reads', 'CCLE_RNAseq_transcripts', 'CCLE_segment_cn']):
