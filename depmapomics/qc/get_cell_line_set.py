@@ -33,3 +33,32 @@ def get_arxspans_across_portals(taiga_dict, files=DEFAULT_FILENAMES, verbose=Fal
         print('fetching {}/{}'.format(*val))
         arxpans[key] = get_all_arxspans(name=val[0], version=val[1], verbose=verbose, files=files)
     return arxpans
+
+def get_release_diffs(arxspans, lines_to_release, quarters, portals = ['public', 'internal', 'dmc', 'ibm']):
+    arxspan_diff = {}
+    arxspan_revdiff = {}
+    for portal in portals:
+        arxspans_expected = (arxspans[quarters[0]][portal] | set(lines_to_release[portal].dropna()))
+        arxspan_diff[portal] = arxspans[quarters[1]][portal] - arxspans_expected
+        arxspan_revdiff[portal] = arxspans_expected - arxspans[quarters[1]][portal]
+        
+    def printx(x):
+        def replace_empty(v):
+            if v == set():
+                return {'None'}
+            else:
+                return v
+        
+        if type(x)==dict:
+            text='\n'.join(['\t{}: {}'.format(k, ', '.join(replace_empty(v))) for k,v in x.items()])
+        elif type(x)==set:
+            text = ', '.join(replace_empty(x))
+        print(text)
+    print('extra arxspans per portal...')
+    printx(arxspan_diff)
+    print('\nmissing arxspans per portal...')
+    printx(arxspan_revdiff)
+    print('\nextra arxspans across portals...')
+    printx(set().union(*arxspan_diff.values()))
+    print('\nmissing arxspans across portals...')
+    printx(set().union(*arxspan_revdiff.values()))
