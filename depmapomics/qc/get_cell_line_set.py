@@ -22,7 +22,7 @@ def get_all_arxspans(name=None, version=None, verbose=False, files=DEFAULT_FILEN
     arxspan_ids = set()
     for file in files:
         if verbose:
-            print('Fetching {}'.format(file))
+            print('\tfetching {}'.format(file))
         arxspan_ids = arxspan_ids | tcget(name=name, version=version, file=file)
         
     return arxspan_ids
