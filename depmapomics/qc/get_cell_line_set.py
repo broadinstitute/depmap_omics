@@ -65,8 +65,31 @@ def get_release_diffs(arxspan_dict, lines_to_release, quarters = ['20q3', '21q1'
             
             release_diff[portal][file] = arxspan_dict[quarters[1]][portal][file] - expected_lines
             release_diff_reverse[portal][file] = expected_lines - arxspan_dict[quarters[1]][portal][file]
-    return release_diff, release_diff_reverse     
+    return release_diff, release_diff_reverse  
 
+def pool_arxspans_per_portal(arxspan_dict):
+    arxspan_dict_per_portal = {}
+    for quarter, qurter_dict in arxspan_dict.items():
+        portal_arxspans_dict = {}
+        for portal, portal_dict in qurter_dict.items():
+            portal_arxspans = set()
+            for file in portal_dict.keys():
+                portal_arxspans = portal_arxspans | arxspan_dict[quarter][portal][file]
+            portal_arxspans_dict[portal] = portal_arxspans
+        arxspan_dict_per_portal[quarter] = portal_arxspans_dict
+    return arxspan_dict_per_portal
+
+
+def get_release_diff_pooled(arxspan_dict, lines_to_release, quarters):
+    arxspans = pool_arxspans_per_portal(arxspan_dict)
+    arxspan_diff = {}
+    arxspan_revdiff = {}
+    for portal in arxspans[quarters[0]].keys():
+        arxspans_expected = (arxspans[quarters[0]][portal] | set(lines_to_release[portal].dropna()))
+        arxspan_diff[portal] = arxspans[quarters[1]][portal] - arxspans_expected
+        arxspan_revdiff[portal] = arxspans_expected - arxspans[quarters[1]][portal]
+    return arxspan_diff, arxspan_revdiff
+    
 # def get_all_arxspans(taiga_dict_expanded, verbose=False):
 #     arxspan_dict = applyfunc_to_json(taiga_dict_expanded, lambda x: tcget(name=x[0], version=x[1], file=x[2]), verbose=True)
 #     return arxspan_dict
@@ -84,22 +107,29 @@ def pretty_print(release_diffs):
     release_diffs_text = applyfunc_to_json(release_diffs, lambda x: _convert_to_text(x))
     for portal, portal_dict in release_diffs_text.items():
         text += portal + ':\n'
-        for file in portal_dict.keys():
-            text+= '\t{}: {}\n'.format(file, release_diffs_text[portal][file])
-        text+= '\n'
+        if type(portal_dict) == dict:
+            for file in portal_dict.keys():
+                text+= '\t{}: {}\n'.format(file, release_diffs_text[portal][file])
+            text+= '\n'
+        else:
+            text+= '\t{}\n'.format(release_diffs_text[portal])
     return(text)
 
 
 def pretty_print_diff(arxspan_dict, lines_to_release, quarters = ['20q3', '21q1'], savefile=False):
     release_diffs, release_diffs_reverse = get_release_diffs(arxspan_dict, lines_to_release, quarters = quarters)
-
+    release_diffs_pooled, release_diffs_reverse_pooled = get_release_diff_pooled(arxspan_dict, lines_to_release, quarters)
     text= 'lines added ({} compared to {})\n'.format(*quarters[::-1])
     text+= pretty_print(release_diffs)
-
-    text+= '\n'+'_'*20 + '\n'
-    text+= 'lines dropped ({} compared to {})\n'.format(*quarters[::-1])
-    text += pretty_print(release_diffs_reverse)
+    text += '\n\tlines pooled across portals\n'
+    text += pretty_print(release_diffs_reverse_pooled)
     
+    text += '\n'+'_'*20 + '\n'
+
+    text += 'lines dropped ({} compared to {})\n'.format(*quarters[::-1])
+    text += pretty_print(release_diffs_reverse)
+    text += '\n\tlines pooled across portals\n'
+    text += pretty_print(release_diffs_reverse_pooled)
     if savefile:
         with open('diff_{}_vs_{}.txt'.format(*quarters[::-1]), 'w') as f:
             f.write(text)
