@@ -15,10 +15,11 @@ def plot_gene_cn_comparison(number_of_dots = 10000,
     tc = TaigaClient()
     CCLE_gene_cn_1 = tc.get(name=release1['name'], version=release1['version'], file=filenames1['gene_cn'])
     CCLE_gene_cn_2 = tc.get(name=release2['name'], version=release2['version'], file=filenames2['gene_cn'])
-    tmp1 = CCLE_gene_cn_1.stack()
-    tmp2 = CCLE_gene_cn_2.stack()  
-    CCLE_gene_cn_12 = pd.concat([tmp1, tmp2], axis=1)
-    del CCLE_gene_cn_1, CCLE_gene_cn_2, tmp1, tmp2
+    CCLE_gene_cn_1 = CCLE_gene_cn_1.stack()
+    CCLE_gene_cn_2 = CCLE_gene_cn_2.stack()
+    CCLE_gene_cn_12 = pd.concat([CCLE_gene_cn_1, CCLE_gene_cn_2], axis=1)
+    del CCLE_gene_cn_1, CCLE_gene_cn_2
+
     cols = ['{:s}:{:d}'.format(release1['name'], release1['version']),
             '{:s}:{:d}'.format(release2['name'], release2['version'])]
     CCLE_gene_cn_12.columns = cols
