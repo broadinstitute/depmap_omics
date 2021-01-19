@@ -29,7 +29,6 @@ files_21q1=['CCLE_expression', 'CCLE_expression_full', 'CCLE_fusions',
 taiga_dict_expanded = propagate_taiga_dict_with_filenames({x: taiga_dict[x] for x in ['20q3', '20q4']})
 taiga_dict_expanded['21q1'] = propagate_taiga_dict_with_filenames(taiga_dict['21q1'], files)
 
-%%time
 arxspan_dict = get_all_arxspans(taiga_dict_expanded, verbose=True)
 
 import pickle

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from taigapy import TaigaClient
 import pandas as pd
 
-def plot_gene_cn_comparison(number_of_dots = 10000,
+def plot_gene_cn_comparison(number_of_dots = 10000, savefig = False,
                             release1 = {'name': 'internal-20q3-00d0', 'version': 9},
                             release2 = {'name': 'internal-21q1-4fc4', 'version': 7},
                             names = None,
@@ -41,4 +41,9 @@ def plot_gene_cn_comparison(number_of_dots = 10000,
     sns.scatterplot(data=CCLE_gene_cn_12.sample(number_of_dots, random_state=0), x=cols[0], y=cols[1], 
                     hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
     
+    if savefig:
+        filename = '{}-vs-{}'.format(cols[1], cols[0])
+        print('saving {}'.format(filename))
+        plt.savefig(filename, bbox_inches='tight')
+
     return CCLE_gene_cn_12
