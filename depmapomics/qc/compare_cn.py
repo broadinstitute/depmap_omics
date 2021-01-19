@@ -42,7 +42,7 @@ def plot_gene_cn_comparison(number_of_dots = 10000, savefig = False,
                     hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
     
     if savefig:
-        filename = '{}-vs-{}'.format(cols[1], cols[0])
+        filename = ('{}-vs-{}.png'.format(cols[1], cols[0])).replace('/', '.')
         print('saving {}'.format(filename))
         plt.savefig(filename, bbox_inches='tight')
 
