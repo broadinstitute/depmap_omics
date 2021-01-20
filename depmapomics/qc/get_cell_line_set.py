@@ -90,9 +90,9 @@ def get_release_diff_pooled(arxspan_dict, lines_to_release, quarters):
         arxspan_revdiff[portal] = arxspans_expected - arxspans[quarters[1]][portal]
     return arxspan_diff, arxspan_revdiff
     
-# def get_all_arxspans(taiga_dict_expanded, verbose=False):
-#     arxspan_dict = applyfunc_to_json(taiga_dict_expanded, lambda x: tcget(name=x[0], version=x[1], file=x[2]), verbose=True)
-#     return arxspan_dict
+def get_all_arxspans(taiga_dict_expanded, verbose=False):
+    arxspan_dict = applyfunc_to_json(taiga_dict_expanded, lambda x: tcget(name=x[0], version=x[1], file=x[2]), verbose=True)
+    return arxspan_dict
 
 def propagate_taiga_dict_with_filenames(taiga_dict, files=DEFAULT_FILENAMES):
     return applyfunc_to_json(taiga_dict, lambda x:{file:x+[file] for file in files})
