@@ -15,19 +15,13 @@ taiga_dict = {'20q3': {'public': ['public-20q3-3d35', 33],
             '20q4': {'public': ['public-20q4-a4b3', 46],
                     'dmc': ['dmc-20q4-fcf4', 38],
                     'internal': ['internal-20q4-2540', 45]},
-            '21q1': {'public': ['public-21q1-4b39', 6],
-                    'dmc': ['dmc-21q1-0e11', 7],
-                    'ibm': ['ibm-21q1-abd9', 7],
-                    'internal': ['internal-21q1-4fc4', 7]}
+            '21q1': {'public': ['public-21q1-4b39', 9],
+                    'dmc': ['dmc-21q1-0e11', 10],
+                    'ibm': ['ibm-21q1-abd9', 12],
+                    'internal': ['internal-21q1-4fc4', 13]}
             }
 
-files_21q1=['CCLE_expression', 'CCLE_expression_full', 'CCLE_fusions',
-            'CCLE_unfiltered_fusions', 'CCLE_gene_cn', 'CCLE_mutations',
-            'CCLE_RNAseq_reads', 'CCLE_RNAseq_transcripts', 'CCLE_segment_cn']
-
-taiga_dict_expanded = gcl.propagate_taiga_dict_with_filenames({x: taiga_dict[x] for x in ['20q3', '20q4']})
-taiga_dict_expanded['21q1'] = gcl.propagate_taiga_dict_with_filenames(taiga_dict['21q1'], files=files_21q1)
-
+taiga_dict_expanded = gcl.propagate_taiga_dict_with_filenames(taiga_dict)
 arxspan_dict = gcl.get_all_arxspans(taiga_dict_expanded, verbose=True)
 
 import pickle
