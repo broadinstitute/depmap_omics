@@ -10,10 +10,10 @@ def get_expected_lines(sheets_url):
     release.columns = release.columns.str.lower()
     return release
 
-taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 13],
-                    'dmc': ['dmc-21q1-0e11', 14],
-                    'ibm': ['ibm-21q1-abd9', 16],
-                    'internal': ['internal-21q1-4fc4', 17]},
+taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 14],
+                    'dmc': ['dmc-21q1-0e11', 15],
+                    'ibm': ['ibm-21q1-abd9', 17],
+                    'internal': ['internal-21q1-4fc4', 18]},
             #  '20q3': {'public': ['public-20q3-3d35', 33],
             #         'dmc': ['dmc-20q3-deprecated-never-released--5f55', 18],
             #         'internal': ['internal-20q3-00d0', 9]},
