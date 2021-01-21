@@ -39,20 +39,20 @@ def applyfunc_to_json(json_dict, func,  verbose=False):
     else:
         return func(json_dict)
 
-def rename_dict(json_dict, verbose=False):
-    arxspans = {}
-    if type(json_dict)==dict:
-        output_dict = {}
-        for k, v in json_dict.items():
-            if verbose:
-                print(k)
-            if k == 'CCLE_unfiltered_fusions':
-                output_dict['CCLE_fusions_unfiltered'] = rename_dict(v, verbose=verbose) 
-            else:
-                output_dict[k] = rename_dict(v, verbose=verbose) 
-        return output_dict
-    else:
-        return json_dict    
+# def rename_dict(json_dict, verbose=False):
+#     arxspans = {}
+#     if type(json_dict)==dict:
+#         output_dict = {}
+#         for k, v in json_dict.items():
+#             if verbose:
+#                 print(k)
+#             if k == 'CCLE_unfiltered_fusions':
+#                 output_dict['CCLE_fusions_unfiltered'] = rename_dict(v, verbose=verbose) 
+#             else:
+#                 output_dict[k] = rename_dict(v, verbose=verbose) 
+#         return output_dict
+#     else:
+#         return json_dict    
 
 def get_release_diffs(arxspan_dict, lines_to_release, quarters = ['20q3', '21q1']):
     release_diff = {}
@@ -122,7 +122,7 @@ def pretty_print_diff(arxspan_dict, lines_to_release, quarters = ['20q3', '21q1'
     text= 'lines added ({} compared to {})\n'.format(*quarters[::-1])
     text+= pretty_print(release_diffs)
     text += '\n\tlines pooled across portals\n'
-    text += pretty_print(release_diffs_reverse_pooled)
+    text += pretty_print(release_diffs_pooled)
     
     text += '\n'+'_'*20 + '\n'
 
