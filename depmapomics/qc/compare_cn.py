@@ -20,8 +20,8 @@ def plot_gene_cn_comparison(number_of_dots = 10000, savefig = False,
     CCLE_gene_cn_12 = pd.concat([CCLE_gene_cn_1, CCLE_gene_cn_2], axis=1)
     del CCLE_gene_cn_1, CCLE_gene_cn_2
 
-    cols = ['{:s}:{:d}'.format(release1['name'], release1['version']),
-            '{:s}:{:d}'.format(release2['name'], release2['version'])]
+    cols = ['{:s}.{:d}'.format(release1['name'], release1['version']),
+            '{:s}.{:d}'.format(release2['name'], release2['version'])]
     CCLE_gene_cn_12.columns = cols
     CCLE_gene_cn_12.reset_index(inplace=True)
     CCLE_gene_cn_12.rename(columns={'level_0': 'DepMap_ID', 'level_1': 'gene'}, inplace=True)    
@@ -42,7 +42,7 @@ def plot_gene_cn_comparison(number_of_dots = 10000, savefig = False,
                     hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
     
     if savefig:
-        filename = ('{}-vs-{}.png'.format(cols[1], cols[0])).replace('/', '.')
+        filename = ('{}-vs-{}.png'.format(cols[1], cols[0]))#.replace('/', '.')
         print('saving {}'.format(filename))
         plt.savefig(filename, bbox_inches='tight')
 
