@@ -3,17 +3,12 @@ from depmapomics.qc import get_cell_line_set as gcl
 import pickle
 import pandas as pd
 
-def get_expected_lines(sheets_url):
-    sheets_obj = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
-    sheets = sheets_obj.get(sheets_url).sheets
-    release = sheets[0].to_frame(header=0, index_col=None)    
-    release.columns = release.columns.str.lower()
-    return release
+lines_to_release_21q1_sheet = 'https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=0'
 
-taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 14],
-                    'dmc': ['dmc-21q1-0e11', 15],
-                    'ibm': ['ibm-21q1-abd9', 17],
-                    'internal': ['internal-21q1-4fc4', 18]},
+taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 15],
+                    'dmc': ['dmc-21q1-0e11', 16],
+                    'ibm': ['ibm-21q1-abd9', 18],
+                    'internal': ['internal-21q1-4fc4', 19]},
             #  '20q3': {'public': ['public-20q3-3d35', 33],
             #         'dmc': ['dmc-20q3-deprecated-never-released--5f55', 18],
             #         'internal': ['internal-20q3-00d0', 9]},
@@ -22,7 +17,7 @@ taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 14],
              'internal': ['internal-20q4-2540', 45]}
                     }
 
-recompute = True
+recompute = False
 if recompute:
     taiga_dict_expanded = gcl.propagate_taiga_dict_with_filenames(taiga_dict)
     arxspan_dict = gcl.get_all_arxspans(taiga_dict_expanded, verbose=True)
@@ -32,11 +27,31 @@ if recompute:
 else:
     arxspan_dict = pickle.load(open('arxspan_dict.pkl', 'br'))
 
-lines_to_release_21q1_sheet = 'https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=0'
-lines_to_release_21q1 = get_expected_lines(lines_to_release_21q1_sheet)
-text = gcl.pretty_print_diff(arxspan_dict, lines_to_release_21q1, quarters = ['20q4', '21q1'], savefile=True)
+lines_to_remove = {'ACH-001189', 'ACH-002303', 'ACH-002315', 'ACH-002341', 'ACH-002359'}
+# lines_to_remove = set()
+lines_to_release_21q1 = gcl.get_expected_lines(lines_to_release_21q1_sheet)
+text = gcl.pretty_print_diff(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'], savefile=True)
+gcl.plot_diff_heatmap(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'])
 
-# lines_to_release_20q4_sheet = 'https://docs.google.com/spreadsheets/d/14WRGIsdNwJydWHeaofkeH9XvC6_0N5v7zd75-gV10n4/edit#gid=0'
-# lines_to_release_20q4 = get_expected_lines(lines_to_release_20q4_sheet)
-# lines_to_release_20q4_21q1 = pd.concat([lines_to_release_21q1, lines_to_release_20q4])
-# text = gcl.pretty_print_diff(arxspan_dict, lines_to_release_20q4_21q1, quarters = ['20q3', '21q1'], savefile=True)
+
+# lines_to_drop_dict = {
+#     'ACH-002217': "no bam found: Sanger",
+#     'ACH-002335': "no bam found: Chordoma",
+#     'ACH-002378': "no bam found: Sanger",
+#     'ACH-001956': "failed qc wes (chordoma)", 
+#     'ACH-001955': "failed qc wes (chordoma)", 
+#     'ACH-001957': "failed qc wes (chordoma)",
+#     'ACH-001011': 'wrong new (should only have HC)',
+#     'ACH-001108': 'wrong new (should only have HC)',
+#     'ACH-001187': 'wrong new (should only have HC)',
+#     'ACH-001189': 'wrong (from 20Q4)',
+#     'ACH-002303': 'wrong (from 20Q4)',
+#     'ACH-002315': 'wrong (from 20Q4)',
+#     'ACH-001675': 'wrong (from 20Q4)',
+#     'ACH-003000': 'wrong engineered', 
+#     'ACH-002875': 'wrong engineered', 
+#     'ACH-002874': 'wrong engineered'
+# }
+
+
+
