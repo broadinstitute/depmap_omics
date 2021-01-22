@@ -126,6 +126,27 @@ def get_release_diff_boolmatrices(arxspan_dict, lines_to_release, lines_to_remov
     release_diffs_reverse_mat = convert_diff_to_boolmatrix(release_diffs_reverse)
     return release_diffs_mat, release_diffs_reverse_mat
 
+def check_if_fusion_has_expression_released(arxspan_dict, quarter='21q1'):
+    for portal in ['public', 'dmc', 'ibm', 'internal']:
+        assert (arxspan_dict[quarter][portal]['CCLE_fusions_unfiltered'] - arxspan_dict[quarter][portal]['CCLE_expression']) == set()
+        assert (arxspan_dict[quarter][portal]['CCLE_fusions'] - arxspan_dict[quarter][portal]['CCLE_expression']) == set()
+    print('all fusion files have accompanying CCLE_expression')
+
+
+def check_acciddental_release(arxspan_dict, quarter = '21q1',
+    portal_comparisons = [['dmc', 'ibm'], ['public', 'dmc'], 
+                        ['internal', 'ibm'], ['internal', 'dmc']]):
+    for portal_pairs in portal_comparisons:
+        nodiff=True
+        for file in DEFAULT_FILENAMES:
+            diff = arxspan_dict[quarter][portal_pairs[0]][file] - arxspan_dict[quarter][portal_pairs[1]][file]
+            if diff!=set():
+                nodiff=False
+                print('lines in {} but not {} for {}: {}'.format(*portal_pairs, file, diff))
+        if nodiff:
+            print('all lines in {} are also in {}'.format(*portal_pairs))
+        print('\n')
+
 
 def plot_diff_heatmap(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = ['20q4', '21q1'], width=15, height_scale=2):
     release_diffs_mat, release_diffs_reverse_mat = get_release_diff_boolmatrices(arxspan_dict, lines_to_release, lines_to_remove=lines_to_remove, quarters = quarters)
