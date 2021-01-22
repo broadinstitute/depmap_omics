@@ -30,6 +30,11 @@ from gsheets import Sheets
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+#####################
+# Const Variables
+#####################
+
+
 sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
 
 
@@ -89,12 +94,15 @@ dup = {"ACH-001620": "ACH-001605",
 rename = {"PEDS117": "CCLFPEDS0009T"}
 
 
+#####################
+# Loading Functions
+#####################
+
 def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="",
-                                  forcekeep=[], addonly=[], match='ACH', other_to_add=[], extract={},
+                                  addonly=[], match='ACH', extract={},
                                   extract_defaults=extract_defaults, refsamples=None,
                                   participantslicepos=10, accept_unknowntypes=False,
-                                  rename=dict(), recomputehash=False,
-                                  recomputesize=False, recomputedate=False):
+                                  rename=dict(), recomputehash=False):
   """
   As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
 
@@ -105,18 +113,20 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="
 
   Args:
   -----
-    check: will need to change slicepos based on match;
-    may have to take diff approach (regex?) for CCLF samples since CCLF sample IDs are not of consistent length
-    wto: dalmatian.workspacemanager the workspace where you want to create the tsvs
-    wfrom1: dalmatian.workspacemanager the workspace where the Samples to add are stored
-    source1: the corresponding source name
-    Can add as much as one wants
-    dry_run: whether to perform a dry run without actually uploading anything to Terra
-    forcekeep: list of sample id that you want to keep even if already in the previous workspace (will
-    cause an overwrite) NOTE: currently this functionality is broken due to the implementation of checking for duplicates
+    wto: str the workspace where you want to create the tsvs
+    wfroms: list[str] the workspaces where the Samples to add are stored
+    sources: list[str] the corresponding source names
+    stype: 
+    maxage: 
+    refurl: 
+    match: 
+    refsamples: 
+    participantslicepos: 
+    accept_unknowntypes: 
+    rename: 
+    recomputehash: 
     addonly: list of sample id that you only want to add
     match: list of substring(s) that has to be matched against the id of the samples to add them
-    other_to_add:
     extract: if you want to specify what values should refer to which column names
       dict{    'name':
       'bai':
@@ -129,9 +139,9 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="
 
   Returns:
   -------
-    sample_ids: list(str) the SM-id of the samples that were updated
-    refsamples: all of the samples in the data of the workspaces
-    CCLE_name: CCLE names of new samples uploaded
+    samples: 
+    pairs: 
+    wrongssamples: 
 
 
   Raise:
@@ -266,6 +276,18 @@ def deleteClosest(sampless, refsamples, size='size', ref_size='size', arxspid='a
   for a list of samples and a tracker, will find the index of the sample with the closest size
 
   if this sample is the same cell line, it will judge it to be a duplicate and remove it
+
+  Args:
+  -----
+    sampless
+    refsamples
+    size
+    ref_size
+    arxspid
+
+  Returns:
+  --------
+    samples:
   """
   sizes = refsamples[ref_size].tolist()
   for k,v in sampless.iterrows():
@@ -277,7 +299,18 @@ def deleteClosest(sampless, refsamples, size='size', ref_size='size', arxspid='a
 
 
 def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True, recomputehash=True, extract={}):
+  """
   # getting the hash
+  Args:
+  -----
+    samples
+    stype
+    recomputeTime
+    recomputesize
+    recomputehash
+    extract
+  
+  """
   extract.update(extract_defaults)
   if extract['hash'] not in samples.columns or recomputehash:
     samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(samples[extract["bam"]].tolist(), "-L", 200)]
@@ -302,6 +335,8 @@ def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True,
 
 
 def mapSamples(samples, source, extract={}):
+  """
+  """
   # creating unique ids
   samples[extract['ref_id']] = ['CDS-' + h.randomString(stringLength=6, stype='all', withdigits=True) for _ in range(len(samples))]
   samples[extract['patient_id']] = ['PT-' + h.randomString(stringLength=8, stype='all', withdigits=True) for _ in range(len(samples))]
@@ -319,9 +354,9 @@ def mapSamples(samples, source, extract={}):
   return samples
 
 
-# -
-
 def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, accept_unknowntypes=True, addonly=[], extract={}):
+  """
+  """
   extract.update(extract_defaults)
   prevlen = len(samples)
   for match_substring in match:
@@ -457,10 +492,9 @@ def changeCellLineName(ref, datatype, dupdict, toupdate=["stripped_cell_line_nam
       raise IndexError(str(v)+" not found in tracker")
   return ref
 
-  #####################
-  # VALIDATION
-  #####################
-
+#####################
+# CN Functions
+#####################
 
 def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
   """
@@ -573,6 +607,136 @@ def checkDifferencesWESWGS(segmentcn_wes, segmentcn_wgs, chromlist=CHROMLIST):
       print(name, count)
 
 
+def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Start", cyto=None):
+  """
+  """
+  prevchr = ''
+  prevend = 0
+  count = 0
+  l = []
+  segments = segtocp.copy()
+  le = len(segments)
+  for k, val in segments.iterrows():
+    h.showcount(count, le)
+    count += 1
+    if val[Chromosome] != prevchr:  # we changed chromosome
+      # we extend the previous segment (last of the prev chrom) to.. way enough
+      if len(l) > 0:
+        l[-1][2] = 1000000000 if cyto is None else cyto[cyto['chrom']
+                                                        == prevchr]['end'].values[-1]
+      # we extend the first segment to 0
+      l.append([val[Chromosome], 0, val[End]])
+    else:
+      if val[Start] > prevend + 1:  # we have a gap in the same chrom
+        sizeofgap = val[Start] - prevend
+        # we add to the previous one half of the gap
+        l[-1][2] += int(sizeofgap /
+                        2) if sizeofgap % 2 == 0 else int(sizeofgap / 2) + 1
+        # the rest to the other
+        l.append([val[Chromosome], val[Start] - int(sizeofgap / 2), val[End]])
+      elif val[Start] < prevend:  # this should never happen
+        raise ValueError("start comes after end")
+      else:
+        l.append([val[Chromosome], val[Start], val[End]])
+    prevchr = val[Chromosome]
+    prevend = val[End]
+  # we extend the last one
+  l[-1][2] = 1000000000 if cyto is None else cyto[cyto['chrom']
+                                                  == prevchr]['end'].values[-1]
+  segments[[Chromosome, Start, End]] = l
+  return segments
+
+
+def toGeneMatrix(segments, gene_mapping, style='weighted', missingchrom=['Y']):
+  """
+  makes gene matrix from segment level copy number
+
+  Args:
+  ----
+    style: one of "weighted","mean","closest"
+  """
+  samples = list(set(segments.DepMap_ID))
+  data = np.zeros((len(samples), len(gene_mapping)))
+  for i, sample in enumerate(samples):
+    segs = segments[segments.DepMap_ID == sample][[
+        'Chromosome', 'Start', 'End', "Segment_Mean"]].values
+    hasmissing = set(missingchrom) - set(segs[:, 0])
+    j = 0
+    h.showcount(i, len(samples))
+    for k, gene in enumerate(gene_mapping[['Chromosome', 'start', 'end']].values):
+        if gene[0] in hasmissing:
+          data[i, k] = np.nan
+          continue
+        while gene[0] != segs[j][0] or gene[1] >= segs[j][2]:
+          #print("went beyong",gene, segs[j])
+          j += 1
+        # some genes are within other genes, we need to go back in the list of segment in that case
+        while gene[1] < segs[j][1]:
+          j -= 1
+          #print("decrease gene",gene)
+        # we are entirely within the segment
+        c = 1
+        if gene[2] <= segs[j][2]:
+          data[i, k] = segs[j][3]
+        else:
+          # how much of the gene is covered by the segment
+          coef = (segs[j][2] - gene[1]) / (gene[2] - gene[1])
+          # print('coef',coef)
+          val = segs[j][3] * coef if style == "weighted" else segs[j][3]
+          end = segs[j][2]
+          # until the end of a segments goes beyon the end of the gene (say if we have X segments within the gene)
+          while end < gene[2]:
+            # pdb.set_trace()
+            j += 1
+            c += 1
+            nextend = segs[j][2] if segs[j][2] < gene[2] else gene[2]
+            # here, end (of prevsegment) is the next segment's start
+            ncoef = (nextend - end) / (gene[2] - gene[1])
+            # print('multi',gene, ncoef)
+            if style == "closest":
+              if ncoef > coef:
+                val = segs[j][3]
+              else:
+                # we switch it back (see line 894)
+                ncoef = coef
+            else:
+              val += segs[j][3] * ncoef if style == "weighted" else segs[j][3]
+            end = segs[j][2]
+            coef = ncoef
+          data[i, k] = val if style == "weighted" else val / c
+  return pd.DataFrame(data=data, index=samples, columns=[i['symbol'] + ' (' + str(i['ensembl_id']) + ')' for _, i in gene_mapping.iterrows()])
+
+
+def plotCNchanges(newgenecn, prevgenecn, newsegments, prevsegments, depmap_id="DepMap_ID", source="Source", prevname='prev', newname="new"):
+  """
+  makes a Javad Plot on the gene copy number dataset
+
+  Args:
+  -----
+    
+  """
+  grouped = pd.concat(
+      [prevgenecn.stack(), newgenecn.stack()], axis=1)
+  grouped.columns = [prevname, newname]
+
+  grouped.reset_index(inplace=True)
+  grouped.rename(
+    columns={'level_0': depmap_id, 'level_1': 'gene'}, inplace=True)
+  sources = pd.merge(prevsegments[[depmap_id, source]].drop_duplicates(), 
+          newsegments[[depmap_id, source]].drop_duplicates(), 
+          on=depmap_id, suffixes=['_'+prevname, '_'+newname])
+
+  sources['source_change'] = sources.apply(lambda x: '{:s} -> {:s}'.format(x[source+'_'+prevname], x[source+'_'+newname]), axis=1)
+  sources['source_has_changed'] = (sources[source+'_'+prevname] != sources[source+"_"+newname])
+  grouped = pd.merge(grouped, sources, on=depmap_id)
+  plt.figure(figsize=(20,10))
+  sns.scatterplot(data=grouped.sample(1000000, random_state=0), x=prevname, y=newname, 
+                hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
+
+#####################
+# Fusion Functions
+#####################
+
 def addToMainFusion(input_filenames, main_filename):
   """
   Given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
@@ -598,6 +762,36 @@ def addToMainFusion(input_filenames, main_filename):
       df = df[cols]
       df.to_csv(f, header=False, sep='\t', index=False)
 
+
+def renameFusionGene(a):
+    return [str(i.split('^')).replace(', ', ' (').replace("'", "")[1:-1]+')' for i in a]
+
+
+def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, red_herring=['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM', 'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']):
+  fusions = fusions.copy()
+  # remove recurrent
+  fusions = fusions[fusions['CCLE_count'] <
+                    len(set(fusions['DepMap_ID']))*maxfreq]
+  # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes,
+  fusions = fusions[~(fusions['LeftBreakpoint'].str.contains(
+      'chrM') & fusions['RightBreakpoint'].str.contains('chrM'))]
+  fusions = fusions[~fusions['FusionName'].str.contains('^HLA\\-')]
+  # (2) Remove red herring fusions
+  fusions = fusions[~fusions['annots'].str.contains(
+      '|'.join(red_herring), case=False)]
+  # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and
+  # LargeAnchorSupport="No" and minFAF<0.02), or
+  fusions = fusions[~((fusions['SpliceType'] == "INCL_NON_REF_SPLICE") & (
+      fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < 0.1))]
+  # STAR-Fusion suggests using 0.1, but after looking at the
+  # translocation data, this looks like it might be too aggressive
+  fusions = fusions[fusions['FFPM'] > minffpm]
+  return fusions
+
+
+#####################
+# Expression Functions
+#####################
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
   """
@@ -654,6 +848,217 @@ def ExtractStarQualityInfo(samplesetname, workspace, release='temp'):
   os.system("rm data/" + release + "/*.Log.final.out")
 
 
+def findMissAnnotatedReplicates(repprofiles, goodprofile, names, exactMatch=True):
+  """
+  from a new rnaseq profile on replicate level and a good rnaseq profile on sample level
+  
+  will if some replicates are missanotated based on correlation.
+  
+  Returns:
+  -------
+      notindataset: list[str] replicates not in the good dataset
+      missannotated: dict(str: tuple(str,str)).  dict containing replicates that are missanotated: for each, gives a tuple (old annotation, right annotation)
+  """
+  notindataset = []
+  missannotated = {}
+  unmatched = {}
+  if exactMatch:
+    res = findClosestMatching(repprofiles, goodprofile)
+    for val in repprofiles.index.tolist():
+        if val not in res:
+            notindataset.append(val)
+        elif val not in names:
+            unmatched.update({val: res[val]})
+        elif res[val] != names[val]:
+            missannotated.update({val: (names[val], res[val])})
+    return notindataset, missannotated, unmatched
+  else:
+    corr, closest = findClosestMatching(
+        repprofiles, goodprofile, returncorr=True)
+    for k, v in corr.iterrows():
+      print(k, v.mean())
+      try:
+          if v[names[k]] < 0.75:
+              print(v[[closest[k], names[k]]])
+      except:
+          a = np.argsort(v.values)[-5:]
+          if v.values[a[-1]] > 0.8:
+              print(names[k],
+                    corr.columns[a], v.values[a])
+
+
+def findClosestMatching(repprofiles, goodprofile, closest=False, returncorr=False):
+  """
+  will find what replicate matches best what known profile
+  """
+  match = {}
+  a = set(repprofiles.columns) & set(goodprofile.columns)
+  ind = goodprofile.index.tolist()
+  corr = []
+  for i, (k, v) in enumerate(repprofiles[a].iterrows()):
+      h.showcount(i, len(repprofiles))
+      res = np.array([np.corrcoef(v, w)[0, 1]
+                      for _, w in goodprofile[a].iterrows()])
+      if max(res) == 1 or closest:
+          match[k] = ind[np.argmax(res)]
+      if returncorr:
+        corr.append(res)
+  if returncorr:
+    corr = pd.DataFrame(data=corr, index=repprofiles.index.tolist(
+    ), columns=goodprofile.index.tolist())
+    return corr, match
+  else:
+    return match
+
+
+def rnaseqcorrelation(cn, rna, ax=None, name=None):
+  """
+  correlates the copy number to the rnaseq in ccle and shows the plot
+  """
+  a = set(cn.columns) & set(rna.columns)
+  ind = set(cn.index) & set(rna.index)
+  re = rna.loc[ind]
+  ce = cn.loc[ind]
+  print(len(ind), len(a))
+  corr = np.array([pearsonr(ce[j], re[j])[0] for j in a])
+  #corr = pd.DataFrame(data=corr, columns=[name if name is not None else "data"])
+  print(np.mean(corr), len(corr))
+  sns.kdeplot(corr, ax=ax) if ax is not None else sns.kdeplot(corr)
+
+#####################
+# Mutations Functions
+#####################
+
+def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
+  """
+  This function is used to subset a df to only the columns with the most up to date names
+
+  We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
+
+  Args:
+  ----
+    a: the dataframe where loc contain the names
+    loc: the location of names
+    prepended: the set of possible prepended values
+
+  Returns:
+  -------
+    a: the subsetted dataframe
+  """
+  values = []
+  if len(prepended) > 0:
+    for i in a[loc]:
+      i = i.split('_')
+      if i[0] in prepended:
+        values.append('_'.join(i[1:]))
+      else:
+        values.append('_'.join(i))
+      if i[-1] == '2':
+        print(i)
+    a[loc] = values
+  a = a.sort_values(by=[loc])
+  todrop = []
+  for i in range(len(a[loc]) - 1):
+    e = a[loc][i + 1].split('_')
+    if len(e[-1]) == 1:
+      if int(e[-1]) > 1 and e[0] == a[loc][i].split('_')[0]:
+        todrop.append(a[loc][i])
+        print(a[loc][i])
+        print(e)
+  a = a.set_index(loc).drop(todrop).reset_index()
+  return a
+
+
+def filterAllelicFraction(maf, loc=['CGA_WES_AC'], sep=':', frac=0.1):
+    muts = np.zeros((len(maf), 2))
+    for val in loc:
+        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
+            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
+    muts = muts[:, 0]/(muts[:, 0]+muts[:, 1])
+    return maf[muts >= frac]
+
+
+def filterCoverage(maf, loc=['CGA_WES_AC'], sep=':', cov=4, altloc=0):
+    muts = np.zeros((len(maf), 2))
+    for val in loc:
+        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
+            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
+    return maf[muts[:, altloc] >= cov]
+
+
+def annotate_likely_immortalized(maf, sample_col="DepMap_ID", genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt',
+                                                                                                           'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5):
+    maf['is_likely_immortalization'] = False
+    leng = len(set(maf[sample_col]))
+    tocheck = []
+    for k, v in Counter(maf[genome_change_col].tolist()).items():
+        if v > max_recurrence*leng:
+            tocheck.append(k)
+    for val in list(set(tocheck)-set([np.nan])):
+        if np.nan_to_num(maf[maf[genome_change_col] == val][TCGAlocs], 0).max() < min_tcga_true_cancer:
+            maf.loc[maf[maf[genome_change_col]
+                        == val].index, 'is_likely_immortalization'] = True
+    return maf
+
+
+def addAnnotation(maf, NCBI_Build='37', Strand="+"):
+    maf['NCBI_Build'] = NCBI_Build
+    maf['Strand'] = Strand
+    return maf
+
+
+def mafToMat(maf, boolify=False, freqcol='tumor_f', samplesCol="DepMap_ID", mutNameCol="Hugo_Symbol"):
+    maf = maf.sort_values(by=mutNameCol)
+    samples = set(maf[samplesCol])
+    mut = pd.DataFrame(data=np.zeros((len(set(maf[mutNameCol])), 1)), columns=[
+                       'fake'], index=set(maf[mutNameCol])).astype(float)
+    for i, val in enumerate(samples):
+        h.showcount(i, len(samples))
+        mut = mut.join(maf[maf[samplesCol] == val].drop_duplicates(
+            mutNameCol).set_index(mutNameCol)[freqcol].rename(val))
+    return mut.fillna(0).astype(bool if boolify else float).drop(columns=['fake'])
+
+
+def mergeAnnotations(firstmaf, additionalmaf, Genome_Change="Genome_Change", Start_position="Start_position", Chromosome="Chromosome", samplename="DepMap_ID", useSecondForConflict=True, dry_run=False):
+    mutations = firstmaf.copy()
+    mutations['ind'] = mutations[samplename]+"_"+mutations[Genome_Change]
+    mutations['loci'] = mutations[samplename] + "_" + \
+        mutations[Chromosome] + "_" + mutations[Start_position].astype(str)
+    additionalmaf['ind'] = additionalmaf[samplename] + \
+        "_"+additionalmaf[Genome_Change]
+    additionalmaf['loci'] = additionalmaf[samplename] + "_" + \
+        additionalmaf[Chromosome] + "_" + \
+        additionalmaf[Start_position].astype(str)
+    inboth = set(additionalmaf['loci']) & set(mutations['loci'])
+    notineach = set(additionalmaf['ind']) ^ set(mutations['ind'])
+    submut = mutations[mutations.loci.isin(
+        inboth) & mutations.ind.isin(notineach)]
+    subother = additionalmaf[additionalmaf.loci.isin(
+        inboth) & additionalmaf.ind.isin(notineach)]
+    issues = None
+    if len(submut) > 0:
+        print("found " + str(len(submut)) + " nonmatching mutations")
+        issues = np.vstack([submut.sort_values(by='loci')[
+                           Genome_Change].values, subother.sort_values(by='loci')[Genome_Change].values]).T
+        if dry_run:
+            print(issues)
+    if not dry_run:
+        if issues is not None:
+            if useSecondForConflict:
+                mutations = mutations[~mutations.ind.isin(set(submut.ind))]
+            else:
+                additionalmaf = additionalmaf[~additionalmaf.ind.isin(
+                    set(subother.ind))]
+            mutations = mutations.append(additionalmaf[additionalmaf['ind'].isin(
+                set(additionalmaf['ind']) - set(mutations['ind']))])
+        return mutations.drop(columns=['loci', 'ind']).sort_values(by=[samplename, Chromosome, Start_position])
+    else:
+        return issues
+
+#####################
+# Other Helpers
+#####################
+
 def AddToVirtual(virtualname, folderfrom, files):
   """
   will add some files from a taiga folder to a taiga virtual dataset folder and preserve the previous files
@@ -675,84 +1080,9 @@ def AddToVirtual(virtualname, folderfrom, files):
   print(files)
   tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={}, add_all_existing_files=True)
 
-
-def removeColDuplicates(a, prepended=['dm', 'ibm', 'ccle']):
-  """
-  This function is used to subset a df to only the columns with the most up to date names
-
-  We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
-
-
-  Args:
-  ----
-    a: the dataframe where columns contain the names
-    prepended: the set of possible prepended values
-
-  Returns:
-  ------
-    a: the subsetted dataframe
-  """
-  values = []
-  for i in a.columns:
-    i = i.split('_')
-    if i[0] in prepended:
-      values.append('_'.join(i[1:]))
-    else:
-      values.append('_'.join(i))
-  a.columns = values
-  a = a[a.columns[np.argsort(values)]]
-  todrop = []
-  for i in range(len(a.columns) - 1):
-    e = a.columns[i + 1].split('_')
-    if len(e[-1]) == 1:
-      if int(e[-1]) > 1 and e[0] == a.columns[i].split('_')[0]:
-        todrop.append(a.columns[i])
-        print("removing: " + str(a.columns[i]) + " and replacing by: " + str(e))
-  a = a.drop(todrop, 1)
-  return a
-
-
-def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
-  """
-  This function is used to subset a df to only the columns with the most up to date names
-
-  We consider a naming convention preprended_NAME_version and transform it into NAME with latest NAMES
-
-  Args:
-  ----
-    a: the dataframe where loc contain the names
-    loc: the location of names
-    prepended: the set of possible prepended values
-
-  Returns:
-  -------
-    a: the subsetted dataframe
-  """
-  values = []
-  if len(prepended) > 0:
-    print('heyyy')
-    for i in a[loc]:
-      i = i.split('_')
-      if i[0] in prepended:
-        values.append('_'.join(i[1:]))
-      else:
-        values.append('_'.join(i))
-      if i[-1] == '2':
-        print(i)
-    a[loc] = values
-  a = a.sort_values(by=[loc])
-  todrop = []
-  for i in range(len(a[loc]) - 1):
-    e = a[loc][i + 1].split('_')
-    if len(e[-1]) == 1:
-      if int(e[-1]) > 1 and e[0] == a[loc][i].split('_')[0]:
-        todrop.append(a[loc][i])
-        print(a[loc][i])
-        print(e)
-
-  a = a.set_index(loc).drop(todrop).reset_index()
-  return a
-
+#####################
+# DB Functions
+#####################
 
 def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', clientsecret='~/.client_secret.json',
                        storagepath='~/.storage.json', colname='CN New to internal', value='no data yet'):
@@ -867,201 +1197,6 @@ def getQC(workspace, only=[], qcname=[], match=""):
 def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
   refsamples.loc[samples, releaseName] = '1'
   return refsamples
-
-
-def manageGapsInSegments(segtocp, Chromosome='Chromosome', End="End", Start="Start", cyto=None):
-  """
-  """
-  prevchr = ''
-  prevend = 0
-  count = 0
-  l = []
-  segments = segtocp.copy()
-  le = len(segments)
-  for k, val in segments.iterrows():
-    h.showcount(count, le)
-    count += 1
-    if val[Chromosome] != prevchr:  # we changed chromosome
-      # we extend the previous segment (last of the prev chrom) to.. way enough
-      if len(l) > 0:
-        l[-1][2] = 1000000000 if cyto is None else cyto[cyto['chrom']==prevchr]['end'].values[-1]
-      # we extend the first segment to 0
-      l.append([val[Chromosome], 0, val[End]])
-    else:
-      if val[Start] > prevend + 1:  # we have a gap in the same chrom
-        sizeofgap = val[Start] - prevend
-        # we add to the previous one half of the gap
-        l[-1][2] += int(sizeofgap / 2) if sizeofgap % 2 == 0 else int(sizeofgap / 2) + 1
-        # the rest to the other
-        l.append([val[Chromosome], val[Start] - int(sizeofgap / 2), val[End]])
-      elif val[Start] < prevend:  # this should never happen
-        raise ValueError("start comes after end")
-      else:
-        l.append([val[Chromosome], val[Start], val[End]])
-    prevchr = val[Chromosome]
-    prevend = val[End]
-  # we extend the last one
-  l[-1][2] = 1000000000  if cyto is None else cyto[cyto['chrom']==prevchr]['end'].values[-1]
-  segments[[Chromosome, Start, End]] = l
-  return segments
-
-
-def toGeneMatrix(segments, gene_mapping, style='weighted', missingchrom=['Y']):
-  """
-  makes gene matrix from segment level copy number
-
-  Args:
-  ----
-    style: one of "weighted","mean","closest"
-  """
-  samples = list(set(segments.DepMap_ID))
-  data = np.zeros((len(samples), len(gene_mapping)))
-  for i, sample in enumerate(samples):
-    segs = segments[segments.DepMap_ID == sample][['Chromosome', 'Start', 'End', "Segment_Mean"]].values
-    hasmissing= set(missingchrom) - set(segs[:,0])
-    j = 0
-    h.showcount(i, len(samples))
-    for k, gene in enumerate(gene_mapping[['Chromosome', 'start', 'end']].values):
-        if gene[0] in hasmissing:
-          data[i, k] = np.nan
-          continue
-        while gene[0] != segs[j][0] or gene[1] >= segs[j][2]:
-          #print("went beyong",gene, segs[j])
-          j += 1
-        # some genes are within other genes, we need to go back in the list of segment in that case
-        while gene[1] < segs[j][1]:
-          j -= 1
-          #print("decrease gene",gene)
-        # we are entirely within the segment
-        c = 1
-        if gene[2] <= segs[j][2]:
-          data[i, k] = segs[j][3]
-        else:
-          # how much of the gene is covered by the segment
-          coef = (segs[j][2] - gene[1]) / (gene[2] - gene[1])
-          # print('coef',coef)
-          val = segs[j][3] * coef if style == "weighted" else segs[j][3]
-          end = segs[j][2]
-          # until the end of a segments goes beyon the end of the gene (say if we have X segments within the gene)
-          while end < gene[2]:
-            # pdb.set_trace()
-            j += 1
-            c += 1
-            nextend = segs[j][2] if segs[j][2] < gene[2] else gene[2]
-            # here, end (of prevsegment) is the next segment's start
-            ncoef = (nextend - end) / (gene[2] - gene[1])
-            # print('multi',gene, ncoef)
-            if style == "closest":
-              if ncoef > coef:
-                val = segs[j][3]
-              else:
-                # we switch it back (see line 894)
-                ncoef = coef
-            else:
-              val += segs[j][3] * ncoef if style == "weighted" else segs[j][3]
-            end = segs[j][2]
-            coef = ncoef
-          data[i, k] = val if style == "weighted" else val / c
-  return pd.DataFrame(data=data, index=samples, columns=[i['symbol'] + ' (' + str(i['ensembl_id']) + ')' for _, i in gene_mapping.iterrows()])
-
-
-def filterAllelicFraction(maf, loc=['CGA_WES_AC'], sep=':', frac=0.1):
-    muts = np.zeros((len(maf), 2))
-    for val in loc:
-        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
-            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
-    muts = muts[:, 0]/(muts[:, 0]+muts[:, 1])
-    return maf[muts >= frac]
-
-
-def filterCoverage(maf, loc=['CGA_WES_AC'], sep=':', cov=4, altloc=0):
-    muts = np.zeros((len(maf), 2))
-    for val in loc:
-        muts += np.array([[v[0], 0] if 'NA' in v else v for v in maf[val].fillna(
-            '0'+sep+'0').astype(str).str.split(sep).tolist()]).astype(int)
-    return maf[muts[:, altloc] >= cov]
-
-
-def annotate_likely_immortalized(maf, sample_col="DepMap_ID", genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt',
-                            'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5):
-    maf['is_likely_immortalization'] = False
-    leng = len(set(maf[sample_col]))
-    tocheck = []
-    for k, v in Counter(maf[genome_change_col].tolist()).items():
-        if v > max_recurrence*leng:
-            tocheck.append(k)
-    for val in list(set(tocheck)-set([np.nan])):
-        if np.nan_to_num(maf[maf[genome_change_col] == val][TCGAlocs], 0).max() < min_tcga_true_cancer:
-            maf.loc[maf[maf[genome_change_col]
-                                    == val].index, 'is_likely_immortalization'] = True
-    return maf
-
-
-def addAnnotation(maf, NCBI_Build='37', Strand="+"):
-    maf['NCBI_Build'] = NCBI_Build
-    maf['Strand'] = Strand
-    return maf
-
-
-def mafToMat(maf, boolify=False, freqcol='tumor_f', samplesCol="DepMap_ID", mutNameCol="Hugo_Symbol"):
-    maf = maf.sort_values(by=mutNameCol)
-    samples = set(maf[samplesCol])
-    mut = pd.DataFrame(data=np.zeros((len(set(maf[mutNameCol])), 1)), columns=[
-                       'fake'], index=set(maf[mutNameCol])).astype(float)
-    for i, val in enumerate(samples):
-        h.showcount(i, len(samples))
-        mut = mut.join(maf[maf[samplesCol] == val].drop_duplicates(
-            mutNameCol).set_index(mutNameCol)[freqcol].rename(val))
-    return mut.fillna(0).astype(bool if boolify else float).drop(columns=['fake'])
-
-def mergeAnnotations(firstmaf, additionalmaf, Genome_Change="Genome_Change", Start_position= "Start_position", Chromosome="Chromosome", samplename="DepMap_ID", useSecondForConflict=True, dry_run=False):
-    mutations = firstmaf.copy()
-    mutations['ind'] = mutations[samplename]+"_"+mutations[Genome_Change]
-    mutations['loci'] = mutations[samplename]+ "_"+ mutations[Chromosome]+ "_" + mutations[Start_position].astype(str)
-    additionalmaf['ind'] = additionalmaf[samplename]+"_"+additionalmaf[Genome_Change]
-    additionalmaf['loci'] = additionalmaf[samplename]+ "_"+ additionalmaf[Chromosome]+ "_" + additionalmaf[Start_position].astype(str)
-    inboth  = set(additionalmaf['loci']) & set(mutations['loci'])
-    notineach = set(additionalmaf['ind']) ^ set(mutations['ind'])
-    submut = mutations[mutations.loci.isin(inboth) & mutations.ind.isin(notineach)]
-    subother = additionalmaf[additionalmaf.loci.isin(inboth) & additionalmaf.ind.isin(notineach)]
-    issues = None
-    if len(submut) > 0:
-        print("found " +str(len(submut)) + " nonmatching mutations")
-        issues= np.vstack([submut.sort_values(by='loci')[Genome_Change].values, subother.sort_values(by='loci')[Genome_Change].values]).T
-        if dry_run:
-            print(issues)
-    if not dry_run:
-        if issues is not None:
-            if useSecondForConflict:
-                mutations = mutations[~mutations.ind.isin(set(submut.ind))]
-            else: 
-                additionalmaf = additionalmaf[~additionalmaf.ind.isin(set(subother.ind))]
-            mutations = mutations.append(additionalmaf[additionalmaf['ind'].isin(set(additionalmaf['ind']) - set(mutations['ind']))])
-        return mutations.drop(columns=['loci','ind']).sort_values(by =[samplename,Chromosome,Start_position])
-    else:
-        return issues
-
-
-def renameFusionGene(a):
-    return [str(i.split('^')).replace(', ',' (').replace("'","")[1:-1]+')' for i in a]
-
-
-def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, red_herring=['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM', 'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']):
-  fusions = fusions.copy()
-  # remove recurrent
-  fusions = fusions[fusions['CCLE_count']<len(set(fusions['DepMap_ID']))*maxfreq]
-  # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes, 
-  fusions = fusions[~(fusions['LeftBreakpoint'].str.contains('chrM') & fusions['RightBreakpoint'].str.contains('chrM'))]
-  fusions = fusions[~fusions['FusionName'].str.contains('^HLA\\-')]
-  # (2) Remove red herring fusions
-  fusions = fusions[~fusions['annots'].str.contains('|'.join(red_herring), case=False)]
-  # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and 
-  # LargeAnchorSupport="No" and minFAF<0.02), or
-  fusions = fusions[~((fusions['SpliceType'] == "INCL_NON_REF_SPLICE") & (fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < 0.1))]
-  # STAR-Fusion suggests using 0.1, but after looking at the 
-  # translocation data, this looks like it might be too aggressive
-  fusions = fusions[fusions['FFPM']>minffpm]
-  return fusions
 
 
 def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_id", "datatype", "size", 
@@ -1252,100 +1387,3 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', partici
     len(samples.loc[notfound][participant_id]
         ), samples.loc[notfound][participant_id].tolist()
     return samples, notfound
-
-
-def plotCNchanges(newgenecn, prevgenecn, newsegments, prevsegments, depmap_id="DepMap_ID", source="Source", prevname='prev', newname="new"):
-  """
-  makes a Javad Plot on the gene copy number dataset
-  """
-  grouped = pd.concat(
-      [prevgenecn.stack(), newgenecn.stack()], axis=1)
-  grouped.columns = [prevname, newname]
-
-  grouped.reset_index(inplace=True)
-  grouped.rename(
-    columns={'level_0': depmap_id, 'level_1': 'gene'}, inplace=True)
-  sources = pd.merge(prevsegments[[depmap_id, source]].drop_duplicates(), 
-          newsegments[[depmap_id, source]].drop_duplicates(), 
-          on=depmap_id, suffixes=['_'+prevname, '_'+newname])
-
-  sources['source_change'] = sources.apply(lambda x: '{:s} -> {:s}'.format(x[source+'_'+prevname], x[source+'_'+newname]), axis=1)
-  sources['source_has_changed'] = (sources[source+'_'+prevname] != sources[source+"_"+newname])
-  grouped = pd.merge(grouped, sources, on=depmap_id)
-  plt.figure(figsize=(20,10))
-  sns.scatterplot(data=grouped.sample(1000000, random_state=0), x=prevname, y=newname, 
-                hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
-
-
-def findMissAnnotatedReplicates(repprofiles, goodprofile, names, exactMatch=True):
-  """
-  from a new rnaseq profile on replicate level and a good rnaseq profile on sample level
-  
-  will if some replicates are missanotated based on correlation.
-  
-  Returns:
-  -------
-      notindataset: list[str] replicates not in the good dataset
-      missannotated: dict(str: tuple(str,str)).  dict containing replicates that are missanotated: for each, gives a tuple (old annotation, right annotation)
-  """
-  notindataset = []
-  missannotated = {}
-  unmatched = {}
-  if exactMatch:
-    res = findClosestMatching(repprofiles, goodprofile)
-    for val in repprofiles.index.tolist():
-        if val not in res:
-            notindataset.append(val)
-        elif val not in names:
-            unmatched.update({val: res[val]})
-        elif res[val] != names[val]:
-            missannotated.update({val: (names[val],res[val])})
-    return notindataset, missannotated, unmatched
-  else:
-    corr, closest = findClosestMatching(repprofiles, goodprofile, returncorr=True)
-    for k, v in corr.iterrows():
-      print(k, v.mean())
-      try:
-          if v[names[k]] < 0.75:
-              print(v[[closest[k], names[k]]])
-      except:
-          a = np.argsort(v.values)[-5:]
-          if v.values[a[-1]] > 0.8:
-              print(names[k],
-              corr.columns[a], v.values[a])
-
-def findClosestMatching(repprofiles, goodprofile, closest=False, returncorr=False):
-  """
-  will find what replicate matches best what known profile
-  """
-  match = {}
-  a = set(repprofiles.columns) & set(goodprofile.columns)
-  ind = goodprofile.index.tolist()
-  corr = []
-  for i, (k,v) in enumerate(repprofiles[a].iterrows()):
-      h.showcount(i, len(repprofiles))
-      res = np.array([np.corrcoef(v, w)[0,1] for _,w in goodprofile[a].iterrows()])
-      if max(res)==1 or closest:
-          match[k] = ind[np.argmax(res)]
-      if returncorr:
-        corr.append(res)
-  if returncorr:
-    corr = pd.DataFrame(data=corr,index=repprofiles.index.tolist(),columns=goodprofile.index.tolist())
-    return corr, match
-  else:
-    return match
-
-
-def rnaseqcorrelation(cn, rna, ax=None, name=None):
-  """
-  correlates the copy number to the rnaseq in ccle and shows the plot
-  """
-  a = set(cn.columns) & set(rna.columns)
-  ind = set(cn.index) & set(rna.index)
-  re = rna.loc[ind]
-  ce = cn.loc[ind]
-  print(len(ind),len(a))
-  corr = np.array([pearsonr(ce[j], re[j])[0] for j in a])
-  #corr = pd.DataFrame(data=corr, columns=[name if name is not None else "data"])
-  print(np.mean(corr), len(corr))
-  sns.kdeplot(corr, ax=ax) if ax is not None else sns.kdeplot(corr)
