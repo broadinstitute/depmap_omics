@@ -116,33 +116,32 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="
     wto: str the workspace where you want to create the tsvs
     wfroms: list[str] the workspaces where the Samples to add are stored
     sources: list[str] the corresponding source names
-    stype: 
-    maxage: 
-    refurl: 
-    match: 
-    refsamples: 
-    participantslicepos: 
-    accept_unknowntypes: 
-    rename: 
-    recomputehash: 
+    stype: str sequencing type
+    maxage: str earliest date of the bam file upload to be considered new
+    refurl: str(url) the reference url for the cell line tracker spreadsheet (only if no refsamples)
+    match: list[str]|str the possible values that a sample id need to contain to be considered valid
+    refsamples: pdDataFrame with columns matching values is in "extract" for the right keys (see "extract_default")
+    participantslicepos: int the length of the sample id string
+    accept_unknowntypes: bool whether or not the sample type column for that sample can be different from "Tumor"
+    rename: dict(str:str) mapping a wrong arxpand_id to a good arxspan id for known cases of misslabelling
+    recomputehash: bool whether or not to recompute the hash of the bam file when loading it
     addonly: list of sample id that you only want to add
     match: list of substring(s) that has to be matched against the id of the samples to add them
     extract: if you want to specify what values should refer to which column names
-      dict{    'name':
+      dict{
+      'name':
       'bai':
       'bam':
       'source':
       'from_arxspan_id':
-      ...}
+      ...} (see extract_defaults)
     extract_defaults: the full default dict to specificy what values should refer to which column names
-
 
   Returns:
   -------
-    samples: 
-    pairs: 
-    wrongssamples: 
-
+    samples: a dataframe with the samples that were resolved by the tool (we still need to add some more annotations)
+    pairs: the corresponding pair from matching known normals with known tumors
+    wrongssamples: a dataframe containing samples that passed most QCs but couldn't be resolved
 
   Raise:
   -----
@@ -309,7 +308,7 @@ def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True,
     recomputesize
     recomputehash
     extract
-  
+
   """
   extract.update(extract_defaults)
   if extract['hash'] not in samples.columns or recomputehash:
@@ -713,7 +712,7 @@ def plotCNchanges(newgenecn, prevgenecn, newsegments, prevsegments, depmap_id="D
 
   Args:
   -----
-    
+
   """
   grouped = pd.concat(
       [prevgenecn.stack(), newgenecn.stack()], axis=1)
@@ -722,15 +721,15 @@ def plotCNchanges(newgenecn, prevgenecn, newsegments, prevsegments, depmap_id="D
   grouped.reset_index(inplace=True)
   grouped.rename(
     columns={'level_0': depmap_id, 'level_1': 'gene'}, inplace=True)
-  sources = pd.merge(prevsegments[[depmap_id, source]].drop_duplicates(), 
-          newsegments[[depmap_id, source]].drop_duplicates(), 
+  sources = pd.merge(prevsegments[[depmap_id, source]].drop_duplicates(),
+          newsegments[[depmap_id, source]].drop_duplicates(),
           on=depmap_id, suffixes=['_'+prevname, '_'+newname])
 
   sources['source_change'] = sources.apply(lambda x: '{:s} -> {:s}'.format(x[source+'_'+prevname], x[source+'_'+newname]), axis=1)
   sources['source_has_changed'] = (sources[source+'_'+prevname] != sources[source+"_"+newname])
   grouped = pd.merge(grouped, sources, on=depmap_id)
   plt.figure(figsize=(20,10))
-  sns.scatterplot(data=grouped.sample(1000000, random_state=0), x=prevname, y=newname, 
+  sns.scatterplot(data=grouped.sample(1000000, random_state=0), x=prevname, y=newname,
                 hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
 
 #####################
@@ -851,9 +850,9 @@ def ExtractStarQualityInfo(samplesetname, workspace, release='temp'):
 def findMissAnnotatedReplicates(repprofiles, goodprofile, names, exactMatch=True):
   """
   from a new rnaseq profile on replicate level and a good rnaseq profile on sample level
-  
+
   will if some replicates are missanotated based on correlation.
-  
+
   Returns:
   -------
       notindataset: list[str] replicates not in the good dataset
@@ -1059,7 +1058,7 @@ def mergeAnnotations(firstmaf, additionalmaf, Genome_Change="Genome_Change", Sta
 # Other Helpers
 #####################
 
-def AddToVirtual(virtualname, folderfrom, files):
+def AddToVirtual(virtualname, folderfrom = None, files):
   """
   will add some files from a taiga folder to a taiga virtual dataset folder and preserve the previous files
 
@@ -1067,18 +1066,24 @@ def AddToVirtual(virtualname, folderfrom, files):
   ----
     virtualname: the taiga virtual dataset name
     folderfrom: the taiga folder wher the files are
-    files: a list(tuples(newfilename,prevfilename))
+    files: a list(tuples(newfilename,prevfilename)) can be from the folder
   """
+  file_dict = {}
   assert type(files[0]) is tuple
-  versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
+  if folderfrom is not None:
+    versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
   versionb = max([int(i['name']) for i in tc.get_dataset_metadata(virtualname)['versions']])
   keep = [(i['name'], i['underlying_file_id']) for i in tc.get_dataset_metadata(virtualname, version=versionb)
           ['datasetVersion']['datafiles'] if 'underlying_file_id' in i]
 
   for i, val in enumerate(files):
-    files[i] = (val[0], folderfrom + '.' + str(versiona) + '/' + val[1])
+    if "/" in val[1]:
+      print("assuming "+val[1]+" to be a local file")
+      file_dict.update({val[0]:val[1]})
+    else:
+      files[i] = (val[0], folderfrom + '.' + str(versiona) + '/' + val[1])
   print(files)
-  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict={}, add_all_existing_files=True)
+  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict=file_dict, add_all_existing_files=True)
 
 #####################
 # DB Functions
@@ -1161,7 +1166,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
 
 def getQC(workspace, only=[], qcname=[], match=""):
   """
-  Will get from a workspace, the QC data for each samples 
+  Will get from a workspace, the QC data for each samples
 
   Args:
   -----
@@ -1199,15 +1204,15 @@ def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
   return refsamples
 
 
-def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_id", "datatype", "size", 
+def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_id", "datatype", "size",
                                                    "ccle_name", "stripped_cell_line_name", "patient_id", "cellosaurus_id",
-"bam_public_sra_path", "internal_bam_filepath", "internal_bai_filepath", 
-"parent_cell_line", "sex", "matched_normal", "age", "primary_site", 
-"primary_disease", "subtype", "subsubtype", "origin", "mediatype", 
+"bam_public_sra_path", "internal_bam_filepath", "internal_bai_filepath",
+"parent_cell_line", "sex", "matched_normal", "age", "primary_site",
+"primary_disease", "subtype", "subsubtype", "origin", "mediatype",
 "condition", "sequencing_type", "baits", "source", "legacy_bam_filepath", "legacy_bai_filepath"], rename={'participant_id':'patient_id'}, deleteUnmatched=False):
   """
   will used the current sample tracker to update sample annotation in the workspace
-  
+
   it can remove samples that are not in the tracker.
   """
   wm = dm.WorkspaceManager(workspaceID).disable_hound()
@@ -1227,14 +1232,14 @@ def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_
 def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
   """
   looks at the current sample tracker and updates the pairs in Terra
-  
+
   It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
   """
 
 def cleanVersions(tracker, samplecol='arxspan_id', dryrun=False, datatypecol='datatype', versioncol="version"):
   """
-  cleans the versions of a sample tracker: 
-  
+  cleans the versions of a sample tracker:
+
   checks that we get 1,2,3 instead of 2,4,5 when samples are renamed or removed
   """
   tracker = tracker.copy()
@@ -1310,7 +1315,7 @@ def merge(tracker, new, old, arxspid, cols):
   given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
   """
   #loc = tracker[tracker[arxspid]==old].index
-    
+
 
 def resolveIssues(tracker, issus, arxspid, cols):
   """
@@ -1324,8 +1329,8 @@ def resolveIssues(tracker, issus, arxspid, cols):
   ach-00002 : rh13
   """
   #for val in issus:
-      
-        
+
+
 def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={},
 stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id", depmappvlink="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"):
     # find back from cell line name in ccle ref samples
