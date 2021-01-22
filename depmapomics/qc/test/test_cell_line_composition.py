@@ -5,10 +5,10 @@ import pandas as pd
 
 lines_to_release_21q1_sheet = 'https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=0'
 
-taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 15],
-                    'dmc': ['dmc-21q1-0e11', 16],
-                    'ibm': ['ibm-21q1-abd9', 18],
-                    'internal': ['internal-21q1-4fc4', 19]},
+taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 17],
+                    'dmc': ['dmc-21q1-0e11', 18],
+                    'ibm': ['ibm-21q1-abd9', 20],
+                    'internal': ['internal-21q1-4fc4', 21]},
             #  '20q3': {'public': ['public-20q3-3d35', 33],
             #         'dmc': ['dmc-20q3-deprecated-never-released--5f55', 18],
             #         'internal': ['internal-20q3-00d0', 9]},
@@ -31,6 +31,9 @@ lines_to_remove = {'ACH-001189', 'ACH-002303', 'ACH-002315', 'ACH-002341', 'ACH-
 # lines_to_remove = set()
 lines_to_release_21q1 = gcl.get_expected_lines(lines_to_release_21q1_sheet)
 text = gcl.pretty_print_diff(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'], savefile=True)
+
+gcl.check_if_fusion_has_expression_released(arxspan_dict, quarter='21q1')
+gcl.check_acciddental_release(arxspan_dict, quarter = '21q1')
 gcl.plot_diff_heatmap(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'])
 
 
