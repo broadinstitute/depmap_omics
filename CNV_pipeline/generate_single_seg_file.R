@@ -29,7 +29,6 @@ for(i in 1:nsamples){
     MEAN_LOG2_COPY_RATIO = col_double(),
     CALL = col_character()
   )) %>%
-    dplyr::select(CONTIG, START, END, NUM_POINTS_COPY_RATIO, MEAN_LOG2_COPY_RATIO, CALL) %>%
     mutate(Sample=sample) %>% dplyr::select(Sample, everything())
   
   # Write to the output file
