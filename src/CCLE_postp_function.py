@@ -715,6 +715,10 @@ def setRightName(tracker, name='stripped_cell_line_name', signs=['-','_','.',' '
   Args:
   -----
     tracker: dataframe of the sample tracker
+
+  Returns:
+  -----
+    an updated sample tracker
   """
   new = []
   for val in tracker[name]:
@@ -729,13 +733,19 @@ def findLikelyDup(tracker, name='stripped_cell_line_name', signs=['-', '_', '.',
   """
   find cell lines that are likely to be duplicates
 
-  will return a list of likly duplicate names as tuples (rh13, RH-13), a list of associated arxspan ids as tuples as well,
-  and a list of arxspan ids that have multiple names associated
+  will return ,  as well,
+  and
 
   Args:
   -----
     tracker: dataframe of the sample tracker
     looksub: bool, look if a name if within another name (can flag many derivatives)
+
+  Returns:
+  --------
+    a list[tuples(str,str)] of likly duplicate names as tuples (rh13, RH-13)
+    a list[tuples(str,str)] of associated arxspan ids
+    a dict[str:set(str)] of arxspan ids that have multiple cell line names associated
   """
   names = set(tracker[name])
   simi = []
