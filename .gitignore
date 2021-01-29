@@ -193,3 +193,4 @@ dmypy.json
 .pyre/
 
 # End of https://www.gitignore.io/api/linux,macos,python,jupyternotebook
+.codeworkspace.code-workspace
