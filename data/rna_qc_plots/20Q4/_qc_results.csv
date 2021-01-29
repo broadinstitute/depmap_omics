@@ -1,0 +1,15 @@
+,Mapping Rate,Base Mismatch,End 1 Mapping Rate,End 2 Mapping Rate,End 1 Mismatch Rate,End 2 Mismatch Rate,Expression Profiling Efficiency,High Quality Rate,Exonic Rate,Ambiguous Alignment Efficiency,Avg. Splits per Read,Alternative Alignments,Chimeric Alignment Rate,Total Reads,Read Length,Min Genes Detected,Max Genes Detected
+CDS-12DTEw,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+CDS-9hv1zM,True,False,True,True,False,False,True,False,False,False,False,False,False,False,False,False,False
+CDS-A6GSeQ,False,False,False,False,False,False,False,True,False,False,False,True,False,False,False,False,False
+CDS-aWlMRt,False,False,False,False,False,False,False,False,False,False,False,True,False,False,False,False,False
+CDS-B1ywOH,True,False,True,True,False,False,True,False,False,False,False,False,False,False,False,False,False
+CDS-BixxtG,False,False,False,False,False,False,True,True,True,False,False,True,False,False,False,False,False
+CDS-DRM3l2,False,False,False,False,False,False,False,False,False,False,False,True,False,False,False,False,False
+CDS-jOlYT4,False,False,False,False,False,False,False,False,True,False,False,True,False,False,False,False,False
+CDS-KMhiT9,True,False,True,True,False,False,True,False,False,False,False,False,False,False,True,False,False
+CDS-M6mnMA,True,False,True,True,False,False,True,False,False,False,False,False,False,False,False,False,False
+CDS-pYwECX,False,False,False,False,False,False,False,False,False,False,False,True,False,False,False,False,False
+CDS-v6E624,False,False,False,False,False,False,False,False,False,False,False,True,False,False,False,False,False
+CDS-vxTqNJ,False,False,False,False,False,False,True,False,True,False,False,False,False,False,False,False,False
+CDS-YxtmkI,False,False,False,False,False,False,True,False,True,False,False,True,False,False,False,False,False
