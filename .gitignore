@@ -192,4 +192,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# VS code project
+.codeworkspace.code-workspace
+
 # End of https://www.gitignore.io/api/linux,macos,python,jupyternotebook
