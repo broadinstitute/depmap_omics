@@ -50,7 +50,7 @@ If you are not familiar with these notions, we will first recommend you get more
 
 Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio).
 
-`git submodule init && git submodule update && cd JKBio git submodule update --init`
+`pip install JKBio`
 ### :warning: you would need the approriate R packages and python packages
 
 1. You will need to install jupyter notetbooks and google cloud sdk
