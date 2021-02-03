@@ -195,4 +195,7 @@ dmypy.json
 # VS code project
 .codeworkspace.code-workspace
 
+# tmp
+tmp.py
+
 # End of https://www.gitignore.io/api/linux,macos,python,jupyternotebook
