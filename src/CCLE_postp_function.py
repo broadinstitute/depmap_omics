@@ -1260,6 +1260,7 @@ def addAnnotation(maf, NCBI_Build='37', Strand="+"):
 # Other Helpers
 #####################
 
+
 def AddToVirtual(virtualname, folderfrom = None, files=[]):
   """
   will add some files from a taiga folder to a taiga virtual dataset folder and preserve the previous files
