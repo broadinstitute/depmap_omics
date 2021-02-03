@@ -43,24 +43,23 @@ If you are not familiar with these notions, we will first recommend you get more
 - [Terra and gcp](https://docs.google.com/document/d/1zTtaN-Px64f8JvgydZNdBbzBpFWyZzEpshSNxQh43Oc/edit#heading=h.dz5wh0l4bu9g)
 
 
+### install it 
+
+`git clone http://github.com/BroadInstitute/ccle_processing.git && cd ccle_processing`
 ### :warning: this repository needs other repos
 
 Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio).
 
-Go to the repos and pull them to the same parent folder as ccle_processing.
-
-
+`pip install JKBio`
 ### :warning: you would need the approriate R packages and python packages
 
 1. You will need to install jupyter notetbooks and google cloud sdk
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
   - authenticate my SDK account by running `gcloud auth application-default login` in the terminal.
-2. For R packages, a loading function contains all required ones (in [here](https://github.com/broadinstitute/ccle_processing/blob/master/src/load_libraries_and_annotations.R))
-  - Another R package needs to be installed like so: `cd src/cdsomics && R CMD INSTALL . && cd -`.
-  - Also taigr: `cd ../JKBio/taigr && R CMD INSTALL . && cd -`.
-  - And Celllinemapr: `cd ../JKBio/cell_line_mapping-master/celllinemapr && R CMD INSTALL . && cd -`.
-  - and GSVA for ssGSEA in R `R` run `if (!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")} BiocManager::install('GSVA')`
-3. For Python use the requirements.txt file `pip install -r requirements.txt`.
+
+2. and GSVA for ssGSEA in R `R` run `R -e 'if(!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")};BiocManager::install(c("GSEABase", "erccdashboard", "GSVA", "DESeq2"));`
+
+3. For Python use the requirements.txt file `pip install -r requirements.txt` 
 
 ## For Broad People
 

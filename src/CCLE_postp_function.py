@@ -1260,7 +1260,8 @@ def addAnnotation(maf, NCBI_Build='37', Strand="+"):
 # Other Helpers
 #####################
 
-def AddToVirtual(virtualname, files, folderfrom = None):
+
+def AddToVirtual(virtualname, folderfrom = None, files=[]):
   """
   will add some files from a taiga folder to a taiga virtual dataset folder and preserve the previous files
 
@@ -1271,7 +1272,8 @@ def AddToVirtual(virtualname, files, folderfrom = None):
     files: a list(tuples(newfilename,prevfilename)) can be from the folder
   """
   file_dict = {}
-  assert type(files[0]) is tuple
+  if len(files)>0:
+    assert type(files[0]) is tuple
   if folderfrom is not None:
     versiona = max([int(i['name']) for i in tc.get_dataset_metadata(folderfrom)['versions']])
   versionb = max([int(i['name']) for i in tc.get_dataset_metadata(virtualname)['versions']])
