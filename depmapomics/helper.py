@@ -3,7 +3,7 @@ from depmapomics.config import RNASEQC_THRESHOLDS_LOWQUAL, RNASEQC_THRESHOLDS_FA
 
 import pandas as pd
 
-def plot_rnaseqc_results(workspace, samplelist):
+def plot_rnaseqc_results(workspace, samplelist, output_path = 'data/rna_qc_plots/'):
     rnaqc = getQC(workspace=workspace, only=samplelist, qcname="rnaseqc2_metrics")
     assert pd.Series(rnaqc).map(lambda x: x[0]).notnull().all()
 
@@ -24,10 +24,12 @@ def plot_rnaseqc_results(workspace, samplelist):
     sys.stdout.flush()
 
     lowqual = rna.filterRNAfromQC(qcs, thresholds=RNASEQC_THRESHOLDS_LOWQUAL,
-                                  folder='/tmp/lowqual/', plot=True, qant1=0.1, qant3=0.9)
+                                  folder='{}/lowqual/'.format(output_path), plot=True,
+                                  qant1=0.1, qant3=0.9)
     print('Failed QC samples')
     sys.stdout.flush()
     failed = rna.filterRNAfromQC(qcs, thresholds=RNASEQC_THRESHOLDS_FAILED,
-                                 folder='/tmp/failed', plot=True, qant1=0.07, qant3=0.93)
+                                 folder='{}/lowqual/'.format(output_path), plot=True,
+                                 qant1=0.07, qant3=0.93)
 
     return qcs, lowqual, failed
