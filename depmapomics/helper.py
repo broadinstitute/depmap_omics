@@ -1,8 +1,11 @@
-from genepy import rna
-from depmapomics.config import RNASEQC_THRESHOLDS_LOWQUAL, RNASEQC_THRESHOLDS_FAILED
-from src.CCLE_postp_function import getQC
+import sys
 
 import pandas as pd
+from genepy import rna
+from src.CCLE_postp_function import getQC
+
+from depmapomics.config import (RNASEQC_THRESHOLDS_FAILED,
+                                RNASEQC_THRESHOLDS_LOWQUAL)
 
 def plot_rnaseqc_results(workspace, samplelist, output_path='data/rna_qc_plots/'):
     rnaqc = getQC(workspace=workspace, only=samplelist, qcname="rnaseqc2_metrics")
@@ -22,7 +25,7 @@ def plot_rnaseqc_results(workspace, samplelist, output_path='data/rna_qc_plots/'
     # qcs = qcs[~((qcs.mean(1)==1.0) | (qcs.mean(1)==0.0))]
 
     print('Low quality samples')
-    import sys
+
     sys.stdout.flush()
 
     lowqual = rna.filterRNAfromQC(qcs, thresholds=RNASEQC_THRESHOLDS_LOWQUAL,
