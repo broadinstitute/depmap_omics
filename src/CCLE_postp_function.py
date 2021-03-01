@@ -1058,7 +1058,7 @@ def mergeAnnotations(firstmaf, additionalmaf, Genome_Change="Genome_Change", Sta
 # Other Helpers
 #####################
 
-def AddToVirtual(virtualname, folderfrom = None, files):
+def AddToVirtual(virtualname, folderfrom = None, files=None):
   """
   will add some files from a taiga folder to a taiga virtual dataset folder and preserve the previous files
 
@@ -1079,11 +1079,13 @@ def AddToVirtual(virtualname, folderfrom = None, files):
   for i, val in enumerate(files):
     if "/" in val[1]:
       print("assuming "+val[1]+" to be a local file")
-      file_dict.update({val[0]:val[1]})
+      file_dict.update({val[1]: val[0]})
+      files.pop(i)    
     else:
       files[i] = (val[0], folderfrom + '.' + str(versiona) + '/' + val[1])
   print(files)
-  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict=file_dict, add_all_existing_files=True)
+  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files,
+                    upload_file_path_dict=file_dict, add_all_existing_files=True)
 
 #####################
 # DB Functions
