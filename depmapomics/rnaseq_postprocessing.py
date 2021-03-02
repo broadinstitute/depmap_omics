@@ -59,9 +59,15 @@ class RNAseq(OmicsPipeline):
         for val in rsem_files:
             file = pd.read_csv(val, compression='gzip', header=0,
                               sep='\t', quotechar='"', error_bad_lines=False)
-            file.rename(columns = {'transcript_id(s)': 'transcript'}, inplace=True)
-            # if val in [x for x in rsem_files if 'gene' in x]:
-            #     file = file.drop(columns = 'transcript').set_index('gene_id', drop=True)
+            file.rename(columns = {'transcript_id(s)': 'transcript_id'}, inplace=True)
+            if val in [x for x in rsem_files if 'gene' in x]:
+                if ('gene_id' not in file.columns) & ('Unnamed: 0' in file.columns):
+                    file.rename(columns={'Unnamed: 0': 'gene_id'}, inplace=True)
+
+                assert {'transcript_id', 'gene_id'} - set(file.columns) == set(), \
+                    '{}:\n{}'.format(val, ', '.join(file.columns))
+                    # '{}:\n{}'.format(val, file.head(2))
+            #     file = file.drop(columns = 'transcript_id').set_index('gene_id', drop=True)
             #     file = file[(file.sum(1) != 0) & (file.var(1) != 0)]
             files[val.split('/')[-1]] = file
         return files
@@ -69,7 +75,7 @@ class RNAseq(OmicsPipeline):
     def subset_gene_columns(self, files):
         self.printv('subsetting gene columns')
         for val in ['rsem_genes_expected_count','rsem_genes_tpm']:
-            file = files[val].drop(columns='transcript').set_index('gene_id')
+            file = files[val].drop(columns='transcript_id').set_index('gene_id')
             file = file[(file.sum(1) != 0) & (file.var(1) != 0)]
             r = [i.split('.')[0] for i in file.index]
             dup = h.dups(r)
