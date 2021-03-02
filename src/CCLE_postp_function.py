@@ -10,21 +10,17 @@
 #
 #
 from scipy.stats import pearsonr
-import pdb
 import pandas as pd
 import numpy as np
 import dalmatian as dm
 from taigapy import TaigaClient
-from time import sleep
 tc = TaigaClient()
 import os
 import ipdb
-import sys
-print("you need to have JKBio in your path:\ne.g. have installed JKBio in the same folder as ccle_processing")
-from JKBio import terra
-from JKBio import sequencing as seq
-from JKBio.utils import helper as h
-from JKBio.google import gcp
+from genepy import terra
+from genepy import sequencing as seq
+from genepy.utils import helper as h
+from genepy.google import gcp
 from collections import Counter
 from gsheets import Sheets
 import seaborn as sns
