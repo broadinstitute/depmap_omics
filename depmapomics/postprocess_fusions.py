@@ -21,12 +21,13 @@ def postprocess_fusions(refworkspace, sample_id_name='DepMap_ID',
         .to_frame(name='CCLE_count')
     fusions = pd.merge(fusions, CCLE_count, on=['LeftBreakpoint', 'RightBreakpoint'])
 
+    # I converted the old funcion to pandas functions
+    # uncommnet the following to test that it matches the old function:
     # from collections import Counter
-    # test that it matches the old function
     # fusions['tmp'] = [i.LeftBreakpoint+'_'+i.RightBreakpoint for k, i in fusions.iterrows()]
     # counts = Counter(list(fusions['tmp']))
     # fusions['tmp'] = [counts[val] for val in fusions['tmp']]
-    # (fusions['tmp'] == fusions['CCLE_count']).all()
+    # assert (fusions['tmp'] == fusions['CCLE_count']).all()
 
     fusions_filtered = filterFusions(fusions, maxfreq=0.1, sample_id_name=sample_id_name)
     fusions.to_csv(output_fusion_file, index=False)
