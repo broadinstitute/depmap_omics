@@ -3,11 +3,11 @@ import pandas as pd
 from genepy.google.gcp import cpFiles
 from src.CCLE_postp_function import filterFusions
 
-def postprocess_fusions(refworkspace, sample_id_name='DepMap_ID',
+def postprocess_fusions(refworkspace, sample_id_name='DepMap_ID', sample_set_name = 'all',
                         output_fusion_file='/tmp/fusions.csv',
                         output_fusion_filtered_file='/tmp/filtered_fusions.csv'):
     refwm = dm.WorkspaceManager(refworkspace).disable_hound()
-    aggregated = refwm.get_sample_sets().loc['all_samples']['fusions_star']
+    aggregated = refwm.get_sample_sets().loc[sample_set_name]['fusions_star']
     cpFiles([aggregated], "/tmp/expression.fusion.tsv")
     fusions = pd.read_csv("/tmp/expression.fusion.tsv",
                           names=[sample_id_name, 'FusionName', 'JunctionReadCount',
