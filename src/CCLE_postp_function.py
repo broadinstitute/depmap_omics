@@ -1110,7 +1110,7 @@ def addToMainFusion(input_filenames, main_filename, DepMap_ID="DepMap_ID"):
       df.to_csv(f, header=False, sep='\t', index=False)
 
 
-def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, CCLE_count="CCLE_count", red_herring=['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM', 'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']):
+def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, sample_id_name='DepMap_ID', CCLE_count="CCLE_count", red_herring=['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM', 'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']):
   """
   Given a fusion file from star fusion, filters it (will also filter Mitochrondria and HLA genes)
 
@@ -1122,11 +1122,12 @@ def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, CCLE_count="CCLE_count", r
     CCLE_count: str: colname where are stored counts of that fusion name across our samples
     minffpm: int minimum ffpm freq to filter on
     red_herring: list[str] of flags to filter on
+    sample_id_name: name used for the sample ids
   """
   fusions = fusions.copy()
   # remove recurrent
   fusions = fusions[fusions[CCLE_count] <
-                    len(set(fusions[DepMap_ID]))*maxfreq]
+                    len(set(fusions[sample_id_name]))*maxfreq]
   # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes,
   fusions = fusions[~(fusions['LeftBreakpoint'].str.contains(
       'chrM') & fusions['RightBreakpoint'].str.contains('chrM'))]
