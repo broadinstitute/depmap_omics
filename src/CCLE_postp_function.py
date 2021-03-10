@@ -1243,6 +1243,22 @@ def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
   return a
 
 
+def annotateLikelyImmortalized(maf, sample_col="DepMap_ID", 
+genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt', 'COSMIChsCnt'], 
+max_recurrence=0.05, min_tcga_true_cancer=5):
+  maf['is_likely_immortalization'] = False
+  leng = len(set(maf[sample_col]))
+  tocheck = []
+  for k, v in Counter(maf[genome_change_col].tolist()).items():
+    if v > max_recurrence*leng:
+      tocheck.append(k)
+  for val in list(set(tocheck)-set([np.nan])):
+    if np.nan_to_num(maf[maf[genome_change_col] == val][TCGAlocs], 0).max() < min_tcga_true_cancer:
+      maf.loc[maf[maf[genome_change_col]
+                              == val].index, 'is_likely_immortalization'] = True
+  return maf
+
+
 def addAnnotation(maf, NCBI_Build='37', Strand="+"):
   """
   adds NCBI_Build and Strand annotaation on the whole maf file
