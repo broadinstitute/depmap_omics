@@ -10,21 +10,17 @@
 #
 #
 from scipy.stats import pearsonr
-import pdb
 import pandas as pd
 import numpy as np
 import dalmatian as dm
 from taigapy import TaigaClient
-from time import sleep
 tc = TaigaClient()
 import os
 import ipdb
-import sys
-print("you need to have JKBio in your path:\ne.g. have installed JKBio in the same folder as ccle_processing")
-from JKBio import terra
-from JKBio import sequencing as seq
-from JKBio.utils import helper as h
-from JKBio.google import gcp
+from genepy import terra
+from genepy import sequencing as seq
+from genepy.utils import helper as h
+from genepy.google import gcp
 from collections import Counter
 from gsheets import Sheets
 import seaborn as sns
@@ -1260,8 +1256,7 @@ def addAnnotation(maf, NCBI_Build='37', Strand="+"):
 # Other Helpers
 #####################
 
-
-def AddToVirtual(virtualname, folderfrom = None, files=[]):
+def addToVirtual(virtualname, folderfrom = None, files=[]):
   """
   will add some files from a taiga folder to a taiga virtual dataset folder and preserve the previous files
 
@@ -1283,8 +1278,318 @@ def AddToVirtual(virtualname, folderfrom = None, files=[]):
   for i, val in enumerate(files):
     if "/" in val[1]:
       print("assuming "+val[1]+" to be a local file")
-      file_dict.update({"name": val[0], "format": "Raw", "path":val[1]})
+      file_dict.update({val[1]: val[0]})
+      files.pop(i)    
     else:
       files[i] = (val[0], folderfrom + '.' + str(versiona) + '/' + val[1])
   print(files)
-  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files, upload_file_path_dict=file_dict, add_all_existing_files=True)
+  tc.update_dataset(dataset_permaname=virtualname, add_taiga_ids=files,
+                    upload_file_path_dict=file_dict, add_all_existing_files=True)
+
+#####################
+# DB Functions
+#####################
+
+def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', clientsecret='~/.client_secret.json',
+                       storagepath='~/.storage.json', colname='CN New to internal', value='no data yet'):
+  """
+  from a google spreadsheet, will check that we have all of the samples we should have in our sample
+  set name (will parse NAME_additional for sample_id)
+
+  Args:
+  -----
+    url: str the url of the gsheet
+    sample: list(str) the samples to check
+    samplesetname: str the name of the sampleset in the googlesheet
+    sample_id: str the name of the sample_id column in the google sheet
+    clientsecret: str path to your secret google api account file
+    storagepath: str path to your secret google api storage file
+    colname: str if we need not to include some rows from the spreadsheet that have the value value
+    value: str the value for which not to include the rows
+
+  @gmiller
+  """
+  sheets = Sheets.from_files(clientsecret, storagepath)
+  # Cell Line Profiling Status google sheet
+  gsheet = sheets.get(url).sheets[0].to_frame()
+  gsheet.index = gsheet[sample_id]
+  new_cn = gsheet[gsheet[colname] == samplesetname + 'tent']
+  if colname and value:
+    data_not_ready_cn = gsheet[gsheet[colname] == value]
+    print(data_not_ready_cn)
+  # these are the "new" samples discovered by our function, createDatasetsFromNewCellLines
+  sample_ids = [id.split('_')[0] for id in sample]
+  print("We found data for " + str(len(sorted(sample))) + " samples.\n")
+
+  print("Sanity check: Since we have the tacked on number, we should only have 1 each per sample ID:\n")
+  Counter(sample)
+
+  in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
+  if len(in_sheet_not_found) > 0:
+    print("We have not found " + str(len(in_sheet_not_found)) + " of the samples we're supposed to \
+      have this release:\n" + str(sorted(list(in_sheet_not_found))))
+  else:
+    print("We aren't missing any samples that we're supposed to have this release!")
+
+
+def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="version"):
+  """
+  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
+
+  Args:
+  -----
+    refsamples: df[id, version, arxspan_id,...] the reference metadata
+    names: list[id] only do it on this set of samples
+    arxspan_id: the name of the id field
+    version: the name of the version field
+
+  Returns:
+  --------
+    the subsetted dataframe
+
+  """
+  lennames = len(names)
+  res = {}
+  refsamples = refsamples[refsamples.index.isin(names)]
+  if lennames > len(refsamples):
+    ipdb.set_trace()
+    raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
+  for arxspan in set(refsamples[arxspan_id]):
+    allv = refsamples[refsamples[arxspan_id] == arxspan]
+    for k, val in allv.iterrows():
+      if val[version] == max(allv.version.values):
+        res[k] = arxspan
+        break
+  print("removed " + str(lennames - len(res)) + " duplicate samples")
+  # remove all the reference metadata columns except the arxspan ID
+  return res
+
+
+def getQC(workspace, only=[], qcname=[], match=""):
+  """
+  Will get from a workspace, the QC data for each samples
+
+  Args:
+  -----
+    workspace: the workspace name
+    only: do it only for this set of samples
+    qcname: col name where the QC is in the workspace samples
+    match: for example'.Log.final.out' get only that QC if you have a list of QCs in you qcname col
+
+  Returns:
+  --------
+    a dict(sample_id:list[QC_filepaths])
+  """
+  if type(qcname) is str:
+    qcname = [qcname]
+  res = {}
+  wm = dm.WorkspaceManager(workspace)
+  sam = wm.get_samples()
+  if len(only) > 0:
+    sam = sam[sam.index.isin(only)]
+  for k, val in sam.iterrows():
+    res[k] = []
+    for i in val[qcname]:
+      if type(i) is list:
+        if match:
+          res[k].extend([e for e in i if match in e])
+        else:
+          res[k].extend(i)
+      else:
+        res[k].append(i)
+  return res
+
+
+def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
+  refsamples.loc[samples, releaseName] = '1'
+  return refsamples
+
+
+def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_id", "datatype", "size",
+                                                   "ccle_name", "stripped_cell_line_name", "patient_id", "cellosaurus_id",
+"bam_public_sra_path", "internal_bam_filepath", "internal_bai_filepath",
+"parent_cell_line", "sex", "matched_normal", "age", "primary_site",
+"primary_disease", "subtype", "subsubtype", "origin", "mediatype",
+"condition", "sequencing_type", "baits", "source", "legacy_bam_filepath", "legacy_bai_filepath"], rename={'participant_id':'patient_id'}, deleteUnmatched=False):
+  """
+  will used the current sample tracker to update sample annotation in the workspace
+
+  it can remove samples that are not in the tracker.
+  """
+  wm = dm.WorkspaceManager(workspaceID).disable_hound()
+  sam = wm.get_samples()
+  track = tracker[tracker.index.isin(sam.index)].rename(columns=rename)
+  miss = set(columns) - set(sam.columns)
+  print('found these columns to be missing in workspace: '+str(miss))
+  if len(track)==0:
+      raise ValueError('wrong tracker or index non matching')
+  unmatched = set(sam.index) - (set(tracker.index) | set(['nan']))
+  print("found these to be unmatched: "+str(unmatched))
+  if deleteUnmatched and len(unmatched)>0:
+      terra.removeSamples(workspaceID, unmatched)
+  wm.update_sample_attributes(track[columns])
+
+
+def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
+  """
+  looks at the current sample tracker and updates the pairs in Terra
+
+  It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
+  """
+
+def cleanVersions(tracker, samplecol='arxspan_id', dryrun=False, datatypecol='datatype', versioncol="version"):
+  """
+  cleans the versions of a sample tracker:
+
+  checks that we get 1,2,3 instead of 2,4,5 when samples are renamed or removed
+  """
+  tracker = tracker.copy()
+  tracker['samval']=tracker[samplecol]+tracker[datatypecol]
+  for v in set(tracker['samval']):
+      sams = tracker[tracker['samval']==v]
+      vs = sams[versioncol].tolist()
+      if max(vs)==len(vs):
+          continue
+      print("found issue")
+      if dryrun:
+        continue
+      vs.sort()
+      rn = {}
+      for i,v in enumerate(vs):
+          rn.update({v:i+1})
+      for k, val in sams.iterrows():
+          tracker.loc[k, versioncol] = rn[val[versioncol]]
+  tracker = tracker.drop(columns='samval')
+  return tracker
+
+
+def setRightName(tracker, name='stripped_cell_line_name', signs=['-','_','.',' ']):
+  """
+  cell line name needd to be all uppercase and not contain special signs
+  """
+  new = []
+  for val in tracker[name]:
+      for s in signs:
+          val=val.replace(s,'')
+      new.append(val.upper())
+  tracker[name]=new
+  return tracker
+
+
+def findLikelyDup(tracker, signs=['-', '_', '.', ' '], name='stripped_cell_line_name', arxspid='arxspan_id', looksub=True):
+    """
+    find cell lines that are likely to be duplicates
+
+    will return a list of likly duplicate names as tuples (rh13, RH-13), a list of associated arxspan ids as tuples as well,
+    and a list of arxspan ids that have multiple names associated
+    """
+    names = set(tracker[name])
+    simi = []
+    arxsp = []
+    issues = {}
+    for i, name1 in enumerate(names):
+        h.showcount(i, len(names))
+        n1 = name1
+        for s in signs:
+            name1 = name1.replace(s, '')
+        name1 = name1.upper()
+        for name2 in names-set([n1]):
+            n2 = name2
+            for s in signs:
+                name2 = name2.replace(s, '')
+            name2 = name2.upper()
+            if name1 == name2:
+                if (looksub and (name1 in name2 or name2 in name1) and abs(len(name1)-len(name2)) < 2) or not looksub:
+                    if (n1, n2) not in simi and (n2, n1) not in simi:
+                        simi.append((n1, n2))
+                        arxsp.append(
+                            (tracker[tracker[name] == n1][arxspid][0], tracker[tracker[name] == n2][arxspid][0]))
+    for val in set(tracker[name]):
+        v = set(tracker[tracker[name] == val][arxspid])
+        if len(v) > 1:
+            issues.update({val: v})
+    return simi, arxsp, issues
+
+
+def merge(tracker, new, old, arxspid, cols):
+  """
+  given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
+  """
+  #loc = tracker[tracker[arxspid]==old].index
+
+
+def resolveIssues(tracker, issus, arxspid, cols):
+  """
+  given a dict of names: [arxp ids] will try to find back the right name for the right
+  arxspan id by looking at their rfequncy of occurance along the tracker
+
+  if we have rh12: [ACH-00001,ACH-0002]
+  and rh12 is associated 1 time with ach-00002 and 3 with ach-00001
+  and rh13 is assocated 2 time with ach-00002, then it associates:
+  ach-00001 : rh12
+  ach-00002 : rh13
+  """
+  #for val in issus:
+
+
+def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={},
+stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id", depmappvlink="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"):
+    # find back from cell line name in ccle ref samples
+    noarxspan.arxspan_id = [ccle_refsamples[ccle_refsamples[stripped_cell_line_name] == i].arxspan_id[0] if i in ccle_refsamples[stripped_cell_line_name].tolist() else 0 for i in noarxspan[arxspan_id]]
+    a = [ccle_refsamples[ccle_refsamples[stripped_cell_line_name] == i][arxspan_id][0]
+         if i in ccle_refsamples[stripped_cell_line_name].tolist() else 0 for i in noarxspan[stripped_cell_line_name]]
+    noarxspan[arxspan_id] = [i if i != 0 else a[e]
+                             for e, i in enumerate(noarxspan.arxspan_id)]
+
+    # get depmap pv
+    depmap_pv = sheets.get(depmappvlink).sheets[0].to_frame(header=2)
+    depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
+
+    # find back from depmapPV
+    signs = ['-', '_', '.', ' ']
+    for k, val in noarxspan[noarxspan[arxspan_id] == 0].iterrows():
+        val = val[stripped_cell_line_name].upper()
+        for s in signs:
+            val = val.replace(s, '')
+        a = depmap_pv[depmap_pv['CCLE_name'].str.contains(
+            val) | depmap_pv['Stripped Cell Line Name'].str.contains(val) | depmap_pv['Aliases'].str.contains(val)]
+        if len(a) > 0:
+            noarxspan.loc[k, arxspan_id] = a['DepMap_ID'].values[0]
+    noarxspan[arxspan_id] = noarxspan[arxspan_id].astype(str)
+    new_noarxspan= resolveFromWorkspace(noarxspan[noarxspan[arxspan_id].str.contains('ACH-')], refsamples=ccle_refsamples[ccle_refsamples['datatype'] == datatype], match=[
+                                     'ACH', 'CDS'], participantslicepos=10, accept_unknowntypes=True, extract=extract)
+    return pd.concat([new_noarxspan, noarxspan[~noarxspan[arxspan_id].str.contains('ACH-')]])
+
+
+def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', participant_id='participant_id', toupdate={"sex":[],
+"primary_disease":[],
+"cellosaurus_id":[],
+"age":[],
+"primary_site":[],
+"subtype":[],
+"subsubtype":[],
+"origin":[],
+"parent_cell_line":[],
+"matched_normal":[],
+"comments":[],
+"mediatype":[],
+"condition":[],
+'stripped_cell_line_name':[],
+"participant_id":[]}):
+    # If I have a previous samples I can update unknown data directly
+    index = []
+    notfound = []
+    for k, val in samples.iterrows():
+        dat = ccle_refsamples[ccle_refsamples[arxspan_id] == val[arxspan_id]]
+        if len(dat) > 0:
+            index.append(k)
+            for k, v in toupdate.items():
+                toupdate[k].append(dat[k].tolist()[0])
+        else:
+            notfound.append(k)
+    # doing so..
+    for k, v in toupdate.items():
+        samples.loc[index, k] = v
+    len(samples.loc[notfound][participant_id]
+        ), samples.loc[notfound][participant_id].tolist()
+    return samples, notfound      
