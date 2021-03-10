@@ -5,6 +5,24 @@ import numpy as np
 from src.CCLE_postp_function import addAnnotation
 from genepy.mutations import filterAllelicFraction, filterCoverage
 
+
+def add_variant_annotation_column(maf):
+    mutation_groups={
+        "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
+        "other non-conserving":["In_Frame_Del", "In_Frame_Ins", "Stop_Codon_Del",
+            "Stop_Codon_Ins", "Missense_Mutation", "Nonstop_Mutation"],
+        'silent': ['Silent'],
+        "damaging":['De_novo_Start_OutOfFrame','Frame_Shift_Del','Frame_Shift_Ins',
+            'Splice_Site', 'Start_Codon_Del', 'Start_Codon_Ins', 'Start_Codon_SNP','Nonsense_Mutation']
+    }
+
+    rename = {}
+    for k,v in mutation_groups.items():
+        for e in v:
+            rename[e] = k
+    maf['Variant_annotation'] = [rename[i] for i in maf['Variant_Classification'].tolist()]
+    return maf
+
 def postprocess_mutations_filtered_wes(refworkspace, sample_set_name = 'all',
                                        output_file='/tmp/wes_somatic_mutations.csv'):
     refwm = dm.WorkspaceManager(refworkspace).disable_hound()
@@ -28,6 +46,8 @@ def postprocess_mutations_filtered_wes(refworkspace, sample_set_name = 'all',
     mutations = filterAllelicFraction(mutations, loc=['CGA_WES_AC'], sep=':', frac=0.1)
     print('adding NCBI_Build and strand annotations')
     mutations = addAnnotation(mutations, NCBI_Build='37', Strand="+")
+    print('adding the Variant_annotation column')
+    mutations = add_variant_annotation_column(mutations)
     print('saving results to output file')
     mutations.to_csv('/tmp/wes_somatic_mutations.csv', index=False)
     return mutations
