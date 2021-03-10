@@ -75,8 +75,11 @@ CCLE generates RNAseq based fusion calls using the STAR-Fusion pipeline. A compr
 - [CN] We are now adding amplification status (-, 0, +)  for each segment in the segment copy number. X chromosome amplification status was removed due to its bias in female samples, caused by our purely male PoNs.
 - [CN] Copy Number calls for the normal sample ACH-002359, were removed in 21Q1. We plan to add the data back in 21Q2.
 
+- [Mutations] Removing mutation calls for ACH-002378 (matched normal) as we are awaiting new mutation calls on the original bam file. [plan to update readme]
+- [Mutations] Removing ACH-001189 ACH-002303, ACH-002315, ACH-001675 again in the mutation dataset as the 20Q4 removal had only happened for the WES data
+- [Mutations] Adding back a set of dropped lines in the internal dataset: ACH-001693, ACH-001855, ACH-001537, ACH-001971, ACH-001672, ACH-001437, ACH-001502, ACH-001349, ACH-001847, ACH-001493, ACH-001669, ACH-001449, ACH-001293, ACH-001194, ACH-002048, ACH-001662, ACH-002204, ACH-002010, ACH-001676, ACH-001678, ACH-001854, ACH-001438, ACH-001696, ACH-001061
+
 - [CN+Mutations] Removed lines that should have been removed in 20Q4 ACH-001189, ACH-002303, ACH-002315, ACH-002341.
-- [CN+Mutations] Warning: Keeping 3 Chordoma lines that dramatically failed our WES QC: "ACH-001955", “ACH-001956”, "ACH-001957".
 
 ###########
 ## Files ##
