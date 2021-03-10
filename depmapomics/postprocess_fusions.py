@@ -2,6 +2,16 @@ import dalmatian as dm
 import pandas as pd
 from genepy.google.gcp import cpFiles
 from src.CCLE_postp_function import filterFusions
+import re
+
+def standardize_leftgene_rightgene(fusions):
+    '''
+    converts [GENE_NAME]^[ENSG] --> [GENE_NAME] ([ENSG])
+    Example: "SMAD4^ENSG00000141646.14" --> "SMAD4 (ENSG00000141646.14)"
+    '''
+    fusions[['LeftGene', 'RightGene']] = fusions[['LeftGene', 'RightGene']]\
+        .applymap(lambda x: '{} ({})'.format(*x.split(r'^')))
+    return fusions
 
 def postprocess_fusions(refworkspace, sample_id_name='DepMap_ID', sample_set_name = 'all',
                         output_fusion_file='/tmp/fusions.csv',
@@ -21,15 +31,11 @@ def postprocess_fusions(refworkspace, sample_id_name='DepMap_ID', sample_set_nam
         .to_frame(name='CCLE_count')
     fusions = pd.merge(fusions, CCLE_count, on=['LeftBreakpoint', 'RightBreakpoint'])
 
-    # I converted the old funcion to pandas functions
-    # uncommnet the following to test that it matches the old function:
-    # from collections import Counter
-    # fusions['tmp'] = [i.LeftBreakpoint+'_'+i.RightBreakpoint for k, i in fusions.iterrows()]
-    # counts = Counter(list(fusions['tmp']))
-    # fusions['tmp'] = [counts[val] for val in fusions['tmp']]
-    # assert (fusions['tmp'] == fusions['CCLE_count']).all()
-
     fusions_filtered = filterFusions(fusions, maxfreq=0.1, sample_id_name=sample_id_name)
+
+    fusions = standardize_leftgene_rightgene(fusions)
+    fusions_filtered = standardize_leftgene_rightgene(fusions_filtered)
+
     fusions.to_csv(output_fusion_file, index=False)
     fusions_filtered.to_csv(output_fusion_filtered_file, index=False)
 
