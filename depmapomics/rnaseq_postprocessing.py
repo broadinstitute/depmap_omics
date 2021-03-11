@@ -1,7 +1,6 @@
 import io
 import os
 import os.path
-import tempfile
 
 import dalmatian as dm
 import pandas as pd
@@ -11,6 +10,7 @@ from genepy.utils import helper as h
 from genepy.utils.helper import createFoldersFor
 
 from depmapomics.config import CACHE_PATH, TMP_PATH
+
 
 def download_rnaseq_files_to_tmp(samplesets, sample_set_id):
     res = samplesets.loc[sample_set_id]
@@ -151,9 +151,6 @@ def postprocess_expression(workspace, sample_set, save_output=True, release=None
     print('fetching sample sets from the workspace')
     sample_sets = workspace_manager.get_sample_sets()
     print('fetching samples from the workspace')
-    samples = workspace_manager.get_samples()
-    print('fetching participants from the workspace')
-    participants = workspace_manager.get_participants()
     gene_rename, protcod_rename, ensembltohgnc = generate_gene_names()
 
     if release is None:
