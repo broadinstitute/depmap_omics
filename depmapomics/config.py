@@ -1,4 +1,5 @@
 CACHE_PATH = '~/.depmapomics/'
+TMP_PATH = '/tmp/'
 
 RNASEQC_THRESHOLDS_LOWQUAL = {'minmapping': 0.85, 'minendmapping': 0.75, 'minefficiency': 0.75,
                               'maxendmismatch': 0.02, 'maxmismatch': 0.02, 'minhighqual': 0.8,
