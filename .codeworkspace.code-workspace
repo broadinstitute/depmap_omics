@@ -8,7 +8,7 @@
 		}
 	],
 	"settings": {
-		"workbench.colorTheme": "Community Material Theme Ocean High Contrast",
+		"workbench.colorTheme": "Night Owl Light",
 		"python.pythonPath": "/home/jeremie/miniconda3/bin/python"
 	}
 }
