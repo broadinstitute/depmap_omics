@@ -1,0 +1,15 @@
+,name,namespace,rootEntityType,methodName,methodVersion,methodNamespace,methodUri,sourceRepo
+0,aggregate_vcfs_indels,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora
+1,aggregate_vcfs_snp,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora
+2,aggregate_vcfs_sv,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora
+3,aggregate_vcfs_sv_somatic,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora
+4,Manta_SomaticSV_original,broad-firecloud-ccle,sample,Manta_SomaticSV,9,GP-TAG,agora://GP-TAG/Manta_SomaticSV/9,agora
+5,cnn-variant-filter,gatk,sample,cnn-variant-filter,3,gatk,agora://gatk/cnn-variant-filter/3,agora
+6,CNV_Somatic_Pair_Workflow,gatk,,CNV_Somatic_Pair_Workflow,15,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/15,agora
+7,CNV_Somatic_Workflow_on_Sample,gatk,sample,CNV_Somatic_Pair_Workflow,15,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/15,agora
+8,PreProcessingForVariantDiscovery_GATK4,gatk,sample,PreProcessingForVariantDiscovery_GATK4,8,gatk,agora://gatk/PreProcessingForVariantDiscovery_GATK4/8,agora
+9,Aggregate_CN_seg_files,gkugener,sample_set,Aggregate_CN_seg_files,2,gkugener,agora://gkugener/Aggregate_CN_seg_files/2,agora
+10,ArrayOfFilesToTxt,gkugener,sample,ArrayOfFilesToTxt,1,gkugener,agora://gkugener/ArrayOfFilesToTxt/1,agora
+11,liftover,jkobject,sample,liftover,10,jkobject,agora://jkobject/liftover/10,agora
+12,Manta_SomaticSV,jkobject,sample,Manta_SomaticSV,1,jkobject,agora://jkobject/Manta_SomaticSV/1,agora
+13,BamToUnmappedRGBams,vdauwera,sample,BamToUnmappedRGBams,3,vdauwera,agora://vdauwera/BamToUnmappedRGBams/3,agora

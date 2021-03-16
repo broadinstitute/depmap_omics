@@ -9,22 +9,19 @@
 # HELPER FUNC  ######################################
 #
 #
-from scipy.stats import pearsonr
+from gsheets import Sheets
+from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
 import dalmatian as dm
 from taigapy import TaigaClient
 tc = TaigaClient()
-import os
-import ipdb
+from src import tracker
+from src import terra as myterra
 from genepy import terra
 from genepy import sequencing as seq
 from genepy.utils import helper as h
 from genepy.google import gcp
-from collections import Counter
-from gsheets import Sheets
-import seaborn as sns
-from matplotlib import pyplot as plt
 
 #####################
 # Const Variables
@@ -44,9 +41,9 @@ extract_defaults = {
     'name': 'sample_alias',
     'bai': 'crai_or_bai_path',
     'bam': 'cram_or_bam_path',
-    'ref_bam': 'internal_bam_filepath',
+    'ref_bam': 'legacy_bam_filepath',
     'ref_type': 'datatype',
-    'ref_bai': "internal_bai_filepath",
+    'ref_bai': "legacy_bai_filepath",
     'version': 'version',
     'primary_disease': 'primary_disease',
     'ref_arxspan_id': 'arxspan_id',
@@ -148,7 +145,7 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="
     match = [match]
   if refurl:
     print('refsamples is overrided by a refurl')
-    refsamples = sheets.get(refurl).sheets[0].to_frame().set_index("cds_sample_id")
+    refsamples = sheets.get(refurl).sheets[0].to_frame(index_col=0)
   if refsamples is None:
     print('we do not have refsamples data. Using the wto workspace sample data instead')
     refsamples = wto.get_samples()
@@ -221,7 +218,7 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="
 
   sampless = assessAllSamples(sampless, refsamples, stype, rename, extract)
   # creating pairs
-  pairs = setupPairsFromSamples(sampless, refsamples[refsamples[extract['ref_type']] == stype], extract)
+  pairs = myterra.setupPairsFromSamples(sampless, refsamples[refsamples[extract['ref_type']] == stype], extract)
   # I am trying to remove duplicates from samples without arxspan ids to then look more into them
   # and see if I have to get data for them or if I should just throw them out
   toremov = set()
@@ -261,7 +258,8 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="
   a = len(sampless)
   wrongsampless = wrongsampless[wrongsampless[extract['update_time']] > maxage]
   sampless = sampless[sampless[extract['update_time']]>maxage]
-  print('removed: '+str(a-len(sampless))+" samples that have not changed since last time (likely duplicate having been removed)")
+  print('removed: '+str(a-len(sampless))+" samples that have not changed since last time (likely\
+     duplicate having been removed)")
   return sampless, pairs, wrongsampless
 
 
@@ -300,7 +298,8 @@ def deleteClosest(sampless, refsamples, size='size', ref_size='size', arxspid='a
   return sampless
 
 
-def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True, recomputehash=True, extract={}):
+def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True, 
+recomputedate=True, recomputehash=True, extract={}):
   """
   Extract more information from a list of samples found on GP workspaces
 
@@ -498,3 +497,204 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
                                      for i, val in sampless.iterrows()]
 
   return sampless
+
+def loadWES(samplesetname, 
+            workspaces=[
+            "terra-broad-cancer-prod/CCLE_DepMap_WES",
+            "terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes"],
+            refworkspace="broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline", 
+            sources=["ccle","ibm"],
+            maxage='2020-09-10',
+            baits = 'ice',
+            stype = "wes"):
+  return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
+              sources=sources, maxage=maxage, baits=baits, stype=stype)
+
+
+def loadRNA(samplesetname,
+            workspaces=[
+                "terra-broad-cancer-prod/CCLE_DepMap_WES",
+                "terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes"],
+            refworkspace="broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline",
+            sources=["ccle", "ibm"],
+            maxage='2020-09-10',
+            baits='ICE',
+            stype="wes"):
+  return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
+              sources=sources, maxage=maxage, baits=baits, stype=stype)
+
+def load(samplesetname, workspaces,
+         refworkspace,
+         sources,
+         maxage,
+         baits,
+         stype,
+        my_id='~/.client_secret.json',
+        mystorage_id="~/.storage.json",
+        refsheet_url = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
+        depmappvlink = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE",
+        extract_to_change = {'from_arxspan_id': 'participant'},
+        # version 102
+        match = ['ACH-','CDS-'],
+        participantslicepos=10, accept_unknowntypes=True,
+        recomputehash=True):
+
+  release = samplesetname
+  sheets = Sheets.from_files(my_id, mystorage_id)
+  ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+
+  ## Adding new data
+
+  # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "primary_site", "primary_disease", "subtype", "subsubtype", "origin", "comments"
+  #when SMid: match== 
+  samples, _ , noarxspan = GetNewCellLinesFromWorkspaces(refworkspace, stype=stype, 
+                                                            maxage=maxage, refurl=refsheet_url, 
+                                                            wmfroms=workspaces,
+                                                            sources=sources, match=match, 
+                                                            participantslicepos=participantslicepos, 
+                                                            accept_unknowntypes=accept_unknowntypes, 
+                                                            extract=extract_to_change, 
+                                                        recomputehash=recomputehash)
+
+  ### finding back arxspan
+  noarxspan = tracker.retrieveFromCellLineName(noarxspan, ccle_refsamples, 
+  datatype=stype, depmappvlink=depmappvlink, extract=extract_to_change)
+
+  extract.update(extract_defaults)
+
+  #assess any potential issues
+  samples = pd.concat([samples, noarxspan[noarxspan.arxspan_id!='0']], sort=False)
+  noarxspan = noarxspan[noarxspan.arxspan_id=='0']
+
+  samples = assessAllSamples(
+      samples, ccle_refsamples, stype=stype, rename={}, extract=extract)
+
+  samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
+
+  noarxspan = noarxspan.sort_values(by = 'stripped_cell_line_name')
+  noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
+  samples['baits'] = baits
+  samples.loc[notfound].to_csv('temp/notfound_'+stype+'_'+release+'.csv')
+  samples.to_csv('temp/new_'+stype+'_'+release+'.csv')
+  return samples, notfound, noarxspan
+
+
+def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
+                name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'], 
+                filetypes=['bam', 'bai'],
+                my_id='~/.client_secret.json',
+                mystorage_id="~/.storage.json",
+                refworkspace="broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline",
+                cnworkspace="broad-firecloud-ccle/DepMap_WES_CN_hg38",
+                stype= "wes",
+                baits= 'ICE',
+                extract = {},
+                creds = '../.credentials.json',
+                sampletrackername ='ccle sample tracker',
+                refsheet_url = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",):
+
+  # uploading to our bucket (now a new function)
+  terra.changeToBucket(samples, bucket, name_col=name_col,
+                        values=values, filetypes=filetypes, catchdup=True, test=False)
+  
+  extract.update(extract_defaults)
+  sheets = Sheets.from_files(my_id, mystorage_id)
+  ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+
+  names=[]
+  subccle_refsamples = ccle_refsamples[ccle_refsamples['datatype'] == stype]
+  for k, val in samples.iterrows():
+    val = val["arxspan_id"]
+    names.append(val)
+    samples.loc[k, 'version'] = len(subccle_refsamples[subccle_refsamples['arxspan_id'] == val]) + names.count(val)
+  samples['version'] = samples['version'].astype(int)
+
+  ccle_refsamples = ccle_refsamples.append(samples, sort=False)
+
+  dfToSheet(ccle_refsamples,sampletrackername, secret=creds)
+
+  pairs = myterra.setupPairsFromSamples(samples, subccle_refsamples, extract)
+
+  #uploading new samples to mut
+  refwm = dm.WorkspaceManager(refworkspace)
+  refwm = refwm.disable_hound()
+  refwm.upload_samples(samples)
+  refwm.upload_entities('pairs', pairs)
+  refwm.update_pair_set(pair_set_id=samplesetname, pair_ids=pairs.index)
+  sam = refwm.get_samples()
+
+  pair = refwm.get_pairs()
+  refwm.update_pair_set(pair_set_id='all', pair_ids=pair.index)
+
+  refwm.update_pair_set(pair_set_id='all_'+baits, pair_ids=pair[pair["case_sample"].isin(
+      [i for i in sam[(sam['baits'] == baits) | (sam['baits'].isna())].index.tolist() if i != 'nan'])].index)
+
+  #creating a sample set
+  refwm.update_sample_set(sample_set_id=samplesetname, sample_ids=samples.index)
+  refwm.update_sample_set(sample_set_id='all', sample_ids=[
+                          i for i in sam.index.tolist() if i != 'nan'])
+
+  refwm.update_sample_set(sample_set_id='all_'+baits, sample_ids=[i for i in sam[(
+      sam['baits'] == baits) | (sam['baits'].isna())].index.tolist() if i != 'nan'])
+
+  #and CN
+  cnwm = dm.WorkspaceManager(cnworkspace)
+  cnwm = cnwm.disable_hound()
+  cnwm.upload_samples(samples)
+  cnwm.upload_entities('pairs', pairs)
+  cnwm.update_pair_set(pair_set_id=samplesetname, pair_ids=pairs.index)
+  sam = cnwm.get_samples()
+
+  pair = cnwm.get_pairs()
+  cnwm.update_pair_set(pair_set_id='all', pair_ids=pair.index)
+  cnwm.update_pair_set(pair_set_id='all_'+baits, pair_ids=pair[pair["case_sample"].isin(
+      [i for i in sam[(sam['baits'] == baits) | (sam['baits'].isna())].index.tolist() if i != 'nan'])].index)
+  #creating a sample set
+  cnwm.update_sample_set(sample_set_id=samplesetname, sample_ids=samples.index)
+  cnwm.update_sample_set(sample_set_id='all', sample_ids=[
+                        i for i in sam.index.tolist() if i != 'nan'])
+  cnwm.update_sample_set(sample_set_id='all_'+baits, sample_ids=[i for i in sam[(
+      sam['baits'] == baits) | (sam['baits'].isna())].index.tolist() if i != 'nan'])
+
+
+def updateRNA(samples, samplesetname, bucket="gs://cclebams/rna/",
+              name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'],
+              filetypes=['bam', 'bai'],
+              my_id='~/.client_secret.json',
+              mystorage_id="~/.storage.json",
+              refworkspace="",
+              stype="wes",
+              creds='../.credentials.json',
+              sampletrackername='ccle sample tracker',
+              refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",):
+
+  # uploading to our bucket (now a new function)
+  terra.changeToBucket(samples, bucket, name_col=name_col,
+                       values=values, filetypes=filetypes, catchdup=True, test=False)
+
+  samplesetname
+  sheets = Sheets.from_files(my_id, mystorage_id)
+  ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+
+  names = []
+  subccle_refsamples = ccle_refsamples[ccle_refsamples['datatype'] == stype]
+  for k, val in samples.iterrows():
+    val = val["arxspan_id"]
+    names.append(val)
+    samples.loc[k, 'version'] = len(
+        subccle_refsamples[subccle_refsamples['arxspan_id'] == val]) + names.count(val)
+  samples['version'] = samples['version'].astype(int)
+
+  ccle_refsamples = ccle_refsamples.append(samples, sort=False)
+  dfToSheet(ccle_refsamples, sampletrackername, secret=creds)
+
+  #uploading new samples to mut
+  refwm = dm.WorkspaceManager(refworkspace).disable_hound()
+  refwm.upload_samples(samples)
+  sam = refwm.get_samples()
+
+  #creating a sample set
+  refwm.update_sample_set(sample_set_id=samplesetname,
+                          sample_ids=samples.index)
+  refwm.update_sample_set(sample_set_id='all', sample_ids=[
+                          i for i in sam.index.tolist() if i != 'nan'])

@@ -1,4 +1,5 @@
 #rna.py
+import pandas as pd
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
   """

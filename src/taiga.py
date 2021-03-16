@@ -1,5 +1,6 @@
 #taiga.py
-
+from taigapy import TaigaClient
+tc = TaigaClient()
 
 def addToVirtual(virtualname, folderfrom = None, files=[]):
   """
