@@ -1,4 +1,5 @@
 #fusion.py
+import pandas as pd
 
 def addToMainFusion(input_filenames, main_filename, DepMap_ID="DepMap_ID"):
   """

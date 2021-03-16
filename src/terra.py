@@ -1,4 +1,10 @@
 #terra.py
+from gsheets import Sheets
+import pandas as pd
+import dalmatian as dm
+from taigapy import TaigaClient
+tc = TaigaClient()
+from genepy import terra
 
 def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', clientsecret='~/.client_secret.json',
                        storagepath='~/.storage.json', colname='CN New to internal', value='no data yet'):
@@ -32,7 +38,6 @@ def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', client
   print("We found data for " + str(len(sorted(sample))) + " samples.\n")
 
   print("Sanity check: Since we have the tacked on number, we should only have 1 each per sample ID:\n")
-  Counter(sample)
 
   in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
   if len(in_sheet_not_found) > 0:
@@ -85,20 +90,20 @@ def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
 
 
 def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', participant_id='participant_id', toupdate={"sex":[],
-"primary_disease":[],
-"cellosaurus_id":[],
-"age":[],
-"primary_site":[],
-"subtype":[],
-"subsubtype":[],
-"origin":[],
-"parent_cell_line":[],
-"matched_normal":[],
-"comments":[],
-"mediatype":[],
-"condition":[],
-'stripped_cell_line_name':[],
-"participant_id":[]}):
+                      "primary_disease":[],
+                      "cellosaurus_id":[],
+                      "age":[],
+                      "primary_site":[],
+                      "subtype":[],
+                      "subsubtype":[],
+                      "origin":[],
+                      "parent_cell_line":[],
+                      "matched_normal":[],
+                      "comments":[],
+                      "mediatype":[],
+                      "condition":[],
+                      'stripped_cell_line_name':[],
+                      "participant_id":[]}):
   """
   given a list of samples missing some information, will look for similar cell lines on the tracker to update it
 
@@ -141,7 +146,6 @@ def setupPairsFromSamples(sampless, refsamples, extract):
   -------
     pairs that can be uploaded to the portal team
   """
-  extract.update(extract_defaults)
   pairs = pd.DataFrame()
   normals = refsamples[refsamples[extract['primary_disease']] == 'normal']
   pairs['control_sample'] = ['nan' if len(normals[normals[extract['patient_id']] == val]) < 1 else normals[normals[extract['patient_id']] == val].index.tolist()[0] for val in sampless[extract['patient_id']]]

@@ -1,5 +1,9 @@
 #cn.py
-
+import pandas as pd
+from taigapy import TaigaClient
+tc = TaigaClient()
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 def renameColumns(df):
   """
