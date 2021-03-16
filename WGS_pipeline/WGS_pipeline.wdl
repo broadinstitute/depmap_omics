@@ -20,35 +20,35 @@ workflow WGS_pipeline {
 	String sample_name #this.name
 
 	#PreProcessingForVariantDiscovery_GATK4
-  String ref_name
+	String ref_name
 	
-  String unmapped_bam_suffix
+	String unmapped_bam_suffix
 
-  File ref_dict
+	File ref_dict
 
-  String bwa_commandline
-  Int compression_level
+	String bwa_commandline
+	Int compression_level
 
-  File dbSNP_vcf
-  File dbSNP_vcf_index
+	File dbSNP_vcf
+	File dbSNP_vcf_index
 
-  Array[File] known_indels_sites_VCFs
-  Array[File] known_indels_sites_indices
+	Array[File] known_indels_sites_VCFs
+	Array[File] known_indels_sites_indices
 
-  String gotc_docker
-  String gatk_docker
-  String python_docker
+	String gotc_docker
+	String gatk_docker
+	String python_docker
 
-  String gotc_path
-  String gatk_launch_path
-  
-  Int flowcell_small_disk
-  Int flowcell_medium_disk
-  Int agg_small_disk
-  Int agg_medium_disk
-  Int agg_large_disk
+	String gotc_path
+	String gatk_launch_path
+	
+	Int flowcell_small_disk
+	Int flowcell_medium_disk
+	Int agg_small_disk
+	Int agg_medium_disk
+	Int agg_large_disk
 
-  Int agg_preemptible_tries
+	Int agg_preemptible_tries
 
 	#CNVSomaticPairWorkflow
 	File common_sites
@@ -156,10 +156,10 @@ workflow WGS_pipeline {
 		#createTxT
 		#PreProcessingForVariantDiscovery_GATK4
 		File PreProcessingForVariantDiscovery_GATK4.duplication_metrics
-    File PreProcessingForVariantDiscovery_GATK4.bqsr_report
-    File PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam
-    File PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
-    File PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_md5
+		File PreProcessingForVariantDiscovery_GATK4.bqsr_report
+		File PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam
+		File PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
+		File PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_md5
 		#CNVSomaticPairWorkflow
 		File preprocessed_intervals = CNVSomaticPairWorkflow.preprocessed_intervals,
 		File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor,
