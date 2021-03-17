@@ -152,6 +152,13 @@ workflow MantaSomaticSV {
                is_cram = is_cram
     }
     output {
-            Manta.*
+        File germline_sv_vcf = Manta.germline_sv_vcf
+        File germline_sv_vcf_index = Manta.germline_sv_vcf_index
+        File somatic_sv_vcf = Manta.somatic_sv_vcf
+        File somatic_sv_vcf_index = Manta.somatic_sv_vcf_index
+        File candidate_sv_vcf = Manta.candidate_sv_vcf
+        File candidate_sv_vcf_index = Manta.candidate_sv_vcf_index
+        File candidate_indel_vcf = Manta.candidate_indel_vcf
+        File candidate_indel_vcf_index = Manta.candidate_indel_vcf_index
     }
 }
