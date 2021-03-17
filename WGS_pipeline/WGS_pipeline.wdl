@@ -129,8 +129,8 @@ workflow WGS_pipeline {
 			tumorBamIdx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
 			pairName=sample_name,
 			refFasta=ref_fasta,
-			refFastaIdx=ref_fasta_idx,
-			refFastaDict=ref_fasta_dict,
+			refFastaIdx=ref_fasta_index,
+			refFastaDict=ref_dict,
 	}
 
 	call common_variant_filter.CommonVariantFilter as CommonVariantFilter {

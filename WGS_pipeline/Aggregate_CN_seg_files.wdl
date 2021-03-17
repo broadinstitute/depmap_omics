@@ -6,7 +6,6 @@ workflow aggregate_CN_segments_wrkflw {
 task aggregate_CN_segments {
     Array[File] sample_seg_files
     String sample_set_id
-    File aggregate_seg_files_script
     
     Int memory
     Int disk_space
