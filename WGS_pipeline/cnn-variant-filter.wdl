@@ -153,6 +153,7 @@ workflow Cram2FilteredVcf {
     }
 
     output {
-        FilterVariantTranches.*
+        File cnn_filtered_vcf=FilterVariantTranches.cnn_filtered_vcf
+        File cnn_filtered_vcf_index=FilterVariantTranches.cnn_filtered_vcf_index
     }
 }
