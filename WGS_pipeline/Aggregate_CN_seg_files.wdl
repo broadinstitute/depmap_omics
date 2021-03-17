@@ -14,7 +14,8 @@ task aggregate_CN_segments {
 
     
     command {
-        Rscript ${aggregate_seg_files_script} "${sample_set_id}.called.seg" ${write_lines(sample_seg_files)} 
+        git clone https://github.com/broadinstitute/ccle_processing.git
+        Rscript ccle_processing/WGS_pipeline/generate_single_seg_file.R "${sample_set_id}.called.seg" ${write_lines(sample_seg_files)} 
     }
 
     output {
@@ -22,7 +23,7 @@ task aggregate_CN_segments {
     }
 
     runtime {
-        docker: "flyingrobin/cds_shiny"
+        docker: "docker.io/jkobject/ccle_rnaseq:latest"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         preemptible: "${num_preempt}"

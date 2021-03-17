@@ -26,9 +26,11 @@ task filterMaf {
     touch ${sample_id}_outMAFfn.txt
     touch ${sample_id}_outMAFannotatedFN.txt
 
-    Rscript ${addExAC_column} ${inMAFfn}
+    git clone https://github.com/broadinstitute/ccle_processing.git
 
-    Rscript ${filtermaf_script} CLEANED.maf ${sample_id}"_outMAFfn.txt" \
+    Rscript ccle_processing/mutation_pipeline/add_column.R ${inMAFfn}
+
+    Rscript ccle_processing/mutation_pipeline/filterMAF.R CLEANED.maf ${sample_id}"_outMAFfn.txt" \
     ${sample_id}"_outMAFannotatedFN.txt" ${minAF} ${maxExAC_AF} \
     ${maxExAC_AF_COSMIC} ${maxPon_loglike} ${onlyCoding} \
     ${minCoverage} ${minAltReads} ${TCGAhotspotMutFN} ${TCGAhotspotMinCnt} \
@@ -41,7 +43,7 @@ task filterMaf {
   }
 
   runtime {
-    docker: "mghandi/ccle_docker_r"
+    docker: "docker.io/jkobject/ccle_rnaseq:latest"
     memory: "10GB"
     disks: "local-disk 50 HDD"
     preemptible: "5"
