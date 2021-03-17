@@ -12,7 +12,9 @@ task aggregateMAFs_selectFields {
 
     
     command {
-        Rscript ${aggregate_selectedFields_MAF_Script} "${outputFN_prfx}.mergedMAF.txt" ${write_lines(inMafFNs)} ${SelectFields}
+        git clone https://github.com/broadinstitute/ccle_processing.git
+
+        Rscript ccle_processing/mutation_pipeline/aggregate_selectedFields_MAF.R "${outputFN_prfx}.mergedMAF.txt" ${write_lines(inMafFNs)} ${SelectFields}
     }
 
     output {
@@ -20,7 +22,7 @@ task aggregateMAFs_selectFields {
     }
 
     runtime {
-        docker: "gcr.io/ccle-docker-images/qwbroad/ccle-firecloud:1"
+        docker: "docker.io/jkobject/ccle_rnaseq:latest"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         preemptible: "${num_preempt}"
