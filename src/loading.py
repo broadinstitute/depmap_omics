@@ -550,6 +550,7 @@ def load(samplesetname, workspaces,
   samples, _ , noarxspan = GetNewCellLinesFromWorkspaces(refworkspace, stype=stype, 
                                                             maxage=maxage, refurl=refsheet_url, 
                                                             wmfroms=workspaces,
+                                                            toraise=["ACH-001195"],
                                                             sources=sources, match=match, 
                                                             participantslicepos=participantslicepos, 
                                                             accept_unknowntypes=accept_unknowntypes, 
@@ -570,7 +571,11 @@ def load(samplesetname, workspaces,
       samples, ccle_refsamples, stype=stype, rename={}, extract=extract)
 
   samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
-
+  
+  for val in toraise:
+    if val in samples['arxspan_id'].tolist() or val in noarxspan['arxspan_id'].tolist():
+      raise ValueError('a sample was amongst the known wrong samples')
+  
   noarxspan = noarxspan.sort_values(by = 'stripped_cell_line_name')
   noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
   samples['baits'] = baits
