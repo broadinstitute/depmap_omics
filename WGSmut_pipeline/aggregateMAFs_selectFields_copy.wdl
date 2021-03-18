@@ -4,7 +4,6 @@ task aggregateMAFs_selectFields {
     Array[File] inMafFNs
     String outputFN_prfx
     String SelectFields
-    File aggregate_selectedFields_MAF_Script
     
     Int memory
     Int disk_space
