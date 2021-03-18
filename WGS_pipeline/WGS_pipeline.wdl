@@ -42,7 +42,6 @@ workflow WGS_pipeline {
 	String python_docker
 
 	String gotc_path
-	String gatk_launch_path
 
 	#CNVSomaticPairWorkflow
 	File common_sites
