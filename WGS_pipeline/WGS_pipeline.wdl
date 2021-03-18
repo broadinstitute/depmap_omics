@@ -91,7 +91,6 @@ workflow WGS_pipeline {
 			python_docker=python_docker,
 			gotc_path=gotc_path,
 			picard_path=picard_path,
-			gatk_launch_path=gatk_launch_path,
 			preemptible_tries=preemptible_tries
 	}
 
