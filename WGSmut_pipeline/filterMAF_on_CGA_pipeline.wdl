@@ -10,7 +10,6 @@ task filterMaf {
   Float maxPon_loglike
   Boolean onlyCoding
   Float minCoverage
-  File filtermaf_script
   Float minAltReads
   File TCGAhotspotMutFN
   Float TCGAhotspotMinCnt
@@ -18,8 +17,6 @@ task filterMaf {
   File blackListFN
   File? intersectWithMafFN
   String sample_id
-
-  File addExAC_column
 
   command <<<
     set -euo pipefail

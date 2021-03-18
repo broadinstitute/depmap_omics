@@ -51,6 +51,11 @@ workflow WGS_pipeline {
 
 	# Manta
 
+	#CGA_Production_Analysis_Workflow
+	File ref_fasta_H19
+	File ref_fasta_H19_index
+	File ref_fasta_H19_dict
+
 	call BamToUnmappedRGBams.BamToUnmappedRGBamsWf as BamToUnmappedRGBamsWf {
 		input:
 			ref_fasta=ref_fasta,
@@ -109,7 +114,8 @@ workflow WGS_pipeline {
 			reference_dict=ref_dict,
 			reference_fasta_index=ref_fasta_index,
 			gatk_docker=gatk_docker,
-			calling_intervals=intervals
+			calling_intervals=intervals,
+			output_prefix=sample_name
 	}
 
 	call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
@@ -128,9 +134,9 @@ workflow WGS_pipeline {
 			tumorBam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
 			tumorBamIdx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
 			pairName=sample_name,
-			refFasta=ref_fasta,
-			refFastaIdx=ref_fasta_index,
-			refFastaDict=ref_dict,
+			refFasta=ref_fasta_H19,
+			refFastaIdx=ref_fasta_H19_index,
+			refFastaDict=ref_fasta_H19_dict,
 	}
 
 	call common_variant_filter.CommonVariantFilter as CommonVariantFilter {
