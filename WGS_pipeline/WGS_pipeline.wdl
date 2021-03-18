@@ -16,7 +16,8 @@ workflow WGS_pipeline {
 	File ref_fasta_index
 
 	File input_bam
-
+	File input_bam_index
+	
 	String picard_path
 	String picard_docker
 
@@ -131,8 +132,8 @@ workflow WGS_pipeline {
 
 	call CGA_WES_CCLE_Characterization_Pipeline_v0.CGA_Production_Analysis_Workflow as CGA_Production_Analysis_Workflow {
 		input:
-			tumorBam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-			tumorBamIdx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+			tumorBam=input_bam,
+			tumorBamIdx=input_bam_index,
 			pairName=sample_name,
 			refFasta=ref_fasta_H19,
 			refFastaIdx=ref_fasta_H19_index,
