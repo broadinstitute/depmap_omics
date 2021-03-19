@@ -11,6 +11,8 @@ from genepy.utils.helper import createFoldersFor
 
 from depmapomics.config import CACHE_PATH, TMP_PATH
 
+ENSEMBL_SERVER_V102 = "http://nov2020.archive.ensembl.org/biomart"
+ENSEMBL_SERVER_LATEST = "http://www.ensembl.org/biomart"
 
 def download_rnaseq_files_to_tmp(samplesets, sample_set_id):
     res = samplesets.loc[sample_set_id]
@@ -20,7 +22,7 @@ def download_rnaseq_files_to_tmp(samplesets, sample_set_id):
     cpFiles([res['rsem_transcripts_expected_count']],
             "{}/rsem_transcripts_expected_count".format(TMP_PATH))
 
-def generate_gene_names(cached=True):
+def generate_gene_names(ensemble_server=ENSEMBL_SERVER_V102, cached=True):
     cachefile = os.path.join(CACHE_PATH, 'biomart_ensembltohgnc.csv')
     cachefile = os.path.expanduser(cachefile)
     if cached & os.path.isfile(cachefile):
@@ -28,7 +30,7 @@ def generate_gene_names(cached=True):
         ensembltohgnc = pd.read_csv(cachefile)
     else:
         print('downloading gene names from biomart')
-        server = BiomartServer("http://www.ensembl.org/biomart")
+        server = BiomartServer(ensemble_server)
         ensmbl = server.datasets['hsapiens_gene_ensembl']
         ensembltohgnc = pd.read_csv(io.StringIO(ensmbl.search({
             'attributes': ['ensembl_gene_id', 'clone_based_ensembl_gene',
