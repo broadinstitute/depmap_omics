@@ -22,7 +22,7 @@ task aggregate_set_files {
     }
 
     runtime {
-        docker: "docker.io/jkobject/ccle_rnaseq:latest"
+        docker: "flyingrobin/cds_shiny"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         preemptible: "${num_preempt}"
