@@ -91,9 +91,9 @@ rename = {"PEDS117": "CCLFPEDS0009T"}
 # Loading Functions
 #####################
 
-def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="",
+def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
                                   addonly=[], match='ACH', extract={},
-                                  extract_defaults=extract_defaults, refsamples=None,
+                                  extract_defaults=extract_defaults, wto=None, refsamples=None,
                                   participantslicepos=10, accept_unknowntypes=False,
                                   rename=dict(), recomputehash=False):
   """
@@ -140,13 +140,15 @@ def GetNewCellLinesFromWorkspaces(wto, wmfroms, sources, stype, maxage, refurl="
     Exception: when no new samples in this matrix
   """
   extract.update(extract_defaults)
-  wto = dm.WorkspaceManager(wto)
   if type(match) is str and match:
     match = [match]
   if refurl:
     print('refsamples is overrided by a refurl')
     refsamples = sheets.get(refurl).sheets[0].to_frame(index_col=0)
   if refsamples is None:
+    if wto is None:
+      raise ValueError('missing refsamples or refworkspace (wto)')
+    wto = dm.WorkspaceManager(wto)
     print('we do not have refsamples data. Using the wto workspace sample data instead')
     refsamples = wto.get_samples()
     # TODO: update directly the df if data is not already in here)
@@ -498,11 +500,70 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
 
   return sampless
 
+
+def completeFromMasterSheet(samples, notfound, toupdate={'primary_disease': ['Primary Disease'],
+                                      'sex': ['CCLF Age'],
+                                      'primary_site': ['Sample Collection Site'],
+                                      'subtype': ['lineage_subtype'],
+                                      'subsubtype': ['lineage_sub_subtype'],
+                                      'origin': ['lineage'],
+                                      'source': ['Program'],
+                                      'parent_cell_line': ["Parental ID"],
+                                      'comments': ['Comments'],
+                                      'mediatype': ['Culture Medium', 'Culture Type'],
+                                      'stripped_cell_line_name': ['Stripped Cell Line Name'],
+                                      "cellosaurus_id": ["RRID"],
+                                      "age": ["CCLF Gender"]}, 
+                            my_id='~/.client_secret.json',
+                            pv_index="DepMap_ID",
+                            master_index="arxspan_id",
+                            pv_tokeep = ['Culture Type', 'Culture Medium'],
+                            mystorage_id="~/.storage.json",
+                            masterfilename="ACH",
+                            nanslist=['None', 'nan', 'Unknown'],
+                            depmap_pv="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE",
+                            depmap_taiga="arxspan-cell-line-export-f808"):
+
+  di = {k: [] for k, _ in toupdate.items()}
+
+  sheets = Sheets.from_files(my_id, mystorage_id)
+
+  depmap_pv = sheets.get(depmap_pv).sheets[0].to_frame(header=2)
+  depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
+  depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index).set_index(
+      pv_index, drop=True)[pv_tokeep]
+  depmap_master = tc.get(name=depmap_taiga, file=masterfilename).set_index(
+      master_index, drop=True)
+  depmap_master = depmap_master.join(depmap_pv)
+  unk = []
+  for k, v in samples.loc[notfound].iterrows():
+    a = depmap_master[depmap_master.index == v.arxspan_id]
+    if len(a) > 0:
+      a = a[0]
+    else:
+      for k, v in toupdate.items():
+        di[k].append('')
+      # for these samples I will need to check and manually add the data in the list
+      print("no data found for "+str(v.arxspan_id))
+      unk.append(k)
+      continue
+    for k, v in toupdate.items():
+      e = ''
+      if len(v) > 0:
+        for i in v:
+          u = depmap_master.loc[a, v].values
+          e += str(u[0])+", " if len(u) > 0 and str(u[0]
+                                                    ) not in nanslist else ''
+        e = e[:-2]
+      di[k].append(e)
+  for k, v in di.items():
+    samples.loc[notfound, k] = v
+  return samples, unk
+
 def loadWES(samplesetname, 
             workspaces=[
             "terra-broad-cancer-prod/CCLE_DepMap_WES",
             "terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes"],
-            refworkspace="broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline", 
             sources=["ccle","ibm"],
             maxage='2020-09-10',
             baits = 'ice',
@@ -510,32 +571,61 @@ def loadWES(samplesetname,
   return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
               sources=sources, maxage=maxage, baits=baits, stype=stype)
 
+def loadWGS(samplesetname, 
+            workspaces=[
+                "terra-broad-cancer-prod/DepMap_WGS",
+                "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"],
+            sources=["ccle","ibm"],
+            maxage='2020-09-10',
+            baits = 'genome',
+            stype = "wgs"):
+  return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
+              sources=sources, maxage=maxage, baits=baits, stype=stype)
 
 def loadRNA(samplesetname,
             workspaces=[
                 "terra-broad-cancer-prod/CCLE_DepMap_WES",
                 "terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes"],
-            refworkspace="broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline",
             sources=["ccle", "ibm"],
             maxage='2020-09-10',
-            baits='ICE',
-            stype="wes"):
+            baits='polyA',
+            stype="rna"):
   return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
               sources=sources, maxage=maxage, baits=baits, stype=stype)
 
 def load(samplesetname, workspaces,
-         refworkspace,
          sources,
          maxage,
          baits,
          stype,
+        toupdate={'primary_disease': ['Primary Disease'],
+                'sex': ['CCLF Age'],
+                'primary_site': ['Sample Collection Site'],
+                'subtype': ['lineage_subtype'],
+                'subsubtype': ['lineage_sub_subtype'],
+                'origin': ['lineage'],
+                'source': ['Program'],
+                'parent_cell_line': ["Parental ID"],
+                'comments': ['Comments'],
+                'mediatype': ['Culture Medium', 'Culture Type'],
+                'stripped_cell_line_name': ['Stripped Cell Line Name'],
+                "cellosaurus_id": ["RRID"],
+                "age": ["CCLF Gender"]},
+        pv_index="DepMap_ID",
+         master_index="arxspan_id",
         my_id='~/.client_secret.json',
+         creds='../.credentials.json',
         mystorage_id="~/.storage.json",
         refsheet_url = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
         depmappvlink = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE",
         extract_to_change = {'from_arxspan_id': 'participant'},
         # version 102
         match = ['ACH-','CDS-'],
+        pv_tokeep=['Culture Type', 'Culture Medium'],
+        masterfilename="ACH",
+        nanslist=['None', 'nan', 'Unknown'],
+         depmap_taiga="arxspan-cell-line-export-f808",
+        toraise=["ACH-001195"],
         participantslicepos=10, accept_unknowntypes=True,
         recomputehash=True):
 
@@ -547,41 +637,72 @@ def load(samplesetname, workspaces,
 
   # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "primary_site", "primary_disease", "subtype", "subsubtype", "origin", "comments"
   #when SMid: match== 
-  samples, _ , noarxspan = GetNewCellLinesFromWorkspaces(refworkspace, stype=stype, 
-                                                            maxage=maxage, refurl=refsheet_url, 
-                                                            wmfroms=workspaces,
-                                                            toraise=["ACH-001195"],
-                                                            sources=sources, match=match, 
-                                                            participantslicepos=participantslicepos, 
-                                                            accept_unknowntypes=accept_unknowntypes, 
-                                                            extract=extract_to_change, 
+  samples, _ , noarxspan = GetNewCellLinesFromWorkspaces(stype=stype, 
+                                                        maxage=maxage, refurl=refsheet_url, 
+                                                        wmfroms=workspaces,
+                                                        sources=sources, match=match, 
+                                                        participantslicepos=participantslicepos, 
+                                                        accept_unknowntypes=accept_unknowntypes, 
+                                                        extract=extract_to_change, 
                                                         recomputehash=recomputehash)
 
   ### finding back arxspan
   noarxspan = tracker.retrieveFromCellLineName(noarxspan, ccle_refsamples, 
   datatype=stype, depmappvlink=depmappvlink, extract=extract_to_change)
 
-  extract.update(extract_defaults)
-
   #assess any potential issues
   samples = pd.concat([samples, noarxspan[noarxspan.arxspan_id!='0']], sort=False)
   noarxspan = noarxspan[noarxspan.arxspan_id=='0']
 
+  extract_defaults.update(extract_to_change)
   samples = assessAllSamples(
-      samples, ccle_refsamples, stype=stype, rename={}, extract=extract)
+      samples, ccle_refsamples, stype=stype, rename={}, extract=extract_defaults)
 
+  if len(noarxspan) > 0:
+    print("we found "+str(len(noarxspan))+" samples without arxspan_ids!!")
+    noarxspan = noarxspan.sort_values(by = 'stripped_cell_line_name')
+    dfToSheet(samples, "depmap ALL samples not found", creds)
+    noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
+    if h.askif("Please review the samples and write yes once finished, else write no to quit and they will not be added"):
+      updated_samples = sheets.get(
+        "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
+          0].to_frame().set_index('sample_id')
+      samples = pd.concat([samples, updated_samples], sort=False)
+  
   samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
   
   for val in toraise:
-    if val in samples['arxspan_id'].tolist() or val in noarxspan['arxspan_id'].tolist():
-      raise ValueError('a sample was amongst the known wrong samples')
+    if val in samples['arxspan_id'].tolist():
+      raise ValueError('some samples were amongst the known wrong samples')
   
-  noarxspan = noarxspan.sort_values(by = 'stripped_cell_line_name')
-  noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
   samples['baits'] = baits
-  samples.loc[notfound].to_csv('temp/notfound_'+stype+'_'+release+'.csv')
+  if len(samples.loc[notfound])>0:
+    print("we found some samples where we could not get annotations. \
+      trying to infer it from depmap master sheet and arxspan export")
+    samples, unk = completeFromMasterSheet(samples, notfound, 
+      toupdate=toupdate, 
+      my_id=my_id,
+      pv_index=pv_index,
+      master_index=master_index,
+      mystorage_id=mystorage_id,
+      pv_tokeep=pv_tokeep,
+      masterfilename=masterfilename,
+      nanslist=nanslist,
+      depmap_pv=depmappvlink,
+      depmap_taiga=depmap_taiga)
+    if len(unk) > 0:
+      print("some samples could still not be inferred")
+      dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
+      samples.loc[notfound].to_csv('temp/notfound_'+stype+'_'+release+'.csv')
+      if h.askif("we"):
+        updated_samples = sheets.get(
+          "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
+          0].to_frame().set_index('sample_id')
+        samples.loc[updated_samples.index, updated_samples.columns] = updated_samples.values
+  
+  dfToSheet(samples, 'depmap ALL samples found', secret=creds)
   samples.to_csv('temp/new_'+stype+'_'+release+'.csv')
-  return samples, notfound, noarxspan
+  return samples
 
 
 def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
@@ -662,16 +783,14 @@ def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
       sam['baits'] == baits) | (sam['baits'].isna())].index.tolist() if i != 'nan'])
 
 
-def updateRNA(samples, samplesetname, bucket="gs://cclebams/rna/",
-              name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'],
-              filetypes=['bam', 'bai'],
-              my_id='~/.client_secret.json',
-              mystorage_id="~/.storage.json",
-              refworkspace="",
-              stype="wes",
-              creds='../.credentials.json',
-              sampletrackername='ccle sample tracker',
-              refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",):
+def update(samples, samplesetname, stype, bucket, refworkspace,
+          name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'],
+          filetypes=['bam', 'bai'],
+          my_id='~/.client_secret.json',
+          mystorage_id="~/.storage.json",
+          creds='../.credentials.json',
+          sampletrackername='ccle sample tracker',
+          refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",):
 
   # uploading to our bucket (now a new function)
   terra.changeToBucket(samples, bucket, name_col=name_col,
