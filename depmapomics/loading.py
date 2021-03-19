@@ -16,8 +16,8 @@ import numpy as np
 import dalmatian as dm
 from taigapy import TaigaClient
 tc = TaigaClient()
-from src import tracker
-from src import terra as myterra
+from depmapomics import tracker
+from depmapomics import terra as myterra
 from genepy import terra
 from genepy import sequencing as seq
 from genepy.utils import helper as h
