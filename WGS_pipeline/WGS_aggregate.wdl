@@ -1,5 +1,5 @@
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/reorganization/WGS_pipeline/Aggregate_CN_seg_files.wdl" as Aggregate_CN_seg_files 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/reorganization/WGSmut_pipeline/aggregateMAFs_selectFields_copy.wdl" as aggregateMAFs_selectFields_copy 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/Aggregate_CN_seg_files.wdl" as Aggregate_CN_seg_files 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGSmut_pipeline/aggregateMAFs_selectFields_copy.wdl" as aggregateMAFs_selectFields_copy 
 
 workflow WGS_aggregate {
 
