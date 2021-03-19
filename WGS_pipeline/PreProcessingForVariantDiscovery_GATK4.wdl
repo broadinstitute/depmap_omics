@@ -567,10 +567,10 @@ task BaseRecalibrator {
       BaseRecalibrator \
       -R ${ref_fasta} \
       -I ${input_bam} \
-      --useOriginalQualities \
+      --use-original-qualities \
       -O ${recalibration_report_filename} \
-      -knownSites ${dbSNP_vcf} \
-      -knownSites ${sep=" -knownSites " known_indels_sites_VCFs} \
+      --known-sites ${dbSNP_vcf} \
+      --known-sites ${sep=" --known-sites " known_indels_sites_VCFs} \
       -L ${sep=" -L " sequence_group_interval}
   }
   runtime {
@@ -641,9 +641,9 @@ task ApplyBQSR {
       -L ${sep=" -L " sequence_group_interval} \
       -bqsr ${recalibration_report} \
       -SQQ 10 -SQQ 20 -SQQ 30 \
-      --useOriginalQualities \
-      --createOutputBamMD5 \
-      --addOutputSAMProgramRecord
+      --use-original-qualities \
+      --create-output-bam-md5 \
+      --add-output-sam-program-record
   }
   runtime {
     preemptible: preemptible_tries
