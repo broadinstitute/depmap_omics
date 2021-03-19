@@ -157,11 +157,12 @@ def setupPairsFromSamples(sampless, refsamples, extract):
 
 
 def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_id", "datatype", "size",
-                                                   "ccle_name", "stripped_cell_line_name", "patient_id", "cellosaurus_id",
+                                                   "ccle_name", "stripped_cell_line_name", "participant_id", "cellosaurus_id",
 "bam_public_sra_path", "internal_bam_filepath", "internal_bai_filepath",
 "parent_cell_line", "sex", "matched_normal", "age", "primary_site",
 "primary_disease", "subtype", "subsubtype", "origin", "mediatype",
-"condition", "sequencing_type", "baits", "source", "legacy_bam_filepath", "legacy_bai_filepath"], rename={'participant_id':'patient_id'}, deleteUnmatched=False):
+"condition", "sequencing_type", "baits", "source", "legacy_bam_filepath", "legacy_bai_filepath"], 
+rename={}, deleteUnmatched=False, addMissing=False):
   """
   will use the current sample tracker to update samples in the workspace
 
@@ -177,13 +178,24 @@ def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_
   """
   wm = dm.WorkspaceManager(workspaceID).disable_hound()
   sam = wm.get_samples()
-  track = tracker[tracker.index.isin(sam.index)].rename(columns=rename)
+  track = tracker[tracker.index.isin(
+      sam.index)][columns].rename(columns=rename)
+  track.index.name="sample_id"
   miss = set(columns) - set(sam.columns)
-  print('found these columns to be missing in workspace: '+str(miss))
-  if len(track)==0:
+  if len(track)==0 and not addMissing:
       raise ValueError('wrong tracker or index non matching')
   unmatched = set(sam.index) - (set(tracker.index) | set(['nan']))
-  print("found these to be unmatched: "+str(unmatched))
-  if deleteUnmatched and len(unmatched)>0:
-      terra.removeSamples(workspaceID, unmatched)
-  wm.update_sample_attributes(track[columns])
+  if not addMissing:
+    print("found these to be unmatched in the tracker: "+str(unmatched))
+    if deleteUnmatched and len(unmatched)>0:
+        terra.removeSamples(workspaceID, unmatched)
+  unmatched = (set(tracker.index) - set(sam.index))
+  if len(track)!=0:
+    wm.update_sample_attributes(track)
+  if addMissing and len(unmatched)>0:
+    print('found these columns to be missing in workspace: '+str(unmatched))
+    track = tracker[tracker.index.isin(
+        unmatched)][columns].rename(columns=rename)
+    track.index.name = "sample_id"
+    wm.upload_samples(track)
+  

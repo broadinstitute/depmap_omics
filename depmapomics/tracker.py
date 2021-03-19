@@ -2,7 +2,7 @@
 from genepy.utils import helper as h
 import ipdb
 import pandas as pd
-from src import loading
+from depmapomics import loading
 from gsheets import Sheets
 from taigapy import TaigaClient
 tc = TaigaClient()
