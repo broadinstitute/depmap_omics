@@ -640,7 +640,7 @@ task ApplyBQSR {
       -O ${output_bam_basename}.bam \
       -L ${sep=" -L " sequence_group_interval} \
       -bqsr ${recalibration_report} \
-      -SQQ 10 -SQQ 20 -SQQ 30 \
+      --static-quantized-quals 10 --static-quantized-quals 20 --static-quantized-quals 30 \
       --use-original-qualities \
       --create-output-bam-md5 \
       --add-output-sam-program-record
