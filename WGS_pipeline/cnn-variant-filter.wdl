@@ -49,7 +49,7 @@ workflow Cram2FilteredVcf {
 
     # Clunky check to see if the input is a BAM or a CRAM
     if (basename(input_file) == basename(input_file, ".bam")){
-        call CNNTasks.CramToBam {
+        call CNNTasks.CramToBam as CramToBam {
             input:
               reference_fasta = reference_fasta,
               reference_dict = reference_dict,
@@ -61,7 +61,7 @@ workflow Cram2FilteredVcf {
         }
     }
 
-    call CNNTasks.SplitIntervals {
+    call CNNTasks.SplitIntervals as SplitIntervals {
         input:
             gatk_override = gatk_override,
             scatter_count = scatter_count,
@@ -77,7 +77,7 @@ workflow Cram2FilteredVcf {
     Float bam_size = size(input_bam, "GB")
 
     scatter (calling_interval in SplitIntervals.interval_files) {
-        call CNNTasks.RunHC4 {
+        call CNNTasks.RunHC4 as RunHC4 {
             input:
                 input_bam = input_bam,
                 input_bam_index = select_first([CramToBam.output_bam_index, input_file_index]),
@@ -93,7 +93,7 @@ workflow Cram2FilteredVcf {
                 disk_space_gb = round(bam_size + ref_size + additional_disk)
         }
 
-        call CNNTasks.CNNScoreVariants {
+        call CNNTasks.CNNScoreVariants as CNNScoreVariants {
             input:
                 input_vcf = RunHC4.raw_vcf,
                 input_vcf_index = RunHC4.raw_vcf_index,
@@ -129,7 +129,7 @@ workflow Cram2FilteredVcf {
             disk_space_gb = additional_disk
     }
 
-    call CNNTasks.FilterVariantTranches {
+    call CNNTasks.FilterVariantTranches as FilterVariantTranches {
         input:
             input_vcf = MergeVCF_HC4.merged_vcf,
             input_vcf_index = MergeVCF_HC4.merged_vcf_index,
@@ -145,7 +145,7 @@ workflow Cram2FilteredVcf {
             disk_space_gb = additional_disk
     }
 
-    call CNNTasks.SamtoolsMergeBAMs {
+    call CNNTasks.SamtoolsMergeBAMs as SamtoolsMergeBAMs {
         input:
             input_bams = RunHC4.bamout,
             output_prefix = output_prefix,
