@@ -113,7 +113,6 @@ workflow WGS_pipeline {
 			reference_dict=ref_dict,
 			reference_fasta_index=ref_fasta_index,
 			gatk_docker=gatk_docker,
-			calling_intervals=intervals,
 			output_prefix=sample_name
 	}
 
@@ -124,8 +123,7 @@ workflow WGS_pipeline {
 			tumor_bam_index=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
 			ref_fasta=ref_fasta,
 			ref_fasta_index=ref_fasta_index,
-			interval_list=intervals,
-			is_cram=false,
+			is_cram=false
 	}
 
 	call CGA_WES_CCLE_Characterization_Pipeline_v0.CGA_Production_Analysis_Workflow as CGA_Production_Analysis_Workflow {
