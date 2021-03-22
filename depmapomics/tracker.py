@@ -69,6 +69,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   res = {}
   refsamples = refsamples[refsamples.index.isin(names)]
   if lennames > len(refsamples):
+    print(set(names) - set(refsamples.index))
     ipdb.set_trace()
     raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
   for arxspan in set(refsamples[arxspan_id]):
