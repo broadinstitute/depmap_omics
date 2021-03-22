@@ -112,5 +112,4 @@ class depmap_igv(igv.Browser):
         '''
         depmap_samples_subset = subset_depmap_samples(self.depmap_samples, arxspan_ids,
                                                       self.config['genome'], datatypes=datatypes)
-        for row in depmap_samples_subset.iterrows():
-            self.get_the_track(row)
+        self.get_the_tracks_from_dataframe(depmap_samples_subset)
