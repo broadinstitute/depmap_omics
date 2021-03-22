@@ -84,6 +84,14 @@ def subset_depmap_samples(depmap_samples, arxspan_ids, genome, datatypes=None):
     return depmap_samples_subset
 
 class depmap_igv(igv.Browser):
+    '''
+    this class can be used to plot IGV tracks for DepMap cell lines
+
+    example code:
+        b = depmap_igv({"genome": "hg19", 'locus':'11:62296943'})
+        b.get_the_tracks(['ACH-000090', 'ACH-002184'], ['wes', 'wgs', 'RRBS', 'rna'])
+        b.show()
+    '''
     def __init__(self, config):
         super().__init__({**config, "oauthToken": get_gcloud_auth_token()})
         self.depmap_samples = load_sample_tracker()
