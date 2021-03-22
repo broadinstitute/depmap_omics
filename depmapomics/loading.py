@@ -66,6 +66,7 @@ extract_defaults = {
     'total_reads': 'total_reads',
     'release_date': 'sequencing_date',
     'hash': 'crc32c_hash',
+    'legacy_hash': 'legacy_crc32c_hash',
     'mean_depth': 'mean_depth'
 }
 
@@ -225,8 +226,8 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
   # and see if I have to get data for them or if I should just throw them out
   toremov = set()
   for k, val in wrongsampless.iterrows():
-    withsamesize = wrongsampless[wrongsampless[extract["size"]] == val[extract["size"]]]
-    if (val[extract["size"]] in sampless[extract["size"]].tolist()) or (val[extract["size"]] in refsamples[extract["size"]]):
+    withsamesize = wrongsampless[wrongsampless[extract["legacy_size"]] == val[extract["legacy_size"]]]
+    if (val[extract["legacy_size"]] in sampless[extract["legacy_size"]].tolist()) or (val[extract["legacy_size"]] in refsamples[extract["size"]]):
       toremov.add(k)
     if len(withsamesize) > 1:
       for l, _ in withsamesize.iloc[1:].iterrows():
@@ -240,15 +241,15 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
       print(v.ccle_name)
       wrongsampless = wrongsampless.drop(i)
   a = len(sampless)
-  sampless = deleteClosest(sampless,refsamples, extract['size'], extract['size'], extract['ref_arxspan_id'])
-  sampless = deleteClosest(sampless,refsamples, extract['size'], extract['prev_size'], extract['ref_arxspan_id'])
+  sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
+  sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy__size'], extract['ref_arxspan_id'])
   print('removed: '+str(a-len(sampless))+" samples from size alone (too similar to a replicate)")
-  wrongsampless = wrongsampless[~wrongsampless[extract['size']].isin(set(refsamples[extract['size']]))]
-  wrongsampless = wrongsampless[~wrongsampless[extract['size']].isin(set(refsamples[extract['prev_size']]))]
+  wrongsampless = wrongsampless[~wrongsampless[extract['legacy_size']].isin(set(refsamples[extract['legacy_size']]))]
+  wrongsampless = wrongsampless[~wrongsampless[extract['legacy_size']].isin(set(refsamples[extract['legacy_size']]))]
   wrongsampless = deleteClosest(
-      wrongsampless, refsamples, extract['size'], extract['size'], extract['ref_arxspan_id'])
+      wrongsampless, refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
   wrongsampless = deleteClosest(
-      wrongsampless, refsamples, extract['size'], extract['prev_size'], extract['ref_arxspan_id'])
+      wrongsampless, refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
   #removing duplicate PDOs
   a = len(sampless)
   wrongsampless = wrongsampless[~wrongsampless[extract['PDO_id']].isin(set(refsamples[extract['PDO_id']]))]
@@ -265,7 +266,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
   return sampless, pairs, wrongsampless
 
 
-def deleteClosest(sampless, refsamples, size='size', ref_size='size', arxspid='arxspan_id'):
+def deleteClosest(sampless, refsamples, size='legacy_size', ref_size='legacy_size', arxspid='arxspan_id'):
   """
   for a list of samples and a tracker, will find the index of the sample with the closest size
 
@@ -326,16 +327,16 @@ recomputedate=True, recomputehash=True, extract={}):
     samples: pd dataframe the filtered sample list
   """
   extract.update(extract_defaults)
-  if extract['hash'] not in samples.columns or recomputehash:
+  if extract['legacy_hash'] not in samples.columns or recomputelegacy_hash:
     samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(samples[extract["bam"]].tolist(), "-L", 200)]
   lis = gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)
-  if extract['size'] not in samples.columns or recomputesize:
-    samples[extract['size']] = [gcp.extractSize(i)[1] for i in lis]
+  if extract['legacy_size'] not in samples.columns or recomputesize:
+    samples[extract['legacy_size']] = [gcp.extractSize(i)[1] for i in lis]
   if extract['update_time'] not in samples.columns or recomputeTime:
     samples[extract['update_time']] = [gcp.extractTime(i) for i in lis]
   todrop = []
   for k, val in samples.iterrows():
-    if val[extract['size']] < MINSIZES[stype]:
+    if val[extract['legacy_size']] < MINSIZES[stype]:
       todrop.append(k)
       print("too small size, removing sample: " + str(val[extract["from_arxspan_id"]]))
   samples = samples.drop(index=todrop)
@@ -382,7 +383,7 @@ def mapSamples(samples, source, extract={}):
                                     extract['from_arxspan_id']: extract['ref_arxspan_id']
                                     }).set_index(extract["ref_id"], drop=True)
   # subsetting
-  samples = samples[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"], extract["release_date"], extract["patient_id"], extract["hash"], extract['size'], extract['PDO_id'], extract['update_time']]]
+  samples = samples[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"], extract["release_date"], extract["patient_id"], extract["legacy_hash"], extract['legacy_size'], extract['PDO_id'], extract['update_time']]]
   return samples
 
 
@@ -420,8 +421,8 @@ def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, acc
   tolookfor = [val[extract['ref_bam']] for _, val in samples.iterrows() if val[extract['ref_arxspan_id']] in set(refsamples[extract['ref_arxspan_id']])]
   print("found " + str(len(tolookfor)) + ' likely replicate')
   sample_hash = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
-  dups_to_remove = [sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['size']])]
-  dups_to_remove.extend([sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['prev_size']])])
+  dups_to_remove = [sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['legacy_size']])]
+  dups_to_remove.extend([sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['legacy_size']])])
   # remove the duplicates from consideration
   print("Len of samples before removal: " + str(len(samples)))
   print("Dups from this workspace has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
@@ -473,7 +474,7 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
 
   # checking no duplicate in the buckets
   for k, val in sampless.iterrows():
-    withsamesize = sampless[sampless[extract["size"]] == val[extract["size"]]]
+    withsamesize = sampless[sampless[extract["legacy_size"]] == val[extract["legacy_size"]]]
     if len(withsamesize) > 1:
       if len(withsamesize[withsamesize[extract["ref_name"]] == val[extract["ref_name"]]]) < 2:
         raise ValueError('we have duplicate samples with different names!')
@@ -663,7 +664,8 @@ def load(samplesetname, workspaces,
     noarxspan = noarxspan.sort_values(by = 'stripped_cell_line_name')
     dfToSheet(samples, "depmap ALL samples not found", creds)
     noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
-    if h.askif("Please review the samples and write yes once finished, else write no to quit and they will not be added"):
+    if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
+      finished, else write no to quit and they will not be added"):
       updated_samples = sheets.get(
         "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
           0].to_frame().set_index('sample_id')
@@ -694,7 +696,8 @@ def load(samplesetname, workspaces,
       print("some samples could still not be inferred")
       dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
       samples.loc[notfound].to_csv('temp/notfound_'+stype+'_'+release+'.csv')
-      if h.askif("we"):
+      if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
+        finished, else write no to quit and they will not be added"):
         updated_samples = sheets.get(
           "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
           0].to_frame().set_index('sample_id')
