@@ -192,4 +192,13 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# VS code project
+.codeworkspace.code-workspace
+
+#biomart
+.pybiomart.sqlite
+
+# tmp
+tmp.py
+
 # End of https://www.gitignore.io/api/linux,macos,python,jupyternotebook

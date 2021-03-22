@@ -1,0 +1,1 @@
+{"RNAseq.merged_vcf": "this.merged_vcf", "RNAseq.merged_vcf_index": "this.merged_vcf_index", "RNAseq.recalibrated_bam": "this.recalibrated_bam", "RNAseq.recalibrated_bam_index": "this.recalibrated_bam_index", "RNAseq.variant_filtered_vcf_index": "this.variant_filtered_vcf_index", "RNAseq.variant_filtered_vcf": "this.variant_filtered_vcf"}
