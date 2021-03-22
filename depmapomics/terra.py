@@ -6,8 +6,11 @@ from taigapy import TaigaClient
 tc = TaigaClient()
 from genepy import terra
 
-def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', clientsecret='~/.client_secret.json',
-                       storagepath='~/.storage.json', colname='CN New to internal', value='no data yet'):
+def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', 
+                       clientsecret='~/.client_secret.json',
+                       storagepath='~/.storage.json', 
+                       colname='CN New to internal', 
+                       value='no data yet'):
   """
   from a google spreadsheet, will check that we have all of the samples we should have in our sample
   set name (will parse NAME_additional for sample_id)
@@ -89,7 +92,9 @@ def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
   """ 
 
 
-def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', participant_id='participant_id', toupdate={"sex":[],
+def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', 
+                      participant_id='participant_id', 
+                      toupdate={"sex":[],
                       "primary_disease":[],
                       "cellosaurus_id":[],
                       "age":[],
@@ -155,14 +160,49 @@ def setupPairsFromSamples(sampless, refsamples, extract):
   print('found ' + str(len(pairs['control_sample'].unique()) - 1) + ' matched normals')
   return pairs.set_index('pair_id')
 
+def updateAllSampleSet(workspace, Allsample_setname='all'):
+  """
+  update the previous All Sample sample_set with the new samples that have been added.
 
-def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id", "version", "sm_id", "datatype", "size",
-                                                   "ccle_name", "stripped_cell_line_name", "participant_id", "cellosaurus_id",
-"bam_public_sra_path", "internal_bam_filepath", "internal_bai_filepath",
-"parent_cell_line", "sex", "matched_normal", "age", "primary_site",
-"primary_disease", "subtype", "subsubtype", "origin", "mediatype",
-"condition", "sequencing_type", "baits", "source", "legacy_bam_filepath", "legacy_bai_filepath"], 
-rename={}, deleteUnmatched=False, addMissing=False):
+  It is especially useful for the aggregate task. Can more generally merge two samplesets together
+
+  Args:
+  ----
+    workspace: str namespace/workspace from url typically
+    newsample_setname: str name of sampleset to add to All_samples
+  """
+  dm.WorkspaceManager(workspace).update_sample_set(
+      Allsample_setname, dm.WorkspaceManager(workspace).get_samples().index.tolist())
+
+def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id",
+                                                    "version",
+                                                    "sm_id",
+                                                    "datatype",
+                                                    "size",
+                                                   "ccle_name",
+                                                   "stripped_cell_line_name",
+                                                   "participant_id",
+                                                   "cellosaurus_id",
+                                                    "bam_public_sra_path",
+                                                    "internal_bam_filepath",
+                                                    "internal_bai_filepath",
+                                                    "parent_cell_line",
+                                                    "sex",
+                                                    "matched_normal",
+                                                    "age",
+                                                    "primary_site",
+                                                    "primary_disease",
+                                                    "subtype",
+                                                    "subsubtype",
+                                                    "origin",
+                                                    "mediatype",
+                                                    "condition",
+                                                    "sequencing_type",
+                                                    "baits",
+                                                    "source",
+                                                    "legacy_bam_filepath",
+                                                    "legacy_bai_filepath"], 
+                    rename={}, deleteUnmatched=False, addMissing=False):
   """
   will use the current sample tracker to update samples in the workspace
 
