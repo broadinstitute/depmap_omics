@@ -21,7 +21,7 @@ This Achilles dataset contains the results of genome-scale CRISPR knockout scree
 - Remove replicates with total reads less than 15 million
 - Calculate reads per million, add pseudo-count of 1, then log2-fold-change from pDNA counts for each replicate
 - Calculate the NNMD for each replicate using genes targeting the Hart reference non-essentials and the intersection of the Hart and Blomen essentials, and remove those with values more positive than -1.0. See Hart et al., Mol. Syst. Biol, 2014 and Blomen et al., Science, 2015
-- Remove replicates that do not have a Pearson coefficient > .61 with at least one other replicate for the line when looking at genes with the highest variance (top 3%) in gene effect across cell lines. Equivalent to excluding lines whose replicates have a p-value greater than 0.05 of having at least as high a correlation with a random line as with each other. 
+- Remove replicates that do not have a Pearson coefficient > .61 with at least one other replicate for the line when looking at genes with the highest variance (top 3%) in gene effect across cell lines. Equivalent to excluding lines whose replicates have a p-value greater than 0.05 of having at least as high a correlation with a random line as with each other.
 - Calculate the NNMD for each cell line after averaging remaining replicates, and remove those more positive than -1.0
 - Run CERES to generate gene-level scores
 - Scale so the median of common essentials in each cell lines is -1
@@ -73,8 +73,10 @@ CCLE generates RNAseq based fusion calls using the STAR-Fusion pipeline. A compr
 - [CN] We are now adding amplification status (-, 0, +)  for each segment in the segment copy number. X chromosome amplification status was removed due to its bias in female samples, caused by our purely male PoNs.
 - [CN] Copy Number calls for the normal sample ACH-002359, were removed in 21Q1. We plan to add the data back in 21Q2.
 
+- [Mutations] Removing mutation calls for ACH-002378 (matched normal) as we are awaiting new mutation calls on the original bam file. [plan to update readme]
+- [Mutations] Removing ACH-001189 ACH-002303, ACH-002315, ACH-001675 again in the mutation dataset as the 20Q4 removal had only happened for the WES data
+
 - [CN+Mutations] Removed lines that should have been removed in 20Q4 ACH-001189, ACH-002303, ACH-002315, ACH-002341.
-- [CN+Mutations] Warning: Keeping 3 Chordoma lines that dramatically failed our WES QC: "ACH-001955", “ACH-001956”, "ACH-001957".
 
 ###########
 ## Files ##
@@ -203,7 +205,7 @@ Columns:
 - replicate_ID (str)
 - Broad_ID
 - pDNA_batch (int): indicates which processing batch the replicate belongs to and therefore which pDNA reference it should be compared with.
-- passes_QC (str): indicates if the replicate was included in CERES calculations 
+- passes_QC (str): indicates if the replicate was included in CERES calculations
 
 ### Achilles_dropped_guides.csv
 Pipeline: Achilles
