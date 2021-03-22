@@ -1,4 +1,7 @@
+library(plyr)
 library(dplyr)
+library(readr)
+library(stringr)
 
 ## reads selected fields from maf files and aggregates them 
 args <- commandArgs(TRUE)
