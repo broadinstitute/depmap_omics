@@ -109,7 +109,7 @@ class depmap_igv(igv.Browser):
         })
 
     def get_the_tracks_from_dataframe(self, depmap_samples):
-        for row in depmap_samples.iterrows():
+        for row in depmap_samples.sort_values(['arxspan_id', 'datatype']).iterrows():
             self.get_the_track(row)
 
     def get_the_tracks(self, arxspan_ids, datatypes=None):
