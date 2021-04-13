@@ -1,4 +1,5 @@
 TEMP_VIRTUAL_TAIGA_ID = 'temp-virtual-2ec2'
+TEMP_VIRTUAL_TAIGA_VERSION = '2'
 
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
 FUSIONS_TAIGA_ID = 'fusions-95c9'
