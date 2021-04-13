@@ -16,3 +16,33 @@ def get_taiga_ids_list(taiga_id_dict):
                 'taiga_id': '{}/{}'.format(taiga_id_with_version, pair[1])
             })
     return taiga_ids_list
+
+
+if __name__ == "__main__":
+    tc = TaigaClient()
+
+    # Uncomment if the temp virtual dataset doesn't exist
+    #  with open('/tmp/null.csv', 'w') as f:
+    #     pass
+
+    # new_dataset_id = tc.create_dataset(
+    #     "temp virtual",
+    #     dataset_description="this is a temporary virtual dataset for omics QCs", # optional (but recommended)
+    #     upload_files=[
+    #         {
+    #             'path': '/tmp/null.csv',
+    #             'format': 'Raw'
+    #         }
+    #     ],
+    #     folder_id="29b48277847443edb7d84b9b457de124", # optional, will default to your home folder if not provided
+    # )
+
+    from depmapomics.test.config import TEMP_VIRTUAL_TAIGA_ID, TAIGA_IDS_LATEST
+    taiga_ids_list = get_taiga_ids_list(TAIGA_IDS_LATEST)
+
+    new_dataset_id = tc.update_dataset(
+        TEMP_VIRTUAL_TAIGA_ID,
+        changes_description="add all the virtual data",
+        add_taiga_ids=taiga_ids_list,
+        add_all_existing_files = True
+    )
