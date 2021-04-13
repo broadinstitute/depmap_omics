@@ -1,6 +1,12 @@
 import re
-from depmapomics.qc.config import FILE_ATTRIBUTES, TEMP_VIRTUAL_TAIGA_ID
+from depmapomics.test.config import FILE_ATTRIBUTES, TEMP_VIRTUAL_TAIGA_ID
 from taigapy import TaigaClient
+import numpy as np
+tc = TaigaClient()
+import pytest
+
+IS_MATRIX = [x for x in FILE_ATTRIBUTES if x['ismatrix']]
+IS_TABLE = [x for x in FILE_ATTRIBUTES if not x['ismatrix']]
 
 def check_symbol_and_entrezid_in_column(matrix):
     matches = matrix.columns.map(lambda x: re.match(r'([a-zA-Z0-9-_/.]+)\s\((\d+)\)$', x))
@@ -10,7 +16,7 @@ def check_symbol_and_entrezid_in_column(matrix):
 def check_symbol_and_enst_in_column(matrix):
     p1 = r'(?:[a-zA-Z0-9-_/.]+)' # only gene symbol
     p2 = r'ENST(?:\d{11})' # only ensembl id
-    p3 = p1 + r'\s\(' + p2 + '\)' # gene symbol (ensembl id)
+    p3 = p1 + r'\s\(' + p2 + r'\)' # gene symbol (ensembl id)
     p4 = r'ERCC-(?:\d{5})' # ERCC
     p  = '|'.join([p2, p3, p4])
     matches = matrix.columns.map(lambda x: re.fullmatch(p, x))
@@ -20,7 +26,7 @@ def check_symbol_and_enst_in_column(matrix):
 def check_symbol_and_ensg_in_column(matrix):
     p1 = r'(?:[a-zA-Z0-9-_/.]+)' # only gene symbol
     p2 = r'ENSG(?:\d{11})' # only ensembl id
-    p3 = p1 + r'\s\(' + p2 + '\)' # gene symbol (ensembl id)
+    p3 = p1 + r'\s\(' + p2 + r'\)' # gene symbol (ensembl id)
     p4 = r'ERCC-(?:\d{5})' # ERCC
     p  = '|'.join([p2, p3, p4])
     matches = matrix.columns.map(lambda x: re.fullmatch(p, x))
@@ -61,17 +67,18 @@ def check_matrix_format(matrix, gene_id=None, hasNA=False):
     assert datatypes - {float, int} == set(), 'matrix contains data other than int and float. Datatypes are: {}'.format(datatypes)
     assert len(datatypes) == 1, 'there is a mixture of datatypes in the matrix'
 
-def check_data_format(files_attributes=FILE_ATTRIBUTES,
-        temp_virtual_taiga_id=TEMP_VIRTUAL_TAIGA_ID, version=None):
-    tc = TaigaClient()
+@pytest.mark.parametrize('files_attribute', IS_MATRIX)
+def test_matrix_format(files_attribute, temp_virtual_taiga_id=TEMP_VIRTUAL_TAIGA_ID, version=None):
+    data = tc.get(name=temp_virtual_taiga_id, file=files_attribute['file'], version=version)
+    check_matrix_format(data, gene_id=files_attribute['gene_id'], hasNA=files_attribute['hasNA'])
 
-    for files_attribute in files_attributes:
-        data = tc.get(name=temp_virtual_taiga_id, file=files_attribute['file'], version=version)
-        print('checking ', files_attribute['file'], end=': ')
-        if files_attribute['ismatrix']:
-            check_matrix_format(data, gene_id=files_attribute['gene_id'], hasNA=files_attribute['hasNA'])
-            print('PASS')
-        else:
-            check_table_format(data)
-            print('PASS')
-        del data
+@pytest.mark.parametrize('files_attribute', IS_TABLE)
+def test_table_format(files_attribute, temp_virtual_taiga_id=TEMP_VIRTUAL_TAIGA_ID, version=None):
+    data = tc.get(name=temp_virtual_taiga_id, file=files_attribute['file'], version=version)
+    check_table_format(data)
+
+@pytest.mark.xfail(strict=True)
+def test_logtransform(file='CCLE_expression_full', temp_virtual_taiga_id=TEMP_VIRTUAL_TAIGA_ID, version=None):
+    CCLE_expression_full = tc.get(name=temp_virtual_taiga_id, version=version, file=file)
+    assert CCLE_expression_full.min().min() == 0
+    assert not CCLE_expression_full.sum(axis=1).map(lambda x: np.isclose(x, 1e6, rtol=1e-4)).all(), 'expression data is not log-transformed'
