@@ -2,15 +2,14 @@ import re
 
 import numpy as np
 import pytest
-from depmapomics.test.config import (FILE_ATTRIBUTES, TEMP_VIRTUAL_TAIGA_ID,
-                                     TEMP_VIRTUAL_TAIGA_VERSION)
+from depmapomics.test.config import (FILE_ATTRIBUTES, VIRTUAL_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
 
 @pytest.fixture(scope='module')
 def data(request):
-    return tc.get(name=TEMP_VIRTUAL_TAIGA_ID, file=request.param, version=TEMP_VIRTUAL_TAIGA_VERSION)
+    return tc.get(name=VIRTUAL_RELEASE['name'], file=request.param, version=VIRTUAL_RELEASE['version'])
 
 PARAMS_test_symbol_and_entrezid_in_column = [x['file'] for x in FILE_ATTRIBUTES if x['ismatrix'] and x['gene_id']=='entrez']
 @pytest.mark.parametrize('data', PARAMS_test_symbol_and_entrezid_in_column, indirect=True)
@@ -34,8 +33,7 @@ def test_symbol_and_enstid_in_column(data):
 
 
 PARAMS_test_symbol_and_ensgid_in_column = [x['file'] for x in FILE_ATTRIBUTES if x['ismatrix'] and x['gene_id']=='ensg']
-@pytest.mark.parametrize('data', PARAMS_test_symbol_and_ensgid_in_column,
-        indirect=True)
+@pytest.mark.parametrize('data', PARAMS_test_symbol_and_ensgid_in_column, indirect=True)
 def test_symbol_and_ensgid_in_column(data):
     p1 = r'(?:[a-zA-Z0-9-_/.]+)' # only gene symbol
     p2 = r'ENSG(?:\d{11})' # only ensembl gene id
@@ -48,10 +46,9 @@ def test_symbol_and_ensgid_in_column(data):
 
 
 PARAMS_test_arxspan_ids = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
-@pytest.mark.parametrize('data', PARAMS_test_arxspan_ids,
-                        indirect=True)
+@pytest.mark.parametrize('data', PARAMS_test_arxspan_ids, indirect=True)
 def test_arxspan_ids(data):
-    assert 'DepMap_ID' in data.columns, 'no DepMap_ID column found'
+    assert 'DepMap_ID' in data.columns
     column = data['DepMap_ID']
     matches = column.map(lambda x: re.match(r'ACH-[\d]{6}$', x))
     assert  matches.notnull().all(), \
