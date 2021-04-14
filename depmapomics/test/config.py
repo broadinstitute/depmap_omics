@@ -1,4 +1,4 @@
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 4}
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 5}
 REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39}
 
 FILE_ATTRIBUTES = [

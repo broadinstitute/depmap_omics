@@ -1,7 +1,8 @@
-from depmapomics.test.archive.compare_cn import plot_gene_cn_comparison
+from depmapomics.test.archive.compare_cn import plot_gene_cn_comparison, plot_matrix_comparison
+from depmapomics.test.config import VIRTUAL_RELEASE, REFERENCE_RELEASE
 
-gene_cn_20q3_21q1 = plot_gene_cn_comparison(release1 = {'name': 'internal-20q3-00d0', 'version': 9},
-                                            release2 = {'name': 'internal-21q1-4fc4', 'version': 13}, savefig=True)
 
-# gene_cn_20q3_21q1 = plot_gene_cn_comparison(release1 = {'name': 'internal-20q3-00d0', 'version': 9},
-#                                             release2 = {'name': 'internal-21q1-4fc4', 'version': 7}, savefig=True)
+CCLE_gene_cn_12 = plot_gene_cn_comparison(release1 = REFERENCE_RELEASE,
+                                            release2 = VIRTUAL_RELEASE, savefig=True)
+
+plot_matrix_comparison('CCLE_expression_full')

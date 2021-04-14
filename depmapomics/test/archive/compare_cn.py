@@ -50,17 +50,17 @@ def CCLE_gene_cn_with_source_change(number_of_points = 500, savefig = False,
     return CCLE_gene_cn_12, cols
 
 
-def plot_matrix_comparison(file, number_of_dots = 500,
+def plot_matrix_comparison(file, number_of_points = 500,
                            release1 = REFERENCE_RELEASE, release2 = VIRTUAL_RELEASE):
-    data_stack, cols = create_data_stack(file, number_of_dots = number_of_dots,
+    data_stack, cols = create_data_stack(file, number_of_points = number_of_points,
                                          release1 = release1, release2 = release2)
     data_stack.plot.scatter(*cols)
 
 
-def plot_gene_cn_comparison(number_of_dots = 500, savefig = False,
+def plot_gene_cn_comparison(number_of_points = 500, savefig = False,
                             release1 = REFERENCE_RELEASE, release2 = VIRTUAL_RELEASE):
 
-    CCLE_gene_cn_12, cols = CCLE_gene_cn_with_source_change(number_of_dots = number_of_dots, savefig = False,
+    CCLE_gene_cn_12, cols = CCLE_gene_cn_with_source_change(number_of_points = number_of_points, savefig = False,
                                                             release1 = release1, release2 = release2)
     # CCLE_gene_cn_12, cols = create_data_stack('CCLE_gene_cn', number_of_points=500, release1 = release1, release2 = release2)
 
