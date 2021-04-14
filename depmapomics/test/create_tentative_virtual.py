@@ -37,11 +37,11 @@ if __name__ == "__main__":
     #     folder_id="29b48277847443edb7d84b9b457de124", # optional, will default to your home folder if not provided
     # )
 
-    from depmapomics.test.config import TEMP_VIRTUAL_TAIGA_ID, TAIGA_IDS_LATEST
+    from depmapomics.test.config import VIRTUAL_RELEASE, TAIGA_IDS_LATEST
     taiga_ids_list = get_taiga_ids_list(TAIGA_IDS_LATEST)
 
     new_dataset_id = tc.update_dataset(
-        TEMP_VIRTUAL_TAIGA_ID,
+        VIRTUAL_RELEASE['name'],
         changes_description="add all the virtual data",
         add_taiga_ids=taiga_ids_list,
         add_all_existing_files = True

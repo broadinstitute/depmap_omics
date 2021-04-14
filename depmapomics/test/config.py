@@ -1,4 +1,4 @@
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 2}
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 4}
 REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39}
 
 FILE_ATTRIBUTES = [
@@ -39,10 +39,10 @@ TAIGA_IDS_LATEST = {
         ('CCLE_fusions', 'filtered_fusions_21Q2')
     ],
     EXPRESSION_TAIGA_ID:[
-        ('CCLE_expression_full', 'expression_21Q2_genes_tpm'),
-        ('CCLE_RNAseq_transcripts', 'expression_21Q2_transcripts_tpm'),
+        ('CCLE_expression_full', 'expression_21Q2_genes_tpm_logp1'),
+        ('CCLE_RNAseq_transcripts', 'expression_21Q2_transcripts_tpm_logp1'),
         ('CCLE_RNAseq_reads', 'expression_21Q2_genes_expected_count'),
-        ('CCLE_expression', 'expression_21Q2_proteincoding_genes_tpm'),
+        ('CCLE_expression', 'expression_21Q2_proteincoding_genes_tpm_logp1'),
         ('CCLE_expression_proteincoding_genes_expected_count', 'expression_21Q2_proteincoding_genes_expected_count'),
         ('CCLE_expression_transcripts_expected_count', 'expression_21Q2_transcripts_expected_count')
     ],
