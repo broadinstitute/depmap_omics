@@ -1,4 +1,4 @@
-from depmapomics.test.config import (FILE_ATTRIBUTES, VIRTUAL_RELEASE, REFERENCE_RELEASE)
+from depmapomics.test.config import (VIRTUAL_RELEASE, REFERENCE_RELEASE)
 import pytest
 from taigapy import TaigaClient
 
@@ -19,13 +19,12 @@ def test_matrix_correlations(data, threshold, axisname, method):
     axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
     data1, data2 = data
     corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
-    # TODO: test for NAs instead of dropping them.
-    # it seems like NA can happen if there are all zeros
-    # in one of the vectors, so let's dropna for now
+    # TODO: test for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
     corrs.dropna(inplace=True)
 
     assert (corrs >= threshold).all(), 'the samples which did not pass the test are:\n{}'.format(corrs[corrs<threshold].sort_values())
 
+# TODO: implement the assert almost equal version of the tests
 # from pandas.testing import assert_frame_equal
 # PARAMS_matrix_correlations = [('CCLE_expression_full', 0.01), ('CCLE_gene_cn', 0.01)]
 # # @pytest.mark.parametrize('axisname', ['pergene', 'persample'])

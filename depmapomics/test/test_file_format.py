@@ -75,6 +75,7 @@ def test_expression_logtransform(data):
     assert not data.sum(axis=1).map(lambda x: np.isclose(x, 1e6, rtol=1e-4)).all(), 'expression data is not log-transformed'
 
 
+# TODO: implement some direct way to test for CNV log transformation
 def test_cnv_logtransform():
     pass
 
