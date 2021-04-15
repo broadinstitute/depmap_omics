@@ -1,4 +1,4 @@
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 7}
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8}
 REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39}
 
 FUSIONS_MERGE_COLS = ['DepMap_ID', 'LeftBreakpoint', 'RightBreakpoint']
@@ -13,7 +13,7 @@ FILE_ATTRIBUTES = [
     {'file': 'CCLE_RNAseq_reads', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
     {'file': 'CCLE_fusions', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS},
     {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS},
-    {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'omicssource':'RNA'},
+    {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'hasNA': False,'omicssource':'RNA', 'gene_id': None},
     {'file': 'CCLE_gene_cn', 'ismatrix': True, 'hasNA': True, 'gene_id': 'entrez', 'omicssource':'DNA'},
     {'file': 'CCLE_segment_cn', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': SEGMENT_CN_MERGE_COLS},
     {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': MUTATIONS_MERGE_COLS},
