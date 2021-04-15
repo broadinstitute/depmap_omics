@@ -1,6 +1,9 @@
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 6}
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 7}
 REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39}
 
+FUSIONS_MERGE_COLS = ['DepMap_ID', 'LeftBreakpoint', 'RightBreakpoint']
+SEGMENT_CN_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start', 'End']
+MUTATIONS_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start_position', 'End_position', 'Tumor_Seq_Allele1']
 FILE_ATTRIBUTES = [
     {'file': 'CCLE_expression', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
     {'file': 'CCLE_expression_proteincoding_genes_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
@@ -8,11 +11,12 @@ FILE_ATTRIBUTES = [
     {'file': 'CCLE_expression_transcripts_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'enst', 'omicssource':'RNA'},
     {'file': 'CCLE_expression_full', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
     {'file': 'CCLE_RNAseq_reads', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
-    {'file': 'CCLE_fusions', 'ismatrix': False, 'omicssource':'RNA'},
-    {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False, 'omicssource':'RNA'},
+    {'file': 'CCLE_fusions', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS},
+    {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS},
+    {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'omicssource':'RNA'},
     {'file': 'CCLE_gene_cn', 'ismatrix': True, 'hasNA': True, 'gene_id': 'entrez', 'omicssource':'DNA'},
-    {'file': 'CCLE_segment_cn', 'ismatrix': False, 'omicssource':'DNA'},
-    {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA'},
+    {'file': 'CCLE_segment_cn', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': SEGMENT_CN_MERGE_COLS},
+    {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': MUTATIONS_MERGE_COLS},
     {'file': 'CCLE_mutations_bool_damaging', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
     {'file': 'CCLE_mutations_bool_hotspot', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
     {'file': 'CCLE_mutations_bool_othercons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
@@ -20,7 +24,7 @@ FILE_ATTRIBUTES = [
 ]
 
 
-# the following information is used to create a temp virtual
+# the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
 FUSIONS_TAIGA_ID = 'fusions-95c9'
 EXPRESSION_TAIGA_ID = 'expression-d035'
@@ -44,7 +48,8 @@ TAIGA_IDS_LATEST = {
         ('CCLE_RNAseq_reads', 'expression_21Q2_genes_expected_count'),
         ('CCLE_expression', 'expression_21Q2_proteincoding_genes_tpm_logp1'),
         ('CCLE_expression_proteincoding_genes_expected_count', 'expression_21Q2_proteincoding_genes_expected_count'),
-        ('CCLE_expression_transcripts_expected_count', 'expression_21Q2_transcripts_expected_count')
+        ('CCLE_expression_transcripts_expected_count', 'expression_21Q2_transcripts_expected_count'),
+        ('CCLE_ssGSEA', 'gene_sets_21Q2_all')
     ],
     CN_TAIGA_ID:[
         ('CCLE_gene_cn', 'all_21Q2_gene_cn'),
