@@ -62,21 +62,9 @@ def plot_gene_cn_comparison(number_of_points = 500, savefig = False,
 
     CCLE_gene_cn_12, cols = CCLE_gene_cn_with_source_change(number_of_points = number_of_points, savefig = False,
                                                             release1 = release1, release2 = release2)
-    # CCLE_gene_cn_12, cols = create_data_stack('CCLE_gene_cn', number_of_points=500, release1 = release1, release2 = release2)
-
-    # CCLE_segment_cn_1 = tc.get(name=release1['name'], version=release1['version'], file='CCLE_segment_cn')
-    # CCLE_segment_cn_2 = tc.get(name=release2['name'], version=release2['version'], file='CCLE_segment_cn')
-    # sources = pd.merge(CCLE_segment_cn_1[['DepMap_ID', 'Source']].drop_duplicates(),
-    #      CCLE_segment_cn_2[['DepMap_ID', 'Source']].drop_duplicates(),
-    #      on='DepMap_ID', suffixes=['_'+names[0], '_'+names[1]])
-    # del CCLE_segment_cn_1, CCLE_segment_cn_2
-    # sources['source_change'] = sources.apply(lambda x: '{:s} -> {:s}'.format(x['Source_'+names[0]], x['Source_'+names[1]]), axis=1)
-    # sources['source_has_changed'] = (sources['Source_'+names[0]] != sources['Source_'+names[1]])
-
-    # CCLE_gene_cn_12 = pd.merge(CCLE_gene_cn_12, sources, on='DepMap_ID')
 
     plt.figure(figsize=(20,10))
-    sns.scatterplot(data=CCLE_gene_cn_12.sample(number_of_dots, random_state=0), x=cols[0], y=cols[1],
+    sns.scatterplot(data=CCLE_gene_cn_12.sample(number_of_points, random_state=0), x=cols[0], y=cols[1],
                     hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
 
     if savefig:

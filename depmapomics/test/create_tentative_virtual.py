@@ -21,12 +21,12 @@ def get_taiga_ids_list(taiga_id_dict):
 if __name__ == "__main__":
     tc = TaigaClient()
 
-    # Uncomment if the temp virtual dataset doesn't exist
+    # Uncomment if the tentative virtual dataset doesn't exist
     #  with open('/tmp/null.csv', 'w') as f:
     #     pass
 
     # new_dataset_id = tc.create_dataset(
-    #     "temp virtual",
+    #     "tentative virtual",
     #     dataset_description="this is a temporary virtual dataset for omics QCs", # optional (but recommended)
     #     upload_files=[
     #         {

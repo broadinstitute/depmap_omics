@@ -1,4 +1,4 @@
-from depmapomics.test.config import (VIRTUAL_RELEASE, REFERENCE_RELEASE)
+from depmapomics.test.config import (VIRTUAL_RELEASE, REFERENCE_RELEASE, FILE_ATTRIBUTES)
 import pytest
 from taigapy import TaigaClient
 
@@ -11,7 +11,8 @@ def data(request):
     return data1, data2
 
 
-PARAMS_matrix_correlations = [('CCLE_expression_full', 0.95), ('CCLE_gene_cn', 0.95)]
+PARAMS_matrix_correlations = [('CCLE_gene_cn', 0.95)]
+PARAMS_matrix_correlations += [(x['file'], 0.99999) for x in FILE_ATTRIBUTES if x['ismatrix'] & (x['omicssource']=='RNA')]
 @pytest.mark.parametrize('method', ['spearman', 'pearson'])
 @pytest.mark.parametrize('axisname', ['pergene', 'persample'])
 @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])

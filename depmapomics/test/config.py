@@ -1,22 +1,22 @@
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 5}
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 6}
 REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39}
 
 FILE_ATTRIBUTES = [
-    {'file': 'CCLE_expression', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez'},
-    {'file': 'CCLE_expression_proteincoding_genes_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez'},
-    {'file': 'CCLE_mutations_bool_damaging', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez'},
-    {'file': 'CCLE_mutations_bool_hotspot', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez'},
-    {'file': 'CCLE_mutations_bool_othercons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez'},
-    {'file': 'CCLE_mutations_bool_othernoncons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez'},
-    {'file': 'CCLE_RNAseq_transcripts', 'ismatrix': True, 'hasNA': False, 'gene_id': 'enst'},
-    {'file': 'CCLE_expression_transcripts_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'enst'},
-    {'file': 'CCLE_expression_full', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg'},
-    {'file': 'CCLE_RNAseq_reads', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg'},
-    {'file': 'CCLE_gene_cn', 'ismatrix': True, 'hasNA': True, 'gene_id': 'entrez'},
-    {'file': 'CCLE_fusions', 'ismatrix': False},
-    {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False},
-    {'file': 'CCLE_segment_cn', 'ismatrix': False},
-    {'file': 'CCLE_mutations', 'ismatrix': False}
+    {'file': 'CCLE_expression', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
+    {'file': 'CCLE_expression_proteincoding_genes_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
+    {'file': 'CCLE_RNAseq_transcripts', 'ismatrix': True, 'hasNA': False, 'gene_id': 'enst', 'omicssource':'RNA'},
+    {'file': 'CCLE_expression_transcripts_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'enst', 'omicssource':'RNA'},
+    {'file': 'CCLE_expression_full', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
+    {'file': 'CCLE_RNAseq_reads', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
+    {'file': 'CCLE_fusions', 'ismatrix': False, 'omicssource':'RNA'},
+    {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False, 'omicssource':'RNA'},
+    {'file': 'CCLE_gene_cn', 'ismatrix': True, 'hasNA': True, 'gene_id': 'entrez', 'omicssource':'DNA'},
+    {'file': 'CCLE_segment_cn', 'ismatrix': False, 'omicssource':'DNA'},
+    {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA'},
+    {'file': 'CCLE_mutations_bool_damaging', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
+    {'file': 'CCLE_mutations_bool_hotspot', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
+    {'file': 'CCLE_mutations_bool_othercons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
+    {'file': 'CCLE_mutations_bool_othernoncons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'}
 ]
 
 
@@ -28,7 +28,7 @@ CN_TAIGA_ID = 'cn-achilles-version-06ca'
 
 TAIGA_IDS_LATEST = {
     MUTATIONS_TAIGA_ID:[
-        ('CCLE_mutations', 'wes_somatic_mutations_all_21Q1'),
+        ('CCLE_mutations', 'all_somatic_mutations_all_21Q2_depmapversion'),
         ('CCLE_mutations_bool_damaging', 'all_somatic_mutations_boolmatrix_fordepmap_damaging'),
         ('CCLE_mutations_bool_othernoncons', 'all_somatic_mutations_boolmatrix_fordepmap_othernoncons'),
         ('CCLE_mutations_bool_othercons', 'all_somatic_mutations_boolmatrix_fordepmap_othercons'),
