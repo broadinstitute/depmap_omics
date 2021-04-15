@@ -5,11 +5,14 @@ from taigapy import TaigaClient
 
 tc = TaigaClient()
 
+def tcget_new_old(file):
+    data1 = tc.get(name=REFERENCE_RELEASE['name'], file=file, version=REFERENCE_RELEASE['version'])
+    data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=file, version=VIRTUAL_RELEASE['version'])
+    return data1, data2
+
 @pytest.fixture(scope='module')
 def data(request):
-    data1 = tc.get(name=REFERENCE_RELEASE['name'], file=request.param, version=REFERENCE_RELEASE['version'])
-    data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=request.param, version=VIRTUAL_RELEASE['version'])
-    return data1, data2
+    return tcget_new_old(request.param)
 
 
 PARAMS_nonmatrix_columns_match = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
@@ -75,3 +78,13 @@ def test_fraction_of_unequl_columns_from_merged_file(dataframes_merged, force_dt
     unequal_columns = unequal_columns[unequal_columns > 0]
     assert len(unequal_columns) == 0, 'fraction of unequal columns when subsetted for shared columns {}:\n {}'.format('merge_columns', unequal_columns)
     return unequal_columns
+
+PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
+@pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
+def test_compare_column_dtypes(data):
+    data1, data2 = data
+    dtypes_compare = pd.concat([data1.dtypes, data2.dtypes], axis=1, keys=['reference', 'virtual'])
+    dtypes_compare.dropna(inplace=True)
+    dtypes_compare_nonmatching = dtypes_compare.apply(lambda x: x[0]!=x[1], axis=1)
+    dtypes_compare = dtypes_compare[dtypes_compare_nonmatching]
+    assert len(dtypes_compare) == 0, 'the following columns have changed types between the releases:\n{}'.format(dtypes_compare)
