@@ -1,0 +1,1 @@
+{"rnaseqc2_workflow.rnaseqc2.bam_file": "this.star_bam_file", "rnaseqc2_workflow.rnaseqc2.genes_gtf": "workspace.genes_gtf", "rnaseqc2_workflow.rnaseqc2.memory": "8", "rnaseqc2_workflow.rnaseqc2.num_threads": "4", "rnaseqc2_workflow.rnaseqc2.num_preempt": "1", "rnaseqc2_workflow.rnaseqc2.disk_space": "75", "rnaseqc2_workflow.rnaseqc2.sample_id": "this.name"}
