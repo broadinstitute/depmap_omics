@@ -8,6 +8,11 @@ FUSIONS_MERGE_COLS = ['DepMap_ID', 'LeftGene', 'RightGene', 'LeftBreakpoint', 'R
 SEGMENT_CN_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start', 'End']
 MUTATIONS_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start_position', 'End_position', 'Tumor_Seq_Allele1']
 
+FILES_RELEASED_BEFORE = ['CCLE_expression', 'CCLE_expression_proteincoding_genes_expected_count',
+                         'CCLE_RNAseq_transcripts', 'CCLE_expression_transcripts_expected_count',
+                         'CCLE_expression_full', 'CCLE_RNAseq_reads', 'CCLE_fusions', 'CCLE_fusions_unfiltered',
+                         'CCLE_gene_cn', 'CCLE_segment_cn', 'CCLE_mutations']
+
 # all the file attributes
 FILE_ATTRIBUTES = [
     {'file': 'CCLE_expression', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
