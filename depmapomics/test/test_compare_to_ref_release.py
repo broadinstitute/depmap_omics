@@ -27,9 +27,10 @@ def dataframes_merged(request):
 
 
 ##### TESTS ############
-PARAMS_nonmatrix_columns_match = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
-@pytest.mark.parametrize('data', PARAMS_nonmatrix_columns_match, indirect=['data'])
-def test_nonmatrix_columns_match(data):
+# PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
+PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES]
+@pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+def test_compare_column_names(data):
     data1, data2 = data
     assert set(data1.columns) == set(data2.columns)
 
@@ -52,7 +53,7 @@ PARAMS_fraction_of_unequl_columns_from_merged_file = [(x['file'], x['merge_cols'
 @pytest.mark.parametrize('dataframes_merged', PARAMS_fraction_of_unequl_columns_from_merged_file,
                          indirect=['dataframes_merged'], ids=[x[0] for x in PARAMS_fraction_of_unequl_columns_from_merged_file])
 # @pytest.mark.parametrize('force_dtype_to_str', [False, True], ids=['keep_dtype', 'force_str'])
-def test_fraction_of_unequl_columns_from_merged_file(dataframes_merged, force_dtype_to_str = False):
+def test_fraction_of_unequl_columns_from_merged_file(dataframes_merged):
     cols = list(set([x[:-2] for x in dataframes_merged.columns if x.endswith('_x') | x.endswith('_y')]))
     dataframe_merge_both = dataframes_merged[dataframes_merged['_merge'] == 'both']
     dataframe_merge_both.set_index('DepMap_ID', inplace=True)
@@ -72,7 +73,8 @@ def test_fraction_of_unequl_columns_from_merged_file(dataframes_merged, force_dt
     assert unequal_columns.empty, 'fraction of unequal columns when subsetted for shared columns {}:\n {}\n'.format(unequal_columns, unequal_values_sum)
 
 
-PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
+# PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
+PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES]
 @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
 def test_compare_column_dtypes(data):
     data1, data2 = data
