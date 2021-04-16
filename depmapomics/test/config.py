@@ -1,9 +1,14 @@
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8}
-REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39}
+# release ids on taiga
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8} # new release
+REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as a ground truth
 
-FUSIONS_MERGE_COLS = ['DepMap_ID', 'LeftBreakpoint', 'RightBreakpoint']
+# these are the columns that if merged with an older release (assuming that old data was not altered),
+# should uniquely identify each row of the file to find equal values in each column
+FUSIONS_MERGE_COLS = ['DepMap_ID', 'LeftGene', 'RightGene', 'LeftBreakpoint', 'RightBreakpoint']
 SEGMENT_CN_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start', 'End']
 MUTATIONS_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start_position', 'End_position', 'Tumor_Seq_Allele1']
+
+# all the file attributes
 FILE_ATTRIBUTES = [
     {'file': 'CCLE_expression', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
     {'file': 'CCLE_expression_proteincoding_genes_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
@@ -11,12 +16,12 @@ FILE_ATTRIBUTES = [
     {'file': 'CCLE_expression_transcripts_expected_count', 'ismatrix': True, 'hasNA': False, 'gene_id': 'enst', 'omicssource':'RNA'},
     {'file': 'CCLE_expression_full', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
     {'file': 'CCLE_RNAseq_reads', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
-    {'file': 'CCLE_fusions', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS},
-    {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS},
+    {'file': 'CCLE_fusions', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS, 'expected_changed_cols':['CCLE_count']},
+    {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS, 'expected_changed_cols':['CCLE_count']},
     {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'hasNA': False,'omicssource':'RNA', 'gene_id': None},
     {'file': 'CCLE_gene_cn', 'ismatrix': True, 'hasNA': True, 'gene_id': 'entrez', 'omicssource':'DNA'},
-    {'file': 'CCLE_segment_cn', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': SEGMENT_CN_MERGE_COLS},
-    {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': MUTATIONS_MERGE_COLS},
+    {'file': 'CCLE_segment_cn', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': SEGMENT_CN_MERGE_COLS, 'expected_changed_cols':[]},
+    {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': MUTATIONS_MERGE_COLS, 'expected_changed_cols':[]},
     {'file': 'CCLE_mutations_bool_damaging', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
     {'file': 'CCLE_mutations_bool_hotspot', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
     {'file': 'CCLE_mutations_bool_othercons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
