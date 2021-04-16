@@ -2,10 +2,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from depmapomics.test.config import (FILE_ATTRIBUTES, REFERENCE_RELEASE,
-                                     VIRTUAL_RELEASE)
+                                     VIRTUAL_RELEASE, FILES_RELEASED_BEFORE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
+
+FILE_ATTRIBUTES_PAIRED = [x for x in FILE_ATTRIBUTES if x['file'] in FILES_RELEASED_BEFORE]
 
 ####### FIXTURES ####
 def tcget_new_old(file):
@@ -30,7 +32,7 @@ def dataframes_merged(request):
 
 ##### TESTS ############
 # PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
-PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES]
+PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES_PAIRED]
 @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
 def test_compare_column_names(data):
     data1, data2 = data
@@ -38,7 +40,7 @@ def test_compare_column_names(data):
 
 
 PARAMS_matrix_correlations = [('CCLE_gene_cn', 0.95)]
-PARAMS_matrix_correlations += [(x['file'], 0.99999) for x in FILE_ATTRIBUTES if x['ismatrix'] & (x['omicssource']=='RNA')]
+PARAMS_matrix_correlations += [(x['file'], 0.99999) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix'] & (x['omicssource']=='RNA')]
 @pytest.mark.parametrize('method', ['spearman', 'pearson'])
 @pytest.mark.parametrize('axisname', ['pergene', 'persample'])
 @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
@@ -52,7 +54,7 @@ def test_matrix_correlations(data, threshold, axisname, method):
 
 
 PARAMS_fraction_of_unequl_columns_from_merged_file = [((x['file'], x['merge_cols']), x['expected_changed_cols'])
-                                                      for x in FILE_ATTRIBUTES if 'merge_cols' in x]
+                                                      for x in FILE_ATTRIBUTES_PAIRED if 'merge_cols' in x]
 @pytest.mark.parametrize('dataframes_merged, expected_changed_cols', PARAMS_fraction_of_unequl_columns_from_merged_file,
                          indirect=['dataframes_merged'], ids=[x[0][0] for x in PARAMS_fraction_of_unequl_columns_from_merged_file])
 def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expected_changed_cols):
@@ -63,11 +65,12 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
     dataframe_merge_both.set_index('DepMap_ID', inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
+    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b))
     for col in cols:
         if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
             unequal_values[col] = ~np.isclose(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
         else:
-            unequal_values[col] = (dataframe_merge_both[col+'_x'] != dataframe_merge_both[col+'_y'])
+            unequal_values[col] = ~equal_noneNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
 
     unequal_columns = unequal_values.agg(['mean', 'sum']).T
     unequal_columns.sort_values('mean', ascending=False, inplace=True)
@@ -84,11 +87,19 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
 
 
 # PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
-PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES]
+PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES_PAIRED]
+@pytest.mark.parametrize('method', ['pd_dtypes', 'map_type'])
 @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
-def test_compare_column_dtypes(data):
+def test_compare_column_dtypes(data, method):
     data1, data2 = data
-    dtypes_compare = pd.concat([data1.dtypes, data2.dtypes], axis=1, keys=['reference', 'virtual'])
+    if method == 'pd_dtypes': # per column dtype
+        get_dtypes = lambda df: df.dtypes
+    elif method == 'map_type': # per element type
+        get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+    else:
+        raise Exception('bad values for dtype method')
+
+    dtypes_compare = pd.concat([get_dtypes(data1), get_dtypes(data2)], axis=1, keys=['reference', 'virtual'])
     dtypes_compare.dropna(inplace=True)
     dtypes_compare_nonmatching = dtypes_compare.apply(lambda x: x[0]!=x[1], axis=1)
     dtypes_compare = dtypes_compare[dtypes_compare_nonmatching]
