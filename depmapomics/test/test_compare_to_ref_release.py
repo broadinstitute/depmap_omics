@@ -1,6 +1,8 @@
-from depmapomics.test.config import (VIRTUAL_RELEASE, REFERENCE_RELEASE, FILE_ATTRIBUTES)
-import pytest
+import numpy as np
 import pandas as pd
+import pytest
+from depmapomics.test.config import (FILE_ATTRIBUTES, REFERENCE_RELEASE,
+                                     VIRTUAL_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
@@ -49,28 +51,36 @@ def test_matrix_correlations(data, threshold, axisname, method):
     assert (corrs >= threshold).all(), 'the samples which did not pass the test are:\n{}'.format(corrs[corrs<threshold].sort_values())
 
 
-PARAMS_fraction_of_unequl_columns_from_merged_file = [(x['file'], x['merge_cols']) for x in FILE_ATTRIBUTES if 'merge_cols' in x]
-@pytest.mark.parametrize('dataframes_merged', PARAMS_fraction_of_unequl_columns_from_merged_file,
-                         indirect=['dataframes_merged'], ids=[x[0] for x in PARAMS_fraction_of_unequl_columns_from_merged_file])
-# @pytest.mark.parametrize('force_dtype_to_str', [False, True], ids=['keep_dtype', 'force_str'])
-def test_fraction_of_unequl_columns_from_merged_file(dataframes_merged):
+PARAMS_fraction_of_unequl_columns_from_merged_file = [((x['file'], x['merge_cols']), x['expected_changed_cols'])
+                                                      for x in FILE_ATTRIBUTES if 'merge_cols' in x]
+@pytest.mark.parametrize('dataframes_merged, expected_changed_cols', PARAMS_fraction_of_unequl_columns_from_merged_file,
+                         indirect=['dataframes_merged'], ids=[x[0][0] for x in PARAMS_fraction_of_unequl_columns_from_merged_file])
+def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expected_changed_cols):
+    dataframes_merged.drop([x+'_x' for x in expected_changed_cols], inplace=True, axis=1)
+    dataframes_merged.drop([x+'_y' for x in expected_changed_cols], inplace=True, axis=1)
     cols = list(set([x[:-2] for x in dataframes_merged.columns if x.endswith('_x') | x.endswith('_y')]))
     dataframe_merge_both = dataframes_merged[dataframes_merged['_merge'] == 'both']
     dataframe_merge_both.set_index('DepMap_ID', inplace=True)
-    unequal_columns = pd.Series(index=cols, dtype=float)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
+    cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
     for col in cols:
-        unequal_values[col] = (dataframe_merge_both[col+'_x'] != dataframe_merge_both[col+'_y'])
-    unequal_columns.sort_values(ascending=False, inplace=True)
+        if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
+            unequal_values[col] = ~np.isclose(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
+        else:
+            unequal_values[col] = (dataframe_merge_both[col+'_x'] != dataframe_merge_both[col+'_y'])
+
+    unequal_columns = unequal_values.agg(['mean', 'sum']).T
+    unequal_columns.sort_values('mean', ascending=False, inplace=True)
+    unequal_columns['sum'] = unequal_columns['sum'].astype(int)
+    unequal_columns = unequal_columns[unequal_columns['sum'] > 0]
+    unequal_columns.rename(columns={'mean': 'freq', 'sum': 'count'}, inplace=True)
 
     unequal_values_sum = unequal_values.groupby('DepMap_ID').sum()
     unequal_values_sum = unequal_values_sum[(unequal_values_sum > 0).any(axis=1)]
     unequal_values_sum = unequal_values_sum.loc[:, (unequal_values_sum == 0).all()]
 
-    unequal_columns = unequal_values.mean()
-    unequal_columns.sort_values(ascending=False, inplace=True)
-    unequal_columns = unequal_columns[unequal_columns > 0]
-    assert unequal_columns.empty, 'fraction of unequal columns when subsetted for shared columns {}:\n {}\n'.format(unequal_columns, unequal_values_sum)
+    assert unequal_columns.empty, 'fraction of unequal values in each column that are expected to be equal:\n{}\
+        \n\ncell lines affected by these changes:\n{}'.format(unequal_columns, unequal_values_sum)
 
 
 # PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
