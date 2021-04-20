@@ -1,6 +1,7 @@
 # release ids on taiga
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8} # new release
-REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as a ground truth
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 9} # new release
+REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
+# REFERENCE_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8} # old release used as ground truth
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
@@ -12,6 +13,9 @@ FILES_RELEASED_BEFORE = ['CCLE_expression', 'CCLE_expression_proteincoding_genes
                          'CCLE_RNAseq_transcripts', 'CCLE_expression_transcripts_expected_count',
                          'CCLE_expression_full', 'CCLE_RNAseq_reads', 'CCLE_fusions', 'CCLE_fusions_unfiltered',
                          'CCLE_gene_cn', 'CCLE_segment_cn', 'CCLE_mutations']
+
+# correlation thresholds above which we consider two releases as 'similar'
+CORRELATION_THRESHOLDS = {'CCLE_gene_cn': 0.95, 'all_expressions': 0.99999}
 
 # all the file attributes
 FILE_ATTRIBUTES = [
@@ -33,6 +37,7 @@ FILE_ATTRIBUTES = [
     {'file': 'CCLE_mutations_bool_othernoncons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'}
 ]
 
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['file'] in ['CCLE_gene_cn', 'CCLE_segment_cn']]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
