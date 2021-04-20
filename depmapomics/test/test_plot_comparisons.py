@@ -11,6 +11,7 @@ NEW_TO_OLD_CORRELATION_THRESHOLD = 0.95
 SHARED_DATA_CORRELATION_THRESHOLD = 0.95
 PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_'
 
+
 def get_data_stack(file, number_of_points=1000000, random_state=0):
     data1, data2 = get_both_releases_from_taiga(file)
 
@@ -71,6 +72,9 @@ def test_plot_gene_cn_comparison(CCLE_gene_cn_with_source_change):
     output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + '{}-vs-{}.png'.format(cols[1], cols[0])
     print('saved to {}'.format(output_img_file))
     plt.savefig(output_img_file, bbox_inches='tight')
+    plt.close()
+    corr = CCLE_gene_cn_12[cols].corr().iloc[0, 1]
+    assert corr > SHARED_DATA_CORRELATION_THRESHOLD
 
 
 
@@ -84,7 +88,6 @@ def test_plot_per_gene_means(data, file_attr):
     old_lines = set(data2.index) & set(data1.index)
 
     stats_old = data2.loc[old_lines].mean()
-    # stats_new =(np.log2(data2.loc[new_lines]+1)).mean()
     stats_new =data2.loc[new_lines].mean()
 
     data_compare_stats = pd.concat([stats_old, stats_new], keys=['old', 'new'], axis=1)
@@ -95,7 +98,9 @@ def test_plot_per_gene_means(data, file_attr):
         hue = 'ERCC'
     else:
         hue = None
+    print(data_compare_stats.head())
     sns.scatterplot(data=data_compare_stats, x='old', y='new', hue=hue)
+
     minmax = (data_compare_stats.min().min(), data_compare_stats.max().max())
     plt.xlabel('per gene values in the new release\n averaged across cell lines shared between the new and old release\n(n={:d})'.format(len(old_lines)))
     plt.ylabel('per gene values in the new release\n averaged across cell lines only in the new release\n(n={:d})'.format(len(new_lines)))
@@ -104,6 +109,7 @@ def test_plot_per_gene_means(data, file_attr):
     output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + 'newlines_per_gene_means_{}.png'.format(file_attr['file'])
     print('saved to {}'.format(output_img_file))
     plt.savefig(output_img_file, bbox_inches='tight')
+    plt.close()
     assert corr > NEW_TO_OLD_CORRELATION_THRESHOLD
 
 
@@ -123,4 +129,5 @@ def test_plot_matrix_comparison(data_stack, file):
     output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + 'sharedlines_per_gene_values_{}.png'.format(file)
     print('saved to {}'.format(output_img_file))
     plt.savefig(output_img_file, bbox_inches='tight')
+    plt.close()
     assert corr > SHARED_DATA_CORRELATION_THRESHOLD
