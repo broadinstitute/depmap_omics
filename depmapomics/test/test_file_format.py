@@ -74,6 +74,11 @@ def test_expression_logtransform(data):
     assert data.min().min() == 0
     assert not data.sum(axis=1).map(lambda x: np.isclose(x, 1e6, rtol=1e-4)).all(), 'expression data is not log-transformed'
 
+@pytest.mark.parametrize('data', ['CCLE_segment_cn', 'CCLE_mutations'], indirect=True)
+def test_chromosome_names(data):
+    matches = data['Chromosome'].drop_duplicates().map(lambda x: re.match(r'^\d+|X|Y|M$', x))
+    assert matches.notnull().all()
+
 
 # TODO: implement some direct way to test for CNV log transformation
 def test_cnv_logtransform():
