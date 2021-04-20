@@ -44,6 +44,7 @@ def dataframes_merged(request):
 # PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
 PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES_PAIRED]
 @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+@pytest.mark.compare
 def test_compare_column_names(data):
     data1, data2 = data
     assert set(data1.columns) == set(data2.columns)
@@ -54,6 +55,7 @@ PARAMS_matrix_correlations += [(x['file'], CORRELATION_THRESHOLDS['all_expressio
 @pytest.mark.parametrize('method', ['spearman', 'pearson'])
 @pytest.mark.parametrize('axisname', ['pergene', 'persample'])
 @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+@pytest.mark.compare
 def test_matrix_correlations(data, threshold, axisname, method):
     axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
     data1, data2 = data
@@ -67,6 +69,7 @@ PARAMS_fraction_of_unequl_columns_from_merged_file = [((x['file'], x['merge_cols
                                                       for x in FILE_ATTRIBUTES_PAIRED if 'merge_cols' in x]
 @pytest.mark.parametrize('dataframes_merged, expected_changed_cols', PARAMS_fraction_of_unequl_columns_from_merged_file,
                          indirect=['dataframes_merged'], ids=[x[0][0] for x in PARAMS_fraction_of_unequl_columns_from_merged_file])
+@pytest.mark.compare
 def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expected_changed_cols):
     dataframes_merged.drop([x+'_x' for x in expected_changed_cols], inplace=True, axis=1)
     dataframes_merged.drop([x+'_y' for x in expected_changed_cols], inplace=True, axis=1)
@@ -99,6 +102,7 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
 PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES_PAIRED]
 @pytest.mark.parametrize('method', ['pd_dtypes', 'map_type'])
 @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
+@pytest.mark.compare
 def test_compare_column_dtypes(data, method):
     data1, data2 = data
     if method == 'pd_dtypes': # per column dtype
@@ -118,6 +122,7 @@ def test_compare_column_dtypes(data, method):
 PARAMS_compare_cell_lines = [(x['file'], 'index' if x['ismatrix'] else 'DepMap_ID') for x in FILE_ATTRIBUTES_PAIRED]
 @pytest.mark.skipif(SKIP_ARXSPAN_COMPARISON, reason="skipping, since it is normal to have arxspan differences between the releases")
 @pytest.mark.parametrize('data, arxspan_col', PARAMS_compare_cell_lines, indirect=['data'])
+@pytest.mark.compare
 def test_compare_cell_lines_released(data, arxspan_col):
     data1, data2 = data
     if arxspan_col == 'index':
@@ -132,6 +137,7 @@ def test_compare_cell_lines_released(data, arxspan_col):
 
 
 @pytest.mark.parametrize('data', ['CCLE_segment_cn'], indirect=['data'])
+@pytest.mark.compare
 def test_source_changes(data):
     data1, data2 = data
     source1 = data1.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
