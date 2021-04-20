@@ -6,9 +6,11 @@ from depmapomics.test.test_compare_to_ref_release import (
     get_both_releases_from_taiga)
 import seaborn as sns
 
+
 NEW_TO_OLD_CORRELATION_THRESHOLD = 0.95
 SHARED_DATA_CORRELATION_THRESHOLD = 0.95
 PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_'
+
 
 @pytest.fixture(scope='module')
 def data_stack(request, number_of_points=500, random_state=0):

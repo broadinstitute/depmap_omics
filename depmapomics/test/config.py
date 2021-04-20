@@ -19,7 +19,7 @@ FILES_RELEASED_BEFORE = ['CCLE_expression', 'CCLE_expression_proteincoding_genes
 # correlation thresholds above which we consider two releases as 'similar'
 CORRELATION_THRESHOLDS = {'CCLE_gene_cn': 0.99, 'all_expressions': 0.99999}
 
-SKIP_ARXSPAN_COMPARISON = False # set to False if you want to test whether some arxspans were added/removed
+SKIP_ARXSPAN_COMPARISON = True # set to False if you want to test whether some arxspans were added/removed
 
 # all the file attributes
 FILE_ATTRIBUTES = [
