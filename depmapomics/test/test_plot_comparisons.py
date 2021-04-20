@@ -11,10 +11,8 @@ NEW_TO_OLD_CORRELATION_THRESHOLD = 0.95
 SHARED_DATA_CORRELATION_THRESHOLD = 0.95
 PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_'
 
-
-@pytest.fixture(scope='module')
-def data_stack(request, number_of_points=500, random_state=0):
-    data1, data2 = get_both_releases_from_taiga(request.param)
+def get_data_stack(file, number_of_points=1000000, random_state=0):
+    data1, data2 = get_both_releases_from_taiga(file)
 
     row = set(data1.index) & set(data2.index)
     col = set(data1.columns) & set(data2.columns)
@@ -34,6 +32,46 @@ def data_stack(request, number_of_points=500, random_state=0):
     data_stack.reset_index(inplace=True)
     data_stack.rename(columns={'level_0': 'DepMap_ID', 'level_1': 'gene'}, inplace=True)
     return data_stack, cols
+
+
+@pytest.fixture(scope='module')
+def data_stack(request):
+    data_stack, cols = get_data_stack(request.param)
+    return data_stack, cols
+
+
+@pytest.fixture(scope='function')
+def CCLE_gene_cn_with_source_change():
+    CCLE_gene_cn_12, cols = get_data_stack('CCLE_gene_cn')
+
+    names = [REFERENCE_RELEASE['name'], VIRTUAL_RELEASE['name']]
+
+    CCLE_segment_cn_1, CCLE_segment_cn_2 = get_both_releases_from_taiga('CCLE_segment_cn')
+
+    sources = pd.merge(CCLE_segment_cn_1[['DepMap_ID', 'Source']].drop_duplicates(),
+         CCLE_segment_cn_2[['DepMap_ID', 'Source']].drop_duplicates(),
+         on='DepMap_ID', suffixes=['_'+names[0], '_'+names[1]])
+    del CCLE_segment_cn_1, CCLE_segment_cn_2
+    sources['source_change'] = sources.apply(lambda x: '{:s} -> {:s}'.format(x['Source_'+names[0]], x['Source_'+names[1]]), axis=1)
+    sources['source_has_changed'] = (sources['Source_'+names[0]] != sources['Source_'+names[1]])
+
+    CCLE_gene_cn_12 = pd.merge(CCLE_gene_cn_12, sources, on='DepMap_ID')
+    return CCLE_gene_cn_12, cols
+
+
+@pytest.mark.plot
+def test_plot_gene_cn_comparison(CCLE_gene_cn_with_source_change):
+
+    CCLE_gene_cn_12, cols = CCLE_gene_cn_with_source_change
+
+    plt.figure(figsize=(20,10))
+    sns.scatterplot(data=CCLE_gene_cn_12, x=cols[0], y=cols[1],
+                    hue='source_change', style='source_has_changed', alpha=0.5, cmap='Tab20')
+
+    output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + '{}-vs-{}.png'.format(cols[1], cols[0])
+    print('saved to {}'.format(output_img_file))
+    plt.savefig(output_img_file, bbox_inches='tight')
+
 
 
 PARAMS_plot_per_gene_means = [(x['file'], x) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix']]
@@ -67,6 +105,7 @@ def test_plot_per_gene_means(data, file_attr):
     print('saved to {}'.format(output_img_file))
     plt.savefig(output_img_file, bbox_inches='tight')
     assert corr > NEW_TO_OLD_CORRELATION_THRESHOLD
+
 
 
 PARAMS_plot_matrix_comparison = [(x['file'], x['file']) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix']]
