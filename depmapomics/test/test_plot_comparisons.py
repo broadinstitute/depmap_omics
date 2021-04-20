@@ -4,9 +4,10 @@ import pytest
 from depmapomics.test.test_compare_to_ref_release import (
     FILE_ATTRIBUTES_PAIRED, REFERENCE_RELEASE, VIRTUAL_RELEASE, data,
     get_both_releases_from_taiga)
+import seaborn as sns
 
-NEW_TO_OLD_CORRELATION_THRESHOLD = 0.99
-SHARED_DATA_CORRELATION_THRESHOLD = 0.99
+NEW_TO_OLD_CORRELATION_THRESHOLD = 0.95
+SHARED_DATA_CORRELATION_THRESHOLD = 0.95
 PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_'
 
 @pytest.fixture(scope='module')
@@ -33,9 +34,10 @@ def data_stack(request, number_of_points=500, random_state=0):
     return data_stack, cols
 
 
-PARAMS_plot_per_gene_means = [(x['file'], x['file']) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix']]
-@pytest.mark.parametrize('data, file', PARAMS_plot_per_gene_means, indirect=['data'])
-def test_plot_per_gene_means(data, file):
+PARAMS_plot_per_gene_means = [(x['file'], x) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix']]
+@pytest.mark.parametrize('data, file_attr', PARAMS_plot_per_gene_means, indirect=['data'])
+@pytest.mark.plot
+def test_plot_per_gene_means(data, file_attr):
     data1, data2 = data
 
     new_lines = set(data2.index) - set(data1.index)
@@ -48,13 +50,18 @@ def test_plot_per_gene_means(data, file):
     data_compare_stats = pd.concat([stats_old, stats_new], keys=['old', 'new'], axis=1)
     corr = data_compare_stats.corr().iloc[0, 1]
 
-    data_compare_stats.plot.scatter('old', 'new')
+    if file_attr['omicssource'] == 'RNA':
+        data_compare_stats['ERCC'] = data_compare_stats.index.map(lambda x: x.startswith('ERCC-'))
+        hue = 'ERCC'
+    else:
+        hue = None
+    sns.scatterplot(data=data_compare_stats, x='old', y='new', hue=hue)
     minmax = (data_compare_stats.min().min(), data_compare_stats.max().max())
     plt.xlabel('per gene values in the new release\n averaged across cell lines shared between the new and old release\n(n={:d})'.format(len(old_lines)))
     plt.ylabel('per gene values in the new release\n averaged across cell lines only in the new release\n(n={:d})'.format(len(new_lines)))
     plt.plot(minmax, minmax, 'r--')
-    plt.title('{}: corr = {:.2f}'.format(file, corr), fontsize=12)
-    output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + 'newlines_per_gene_means_{}.png'.format(file)
+    plt.title('{}: corr = {:.2f}'.format(file_attr['file'], corr), fontsize=12)
+    output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + 'newlines_per_gene_means_{}.png'.format(file_attr['file'])
     print('saved to {}'.format(output_img_file))
     plt.savefig(output_img_file, bbox_inches='tight')
     assert corr > NEW_TO_OLD_CORRELATION_THRESHOLD
@@ -62,6 +69,7 @@ def test_plot_per_gene_means(data, file):
 
 PARAMS_plot_matrix_comparison = [(x['file'], x['file']) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix']]
 @pytest.mark.parametrize('data_stack, file', PARAMS_plot_matrix_comparison, indirect=['data_stack'])
+@pytest.mark.plot
 def test_plot_matrix_comparison(data_stack, file):
     data_stack_df, cols = data_stack
     corr = data_stack_df.corr().iloc[0, 1]
