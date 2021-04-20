@@ -1,15 +1,14 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
+import seaborn as sns
+from depmapomics.test.config import PLOTS_OUTPUT_FILENAME_PREFIX
 from depmapomics.test.test_compare_to_ref_release import (
     FILE_ATTRIBUTES_PAIRED, REFERENCE_RELEASE, VIRTUAL_RELEASE, data,
     get_both_releases_from_taiga)
-import seaborn as sns
-
 
 NEW_TO_OLD_CORRELATION_THRESHOLD = 0.95
 SHARED_DATA_CORRELATION_THRESHOLD = 0.95
-PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_'
 
 
 def get_data_stack(file, number_of_points=1000000, random_state=0):

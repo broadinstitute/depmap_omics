@@ -21,6 +21,8 @@ CORRELATION_THRESHOLDS = {'CCLE_gene_cn': 0.99, 'all_expressions': 0.99999}
 
 SKIP_ARXSPAN_COMPARISON = True # set to False if you want to test whether some arxspans were added/removed
 
+PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_' # location/prefix for saving output plots
+
 # all the file attributes
 FILE_ATTRIBUTES = [
     {'file': 'CCLE_expression', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},

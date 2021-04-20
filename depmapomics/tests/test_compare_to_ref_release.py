@@ -11,14 +11,13 @@ tc = TaigaClient()
 FILE_ATTRIBUTES_PAIRED = [x for x in FILE_ATTRIBUTES if x['file'] in FILES_RELEASED_BEFORE]
 
 DEBUG_MODE_rename_column = False
-DEBUG_MODE_force_str = False
 
 ####### FIXTURES ####
 def get_both_releases_from_taiga(file):
     data1 = tc.get(name=REFERENCE_RELEASE['name'], file=file, version=REFERENCE_RELEASE['version'])
     data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=file, version=VIRTUAL_RELEASE['version'])
     if DEBUG_MODE_rename_column:
-        # in 21q1 this column name was changed
+        # in 21q1 CCLE_mutations file this column was renamed
         data1.rename(columns={'Tumor_Allele': 'Tumor_Seq_Allele1'}, inplace=True)
     return data1, data2
 
@@ -35,8 +34,6 @@ def data(request):
 @pytest.fixture(scope='module')
 def dataframes_merged(request):
     merged_df =  merge_dataframes(request.param[0], request.param[1])
-    if DEBUG_MODE_force_str:
-        merged_df = merged_df.astype(str)
     return merged_df
 
 
