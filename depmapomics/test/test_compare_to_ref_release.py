@@ -10,10 +10,16 @@ tc = TaigaClient()
 
 FILE_ATTRIBUTES_PAIRED = [x for x in FILE_ATTRIBUTES if x['file'] in FILES_RELEASED_BEFORE]
 
+DEBUG_MODE_rename_column = False
+DEBUG_MODE_force_str = False
+
 ####### FIXTURES ####
 def get_both_releases_from_taiga(file):
     data1 = tc.get(name=REFERENCE_RELEASE['name'], file=file, version=REFERENCE_RELEASE['version'])
     data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=file, version=VIRTUAL_RELEASE['version'])
+    if DEBUG_MODE_rename_column:
+        # in 21q1 this column name was changed
+        data1.rename(columns={'Tumor_Allele': 'Tumor_Seq_Allele1'}, inplace=True)
     return data1, data2
 
 def merge_dataframes(file, merge_columns):
@@ -28,7 +34,10 @@ def data(request):
 
 @pytest.fixture(scope='module')
 def dataframes_merged(request):
-    return merge_dataframes(request.param[0], request.param[1])
+    merged_df =  merge_dataframes(request.param[0], request.param[1])
+    if DEBUG_MODE_force_str:
+        merged_df = merged_df.astype(str)
+    return merged_df
 
 
 ##### TESTS ############
@@ -66,7 +75,7 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
     dataframe_merge_both.set_index('DepMap_ID', inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
-    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is an equality test that avoids setting NAs as unequal
+    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is a regular equality test with the exception that NA==NA
     for col in cols:
         if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
             unequal_values[col] = ~np.isclose(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
@@ -119,7 +128,7 @@ def test_compare_cell_lines_released(data, arxspan_col):
         arxspans2 = set(data2['DepMap_ID'])
     else:
         raise Exception('unknown value provided for arxspan_col')
-    assert arxspans1 == arxspans2, 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
+    assert arxspans1 == arxspans2#, 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
 
 
 @pytest.mark.parametrize('data', ['CCLE_segment_cn'], indirect=['data'])
@@ -132,6 +141,7 @@ def test_source_changes(data):
     source_changes = source_changes[source_changes['old'] != source_changes['new']]
 
     assert source_changes.empty, 'the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}'.format(source_changes, source_changes_matrix)
+
 
 
 # TODO: implement the assert almost equal version of the tests
