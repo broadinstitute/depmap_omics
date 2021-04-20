@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import pytest
-from depmapomics.test.config import (FILE_ATTRIBUTES, REFERENCE_RELEASE,
-                                     VIRTUAL_RELEASE, FILES_RELEASED_BEFORE)
+from depmapomics.test.config import (CORRELATION_THRESHOLDS, FILE_ATTRIBUTES,
+                                     FILES_RELEASED_BEFORE, REFERENCE_RELEASE,
+                                     VIRTUAL_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
@@ -39,8 +40,8 @@ def test_compare_column_names(data):
     assert set(data1.columns) == set(data2.columns)
 
 
-PARAMS_matrix_correlations = [('CCLE_gene_cn', 0.95)]
-PARAMS_matrix_correlations += [(x['file'], 0.99999) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix'] & (x['omicssource']=='RNA')]
+PARAMS_matrix_correlations = [('CCLE_gene_cn', CORRELATION_THRESHOLDS['CCLE_gene_cn'])]
+PARAMS_matrix_correlations += [(x['file'], CORRELATION_THRESHOLDS['all_expressions']) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix'] & (x['omicssource']=='RNA')]
 @pytest.mark.parametrize('method', ['spearman', 'pearson'])
 @pytest.mark.parametrize('axisname', ['pergene', 'persample'])
 @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
@@ -65,7 +66,7 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
     dataframe_merge_both.set_index('DepMap_ID', inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
-    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b))
+    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is an equality test that avoids setting NAs as unequal
     for col in cols:
         if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
             unequal_values[col] = ~np.isclose(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
@@ -80,7 +81,7 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
 
     unequal_values_sum = unequal_values.groupby('DepMap_ID').sum()
     unequal_values_sum = unequal_values_sum[(unequal_values_sum > 0).any(axis=1)]
-    unequal_values_sum = unequal_values_sum.loc[:, (unequal_values_sum == 0).all()]
+    unequal_values_sum = unequal_values_sum.loc[:, (unequal_values_sum > 0).all()]
 
     assert unequal_columns.empty, 'fraction of unequal values in each column that are expected to be equal:\n{}\
         \n\ncell lines affected by these changes:\n{}'.format(unequal_columns, unequal_values_sum)
@@ -104,6 +105,32 @@ def test_compare_column_dtypes(data, method):
     dtypes_compare_nonmatching = dtypes_compare.apply(lambda x: x[0]!=x[1], axis=1)
     dtypes_compare = dtypes_compare[dtypes_compare_nonmatching]
     assert dtypes_compare.empty, 'the following columns have changed types between the releases:\n{}'.format(dtypes_compare)
+
+
+PARAMS_compare_cell_lines = [(x['file'], 'index' if x['ismatrix'] else 'DepMap_ID') for x in FILE_ATTRIBUTES_PAIRED]
+@pytest.mark.parametrize('data, arxspan_col', PARAMS_compare_cell_lines, indirect=['data'])
+def test_compare_cell_lines_released(data, arxspan_col):
+    data1, data2 = data
+    if arxspan_col == 'index':
+        arxspans1 = set(data1.index)
+        arxspans2 = set(data2.index)
+    elif arxspan_col == 'DepMap_ID':
+        arxspans1 = set(data1['DepMap_ID'])
+        arxspans2 = set(data2['DepMap_ID'])
+    else:
+        raise Exception('unknown value provided for arxspan_col')
+    assert arxspans1 == arxspans2, 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
+
+@pytest.mark.parametrize('data', ['CCLE_segment_cn'], indirect=['data'])
+def test_source_changes(data):
+    data1, data2 = data
+    source1 = data1.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
+    source2 = data2.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
+    source_changes = pd.concat([source1, source2], axis=1, keys=['old', 'new'])
+    source_changes_matrix = source_changes.groupby(['old', 'new']).size().unstack(fill_value=0)
+    source_changes = source_changes[source_changes['old'] != source_changes['new']]
+
+    assert source_changes.empty, 'the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}'.format(source_changes, source_changes_matrix)
 
 # TODO: implement the assert almost equal version of the tests
 # from pandas.testing import assert_frame_equal
