@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from depmapomics.test.config import (CORRELATION_THRESHOLDS, FILE_ATTRIBUTES,
                                      FILES_RELEASED_BEFORE, REFERENCE_RELEASE,
-                                     VIRTUAL_RELEASE)
+                                     VIRTUAL_RELEASE, SKIP_ARXSPAN_COMPARISON)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
@@ -11,20 +11,20 @@ tc = TaigaClient()
 FILE_ATTRIBUTES_PAIRED = [x for x in FILE_ATTRIBUTES if x['file'] in FILES_RELEASED_BEFORE]
 
 ####### FIXTURES ####
-def tcget_new_old(file):
+def get_both_releases_from_taiga(file):
     data1 = tc.get(name=REFERENCE_RELEASE['name'], file=file, version=REFERENCE_RELEASE['version'])
     data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=file, version=VIRTUAL_RELEASE['version'])
     return data1, data2
 
 def merge_dataframes(file, merge_columns):
     # TODO: figure out how to call the data fixture instead
-    data1, data2 = tcget_new_old(file)
+    data1, data2 = get_both_releases_from_taiga(file)
     data_merged = pd.merge(data1, data2, on=merge_columns, indicator=True, how='outer')
     return data_merged
 
 @pytest.fixture(scope='module')
 def data(request):
-    return tcget_new_old(request.param)
+    return get_both_releases_from_taiga(request.param)
 
 @pytest.fixture(scope='module')
 def dataframes_merged(request):
@@ -87,7 +87,6 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
         \n\ncell lines affected by these changes:\n{}'.format(unequal_columns, unequal_values_sum)
 
 
-# PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
 PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES_PAIRED]
 @pytest.mark.parametrize('method', ['pd_dtypes', 'map_type'])
 @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
@@ -108,6 +107,7 @@ def test_compare_column_dtypes(data, method):
 
 
 PARAMS_compare_cell_lines = [(x['file'], 'index' if x['ismatrix'] else 'DepMap_ID') for x in FILE_ATTRIBUTES_PAIRED]
+@pytest.mark.skipif(SKIP_ARXSPAN_COMPARISON, reason="skipping, since it is normal to have arxspan differences between the releases")
 @pytest.mark.parametrize('data, arxspan_col', PARAMS_compare_cell_lines, indirect=['data'])
 def test_compare_cell_lines_released(data, arxspan_col):
     data1, data2 = data
@@ -121,6 +121,7 @@ def test_compare_cell_lines_released(data, arxspan_col):
         raise Exception('unknown value provided for arxspan_col')
     assert arxspans1 == arxspans2, 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
 
+
 @pytest.mark.parametrize('data', ['CCLE_segment_cn'], indirect=['data'])
 def test_source_changes(data):
     data1, data2 = data
@@ -131,6 +132,7 @@ def test_source_changes(data):
     source_changes = source_changes[source_changes['old'] != source_changes['new']]
 
     assert source_changes.empty, 'the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}'.format(source_changes, source_changes_matrix)
+
 
 # TODO: implement the assert almost equal version of the tests
 # from pandas.testing import assert_frame_equal
