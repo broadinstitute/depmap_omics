@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import seaborn as sns
-from depmapomics.test.config import PLOTS_OUTPUT_FILENAME_PREFIX
-from depmapomics.test.test_compare_to_ref_release import (
+from depmapomics.tests.config import PLOTS_OUTPUT_FILENAME_PREFIX
+from depmapomics.tests.test_compare_to_ref_release import (
     FILE_ATTRIBUTES_PAIRED, REFERENCE_RELEASE, VIRTUAL_RELEASE, data,
     get_both_releases_from_taiga)
 
@@ -119,7 +119,7 @@ PARAMS_plot_matrix_comparison = [(x['file'], x['file']) for x in FILE_ATTRIBUTES
 def test_plot_matrix_comparison(data_stack, file):
     data_stack_df, cols = data_stack
     corr = data_stack_df.corr().iloc[0, 1]
-    data_stack_df.plot.scatter(*cols)
+    sns.scatterplot(data=data_stack_df, x=cols[0], y=cols[1])
     minmax = (data_stack_df[cols].min().min(), data_stack_df[cols].max().max())
     plt.plot(minmax, minmax, 'r--')
     plt.xlabel(cols[0])
