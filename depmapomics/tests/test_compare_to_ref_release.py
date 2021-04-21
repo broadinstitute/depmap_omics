@@ -1,16 +1,17 @@
 import numpy as np
 import pandas as pd
 import pytest
-from depmapomics.tests.config import (CORRELATION_THRESHOLDS, FILE_ATTRIBUTES,
-                                     FILES_RELEASED_BEFORE, REFERENCE_RELEASE,
-                                     VIRTUAL_RELEASE, SKIP_ARXSPAN_COMPARISON)
+from depmapomics.tests.config import (CORRELATION_THRESHOLDS, DEBUG_MODE,
+                                      FILE_ATTRIBUTES, FILES_RELEASED_BEFORE,
+                                      REFERENCE_RELEASE,
+                                      SKIP_ARXSPAN_COMPARISON, VIRTUAL_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
 
 FILE_ATTRIBUTES_PAIRED = [x for x in FILE_ATTRIBUTES if x['file'] in FILES_RELEASED_BEFORE]
 
-DEBUG_MODE_rename_column = False
+DEBUG_MODE_rename_column = DEBUG_MODE
 
 ####### FIXTURES ####
 def get_both_releases_from_taiga(file):
