@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from depmapomics.test.config import (CORRELATION_THRESHOLDS, FILE_ATTRIBUTES,
+from depmapomics.tests.config import (CORRELATION_THRESHOLDS, FILE_ATTRIBUTES,
                                      FILES_RELEASED_BEFORE, REFERENCE_RELEASE,
                                      VIRTUAL_RELEASE, SKIP_ARXSPAN_COMPARISON)
 from taigapy import TaigaClient
@@ -57,9 +57,9 @@ def test_matrix_correlations(data, threshold, axisname, method):
     axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
     data1, data2 = data
     corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
-    # TODO: test for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+    # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
     corrs.dropna(inplace=True)
-    assert (corrs >= threshold).all(), 'the samples which did not pass the test are:\n{}'.format(corrs[corrs<threshold].sort_values())
+    assert (corrs >= threshold).all(), 'the samples which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
 
 
 PARAMS_fraction_of_unequl_columns_from_merged_file = [((x['file'], x['merge_cols']), x['expected_changed_cols'])
@@ -75,7 +75,7 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
     dataframe_merge_both.set_index('DepMap_ID', inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
-    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is a regular equality test with the exception that NA==NA
+    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
     for col in cols:
         if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
             unequal_values[col] = ~np.isclose(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])

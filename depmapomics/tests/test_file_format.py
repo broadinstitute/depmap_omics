@@ -2,7 +2,7 @@ import re
 
 import numpy as np
 import pytest
-from depmapomics.test.config import (FILE_ATTRIBUTES, VIRTUAL_RELEASE)
+from depmapomics.tests.config import (FILE_ATTRIBUTES, VIRTUAL_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
@@ -90,7 +90,7 @@ def test_chromosome_names(data):
 
 
 @pytest.mark.format
-@pytest.mark.skip
+@pytest.mark.skip(reason='not implemented')
 def test_cnv_logtransform():
     # TODO: implement some direct way to test for CNV log transformation
     assert True

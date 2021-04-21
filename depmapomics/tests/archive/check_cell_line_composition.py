@@ -1,5 +1,5 @@
 from gsheets import Sheets
-from depmapomics.qc import get_cell_line_set as gcl
+from depmapomics.tests.archive import get_cell_line_set as gcl
 import pickle
 import pandas as pd
 
@@ -41,8 +41,8 @@ gcl.plot_diff_heatmap(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines
 #     'ACH-002217': "no bam found: Sanger",
 #     'ACH-002335': "no bam found: Chordoma",
 #     'ACH-002378': "no bam found: Sanger",
-#     'ACH-001956': "failed qc wes (chordoma)", 
-#     'ACH-001955': "failed qc wes (chordoma)", 
+#     'ACH-001956': "failed qc wes (chordoma)",
+#     'ACH-001955': "failed qc wes (chordoma)",
 #     'ACH-001957': "failed qc wes (chordoma)",
 #     'ACH-001011': 'wrong new (should only have HC)',
 #     'ACH-001108': 'wrong new (should only have HC)',
@@ -51,10 +51,7 @@ gcl.plot_diff_heatmap(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines
 #     'ACH-002303': 'wrong (from 20Q4)',
 #     'ACH-002315': 'wrong (from 20Q4)',
 #     'ACH-001675': 'wrong (from 20Q4)',
-#     'ACH-003000': 'wrong engineered', 
-#     'ACH-002875': 'wrong engineered', 
+#     'ACH-003000': 'wrong engineered',
+#     'ACH-002875': 'wrong engineered',
 #     'ACH-002874': 'wrong engineered'
 # }
-
-
-
