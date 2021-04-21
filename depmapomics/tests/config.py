@@ -1,8 +1,11 @@
 # release ids on taiga
+from re import DEBUG
+
+
 VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 11} # new release
-REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
+# REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8} # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47} # old release used as ground truth
+REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47} # old release used as ground truth
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
@@ -22,6 +25,8 @@ CORRELATION_THRESHOLDS = {'CCLE_gene_cn': 0.99, 'all_expressions': 0.99999}
 SKIP_ARXSPAN_COMPARISON = True # set to False if you want to test whether some arxspans were added/removed
 
 PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_' # location/prefix for saving output plots
+
+DEBUG_MODE = True
 
 # all the file attributes
 FILE_ATTRIBUTES = [
