@@ -106,10 +106,20 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
         \n\ncell lines affected by these changes:\n{}'.format(unequal_columns, unequal_values_sum)
 
 PARAMS_compare_nan_fractions = [x['file'] for x in FILE_ATTRIBUTES_PAIRED if not x['ismatrix']]
+@pytest.mark.parametrize('arxspans', ['allcells', 'sharedcells'])
 @pytest.mark.parametrize('data', PARAMS_compare_nan_fractions, indirect=True)
 @pytest.mark.compare
-def test_compare_nan_fractions(data, atol=1e-2):
-    nan_fractions = pd.concat([data[0].isnull().mean(), data[1].isnull().mean()], axis=1, join='inner', keys=['old', 'new'])
+def test_compare_nan_fractions(data, arxspans, atol=1e-2):
+    data1, data2 = data
+    if arxspans == 'sharedcells':
+        # subset data1 and data2 by shared arxspan IDs
+        arxspans_ids = set(data1['DepMap_ID']) & set(data2['DepMap_ID'])
+        data1 = data1[data1['DepMap_ID'].isin(arxspans_ids)]
+        data2 = data2[data2['DepMap_ID'].isin(arxspans_ids)]
+    elif arxspans != 'allcells':
+        raise Exception('unknown value for arxspans')
+
+    nan_fractions = pd.concat([data1.isnull().mean(), data2.isnull().mean()], axis=1, join='inner', keys=['old', 'new'])
     nan_fractions.sort_values('new', ascending=False, inplace=True)
     nan_fractions = nan_fractions[~np.isclose(nan_fractions['old'], nan_fractions['new'], atol=atol)]
     assert nan_fractions.empty, 'the following NA fractions are different according to tolerance {:.1e}:\n{}'.format(atol, nan_fractions)
