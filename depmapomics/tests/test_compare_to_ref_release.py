@@ -11,13 +11,21 @@ tc = TaigaClient()
 
 FILE_ATTRIBUTES_PAIRED = [x for x in FILE_ATTRIBUTES if x['file'] in FILES_RELEASED_BEFORE]
 
-DEBUG_MODE_rename_column = DEBUG_MODE
+
+def tsv2csv(df):
+    df.to_csv('/tmp/data.tsv', index=False)
+    df = pd.read_csv('/tmp/data.tsv', sep='\t')
+    return df
 
 ####### FIXTURES ####
 def get_both_releases_from_taiga(file):
     data1 = tc.get(name=REFERENCE_RELEASE['name'], file=file, version=REFERENCE_RELEASE['version'])
     data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=file, version=VIRTUAL_RELEASE['version'])
-    if DEBUG_MODE_rename_column:
+    if DEBUG_MODE['tsv2csv']:
+        # some older taiga data formats (probably 20q1 and older) are tsv and deprecated
+        data1 = tsv2csv(data1)
+
+    if DEBUG_MODE['rename_column']:
         # in 21q1 CCLE_mutations file this column was renamed
         data1.rename(columns={'Tumor_Allele': 'Tumor_Seq_Allele1'}, inplace=True)
     return data1, data2
@@ -77,9 +85,10 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
     equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
+    almost_equal_noneNA = lambda a, b: np.isclose(a, b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
     for col in cols:
         if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
-            unequal_values[col] = ~np.isclose(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
+            unequal_values[col] = ~almost_equal_noneNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
         else:
             unequal_values[col] = ~equal_noneNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
 
@@ -95,6 +104,15 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
 
     assert unequal_columns.empty, 'fraction of unequal values in each column that are expected to be equal:\n{}\
         \n\ncell lines affected by these changes:\n{}'.format(unequal_columns, unequal_values_sum)
+
+PARAMS_compare_nan_fractions = [x['file'] for x in FILE_ATTRIBUTES_PAIRED if not x['ismatrix']]
+@pytest.mark.parametrize('data', PARAMS_compare_nan_fractions, indirect=True)
+@pytest.mark.compare
+def test_compare_nan_fractions(data, atol=1e-2):
+    nan_fractions = pd.concat([data[0].isnull().mean(), data[1].isnull().mean()], axis=1, join='inner', keys=['old', 'new'])
+    nan_fractions.sort_values('new', ascending=False, inplace=True)
+    nan_fractions = nan_fractions[~np.isclose(nan_fractions['old'], nan_fractions['new'], atol=atol)]
+    assert nan_fractions.empty, 'the following NA fractions are different according to tolerance {:.1e}:\n{}'.format(atol, nan_fractions)
 
 
 PARAMS_compare_column_dtypes = [x['file'] for x in FILE_ATTRIBUTES_PAIRED]
