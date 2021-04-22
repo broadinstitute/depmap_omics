@@ -56,8 +56,9 @@ def test_compare_column_names(data):
     assert set(data1.columns) == set(data2.columns)
 
 
-PARAMS_matrix_correlations = [('CCLE_gene_cn', CORRELATION_THRESHOLDS['CCLE_gene_cn'])]
-PARAMS_matrix_correlations += [(x['file'], CORRELATION_THRESHOLDS['all_expressions']) for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix'] & (x['omicssource']=='RNA')]
+PARAMS_matrix_correlations = [(x['file'],
+    CORRELATION_THRESHOLDS['CCLE_gene_cn'] if (x['file'] == 'CCLE_gene_cn') else CORRELATION_THRESHOLDS['all_expressions'])
+    for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix'] & (x['omicssource']=='RNA')]
 @pytest.mark.parametrize('method', ['spearman', 'pearson'])
 @pytest.mark.parametrize('axisname', ['pergene', 'persample'])
 @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
@@ -162,7 +163,8 @@ def test_compare_cell_lines_released(data, arxspan_col):
     assert arxspans1 == arxspans2#, 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
 
 
-@pytest.mark.parametrize('data', ['CCLE_segment_cn'], indirect=['data'])
+@pytest.mark.skipif([1 for x in FILE_ATTRIBUTES_PAIRED if x['file']=='CCLE_gene_cn'] == [], reason='skipped by user')
+@pytest.mark.parametrize('data', ['CCLE_gene_cn'], indirect=['data'])
 @pytest.mark.compare
 def test_source_changes(data):
     data1, data2 = data

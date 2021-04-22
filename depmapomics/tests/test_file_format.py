@@ -11,6 +11,15 @@ tc = TaigaClient()
 def data(request):
     return tc.get(name=VIRTUAL_RELEASE['name'], file=request.param, version=VIRTUAL_RELEASE['version'])
 
+
+PARAMS_wrong_columns = [x['file'] for x in FILE_ATTRIBUTES]
+@pytest.mark.parametrize('data', PARAMS_wrong_columns, indirect=True)
+@pytest.mark.format
+def test_wrong_columns(data):
+    wrong_columns = {'Unnamed: 0'}
+    assert wrong_columns & set(data.columns) == {}
+
+
 PARAMS_test_symbol_and_entrezid_in_column = [x['file'] for x in FILE_ATTRIBUTES if x['ismatrix'] and x['gene_id']=='entrez']
 @pytest.mark.parametrize('data', PARAMS_test_symbol_and_entrezid_in_column, indirect=True)
 @pytest.mark.format
