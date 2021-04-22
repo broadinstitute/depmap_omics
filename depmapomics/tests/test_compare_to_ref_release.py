@@ -85,13 +85,13 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
     dataframe_merge_both.set_index('DepMap_ID', inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
-    equal_noneNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
-    almost_equal_noneNA = lambda a, b: np.isclose(a, b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
+    equal_nonNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
+    almost_equal_nonNA = lambda a, b: np.isclose(a, b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
     for col in cols:
         if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
-            unequal_values[col] = ~almost_equal_noneNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
+            unequal_values[col] = ~almost_equal_nonNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
         else:
-            unequal_values[col] = ~equal_noneNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
+            unequal_values[col] = ~equal_nonNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
 
     unequal_columns = unequal_values.agg(['mean', 'sum']).T
     unequal_columns.sort_values('mean', ascending=False, inplace=True)
