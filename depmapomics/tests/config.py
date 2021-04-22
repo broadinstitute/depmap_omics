@@ -1,10 +1,10 @@
 DEBUG_MODE = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 11} # new release
-REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
+VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 12} # new release
+# REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
 # VIRTUAL_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8} # old release used as ground truth
+REFERENCE_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47}; DEBUG_MODE = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-20q1-f1a0', 'version': 15}; DEBUG_MODE = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-20q2-7f46', 'version': 18} # old release used as ground truth
@@ -49,7 +49,7 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['file'] in ['CCLE_gene_cn', 'CCLE_segment_cn']]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['file'] in ['CCLE_mutations']]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'

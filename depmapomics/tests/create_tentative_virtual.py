@@ -1,4 +1,5 @@
 from taigapy import TaigaClient
+from depmapomics.tests.config import VIRTUAL_RELEASE, TAIGA_IDS_LATEST
 
 def get_taiga_id_with_version(taiga_id):
     tc = TaigaClient()
@@ -37,7 +38,7 @@ if __name__ == "__main__":
     #     folder_id="29b48277847443edb7d84b9b457de124", # optional, will default to your home folder if not provided
     # )
 
-    from depmapomics.test.config import VIRTUAL_RELEASE, TAIGA_IDS_LATEST
+
     taiga_ids_list = get_taiga_ids_list(TAIGA_IDS_LATEST)
 
     new_dataset_id = tc.update_dataset(

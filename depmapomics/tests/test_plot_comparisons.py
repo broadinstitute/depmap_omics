@@ -59,6 +59,7 @@ def CCLE_gene_cn_with_source_change():
     return CCLE_gene_cn_12, cols
 
 
+@pytest.mark.skipif([1 for x in FILE_ATTRIBUTES_PAIRED if x['file']=='CCLE_gene_cn'] == [], reason='skipped by user')
 @pytest.mark.plot
 def test_plot_gene_cn_comparison(CCLE_gene_cn_with_source_change):
 
