@@ -1,11 +1,13 @@
 from taigapy import TaigaClient
 from depmapomics.tests.config import VIRTUAL_RELEASE, TAIGA_IDS_LATEST
 
+
 def get_taiga_id_with_version(taiga_id):
     tc = TaigaClient()
     latest_version = max([int(x['name']) for x in tc.get_dataset_metadata(taiga_id)['versions']])
     taiga_id_with_version = '{}.{}'.format(taiga_id, latest_version)
     return taiga_id_with_version
+
 
 def get_taiga_ids_list(taiga_id_dict):
     taiga_ids_list = []
@@ -19,7 +21,7 @@ def get_taiga_ids_list(taiga_id_dict):
     return taiga_ids_list
 
 
-if __name__ == "__main__":
+def update_tentative_virtual():
     tc = TaigaClient()
 
     # Uncomment if the tentative virtual dataset doesn't exist
@@ -47,3 +49,7 @@ if __name__ == "__main__":
         add_taiga_ids=taiga_ids_list,
         add_all_existing_files = True
     )
+
+
+if __name__ == "__main__":
+    update_tentative_virtual()
