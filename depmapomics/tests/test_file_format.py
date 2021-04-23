@@ -17,7 +17,7 @@ PARAMS_wrong_columns = [x['file'] for x in FILE_ATTRIBUTES]
 @pytest.mark.format
 def test_wrong_columns(data):
     wrong_columns = {'Unnamed: 0'}
-    assert wrong_columns & set(data.columns) == {}
+    assert wrong_columns & set(data.columns) == set()
 
 
 PARAMS_test_symbol_and_entrezid_in_column = [x['file'] for x in FILE_ATTRIBUTES if x['ismatrix'] and x['gene_id']=='entrez']
