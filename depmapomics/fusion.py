@@ -43,7 +43,7 @@ def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, CCLE_count="CCLE_count", r
   fusions = fusions.copy()
   # remove recurrent
   fusions = fusions[fusions[CCLE_count] <
-                    len(set(fusions[DepMap_ID]))*maxfreq]
+                    len(set(fusions["DepMap_ID"]))*maxfreq]
   # (1) Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes,
   fusions = fusions[~(fusions['LeftBreakpoint'].str.contains(
       'chrM') & fusions['RightBreakpoint'].str.contains('chrM'))]
@@ -59,3 +59,10 @@ def filterFusions(fusions, maxfreq=0.1, minffpm=0.05, CCLE_count="CCLE_count", r
   # translocation data, this looks like it might be too aggressive
   fusions = fusions[fusions['FFPM'] > minffpm]
   return fusions
+
+
+def renameFusionGene(a):
+  """
+  Given a fusion name from star-fusion, renames it
+  """
+  return [str(i.split('^')).replace(', ', ' (').replace("'", "")[1:-1]+')' for i in a]
