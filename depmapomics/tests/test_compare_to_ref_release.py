@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from depmapomics.tests.config import (CORRELATION_THRESHOLDS, DEBUG_MODE,
+from depmapomics.tests.config import (CORRELATION_THRESHOLDS, LEGACY_PATCH_FLAGS,
                                       FILE_ATTRIBUTES, FILES_RELEASED_BEFORE,
                                       REFERENCE_RELEASE,
                                       SKIP_ARXSPAN_COMPARISON, VIRTUAL_RELEASE)
@@ -21,11 +21,11 @@ def tsv2csv(df):
 def get_both_releases_from_taiga(file):
     data1 = tc.get(name=REFERENCE_RELEASE['name'], file=file, version=REFERENCE_RELEASE['version'])
     data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=file, version=VIRTUAL_RELEASE['version'])
-    if DEBUG_MODE['tsv2csv']:
+    if LEGACY_PATCH_FLAGS['tsv2csv']:
         # some older taiga data formats (probably 20q1 and older) are tsv and deprecated
         data1 = tsv2csv(data1)
 
-    if DEBUG_MODE['rename_column']:
+    if LEGACY_PATCH_FLAGS['rename_column']:
         # in 21q1 CCLE_mutations file this column was renamed
         data1.rename(columns={'Tumor_Allele': 'Tumor_Seq_Allele1'}, inplace=True)
     return data1, data2
@@ -106,6 +106,7 @@ def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expecte
     assert unequal_columns.empty, 'fraction of unequal values in each column that are expected to be equal:\n{}\
         \n\ncell lines affected by these changes:\n{}'.format(unequal_columns, unequal_values_sum)
 
+
 PARAMS_compare_nan_fractions = [x['file'] for x in FILE_ATTRIBUTES_PAIRED if not x['ismatrix']]
 @pytest.mark.parametrize('arxspans', ['allcells', 'sharedcells'])
 @pytest.mark.parametrize('data', PARAMS_compare_nan_fractions, indirect=True)
@@ -163,8 +164,8 @@ def test_compare_cell_lines_released(data, arxspan_col):
     assert arxspans1 == arxspans2#, 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
 
 
-@pytest.mark.skipif([1 for x in FILE_ATTRIBUTES_PAIRED if x['file']=='CCLE_gene_cn'] == [], reason='skipped by user')
-@pytest.mark.parametrize('data', ['CCLE_gene_cn'], indirect=['data'])
+@pytest.mark.skipif([1 for x in FILE_ATTRIBUTES_PAIRED if x['file']=='CCLE_segment_cn'] == [], reason='skipped by user')
+@pytest.mark.parametrize('data', ['CCLE_segment_cn'], indirect=['data'])
 @pytest.mark.compare
 def test_source_changes(data):
     data1, data2 = data

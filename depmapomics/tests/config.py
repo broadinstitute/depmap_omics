@@ -1,12 +1,16 @@
-DEBUG_MODE = {'rename_column': False, 'tsv2csv': False}
+# there are some issues in the older versions of omics data on virtual that this flag deals with
+# some columns got renamed in the mutation file and some data was uploaded as tsv instead of csv
+LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 12} # new release
-# REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
+TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 12}
+# VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
+VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
+REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
 # VIRTUAL_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
-REFERENCE_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 8} # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47}; DEBUG_MODE = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'internal-20q1-f1a0', 'version': 15}; DEBUG_MODE = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
+# REFERENCE_RELEASE = TENTATIVE_VIRTUAL # old release used as ground truth
+# REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47}; LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
+# REFERENCE_RELEASE = {'name': 'internal-20q1-f1a0', 'version': 15}; LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-20q2-7f46', 'version': 18} # old release used as ground truth
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
@@ -44,12 +48,12 @@ FILE_ATTRIBUTES = [
     {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': MUTATIONS_MERGE_COLS, 'expected_changed_cols':[]},
     {'file': 'CCLE_mutations_bool_damaging', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
     {'file': 'CCLE_mutations_bool_hotspot', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
-    {'file': 'CCLE_mutations_bool_othercons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
-    {'file': 'CCLE_mutations_bool_othernoncons', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'}
+    {'file': 'CCLE_mutations_bool_otherconserving', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'},
+    {'file': 'CCLE_mutations_bool_nonconserving', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'DNA'}
 ]
 
 # comment/uncomment to use all/subset of files for testing
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['file'] in ['CCLE_mutations']]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['file'] in ['CCLE_mutations']]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
@@ -61,8 +65,8 @@ TAIGA_IDS_LATEST = {
     MUTATIONS_TAIGA_ID:[
         ('CCLE_mutations', 'all_somatic_mutations_all_21Q2_depmapversion'),
         ('CCLE_mutations_bool_damaging', 'all_somatic_mutations_boolmatrix_fordepmap_damaging'),
-        ('CCLE_mutations_bool_othernoncons', 'all_somatic_mutations_boolmatrix_fordepmap_othernoncons'),
-        ('CCLE_mutations_bool_othercons', 'all_somatic_mutations_boolmatrix_fordepmap_othercons'),
+        ('CCLE_mutations_bool_nonconserving', 'all_somatic_mutations_boolmatrix_fordepmap_othernoncons'),
+        ('CCLE_mutations_bool_otherconserving', 'all_somatic_mutations_boolmatrix_fordepmap_othercons'),
         ('CCLE_mutations_bool_hotspot', 'all_somatic_mutations_boolmatrix_fordepmap_hotspot')
     ],
     FUSIONS_TAIGA_ID:[

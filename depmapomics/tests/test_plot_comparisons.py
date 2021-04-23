@@ -9,7 +9,7 @@ from depmapomics.tests.test_compare_to_ref_release import (
 
 NEW_TO_OLD_CORRELATION_THRESHOLD = 0.95
 SHARED_DATA_CORRELATION_THRESHOLD = 0.95
-
+MIN_SAMPLESIZE_FOR_CORR = 10
 
 def get_data_stack(file, number_of_points=1000000, random_state=0):
     data1, data2 = get_both_releases_from_taiga(file)
@@ -110,7 +110,7 @@ def test_plot_per_gene_means(data, file_attr):
     print('saved to {}'.format(output_img_file))
     plt.savefig(output_img_file, bbox_inches='tight')
     plt.close()
-    assert corr > NEW_TO_OLD_CORRELATION_THRESHOLD
+    assert (corr > NEW_TO_OLD_CORRELATION_THRESHOLD) | (len(stats_new) >= MIN_SAMPLESIZE_FOR_CORR)
 
 
 

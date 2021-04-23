@@ -1,5 +1,5 @@
 from taigapy import TaigaClient
-from depmapomics.tests.config import VIRTUAL_RELEASE, TAIGA_IDS_LATEST
+from depmapomics.tests.config import TENTATIVE_VIRTUAL, TAIGA_IDS_LATEST
 
 
 def get_taiga_id_with_version(taiga_id):
@@ -44,10 +44,10 @@ def update_tentative_virtual():
     taiga_ids_list = get_taiga_ids_list(TAIGA_IDS_LATEST)
 
     new_dataset_id = tc.update_dataset(
-        VIRTUAL_RELEASE['name'],
+        TENTATIVE_VIRTUAL['name'],
         changes_description="add all the virtual data",
         add_taiga_ids=taiga_ids_list,
-        add_all_existing_files = True
+        add_all_existing_files = False
     )
 
 
