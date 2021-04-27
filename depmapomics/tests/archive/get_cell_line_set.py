@@ -11,15 +11,15 @@ DEFAULT_FILENAMES=['CCLE_expression', 'CCLE_expression_full', 'CCLE_fusions',
                    'CCLE_RNAseq_reads', 'CCLE_RNAseq_transcripts', 'CCLE_segment_cn']
 
 def tcget(name=None, version=None, file=None):
-    # get arxspan ids from the Taiga file 
+    # get arxspan ids from the Taiga file
     # this function avoids overloading the memory because the entire variable is local to it
     tc_df = tc.get(name=name, version=version, file=file)
-    
+
     if 'DepMap_ID' in tc_df.columns:
         arxspan_ids = set(tc_df['DepMap_ID'])
     else:
         arxspan_ids = set(tc_df.index)
-    assert all([x.startswith('ACH-') for x in arxspan_ids])    
+    assert all([x.startswith('ACH-') for x in arxspan_ids])
     return arxspan_ids
 
 def applyfunc_to_json(json_dict, func,  verbose=False):
@@ -29,15 +29,15 @@ def applyfunc_to_json(json_dict, func,  verbose=False):
         for k, v in json_dict.items():
             if verbose:
                 print(k)
-            output_dict[k] = applyfunc_to_json(v, func, verbose=verbose) 
+            output_dict[k] = applyfunc_to_json(v, func, verbose=verbose)
         return output_dict
     else:
-        return func(json_dict)  
+        return func(json_dict)
 
 def get_expected_lines(sheets_url, merge_ibm_dmc=True):
     sheets_obj = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
     sheets = sheets_obj.get(sheets_url).sheets
-    release = sheets[0].to_frame(header=0, index_col=None)    
+    release = sheets[0].to_frame(header=0, index_col=None)
     release.columns = release.columns.str.lower()
     if merge_ibm_dmc:
         cols = release.columns
@@ -45,10 +45,10 @@ def get_expected_lines(sheets_url, merge_ibm_dmc=True):
         # ibm = pd.concat([release['dmc'], release['ibm']]
         #         ).dropna().drop_duplicates().to_frame('ibm')
         release = pd.concat([release[['internal', 'dmc', 'public']], ibm], axis=1)
-        lines_to_release = release[cols]        
+        lines_to_release = release[cols]
     return release
 
-def get_release_diffs(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = ['20q3', '21q1']):
+def get_release_diffs(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters=None):
     release_diff = {}
     release_diff_reverse = {}
     for portal, portal_dict in arxspan_dict[quarters[0]].items():
@@ -57,10 +57,10 @@ def get_release_diffs(arxspan_dict, lines_to_release, lines_to_remove=set(), qua
         for file in portal_dict.keys():
             expected_lines = set(lines_to_release[portal].dropna()) | arxspan_dict[quarters[0]][portal][file]
             expected_lines = expected_lines-lines_to_remove
-            
+
             release_diff[portal][file] = arxspan_dict[quarters[1]][portal][file] - expected_lines
             release_diff_reverse[portal][file] = expected_lines - arxspan_dict[quarters[1]][portal][file]
-    return release_diff, release_diff_reverse  
+    return release_diff, release_diff_reverse
 
 def pool_arxspans_per_portal(arxspan_dict):
     arxspan_dict_per_portal = {}
@@ -75,7 +75,7 @@ def pool_arxspans_per_portal(arxspan_dict):
     return arxspan_dict_per_portal
 
 
-def get_release_diff_pooled(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters=['20q3', '21q1']):
+def get_release_diff_pooled(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters=None):
     arxspans = pool_arxspans_per_portal(arxspan_dict)
     arxspan_diff = {}
     arxspan_revdiff = {}
@@ -85,7 +85,7 @@ def get_release_diff_pooled(arxspan_dict, lines_to_release, lines_to_remove=set(
         arxspan_diff[portal] = arxspans[quarters[1]][portal] - arxspans_expected
         arxspan_revdiff[portal] = arxspans_expected - arxspans[quarters[1]][portal]
     return arxspan_diff, arxspan_revdiff
-    
+
 def get_all_arxspans(taiga_dict_expanded, verbose=False):
     arxspan_dict = applyfunc_to_json(taiga_dict_expanded, lambda x: tcget(name=x[0], version=x[1], file=x[2]), verbose=True)
     return arxspan_dict
@@ -120,21 +120,21 @@ def convert_diff_to_boolmatrix(release_diffs):
     diff_df = diff_df.T.astype(int)
     return diff_df
 
-def get_release_diff_boolmatrices(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = ['20q4', '21q1']):
+def get_release_diff_boolmatrices(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = None):
     release_diffs, release_diffs_reverse = get_release_diffs(arxspan_dict, lines_to_release, lines_to_remove=lines_to_remove, quarters = quarters)
     release_diffs_mat = convert_diff_to_boolmatrix(release_diffs)
     release_diffs_reverse_mat = convert_diff_to_boolmatrix(release_diffs_reverse)
     return release_diffs_mat, release_diffs_reverse_mat
 
-def check_if_fusion_has_expression_released(arxspan_dict, quarter='21q1'):
+def check_if_fusion_has_expression_released(arxspan_dict, quarter=None):
     for portal in ['public', 'dmc', 'ibm', 'internal']:
         assert (arxspan_dict[quarter][portal]['CCLE_fusions_unfiltered'] - arxspan_dict[quarter][portal]['CCLE_expression']) == set()
         assert (arxspan_dict[quarter][portal]['CCLE_fusions'] - arxspan_dict[quarter][portal]['CCLE_expression']) == set()
     print('all fusion files have accompanying CCLE_expression')
 
 
-def check_acciddental_release(arxspan_dict, quarter = '21q1',
-    portal_comparisons = [['dmc', 'ibm'], ['public', 'dmc'], 
+def check_acciddental_release(arxspan_dict, quarter = None,
+    portal_comparisons = [['dmc', 'ibm'], ['public', 'dmc'],
                         ['internal', 'ibm'], ['internal', 'dmc']]):
     for portal_pairs in portal_comparisons:
         nodiff=True
@@ -148,27 +148,27 @@ def check_acciddental_release(arxspan_dict, quarter = '21q1',
         print('\n')
 
 
-def plot_diff_heatmap(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = ['20q4', '21q1'], width=15, height_scale=2):
+def plot_diff_heatmap(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = None, width=15, height_scale=2):
     release_diffs_mat, release_diffs_reverse_mat = get_release_diff_boolmatrices(arxspan_dict, lines_to_release, lines_to_remove=lines_to_remove, quarters = quarters)
 
     plt.figure(figsize=(width, int(release_diffs_mat.shape[0]/height_scale+1)))
     sns.heatmap(release_diffs_mat, cbar=False)
     plt.title('{} vs {}: files added (white: true)'.format(quarters[1], quarters[0]));
     plt.savefig('{}-vs-{}-files-added.png'.format(quarters[1], quarters[0]), bbox_inches='tight')
-    
+
     plt.figure(figsize=(width, int(release_diffs_reverse_mat.shape[0]/height_scale+1)))
     sns.heatmap(release_diffs_reverse_mat, cbar=False)
     plt.title('{} vs {}: files dropped (white: true)'.format(quarters[1], quarters[0]));
     plt.savefig('{}-vs-{}-files-dropped.png'.format(quarters[1], quarters[0]), bbox_inches='tight')
 
-def pretty_print_diff(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = ['20q3', '21q1'], savefile=False):
+def pretty_print_diff(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = None, savefile=False):
     release_diffs, release_diffs_reverse = get_release_diffs(arxspan_dict, lines_to_release, lines_to_remove=lines_to_remove, quarters = quarters)
     release_diffs_pooled, release_diffs_reverse_pooled = get_release_diff_pooled(arxspan_dict, lines_to_release, lines_to_remove=lines_to_remove, quarters = quarters)
     text= 'lines added ({} compared to {})\n'.format(*quarters[::-1])
     text+= pretty_print(release_diffs)
     text += '\n\tlines pooled across portals\n'
     text += pretty_print(release_diffs_pooled)
-    
+
     text += '\n'+'_'*20 + '\n'
 
     text += 'lines dropped ({} compared to {})\n'.format(*quarters[::-1])
@@ -178,5 +178,5 @@ def pretty_print_diff(arxspan_dict, lines_to_release, lines_to_remove=set(), qua
     if savefile:
         with open('diff_{}_vs_{}.txt'.format(*quarters[::-1]), 'w') as f:
             f.write(text)
-    
+
     return text

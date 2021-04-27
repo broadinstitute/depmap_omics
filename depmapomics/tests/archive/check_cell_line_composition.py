@@ -17,12 +17,10 @@ taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 33],
                     }
 quarters = ['21q1', '21q2']
 
-recompute = True
+recompute = False
 if recompute:
     taiga_dict_expanded = gcl.propagate_taiga_dict_with_filenames(taiga_dict)
     arxspan_dict = gcl.get_all_arxspans(taiga_dict_expanded, verbose=True)
-    # arxspan_dict['20q3']['ibm'] = arxspan_dict['20q3']['dmc']
-    # arxspan_dict['20q4']['ibm'] = arxspan_dict['20q4']['dmc']
     pickle.dump(arxspan_dict, open('arxspan_dict.pkl', 'bw'))
 else:
     arxspan_dict = pickle.load(open('arxspan_dict.pkl', 'br'))
