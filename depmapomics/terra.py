@@ -202,7 +202,7 @@ def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id",
                                                     "source",
                                                     "legacy_bam_filepath",
                                                     "legacy_bai_filepath"], 
-                    rename={}, deleteUnmatched=False, addMissing=False):
+                    rename={}, deleteUnmatched=False, addMissing=False, group=50):
   """
   will use the current sample tracker to update samples in the workspace
 
@@ -231,7 +231,8 @@ def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id",
         terra.removeSamples(workspaceID, unmatched)
   unmatched = (set(tracker.index) - set(sam.index))
   if len(track)!=0:
-    wm.update_sample_attributes(track)
+    for i in range(0,len(track), group):
+      wm.update_sample_attributes(track.iloc[i:i+group])
   if addMissing and len(unmatched)>0:
     print('found these columns to be missing in workspace: '+str(unmatched))
     track = tracker[tracker.index.isin(
