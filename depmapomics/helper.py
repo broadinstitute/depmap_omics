@@ -1,13 +1,15 @@
 import sys
 
+import igv
 import pandas as pd
 from genepy import rna
-from src.CCLE_postp_function import getQC
-import igv
 from genepy.utils.helper import parrun
+from gsheets import Sheets
+from src.CCLE_postp_function import getQC
 
 from depmapomics.config import (RNASEQC_THRESHOLDS_FAILED,
                                 RNASEQC_THRESHOLDS_LOWQUAL)
+
 
 def plot_rnaseqc_results(workspace, samplelist, output_path='data/rna_qc_plots/'):
     rnaqc = getQC(workspace=workspace, only=samplelist, qcname="rnaseqc2_metrics")
@@ -49,7 +51,7 @@ def get_gcloud_auth_token():
         token = f.readline().strip()
     return token
 
-from gsheets import Sheets
+
 
 def load_sample_tracker():
     SAMPLE_TRACKER_URL = 'https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY'
@@ -57,6 +59,8 @@ def load_sample_tracker():
 
     sheets = sheets_obj.get(SAMPLE_TRACKER_URL).sheets
     depmap_samples = sheets[0].to_frame(header=0, index_col=0)
+
+    depmap_samples.drop_duplicates(inplace=True)
 
     depmap_samples.loc[depmap_samples['datatype'].isin(['wes', 'rna', 'wgs']),
                        'hg19_bam'] = depmap_samples['legacy_bam_filepath']
