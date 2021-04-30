@@ -122,6 +122,6 @@ class depmap_igv(igv.Browser):
         arxspan_ids: list of arxspan IDs
         datatypes: list of datatypes to show. If None will show all (default is None)
         '''
-        depmap_samples_subset = subset_depmap_samples(self.depmap_samples, arxspan_ids,
+        self.depmap_samples_subset = subset_depmap_samples(self.depmap_samples, arxspan_ids,
                                                       self.config['genome'], datatypes=datatypes)
-        self.get_the_tracks_from_dataframe(depmap_samples_subset)
+        self.get_the_tracks_from_dataframe(self.depmap_samples_subset)
