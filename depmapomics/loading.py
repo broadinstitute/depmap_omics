@@ -27,16 +27,16 @@ from genepy.google import gcp
 # Const Variables
 #####################
 
-
 sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
 
-
+# chromosome list
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
              'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15',
              'chr16', 'chr17', 'chr18', 'chr19', 'chr20',
              'chr21', 'chr22', 'chrX']
 
-
+# default values in the GP workspaces and our sample tracker (to change if you use another workspace/
+# sample tracker)
 extract_defaults = {
     'name': 'sample_alias',
     'bai': 'crai_or_bai_path',
@@ -70,20 +70,22 @@ extract_defaults = {
     'mean_depth': 'mean_depth'
 }
 
+# minimum bam file size in bytes for each sequencing type
 MINSIZES = {
     'rna': 2000000000,
     'wes': 3000000000,
     'wgs': 50000000000,
 }
 
-# found same patient
+# known cell lines that are from the same patient
 samepatient = [["ACH-000635", "ACH-000717", "ACH-000864", "ACH-001042", "ACH-001547"],
                ["ACH-002291", "ACH-001672"],
                ["ACH-001706", "ACH-001707"]]
 
-# duplicate ach-id
+# known duplicate arxspan-ids
 dup = {"ACH-001620": "ACH-001605",
        "ACH-001621": "ACH-001606"}
+
 # rename ccle_name TODO: ask becky what to do
 rename = {"PEDS117": "CCLFPEDS0009T"}
 
@@ -524,7 +526,9 @@ def completeFromMasterSheet(samples, notfound, toupdate={'primary_disease': ['Pr
                             nanslist=['None', 'nan', 'Unknown'],
                             depmap_pv="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE",
                             depmap_taiga="arxspan-cell-line-export-f808"):
-
+  """
+  TODO to document
+  """
   di = {k: [] for k, _ in toupdate.items()}
 
   sheets = Sheets.from_files(my_id, mystorage_id)
@@ -568,9 +572,15 @@ def loadWES(samplesetname,
             sources=["ccle","ibm"],
             maxage='2020-09-10',
             baits = 'ice',
-            stype = "wes"):
+            stype = "wes",
+            **kwargs):
+  """
+  function to load WES data from GP workspaces
+
+  @see load()
+  """
   return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
-              sources=sources, maxage=maxage, baits=baits, stype=stype)
+              sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
 def loadWGS(samplesetname, 
             workspaces=[
@@ -579,9 +589,15 @@ def loadWGS(samplesetname,
             sources=["ccle","ibm"],
             maxage='2020-09-10',
             baits = 'genome',
-            stype = "wgs"):
+            stype = "wgs",
+            **kwargs):
+  """
+  function to load WGS data from GP workspaces
+
+  @see load()
+  """
   return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
-              sources=sources, maxage=maxage, baits=baits, stype=stype)
+              sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
 def loadRNA(samplesetname,
             workspaces=[
@@ -590,9 +606,14 @@ def loadRNA(samplesetname,
             sources=["ccle", "ibm"],
             maxage='2020-09-10',
             baits='polyA',
-            stype="rna"):
+            stype="rna", **kwargs):
+  """
+  function to load RNA data from GP workspaces 
+
+  @see load()
+  """
   return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
-              sources=sources, maxage=maxage, baits=baits, stype=stype)
+              sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
 def load(samplesetname, workspaces,
          sources,
@@ -629,7 +650,17 @@ def load(samplesetname, workspaces,
         toraise=["ACH-001195"],
         participantslicepos=10, accept_unknowntypes=True,
         recomputehash=True):
+  """
+  function to load and extract data from the GP workspaces
+  
+  Args:
+  -----
+  TODO to document
+  
+  Returns:
+  -------
 
+  """
   release = samplesetname
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
