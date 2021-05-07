@@ -8,8 +8,8 @@ from depmapomics.config import (RNASEQC_THRESHOLDS_FAILED,
                                 RNASEQC_THRESHOLDS_LOWQUAL)
 
 
-def plot_rnaseqc_results(workspace, samplelist, output_path='data/rna_qcs/', 
-                         qcname="rnaseqc2_metrics", save=True):
+def plot_rnaseqc_results(workspace, samplelist, output_path='data/rna_qc_plots/',
+                         qcname="rnaseqc2_metrics", save=True):                         
     """
     TODO: to document
     """
@@ -41,3 +41,4 @@ def plot_rnaseqc_results(workspace, samplelist, output_path='data/rna_qcs/',
                                  qant1=0.07, qant3=0.93)
 
     return qcs, lowqual, failed
+
