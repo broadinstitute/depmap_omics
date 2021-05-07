@@ -3,7 +3,6 @@ import os.path
 import asyncio
 
 import dalmatian as dm
-from numpy.lib.npyio import save
 import pandas as pd
 import numpy as np
 from scipy.stats import zscore 
@@ -19,7 +18,7 @@ from depmapomics import terra as myterra
 from depmapomics.qc import rna as myQC
 from depmapomics import tracker
 
-from depmapomics.config import CACHE_PATH, TMP_PATH, ENSEMBL_SERVER_V
+from depmapomics.config import CACHE_PATH, TMP_PATH, ENSEMBL_SERVER_V, RNAseqreadme
 
 from gsheets import Sheets
 from taigapy import TaigaClient
@@ -317,11 +316,12 @@ def postprocessExpression(refworkspace, samplesetname,
     enrichments = asyncio.run(ssGSEA(files[ssGSEAcol]))
     print("saving files")
     enrichments.to_csv('temp/gene_sets_'+samplesetname+'_all.csv')
-    saveFiles(files, samplesetname)
+    saveFiles(files, samplesetname, "temp")
     return files, enrichments, failed, samplesinset, renaming
     
 
-def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
+def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.google.com/spreadshe\
+                        ets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
                        colstoclean=['fastq1', 'fastq2', 'recalibrated_bam', 'recalibrated_bam_index'], 
                        ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
                        previousQCfail=[], my_id='~/.client_secret.json',
@@ -330,7 +330,8 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
                                   "genes_tpm": "CCLE_expression_full",
                                   "proteincoding_genes_tpm": "CCLE_expression"},
                        sheetname='ccle sample tracker', sheetcreds='../.credentials.json',
-                       **kwargs):
+                       taiga_dataset="expression-d035", minsimi=0.95, 
+                       dataset_description=RNAseqreadme, **kwargs):
 
     
     sheets = Sheets.from_files(my_id, mystorage_id)
@@ -375,7 +376,7 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
     #        print(k,v)
     # do we have samples that are missanotated compared to previous releases (sample level)
     unmatched = rna.getDifferencesFromCorrelations(
-        files.get('genes_expected_count'), prevcounts, minsimi=0.95)
+        files.get('genes_expected_count'), prevcounts, minsimi=minsimi)
     print("differences in correlations against the previous release")
     print(unmatched)
     # Is it because of  duplicate version?
@@ -404,4 +405,63 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
     updateTracker(refworkspace, set(renaming.keys()) - set(['transcript_id(s)']),
                 lowqual[lowqual.sum(1) > 3].index.tolist(),
                 ccle_refsamples, samplesinset, samplesetname, sheetname=sheetname, sheetcreds=sheetcreds)
+    
+    print("uploading to taiga")
+    tc.update_dataset(changes_description="new "+samplesetname+" release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": "temp/expression_"+samplesetname+"_proteincoding_tpm_logp1.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_transcripts_tpm_logp1.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_genes_tpm_logp1.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_genes_tpm.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_transcripts_tpm.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_proteincoding_tpm.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_transcripts_expectedcount.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_proteincoding_expectedcount.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": "temp/expression_"+samplesetname+"_genes_expectedcount.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": 'temp/gene_sets_'+samplesetname+'_all.csv',
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                    },
+                 ],
+                upload_async=False,
+                add_all_existing_files=True,
+        dataset_description=dataset_description)
     print("done")
