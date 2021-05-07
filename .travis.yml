@@ -7,4 +7,4 @@ install:
   - pip install .
 # command to run tests
 script:
-  - pytest -v test/
+  - pytest -v depmapomics/qc/
