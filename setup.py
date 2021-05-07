@@ -6,3 +6,6 @@ setup(name='depmapomics',
       # install_requires=open("requirements.txt").readlines(),
       packages=['depmapomics']
       )
+# add requiremnts
+
+# add R/GCP/Rpackages installation in genepy

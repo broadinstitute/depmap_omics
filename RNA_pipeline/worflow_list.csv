@@ -1,0 +1,12 @@
+,name,namespace,rootEntityType,methodName,methodVersion,methodNamespace,methodUri,sourceRepo
+0,star_v1-0_BETA_cfg_hg19,broad-firecloud-ccle,sample,star_v1-0_BETA,7,broadinstitute_gtex,agora://broadinstitute_gtex/star_v1-0_BETA/7,agora
+1,rnaseqc2_v1-0_BETA_cfg,broadinstitute_gtex,sample,rnaseqc2_v1-0_BETA,2,broadinstitute_gtex,agora://broadinstitute_gtex/rnaseqc2_v1-0_BETA/2,agora
+2,rsem_v1-0_BETA_cfg,broadinstitute_gtex,sample,rsem_v1-0_BETA,6,broadinstitute_gtex,agora://broadinstitute_gtex/rsem_v1-0_BETA/6,agora
+3,samtofastq_v1-0_BETA_cfg,broadinstitute_gtex,sample,samtofastq_v1-0_BETA,6,broadinstitute_gtex,agora://broadinstitute_gtex/samtofastq_v1-0_BETA/6,agora
+4,star_v1-0_BETA_cfg,broadinstitute_gtex,sample,star_v1-0_BETA,7,broadinstitute_gtex,agora://broadinstitute_gtex/star_v1-0_BETA/7,agora
+5,Aggregate_Fusion_Calls,gkugener,sample_set,Aggregate_files_set,2,gkugener,agora://gkugener/Aggregate_files_set/2,agora
+6,ExonUsage_hg38_fixed,gkugener,sample,ExonUsage_fixed,1,gkugener,agora://gkugener/ExonUsage_fixed/1,agora
+7,hg38_STAR_fusion,gkugener,sample,STAR_fusion,17,gkugener,agora://gkugener/STAR_fusion/17,agora
+8,aggregate_vcfs,jkobject,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora
+9,rnaseq-germline-snps-indels,jkobject,sample,rnaseq-germline-snps-indels,7,jkobject,agora://jkobject/rnaseq-germline-snps-indels/7,agora
+10,rsem_aggregate_results,jkobject,sample_set,rsem_aggregate_results,5,jkobject,agora://jkobject/rsem_aggregate_results/5,agora
