@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from depmapomics.tests.config import (CORRELATION_THRESHOLDS, LEGACY_PATCH_FLAGS,
+from depmapomics.qc.config import (CORRELATION_THRESHOLDS, LEGACY_PATCH_FLAGS,
                                       FILE_ATTRIBUTES, FILES_RELEASED_BEFORE,
                                       REFERENCE_RELEASE,
                                       SKIP_ARXSPAN_COMPARISON, VIRTUAL_RELEASE)

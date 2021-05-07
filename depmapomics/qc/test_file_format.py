@@ -2,7 +2,7 @@ import re
 
 import numpy as np
 import pytest
-from depmapomics.tests.config import (FILE_ATTRIBUTES, VIRTUAL_RELEASE)
+from depmapomics.qc.config import (FILE_ATTRIBUTES, VIRTUAL_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
