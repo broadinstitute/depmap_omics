@@ -60,10 +60,5 @@ task run_fingerprint {
 }
 
 workflow fingerprint {
-  
   call run_fingerprint
-  
-  output {
-    File fingerprint_vcf = run_fingerprint.out
-    }
 }

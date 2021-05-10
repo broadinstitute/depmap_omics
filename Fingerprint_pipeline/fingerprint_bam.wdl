@@ -50,10 +50,5 @@ task run_fingerprint {
 }
 
 workflow fingerprint {
-  
   call run_fingerprint
-  
-  output {
-    File out = run_fingerprint.out
-    }
 }

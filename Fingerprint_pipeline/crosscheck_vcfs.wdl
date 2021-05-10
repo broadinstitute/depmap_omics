@@ -49,10 +49,5 @@ task run_crosscheck {
 }
 
 workflow crosscheck {
-  
   call run_crosscheck
-  
-  output {
-    File out = run_crosscheck.out
-    }
 }
