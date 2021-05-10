@@ -1,6 +1,9 @@
 #!/bin/bash -l
 # Download and install https://github.com/naumanjaved/fingerprint_maps
-# Then run this bash script for all chromosomes except for Y
+# Install GATK and bcftools
+# Download example RNA-seq bam to select expressed SNPs and save as example_rna.bam.
+# I used gs://cclebams/rnasq_hg38/CDS-QcwFpK.Aligned.sortedByCoord.out.bam as an example.
+# Then with python 2.7 enviroment run this bash script for all chromosomes except for Y
 CHR="22"
 echo Running chromosome ${CHR} SNPs
 echo Downloading chromosome ${CHR} SNPs
@@ -12,7 +15,7 @@ bcftools index vcfs_1k_genomes/ALL.chr${CHR}.phase3_shapeit2_mvncall_integrated_
 echo Filtering chromosome ${CHR} SNPs by MAF
 bcftools view vcfs_1k_genomes/ALL.chr${CHR}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz -i "AF>.1&AF<.9&VT='SNP'" --max-alleles 2 -o filtered_chr${CHR}.vcf -O v
 echo Getting RNA-seq coverage for ${CHR} SNPs
-java -Xmx6g -jar ~/Library/gatk/gatk-package-4.2.0.0-local.jar AnnotateVcfWithBamDepth -I example_bams/KG1_rna.bam -V filtered_chr${CHR}.vcf -O rna_coverage_filtered_chr${CHR}.vcf
+java -Xmx6g -jar ~/Library/gatk/gatk-package-4.2.0.0-local.jar AnnotateVcfWithBamDepth -I example_rna.bam -V filtered_chr${CHR}.vcf -O rna_coverage_filtered_chr${CHR}.vcf
 echo Filtering chromosome ${CHR} SNPs by RNA-seq coverage
 bcftools view rna_coverage_filtered_chr${CHR}.vcf -i "BAM_DEPTH>10" -o coding_filtered_chr${CHR}.vcf -O v
 echo Running build_fingerprint_maps for chromosome ${CHR} SNPs
