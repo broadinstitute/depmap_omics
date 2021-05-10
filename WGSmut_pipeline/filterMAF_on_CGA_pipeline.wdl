@@ -40,7 +40,7 @@ task filterMaf {
   }
 
   runtime {
-    docker: "docker.io/jkobject/ccle_rnaseq:latest"
+    docker: "us.gcr.io/cds-docker-containers/omics-ccle_rnaseq:latest"
     memory: "10GB"
     disks: "local-disk 50 HDD"
     preemptible: "5"

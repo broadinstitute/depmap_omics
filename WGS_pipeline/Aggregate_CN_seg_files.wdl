@@ -22,7 +22,7 @@ task aggregate_CN_segments {
     }
 
     runtime {
-        docker: "docker.io/jkobject/ccle_rnaseq:latest"
+        docker: "us.gcr.io/cds-docker-containers/omics-ccle_rnaseq:latest"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         preemptible: "${num_preempt}"
