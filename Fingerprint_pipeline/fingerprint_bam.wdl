@@ -4,7 +4,6 @@ task run_fingerprint {
   File bam
   File bam_index
   String output_name
-  String output_dir
   File haplotype_map
   File ref_fasta
   File ref_fasta_index
@@ -16,8 +15,8 @@ task run_fingerprint {
   Int? locus_max_reads
   
   # Hardware-related inputs
-  Int? hardware_disk_size_GB = 128
-  Int? hardware_memory_GB = 8
+  Int? hardware_disk_size_GB = 300
+  Int? hardware_memory_GB = 16
   Int? hardware_preemptible_tries = 2
   
   command {
@@ -29,16 +28,14 @@ task run_fingerprint {
       ${"--CONTAMINATION " + contamination} \
       ${"--SAMPLE_ALIAS " + sample_alias} \
       ${"--LOCUS_MAX_READS " + locus_max_reads}
-    
-    gsutil cp "${output_name}.vcf" "${output_dir}/${output_name}.vcf"
   }
   
   output {
-    String out = "${output_dir}/${output_name}.vcf"
+    File out = "${output_name}.vcf"
   }
   
   runtime {
-    docker: "colganwi/ccle_snp_qc:latest"
+    docker: "broadinstitute/picard:2.25.0"
     bootDiskSizeGb: 32
     disks: "local-disk ${hardware_disk_size_GB} HDD"
     memory: "${hardware_memory_GB}GB"
