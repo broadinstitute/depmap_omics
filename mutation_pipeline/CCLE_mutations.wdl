@@ -553,7 +553,7 @@ task VEP_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -689,7 +689,7 @@ task PicardMultipleMetrics_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -805,7 +805,7 @@ task CrossCheckLaneFingerprints_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -916,7 +916,7 @@ task ContEST_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu

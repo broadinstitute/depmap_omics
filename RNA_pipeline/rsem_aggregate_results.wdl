@@ -27,7 +27,7 @@ task rsem_aggregate_results {
     }
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-ccle_rnaseq:latest"
+        docker: "us-docker.pkg.dev/depmap-omics/public/ccle_rnaseq:latest:latest"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"

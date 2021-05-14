@@ -41,7 +41,7 @@ task filterMaf {
   }
 
   runtime {
-    docker: "us.gcr.io/cds-docker-containers/omics-ccle_docker_r"
+    docker: "us-docker.pkg.dev/depmap-omics/public/ccle_docker_r"
     memory: "10GB"
     disks: "local-disk 50 HDD"
     preemptible: "5"

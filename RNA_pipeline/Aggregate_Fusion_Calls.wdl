@@ -22,7 +22,7 @@ task aggregate_set_files {
     }
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cds_shiny"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cds-shiny:latest"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         preemptible: "${num_preempt}"
