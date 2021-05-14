@@ -1,4 +1,3 @@
-import io
 import os.path
 import asyncio
 
@@ -7,10 +6,8 @@ import pandas as pd
 import numpy as np
 from scipy.stats import zscore 
 
-from biomart import BiomartServer
 from genepy.google import gcp
 from genepy.utils import helper as h
-from genepy.utils.helper import createFoldersFor
 from genepy.google.google_sheet import dfToSheet
 from genepy import rna, terra
 
@@ -18,12 +15,49 @@ from depmapomics import terra as myterra
 from depmapomics.qc import rna as myQC
 from depmapomics import tracker
 
-from depmapomics.config import CACHE_PATH, TMP_PATH, ENSEMBL_SERVER_V, RNAseqreadme
+from depmapomics.config import TMP_PATH, ENSEMBL_SERVER_V, RNAseqreadme
 
 from gsheets import Sheets
 from taigapy import TaigaClient
 tc = TaigaClient()
 
+
+def addSamplesRSEMToMain(input_filenames, main_filename):
+    """
+    given a tsv RNA files from RSEM algorithm, merge it to a tsv set of RNA data
+
+    Args:
+    ----
+    input_filenames: a list of dict like file path in Terra gs://, outputs from the rsem pipeline
+    main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
+    """
+    genes_count = pd.read_csv('temp/' + main_filename['rsem_genes_expected_count'].split('/')[-1],
+                            sep='\t', compression='gzip')
+    transcripts_tpm = pd.read_csv('temp/' + main_filename['rsem_transcripts_tpm'].split('/')[-1],
+                                sep='\t', compression='gzip')
+    genes_tpm = pd.read_csv('temp/' + main_filename['rsem_genes_tpm'].split('/')[-1],
+                            sep='\t', compression='gzip')
+
+    for input_filename in input_filenames:
+        name = input_filename['rsem_genes'].split(
+            '/')[-1].split('.')[0].split('_')[-1]
+        rsem_genes = pd.read_csv(
+            'temp/' + input_filename['rsem_genes'].split('/')[-1], sep='\t')
+        rsem_transcripts = pd.read_csv(
+            'temp/' + input_filename['rsem_isoforms'].split('/')[-1], sep='\t')
+        genes_count[name] = pd.Series(
+            rsem_genes['expected_count'], index=rsem_genes.index)
+        transcripts_tpm[name] = pd.Series(
+            rsem_transcripts['TPM'], index=rsem_transcripts.index)
+        genes_tpm[name] = pd.Series(rsem_genes['TPM'], index=rsem_genes.index)
+
+    genes_count.to_csv('temp/' + main_filename['rsem_genes_expected_count'].split('/')[-1], sep='\t',
+                        index=False, index_label=False, compression='gzip')
+    transcripts_tpm.to_csv('temp/' + main_filename['rsem_transcripts_tpm'].split('/')[-1], sep='\t',
+                            index=False, index_label=False, compression='gzip')
+    genes_tpm.to_csv('temp/' + main_filename['rsem_genes_tpm'].split('/')[-1], sep='\t',
+                index=False, index_label=False, compression='gzip')
+  
 
 def solveQC(tracker, failed, save=""):
     """
@@ -114,46 +148,6 @@ def loadFromRSEMaggregate(refwm, todrop=[], filenames=["transcripts_tpm", "genes
         files[val] = file[file.columns[:2].tolist()+[i for i in file.columns[2:]
                             if i in set(renaming.keys())]].rename(columns=renaming)
     return files, renaming
-
-
-def generateGeneNames(ensemble_server=ENSEMBL_SERVER_V, useCache=False, cache_folder=CACHE_PATH):
-    """
-    # TODO: to document
-    """
-    assert cache_folder[-1] == '/'
-    createFoldersFor(cache_folder)
-    cachefile = os.path.join(cache_folder, 'biomart_ensembltohgnc.csv')
-    cachefile = os.path.expanduser(cachefile)
-    if useCache & os.path.isfile(cachefile):
-        print('fetching gene names from biomart cache')
-        ensembltohgnc = pd.read_csv(cachefile)
-    else:
-        print('downloading gene names from biomart')
-        server = BiomartServer(ensemble_server)
-        ensmbl = server.datasets['hsapiens_gene_ensembl']
-        ensembltohgnc = pd.read_csv(io.StringIO(ensmbl.search({
-            'attributes': ['ensembl_gene_id', 'clone_based_ensembl_gene',
-                           'hgnc_symbol', 'gene_biotype', 'entrezgene_id']
-        }, header=1).content.decode()), sep='\t')
-        ensembltohgnc.to_csv(cachefile, index=False)
-
-    ensembltohgnc.columns = ['ensembl_gene_id', 'clone_based_ensembl_gene',
-                             'hgnc_symbol', 'gene_biotype', 'entrezgene_id']
-    if type(ensembltohgnc) is not type(pd.DataFrame()):
-        raise ValueError('should be a dataframe')
-    ensembltohgnc = ensembltohgnc[~(ensembltohgnc[
-        'clone_based_ensembl_gene'].isna() & ensembltohgnc['hgnc_symbol'].isna())]
-    ensembltohgnc.loc[ensembltohgnc[ensembltohgnc.hgnc_symbol.isna()].index, "hgnc_symbol"] = \
-        ensembltohgnc[ensembltohgnc.hgnc_symbol.isna()]['clone_based_ensembl_gene']
-
-    gene_rename = {i.ensembl_gene_id: i.hgnc_symbol+' ('+i.ensembl_gene_id+')'
-                   for _, i in ensembltohgnc.iterrows()}
-    protcod_rename = {
-        i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'
-        for _, i in
-        ensembltohgnc[(~ensembltohgnc.entrezgene_id.isna()) &
-                      (ensembltohgnc.gene_biotype == 'protein_coding')].iterrows()}
-    return gene_rename, protcod_rename, ensembltohgnc
 
 
 def subsetGenes(files, gene_rename, filenames=['rsem_transcripts_expected_count',
@@ -255,7 +249,7 @@ def saveFiles(files, release, folder=TMP_PATH):
                                                    '_logp1.csv'))
 
 
-def postprocessExpression(refworkspace, samplesetname,
+def postProcess(refworkspace, samplesetname,
                           save_output="", doCleanup=False,
                           colstoclean=[], ensemblserver=ENSEMBL_SERVER_V,
                           previousQCfail=[], samplesetToLoad="all",
@@ -349,7 +343,7 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
         return renaming
 
     folder = os.path.join("data", samplesetname, "rna_")
-    files, enrichments, _, samplesinset, _ = postprocessExpression(refworkspace, samplesetname,
+    files, enrichments, _, samplesinset, _ = postProcess(refworkspace, samplesetname,
                                                         save_output=folder,
                             doCleanup=doCleanup,
                             colstoclean=colstoclean, ensemblserver=ensemblserver,
