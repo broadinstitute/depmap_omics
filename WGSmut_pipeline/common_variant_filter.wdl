@@ -81,7 +81,7 @@ task commonfilterTask {
 
     runtime {
         disks: "local-disk " + SSD + " SSD"
-        docker: "us.gcr.io/cds-docker-containers/omics-common_variant_filter:" + docker_tag
+        docker: "us-docker.pkg.dev/depmap-omics/public/common_variant_filter:" + docker_tag
         memory: RAM + " GB"
         preemptible: preemptible
     }

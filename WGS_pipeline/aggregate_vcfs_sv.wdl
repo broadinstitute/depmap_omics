@@ -24,7 +24,7 @@ task aggregate {
     }
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-bcftools:v1.9-1-deb_cv1"
+        docker: "us-docker.pkg.dev/depmap-omics/public/bcftools:v1.9-1-deb_cv1"
         cpu: "${num_threads}"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"

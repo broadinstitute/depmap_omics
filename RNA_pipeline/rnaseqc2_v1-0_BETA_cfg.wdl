@@ -31,7 +31,7 @@ task rnaseqc2 {
     }
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-gtex_rnaseq:V9"
+        docker: "us-docker.pkg.dev/depmap-omics/public/gtex-rnaseq:V9"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"

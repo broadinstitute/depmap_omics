@@ -836,7 +836,7 @@ CODE
     >>>
 
     runtime {
-        docker         : "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker         : "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb : if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible    : if preemptible != "" then preemptible else default_preemptible
         cpu            : if cpu != "" then cpu else default_cpu
@@ -977,7 +977,7 @@ task PicardMultipleMetrics_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1107,7 +1107,7 @@ task ContEST_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1207,7 +1207,7 @@ task CrossCheckLaneFingerprints_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1270,7 +1270,7 @@ task CallSomaticMutations_Prepare_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         memory: "1 GB"
@@ -1390,7 +1390,7 @@ task Mutect1_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1518,7 +1518,7 @@ task Mutect2_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1639,7 +1639,7 @@ task MutectFC_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1755,7 +1755,7 @@ run('tar cvfz ${pairName}.strelka.tar.gz ${pairName}.all.somatic.indels.vcf ${pa
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1847,7 +1847,7 @@ CODE
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -1947,7 +1947,7 @@ task DeTiN_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -2132,7 +2132,7 @@ task VEP_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -2225,7 +2225,7 @@ CODE
     >>>
 
     runtime {
-        docker         : "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker         : "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb : if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible    : if preemptible != "" then preemptible else default_preemptible
         cpu            : if cpu != "" then cpu else default_cpu
@@ -2375,7 +2375,7 @@ task Oncotate_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -2519,7 +2519,7 @@ task OrientationBias_filter_Task {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -2667,7 +2667,7 @@ CODE
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -2745,7 +2745,7 @@ task blat {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -2834,7 +2834,7 @@ CODE
     >>>
 
     runtime {
-        docker         : "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker         : "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb : if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible    : if preemptible != "" then preemptible else default_preemptible
         cpu            : if cpu != "" then cpu else default_cpu
@@ -2938,7 +2938,7 @@ task mutation_validator {
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -3173,7 +3173,7 @@ CODE
     >>>
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -3257,7 +3257,7 @@ task absolute {
     >>>
 
     runtime {
-        docker         : "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker         : "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb : if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible    : if preemptible != "" then preemptible else default_preemptible
         cpu            : if cpu != "" then cpu else default_cpu
@@ -3377,7 +3377,7 @@ for H in glob.glob('*_legos.html'):
     >>>
 
     runtime {
-        docker         : "us.gcr.io/cds-docker-containers/omics-cga_production_pipeline:v0.2.ccle"
+        docker         : "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
         bootDiskSizeGb : if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible    : if preemptible != "" then preemptible else default_preemptible
         cpu            : if cpu != "" then cpu else default_cpu

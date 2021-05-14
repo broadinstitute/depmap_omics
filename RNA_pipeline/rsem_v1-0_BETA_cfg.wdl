@@ -35,7 +35,7 @@ task rsem {
     }
 
     runtime {
-        docker: "us.gcr.io/cds-docker-containers/omics-gtex_rnaseq:V10"
+        docker: "us-docker.pkg.dev/depmap-omics/public/gtex-rnaseq:V10"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"
