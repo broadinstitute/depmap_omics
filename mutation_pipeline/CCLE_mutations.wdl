@@ -18,7 +18,7 @@ workflow CDS_MutationCalling {
     Boolean? tumor_normal_mode
     File? normal_file_index           # Index for an aligned BAM file if that is the input, unneeded if input is a CRAM
     File? normal_file           # Index for an aligned BAM file if that is the input, unneeded if input is a CRAM
-    File reference_fasta 
+    File reference_fasta
     File reference_dict
     File reference_fasta_index
     File resource_fofn               # File of VCF file names of resources of known SNPs and INDELs, (e.g. mills, gnomAD)
@@ -70,7 +70,7 @@ workflow CDS_MutationCalling {
               reference_fasta_index = reference_fasta_index,
               cram_file = tumor_file,
               output_prefix = output_prefix,
-              
+
               disk_space_gb = round(4*size(tumor_file, "GB") + ref_size + additional_disk),
               preemptible_attempts = preemptible_attempts
         }
@@ -86,7 +86,7 @@ workflow CDS_MutationCalling {
                   reference_fasta_index = reference_fasta_index,
                   cram_file = normal_file,
                   output_prefix = output_prefix,
-                  
+
                   disk_space_gb = round(4*size(normal_file, "GB") + ref_size + additional_disk),
                   preemptible_attempts = preemptible_attempts
             }
@@ -146,7 +146,7 @@ workflow CDS_MutationCalling {
             ref_fasta = reference_fasta,
             ref_dict = reference_dict,
             ref_fai = reference_fasta_index,
-            
+
             gatk_override = gatk_override,
             gatk_docker = gatk_docker,
             disk_space = round(additional_disk + ref_size)
@@ -165,7 +165,7 @@ workflow CDS_MutationCalling {
                 reference_fasta_index = reference_fasta_index,
                 output_prefix = output_prefix,
                 interval_list = calling_interval,
-                
+
                 gatk_docker = gatk_docker,
                 gatk_override = gatk_override,
                 preemptible_attempts = preemptible_attempts,
@@ -188,10 +188,10 @@ workflow CDS_MutationCalling {
                 intra_op_threads = intra_op_threads,
                 inter_op_threads = inter_op_threads,
                 reference_dict = reference_dict,
-                reference_fasta_index = reference_fasta_index,               
+                reference_fasta_index = reference_fasta_index,
                 output_prefix = output_prefix,
                 interval_list = calling_interval,
-                
+
                 gatk_override = gatk_override,
                 gatk_docker = gatk_docker,
                 preemptible_attempts = preemptible_attempts,
@@ -201,10 +201,10 @@ workflow CDS_MutationCalling {
     }
 
     call CNNTasks.MergeVCFs as MergeVCF_HC4 {
-        input: 
+        input:
             input_vcfs = CNNScoreVariants.cnn_annotated_vcf,
             output_prefix = output_prefix,
-            
+
             gatk_override = gatk_override,
             preemptible_attempts = preemptible_attempts,
             gatk_docker = gatk_docker,
@@ -221,7 +221,7 @@ workflow CDS_MutationCalling {
             snp_tranches = snp_tranches,
             indel_tranches = indel_tranches,
             info_key = info_key,
-            
+
             gatk_override = gatk_override,
             preemptible_attempts = preemptible_attempts,
             gatk_docker = gatk_docker,
@@ -234,14 +234,14 @@ workflow CDS_MutationCalling {
             output_prefix = output_prefix,
             disk_space_gb = round(bam_size + ref_size + additional_disk)
     }
-    
+
     call VEP_Task {
         input:
             vcf=vcf
             vcf_id=vcf_id
             pairName=pairName,
             caseName=caseName,
-            ctrlName=ctrlName,    
+            ctrlName=ctrlName,
     }
 
     # Oncotator is a tool for annotating human genomic point mutations and indels with data relevant to cancer researchers.
@@ -292,7 +292,7 @@ workflow CDS_MutationCalling {
         File? normal_bam_gc_bias=normalMM_Task.gc_bias
         File? normal_bam_gc_bias_summary_metrics=normalMM_Task.gc_bias_summary_metrics
         File? normal_bam_insert_size_histogram=normalMM_Task.insert_size_histogram
-        File? normal_bam_insert_size_metrics=normalMM_Task.insert_size_metrics        
+        File? normal_bam_insert_size_metrics=normalMM_Task.insert_size_metrics
         File? normal_bam_pre_adapter_detail_metrics=normalMM_Task.pre_adapter_detail_metrics
         File? normal_bam_pre_adapter_summary_metrics=normalMM_Task.pre_adapter_summary_metrics
         File? normal_bam_quality_by_cycle=normalMM_Task.quality_by_cycle
@@ -335,7 +335,7 @@ workflow CDS_MutationCalling {
         Float cross_check_fingprt_min_lod_value=CrossCheckLaneFingerprints_Task.crossCheckMinLODValue
         String cross_check_fingprt_min_lod_lanes=CrossCheckLaneFingerprints_Task.crossCheckMinLODLanes
         ####### Mutation calling #####
-        
+
 
         ###### Annotated ####
     }
@@ -400,7 +400,7 @@ task VEP_Task {
     String pairName
     String caseName
     String ctrlName
-    File VEP_File    
+    File VEP_File
     File GNOMAD_FILE
     File GNOMAD_FILE_IDX
     File oncoDBTarBall_JustRef
@@ -426,7 +426,7 @@ task VEP_Task {
     # COMPUTE DISK SIZE
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
     Int diskGB = ceil(size(MUTECT1_CS, "G") + size(MUTECT2_VCF, "G") + size(STRELKA_VCF, "G")
-                + size(GNOMAD_FILE, "G")*5 + size(GNOMAD_FILE_IDX, "G") + size(VEP_File, "G") * 5 
+                + size(GNOMAD_FILE, "G")*5 + size(GNOMAD_FILE_IDX, "G") + size(VEP_File, "G") * 5
                 + machine_diskGB_buffer)
 
     parameter_meta {
@@ -437,7 +437,7 @@ task VEP_Task {
         caseName : "tumor sample name, prefix for output"
         ctrlName : "normal sample name, prefix for output"
         VEP_File : ""
-        GNOMAD_FILE : ""      
+        GNOMAD_FILE : ""
     }
 
     command <<<
@@ -445,7 +445,7 @@ task VEP_Task {
         set -x
 
         ############## Pre-process MuTect1 call stats #################################
-        # Running Oncotator to Convert MuTect1 callstats to VCF 
+        # Running Oncotator to Convert MuTect1 callstats to VCF
 
         MUTECT1_CS_PASSED="${pairName}.MuTect1.call_stats.passed.txt"
         MUTECT1_CS_REJECTED="${pairName}.MuTect1.call_stats.rejected.txt"
@@ -459,7 +459,7 @@ task VEP_Task {
 
         ########################### Unzip Oncotator database ###############################
 
-        #find TARBALL type 
+        #find TARBALL type
         # TODO Find better way to get extension
         TYPE=`echo 'if("${oncoDBTarBall_JustRef}"=~m/z$/) { print "GZ" ; } else { print "TAR" ; } '| perl` ;
 
@@ -476,7 +476,7 @@ task VEP_Task {
         ################## Annotate MuTect1, MuTect2, Strelka call stats ###########################
 
         # Annotate MuTect1 call stats (MAFLITE to VCF)
-        # --infer-onps \        
+        # --infer-onps \
         /root/oncotator_venv/bin/oncotator \
         -i MAFLITE \
         -o VCF \
@@ -553,7 +553,7 @@ task VEP_Task {
     >>>
 
     runtime {
-        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga-production-pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -564,10 +564,10 @@ task VEP_Task {
     output {
         File MUTECT1_VEP_annotated_vcf="${pairName}.mutect1.vep_annotated.vcf"
         File MUTECT2_VEP_annotated_vcf="${pairName}.mutect2.vep_annotated.vcf"
-        File STRELKA_VEP_annotated_vcf="${pairName}.strelka.vep_annotated.vcf"  
+        File STRELKA_VEP_annotated_vcf="${pairName}.strelka.vep_annotated.vcf"
         File MUTECT1_VEP_annotated_filtered_vcf="${pairName}.mutect1.vep_annotated.filtered.vcf"
         File MUTECT2_VEP_annotated_filtered_vcf="${pairName}.mutect2.vep_annotated.filtered.vcf"
-        File STRELKA_VEP_annotated_filtered_vcf="${pairName}.strelka.vep_annotated.filtered.vcf"       
+        File STRELKA_VEP_annotated_filtered_vcf="${pairName}.strelka.vep_annotated.filtered.vcf"
     }
 }
 
@@ -612,7 +612,7 @@ task PicardMultipleMetrics_Task {
     # COMPUTE MEMORY SIZE
     Int machine_memoryGB = if memoryGB != "" then memoryGB else default_memoryGB
     Int command_memoryGB = machine_memoryGB - 1
-    
+
     # COMPUTE DISK SIZE
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
     Int diskGB = ceil(bam_size + refFasta_size + gatk4_jar_size + db_snp_vcf_size + machine_diskGB_buffer)
@@ -662,9 +662,9 @@ task PicardMultipleMetrics_Task {
         --PROGRAM CollectSequencingArtifactMetrics \
         --PROGRAM CollectQualityYieldMetrics \
         --PROGRAM CollectGcBiasMetrics
-        
-        #Extract OxoG metrics from generalized artifacts metrics. 
-        # This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of CollectSequencingArtifactsMetrics 
+
+        #Extract OxoG metrics from generalized artifacts metrics.
+        # This tool extracts 8-oxoguanine (OxoG) artifact metrics from the output of CollectSequencingArtifactsMetrics
         # (a tool that provides detailed information on a variety of
         # artifacts found in sequencing libraries) and converts them to the CollectOxoGMetrics tool's output format. This
         # conveniently eliminates the need to run CollectOxoGMetrics if we already ran CollectSequencingArtifactsMetrics in our
@@ -689,7 +689,7 @@ task PicardMultipleMetrics_Task {
     >>>
 
     runtime {
-        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga-production-pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -759,10 +759,10 @@ task CrossCheckLaneFingerprints_Task {
     # COMPUTE MEMORY SIZE
     Int machine_memoryGB = if memoryGB != "" then memoryGB else default_memoryGB
     Int command_memoryGB = machine_memoryGB - 1
-    
+
     # COMPUTE DISK SIZE
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
-    Int diskGB = ceil(tumorBam_size + normalBam_size + gatk4_jar_size + size(HaplotypeDBForCrossCheck, "G") 
+    Int diskGB = ceil(tumorBam_size + normalBam_size + gatk4_jar_size + size(HaplotypeDBForCrossCheck, "G")
                     + machine_diskGB_buffer)
 
     String stringencyLevel = if validationStringencyLevel != "" then validationStringencyLevel else default_stringencyLevel
@@ -795,17 +795,17 @@ task CrossCheckLaneFingerprints_Task {
         --QUIET false \
         --EXIT_CODE_WHEN_MISMATCH 0 \
         --OUTPUT crosscheck.metrics \
-        --VALIDATION_STRINGENCY ${stringencyLevel} 
+        --VALIDATION_STRINGENCY ${stringencyLevel}
 
         #Produce crosscheck.stats.txt file for making the html report
         grep -v "#" crosscheck.metrics | sed 1d > crosscheck.metrics.stripped
-        
+
         python /usr/local/bin/crosscheck_report.py crosscheck.metrics.stripped
 
     >>>
 
     runtime {
-        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga-production-pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
@@ -822,7 +822,7 @@ task CrossCheckLaneFingerprints_Task {
 }
 
 task ContEST_Task {
-        
+
     # TASK INPUT PARAMS
     File tumorBam
     File tumorBamIdx
@@ -832,7 +832,7 @@ task ContEST_Task {
     File refFastaIdx
     File refFastaDict
     File targetIntervals
-    
+
     File SNP6Bed
     File HapMapVCF
     String pairName
@@ -859,7 +859,7 @@ task ContEST_Task {
     # COMPUTE MEMORY SIZE
     Int machine_memoryGB = if memoryGB != "" then memoryGB else default_memoryGB
     Int command_memoryGB = machine_memoryGB - 1
-    
+
     # COMPUTE DISK SIZE
     Int machine_diskGB_buffer = if diskGB_buffer != "" then diskGB_buffer else default_diskGB_buffer
     Int diskGB = ceil(tumorBam_size + normalBam_size + refFasta_size
@@ -883,7 +883,7 @@ task ContEST_Task {
     command <<<
 
         set -euxo pipefail
-         
+
         java "-Xmx${command_memoryGB}g" -Djava.io.tmpdir=/tmp -jar /usr/local/bin/GenomeAnalysisTK.jar \
         -T ContEst \
         -I:eval ${tumorBam} \
@@ -916,7 +916,7 @@ task ContEST_Task {
     >>>
 
     runtime {
-        docker: "us-docker.pkg.dev/depmap-omics/public/cga_production_pipeline:v0.2.ccle"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cga-production-pipeline:v0.2.ccle"
         bootDiskSizeGb: if diskGB_boot != "" then diskGB_boot else default_diskGB_boot
         preemptible: if preemptible != "" then preemptible else default_preemptible
         cpu: if cpu != "" then cpu else default_cpu
