@@ -40,7 +40,7 @@ task filterMaf {
   }
 
   runtime {
-    docker: "us-docker.pkg.dev/depmap-omics/public/ccle_rnaseq:latest:latest"
+    docker: "us-docker.pkg.dev/depmap-omics/public/ccle-rnaseq:latest"
     memory: "10GB"
     disks: "local-disk 50 HDD"
     preemptible: "5"
