@@ -40,6 +40,7 @@ Unfiltered data contains all output fusions, while the filtered data uses the fi
 - FFPM < 0.05
 """
 
+
 RNAseqreadme = """
 # RNAseq
 
@@ -64,6 +65,7 @@ __Columns__:
  gene names in the format HGNC\_symbol (Entrez\_ID)
 DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean
 """
+
 
 CNreadme = """
 # Copy Number
@@ -117,3 +119,40 @@ __Columns__: gene names in the format HGNC\_symbol (Entrez\_ID)
 Segment level data:
 
 __Columns__: DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean"""
+
+
+Mutationsreadme = """
+# Mutations
+
+PORTAL TEAM SHOULD NOT USE THIS: There are lines here that should not make it even to internal.
+
+/!\ This is the most up to date version of the CCLE Mutatios data.
+The data is most likely of a better quality that what is on other folder. It is however in beta version as not all changes have either been confirmed or accepted by the DepMap Ops and the DepMap Portal Team.
+
+# Notations:
+
+all: every cell lines we have
+
+WES: all data comes from the WExomeS samples we posses
+
+WGS: all data comes from the WGenomeS samples we posses
+
+withreplicates: if we have two different sequencing from a sample, we kept both, see the depmap sample tracker for annotations [https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE](https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE). this dataset is more geared toward QC or in-depth analysis of a particular cell line.
+
+merged: everything from both WGS and WES
+
+latest: only the latest sequencing versions of the samples were kept
+
+genes (gene rpkm):
+__Rows__:
+__Columns__:
+Counts (gene counts):
+__Rows__:
+__Columns__:
+Gene level CN data:
+__Rows__:
+__Columns__:
+ DepMap cell line IDs
+ gene names in the format HGNC\_symbol (Entrez\_ID)
+DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean
+ """
