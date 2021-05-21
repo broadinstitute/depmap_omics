@@ -63,7 +63,8 @@ workflow PreProcessingForVariantDiscovery_GATK4 {
 
   String gotc_path
   String picard_path
-    
+  String gatk_launch_path
+  
   Int flowcell_small_disk
   Int flowcell_medium_disk
   Int agg_small_disk
@@ -183,7 +184,7 @@ workflow PreProcessingForVariantDiscovery_GATK4 {
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
         docker_image = gatk_docker,
-
+        gatk_launch_path = gatk_launch_path,
         disk_size = agg_small_disk,
         preemptible_tries = agg_preemptible_tries
     }  
@@ -195,7 +196,7 @@ workflow PreProcessingForVariantDiscovery_GATK4 {
       input_bqsr_reports = BaseRecalibrator.recalibration_report,
       output_report_filename = base_file_name + ".recal_data.csv",
       docker_image = gatk_docker,
-
+      gatk_launch_path = gatk_launch_path,
       disk_size = flowcell_small_disk,
       preemptible_tries = preemptible_tries
   }
@@ -214,6 +215,7 @@ workflow PreProcessingForVariantDiscovery_GATK4 {
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
         docker_image = gatk_docker,
+        gatk_launch_path = gatk_launch_path,
         disk_size = agg_small_disk,
         preemptible_tries = agg_preemptible_tries
     }
@@ -560,17 +562,18 @@ task BaseRecalibrator {
   String mem_size
 
   String docker_image
+  String gatk_launch_path
   String java_opt
 
   command { 
-    gatk --java-options "${java_opt}" \
+    ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \
       BaseRecalibrator \
       -R ${ref_fasta} \
       -I ${input_bam} \
-      --use-original-qualities \
+      --useOriginalQualities \
       -O ${recalibration_report_filename} \
-      --known-sites ${dbSNP_vcf} \
-      --known-sites ${sep=" --known-sites " known_indels_sites_VCFs} \
+      -knownSites ${dbSNP_vcf} \
+      -knownSites ${sep=" -knownSites " known_indels_sites_VCFs} \
       -L ${sep=" -L " sequence_group_interval}
   }
   runtime {
@@ -595,10 +598,11 @@ task GatherBqsrReports {
   String mem_size
 
   String docker_image
+  String gatk_launch_path
   String java_opt
 
   command {
-    gatk --java-options "${java_opt}" \
+    ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \
       GatherBQSRReports \
       -I ${sep=' -I ' input_bqsr_reports} \
       -O ${output_report_filename}
@@ -630,20 +634,21 @@ task ApplyBQSR {
   String mem_size
 
   String docker_image
+  String gatk_launch_path
   String java_opt
 
   command {  
-    gatk --java-options "${java_opt}" \
+    ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \
       ApplyBQSR \
       -R ${ref_fasta} \
       -I ${input_bam} \
       -O ${output_bam_basename}.bam \
       -L ${sep=" -L " sequence_group_interval} \
       -bqsr ${recalibration_report} \
-      --static-quantized-quals 10 --static-quantized-quals 20 --static-quantized-quals 30 \
-      --use-original-qualities \
-      --create-output-bam-md5 \
-      --add-output-sam-program-record
+      -SQQ 10 -SQQ 20 -SQQ 30 \
+      --useOriginalQualities \
+      --createOutputBamMD5 \
+      --addOutputSAMProgramRecord
   }
   runtime {
     preemptible: preemptible_tries
