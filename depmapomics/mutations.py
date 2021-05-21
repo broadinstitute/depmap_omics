@@ -1,23 +1,35 @@
+from genepy import terra
+from genepy.utils import helper as h
+from genepy import mutations as mut
+import os
 import dalmatian as dm
 import pandas as pd
 from genepy.google.gcp import cpFiles
 import numpy as np
 from genepy.mutations import filterAllelicFraction, filterCoverage
 from collections import Counter
+from depmapomics import tracker as track
+from depmapomics import utils
+from depmapomics.config import TMP_PATH, ENSEMBL_SERVER_V,
+import dalmatian as dm
+import pandas as pd
+from taigapy import TaigaClient
+tc = TaigaClient()
+from gsheets import Sheets
 
 
 def download_maf_from_workspace(refwm, sample_set_ids=['all_ice', 'all_agilent'],
                                 output_maf='/tmp/mutation_filtered_terra_merged.txt'):
-    sample_sets = refwm.get_sample_sets()
-    dfs = []
-    for sample_set_id in sample_sets.index.intersection(sample_set_ids):
-        cpFiles(sample_sets.loc[sample_set_id, 'filtered_CGA_MAF_aggregated'],
-                    '/tmp/tmp.txt', payer_project_id='broad-firecloud-ccle', verbose=False)
-        df = pd.read_csv('/tmp/tmp.txt', sep='\t', low_memory=False)
-        dfs.append(df)
-    dfs_concat = pd.concat(dfs)
-    dfs_concat.to_csv(output_maf, index=False, sep='\t')
-    return dfs_concat
+  sample_sets = refwm.get_sample_sets()
+  dfs = []
+  for sample_set_id in sample_sets.index.intersection(sample_set_ids):
+    cpFiles(sample_sets.loc[sample_set_id, 'filtered_CGA_MAF_aggregated'],
+                '/tmp/tmp.txt', payer_project_id='broad-firecloud-ccle', verbose=False)
+    df = pd.read_csv('/tmp/tmp.txt', sep='\t', low_memory=False)
+    dfs.append(df)
+  dfs_concat = pd.concat(dfs)
+  dfs_concat.to_csv(output_maf, index=False, sep='\t')
+  return dfs_concat
 
 
 def removeDuplicates(a, loc, prepended=['dm', 'ibm', 'ccle']):
@@ -97,36 +109,179 @@ def add_variant_annotation_column(maf):
 
     rename = {}
     for k,v in mutation_groups.items():
-        for e in v:
-            rename[e] = k
+      for e in v:
+        rename[e] = k
     maf['Variant_annotation'] = [rename[i] for i in maf['Variant_Classification'].tolist()]
     return maf
 
 def postprocess_mutations_filtered_wes(refworkspace, sample_set_name = 'all',
                                        output_file='/tmp/wes_somatic_mutations.csv'):
-    refwm = dm.WorkspaceManager(refworkspace).disable_hound()
-    filtered = refwm.get_sample_sets().loc[sample_set_name]['filtered_CGA_MAF_aggregated']
-    print('copying aggregated filtered mutation file')
-    cpFiles([filtered], "/tmp/mutation_filtered_terra_merged.txt")
-    print('reading the mutation file')
-    mutations = pd.read_csv('/tmp/mutation_filtered_terra_merged.txt', sep='\t', low_memory=False)
-    mutations = mutations.rename(columns={"i_ExAC_AF":"ExAC_AF",
-                                          "Tumor_Sample_Barcode":'DepMap_ID',
-                                          "Tumor_Seq_Allele2":"Tumor_Allele"}).\
-    drop(columns=['Center','Tumor_Seq_Allele1'])
-    # mutations = annotate_likely_immortalized(mutations, TCGAlocs = ['TCGAhsCnt', 'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5)
-    print('writing CGA_WES_AC column')
-    mutations['CGA_WES_AC'] = [str(i[0]) + ':' + str(i[1]) for i in np.nan_to_num(mutations[['t_alt_count','t_ref_count']].values,0).astype(int)]
-    # apply version:
-    # mutations['CGA_WES_AC'] = mutations[['t_alt_count', 't_ref_count']].fillna(0).astype(int).apply(lambda x: '{:d}:{:d}'.format(*x), raw=True, axis=1)
-    print('filtering coverage')
-    mutations = filterCoverage(mutations, loc=['CGA_WES_AC'], sep=':', cov=2)
-    print('filtering allelic fractions')
-    mutations = filterAllelicFraction(mutations, loc=['CGA_WES_AC'], sep=':', frac=0.1)
-    print('adding NCBI_Build and strand annotations')
-    mutations = addAnnotation(mutations, NCBI_Build='37', Strand="+")
-    print('adding the Variant_annotation column')
-    mutations = add_variant_annotation_column(mutations)
-    print('saving results to output file')
-    mutations.to_csv('/tmp/wes_somatic_mutations.csv', index=False)
-    return mutations
+  refwm = dm.WorkspaceManager(refworkspace).disable_hound()
+  filtered = refwm.get_sample_sets().loc[sample_set_name]['filtered_CGA_MAF_aggregated']
+  print('copying aggregated filtered mutation file')
+  cpFiles([filtered], "/tmp/mutation_filtered_terra_merged.txt")
+  print('reading the mutation file')
+  mutations = pd.read_csv('/tmp/mutation_filtered_terra_merged.txt', sep='\t', low_memory=False)
+  mutations = mutations.rename(columns={"i_ExAC_AF":"ExAC_AF",
+                                        "Tumor_Sample_Barcode":'DepMap_ID',
+                                        "Tumor_Seq_Allele2":"Tumor_Allele"}).\
+  drop(columns=['Center','Tumor_Seq_Allele1'])
+  # mutations = annotate_likely_immortalized(mutations, TCGAlocs = ['TCGAhsCnt', 'COSMIChsCnt'], max_recurrence=0.05, min_tcga_true_cancer=5)
+  print('writing CGA_WES_AC column')
+  mutations['CGA_WES_AC'] = [str(i[0]) + ':' + str(i[1]) for i in np.nan_to_num(mutations[['t_alt_count','t_ref_count']].values,0).astype(int)]
+  # apply version:
+  # mutations['CGA_WES_AC'] = mutations[['t_alt_count', 't_ref_count']].fillna(0).astype(int).apply(lambda x: '{:d}:{:d}'.format(*x), raw=True, axis=1)
+  print('filtering coverage')
+  mutations = filterCoverage(mutations, loc=['CGA_WES_AC'], sep=':', cov=2)
+  print('filtering allelic fractions')
+  mutations = filterAllelicFraction(mutations, loc=['CGA_WES_AC'], sep=':', frac=0.1)
+  print('adding NCBI_Build and strand annotations')
+  mutations = addAnnotation(mutations, NCBI_Build='37', Strand="+")
+  print('adding the Variant_annotation column')
+  mutations = add_variant_annotation_column(mutations)
+  print('saving results to output file')
+  mutations.to_csv('/tmp/wes_somatic_mutations.csv', index=False)
+  return mutations
+
+
+def managingDuplicates(samples, failed, datatype, tracker):
+  # selecting the right arxspan id (latest version)
+  renaming = tracker.removeOlderVersions(names=samples,
+                                         refsamples=tracker[tracker.datatype == datatype], 
+                                         priority="prioritized")
+
+  # reparing QC when we have a better duplicate
+  ref = pd.DataFrame(
+      tracker[tracker.datatype == datatype]['arxspan_id'])
+  replace = 0
+  for val in failed:
+    if val in list(renaming.keys()):
+      a = ref[ref.arxspan_id == ref.loc[val].arxspan_id].index
+      for v in a:
+        if v not in failed:
+          renaming[v] = renaming.pop(val)
+          replace += 1
+          break
+  print('could replace:')
+  print(replace)
+  return renaming
+
+
+def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", doCleanup=False,  sortby=[
+        "DepMap_ID", 'Chromosome', "Start", "End"], todrop=[],
+        genechangethresh=0.025, segmentsthresh=2000, ensemblserver=ENSEMBL_SERVER_V,
+        rename_cols={"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": 'DepMap_ID', 
+        "Tumor_Seq_Allele2": "Tumor_Allele"},):
+  
+  h.createFoldersFor(save_output)
+  print('loading from Terra')
+  if save_output:
+    terra.saveConfigs(refworkspace, save_output + 'config/')
+  refwm = dm.WorkspaceManager(refworkspace)
+  mutations = pd.read_csv(refwm.get_sample_sets().loc[sampleset, 'filtered_CGA_MAF_aggregated'], sep='\t') 
+  mutations = mutations.rename(columns={"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": 'DepMap_ID',
+                                        "Tumor_Seq_Allele2": "Tumor_Allele"}).drop(columns=['Center', 'Tumor_Seq_Allele1'])
+
+  mutations[mutCol] = [str(i[0]) + ':' + str(i[1]) for i in np.nan_to_num(mutations[
+      ['t_alt_count', 't_ref_count']].values, 0).astype(int)]
+  mutations = mut.filterCoverage(mutations, loc=[mutCol], sep=':',cov=2)
+  mutations = mut.filterAllelicFraction(mutations, loc=[mutCol], sep=':',frac=0.1)
+  mutations = addAnnotation(mutations, NCBI_Build='37', Strand="+")
+  mutations = annotateLikelyImmortalized(mutations,
+                                          TCGAlocs=['TCGAhsCnt', 'COSMIChsCnt'], 
+                                          max_recurrence=0.05, min_tcga_true_cancer=5)
+
+  mutations.to_csv(save_output + 'somatic_mutations_all.csv', index=None)
+  print('done')
+  return mutations
+
+def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
+                       AllSamplesetName='all', doCleanup=False,
+                       my_id='~/.client_secret.json', mystorage_id="~/.storage.json",
+                       refsheet_url="https://docs.google.com/spreadshe\
+                        ets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
+                       taiga_dataset="cn-latest-d8d4", dataset_description=CNreadme,
+                       **kwargs):
+
+  sheets = Sheets.from_files(my_id, mystorage_id)
+  tracker = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+  
+  wesrefwm = dm.WorkspaceManager(wesrefworkspace)
+  wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)  
+
+  if doCleanup:
+    #TODO:
+    val = ""
+    #gcp.rmFiles('gs://fc-secure-012d088c-f039-4d36-bde5-ee9b1b76b912/$val/**/call-tumorMM_Task/*.cleaned.bam')
+  # sometimes it does not work so better check again
+
+  # doing wes
+  print('doing wes')
+  folder=os.path.join("temp", samplesetname, "wes_")
+  
+  wesmutations = postProcess(wesrefwm, AllSamplesetName if AllSamplesetName else samplesetname,
+                             save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
+
+  # renaming
+  print('renaming')
+  #wesrenaming = track.removeOlderVersions(names=set(
+  #    wesmutations['DepMap_ID']), refsamples=wesrefwm.get_samples(),
+  #    arxspan_id="arxspan_id", version="version", priority=priority)
+  
+  wesrenaming = h.fileToDict(folder+"sample_renaming.json")
+  
+  wesmutations = wesmutations[wesmutations.DepMap_ID.isin(wesrenaming.keys())].replace({
+      'DepMap_ID': wesrenaming})
+  wesmutations.to_csv(folder + 'somatic_mutations_latest.csv', index=None)
+
+  # doing wgs
+  print('doing wgs')
+  folder=os.path.join("temp", samplesetname, "wgs_")
+  
+  wgsmutations = postProcess(wgsrefwm, "allcurrent", #AllSamplesetName if AllSamplesetName else samplesetname, 
+                         save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
+
+  # renaming
+  print('renaming')
+  #wgsrenaming = track.removeOlderVersions(names=set(
+  #    wesmutations['DepMap_ID']), refsamples=wgsrefwm.get_samples(),
+  #    arxspan_id="arxspan_id", version="version", priority=priority)
+
+  wgsrenaming = h.fileToDict(folder+"sample_renaming.json")
+
+  wgsmutations = wgsmutations[wgsmutations.DepMap_ID.isin(wgsrenaming.keys())].replace({
+      'DepMap_ID': wgsrenaming})
+  wgsmutations.to_csv(folder + 'somatic_mutations_latest.csv', index=None)
+
+  # merge
+  print('merging')
+  toadd = set(wgsmutations.DepMap_ID) - set(wesmutations.DepMap_ID)
+  priomutations = wesmutations.append(
+      wgsmutations[wgsmutations.DepMap_ID.isin(toadd)]).reset_index(drop=True)
+  #normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
+  #mutations = mutations[~mutations.DepMap_ID.isin(normals)]
+  priomutations.to_csv('temp/'+samplesetname+'/merged_somatic_mutations.csv', index=False)
+
+  #making binary mutation matrices
+  # binary mutations matrices
+  mut.mafToMat(priomutations[(priomutations.isDeleterious)]).astype(
+      int).T.to_csv('temp/wes_somatic_mutations_deleterious_boolmatrix.csv')
+  mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot | 
+                               priomutations.isTCGAhotspot | 
+                               priomutations['Variant_Classification'] == 'Silent')]).astype(int).T.to_csv(
+    'temp/'+samplesetname+'/merged_somatic_mutations_other_boolmatrix.csv')
+  mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)]).astype(
+    int).T.to_csv('temp/'+samplesetname+'/merged_somatic_mutations_hotspot_boolmatrix.csv')
+
+
+  # genotyped mutations matrices
+  mut.mafToMat(priomutations[(priomutations.isDeleterious)], mode="genotype",
+              minfreqtocall=0.05).T.to_csv('temp/wes_somatic_mutations_deleterious_matrix.csv')
+  mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot | 
+                               priomutations.isTCGAhotspot |
+                               priomutations['Variant_Classification'] == 'Silent')], 
+                mode="genotype", minfreqtocall=0.05).T.to_csv(
+                  'temp/wes_somatic_mutations_other_matrix.csv')
+  mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)],
+              mode="genotype", minfreqtocall=0.05).T.to_csv(
+                'temp/wes_somatic_mutations_hotspot_matrix.csv')

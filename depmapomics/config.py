@@ -64,3 +64,56 @@ __Columns__:
  gene names in the format HGNC\_symbol (Entrez\_ID)
 DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean
 """
+
+CNreadme = """
+# Copy Number
+
+PORTAL TEAM SHOULD NOT USE THIS: There are lines here that should not make it even to internal.
+
+/!\ This is the most up to date version of the CCLE CN data.
+
+# Notations:
+
+all: everything
+
+allWES: all data comes from the WExomeS samples we posses
+
+allWGS: all data comes from the WGenomeS samples we posses
+
+withreplicates: if we have two different sequencing from a sample, we kept both, see the depmap sample tracker for annotations [https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE](https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE). this dataset is more geared toward QC or in-depth analysis of a particular cell line.
+
+merged: everything from both WGS and WES
+
+latest: only the latest sequencing versions of the samples were kept
+
+
+Gene level CN data:
+
+__Rows__: cell line IDs
+
+__Columns__: gene names in the format HGNC\_symbol (Entrez\_ID)
+
+Segment level data:
+
+__Columns__: DepMap\_ID, Chromosome, Start, End, Segment\_Mean, Num\_Probes, Calls"""
+
+
+Achillesreadme = """
+# Copy Number
+
+Combined segment and gene-level CN calls from Broad WES, Sanger WES, and Broad SNP. Relative CN, log2(x+1) transformed.
+
+PORTAL TEAM SHOULD NOT USE THIS: There are lines here that should not make it even to internal. Must use subsetted dataset instead. These data will not make it on the portal starting 19Q1. With the DMC portal, there is new cell line release prioritization as to which lines can be included, so a new taiga dataset will be created containing CN for the portal.
+
+These data are generated for Achilles to pull from to run CERES.
+
+
+Gene level CN data:
+
+__Rows__: DepMap cell line IDs
+
+__Columns__: gene names in the format HGNC\_symbol (Entrez\_ID)
+
+Segment level data:
+
+__Columns__: DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean"""
