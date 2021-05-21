@@ -118,11 +118,12 @@ def changeCellLineNameInNew(ref, new, datatype, dupdict, toupdate=['stripped_cel
   return new
 
 
-def changeCellLineName(ref, datatype, dupdict, toupdate=["stripped_cell_line_name",
+def changeCellLineName(tracker, datatype, dupdict, toupdate=["stripped_cell_line_name",
                                                          "participant_id",
                                                          "cellosaurus_id",
                                                          "sex",
                                                          "arxspan_id",
+                                                         "parent_cell_line",
                                                          "matched_normal",
                                                          "age",
                                                          "primary_site",
@@ -136,7 +137,7 @@ def changeCellLineName(ref, datatype, dupdict, toupdate=["stripped_cell_line_nam
   Args:
   -----
     dupdict: dict(tochange,newname)
-    datatype: str for a ref with many datatype (to get the right version number)
+    datatype: str for a tracker with many datatype (to get the right version number)
 
   Returns:
   --------
@@ -144,11 +145,11 @@ def changeCellLineName(ref, datatype, dupdict, toupdate=["stripped_cell_line_nam
   """
   for k, v in dupdict.items():
     try:
-      ref.loc[k, toupdate] = ref[ref.arxspan_id == v][toupdate].values[0]
-      ref.loc[k, 'version'] = len(ref[(ref.arxspan_id == v) & (ref.datatype == datatype)]) + 1
+      tracker.loc[k, toupdate] = tracker[tracker.arxspan_id == v][toupdate].values[0]
+      tracker.loc[k, 'version'] = len(tracker[(tracker.arxspan_id == v) & (tracker.datatype == datatype)])
     except IndexError:
       raise IndexError(str(v)+" not found in tracker")
-  return ref
+  return tracker
 
 
 
@@ -340,3 +341,29 @@ def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
   refsamples[releaseName] = '0'
   refsamples.loc[samples, releaseName] = '1'
   return refsamples
+
+
+def makeCCLE2(tracker, source='CCLE2'):
+  """
+  """
+  tracker = tracker[tracker.source == source]
+  ccle = pd.DataFrame(index=set(tracker.arxspan_id),
+                      data=tracker['stripped_cell_line_name'], columns=['stripped_cell_line_name'])
+  ccle = ccle[~ccle.index.duplicated(keep='first')]
+  ccle['stripped_cell_line_name'] = tracker[~tracker.index.duplicated(
+    keep='first')]['stripped_cell_line_name']
+  for val in ['wes', 'wgs', 'rna']:
+    a = tracker[tracker.datatype ==
+                        val].set_index('arxspan_id')
+    ccle[val +
+          '_bam'] = a[~a.index.duplicated(keep='first')]['legacy_bam_filepath']
+    ccle[val +
+          '_bai'] = a[~a.index.duplicated(keep='first')]['legacy_bai_filepath']
+  for val in ['hybrid_capture', 'targeted', 'raindance']:
+    a = tracker[tracker.datatype ==
+                        val].set_index('arxspan_id')
+    ccle[val +
+          '_bam'] = a[~a.index.duplicated(keep='first')]['internal_bam_filepath']
+    ccle[val +
+          '_bai'] = a[~a.index.duplicated(keep='first')]['internal_bai_filepath']
+  return ccle
