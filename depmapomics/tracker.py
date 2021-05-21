@@ -49,7 +49,8 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', partici
     return samples, notfound    
 
 
-def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="version"):
+def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", 
+                        version="version", priority=None):
   """
   Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
 
@@ -67,7 +68,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   """
   lennames = len(names)
   res = {}
-  refsamples = refsamples[refsamples.index.isin(names)]
+  refsamples = refsamples.loc[names].copy()
   if lennames > len(refsamples):
     print(set(names) - set(refsamples.index))
     ipdb.set_trace()
@@ -75,9 +76,17 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   for arxspan in set(refsamples[arxspan_id]):
     allv = refsamples[refsamples[arxspan_id] == arxspan]
     for k, val in allv.iterrows():
-      if val[version] == max(allv.version.values):
-        res[k] = arxspan
-        break
+      if priority is None:
+        if val[version] == max(allv.version.values):
+          res[k] = arxspan
+          break
+      else:
+        if val[version] == max(allv.version.values):
+          res[k] = arxspan
+        if val[priority] == 1:
+          res[k] = arxspan
+          break
+
   print("removed " + str(lennames - len(res)) + " duplicate samples")
   # remove all the reference metadata columns except the arxspan ID
   return res

@@ -1,10 +1,12 @@
+from gsheets import Sheets
 import dalmatian as dm
 import pandas as pd
-from genepy.google.gcp import cpFiles
 import re
 import os.path
+from genepy.utils import helper as h
 import seaborn as sns
 from depmapomics.config import FUSIONreadme
+from genepy import terra
 
 from depmapomics import tracker
 
@@ -64,11 +66,11 @@ def filterFusions(fusions, maxfreq=0.1, sampleCol, minffpm=0.05, countCol="CCLE_
   fusions = fusions[~fusions['FusionName'].str.contains('^HLA\\-')]
   # (2) Remove red herring fusions
   fusions = fusions[~fusions['annots'].str.contains(
-      '|'.join(red_herring), case=False)]
+    '|'.join(red_herring), case=False)]
   # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and
   # LargeAnchorSupport="No" and minFAF<0.02), or
   fusions = fusions[~((fusions['SpliceType'] == "INCL_NON_REF_SPLICE") & (
-      fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < 0.1))]
+    fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < 0.1))]
   # STAR-Fusion suggests using 0.1, but after looking at the
   # translocation data, this looks like it might be too aggressive
   fusions = fusions[fusions['FFPM'] > minffpm]
@@ -83,117 +85,137 @@ def renameFusionGene(a):
 
 
 def standardizeGeneNames(fusions):
-    """
-    TODO: todocument
-    converts [GENE_NAME]^[ENSG] --> [GENE_NAME] ([ENSG])
-    Example: "SMAD4^ENSG00000141646.14" --> "SMAD4 (ENSG00000141646.14)"
-    """
-    fusions[['LeftGene', 'RightGene']] = fusions[['LeftGene', 'RightGene']]\
-        .applymap(lambda x: '{} ({})'.format(*x.split(r'^')))
-    return fusions
+  """
+  TODO: todocument
+  converts [GENE_NAME]^[ENSG] --> [GENE_NAME] ([ENSG])
+  Example: "SMAD4^ENSG00000141646.14" --> "SMAD4 (ENSG00000141646.14)"
+  """
+  fusions[['LeftGene', 'RightGene']] = fusions[['LeftGene', 'RightGene']]\
+    .applymap(lambda x: '{} ({})'.format(*x.split(r'^')))
+  return fusions
 
 
-def postProcessFusions(refworkspace, samplesetname, sampleCol='DepMap_ID', samplesetToLoad = 'all',
+def postProcess(refworkspace, samplesetname, sampleCol='DepMap_ID', samplesetToLoad = 'all',
                         colnames=['FusionName', 'JunctionReadCount',
                         'SpanningFragCount', 'SpliceType', 'LeftGene', 'LeftBreakpoint',
                         'RightGene', 'RightBreakpoint', 'LargeAnchorSupport', 'FFPM',
                         'LeftBreakDinuc', 'LeftBreakEntropy', 'RightBreakDinuc',
-                        'RightBreakEntropy', 'annots'], doplot=True,
-                        countCol="CCLE_count", folder="temp", rnFunc=None,
+                        'RightBreakEntropy', 'annots'], todrop=[], doplot=True,
+                        countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
                         **kwargs ):
-    """
-    TODO: todocument
-    """
-    refwm = dm.WorkspaceManager(refworkspace)
-    print("loading fusions")
-    aggregated = refwm.get_sample_sets().loc[samplesetToLoad]['fusions_star']
-    fusions = pd.read_csv(aggregated,
-                          names=[sampleCol]+colnames, skiprows=1, sep='\t')
+  """
+  TODO: todocument
+  """
+  refwm = dm.WorkspaceManager(refworkspace)
+  if save_output:
+    terra.saveConfigs(refworkspace, save_output + 'config/')
+  
+  print("loading fusions")
+  aggregated = refwm.get_sample_sets().loc[samplesetToLoad]['fusions_star']
+  fusions = pd.read_csv(aggregated,
+                        names=[sampleCol]+colnames, skiprows=1, sep='\t')
+  
+  print("postprocessing fusions")
+  fusions.RightGene = renameFusionGene(fusions.RightGene)
+  fusions.LeftGene = renameFusionGene(fusions.LeftGene)
+  fusions = standardizeGeneNames(fusions)
+  
+  count = fusions[['LeftBreakpoint', 'RightBreakpoint']]\
+    .value_counts()\
+    .to_frame(name=countCol)
+  fusions = pd.merge(fusions, count, on=[
+                      'LeftBreakpoint', 'RightBreakpoint'])
+  
+  # removing failed
+  fusions = fusions[~fusions[sampleCol].isin(todrop)]
+  
+  fusions_filtered = filterFusions(
+    fusions, sampleCol=sampleCol, countCol=countCol, **kwargs)
+  if doplot:
+    sns.kdeplot(fusions[countCol])
+  
+  print("saving")
+  fusions.to_csv(os.path.join(save_output,'fusions_all.csv'), index=False)
+  if rnFunc is not None or renaming is not None:
+    print('renaming')
+    renaming = rnFunc(set(fusions[sampleCol])) if rnFunc is not None else renaming
+    fusions = fusions[fusions[sampleCol].isin(renaming.keys())].replace(
+        {sampleCol: renaming}).reset_index(drop=True)
+    fusions.to_csv(os.path.join(save_output, 'fusions_latest.csv'), index=False)
+  
+  fusions_filtered.to_csv(os.path.join(
+    save_output, 'filteredfusions_latest.csv'), index=False)
+  
+  print("done")
+  return fusions, fusions_filtered
 
-    print("postprocessing fusions")
-    fusions.RightGene = renameFusionGene(fusions.RightGene)
-    fusions.LeftGene = renameFusionGene(fusions.LeftGene)
-    fusions = standardizeGeneNames(fusions)
-    
-    count = fusions[['LeftBreakpoint', 'RightBreakpoint']]\
-        .value_counts()\
-        .to_frame(name=countCol)
-    fusions = pd.merge(fusions, count, on=[
-                       'LeftBreakpoint', 'RightBreakpoint'])
 
-    fusions_filtered = filterFusions(
-        fusions, sampleCol=sampleCol, countCol=countCol, **kwargs)
-    if doplot:
-        sns.kdeplot(fusions[countCol])
-    
-    print("saving")
-    fusions.to_csv(os.path.join(folder,'/fusions_unRenamed_'+samplesetname+'.csv'), index=False)
-    if rnFunc:
-        print('renaming')
-        renaming = rnFunc(set(fusions[sampleCol]))
-        fusions = fusions[fusions[sampleCol].isin(renaming.keys())].replace(
-            {sampleCol: renaming}).reset_index(drop=True)
-        fusions.to_csv(os.path.join(folder, 'fusions_' +
-                                    samplesetname+'.csv'), index=False)
-    
-    fusions_filtered.to_csv(os.path.join(
-        folder, 'filtered_fusions_'+samplesetname+'.csv'), index=False)
+def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol="depmap_id", 
+                      refsheet_url="https://docs.google.com/spreadshe\
+                      ets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY", 
+                      taiga_dataset="fusions-95c9", dataset_description=FUSIONreadme,
+                      my_id='~/.client_secret.json',
+                      mystorage_id="~/.storage.json",
+                      prevdataset=tc.get(name='depmap-a0ab',
+                                  file='CCLE_fusions_unfiltered'),
+                      **kwargs):
+  """
+  TODO: todocument
+  """
+  
+  sheets = Sheets.from_files(my_id, mystorage_id)
+  ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+  
+  previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
-    return fusions, fusions_filtered
+  folder=os.path.join("temp", samplesetname, "")
+  renaming = h.fileToDict(folder+"rna_sample_renaming.json")
 
+  fusions, _ = postProcess(refworkspace, samplesetname=samplesetname,
+                           todrop=previousQCfail, renaming=renaming, save_output=folder,
+    **kwargs)
+  
+  print('comparing to previous version')
+  print('new')
+  print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
 
-def CCLEPostProcessFusions(refworkspace, samplesetname, fusionSamplecol="depmap_id", 
-                           taiga_dataset="fusions-95c9", dataset_description=FUSIONreadme,
-                           **kwargs):
-    """
-    TODO: todocument
-    """
-    refwm = dm.WorkspaceManager(refworkspace)
-    fusions, _ = postProcessFusions(refworkspace=refworkspace, samplesetname=samplesetname,
-        rnFunc=lambda x: tracker.removeOlderVersions(
-            names=x, refsamples=refwm.get_samples(),
-            arxspan_id="arxspan_id", version="version",
-            ),
-        **kwargs)
-    
-    print('')
-    prev = tc.get(name='depmap-a0ab', file='CCLE_fusions_unfiltered')
-    print('new')
-    print(set(fusions[fusionSamplecol]) - set(prev[fusionSamplecol]))
+  print('removed')
+  print(set(prevdataset[fusionSamplecol]) - set(fusions[fusionSamplecol]))
 
-    print('removed')
-    print(set(prev[fusionSamplecol]) - set(fusions[fusionSamplecol]))
+  print("changes in fusion names")
+  pf = prevdataset.copy()
+  pf["id"] = pf[fusionSamplecol]+"_"+pf["FusionName"]
+  f = fusions.copy()
+  f["id"] = f[fusionSamplecol]+"_"+f["FusionName"]
+  print(len(set(pf[~pf.id.isin(f.id.tolist())][fusionSamplecol])))
 
-    print("changes in fusion names")
-    pf = prev.copy()
-    pf["id"] = pf[fusionSamplecol]+"_"+pf["FusionName"]
-    f = fusions.copy()
-    f["id"] = f[fusionSamplecol]+"_"+f["FusionName"]
-    print(len(set(pf[~pf.id.isin(f.id.tolist())][fusionSamplecol])))
-
-    print("changes in junction readd counts")
-    f["sid"] = f[fusionSamplecol]+"_"+f["FusionName"] + \
-        "_" + f["JunctionReadCount"].astype(str)
-    pf["sid"] = pf[fusionSamplecol]+"_"+pf["FusionName"] + \
-        "_" + pf["JunctionReadCount"].astype(str)
-    print(len(set(pf[~pf.sid.isin(f.sid.tolist())][fusionSamplecol])))
-    tc.update_dataset(dataset_permaname=taiga_dataset,
-                      changes_description="new "+samplesetname+" release!",
-                      upload_files=[
-                          {
-                              "path": 'temp/fusions_'+samplesetname+'.csv',
-                              "format": "TableCSV",
-                              "encoding": "utf-8"
-                          },
-                          {
-                              "path": 'temp/filtered_fusions_'+samplesetname+'.csv',
-                              "format": "TableCSV",
-                              "encoding": "utf-8"
-                          },
-                          {
-                              "path": "temp/fusions_withReplicates_"+samplesetname+".csv",
-                              "format": "TableCSV",
-                              "encoding": "utf-8"
-                          },
-                      ],
-                      dataset_description=dataset_description)
+  print("changes in junction readd counts")
+  f["sid"] = f[fusionSamplecol]+"_"+f["FusionName"] + \
+      "_" + f["JunctionReadCount"].astype(str)
+  pf["sid"] = pf[fusionSamplecol]+"_"+pf["FusionName"] + \
+      "_" + pf["JunctionReadCount"].astype(str)
+  print(len(set(pf[~pf.sid.isin(f.sid.tolist())][fusionSamplecol])))
+  
+  #taiga
+  print("uploading to taiga")
+  tc.update_dataset(dataset_permaname=taiga_dataset,
+                    changes_description="new "+samplesetname+" release!",
+                    upload_files=[
+                      {
+                          "path": 'temp/'+samplesetname+'/fusions_latest.csv',
+                          "format": "TableCSV",
+                          "encoding": "utf-8"
+                      },
+                      {
+                          "path": 'temp/'+samplesetname+'/filteredfusions_latest.csv',
+                          "format": "TableCSV",
+                          "encoding": "utf-8"
+                      },
+                      {
+                          "path": "temp/"+samplesetname+"/fusions_all.csv",
+                          "format": "TableCSV",
+                          "encoding": "utf-8"
+                      },
+                    ],
+                    dataset_description=dataset_description)
+  print("done")
