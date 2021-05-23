@@ -235,7 +235,7 @@ task SplitIntervals {
     }
 
     output {
-        Array[File] interval_files = glob("*.interval-list")
+        Array[File] interval_files = glob("*.interval_list")
     }
 }
 
