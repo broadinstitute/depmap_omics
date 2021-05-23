@@ -1,6 +1,50 @@
+########################## GENERIC PARAMS
+
 CACHE_PATH = '~/.depmapomics/'
 TMP_PATH = '/tmp/'
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
+SHEETCREDS = '../.credentials.json'
+SHEETNAME='ccle sample tracker'
+
+############## TERRA
+
+
+
+############## LOADING
+
+
+
+############## CN
+
+
+
+############## Mutations
+
+
+
+############## FUSION
+
+
+
+############## EXPRESSION
+
+RNAGSPATH38="gs://cclebams/rnasq_hg38/"
+
+STARBAMCOLTERRA = [ "star_bam_file", 'star_bam_index']
+
+RSEM_TRANSCRIPTS = ['rsem_transcripts_expected_count',
+                    'rsem_transcripts_tpm']
+
+RSEMFILENAME_GENE=["genes_tpm",
+"genes_expected_count"]
+
+RSEMFILENAME_TRANSCRIPTS=["transcripts_tpm", "transcripts_expected_count"]
+
+RSEMFILENAME = RSEMFILENAME_GENE+RSEMFILENAME_TRANSCRIPTS
+
+SSGSEAFILEPATH = "data/genesets/msigdb.v7.2.symbols.gmt"
+
+PATHTOGENEPY = "../"
 
 RNASEQC_THRESHOLDS_LOWQUAL = {'minmapping': 0.85, 'minendmapping': 0.75, 'minefficiency': 0.75,
                               'maxendmismatch': 0.02, 'maxmismatch': 0.02, 'minhighqual': 0.8,
@@ -14,6 +58,9 @@ RNASEQC_THRESHOLDS_FAILED = {'minmapping': 0.7, 'minendmapping': 0.66, 'mineffic
                              'minexon': 0.66, "maxambiguous": 0.1, "maxsplits": 0.1,
                              "maxalt": 0.5, "maxchim": 0.2, "minreads": 20000000,
                              "minlength": 80, "maxgenes": 35000, "mingenes": 10000}
+
+
+###################### README
 
 FUSIONreadme = """
 # Fusions
