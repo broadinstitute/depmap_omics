@@ -85,8 +85,8 @@ def solveQC(tracker, failed, save=""):
     
 
 def updateTracker(refworkspace, selected, failed, lowqual, tracker, samples, samplesetname, 
-                  sheetname='ccle sample tracker', sheetcreds='../.credentials.json', onlycol=[
-                    "star_bam_file", 'star_bam_index'], newgs="gs://cclebams/rnasq_hg38/",
+                  sheetname=SHEETNAME, sheetcreds=SHEETCREDS, 
+                  onlycol=STARBAMCOLTERRA, newgs=RNAGSPATH38,
                   dry_run=False, keeppath=False, qcname="star_logs", match=".Log.final.out"):
   """
   # TODO: to document
@@ -107,14 +107,14 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samples, sam
 
   tracker.loc[samples, ['legacy_size', 'legacy_crc32c_hash']
                       ] = tracker.loc[samples][['size', 'crc32c_hash']].values
-  tracker.loc[samples, ['internal_bam_filepath', "internal_bai_filepath"]] = renamed[[
-    'star_bam_file', 'star_bam_index']].values
+  tracker.loc[samples, ['internal_bam_filepath',
+                        "internal_bai_filepath"]] = renamed[onlycol[:2]].values
   tracker.loc[samples, 'size'] = [gcp.extractSize(
-    i)[1] for i in gcp.lsFiles(renamed['star_bam_file'].tolist(), '-l')]
+    i)[1] for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-l')]
   tracker.loc[samples, 'crc32c_hash'] = [gcp.extractHash(
-    i) for i in gcp.lsFiles(renamed['star_bam_file'].tolist(), '-L')]
+    i) for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
   tracker.loc[samples, 'md5_hash'] = [gcp.extractHash(
-    i, "md5") for i in gcp.lsFiles(renamed['star_bam_file'].tolist(), '-L')]
+    i, "md5") for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
   
   tracker.loc[selected, samplesetname]=1
   tracker.loc[samples, ['low_quality', 'blacklist', 'prioritized']] = 0
@@ -124,9 +124,7 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samples, sam
   print("updated the sheet, please reactivate protections")
 
 
-def loadFromRSEMaggregate(refwm, todrop=[], filenames=["transcripts_tpm", "genes_tpm", 
-                                                        "genes_expected_count", 
-                                                        "transcripts_expected_count"],
+def loadFromRSEMaggregate(refwm, todrop=[], filenames=RSEMFILENAME,
                           sampleset="all", renamingFunc=None):
   """
   #TODO: to document
@@ -153,8 +151,7 @@ def loadFromRSEMaggregate(refwm, todrop=[], filenames=["transcripts_tpm", "genes
   return files, renaming
 
 
-def subsetGenes(files, gene_rename, filenames=['rsem_transcripts_expected_count',
-                                                'rsem_transcripts_tpm'],
+def subsetGenes(files, gene_rename, filenames=RSEMTRANSCRIPTS,
                               drop=[], index="transcript_id"):
   """
   # TODO: to document
@@ -185,7 +182,7 @@ def subsetGenes(files, gene_rename, filenames=['rsem_transcripts_expected_count'
 
 
 def extractProtCod(files, ensembltohgnc, protcod_rename,
-                  filenames=['rsem_transcripts_expected_count', 'rsem_transcripts_tpm'],
+                   filenames=RSEMTRANSCRIPTS,
                   rep=('genes', 'proteincoding_genes')):
   """
   # TODO: to document
@@ -208,8 +205,8 @@ def extractProtCod(files, ensembltohgnc, protcod_rename,
   return files
 
 
-async def ssGSEA(tpm_genes, pathtogenepy="../",
-                geneset_file="data/genesets/msigdb.v7.2.symbols.gmt"):
+async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
+                 geneset_file=SSGSEAFILEPATH):
   """
   #TODO: todocument
   """
@@ -238,17 +235,17 @@ async def ssGSEA(tpm_genes, pathtogenepy="../",
   return enrichments
 
 
-def saveFiles(files, folder=TMP_PATH):
+def saveFiles(files, folder=TMP_PATH, rep=('rsem', 'expression')):
   """
   # TODO: to document
   """
   print('storing files in {}'.format(folder))
   for k, val in files.items():
     val.to_csv(os.path.join(folder, k.replace(
-      'rsem', 'expression')+'.csv'))
+      rep[0], rep[1])+'.csv'))
     if 'tpm' in k:
       val.apply(lambda x: np.log2(x + 1)).to_csv(os.path.join(folder,
-                                                k.replace('rsem', 'expression') + 
+                                                k.replace(rep[0],rep[1]) + 
                                                 '_logp1.csv'))
 
 
@@ -331,7 +328,7 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
                       tocompare={"genes_expected_count": "CCLE_RNAseq_reads",
                                 "genes_tpm": "CCLE_expression_full",
                                 "proteincoding_genes_tpm": "CCLE_expression"},
-                      sheetname='ccle sample tracker', sheetcreds='../.credentials.json',
+                      sheetname=SHEETNAME, sheetcreds=SHEETCREDS,
                       taiga_dataset="expression-d035", minsimi=0.95, 
                       dataset_description=RNAseqreadme, **kwargs):
 
@@ -465,6 +462,5 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
                       },
                     ],
                     upload_async=False,
-                    add_all_existing_files=True,
             dataset_description=dataset_description)
   print("done")

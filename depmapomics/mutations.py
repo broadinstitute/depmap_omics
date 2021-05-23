@@ -117,7 +117,7 @@ def add_variant_annotation_column(maf):
 def postprocess_mutations_filtered_wes(refworkspace, sample_set_name = 'all',
                                        output_file='/tmp/wes_somatic_mutations.csv'):
   refwm = dm.WorkspaceManager(refworkspace).disable_hound()
-  filtered = refwm.get_sample_sets().loc[sample_set_name]['filtered_CGA_MAF_aggregated']
+  filtered = refwm.get_sample_sets().loc[sample_set_name, 'filtered_CGA_MAF_aggregated']
   print('copying aggregated filtered mutation file')
   cpFiles([filtered], "/tmp/mutation_filtered_terra_merged.txt")
   print('reading the mutation file')
@@ -156,7 +156,7 @@ def managingDuplicates(samples, failed, datatype, tracker):
   replace = 0
   for val in failed:
     if val in list(renaming.keys()):
-      a = ref[ref.arxspan_id == ref.loc[val].arxspan_id].index
+      a = ref[ref.arxspan_id == ref.loc[val, 'arxspan_id']].index
       for v in a:
         if v not in failed:
           renaming[v] = renaming.pop(val)
@@ -200,7 +200,7 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
                        my_id='~/.client_secret.json', mystorage_id="~/.storage.json",
                        refsheet_url="https://docs.google.com/spreadshe\
                         ets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
-                       taiga_dataset="cn-latest-d8d4", dataset_description=CNreadme,
+                       taiga_description=Mutationsreadme, taiga_dataset="mutations-latest-ed72",
                        mutation_groups={
                            "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
                            "other non-conserving": ["In_Frame_Del", "In_Frame_Ins",
@@ -211,7 +211,6 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
                             'Frame_Shift_Ins', 'Splice_Site', 'Start_Codon_Del', 'Start_Codon_Ins', 
                             'Start_Codon_SNP', 'Nonsense_Mutation']
                        }, prev=tc.get(name='depmap-a0ab', file='CCLE_mutations'),
-                       taiga_dataset="mutations-latest-ed72",
                        **kwargs):
 
   sheets = Sheets.from_files(my_id, mystorage_id)
@@ -439,6 +438,61 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
                             "encoding": "utf-8"
                         },
                     ],
-                    add_all_existing_files=True,
                     upload_async=False,
-                    dataset_description=Mutationsreadme)
+                    dataset_description=taiga_description)
+
+def analyzeUnfiltered(workspace, samplesetname, allsampleset='all', folder="temp/",
+                      subsetcol=['DepMap_ID', 'Hugo_Symbol', 'Entrez_Gene_Id',
+                                 'Chromosome', 'Start_position', 'End_position',
+                                 'Variant_Classification', 'Variant_Type', 'Reference_Allele',
+                                 'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change',
+                                 'Annotation_Transcript', 'cDNA_Change', 'Codon_Change',
+                                 'HGVS_protein_change',  'Protein_Change',
+                                 't_alt_count', 't_ref_count', 'tumor_f', 'CGA_WES_AC'],
+                      taiga_dataset="mutations-latest-ed72",):
+
+  print("retrieving unfiltered")
+  ####### WES
+  res = dm.WorkspaceManager(workspace).get_sample_sets()
+  unfiltered = pd.read_csv(res.loc[allsampleset, 'unfiltered_CGA_MAF_aggregated'], sep='\t',
+  encoding='L6',na_values=["__UNKNOWN__",'.'], engine='c', dtype=str)
+  unfiltered['somatic'] = unfiltered['somatic'].replace('nan','False')
+  unfiltered['HGNC_Status'] = unfiltered['HGNC_Status'].replace('nan','Unapproved')
+  unfiltered['judgement'] = unfiltered['judgement'].replace('nan','REMOVE')
+  unfiltered = unfiltered.rename(columns={"i_ExAC_AF":"ExAC_AF",
+  "Tumor_Sample_Barcode":'DepMap_ID',
+  "Tumor_Seq_Allele2":"Tumor_Allele"}).drop(columns=['Tumor_Seq_Allele1'])
+  unfiltered['CGA_WES_AC'] = [str(i[0]) + ':' + str(i[1]) for i in np.nan_to_num(
+    unfiltered[['t_alt_count','t_ref_count']].values.astype(float),0).astype(int)]
+  toremove = []
+  subunfilt = unfiltered.iloc[:10000]
+  for i, val in enumerate(unfiltered.columns):
+    h.showcount(i,len(unfiltered.columns))
+    if len(set(subunfilt[val])-set(['nan']))==1:
+      if len(set(unfiltered[val])-set(['nan']))==1:
+        toremove.append(val)
+  unfiltered = unfiltered.drop(columns=set(toremove))
+  toint =  ["Start_position", "End_position"]
+  for val in toint:
+    unfiltered[val]  = unfiltered[val].astype(int)
+  unfiltered.to_csv(folder+'mutation_somatic_unfiltered_withreplicates.csv.gz', index=False)
+  unfiltered = unfiltered[subsetcol]
+  unfiltered.to_csv(folder+'mutation_somatic_unfiltered_withreplicates_subseted.csv.gz', index=False)
+  os.system('gunzip '+folder+'mutation_somatic_unfiltered_withreplicates.csv.gz')
+  del unfiltered
+  tc.update_dataset(changes_description="adding unfiltered mutations",
+                  dataset_permaname=taiga_dataset,
+                  upload_files=[  
+                    {
+                        "path": folder+"mutation_somatic_unfiltered_withreplicates_subseted.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                    },
+                    {
+                        "path": folder+"mutation_somatic_unfiltered_withreplicates.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                    },
+                  ],
+                  add_all_existing_files=True,
+                  upload_async=False)
