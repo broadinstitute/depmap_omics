@@ -1,9 +1,10 @@
 #cn.py
+
 import numpy as np
 from gsheets import Sheets
 from depmapomics import tracker as track
 from depmapomics import utils
-from depmapomics.config import TMP_PATH, ENSEMBL_SERVER_V, CNreadme, Achillesreadme
+from depmapomics.config import *
 from IPython.display import Image, display
 import dalmatian as dm
 import pandas as pd
@@ -28,26 +29,16 @@ def renameColumns(df):
   ------
     df the renamed df
   """
-  return df.rename(columns={'Sample': 'DepMap_ID', 'CONTIG': 'Chromosome', 'START': 'Start',
-                            'END': 'End', 'seqnames': 'Chromosome', 'start': 'Start', 'end': 'End'})
+  return df.rename(columns=COLRENAMING)
 
-def loadFromGATKAggregation(refworkspace,  sortby=["DepMap_ID", 
+def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 
                                                     'Chromosome', 
                                                     "Start", 
                                                     "End"], save_output='', doCleanup=True,
                             todrop=[], showPlots=False, colname="combined_seg_file",
                             plotColname="modeled_segments_plot_tumor", tempFolder="temp/",
                             toremove=["readgroup_ubams", ],
-                            sampleset="all", colRenaming={'CONTIG': 'Chromosome',
-                                                          'START': 'Start',
-                                                          'END': 'End',
-                                                          'end': 'End',
-                                                          'seqnames': 'Chromosome', 
-                                                          'start': 'Start',
-                                                          'Sample': "DepMap_ID",
-                                                          'NUM_POINTS_COPY_RATIO': 'Num_Probes',
-                                                          'MEAN_LOG2_COPY_RATIO': 'Segment_Mean',
-                                                          'CALL': 'Status'}):
+                            sampleset="all", colRenaming=COLRENAMING):
   """
    """
   wm = dm.WorkspaceManager(refworkspace)
@@ -68,7 +59,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=["DepMap_ID",
   segments = pd.read_csv(wm.get_entities(
         'sample_set').loc[sampleset, colname], sep='\t').rename(columns=colRenaming)
  
-  segments = segments[~segments.DepMap_ID.isin(todrop)].reset_index(drop=True)
+  segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
   if "chr" in segments['Chromosome'][0]:
      segments['Chromosome'] = [i[3:] for i in segments['Chromosome']]
   segments.Segment_Mean = 2**segments.Segment_Mean
@@ -78,7 +69,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=["DepMap_ID",
     ['X', 'Y'])].index, 'Segment_Mean'] = segments[segments.Chromosome.isin(['X', 'Y'])]['Segment_Mean']/2
   segments = segments.sort_values(by=sortby)
   
-  print("loading "+ str(len(set(segments.DepMap_ID)))+ " rows")
+  print("loading "+ str(len(set(segments[SAMPLEID])))+ " rows")
   if showPlots:
     # plotting results of CN calls for this new sample set
     for i, (k, val) in enumerate(wm.get_samples().loc[wm.get_sample_sets().loc[
@@ -94,13 +85,9 @@ def loadFromGATKAggregation(refworkspace,  sortby=["DepMap_ID",
 
 
 def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  sortby=[
-                  "DepMap_ID", 'Chromosome', "Start", "End"], todrop=[], priority=[],
+                  SAMPLEID, 'Chromosome', "Start", "End"], todrop=[], priority=[],
                 genechangethresh=0.025, segmentsthresh=2000, ensemblserver=ENSEMBL_SERVER_V,
-                source_rename={'CCLF': 'Broad WES', 'CHORDOMA': 'Chordoma WES', 
-                                'SANGER': 'Sanger WES', 'IBM': 'Broad WES', 
-                                np.nan: 'Broad WES', 'DEPMAP': 'Broad WES', 
-                                'IBM WES': "Broad WES", 'Broad CCLF': "Broad WES"},
-                useCache=False):
+                source_rename={}, useCache=False):
   h.createFoldersFor(save_output)
   print('loading WES from Terra')
   segments = loadFromGATKAggregation(
@@ -119,10 +106,12 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   
   print("failed our QC")
   print(failed)
+  if source_rename:
+    segments = segments.replace({'Source': source_rename})
   if save_output:
     h.listToFile(failed, os.path.join(save_output, 'failed.txt')
   # subsetting
-  segments = segments[~segments.DepMap_ID.isin(
+  segments = segments[~segments[SAMPLEID].isin(
     (set(failed) | set(todrop))-set(priority))].reset_index(drop=True)
   genecn=genecn[~genecn.index.isin((set(failed) | set(todrop))-set(priority))]
 
@@ -136,8 +125,8 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   
   
 def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
-                  creds = '../.credentials.json',
-                  sheetname='ccle sample tracker', procqc=[], bamqc=[], refworkspace=None,
+                  sheetcreds = SHEETCREDS,
+                  sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
                   ):
   
@@ -151,13 +140,11 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
                                       ] = tracker.loc[
                                         res.index.tolist()][
                                           ['size', 'crc32c_hash']].values
-    tracker.loc[res.index.tolist()][
-      ['internal_bam_filepath', 'internal_bai_filepath']] = res[[
-        'internal_bam_filepath', 'internal_bai_filepath']].values
+    tracker.loc[res.index.tolist()][HG38BAMCOL]=res[onlycol[:2]].values
     tracker.loc[res.index.tolist(), 'size']=[gcp.extractSize(
-      i)[1] for i in gcp.lsFiles(res['internal_bam_filepath'].tolist(), '-l')]
+      i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
     tracker.loc[res.index.tolist(), 'crc32c_hash']=[gcp.extractHash(
-      i) for i in gcp.lsFiles(res['internal_bam_filepath'].tolist(), '-L')]
+      i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
     tracker.loc[res.index.tolist(), 'md5_hash']=gcp.catFiles(
       dm.WorkspaceManager(refworkspace).get_samples().loc[
         samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
@@ -187,10 +174,10 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
   tracker.loc[tracker[tracker.datatype.isin(['wes',"wgs"])].index, samplesetname]=0
   len(selected)
   tracker.loc[selected, samplesetname]=1
-  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']=0
+  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
   tracker.loc[lowqual,'low_quality']=1
   tracker.loc[lowqual,'blacklist']=1
-  dfToSheet(tracker, sheetname, secret=creds)
+  dfToSheet(tracker, sheetname, secret=sheetcreds)
   print("updated the sheet, please reactivate protections")
 
 
@@ -229,34 +216,18 @@ def managingDuplicates(samples, failed, datatype, tracker):
 
 
 def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname, 
-                      AllSamplesetName='',
-                       my_id='~/.client_secret.json', mystorage_id="~/.storage.json",
-                       creds='../.credentials.json', sheetname='ccle sample tracker',
-                       refsheet_url="https://docs.google.com/spreadshe\
-                        ets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
-                       prevgenecn=tc.get(name='depmap-a0ab', file='CCLE_gene_cn'),
+                       AllSamplesetName='',
+                       my_id=MY_ID, mystorage_id=MY_STORAGE_ID,
+                       sheetcreds=SHEETCREDS, sheetname=SHEETNAME,
+                       refsheet_url=REFSHEET_URL,
+                       prevgenecn=tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn'),
                        taiga_dataset="cn-latest-d8d4", dataset_description=CNreadme,
-                       subsetsegs=['DepMap_ID', 'Chromosome',
+                       subsetsegs=[SAMPLEID, 'Chromosome',
                                    'Start', 'End', 'Segment_Mean',
                                    'Num_Probes', 'Status', 'Source'],
-                       bamqc=["duplication_metrics", "bqsr_report", 
-                       "tumor_bam_alignment_summary_metrics", 
-                       "tumor_bam_bait_bias_summary_metrics", 
-                       "tumor_bam_gc_bias_summary_metrics", 
-                       "tumor_bam_hybrid_selection_metrics",
-                        "tumor_bam_insert_size_histogram", 
-                        "tumor_bam_insert_size_metrics", 
-                        "tumor_bam_pre_adapter_summary_metrics", 
-                        "tumor_bam_quality_by_cycle_metrics", 
-                        "tumor_bam_quality_distribution_metrics", 
-                        "tumor_bam_quality_yield_metrics"],
-                       procqc=["allelic_counts_tumor", "delta_MAD_tumor", "denoised_MAD_tumor",
-                               "scaled_delta_MAD_tumor", "denoised_copy_ratios_lim_4_plot_tumor",
-                               "denoised_copy_ratios_plot_tumor", "modeled_segments_plot_tumor",
-                               "gatk_cnv_all_plots", "lego_plotter_pngs", "copy_number_qc_report", 
-                               "ffpe_OBF_figures", "mut_legos_html", "oxoG_OBF_figures", 
-                               "tumor_bam_base_distribution_by_cycle_metrics",
-                               "tumor_bam_converted_oxog_metrics"],
+                       bamqc=BAMQC,
+                       procqc=PROCQC,
+                       source_rename=SOURCERENAME,
                       **kwargs):
       
   sheets = Sheets.from_files(my_id, mystorage_id)
@@ -273,14 +244,14 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
   segments, genecn, wesfailed = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname, 
               topdrop=tracker[tracker.blacklist==1].index.tolist(),
               save_output=folder, doCleanup=True, 
-              priority=priority, **kwargs)
+              priority=priority, source_rename=source_rename, **kwargs)
   
-  wesrenaming = managingDuplicates(set(wessegments['DepMap_ID']), (set(
+  wesrenaming = managingDuplicates(set(wessegments[SAMPLEID]), (set(
       wesfailed) - set(priority)) | set(todrop), "wes", tracker)
   h.dictToFile(wesrenaming, folder+"sample_renaming.json")
   print('renaming')
-  wespriosegments = segments[segments.DepMap_ID.isin(set(wesrenaming.keys()))].replace(
-    {'DepMap_ID': wesrenaming}).reset_index(drop = True)
+  wespriosegments = segments[segments[SAMPLEID].isin(set(wesrenaming.keys()))].replace(
+    {SAMPLEID: wesrenaming}).reset_index(drop = True)
   wespriogenecn = genecn[genecn.index.isin(set(wesrenaming.keys()))].rename(index=wesrenaming)
 
   #saving prio
@@ -295,16 +266,16 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
         segments, genecn, wgsfailed=postProcess(wgsrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
               topdrop=tracker[tracker.blacklist == 1].index.tolist(),
               save_output=folder, doCleanup=True,
-              priority=priority, **kwargs)
+              priority=priority, source_rename=source_rename, **kwargs)
 
-  wgsrenaming = managingDuplicates(set(wgssegments['DepMap_ID']), (set(
+  wgsrenaming = managingDuplicates(set(wgssegments[SAMPLEID]), (set(
       wgsfailed) - set(priority)) | set(todrop), "wgs", tracker)  
 
   h.dictToFile(wgsrenaming, folder+"sample_renaming.json")
 
   print('renaming')
-  wgspriosegments = segments[segments.DepMap_ID.isin(set(wgsrenaming.keys()))].replace(
-    {'DepMap_ID': wgsrenaming}).reset_index(drop = True)
+  wgspriosegments = segments[segments[SAMPLEID].isin(set(wgsrenaming.keys()))].replace(
+    {SAMPLEID: wgsrenaming}).reset_index(drop = True)
   wgspriogenecn = genecn[genecn.index.isin(set(wgsrenaming.keys()))].rename(index=wgsrenaming)
   
   #saving prio
@@ -323,7 +294,7 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
     wgssamplesinset=[i['entityName'] for i in wesrefwm.get_entities(
             'sample_set').loc[samplesetname].samples]
     updateTracker(tracker, selected, wgssamplesinset, samplesetname
-                  list(wgsfailed)+, creds=creds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
+                  list(wgsfailed)+, sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
   except:
     print('no wgs for this sampleset')
   
@@ -331,14 +302,14 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
     wessamplesinset=[i['entityName'] for i in wgsrefwm.get_entities(
         'sample_set').loc[samplesetname].samples]
     updateTracker(tracker, selected, wessamplesinset, samplesetname
-                  list(wesfailed)+, creds=creds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
+                  list(wesfailed)+, sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
   except:
     print('no wes for this sampleset')
   
   #merging WES/WGS
   folder=os.path.join("data", samplesetname, '')
-  mergedsegments =  wgspriosegments.append(wespriosegments[~wespriosegments.DepMap_ID.isin(
-    set(wgspriosegments.DepMap_ID))])[subsetsegs]
+  mergedsegments =  wgspriosegments.append(wespriosegments[~wespriosegments[SAMPLEID].isin(
+    set(wgspriosegments[SAMPLEID]))])[subsetsegs]
   mergedgenecn =  wgspriogenecn.append(wespriogenecn[~wespriogenecn.index.isin(
     set(wgspriogenecn.index))])
 
@@ -417,10 +388,10 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname, bad=["ACH-001011
                        dataset_description=Achillesreadme,
                        cytobandloc='data/hg38_cytoband.gz', 
                        gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),
-                       prevsegments=tc.get(name='depmap-a0ab', file='CCLE_segment_cn'),
+                       prevsegments=tc.get(name=TAIGA_ETERNAL, file='CCLE_segment_cn'),
                        prevgenecn=(
-                           2**tc.get(name='depmap-a0ab', file='CCLE_gene_cn'))-1,
-                       gene_expected_count=tc.get(name='depmap-a0ab', 
+                           2**tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn'))-1,
+                       gene_expected_count=tc.get(name=TAIGA_ETERNAL, 
                         file='CCLE_expression_proteincoding_genes_expected_count')):
   # load legacy_segments
   legacy_segments=tc.get(
@@ -429,7 +400,7 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname, bad=["ACH-001011
   legacy_segments.loc[legacy_segments[legacy_segments.Chromosome.str.contains("chr")].index, "Chromosome"]=[
   i[3:] for i in legacy_segments[legacy_segments.Chromosome.str.contains("chr")].Chromosome]
 
-  onlyinleg=set(legacy_segments.DepMap_ID) - set(priosegments.DepMap_ID)
+  onlyinleg=set(legacy_segments[SAMPLEID]) - set(priosegments[SAMPLEID])
   #samegenes = set(prevgenecn.columns) & set(priogenecn.columns)
 
   onlyinleg=onlyinleg - set(bad)
@@ -437,15 +408,15 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname, bad=["ACH-001011
   print(onlyinleg)
   # merging 
   print('merging wes/wgs/legacy')
-  mergedsegments=wespriosegs[~wespriosegs.DepMap_ID.isin(list(onlyinleg))].append(
-    legacy_segments[legacy_segments.DepMap_ID.isin(list(onlyinleg))]).reset_index(drop=True)
+  mergedsegments=wespriosegs[~wespriosegs[SAMPLEID].isin(list(onlyinleg))].append(
+    legacy_segments[legacy_segments[SAMPLEID].isin(list(onlyinleg))]).reset_index(drop=True)
   
   mergedsegments=wgspriosegs.append(
-    mergedsegments[~mergedsegments.DepMap_ID.isin(set(wgspriosegs.DepMap_ID))])
+    mergedsegments[~mergedsegments[SAMPLEID].isin(set(wgspriosegs[SAMPLEID]))])
 
-  mergedsegments=mergedsegments[['DepMap_ID', 'Chromosome', 'Start', 'End', 
+  mergedsegments=mergedsegments[[SAMPLEID, 'Chromosome', 'Start', 'End', 
   'Segment_Mean', 'Num_Probes', 'Status', 'Source']].sort_values(by=
-    ['DepMap_ID', 'Chromosome', 'Start', 'End']).reset_index(drop=True)
+    [SAMPLEID, 'Chromosome', 'Start', 'End']).reset_index(drop=True)
   
   #setting amplification status to U for X chromosome as it is artificially 
   #amplified in female samples:
