@@ -1,13 +1,27 @@
+import numpy as np
+
 ########################## GENERIC PARAMS
 
 CACHE_PATH = '~/.depmapomics/'
 TMP_PATH = '/tmp/'
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
+
 SHEETCREDS = '../.credentials.json'
+MY_ID = '~/.client_secret.json',
+MYSTORAGE_ID = "~/.storage.json"
+
 SHEETNAME='ccle sample tracker'
+
+TAIGA_ETERNAL = 'depmap-a0ab'
+
+REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
+
+SAMPLEID="DepMap_ID"
 
 ############## TERRA
 
+HG38BAMCOL = ['internal_bam_filepath',
+              "internal_bai_filepath"]
 
 
 ############## LOADING
@@ -16,15 +30,73 @@ SHEETNAME='ccle sample tracker'
 
 ############## CN
 
+COLRENAMING = {'CONTIG': 'Chromosome',
+               'START': 'Start',
+               'END': 'End',
+               'end': 'End',
+               'seqnames': 'Chromosome',
+               'start': 'Start',
+               'Sample': SAMPLEID,
+               'NUM_POINTS_COPY_RATIO': 'Num_Probes',
+               'MEAN_LOG2_COPY_RATIO': 'Segment_Mean',
+               'CALL': 'Status'}
 
+SOURCE_RENAME = {'CCLF': 'Broad WES', 'CHORDOMA': 'Chordoma WES',
+                'SANGER': 'Sanger WES', 'IBM': 'Broad WES',
+                np.nan: 'Broad WES', 'DEPMAP': 'Broad WES',
+                'IBM WES': "Broad WES", 'Broad CCLF': "Broad WES"}
+
+PROCQC = ["allelic_counts_tumor", "delta_MAD_tumor", "denoised_MAD_tumor",
+          "scaled_delta_MAD_tumor", "denoised_copy_ratios_lim_4_plot_tumor",
+          "denoised_copy_ratios_plot_tumor", "modeled_segments_plot_tumor",
+          "gatk_cnv_all_plots", "lego_plotter_pngs", "copy_number_qc_report",
+          "ffpe_OBF_figures", "mut_legos_html", "oxoG_OBF_figures",
+          "tumor_bam_base_distribution_by_cycle_metrics",
+          "tumor_bam_converted_oxog_metrics"]
+
+BAMQC = ["duplication_metrics", "bqsr_report",
+         "tumor_bam_alignment_summary_metrics",
+         "tumor_bam_bait_bias_summary_metrics",
+         "tumor_bam_gc_bias_summary_metrics",
+         "tumor_bam_hybrid_selection_metrics",
+         "tumor_bam_insert_size_histogram",
+         "tumor_bam_insert_size_metrics",
+         "tumor_bam_pre_adapter_summary_metrics",
+         "tumor_bam_quality_by_cycle_metrics",
+         "tumor_bam_quality_distribution_metrics",
+         "tumor_bam_quality_yield_metrics"]
 
 ############## Mutations
 
+MUTATION_GROUPS = {
+    "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
+    "other non-conserving": ["In_Frame_Del", "In_Frame_Ins", "Stop_Codon_Del",
+                             "Stop_Codon_Ins", "Missense_Mutation", "Nonstop_Mutation"],
+    'silent': ['Silent'],
+    "damaging": ['De_novo_Start_OutOfFrame', 'Frame_Shift_Del', 'Frame_Shift_Ins',
+                 'Splice_Site', 'Start_Codon_Del', 'Start_Codon_Ins', 'Start_Codon_SNP', 'Nonsense_Mutation']
+}
+
+MUTCOL_DEPMAP = ['Hugo_Symbol', 'Entrez_Gene_Id', 'NCBI_Build', 'Chromosome',
+                 'Start_position', 'End_position', 'Strand', 'Variant_Classification',
+                 'Variant_Type', 'Reference_Allele', 'Tumor_Allele', 'dbSNP_RS',
+                 'dbSNP_Val_Status', 'Genome_Change', 'Annotation_Transcript',
+                 SAMPLEID, 'cDNA_Change', 'Codon_Change', 'Protein_Change', 'isDeleterious',
+                 'isTCGAhotspot', 'TCGAhsCnt', 'isCOSMIChotspot', 'COSMIChsCnt',
+                 'ExAC_AF', "Variant_annotation", 'CGA_WES_AC', 'HC_AC',
+                 'RD_AC', 'RNAseq_AC', 'SangerWES_AC', 'WGS_AC']
 
 
 ############## FUSION
 
+FUSION_COLNAME = ['FusionName', 'JunctionReadCount',
+                  'SpanningFragCount', 'SpliceType', 'LeftGene', 'LeftBreakpoint',
+                  'RightGene', 'RightBreakpoint', 'LargeAnchorSupport', 'FFPM',
+                  'LeftBreakDinuc', 'LeftBreakEntropy', 'RightBreakDinuc',
+                  'RightBreakEntropy', 'annots']
 
+FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
+                      'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']
 
 ############## EXPRESSION
 

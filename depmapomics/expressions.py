@@ -16,7 +16,7 @@ from depmapomics.qc import rna as myQC
 from depmapomics import utils
 from depmapomics import tracker as track
 
-from depmapomics.config import TMP_PATH, ENSEMBL_SERVER_V, RNAseqreadme
+from depmapomics.config import *
 
 from gsheets import Sheets
 from taigapy import TaigaClient
@@ -84,7 +84,7 @@ def solveQC(tracker, failed, save=""):
   return rename
     
 
-def updateTracker(refworkspace, selected, failed, lowqual, tracker, samples, samplesetname, 
+def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesinset, samplesetname, 
                   sheetname=SHEETNAME, sheetcreds=SHEETCREDS, 
                   onlycol=STARBAMCOLTERRA, newgs=RNAGSPATH38,
                   dry_run=False, keeppath=False, qcname="star_logs", match=".Log.final.out"):
@@ -92,7 +92,7 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samples, sam
   # TODO: to document
   """
   
-  starlogs = myterra.getQC(workspace=refworkspace, only=samples,
+  starlogs = myterra.getQC(workspace=refworkspace, only=samplesinset,
                             qcname=qcname, match=match)
   for k, v in starlogs.items():
     if k == 'nan':
@@ -102,22 +102,21 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samples, sam
   
   ## copy star bam file to our cclebams/rnasq_hg38/ bucket
   renamed, _ = terra.changeGSlocation(workspacefrom=refworkspace, newgs=newgs, 
-                                      onlysamples=samples, onlycol=onlycol, 
+                                      onlysamples=samplesinset, onlycol=onlycol, 
                                       entity="sample", keeppath=keeppath, dry_run=dry_run)
 
-  tracker.loc[samples, ['legacy_size', 'legacy_crc32c_hash']
-                      ] = tracker.loc[samples][['size', 'crc32c_hash']].values
-  tracker.loc[samples, ['internal_bam_filepath',
-                        "internal_bai_filepath"]] = renamed[onlycol[:2]].values
-  tracker.loc[samples, 'size'] = [gcp.extractSize(
+  tracker.loc[samplesinset, ['legacy_size', 'legacy_crc32c_hash']
+                      ] = tracker.loc[samplesinset][['size', 'crc32c_hash']].values
+  tracker.loc[samplesinset, HG38BAMCOL] = renamed[onlycol[:2]].values
+  tracker.loc[samplesinset, 'size'] = [gcp.extractSize(
     i)[1] for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-l')]
-  tracker.loc[samples, 'crc32c_hash'] = [gcp.extractHash(
+  tracker.loc[samplesinset, 'crc32c_hash'] = [gcp.extractHash(
     i) for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
-  tracker.loc[samples, 'md5_hash'] = [gcp.extractHash(
+  tracker.loc[samplesinset, 'md5_hash'] = [gcp.extractHash(
     i, "md5") for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
   
   tracker.loc[selected, samplesetname]=1
-  tracker.loc[samples, ['low_quality', 'blacklist', 'prioritized']] = 0
+  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']] = 0
   tracker.loc[lowqual,'low_quality']=1
   tracker.loc[failed, 'blacklist'] = 1
   dfToSheet(tracker, sheetname, secret=sheetcreds)
@@ -253,8 +252,8 @@ def postProcess(refworkspace, samplesetname,
               save_output="", doCleanup=False,
               colstoclean=[], ensemblserver=ENSEMBL_SERVER_V,
               todrop=[], samplesetToLoad="all", priority=[],
-              geneLevelCols=[ "genes_tpm", "genes_expected_count"],
-              trancriptLevelCols=["transcripts_tpm", "transcripts_expected_count"],
+              geneLevelCols=RSEMFILENAME_GENE,
+              trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
               ssGSEAcol="gene_tpm", renamingFunc=None, useCache=False
               ):
   """
@@ -319,16 +318,15 @@ def postProcess(refworkspace, samplesetname,
   return files, enrichments, failed, samplesinset, renaming, lowqual
   
 
-def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.google.com/spreadshe\
-                      ets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
+def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url=REFSHEET_URL,
                       colstoclean=['fastq1', 'fastq2', 'recalibrated_bam', 'recalibrated_bam_index'], 
                       ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
-                      my_id='~/.client_secret.json',
-                      mystorage_id="~/.storage.json", samplesetToLoad="all", 
+                      my_id=MY_ID, mystorage_id=MYSTORAGE_ID, samplesetToLoad="all", 
                       tocompare={"genes_expected_count": "CCLE_RNAseq_reads",
                                 "genes_tpm": "CCLE_expression_full",
                                 "proteincoding_genes_tpm": "CCLE_expression"},
                       sheetname=SHEETNAME, sheetcreds=SHEETCREDS,
+                      prevcounts = tc.get(name=TAIGA_ETERNAL, file='CCLE_RNAseq_reads'),
                       taiga_dataset="expression-d035", minsimi=0.95, 
                       dataset_description=RNAseqreadme, **kwargs):
 
@@ -355,13 +353,11 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
                           save_output=folder, doCleanup=doCleanup, priority=priority,
                           colstoclean=colstoclean, ensemblserver=ensemblserver,
                           todrop=todrop, samplesetToLoad=samplesetToLoad,
-                          geneLevelCols=["genes_tpm", "genes_expected_count"],
-                          trancriptLevelCols=["transcripts_tpm",
-                                              "transcripts_expected_count"],
+                          geneLevelCols=RSEMFILENAME_GENE,
+                          trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
                           ssGSEAcol="gene_tpm", renamingFunc=rn, **kwargs)
   
   print("doing validation")
-  prevcounts = tc.get(name='depmap-a0ab', file='CCLE_RNAseq_reads')
   nonoverlap = set(prevcounts.columns) ^ set(
       files.get('genes_expected_count').columns)
   print("number of non overlaping genes:")
@@ -388,12 +384,12 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url="https://docs.g
   
   #CCLE_expression, CCLE_expression_full, ,
   print("comparing to previous release")
-  #h.compareDfs(files["rsem_transcripts_tpm"], tc.get(name='depmap-a0ab', file='CCLE_RNAseq_transcripts'))
-  #h.compareDfs(files["rsem_transcripts_expected_count"], tc.get(name='depmap-a0ab', file='CCLE_expression_transcripts_expected_count'))
-  # h.compareDfs(enrichments, tc.get(name='depmap-a0ab', file='CCLE_fusions_unfiltered'))
+  #h.compareDfs(files["rsem_transcripts_tpm"], tc.get(name=TAIGA_ETERNAL, file='CCLE_RNAseq_transcripts'))
+  #h.compareDfs(files["rsem_transcripts_expected_count"], tc.get(name=TAIGA_ETERNAL, file='CCLE_expression_transcripts_expected_count'))
+  # h.compareDfs(enrichments, tc.get(name=TAIGA_ETERNAL, file='CCLE_fusions_unfiltered'))
   for key, val in tocompare.items():
     _, omissmatchCols, _, omissmatchInds, newNAs, new0s = h.compareDfs(
-      files[key], tc.get(name='depmap-a0ab', file=val))
+      files[key], tc.get(name=TAIGA_ETERNAL, file=val))
     print(key)
     assert omissmatchCols == 0
     assert omissmatchInds == 0

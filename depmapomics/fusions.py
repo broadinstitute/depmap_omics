@@ -1,20 +1,17 @@
 from gsheets import Sheets
 import dalmatian as dm
 import pandas as pd
-import re
 import os.path
 from genepy.utils import helper as h
 import seaborn as sns
-from depmapomics.config import FUSIONreadme
+from depmapomics.config import *
 from genepy import terra
-
-from depmapomics import tracker
 
 from taigapy import TaigaClient
 tc = TaigaClient()
 
 
-def addToMainFusion(input_filenames, main_filename, DepMap_ID="DepMap_ID"):
+def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
   """
   Given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
 
@@ -24,17 +21,17 @@ def addToMainFusion(input_filenames, main_filename, DepMap_ID="DepMap_ID"):
     main_filename: a filepath to input the files should be c|tsv from Terra aggregation pipeline
   """
   maindata = pd.read_csv(main_filename, sep='\t')
-  if '.' in maindata[DepMap_ID][0]:
-    maindata[DepMap_ID] = [i[0]
-                           for i in maindata[DepMap_ID].str.split('.').tolist()]
-  samples = set(maindata[DepMap_ID].tolist())
+  if '.' in maindata[sample_id][0]:
+    maindata[sample_id] = [i[0]
+                           for i in maindata[sample_id].str.split('.').tolist()]
+  samples = set(maindata[sample_id].tolist())
   with open(main_filename, 'a') as f:
     for input_filename in input_filenames:
       df = pd.read_csv(input_filename, sep='\t')
       input_filename = input_filename.split('/')[-1].split('.')[0]
       if input_filename in samples:
         print(input_filename + " is Already in main fusions")
-      df[DepMap_ID] = pd.Series(
+      df[sample_id] = pd.Series(
         [input_filename] * len(df.index.tolist()), index=df.index)
       cols = df.columns.tolist()
       cols = cols[-1:] + cols[: -1]
@@ -42,8 +39,8 @@ def addToMainFusion(input_filenames, main_filename, DepMap_ID="DepMap_ID"):
       df.to_csv(f, header=False, sep='\t', index=False)
 
 
-def filterFusions(fusions, maxfreq=0.1, sampleCol, minffpm=0.05, countCol="CCLE_count",
-                  red_herring=['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM', 'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']):
+def filterFusions(fusions, maxfreq=0.1, sampleCol, minffpm=0.05, maxffpm=0.1, countCol="CCLE_count",
+                  red_herring=FUSION_RED_HERRING):
   """
   Given a fusion file from star fusion, filters it (will also filter Mitochrondria and HLA genes)
 
@@ -51,7 +48,7 @@ def filterFusions(fusions, maxfreq=0.1, sampleCol, minffpm=0.05, countCol="CCLE_
   -----
     fusions: dataframe the fusion as a dataframe should contain: LeftBreakpoint, RightBreakpoint, FusionName, annots, SpliceType, LargeAnchorSupport, FFPM columns
     maxfreq: int the max allowed frequency of that fusion across our samples
-    DepMap_ID: str: colname for the sample ids
+    samplecol str: colname for the sample ids
     countCol: str: colname where are stored counts of that fusion name across our samples
     minffpm: int minimum ffpm freq to filter on
     red_herring: list[str] of flags to filter on
@@ -70,7 +67,7 @@ def filterFusions(fusions, maxfreq=0.1, sampleCol, minffpm=0.05, countCol="CCLE_
   # (4) Removed fusion with (SpliceType=" INCL_NON_REF_SPLICE" and
   # LargeAnchorSupport="No" and minFAF<0.02), or
   fusions = fusions[~((fusions['SpliceType'] == "INCL_NON_REF_SPLICE") & (
-    fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < 0.1))]
+    fusions['LargeAnchorSupport'] == "NO_LDAS") & (fusions['FFPM'] < maxffpm))]
   # STAR-Fusion suggests using 0.1, but after looking at the
   # translocation data, this looks like it might be too aggressive
   fusions = fusions[fusions['FFPM'] > minffpm]
@@ -95,12 +92,8 @@ def standardizeGeneNames(fusions):
   return fusions
 
 
-def postProcess(refworkspace, samplesetname, sampleCol='DepMap_ID', samplesetToLoad = 'all',
-                        colnames=['FusionName', 'JunctionReadCount',
-                        'SpanningFragCount', 'SpliceType', 'LeftGene', 'LeftBreakpoint',
-                        'RightGene', 'RightBreakpoint', 'LargeAnchorSupport', 'FFPM',
-                        'LeftBreakDinuc', 'LeftBreakEntropy', 'RightBreakDinuc',
-                        'RightBreakEntropy', 'annots'], todrop=[], doplot=True,
+def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
+                        colnames=FUSION_COLNAME, todrop=[], doplot=True,
                         countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
                         **kwargs ):
   """
@@ -150,13 +143,11 @@ def postProcess(refworkspace, samplesetname, sampleCol='DepMap_ID', samplesetToL
   return fusions, fusions_filtered
 
 
-def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol="depmap_id", 
-                      refsheet_url="https://docs.google.com/spreadshe\
-                      ets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY", 
+def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol=SAMPLEID, 
+                      refsheet_url=REFSHEET_URL, 
                       taiga_dataset="fusions-95c9", dataset_description=FUSIONreadme,
-                      my_id='~/.client_secret.json',
-                      mystorage_id="~/.storage.json",
-                      prevdataset=tc.get(name='depmap-a0ab',
+                      my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
+                      prevdataset=tc.get(name=TAIGA_ETERNAL,
                                   file='CCLE_fusions_unfiltered'),
                       **kwargs):
   """
