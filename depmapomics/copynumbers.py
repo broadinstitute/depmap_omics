@@ -31,10 +31,8 @@ def renameColumns(df):
   """
   return df.rename(columns=COLRENAMING)
 
-def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 
-                                                    'Chromosome', 
-                                                    "Start", 
-                                                    "End"], save_output='', doCleanup=True,
+def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Start", "End"], 
+                            save_output='', doCleanup=True,
                             todrop=[], showPlots=False, colname="combined_seg_file",
                             plotColname="modeled_segments_plot_tumor", tempFolder="temp/",
                             toremove=["readgroup_ubams", ],

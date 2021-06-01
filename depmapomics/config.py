@@ -10,41 +10,102 @@ SHEETCREDS = '../.credentials.json'
 MY_ID = '~/.client_secret.json',
 MYSTORAGE_ID = "~/.storage.json"
 
-SHEETNAME='ccle sample tracker'
+SHEETNAME = 'ccle sample tracker'
 
 TAIGA_ETERNAL = 'depmap-a0ab'
 
+
 REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
 
+PRIVACY_RELEASE = "https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4"
+DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
+
+POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
+
+depmap_taiga = "arxspan-cell-line-export-f808"
+
 SAMPLEID="DepMap_ID"
+
+SAMPLESETNAME = "21Q2"
+
+VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
+
+RELEASE = SAMPLESETNAME.lower()
 
 ############## TERRA
 
 HG38BAMCOL = ['internal_bam_filepath',
               "internal_bai_filepath"]
 
-
 ############## LOADING
 
+MAXAGE = '2020-11-01'
 
+EXTRACT_TO_CHANGE = {'from_arxspan_id': 'participant'}
 
-############## CN
+REPLACE = {'T': 'Tumor', 'N': 'Normal', 'm': 'Unknown', 'L': 'Unknown'}
 
-COLRENAMING = {'CONTIG': 'Chromosome',
-               'START': 'Start',
-               'END': 'End',
-               'end': 'End',
-               'seqnames': 'Chromosome',
-               'start': 'Start',
-               'Sample': SAMPLEID,
-               'NUM_POINTS_COPY_RATIO': 'Num_Probes',
-               'MEAN_LOG2_COPY_RATIO': 'Segment_Mean',
-               'CALL': 'Status'}
+values = ['legacy_bam_filepath', 'legacy_bai_filepath'],
 
-SOURCE_RENAME = {'CCLF': 'Broad WES', 'CHORDOMA': 'Chordoma WES',
-                'SANGER': 'Sanger WES', 'IBM': 'Broad WES',
-                np.nan: 'Broad WES', 'DEPMAP': 'Broad WES',
-                'IBM WES': "Broad WES", 'Broad CCLF': "Broad WES"}
+filetypes = ['bam', 'bai']
+   
+match=['ACH-', 'CDS-']
+
+## old GP storage buckets
+#rnaworkspace2 = "broad-firecloud-ccle/CCLE_DepMap_RNAseq"
+#rnaworkspace4 = "broad-genomics-delivery/Cancer_Cell_Line_Factory_CCLF_RNAseq"
+#rnaworkspace5 = "nci-mimoun-bi-org/CCLF_RNA_2_0"
+#rnaworkspace3 = "broad-genomics-delivery/CCLE_DepMap_RNAseq"
+#rnaworkspace1 = "broad-genomics-delivery/Getz_IBM_CellLines_RNASeqData"
+
+## curent GP buckets
+rnaworkspace6 = "terra-broad-cancer-prod/CCLE_DepMap_RNAseq"
+rnaworkspace7 = "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData"
+
+## and their correesponding sample source
+#rnasource1 = "ibm"
+#rnasource2 = "ccle"
+#rnasource3 = "ccle"
+#rnasource4 = "cclf"
+#rnasource5 = "cclf"
+
+rnasource6 = "ccle"
+rnasource7 = "ibm"
+
+## our working workspace (reference)
+rnaworkspace = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
+
+## curent WGS GP buckets
+wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
+wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
+
+## and their corresponding sample source
+wgssource1 = "ccle"
+wgssource2 = "ibm"
+
+wgsworkspace = "broad-firecloud-ccle/DepMap_WGS_CN"
+wescnworkspace = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
+wesmutworkspace = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
+
+############## DNAseq
+
+WGS_methods = [
+  "gatk/PreProcessingForVariantDiscovery_GATK4/8",
+  "GP-TAG/Manta_SomaticSV/9",
+  "gkugener/ArrayOfFilesToTxt/1",
+  "vdauwera/BamToUnmappedRGBams/4",
+  "gatk/CNV_Somatic_Pair_Workflow/9",
+  "gkugener/Aggregate_CN_seg_files/2"
+]
+
+CNWES_methods = [
+  "gatk/PreProcessingForVariantDiscovery_GATK4/8",
+  "GP-TAG/Manta_SomaticSV/9",
+  "gkugener/ArrayOfFilesToTxt/1",
+  "vdauwera/BamToUnmappedRGBams/4",
+  "gatk/CNV_Somatic_Pair_Workflow/9",
+  "gkugener/Aggregate_CN_seg_files/2"
+]
 
 PROCQC = ["allelic_counts_tumor", "delta_MAD_tumor", "denoised_MAD_tumor",
           "scaled_delta_MAD_tumor", "denoised_copy_ratios_lim_4_plot_tumor",
@@ -66,15 +127,33 @@ BAMQC = ["duplication_metrics", "bqsr_report",
          "tumor_bam_quality_distribution_metrics",
          "tumor_bam_quality_yield_metrics"]
 
+############## CN
+
+COLRENAMING = {'CONTIG': 'Chromosome',
+               'START': 'Start',
+               'END': 'End',
+               'end': 'End',
+               'seqnames': 'Chromosome',
+               'start': 'Start',
+               'Sample': SAMPLEID,
+               'NUM_POINTS_COPY_RATIO': 'Num_Probes',
+               'MEAN_LOG2_COPY_RATIO': 'Segment_Mean',
+               'CALL': 'Status'}
+
+SOURCE_RENAME = {'CCLF': 'Broad WES', 'CHORDOMA': 'Chordoma WES',
+                'SANGER': 'Sanger WES', 'IBM': 'Broad WES',
+                np.nan: 'Broad WES', 'DEPMAP': 'Broad WES',
+                'IBM WES': "Broad WES", 'Broad CCLF': "Broad WES"}
+
 ############## Mutations
 
 MUTATION_GROUPS = {
-    "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
-    "other non-conserving": ["In_Frame_Del", "In_Frame_Ins", "Stop_Codon_Del",
-                             "Stop_Codon_Ins", "Missense_Mutation", "Nonstop_Mutation"],
-    'silent': ['Silent'],
-    "damaging": ['De_novo_Start_OutOfFrame', 'Frame_Shift_Del', 'Frame_Shift_Ins',
-                 'Splice_Site', 'Start_Codon_Del', 'Start_Codon_Ins', 'Start_Codon_SNP', 'Nonsense_Mutation']
+  "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
+  "other non-conserving": ["In_Frame_Del", "In_Frame_Ins", "Stop_Codon_Del",
+                            "Stop_Codon_Ins", "Missense_Mutation", "Nonstop_Mutation"],
+  'silent': ['Silent'],
+  "damaging": ['De_novo_Start_OutOfFrame', 'Frame_Shift_Del', 'Frame_Shift_Ins',
+                'Splice_Site', 'Start_Codon_Del', 'Start_Codon_Ins', 'Start_Codon_SNP', 'Nonsense_Mutation']
 }
 
 MUTCOL_DEPMAP = ['Hugo_Symbol', 'Entrez_Gene_Id', 'NCBI_Build', 'Chromosome',
@@ -108,7 +187,7 @@ RSEM_TRANSCRIPTS = ['rsem_transcripts_expected_count',
                     'rsem_transcripts_tpm']
 
 RSEMFILENAME_GENE=["genes_tpm",
-"genes_expected_count"]
+                   "genes_expected_count"]
 
 RSEMFILENAME_TRANSCRIPTS=["transcripts_tpm", "transcripts_expected_count"]
 
@@ -133,6 +212,35 @@ RNASEQC_THRESHOLDS_FAILED = {'minmapping': 0.7, 'minendmapping': 0.66, 'mineffic
 
 
 ###################### README
+
+#20Q3
+#prev_virtual['public'] = 'public-20q3-3d35'
+#prev_virtual['dmc'] = 'dmc-20q3-deprecated-never-released--5f55'
+#prev_virtual['internal'] = 'internal-20q3-00d0'
+
+#20Q4
+# prev_virtual['public'] = 'public-20q4-a4b3'
+# prev_virtual['dmc'] = 'dmc-20q4-fcf4'
+# prev_virtual['ibm'] = 'ibm-20q4-269f'
+# prev_virtual['internal'] = 'internal-20q4-2540'
+
+#21Q1
+PREV_VIRTUAL = {
+  'public': 'public-21q1-4b39',
+  'ibm': 'ibm-21q1-abd9',
+  'dmc': 'dmc-21q1-0e11',
+  'internal': 'internal-21q1-4fc4',
+}
+
+datasets = ['internal', 'ibm', 'dmc', 'public']
+
+README_folder = "../depmap-release-readmes/"
+
+README_currentfolder = README_folder+"release-"+RELEASE+"/"
+
+README_changes = """
+
+"""
 
 FUSIONreadme = """
 # Fusions
