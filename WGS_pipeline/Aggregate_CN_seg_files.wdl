@@ -22,7 +22,7 @@ task aggregate_CN_segments {
     }
 
     runtime {
-        docker: "us-docker.pkg.dev/depmap-omics/public/ccle-rnaseq:latest"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cds-shiny:latest"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         preemptible: "${num_preempt}"
