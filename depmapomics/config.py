@@ -7,7 +7,7 @@ TMP_PATH = '/tmp/'
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
 SHEETCREDS = '../.credentials.json'
-MY_ID = '~/.client_secret.json',
+MY_ID = '~/.client_secret.json'
 MYSTORAGE_ID = "~/.storage.json"
 
 SHEETNAME = 'ccle sample tracker'
@@ -22,7 +22,7 @@ DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU
 
 POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
 
-depmap_taiga = "arxspan-cell-line-export-f808"
+DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID="DepMap_ID"
 
@@ -39,6 +39,22 @@ HG38BAMCOL = ['internal_bam_filepath',
 
 ############## LOADING
 
+TORAISE=["ACH-001195"],
+
+TO_UPDATE = {'primary_disease': ['Primary Disease'],
+            'sex': ['CCLF Age'],
+            'primary_site': ['Sample Collection Site'],
+            'subtype': ['lineage_subtype'],
+            'subsubtype': ['lineage_sub_subtype'],
+            'origin': ['lineage'],
+            'source': ['Program'],
+            'parent_cell_line': ["Parental ID"],
+            'comments': ['Comments'],
+            'mediatype': ['Culture Medium', 'Culture Type'],
+            'stripped_cell_line_name': ['Stripped Cell Line Name'],
+            "cellosaurus_id": ["RRID"],
+            "age": ["CCLF Gender"]}
+
 MAXAGE = '2020-11-01'
 
 EXTRACT_TO_CHANGE = {'from_arxspan_id': 'participant'}
@@ -49,7 +65,7 @@ values = ['legacy_bam_filepath', 'legacy_bai_filepath'],
 
 filetypes = ['bam', 'bai']
    
-match=['ACH-', 'CDS-']
+MATCH=['ACH-', 'CDS-']
 
 ## old GP storage buckets
 #rnaworkspace2 = "broad-firecloud-ccle/CCLE_DepMap_RNAseq"
@@ -83,9 +99,9 @@ wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
 wgssource1 = "ccle"
 wgssource2 = "ibm"
 
-wgsworkspace = "broad-firecloud-ccle/DepMap_WGS_CN"
-wescnworkspace = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
-wesmutworkspace = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
+WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
+WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
+WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 
 ############## DNAseq
 
@@ -179,6 +195,9 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
 
 ############## EXPRESSION
 
+## genomic annotations (v35)
+GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.annotation.gff3.gz'
+
 RNAGSPATH38="gs://cclebams/rnasq_hg38/"
 
 STARBAMCOLTERRA = [ "star_bam_file", 'star_bam_index']
@@ -210,6 +229,9 @@ RNASEQC_THRESHOLDS_FAILED = {'minmapping': 0.7, 'minendmapping': 0.66, 'mineffic
                              "maxalt": 0.5, "maxchim": 0.2, "minreads": 20000000,
                              "minlength": 80, "maxgenes": 35000, "mingenes": 10000}
 
+PREVIOUS_QC_FAIL = ['CDS-12DTEw', 'CDS-9hv1zM', 'CDS-A6GSeQ', 'CDS-aWlMRt', 'CDS-B1ywOH', 'CDS-BixxtG', 
+                    'CDS-DRM3l2', 'CDS-jOlYT4', 'CDS-KMhiT9', 'CDS-M6mnMA', 'CDS-pYwECX', 'CDS-v6E624', 
+                    'CDS-vxTqNJ', 'CDS-YxtmkI',"CDS-fk564T","CDS-kU30H5","CDS-G0F5f5","CDS-ABH0uZ"]
 
 ###################### README
 

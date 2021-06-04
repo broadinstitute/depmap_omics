@@ -86,6 +86,27 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
                   SAMPLEID, 'Chromosome', "Start", "End"], todrop=[], priority=[],
                 genechangethresh=0.025, segmentsthresh=2000, ensemblserver=ENSEMBL_SERVER_V,
                 source_rename={}, useCache=False):
+  """post process an aggregated CN segment file, the CCLE way
+
+  (usually a CN segment file from the Aggregate_CN terra workflow)
+
+  Args:
+      refworkspace ([type]): [description]
+      sampleset (str, optional): [description]. Defaults to 'all'.
+      save_output (str, optional): [description]. Defaults to "".
+      doCleanup (bool, optional): [description]. Defaults to True.
+      sortby (list, optional): [description]. Defaults to [ SAMPLEID, 'Chromosome', "Start", "End"].
+      todrop (list, optional): [description]. Defaults to [].
+      priority (list, optional): [description]. Defaults to [].
+      genechangethresh (float, optional): [description]. Defaults to 0.025.
+      segmentsthresh (int, optional): [description]. Defaults to 2000.
+      ensemblserver ([type], optional): [description]. Defaults to ENSEMBL_SERVER_V.
+      source_rename (dict, optional): [description]. Defaults to {}.
+      useCache (bool, optional): [description]. Defaults to False.
+
+  Returns:
+      [type]: [description]
+  """
   h.createFoldersFor(save_output)
   print('loading WES from Terra')
   segments = loadFromGATKAggregation(
@@ -167,7 +188,6 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
     a = tracker.loc[k,'bam_qc']
     a = '' if a is np.nan else a
     tracker.loc[k,'bam_qc'] = str(v) + ',' + a
-
   
   tracker.loc[tracker[tracker.datatype.isin(['wes',"wgs"])].index, samplesetname]=0
   len(selected)
@@ -227,7 +247,28 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
                        procqc=PROCQC,
                        source_rename=SOURCERENAME,
                       **kwargs):
-      
+  """the full CCLE Copy Number post processing pipeline (used only by CCLE)
+
+  see postprocessing() to reproduce our analysis
+
+  Args:
+      wesrefworkspace ([type]): [description]
+      wgsrefworkspace ([type]): [description]
+      samplesetname ([type]): [description]
+      AllSamplesetName (str, optional): [description]. Defaults to ''.
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      mystorage_id ([type], optional): [description]. Defaults to MY_STORAGE_ID.
+      sheetcreds ([type], optional): [description]. Defaults to SHEETCREDS.
+      sheetname ([type], optional): [description]. Defaults to SHEETNAME.
+      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+      prevgenecn ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn').
+      taiga_dataset (str, optional): [description]. Defaults to "cn-latest-d8d4".
+      dataset_description ([type], optional): [description]. Defaults to CNreadme.
+      subsetsegs (list, optional): [description]. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
+      bamqc ([type], optional): [description]. Defaults to BAMQC.
+      procqc ([type], optional): [description]. Defaults to PROCQC.
+      source_rename ([type], optional): [description]. Defaults to SOURCERENAME.
+  """
   sheets = Sheets.from_files(my_id, mystorage_id)
   tracker = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
   

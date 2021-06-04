@@ -12,41 +12,57 @@ def merge(tracker, new, old, arxspid, cols):
   given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
   """
   #loc = tracker[tracker[arxspid]==old].index
+  return False
 
 
-def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', participant_id='participant_id', toupdate={"sex":[],
-  "primary_disease":[],
-  "cellosaurus_id":[],
-  "age":[],
-  "primary_site":[],
-  "subtype":[],
-  "subsubtype":[],
-  "origin":[],
-  "parent_cell_line":[],
-  "matched_normal":[],
-  "comments":[],
-  "mediatype":[],
-  "condition":[],
-  'stripped_cell_line_name':[],
-  "participant_id":[]}):
-    # If I have a previous samples I can update unknown data directly
-    index = []
-    notfound = []
-    for k, val in samples.iterrows():
-        dat = ccle_refsamples[ccle_refsamples[arxspan_id] == val[arxspan_id]]
-        if len(dat) > 0:
-            index.append(k)
-            for k, v in toupdate.items():
-                toupdate[k].append(dat[k].tolist()[0])
-        else:
-            notfound.append(k)
-    # doing so..
-    import pdb;pdb.set_trace()
-    for k, v in toupdate.items():
-        samples.loc[index, k] = v
-    len(samples.loc[notfound][participant_id]
-        ), samples.loc[notfound][participant_id].tolist()
-    return samples, notfound    
+def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', 
+                      participant_id='participant_id', toupdate={}):
+  """update a list of samples' missing information from what is known in the ccle sample tracker
+
+  Args:
+      samples ([type]): [description]
+      ccle_refsamples ([type]): [description]
+      arxspan_id (str, optional): [description]. Defaults to 'arxspan_id'.
+      participant_id (str, optional): [description]. Defaults to 'participant_id'.
+      toupdate (dict, optional): [description]. Defaults to {}.
+
+  Returns:
+      [type]: [description]
+  """
+  # If I have a previous samples I can update unknown data directly
+  index = []
+  notfound = []
+  if len(toupdate) == 0:
+    toupdate = {"sex": [],
+                "primary_disease": [],
+                "cellosaurus_id": [],
+                "age": [],
+                "primary_site": [],
+                "subtype": [],
+                "subsubtype": [],
+                "origin": [],
+                "parent_cell_line": [],
+                "matched_normal": [],
+                "comments": [],
+                "mediatype": [],
+                "condition": [],
+                'stripped_cell_line_name': [],
+                "participant_id": []}
+  #import pdb;pdb.set_trace()
+  for k, val in samples.iterrows():
+    dat = ccle_refsamples[ccle_refsamples[arxspan_id] == val[arxspan_id]]
+    if len(dat) > 0:
+      index.append(k)
+      for k, v in toupdate.items():
+        toupdate[k].append(dat[k].tolist()[0])
+    else:
+      notfound.append(k)
+  # doing so..
+  for k, v in toupdate.items():
+    samples.loc[index, k] = v
+  len(samples.loc[notfound][participant_id]
+    ), samples.loc[notfound][participant_id].tolist()
+  return samples, notfound    
 
 
 def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", 
@@ -344,7 +360,16 @@ def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
 
 
 def makeCCLE2(tracker, source='CCLE2'):
-  """
+  """will turn the ccle sample tracker into the original ccle2 dataset based on the source column
+
+  this means it will return a table with arxspan ids, cell line name, ...[bam file type]
+
+  Args:
+      tracker ([type]): [description]
+      source (str, optional): [description]. Defaults to 'CCLE2'.
+
+  Returns:
+      pd.DF: a table with arxspan ids, cell line name, ...[bam file type]
   """
   tracker = tracker[tracker.source == source]
   ccle = pd.DataFrame(index=set(tracker.arxspan_id),
