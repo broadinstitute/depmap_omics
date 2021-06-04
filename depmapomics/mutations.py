@@ -94,7 +94,21 @@ def managingDuplicates(samples, failed, datatype, tracker):
 def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", doCleanup=False,
         rename_cols={"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID, 
         "Tumor_Seq_Allele2": "Tumor_Allele"},):
-  
+  """post process an aggregated MAF file the CCLE way
+
+  (usually a MAF file from the Aggregate_MAF Terra worklflow)
+
+  Args:
+      refworkspace ([type]): [description]
+      sampleset (str, optional): [description]. Defaults to 'all'.
+      mutCol (str, optional): [description]. Defaults to "mut_AC".
+      save_output (str, optional): [description]. Defaults to "".
+      doCleanup (bool, optional): [description]. Defaults to False.
+      rename_cols (dict, optional): [description]. Defaults to {"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID, "Tumor_Seq_Allele2": "Tumor_Allele"}.
+
+  Returns:
+      [type]: [description]
+  """
   h.createFoldersFor(save_output)
   print('loading from Terra')
   if save_output:
@@ -126,7 +140,25 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
                        prev=tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations'),
                        minfreqtocall=0.05,
                        **kwargs):
+  """the full CCLE mutations post processing pipeline (used only by CCLE)
 
+  see postprocess() to reproduce our analysis
+
+  Args:
+      wesrefworkspace ([type]): [description]
+      wgsrefworkspace ([type]): [description]
+      samplesetname ([type]): [description]
+      AllSamplesetName (str, optional): [description]. Defaults to 'all'.
+      doCleanup (bool, optional): [description]. Defaults to False.
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+      taiga_description ([type], optional): [description]. Defaults to Mutationsreadme.
+      taiga_dataset (str, optional): [description]. Defaults to "mutations-latest-ed72".
+      mutation_groups ([type], optional): [description]. Defaults to MUTATION_GROUPS.
+      prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
+      minfreqtocall (float, optional): [description]. Defaults to 0.05.
+  """
   sheets = Sheets.from_files(my_id, mystorage_id)
   tracker = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
   

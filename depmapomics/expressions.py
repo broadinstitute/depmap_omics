@@ -123,7 +123,7 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesinset
   print("updated the sheet, please reactivate protections")
 
 
-def loadFromRSEMaggregate(refwm, todrop=[], filenames=RSEMFILENAME,
+def loadFromRSEMaggregate(refworkspace, todrop=[], filenames=RSEMFILENAME,
                           sampleset="all", renamingFunc=None):
   """
   #TODO: to document
@@ -133,7 +133,7 @@ def loadFromRSEMaggregate(refwm, todrop=[], filenames=RSEMFILENAME,
   """
   files = {}
   renaming = {}
-  refwm = dm.WorkspaceManager(refwm)
+  refwm = dm.WorkspaceManager(refworkspace)
   res = refwm.get_sample_sets().loc[sampleset]
   for val in filenames:
     file = pd.read_csv(res[val], compression='gzip', header=0,
@@ -143,14 +143,14 @@ def loadFromRSEMaggregate(refwm, todrop=[], filenames=RSEMFILENAME,
       renaming = renamingFunc(file.columns[2:], todrop)
     else:
       renaming.update({i:i for i in file.columns[2:] if i not in todrop})
-    renaming.update({'transcript_id(s)': 'transcript'})
+    renaming.update({'transcript_id(s)': 'transcript_id'})
     # we remove the failed samples where we did not found anything else to replace them with
     files[val] = file[file.columns[:2].tolist()+[i for i in file.columns[2:]
                         if i in set(renaming.keys())]].rename(columns=renaming)
   return files, renaming
 
 
-def subsetGenes(files, gene_rename, filenames=RSEMTRANSCRIPTS,
+def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
                               drop=[], index="transcript_id"):
   """
   # TODO: to document
@@ -181,14 +181,14 @@ def subsetGenes(files, gene_rename, filenames=RSEMTRANSCRIPTS,
 
 
 def extractProtCod(files, ensembltohgnc, protcod_rename,
-                   filenames=RSEMTRANSCRIPTS,
+                   filenames=RSEM_TRANSCRIPTS,
                   rep=('genes', 'proteincoding_genes')):
   """
   # TODO: to document
   """
   for val in filenames:
     name = val.replace(rep[0], rep[1])
-    files[name] = files[name][files[name].columns.isin(set(ensembltohgnc.ensembl_gene_id))]
+    files[name] = files[val][files[val].columns.isin(set(ensembltohgnc.ensembl_gene_id))]
     files[name] = files[name].rename(columns=protcod_rename)
     # removing genes that did not match.. pretty unfortunate
     files[name] = files[name][[i for i in files[name].columns if ' (' in i]]
@@ -206,8 +206,15 @@ def extractProtCod(files, ensembltohgnc, protcod_rename,
 
 async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
                  geneset_file=SSGSEAFILEPATH):
-  """
-  #TODO: todocument
+  """the way we run ssGSEA on the CCLE dataset
+
+  Args:
+      tpm_genes ([type]): [description]
+      pathtogenepy ([type], optional): [description]. Defaults to PATHTOGENEPY.
+      geneset_file ([type], optional): [description]. Defaults to SSGSEAFILEPATH.
+
+  Returns:
+      [type]: [description]
   """
   tpm_genes = tpm_genes.copy()
   tpm_genes.columns = [i.split(' (')[0] for i in tpm_genes.columns]
@@ -256,8 +263,28 @@ def postProcess(refworkspace, samplesetname,
               trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
               ssGSEAcol="gene_tpm", renamingFunc=None, useCache=False
               ):
-  """
-  # TODO: to document
+  """postprocess a set of aggregated Expression table from RSEM in the CCLE way
+  
+  (usually using the aggregate_RSEM terra worklow) 
+
+  Args:
+      refworkspace ([type]): [description]
+      samplesetname ([type]): [description]
+      save_output (str, optional): [description]. Defaults to "".
+      doCleanup (bool, optional): [description]. Defaults to False.
+      colstoclean (list, optional): [description]. Defaults to [].
+      ensemblserver ([type], optional): [description]. Defaults to ENSEMBL_SERVER_V.
+      todrop (list, optional): [description]. Defaults to [].
+      samplesetToLoad (str, optional): [description]. Defaults to "all".
+      priority (list, optional): [description]. Defaults to [].
+      geneLevelCols ([type], optional): [description]. Defaults to RSEMFILENAME_GENE.
+      trancriptLevelCols ([type], optional): [description]. Defaults to RSEMFILENAME_TRANSCRIPTS.
+      ssGSEAcol (str, optional): [description]. Defaults to "gene_tpm".
+      renamingFunc ([type], optional): [description]. Defaults to None.
+      useCache (bool, optional): [description]. Defaults to False.
+
+  Returns:
+      [type]: [description]
   """
   if not samplesetToLoad:
     samplesetToLoad = samplesetname
@@ -282,15 +309,18 @@ def postProcess(refworkspace, samplesetname,
     print("cleaninp up data")
     res = refwm.get_samples()
     for val in colstoclean:
-      refwm.disable_hound().delete_entity_attributes(
-        'sample', res[val], delete_files=True)
+      if val in res.columns.tolist():
+        refwm.disable_hound().delete_entity_attributes(
+          'sample', res[val], delete_files=True)
+      else:
+        print(val+' not in the workspace\'s data')
   
   print("generating gene names")
   gene_rename, protcod_rename, ensembltohgnc = utils.generateGeneNames(
     ensemble_server=ensemblserver, useCache=useCache)
   
   print("loading files")
-  files, renaming = loadFromRSEMaggregate(refwm, todrop=failed, filenames=trancriptLevelCols+geneLevelCols, 
+  files, renaming = loadFromRSEMaggregate(refworkspace, todrop=failed, filenames=trancriptLevelCols+geneLevelCols,
                                 sampleset=samplesetToLoad, renamingFunc=renamingFunc)
   if save_output:
     h.dictToFile(renaming, save_output+"rna_sample_renaming.json")
@@ -299,6 +329,7 @@ def postProcess(refworkspace, samplesetname,
   print("renaming files")
   # gene level
   if len(geneLevelCols) > 0:
+    #import pdb; pdb.set_trace()
     files = subsetGenes(files, gene_rename, filenames=geneLevelCols, 
                                 drop="transcript_id", index="gene_id")
 
@@ -318,7 +349,7 @@ def postProcess(refworkspace, samplesetname,
   return files, enrichments, failed, samplesinset, renaming, lowqual
   
 
-def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url=REFSHEET_URL,
+def CCLEPostProcessing(refworkspace=rnaworkspace, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
                       colstoclean=['fastq1', 'fastq2', 'recalibrated_bam', 'recalibrated_bam_index'], 
                       ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
                       my_id=MY_ID, mystorage_id=MYSTORAGE_ID, samplesetToLoad="all", 
@@ -329,7 +360,31 @@ def CCLEPostProcessing(refworkspace, samplesetname, refsheet_url=REFSHEET_URL,
                       prevcounts = tc.get(name=TAIGA_ETERNAL, file='CCLE_RNAseq_reads'),
                       taiga_dataset="expression-d035", minsimi=0.95, 
                       dataset_description=RNAseqreadme, **kwargs):
+  """the full CCLE Expression post processing pipeline (used only by CCLE)
 
+  see postprocessing() to reproduce our analysis
+
+  Args:
+      refworkspace ([type], optional): [description]. Defaults to rnaworkspace.
+      samplesetname ([type], optional): [description]. Defaults to SAMPLESETNAME.
+      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+      colstoclean (list, optional): [description]. Defaults to ['fastq1', 'fastq2', 'recalibrated_bam', 'recalibrated_bam_index'].
+      ensemblserver ([type], optional): [description]. Defaults to ENSEMBL_SERVER_V.
+      doCleanup (bool, optional): [description]. Defaults to True.
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+      samplesetToLoad (str, optional): [description]. Defaults to "all".
+      tocompare (dict, optional): [description]. Defaults to {"genes_expected_count": "CCLE_RNAseq_reads", "genes_tpm": "CCLE_expression_full", "proteincoding_genes_tpm": "CCLE_expression"}.
+      sheetname ([type], optional): [description]. Defaults to SHEETNAME.
+      sheetcreds ([type], optional): [description]. Defaults to SHEETCREDS.
+      prevcounts ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_RNAseq_reads').
+      taiga_dataset (str, optional): [description]. Defaults to "expression-d035".
+      minsimi (float, optional): [description]. Defaults to 0.95.
+      dataset_description ([type], optional): [description]. Defaults to RNAseqreadme.
+
+  Returns:
+      [type]: [description]
+  """
   
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)

@@ -39,7 +39,7 @@ def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
       df.to_csv(f, header=False, sep='\t', index=False)
 
 
-def filterFusions(fusions, maxfreq=0.1, sampleCol, minffpm=0.05, maxffpm=0.1, countCol="CCLE_count",
+def filterFusions(fusions, sampleCol, maxfreq=0.1, minffpm=0.05, maxffpm=0.1, countCol="CCLE_count",
                   red_herring=FUSION_RED_HERRING):
   """
   Given a fusion file from star fusion, filters it (will also filter Mitochrondria and HLA genes)
@@ -96,8 +96,24 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
                         colnames=FUSION_COLNAME, todrop=[], doplot=True,
                         countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
                         **kwargs ):
-  """
-  TODO: todocument
+  """post process an aggregated fusion files in the CCLE way
+
+  (usually from the aggregate_Fusion terra workflow)
+
+  Args:
+      refworkspace ([type]): [description]
+      sampleCol ([type], optional): [description]. Defaults to SAMPLEID.
+      samplesetToLoad (str, optional): [description]. Defaults to 'all'.
+      colnames ([type], optional): [description]. Defaults to FUSION_COLNAME.
+      todrop (list, optional): [description]. Defaults to [].
+      doplot (bool, optional): [description]. Defaults to True.
+      countCol (str, optional): [description]. Defaults to "CCLE_count".
+      save_output (str, optional): [description]. Defaults to "".
+      rnFunc ([type], optional): [description]. Defaults to None.
+      renaming ([type], optional): [description]. Defaults to None.
+
+  Returns:
+      [type]: [description]
   """
   refwm = dm.WorkspaceManager(refworkspace)
   if save_output:
@@ -150,8 +166,20 @@ def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol=SAMPLEID,
                       prevdataset=tc.get(name=TAIGA_ETERNAL,
                                   file='CCLE_fusions_unfiltered'),
                       **kwargs):
-  """
-  TODO: todocument
+  """the full CCLE Fusion post processing pipeline (used only by CCLE)
+
+  see postprocessing() to reproduce our analysis
+
+  Args:
+      refworkspace ([type]): [description]
+      samplesetname ([type]): [description]
+      fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
+      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+      taiga_dataset (str, optional): [description]. Defaults to "fusions-95c9".
+      dataset_description ([type], optional): [description]. Defaults to FUSIONreadme.
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+      prevdataset ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_fusions_unfiltered').
   """
   
   sheets = Sheets.from_files(my_id, mystorage_id)

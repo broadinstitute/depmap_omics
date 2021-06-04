@@ -17,6 +17,7 @@ import dalmatian as dm
 from taigapy import TaigaClient
 tc = TaigaClient()
 from depmapomics import tracker
+from depmapomics.config import *
 from depmapomics import terra as myterra
 from genepy import terra
 from genepy import sequencing as seq
@@ -26,8 +27,6 @@ from genepy.google import gcp
 #####################
 # Const Variables
 #####################
-
-sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
 
 # chromosome list
 CHROMLIST = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',
@@ -50,7 +49,7 @@ extract_defaults = {
     'ref_name': 'stripped_cell_line_name',
     'source': 'source',
     'size': 'size',
-    "prev_size":"legacy_size",
+    "legacy_size":"legacy_size",
     'from_arxspan_id': 'individual_alias',
     'ref_id': 'sample_id',
     'PDO_id':'PDO',
@@ -98,7 +97,8 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
                                   addonly=[], match='ACH', extract={},
                                   extract_defaults=extract_defaults, wto=None, refsamples=None,
                                   participantslicepos=10, accept_unknowntypes=False,
-                                  rename=dict(), recomputehash=False):
+                                  rename=dict(), recomputehash=False, my_id = MY_ID,
+                                  mystorage_id = MYSTORAGE_ID,):
   """
   As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
 
@@ -147,6 +147,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
     match = [match]
   if refurl:
     print('refsamples is overrided by a refurl')
+    sheets = Sheets.from_files(my_id, mystorage_id)
     refsamples = sheets.get(refurl).sheets[0].to_frame(index_col=0)
   if refsamples is None:
     if wto is None:
@@ -244,7 +245,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
       wrongsampless = wrongsampless.drop(i)
   a = len(sampless)
   sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
-  sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy__size'], extract['ref_arxspan_id'])
+  sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
   print('removed: '+str(a-len(sampless))+" samples from size alone (too similar to a replicate)")
   wrongsampless = wrongsampless[~wrongsampless[extract['legacy_size']].isin(set(refsamples[extract['legacy_size']]))]
   wrongsampless = wrongsampless[~wrongsampless[extract['legacy_size']].isin(set(refsamples[extract['legacy_size']]))]
@@ -304,7 +305,7 @@ def deleteClosest(sampless, refsamples, size='legacy_size', ref_size='legacy_siz
 
 
 def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True, 
-recomputedate=True, recomputehash=True, extract={}):
+                         recomputedate=True, recompute_hash=True, extract={}):
   """
   Extract more information from a list of samples found on GP workspaces
 
@@ -329,7 +330,7 @@ recomputedate=True, recomputehash=True, extract={}):
     samples: pd dataframe the filtered sample list
   """
   extract.update(extract_defaults)
-  if extract['legacy_hash'] not in samples.columns or recomputelegacy_hash:
+  if extract['legacy_hash'] not in samples.columns or recompute_hash:
     samples[extract['hash']] = [gcp.extractHash(val) for val in gcp.lsFiles(samples[extract["bam"]].tolist(), "-L", 200)]
   lis = gcp.lsFiles(samples[extract['bam']].tolist(), '-al', 200)
   if extract['legacy_size'] not in samples.columns or recomputesize:
@@ -385,7 +386,8 @@ def mapSamples(samples, source, extract={}):
                                     extract['from_arxspan_id']: extract['ref_arxspan_id']
                                     }).set_index(extract["ref_id"], drop=True)
   # subsetting
-  samples = samples[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"], extract["release_date"], extract["patient_id"], extract["legacy_hash"], extract['legacy_size'], extract['PDO_id'], extract['update_time']]]
+  print(samples.columns)
+  samples = samples[[extract['ref_bam'], extract['ref_bai'], extract['ref_name'], extract["ref_arxspan_id"], extract["release_date"], extract["patient_id"], extract['legacy_size'], extract['PDO_id'], extract['update_time']]]
   return samples
 
 
@@ -470,7 +472,6 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
   """
   extract.update(extract_defaults)
   rename.update(dup)
-  sample_ids = []
   prevlen = len(sampless)
   sampless[extract['ref_type']] = stype
 
@@ -504,30 +505,34 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
   return sampless
 
 
-def completeFromMasterSheet(samples, notfound, toupdate={'primary_disease': ['Primary Disease'],
-                                      'sex': ['CCLF Age'],
-                                      'primary_site': ['Sample Collection Site'],
-                                      'subtype': ['lineage_subtype'],
-                                      'subsubtype': ['lineage_sub_subtype'],
-                                      'origin': ['lineage'],
-                                      'source': ['Program'],
-                                      'parent_cell_line': ["Parental ID"],
-                                      'comments': ['Comments'],
-                                      'mediatype': ['Culture Medium', 'Culture Type'],
-                                      'stripped_cell_line_name': ['Stripped Cell Line Name'],
-                                      "cellosaurus_id": ["RRID"],
-                                      "age": ["CCLF Gender"]}, 
-                            my_id='~/.client_secret.json',
-                            pv_index="DepMap_ID",
+def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE, 
+                            my_id=MY_ID,
+                            pv_index=SAMPLEID,
                             master_index="arxspan_id",
                             pv_tokeep = ['Culture Type', 'Culture Medium'],
-                            mystorage_id="~/.storage.json",
+                            mystorage_id=MYSTORAGE_ID,
                             masterfilename="ACH",
-                            nanslist=['None', 'nan', 'Unknown'],
-                            depmap_pv="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE",
-                            depmap_taiga="arxspan-cell-line-export-f808"):
-  """
-  TODO to document
+                            nanslist=['None', 'nan', 'Unknown', None],
+                            depmap_pv=DEPMAP_PV,
+                            depmap_taiga=DEPMAP_TAIGA):
+  """complete the missing sample information from a given DepMap Ops MasterSheet
+
+  Args:
+      samples ([type]): [description]
+      notfound ([type]): [description]
+      toupdate ([type], optional): [description]. Defaults to TO_UPDATE.
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      pv_index ([type], optional): [description]. Defaults to SAMPLEID.
+      master_index (str, optional): [description]. Defaults to "arxspan_id".
+      pv_tokeep (list, optional): [description]. Defaults to ['Culture Type', 'Culture Medium'].
+      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+      masterfilename (str, optional): [description]. Defaults to "ACH".
+      nanslist (list, optional): [description]. Defaults to ['None', 'nan', 'Unknown', None].
+      depmap_pv ([type], optional): [description]. Defaults to DEPMAP_PV.
+      depmap_taiga ([type], optional): [description]. Defaults to DEPMAP_TAIGA.
+
+  Returns:
+      [type]: [description]
   """
   di = {k: [] for k, _ in toupdate.items()}
 
@@ -543,24 +548,22 @@ def completeFromMasterSheet(samples, notfound, toupdate={'primary_disease': ['Pr
   unk = []
   for k, v in samples.loc[notfound].iterrows():
     a = depmap_master[depmap_master.index == v.arxspan_id]
-    if len(a) > 0:
-      a = a[0]
-    else:
+    if len(a) == 0:
       for k, v in toupdate.items():
         di[k].append('')
       # for these samples I will need to check and manually add the data in the list
       print("no data found for "+str(v.arxspan_id))
       unk.append(k)
       continue
-    for k, v in toupdate.items():
-      e = ''
-      if len(v) > 0:
-        for i in v:
-          u = depmap_master.loc[a, v].values
-          e += str(u[0])+", " if len(u) > 0 and str(u[0]
-                                                    ) not in nanslist else ''
-        e = e[:-2]
-      di[k].append(e)
+    for k, j in toupdate.items():
+      l = []
+      if len(j) > 0:
+        ll = depmap_master.loc[v.arxspan_id, j] if len(
+          a) == 1 else depmap_master.loc[v.arxspan_id, j].iloc[0]
+        for val in ll.tolist():
+          if val not in nanslist:
+            l.append(val)
+      di[k].append(", ".join(l))
   for k, v in di.items():
     samples.loc[notfound, k] = v
   return samples, unk
@@ -570,7 +573,7 @@ def loadWES(samplesetname,
             "terra-broad-cancer-prod/CCLE_DepMap_WES",
             "terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes"],
             sources=["ccle","ibm"],
-            maxage='2020-09-10',
+            maxage=MAXAGE,
             baits = 'ice',
             stype = "wes",
             **kwargs):
@@ -579,15 +582,15 @@ def loadWES(samplesetname,
 
   @see load()
   """
-  return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
+  return load(samplesetname=samplesetname, workspaces=workspaces,
               sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
 def loadWGS(samplesetname, 
             workspaces=[
-                "terra-broad-cancer-prod/DepMap_WGS",
-                "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"],
-            sources=["ccle","ibm"],
-            maxage='2020-09-10',
+                wgsworkspace1,
+                wgsworkspace2],
+            sources=[wgssource1,wgssource2],
+            maxage=MAXAGE,
             baits = 'genome',
             stype = "wgs",
             **kwargs):
@@ -596,15 +599,15 @@ def loadWGS(samplesetname,
 
   @see load()
   """
-  return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
+  return load(samplesetname=samplesetname, workspaces=workspaces,
               sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
 def loadRNA(samplesetname,
             workspaces=[
-                "terra-broad-cancer-prod/CCLE_DepMap_WES",
-                "terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes"],
-            sources=["ccle", "ibm"],
-            maxage='2020-09-10',
+                rnaworkspace6,
+                rnaworkspace7],
+            sources=[rnasource6, rnasource7],
+            maxage=MAXAGE,
             baits='polyA',
             stype="rna", **kwargs):
   """
@@ -612,7 +615,7 @@ def loadRNA(samplesetname,
 
   @see load()
   """
-  return load(samplesetname=samplesetname, workspaces=workspaces, refworkspace=refworkspace,
+  return load(samplesetname=samplesetname, workspaces=workspaces,
               sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
 def load(samplesetname, workspaces,
@@ -620,46 +623,57 @@ def load(samplesetname, workspaces,
          maxage,
          baits,
          stype,
-        toupdate={'primary_disease': ['Primary Disease'],
-                'sex': ['CCLF Age'],
-                'primary_site': ['Sample Collection Site'],
-                'subtype': ['lineage_subtype'],
-                'subsubtype': ['lineage_sub_subtype'],
-                'origin': ['lineage'],
-                'source': ['Program'],
-                'parent_cell_line': ["Parental ID"],
-                'comments': ['Comments'],
-                'mediatype': ['Culture Medium', 'Culture Type'],
-                'stripped_cell_line_name': ['Stripped Cell Line Name'],
-                "cellosaurus_id": ["RRID"],
-                "age": ["CCLF Gender"]},
-        pv_index="DepMap_ID",
-         master_index="arxspan_id",
-        my_id='~/.client_secret.json',
-         creds='../.credentials.json',
-        mystorage_id="~/.storage.json",
-        refsheet_url = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
-        depmappvlink = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE",
-        extract_to_change = {'from_arxspan_id': 'participant'},
+        toupdate=TO_UPDATE,
+        pv_index=SAMPLEID,
+        master_index="arxspan_id",
+        my_id=MY_ID,
+        creds=SHEETCREDS,
+        mystorage_id=MYSTORAGE_ID,
+        refsheet_url = REFSHEET_URL,
+        depmappvlink = DEPMAP_PV,
+        extract_to_change = EXTRACT_TO_CHANGE,
         # version 102
-        match = ['ACH-','CDS-'],
+        match = MATCH,
         pv_tokeep=['Culture Type', 'Culture Medium'],
         masterfilename="ACH",
         nanslist=['None', 'nan', 'Unknown'],
-         depmap_taiga="arxspan-cell-line-export-f808",
-        toraise=["ACH-001195"],
+        depmap_taiga=DEPMAP_TAIGA,
+        toraise=TORAISE,
         participantslicepos=10, accept_unknowntypes=True,
         recomputehash=True):
-  """
-  function to load and extract data from the GP workspaces
-  
-  Args:
-  -----
-  TODO to document
-  
-  Returns:
-  -------
+  """function to load and extract data from the GP workspaces
 
+  Args:
+      samplesetname ([type]): [description]
+      workspaces ([type]): [description]
+      sources ([type]): [description]
+      maxage ([type]): [description]
+      baits ([type]): [description]
+      stype ([type]): [description]
+      toupdate ([type], optional): [description]. Defaults to TO_UPDATE.
+      pv_index ([type], optional): [description]. Defaults to SAMPLEID.
+      master_index (str, optional): [description]. Defaults to "arxspan_id".
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      creds ([type], optional): [description]. Defaults to SHEETCREDS.
+      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+      depmappvlink ([type], optional): [description]. Defaults to DEPMAP_PV.
+      extract_to_change ([type], optional): [description]. Defaults to EXTRACT_TO_CHANGE.
+      match ([type], optional): [description]. Defaults to MATCH.
+      pv_tokeep (list, optional): [description]. Defaults to ['Culture Type', 'Culture Medium'].
+      masterfilename (str, optional): [description]. Defaults to "ACH".
+      nanslist (list, optional): [description]. Defaults to ['None', 'nan', 'Unknown'].
+      depmap_taiga ([type], optional): [description]. Defaults to DEPMAP_TAIGA.
+      toraise ([type], optional): [description]. Defaults to TORAISE.
+      participantslicepos (int, optional): [description]. Defaults to 10.
+      accept_unknowntypes (bool, optional): [description]. Defaults to True.
+      recomputehash (bool, optional): [description]. Defaults to True.
+
+  Raises:
+      ValueError: [description]
+
+  Returns:
+      [type]: [description]
   """
   release = samplesetname
   sheets = Sheets.from_files(my_id, mystorage_id)
@@ -701,7 +715,6 @@ def load(samplesetname, workspaces,
         "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
           0].to_frame().set_index('sample_id')
       samples = pd.concat([samples, updated_samples], sort=False)
-  
   samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
   
   for val in toraise:
@@ -742,16 +755,36 @@ def load(samplesetname, workspaces,
 def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
                 name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'], 
                 filetypes=['bam', 'bai'],
-                my_id='~/.client_secret.json',
-                mystorage_id="~/.storage.json",
-                refworkspace="broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline",
-                cnworkspace="broad-firecloud-ccle/DepMap_WES_CN_hg38",
+                my_id=MY_ID,
+                mystorage_id=MYSTORAGE_ID,
+                refworkspace=WESMUTWORKSPACE,
+                cnworkspace=WESCNWORKSPACE,
                 stype= "wes",
                 baits= 'ICE',
                 extract = {},
-                creds = '../.credentials.json',
-                sampletrackername ='ccle sample tracker',
-                refsheet_url = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",):
+                creds = SHEETCREDS,
+                sampletrackername =SHEETNAME,
+                refsheet_url = REFSHEET_URL,):
+  """[summary]
+
+  Args:
+      samples ([type]): [description]
+      samplesetname ([type]): [description]
+      bucket (str, optional): [description]. Defaults to "gs://cclebams/wes/".
+      name_col (str, optional): [description]. Defaults to "index".
+      values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
+      filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+      refworkspace ([type], optional): [description]. Defaults to WESMUTWORKSPACE.
+      cnworkspace ([type], optional): [description]. Defaults to WESCNWORKSPACE.
+      stype (str, optional): [description]. Defaults to "wes".
+      baits (str, optional): [description]. Defaults to 'ICE'.
+      extract (dict, optional): [description]. Defaults to {}.
+      creds ([type], optional): [description]. Defaults to SHEETCREDS.
+      sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
+      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+  """
 
   # uploading to our bucket (now a new function)
   terra.changeToBucket(samples, bucket, name_col=name_col,
@@ -820,11 +853,28 @@ def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
 def update(samples, samplesetname, stype, bucket, refworkspace,
           name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'],
           filetypes=['bam', 'bai'],
-          my_id='~/.client_secret.json',
-          mystorage_id="~/.storage.json",
-          creds='../.credentials.json',
-          sampletrackername='ccle sample tracker',
-          refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",):
+          my_id=MY_ID,
+          mystorage_id=MYSTORAGE_ID,
+          creds=SHEETCREDS,
+          sampletrackername=SHEETNAME,
+          refsheet_url=REFSHEET_URL,):
+  """update the samples on a depmapomics terra processing workspace
+
+  Args:
+      samples ([type]): [description]
+      samplesetname ([type]): [description]
+      stype ([type]): [description]
+      bucket ([type]): [description]
+      refworkspace ([type]): [description]
+      name_col (str, optional): [description]. Defaults to "index".
+      values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
+      filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
+      my_id ([type], optional): [description]. Defaults to MY_ID.
+      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+      creds ([type], optional): [description]. Defaults to SHEETCREDS.
+      sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
+      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+  """
 
   # uploading to our bucket (now a new function)
   terra.changeToBucket(samples, bucket, name_col=name_col,
