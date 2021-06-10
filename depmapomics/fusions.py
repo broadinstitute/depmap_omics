@@ -44,6 +44,13 @@ def filterFusions(fusions, sampleCol, maxfreq=0.1, minffpm=0.05, maxffpm=0.1, co
   """
   Given a fusion file from star fusion, filters it (will also filter Mitochrondria and HLA genes)
 
+  We want to apply filters to the fusion table to reduce the number of artifacts in the dataset. Specifically, we filter the following:
+  * Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes
+  * Remove red herring fusions (from STAR-Fusion annotations column)
+  * Remove recurrent in CCLE (>= 25 samples)
+  * Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
+  * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
+
   Args:
   -----
     fusions: dataframe the fusion as a dataframe should contain: LeftBreakpoint, RightBreakpoint, FusionName, annots, SpliceType, LargeAnchorSupport, FFPM columns
@@ -83,9 +90,15 @@ def renameFusionGene(a):
 
 def standardizeGeneNames(fusions):
   """
-  TODO: todocument
   converts [GENE_NAME]^[ENSG] --> [GENE_NAME] ([ENSG])
+
   Example: "SMAD4^ENSG00000141646.14" --> "SMAD4 (ENSG00000141646.14)"
+
+  Args:
+      fusions ():
+
+  Returns:
+      ():  
   """
   fusions[['LeftGene', 'RightGene']] = fusions[['LeftGene', 'RightGene']]\
     .applymap(lambda x: '{} ({})'.format(*x.split(r'^')))
@@ -124,10 +137,10 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   fusions = pd.read_csv(aggregated,
                         names=[sampleCol]+colnames, skiprows=1, sep='\t')
   
+  fusions[sampleCol] = fusions[sampleCol].str.split('.').str[0]
   print("postprocessing fusions")
   fusions.RightGene = renameFusionGene(fusions.RightGene)
   fusions.LeftGene = renameFusionGene(fusions.LeftGene)
-  fusions = standardizeGeneNames(fusions)
   
   count = fusions[['LeftBreakpoint', 'RightBreakpoint']]\
     .value_counts()\
@@ -138,11 +151,6 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   # removing failed
   fusions = fusions[~fusions[sampleCol].isin(todrop)]
   
-  fusions_filtered = filterFusions(
-    fusions, sampleCol=sampleCol, countCol=countCol, **kwargs)
-  if doplot:
-    sns.kdeplot(fusions[countCol])
-  
   print("saving")
   fusions.to_csv(os.path.join(save_output,'fusions_all.csv'), index=False)
   if rnFunc is not None or renaming is not None:
@@ -152,6 +160,10 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
         {sampleCol: renaming}).reset_index(drop=True)
     fusions.to_csv(os.path.join(save_output, 'fusions_latest.csv'), index=False)
   
+  fusions_filtered = filterFusions(
+      fusions, sampleCol=sampleCol, countCol=countCol, **kwargs)
+  if doplot:
+    sns.kdeplot(fusions[countCol])
   fusions_filtered.to_csv(os.path.join(
     save_output, 'filteredfusions_latest.csv'), index=False)
   
@@ -159,9 +171,9 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   return fusions, fusions_filtered
 
 
-def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol=SAMPLEID, 
-                      refsheet_url=REFSHEET_URL, 
-                      taiga_dataset="fusions-95c9", dataset_description=FUSIONreadme,
+def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, 
+                      fusionSamplecol=SAMPLEID, refsheet_url=REFSHEET_URL,  todrop=KNOWN_DROP,
+                      taiga_dataset=TAIGA_FUSION, dataset_description=FUSIONreadme,
                       my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                       prevdataset=tc.get(name=TAIGA_ETERNAL,
                                   file='CCLE_fusions_unfiltered'),
@@ -175,13 +187,12 @@ def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol=SAMPLEID,
       samplesetname ([type]): [description]
       fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
       refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-      taiga_dataset (str, optional): [description]. Defaults to "fusions-95c9".
+      taiga_dataset (str, optional): [description]. Defaults to TAIGA_FUSION.
       dataset_description ([type], optional): [description]. Defaults to FUSIONreadme.
       my_id ([type], optional): [description]. Defaults to MY_ID.
       mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
       prevdataset ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_fusions_unfiltered').
   """
-  
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
   
@@ -190,7 +201,7 @@ def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol=SAMPLEID,
   folder=os.path.join("temp", samplesetname, "")
   renaming = h.fileToDict(folder+"rna_sample_renaming.json")
 
-  fusions, _ = postProcess(refworkspace, samplesetname=samplesetname,
+  fusions, _ = postProcess(refworkspace,
                            todrop=previousQCfail, renaming=renaming, save_output=folder,
     **kwargs)
   
@@ -238,3 +249,4 @@ def CCLEPostProcessing(refworkspace, samplesetname, fusionSamplecol=SAMPLEID,
                     ],
                     dataset_description=dataset_description)
   print("done")
+  return fusions

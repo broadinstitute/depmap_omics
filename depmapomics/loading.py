@@ -512,7 +512,7 @@ def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE,
                             pv_tokeep = ['Culture Type', 'Culture Medium'],
                             mystorage_id=MYSTORAGE_ID,
                             masterfilename="ACH",
-                            nanslist=['None', 'nan', 'Unknown', None],
+                            nanslist=['None', 'nan', 'Unknown', None, np.nan],
                             depmap_pv=DEPMAP_PV,
                             depmap_taiga=DEPMAP_TAIGA):
   """complete the missing sample information from a given DepMap Ops MasterSheet
@@ -563,7 +563,7 @@ def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE,
         for val in ll.tolist():
           if val not in nanslist:
             l.append(val)
-      di[k].append(", ".join(l))
+        di[k].append(", ".join(l))
   for k, v in di.items():
     samples.loc[notfound, k] = v
   return samples, unk
@@ -602,7 +602,7 @@ def loadWGS(samplesetname,
   return load(samplesetname=samplesetname, workspaces=workspaces,
               sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
-def loadRNA(samplesetname,
+def loadRNA(samplesetname=SAMPLESETNAME,
             workspaces=[
                 rnaworkspace6,
                 rnaworkspace7],
@@ -636,7 +636,7 @@ def load(samplesetname, workspaces,
         match = MATCH,
         pv_tokeep=['Culture Type', 'Culture Medium'],
         masterfilename="ACH",
-        nanslist=['None', 'nan', 'Unknown'],
+        nanslist=['None', 'nan', 'Unknown', None, np.nan],
         depmap_taiga=DEPMAP_TAIGA,
         toraise=TORAISE,
         participantslicepos=10, accept_unknowntypes=True,
@@ -683,7 +683,7 @@ def load(samplesetname, workspaces,
 
   # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "primary_site", "primary_disease", "subtype", "subsubtype", "origin", "comments"
   #when SMid: match== 
-  samples, _ , noarxspan = GetNewCellLinesFromWorkspaces(stype=stype, 
+  samples, _, noarxspan = GetNewCellLinesFromWorkspaces(stype=stype, 
                                                         maxage=maxage, refurl=refsheet_url, 
                                                         wmfroms=workspaces,
                                                         sources=sources, match=match, 
@@ -850,7 +850,7 @@ def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
       sam['baits'] == baits) | (sam['baits'].isna())].index.tolist() if i != 'nan'])
 
 
-def update(samples, samplesetname, stype, bucket, refworkspace,
+def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
           name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'],
           filetypes=['bam', 'bai'],
           my_id=MY_ID,
@@ -878,7 +878,7 @@ def update(samples, samplesetname, stype, bucket, refworkspace,
 
   # uploading to our bucket (now a new function)
   terra.changeToBucket(samples, bucket, name_col=name_col,
-                       values=values, filetypes=filetypes, catchdup=True, test=False)
+                       values=values, filetypes=filetypes, catchdup=True, dryrun=False)
 
   samplesetname
   sheets = Sheets.from_files(my_id, mystorage_id)
