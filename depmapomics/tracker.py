@@ -4,8 +4,24 @@ import ipdb
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
+from depmapomics.config import *
 from taigapy import TaigaClient
 tc = TaigaClient()
+
+
+def getCCLETracker():
+  return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
+
+
+def getDEPMAPPV(pv_index="arxspan_id",
+                pv_tokeep=[],
+                index="DepMap_ID"):
+  depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
+    DEPMAP_PV).sheets[0].to_frame(header=2)
+  depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
+  depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index).set_index(
+      index, drop=True)
+  return depmap_pv[pv_tokeep] if pv_tokeep else depmap_pv
 
 def merge(tracker, new, old, arxspid, cols):
   """
@@ -68,7 +84,11 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
 def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", 
                         version="version", priority=None):
   """
-  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
+  will set it to your sample_ids using the latest version available for each sample
+
+  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed 
+  by the same ids, will set it to your sample_ids using the latest version 
+  available for each sample
 
   Args:
   -----
