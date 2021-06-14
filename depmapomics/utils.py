@@ -38,11 +38,14 @@ def generateGeneNames(ensemble_server=ENSEMBL_SERVER_V, useCache=False, cache_fo
         ensembltohgnc[ensembltohgnc.hgnc_symbol.isna()
                       ]['clone_based_ensembl_gene']
 
-    gene_rename = {i.ensembl_gene_id: i.hgnc_symbol+' ('+i.ensembl_gene_id+')'
-                   for _, i in ensembltohgnc.iterrows()}
-    protcod_rename = {
-        i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'
-        for _, i in
-        ensembltohgnc[(~ensembltohgnc.entrezgene_id.isna()) &
-                      (ensembltohgnc.gene_biotype == 'protein_coding')].iterrows()}
+    # creating renaming index, keeping top name first
+    gene_rename = {}
+    for _, i in ensembltohgnc.iterrows():
+      if i not in gene_rename:
+        gene_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+i.ensembl_gene_id+')'})
+    protcod_rename = {}
+    for _, i in ensembltohgnc[(~ensembltohgnc.entrezgene_id.isna()) &
+                              (ensembltohgnc.gene_biotype == 'protein_coding')].iterrows():
+      if i not in protcod_rename:
+        protcod_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'})
     return gene_rename, protcod_rename, ensembltohgnc
