@@ -14,7 +14,6 @@ SHEETNAME = 'ccle sample tracker'
 
 TAIGA_ETERNAL = 'depmap-a0ab'
 
-
 REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
 
 PRIVACY_RELEASE = "https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4"
@@ -27,6 +26,39 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 SAMPLEID="DepMap_ID"
 
 SAMPLESETNAME = "21Q2"
+
+RELEASE = SAMPLESETNAME
+
+PREV_VIRTUAL = {}
+
+#20Q3
+#PREV_VIRTUAL={}
+#PREV_VIRTUAL['public'] = 'public-20q3-3d35'
+#PREV_VIRTUAL['dmc'] = 'dmc-20q3-deprecated-never-released--5f55'
+#PREV_VIRTUAL['internal'] = 'internal-20q3-00d0'
+
+#20Q4
+#PREV_VIRTUAL={}
+#PREV_VIRTUAL['public'] = 'public-20q4-a4b3'
+#PREV_VIRTUAL['dmc'] = 'dmc-20q4-fcf4'
+#PREV_VIRTUAL['ibm'] = 'ibm-20q4-269f'
+#PREV_VIRTUAL['internal'] = 'internal-20q4-2540'
+
+#21Q1
+PREV_VIRTUAL['public'] = 'public-21q1-4b39'
+PREV_VIRTUAL['ibm'] = 'ibm-21q1-abd9'
+PREV_VIRTUAL['dmc'] = 'dmc-21q1-0e11'
+PREV_VIRTUAL['internal'] = 'internal-21q1-4fc4'
+
+CHANGES = """
+
+"""
+
+RUN_NOTEBOOKS = ['WGS_CCLE.ipynb', 'RNA_CCLE.ipynb']
+
+UPLOAD_NOTEBOOK = ['DepMap_Upload.ipynb']
+
+NOTEBOOKS = RUN_NOTEBOOKS+UPLOAD_NOTEBOOK
 
 VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
@@ -42,7 +74,7 @@ HG38BAMCOL = ['internal_bam_filepath',
 TORAISE=["ACH-001195"],
 
 TO_UPDATE = {'primary_disease': ['Primary Disease'],
-            'sex': ['CCLF Age'],
+            'sex': ['CCLF Gender'],
             'primary_site': ['Sample Collection Site'],
             'subtype': ['lineage_subtype'],
             'subsubtype': ['lineage_sub_subtype'],
@@ -53,9 +85,9 @@ TO_UPDATE = {'primary_disease': ['Primary Disease'],
             'mediatype': ['Culture Medium', 'Culture Type'],
             'stripped_cell_line_name': ['Stripped Cell Line Name'],
             "cellosaurus_id": ["RRID"],
-            "age": ["CCLF Gender"]}
+             "age": ["CCLF Age"]}
 
-MAXAGE = '2020-11-01'
+MAXAGE = '2021-02-01'
 
 EXTRACT_TO_CHANGE = {'from_arxspan_id': 'participant'}
 
@@ -89,7 +121,7 @@ rnasource6 = "ccle"
 rnasource7 = "ibm"
 
 ## our working workspace (reference)
-rnaworkspace = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
+RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
 
 ## curent WGS GP buckets
 wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
@@ -143,6 +175,8 @@ BAMQC = ["duplication_metrics", "bqsr_report",
          "tumor_bam_quality_distribution_metrics",
          "tumor_bam_quality_yield_metrics"]
 
+KNOWN_DROP = ['CDS-R22IHj',]
+
 ############## CN
 
 COLRENAMING = {'CONTIG': 'Chromosome',
@@ -160,6 +194,14 @@ SOURCE_RENAME = {'CCLF': 'Broad WES', 'CHORDOMA': 'Chordoma WES',
                 'SANGER': 'Sanger WES', 'IBM': 'Broad WES',
                 np.nan: 'Broad WES', 'DEPMAP': 'Broad WES',
                 'IBM WES': "Broad WES", 'Broad CCLF': "Broad WES"}
+
+wrongwes_arxspan = {'ACH-001189', 'ACH-002303', 'ACH-002315', 'ACH-002341', 'ACH-001011', 
+                    'ACH-001108', 'ACH-001187', 'ACH-002875', 'ACH-002874',
+                    "ACH-001955",  # chordoma lines
+                    "ACH-001956",
+                    "ACH-001957"}
+
+toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 
 ############## Mutations
 
@@ -254,6 +296,14 @@ PREV_VIRTUAL = {
   'internal': 'internal-21q1-4fc4',
 }
 
+TAIGA_MUTATION = "mutations-latest-ed72"
+
+TAIGA_CN="cn-latest-d8d4"
+
+TAIGA_EXPRESSION="expression-d035"
+
+TAIGA_FUSION = "fusions-95c9"
+
 datasets = ['internal', 'ibm', 'dmc', 'public']
 
 README_folder = "../depmap-release-readmes/"
@@ -261,6 +311,7 @@ README_folder = "../depmap-release-readmes/"
 README_currentfolder = README_folder+"release-"+RELEASE+"/"
 
 README_changes = """
+
 
 """
 

@@ -7,45 +7,46 @@ from genepy.utils.helper import createFoldersFor
 from depmapomics.config import CACHE_PATH, ENSEMBL_SERVER_V
 
 
-def generateGeneNames(ensemble_server=ENSEMBL_SERVER_V, useCache=False, cache_folder=CACHE_PATH):
-    """
-    # TODO: to document
-    """
-    assert cache_folder[-1] == '/'
-    createFoldersFor(cache_folder)
-    cachefile = os.path.join(cache_folder, 'biomart_ensembltohgnc.csv')
-    cachefile = os.path.expanduser(cachefile)
-    if useCache & os.path.isfile(cachefile):
-        print('fetching gene names from biomart cache')
-        ensembltohgnc = pd.read_csv(cachefile)
-    else:
-        print('downloading gene names from biomart')
-        server = BiomartServer(ensemble_server)
-        ensmbl = server.datasets['hsapiens_gene_ensembl']
-        ensembltohgnc = pd.read_csv(io.StringIO(ensmbl.search({
-            'attributes': ['ensembl_gene_id', 'clone_based_ensembl_gene',
-                           'hgnc_symbol', 'gene_biotype', 'entrezgene_id']
-        }, header=1).content.decode()), sep='\t')
-        ensembltohgnc.to_csv(cachefile, index=False)
+def generateGeneNames(ensemble_server=ENSEMBL_SERVER_V, useCache=False, cache_folder=CACHE_PATH,
+  attributes=[]):
+  """generate a genelist dataframe from ensembl's biomart
 
-    ensembltohgnc.columns = ['ensembl_gene_id', 'clone_based_ensembl_gene',
-                             'hgnc_symbol', 'gene_biotype', 'entrezgene_id']
-    if type(ensembltohgnc) is not type(pd.DataFrame()):
-        raise ValueError('should be a dataframe')
-    ensembltohgnc = ensembltohgnc[~(ensembltohgnc[
-        'clone_based_ensembl_gene'].isna() & ensembltohgnc['hgnc_symbol'].isna())]
-    ensembltohgnc.loc[ensembltohgnc[ensembltohgnc.hgnc_symbol.isna()].index, "hgnc_symbol"] = \
-        ensembltohgnc[ensembltohgnc.hgnc_symbol.isna()
-                      ]['clone_based_ensembl_gene']
+  Args:
+      ensemble_server ([type], optional): [description]. Defaults to ENSEMBL_SERVER_V.
+      useCache (bool, optional): [description]. Defaults to False.
+      cache_folder ([type], optional): [description]. Defaults to CACHE_PATH.
 
-    # creating renaming index, keeping top name first
-    gene_rename = {}
-    for _, i in ensembltohgnc.iterrows():
-      if i not in gene_rename:
-        gene_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+i.ensembl_gene_id+')'})
-    protcod_rename = {}
-    for _, i in ensembltohgnc[(~ensembltohgnc.entrezgene_id.isna()) &
-                              (ensembltohgnc.gene_biotype == 'protein_coding')].iterrows():
-      if i not in protcod_rename:
-        protcod_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'})
-    return gene_rename, protcod_rename, ensembltohgnc
+  Raises:
+      ValueError: [description]
+
+  Returns:
+      [type]: [description]
+  """
+  defattr = ['ensembl_gene_id', 'clone_based_ensembl_gene', 'hgnc_symbol', 'gene_biotype',
+  'entrezgene_id']
+  assert cache_folder[-1] == '/'
+  createFoldersFor(cache_folder)
+  cachefile = os.path.join(cache_folder, 'biomart_ensembltohgnc.csv')
+  cachefile = os.path.expanduser(cachefile)
+  if useCache & os.path.isfile(cachefile):
+    print('fetching gene names from biomart cache')
+    res = pd.read_csv(cachefile)
+  else:
+    print('downloading gene names from biomart')
+    server = BiomartServer(ensemble_server)
+    ensmbl = server.datasets['hsapiens_gene_ensembl']
+    res = pd.read_csv(io.StringIO(ensmbl.search({
+      'attributes': defattr+attributes
+    }, header=1).content.decode()), sep='\t')
+    res.to_csv(cachefile, index=False)
+
+  res.columns = defattr+attributes
+  if type(res) is not type(pd.DataFrame()):
+    raise ValueError('should be a dataframe')
+  res = res[~(res[
+    'clone_based_ensembl_gene'].isna() & res['hgnc_symbol'].isna())]
+  res.loc[res[res.hgnc_symbol.isna()].index, "hgnc_symbol"] = \
+    res[res.hgnc_symbol.isna()
+                  ]['clone_based_ensembl_gene']
+
+  return res

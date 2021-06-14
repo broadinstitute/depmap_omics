@@ -131,11 +131,13 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   print('done')
   return mutations
 
-def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
+
+def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKSPACE, 
+                      samplesetname=SAMPLESETNAME, todrop=KNOWN_DROP,
                        AllSamplesetName='all', doCleanup=False,
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                        refsheet_url=REFSHEET_URL,
-                       taiga_description=Mutationsreadme, taiga_dataset="mutations-latest-ed72",
+                       taiga_description=Mutationsreadme, taiga_dataset=TAIGA_MUTATION,
                        mutation_groups=MUTATION_GROUPS,
                        prev=tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations'),
                        minfreqtocall=0.05,
@@ -154,17 +156,11 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
       mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
       refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
       taiga_description ([type], optional): [description]. Defaults to Mutationsreadme.
-      taiga_dataset (str, optional): [description]. Defaults to "mutations-latest-ed72".
+      taiga_dataset (str, optional): [description]. Defaults to TAIGA_MUTATION.
       mutation_groups ([type], optional): [description]. Defaults to MUTATION_GROUPS.
       prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
       minfreqtocall (float, optional): [description]. Defaults to 0.05.
-  """
-  sheets = Sheets.from_files(my_id, mystorage_id)
-  tracker = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
-  
-  wesrefwm = dm.WorkspaceManager(wesrefworkspace)
-  wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)  
-
+  """  
   if doCleanup:
     #TODO:
     val = ""
@@ -175,7 +171,7 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
   print('doing wes')
   folder=os.path.join("temp", samplesetname, "wes_")
   
-  wesmutations = postProcess(wesrefwm, AllSamplesetName if AllSamplesetName else samplesetname,
+  wesmutations = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
                              save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
 
   # renaming
@@ -194,7 +190,7 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
   print('doing wgs')
   folder=os.path.join("temp", samplesetname, "wgs_")
   
-  wgsmutations = postProcess(wgsrefwm, "allcurrent", #AllSamplesetName if AllSamplesetName else samplesetname, 
+  wgsmutations = postProcess(wgsrefworkspace, "allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
                          save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
 
   # renaming
@@ -246,11 +242,11 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
 
   # adding lgacy datasetss
   print('add legacy datasets')
-  legacy_hybridcapture = tc.get(name='mutations-da6a', file='legacy_hybridcapture_somatic_mutations')
-  legacy_raindance = tc.get(name='mutations-da6a', file='legacy_raindance_somatic_mutations')
-  legacy_rna = tc.get(name='mutations-da6a', file='legacy_rna_somatic_mutations')
-  legacy_wes_sanger = tc.get(name='mutations-da6a', file='legacy_wes_sanger_somatic_mutations')
-  legacy_wgs_exoniconly = tc.get(name='mutations-da6a', file='legacy_wgs_exoniconly_somatic_mutations')
+  legacy_hybridcapture = tc.get(name='mutations-da6a', file='legacy_hybridcapture')
+  legacy_raindance = tc.get(name='mutations-da6a', file='legacy_raindance')
+  legacy_rna = tc.get(name='mutations-da6a', file='legacy_rna')
+  legacy_wes_sanger = tc.get(name='mutations-da6a', file='legacy_wes_sanger')
+  legacy_wgs_exoniconly = tc.get(name='mutations-da6a', file='legacy_wgs_exoniconly')
 
   merged = mut.mergeAnnotations(
       priomutations, legacy_hybridcapture, "HC_AC", useSecondForConflict=True, dry_run=False)
@@ -284,12 +280,11 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
   print(b-a)
 
   # making a depmap version
+  # removing immortalized ffor now 
+  merged = merged[~merged['is_likely_immortalization']]
   #reverting to previous versions
   merged = merged[MUTCOL_DEPMAP].rename(columns={
-          "Tumor_Allele":"Tumor_Seq_Allele1"})
-  # removing immortalized ffor now 
-  merged = merged[merged.is_likely_immortalization!=True]
-
+      "Tumor_Allele": "Tumor_Seq_Allele1"})
   merged.to_csv(folder+'somatic_mutations_withlegacy.csv', index=False)
 
   # making binary matrices
@@ -380,7 +375,7 @@ def CCLEPostProcessing(wesrefworkspace, wgsrefworkspace, samplesetname,
                     upload_async=False,
                     dataset_description=taiga_description)
 
-def analyzeUnfiltered(workspace, allsampleset='all', folder="temp/",
+def analyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', folder="temp/",
                       subsetcol=[SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id',
                                  'Chromosome', 'Start_position', 'End_position',
                                  'Variant_Classification', 'Variant_Type', 'Reference_Allele',
@@ -388,7 +383,7 @@ def analyzeUnfiltered(workspace, allsampleset='all', folder="temp/",
                                  'Annotation_Transcript', 'cDNA_Change', 'Codon_Change',
                                  'HGVS_protein_change',  'Protein_Change',
                                  't_alt_count', 't_ref_count', 'tumor_f', 'CGA_WES_AC'],
-                      taiga_dataset="mutations-latest-ed72",):
+                      taiga_dataset=TAIGA_MUTATION,):
 
   print("retrieving unfiltered")
   ####### WES
