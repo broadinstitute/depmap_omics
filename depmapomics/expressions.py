@@ -342,15 +342,19 @@ def postProcess(refworkspace, samplesetname,
         print(val+' not in the workspace\'s data')
 
   print("generating gene names")
+  
   mybiomart = utils.generateGeneNames(
       ensemble_server=ensemblserver, useCache=useCache)
-  gene_rename = {i.ensembl_gene_id: i.hgnc_symbol+' ('+i.ensembl_gene_id+')'
-                 for _, i in mybiomart.iterrows()}
-
-  protcod_rename = {
-    i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'
-    for _, i in mybiomart[(~mybiomart.entrezgene_id.isna()) &
-                  (mybiomart.gene_biotype == 'protein_coding')].iterrows()}
+  # creating renaming index, keeping top name first 
+  gene_rename = {}
+  for _, i in mybiomart.iterrows():
+    if i not in gene_rename:
+      gene_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+i.ensembl_gene_id+')'})
+  protcod_rename = {}
+  for _, i in mybiomart[(~mybiomart.entrezgene_id.isna()) &
+                            (mybiomart.gene_biotype == 'protein_coding')].iterrows():
+    if i not in protcod_rename:
+      protcod_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'})
   
   print("loading files")
   files, renaming = loadFromRSEMaggregate(refworkspace, todrop=failed, filenames=trancriptLevelCols+geneLevelCols,

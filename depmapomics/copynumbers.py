@@ -219,6 +219,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   mybiomart['gene_name'] = [i['hgnc_symbol'] +
                             ' (' + str(i['entrezgene_id']).split('.')[0] +
                             ')' for _, i in mybiomart.iterrows()]
+  mybiomart = mybiomart.drop_duplicates('gene_name', keep="first")
   genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
 
   # validation step
