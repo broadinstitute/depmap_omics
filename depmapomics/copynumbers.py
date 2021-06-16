@@ -299,8 +299,8 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   todropwes=todrop+tracker[(tracker.datatype=='wes')&(tracker.blacklist == 1)].index.tolist()
   wessegments, genecn, wesfailed = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
               todrop=todropwes,
-              save_output=folder, 
-              priority=priority, source_rename=source_rename, **kwargs)
+              save_output=folder,
+              priority=priority, **kwargs)
   
   wesrenaming = managingDuplicates(set(wessegments[SAMPLEID]), (set(
       wesfailed) - set(priority)) | set(todropwes), "wes", tracker)
@@ -310,6 +310,13 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
     {SAMPLEID: wesrenaming}).reset_index(drop = True)
   wespriogenecn = genecn[genecn.index.isin(set(wesrenaming.keys()))].rename(index=wesrenaming)
 
+  # annotating source
+  for v in set(wespriosegments.DepMap_ID):
+    wespriosegments.loc[wespriosegments[wespriosegments.DepMap_ID == v].index,
+                 'Source'] = tracker[tracker.index == v].source.values[0]
+    wespriosegments.Source = wespriosegments.Source.replace(source_rename)
+    wespriosegments.Source += ' WES'
+  
   #saving prio
   wespriosegments.to_csv(folder+"segments_all_latest.csv", index=False)
   wespriogenecn.to_csv(folder+"genecn_all_latest.csv")
@@ -322,7 +329,7 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   wgssegments, genecn, wgsfailed = postProcess(wgsrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
               todrop=todropwgs,
               save_output=folder,
-              priority=priority, source_rename=source_rename, **kwargs)
+              priority=priority, **kwargs)
 
   wgsrenaming = managingDuplicates(set(wgssegments[SAMPLEID]), (set(
       wgsfailed) - set(priority)) | set(todropwgs), "wgs", tracker)  
@@ -334,6 +341,13 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
     {SAMPLEID: wgsrenaming}).reset_index(drop = True)
   wgspriogenecn = genecn[genecn.index.isin(set(wgsrenaming.keys()))].rename(index=wgsrenaming)
   
+  # annotating source
+  for v in set(wgspriosegments.DepMap_ID):
+    wgspriosegments.loc[wgspriosegments[wgspriosegments.DepMap_ID == v].index,
+                 'Source'] = tracker[tracker.index == v].source.values[0]
+    wgspriosegments.Source = wgspriosegments.Source.replace(source_rename)
+    wgspriosegments.Source += ' WGS'
+
   #saving prio
   wgspriosegments.to_csv(folder+ "segments_all_latest.csv", index=False)
   wgspriogenecn.to_csv(folder+ "genecn_all_latest.csv")
