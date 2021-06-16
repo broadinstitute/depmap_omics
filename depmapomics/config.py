@@ -190,9 +190,9 @@ COLRENAMING = {'CONTIG': 'Chromosome',
                'MEAN_LOG2_COPY_RATIO': 'Segment_Mean',
                'CALL': 'Status'}
 
-SOURCE_RENAME = {'CCLF': 'Broad WES', 'CHORDOMA': 'Chordoma WES',
-                'SANGER': 'Sanger WES', 'IBM': 'Broad WES',
-                np.nan: 'Broad WES', 'DEPMAP': 'Broad WES',
+SOURCE_RENAME = {'CCLF': 'Broad', 'CHORDOMA': 'Chordoma',
+                'SANGER': 'Sanger', 'IBM': 'Broad', "CCLE2": "Broad",
+                np.nan: 'Broad', 'DEPMAP': 'Broad',
                 'IBM WES': "Broad WES", 'Broad CCLF': "Broad WES"}
 
 wrongwes_arxspan = {'ACH-001189', 'ACH-002303', 'ACH-002315', 'ACH-002341', 'ACH-001011', 
