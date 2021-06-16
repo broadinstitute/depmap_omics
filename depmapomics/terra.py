@@ -92,57 +92,6 @@ def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
   """ 
 
 
-def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', 
-                      participant_id='participant_id', 
-                      toupdate={"sex":[],
-                      "primary_disease":[],
-                      "cellosaurus_id":[],
-                      "age":[],
-                      "primary_site":[],
-                      "subtype":[],
-                      "subsubtype":[],
-                      "origin":[],
-                      "parent_cell_line":[],
-                      "matched_normal":[],
-                      "comments":[],
-                      "mediatype":[],
-                      "condition":[],
-                      'stripped_cell_line_name':[],
-                      "participant_id":[]}):
-  """
-  given a list of samples missing some information, will look for similar cell lines on the tracker to update it
-
-  Args:
-  ------
-    samples: dataframe of some samples
-    ccle_refsamples: dataframe of the sample tracker
-    arxspan_id: str colname of the sampleid
-    participant_id: str colname of the participant id
-    toupdate: dict(str:list) keys being columns to update and values being empty lists
-
-  Returns:
-  --------
-    samples: dataframe of the updated samples
-    notfound: dataframe of the samples that couldn't be updated
-  """
-  # If I have a previous samples I can update unknown data directly
-  index = []
-  notfound = []
-  for k, val in samples.iterrows():
-    dat = ccle_refsamples[ccle_refsamples[arxspan_id] == val[arxspan_id]]
-    if len(dat) > 0:
-      index.append(k)
-      for k, v in toupdate.items():
-        toupdate[k].append(dat[k].tolist()[0])
-    else:
-      notfound.append(k)
-  # doing so..
-  for k, v in toupdate.items():
-    samples.loc[index, k] = v
-  len(samples.loc[notfound][participant_id]
-      ), samples.loc[notfound][participant_id].tolist()
-  return samples, notfound
-
 def setupPairsFromSamples(sampless, refsamples, extract):
   """
   Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)

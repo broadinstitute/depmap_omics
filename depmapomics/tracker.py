@@ -4,54 +4,91 @@ import ipdb
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
+from depmapomics.config import *
 from taigapy import TaigaClient
 tc = TaigaClient()
+
+
+def getCCLETracker():
+  return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
+
+
+def getDEPMAPPV(pv_index="arxspan_id",
+                pv_tokeep=[],
+                index="DepMap_ID"):
+  depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
+    DEPMAP_PV).sheets[0].to_frame(header=2)
+  depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
+  depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index).set_index(
+      index, drop=True)
+  return depmap_pv[pv_tokeep] if pv_tokeep else depmap_pv
 
 def merge(tracker, new, old, arxspid, cols):
   """
   given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
   """
   #loc = tracker[tracker[arxspid]==old].index
+  return False
 
 
-def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', participant_id='participant_id', toupdate={"sex":[],
-  "primary_disease":[],
-  "cellosaurus_id":[],
-  "age":[],
-  "primary_site":[],
-  "subtype":[],
-  "subsubtype":[],
-  "origin":[],
-  "parent_cell_line":[],
-  "matched_normal":[],
-  "comments":[],
-  "mediatype":[],
-  "condition":[],
-  'stripped_cell_line_name':[],
-  "participant_id":[]}):
-    # If I have a previous samples I can update unknown data directly
-    index = []
-    notfound = []
-    for k, val in samples.iterrows():
-        dat = ccle_refsamples[ccle_refsamples[arxspan_id] == val[arxspan_id]]
-        if len(dat) > 0:
-            index.append(k)
-            for k, v in toupdate.items():
-                toupdate[k].append(dat[k].tolist()[0])
-        else:
-            notfound.append(k)
-    # doing so..
-    import pdb;pdb.set_trace()
-    for k, v in toupdate.items():
-        samples.loc[index, k] = v
-    len(samples.loc[notfound][participant_id]
-        ), samples.loc[notfound][participant_id].tolist()
-    return samples, notfound    
+def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', 
+                      participant_id='participant_id', toupdate={}):
+  """update a list of samples' missing information from what is known in the ccle sample tracker
 
+  Args:
+      samples ([type]): [description]
+      ccle_refsamples ([type]): [description]
+      arxspan_id (str, optional): [description]. Defaults to 'arxspan_id'.
+      participant_id (str, optional): [description]. Defaults to 'participant_id'.
+      toupdate (dict, optional): [description]. Defaults to {}.
 
-def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="version"):
+  Returns:
+      [type]: [description]
   """
-  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed by the same ids, will set it to your sample_ids using the latest version available for each sample
+  # If I have a previous samples I can update unknown data directly
+  index = []
+  notfound = []
+  if len(toupdate) == 0:
+    toupdate = {"sex": [],
+                "primary_disease": [],
+                "cellosaurus_id": [],
+                "age": [],
+                "primary_site": [],
+                "subtype": [],
+                "subsubtype": [],
+                "origin": [],
+                "parent_cell_line": [],
+                "matched_normal": [],
+                "comments": [],
+                "mediatype": [],
+                "condition": [],
+                'stripped_cell_line_name': [],
+                "participant_id": []}
+  #import pdb;pdb.set_trace()
+  for k, val in samples.iterrows():
+    dat = ccle_refsamples[ccle_refsamples[arxspan_id] == val[arxspan_id]]
+    if len(dat) > 0:
+      index.append(k)
+      for k, v in toupdate.items():
+        toupdate[k].append(dat[k].tolist()[0])
+    else:
+      notfound.append(k)
+  # doing so..
+  for k, v in toupdate.items():
+    samples.loc[index, k] = v
+  len(samples.loc[notfound][participant_id]
+    ), samples.loc[notfound][participant_id].tolist()
+  return samples, notfound    
+
+
+def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", 
+                        version="version", priority=None):
+  """
+  will set it to your sample_ids using the latest version available for each sample
+
+  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed 
+  by the same ids, will set it to your sample_ids using the latest version 
+  available for each sample
 
   Args:
   -----
@@ -67,7 +104,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   """
   lennames = len(names)
   res = {}
-  refsamples = refsamples[refsamples.index.isin(names)]
+  refsamples = refsamples.loc[names].copy()
   if lennames > len(refsamples):
     print(set(names) - set(refsamples.index))
     ipdb.set_trace()
@@ -75,9 +112,17 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", version="ver
   for arxspan in set(refsamples[arxspan_id]):
     allv = refsamples[refsamples[arxspan_id] == arxspan]
     for k, val in allv.iterrows():
-      if val[version] == max(allv.version.values):
-        res[k] = arxspan
-        break
+      if priority is None:
+        if val[version] == max(allv.version.values):
+          res[k] = arxspan
+          break
+      else:
+        if val[version] == max(allv.version.values):
+          res[k] = arxspan
+        if val[priority] == 1:
+          res[k] = arxspan
+          break
+
   print("removed " + str(lennames - len(res)) + " duplicate samples")
   # remove all the reference metadata columns except the arxspan ID
   return res
@@ -335,7 +380,16 @@ def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
 
 
 def makeCCLE2(tracker, source='CCLE2'):
-  """
+  """will turn the ccle sample tracker into the original ccle2 dataset based on the source column
+
+  this means it will return a table with arxspan ids, cell line name, ...[bam file type]
+
+  Args:
+      tracker ([type]): [description]
+      source (str, optional): [description]. Defaults to 'CCLE2'.
+
+  Returns:
+      pd.DF: a table with arxspan ids, cell line name, ...[bam file type]
   """
   tracker = tracker[tracker.source == source]
   ccle = pd.DataFrame(index=set(tracker.arxspan_id),
