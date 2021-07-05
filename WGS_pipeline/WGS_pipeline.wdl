@@ -4,9 +4,9 @@ import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample 
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/cnn-variant-filter.wdl" as cnn_variant_filter 
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/Manta_SomaticSV.wdl" as Manta_SomaticSV 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGSmut_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGSmut_pipeline/common_variant_filter.wdl" as common_variant_filter 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGSmut_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_pipeline 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/common_variant_filter.wdl" as common_variant_filter 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_pipeline 
 
 
 workflow WGS_pipeline {
