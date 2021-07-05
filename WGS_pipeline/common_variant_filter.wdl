@@ -11,7 +11,7 @@ workflow CommonVariantFilter {
     Int SSD = 60
     Int preemptible = 3
 
-    String docker_tag = "1.0.4"
+    String? docker_tag = "1.0.4"
 
     meta {
         author: "Brendan Reardon"
@@ -58,7 +58,7 @@ task commonfilterTask {
     Int? SSD
     Int? preemptible
 
-    String? docker_tag
+    String docker_tag
 
     command {
         args="--min_exac_ac "${min_exac_ac}" "
@@ -75,8 +75,8 @@ task commonfilterTask {
         File passedMAF="${sampleId}.common_variant_filter.pass.maf"
         File rejectedMAF="${sampleId}.common_variant_filter.reject.maf"
         String consideredCount=read_string("considered.txt")
-		String passCount=read_string("passed.txt")
-		String rejectCount=read_string("rejected.txt")
+        String passCount=read_string("passed.txt")
+        String rejectCount=read_string("rejected.txt")
     }
 
     runtime {
