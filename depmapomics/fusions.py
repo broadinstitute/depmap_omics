@@ -105,7 +105,7 @@ def standardizeGeneNames(fusions):
   return fusions
 
 
-def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
+async def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
                         colnames=FUSION_COLNAME, todrop=[], doplot=True,
                         countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
                         **kwargs ):
@@ -130,7 +130,7 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   """
   refwm = dm.WorkspaceManager(refworkspace)
   if save_output:
-    terra.saveConfigs(refworkspace, save_output + 'config/')
+    terra.saveWorkspace(refworkspace, save_output + 'config/')
   
   print("loading fusions")
   aggregated = refwm.get_sample_sets().loc[samplesetToLoad]['fusions_star']
@@ -171,7 +171,7 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   return fusions, fusions_filtered
 
 
-def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, 
+async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, 
                       fusionSamplecol=SAMPLEID, refsheet_url=REFSHEET_URL,  todrop=KNOWN_DROP,
                       taiga_dataset=TAIGA_FUSION, dataset_description=FUSIONreadme,
                       my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
@@ -203,7 +203,7 @@ def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME,
   folder=os.path.join("temp", samplesetname, "")
   renaming = h.fileToDict(folder+"rna_sample_renaming.json")
 
-  fusions, _ = postProcess(refworkspace,
+  fusions, _ = await postProcess(refworkspace,
                            todrop=previousQCfail, renaming=renaming, save_output=folder,
     **kwargs)
   

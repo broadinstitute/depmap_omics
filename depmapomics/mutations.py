@@ -140,7 +140,7 @@ def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKS
                        taiga_description=Mutationsreadme, taiga_dataset=TAIGA_MUTATION,
                        mutation_groups=MUTATION_GROUPS,
                        prev='ccle',
-                       minfreqtocall=0.05,
+                       minfreqtocall=0.25,
                        **kwargs):
   """the full CCLE mutations post processing pipeline (used only by CCLE)
 
@@ -220,26 +220,26 @@ def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKS
   #making binary mutation matrices
   print("creating mutation matrices")
   # binary mutations matrices
-  mut.mafToMat(priomutations[(priomutations.isDeleterious)]).astype(
+  mut.mafToMat(priomutations[(priomutations.isDeleterious)], minfreqtocall=minfreqtocall).astype(
       int).T.to_csv(folder+'somatic_mutations_boolmatrix_deleterious.csv')
   mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot | 
                                priomutations.isTCGAhotspot | 
-                               priomutations['Variant_Classification'] == 'Silent')]).astype(int).T.to_csv(
+                               priomutations['Variant_Classification'] == 'Silent')], minfreqtocall=minfreqtocall).astype(int).T.to_csv(
       folder+'somatic_mutations_boolmatrix_other.csv')
-  mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)]).astype(
+  mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)], minfreqtocall=minfreqtocall).astype(
     int).T.to_csv(folder+'somatic_mutations_boolmatrix_hotspot.csv')
 
 
   # genotyped mutations matrices
-  mut.mafToMat(priomutations[(priomutations.isDeleterious)], mode="genotype",
-              minfreqtocall=minfreqtocall).T.to_csv(folder+'somatic_mutations_matrix_deleterious.csv')
+  mut.mafToMat(priomutations[(priomutations.isDeleterious)], mode="genotype", 
+              ).T.to_csv(folder+'somatic_mutations_matrix_deleterious.csv')
   mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot | 
                                priomutations.isTCGAhotspot |
                                priomutations['Variant_Classification'] == 'Silent')], 
-                mode="genotype", minfreqtocall=minfreqtocall).T.to_csv(
+                mode="genotype").T.to_csv(
                   folder+'somatic_mutations_matrix_other.csv')
   mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)],
-              mode="genotype", minfreqtocall=minfreqtocall).T.to_csv(
+              mode="genotype").T.to_csv(
                 folder+'somatic_mutations_matrix_hotspot.csv')
 
   # adding lgacy datasetss
@@ -293,13 +293,13 @@ def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKS
   merged = merged[merged['Entrez_Gene_Id'] != 0]
   merged['mutname'] = merged['Hugo_Symbol'] + " (" + merged["Entrez_Gene_Id"].astype(str) + ")"
   mut.mafToMat(merged[(merged.Variant_annotation=="damaging")], mode='bool', 
-    mutNameCol="mutname").astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_damaging.csv')
+    mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_damaging.csv')
   mut.mafToMat(merged[(merged.Variant_annotation=="other conserving")], mode='bool', 
-    mutNameCol="mutname").astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_othercons.csv')
+    mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_othercons.csv')
   mut.mafToMat(merged[(merged.Variant_annotation=="other non-conserving")], mode='bool', 
-    mutNameCol="mutname").astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_othernoncons.csv')
+    mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_othernoncons.csv')
   mut.mafToMat(merged[(merged.isCOSMIChotspot | merged.isTCGAhotspot)], mode='bool', 
-    mutNameCol="mutname").astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_hotspot.csv')
+    mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_hotspot.csv')
 
   # uploading to taiga
   tc.update_dataset(changes_description="new "+samplesetname+" release!",
