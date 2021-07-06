@@ -25,11 +25,39 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID="DepMap_ID"
 
-SAMPLESETNAME = "21Q2"
+SAMPLESETNAME = "21Q3"
 
 RELEASE = SAMPLESETNAME
 
 isCCLE = True
+
+doCleanup = True
+
+LINES_TO_RELEASE = [
+    "ACH-000023",
+    "ACH-000145",
+    "ACH-000205",
+    "ACH-000345",
+    "ACH-000359",
+    "ACH-000399",
+    "ACH-000409",
+    "ACH-000515",
+    "ACH-000664",
+    "ACH-000744",
+    "ACH-000992",
+    "ACH-001032",
+    "ACH-001373",
+    "ACH-001393",
+    "ACH-001410",
+    "ACH-001558",
+    "ACH-001679",
+    "ACH-001696",
+    "ACH-002022",
+    "ACH-002060",
+    "ACH-002659",
+    "ACH-002687",
+    "ACH-002707",
+]
 
 PREV_VIRTUAL = {}
 
@@ -89,7 +117,7 @@ TO_UPDATE = {'primary_disease': ['Primary Disease'],
             "cellosaurus_id": ["RRID"],
             "age": ["CCLF Age"]}
 
-MAXAGE = '2021-02-01'
+MAXAGE = '2021-01-01'
 
 EXTRACT_TO_CHANGE = {'from_arxspan_id': 'participant'}
 
@@ -177,7 +205,7 @@ BAMQC = ["duplication_metrics", "bqsr_report",
          "tumor_bam_quality_distribution_metrics",
          "tumor_bam_quality_yield_metrics"]
 
-KNOWN_DROP = ['CDS-R22IHj',]
+KNOWN_DROP = ['CDS-R22IHj', 'CDS-xMnTwN']
 
 ############## CN
 
