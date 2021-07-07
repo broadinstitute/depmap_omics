@@ -17,6 +17,7 @@ workflow Cram2FilteredVcf {
     File? input_file_index           # Index for an aligned BAM file if that is the input, unneeded if input is a CRAM
     File reference_fasta 
     File reference_dict
+    File reference_fasta_index
     File resource_fofn               # File of VCF file names of resources of known SNPs and INDELs, (e.g. mills, gnomAD)
     File resource_fofn_index         # File of VCF file indices of resources
     File? architecture_json          # Neural Net configuration for CNNScoreVariants
