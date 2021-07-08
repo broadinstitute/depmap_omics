@@ -3,10 +3,11 @@
 LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 12}
+# TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 12}
+TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 15}
 # VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
-VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
-REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
+# VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
+# REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
 # VIRTUAL_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
 # REFERENCE_RELEASE = TENTATIVE_VIRTUAL # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47}; LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
