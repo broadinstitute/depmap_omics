@@ -1,5 +1,5 @@
 from taigapy import TaigaClient
-from depmapomics.tests.config import TENTATIVE_VIRTUAL, TAIGA_IDS_LATEST
+from depmapomics.qc.config import TENTATIVE_VIRTUAL, TAIGA_IDS_LATEST
 
 
 def get_taiga_id_with_version(taiga_id):
