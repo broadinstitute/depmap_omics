@@ -3,10 +3,10 @@
 LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-# TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 12}
 TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 15}
-# VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
+VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
 # VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
+REFERENCE_RELEASE = {'name': 'internal-21q2-9d16', 'version': 17} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
 # VIRTUAL_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
 # REFERENCE_RELEASE = TENTATIVE_VIRTUAL # old release used as ground truth
@@ -54,7 +54,7 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['file'] in ['CCLE_mutations']]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['omicssource'] in ['RNA']]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
@@ -71,17 +71,17 @@ TAIGA_IDS_LATEST = {
         ('CCLE_mutations_bool_hotspot', 'all_somatic_mutations_boolmatrix_fordepmap_hotspot')
     ],
     FUSIONS_TAIGA_ID:[
-        ('CCLE_fusions_unfiltered', 'fusions_21Q2'),
-        ('CCLE_fusions', 'filtered_fusions_21Q2')
+        ('CCLE_fusions_unfiltered', 'fusions_latest'),
+        ('CCLE_fusions', 'filteredfusions_latest')
     ],
     EXPRESSION_TAIGA_ID:[
-        ('CCLE_expression_full', 'expression_21Q2_genes_tpm_logp1'),
-        ('CCLE_RNAseq_transcripts', 'expression_21Q2_transcripts_tpm_logp1'),
-        ('CCLE_RNAseq_reads', 'expression_21Q2_genes_expected_count'),
-        ('CCLE_expression', 'expression_21Q2_proteincoding_genes_tpm_logp1'),
-        ('CCLE_expression_proteincoding_genes_expected_count', 'expression_21Q2_proteincoding_genes_expected_count'),
-        ('CCLE_expression_transcripts_expected_count', 'expression_21Q2_transcripts_expected_count'),
-        ('CCLE_ssGSEA', 'gene_sets_21Q2_all')
+        ('CCLE_expression_full', 'genes_tpm_logp1'),
+        ('CCLE_RNAseq_transcripts', 'transcripts_tpm_logp1'),
+        ('CCLE_RNAseq_reads', 'genes_expected_count'),
+        ('CCLE_expression', 'proteincoding_genes_tpm_logp1'),
+        ('CCLE_expression_proteincoding_genes_expected_count', 'proteincoding_genes_expected_count'),
+        ('CCLE_expression_transcripts_expected_count', 'transcripts_expected_count'),
+        ('CCLE_ssGSEA', 'gene_sets_all')
     ],
     CN_TAIGA_ID:[
         ('CCLE_gene_cn', 'all_21Q2_gene_cn'),

@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import seaborn as sns
-from depmapomics.tests.config import PLOTS_OUTPUT_FILENAME_PREFIX
-from depmapomics.tests.test_compare_to_ref_release import (
+from depmapomics.qc.config import PLOTS_OUTPUT_FILENAME_PREFIX
+from depmapomics.qc.test_compare_to_ref_release import (
     FILE_ATTRIBUTES_PAIRED, REFERENCE_RELEASE, VIRTUAL_RELEASE, data,
     get_both_releases_from_taiga)
 
