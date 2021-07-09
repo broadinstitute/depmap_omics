@@ -1,5 +1,4 @@
 import os.path
-import asyncio
 
 import dalmatian as dm
 import pandas as pd
@@ -17,7 +16,6 @@ from depmapomics import utils
 from depmapomics import tracker as track
 
 from depmapomics.config import *
-from functools import lru_cache
 from gsheets import Sheets
 from taigapy import TaigaClient
 tc = TaigaClient()
@@ -122,7 +120,7 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetnam
   tracker.loc[selected, samplesetname] = 1
   tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']] = 0
   tracker.loc[lowqual, 'low_quality'] = 1
-  tracker.loc[failed, 'blacklist'] = 1
+  tracker.loc[set(failed)&set(tracker.index), 'blacklist'] = 1
   dfToSheet(tracker, sheetname, secret=sheetcreds)
   print("updated the sheet, please reactivate protections")
 
@@ -214,21 +212,18 @@ def extractProtCod(files, mybiomart, protcod_rename,
         print(dup)
         raise ValueError('duplicate genes')
     files[name].index = r
-    files[name][(files[name].sum(1) != 0) & (files[name].var(1) != 0)]
-
-    files[name][files[name].index.isin(set(mybiomart.ensembl_gene_id))]
-    files[name] = files[name].rename(columns=protcod_rename)
+    files[name] = files[name][files[name].index.isin(set(mybiomart.ensembl_gene_id))].rename(index=protcod_rename)
     # removing genes that did not match.. pretty unfortunate
     if dropNonMatching:
-      files[name] = files[name][[i for i in files[name].columns if ' (' in i]]
+      files[name] = files[name].loc[[i for i in files[name].index if ' (' in i]]
     # check: do we have any duplicates?
     # if we do, managing duplicates
-    if len(set(h.dups(files[name].columns.tolist()))) > 0:
+    if len(set(h.dups(files[name].index.tolist()))) > 0:
       print("we have duplicate gene names!!")
-      for dup in h.dups(files[name].columns):
-        a = files[name][dup].sum()
-        files[name].drop(columns=dup)
-        files[name][dup] = a
+      for dup in h.dups(files[name].index):
+        a = files[name].loc[dup].sum()
+        files[name].drop(index=dup)
+        files[name].loc[dup] = a
     
   return files
 
@@ -370,6 +365,7 @@ async def postProcess(refworkspace, samplesetname,
   print("renaming files")
   # gene level
   if len(geneLevelCols) > 0:
+    import pdb; pdb.set_trace()
     files = extractProtCod(files, mybiomart[mybiomart.gene_biotype == 'protein_coding'],
                            protcod_rename, dropNonMatching=dropNonMatching,
                            filenames=geneLevelCols)
@@ -389,7 +385,6 @@ async def postProcess(refworkspace, samplesetname,
   return files, enrichments, failed, samplesinset, renaming, lowqual
 
 
-@lru_cache(maxsize=None)
 async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
                        colstoclean=['fastq1', 'fastq2',
                                     'recalibrated_bam', 'recalibrated_bam_index'],
@@ -427,8 +422,6 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
   Returns:
       [type]: [description]
   """
-  import pdb
-  pdb.set_trace()
   if prevcounts is "ccle":
     prevcounts = tc.get(name=TAIGA_ETERNAL,
            file='CCLE_RNAseq_reads')
@@ -451,7 +444,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
     return renaming
 
   folder = os.path.join("temp", samplesetname, "")
-  files, _, failed, samplesinset, renaming, lowqual = await postProcess(refworkspace, samplesetname,
+  files, _, failed, _, renaming, lowqual = await postProcess(refworkspace, samplesetname,
                                                                   save_output=folder, doCleanup=doCleanup, priority=priority,
                                                                   colstoclean=colstoclean, ensemblserver=ensemblserver,
                                                                   todrop=todrop, samplesetToLoad=samplesetToLoad,
@@ -499,63 +492,63 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
     # assert newNAs == 0
     # assert new0s == 0
 
-  print("updating the tracker")
-  updateTracker(refworkspace, set(renaming.keys()) - set(['transcript_id(s)']), failed,
-                lowqual[lowqual.sum(1) > 3].index.tolist(),
-                ccle_refsamples, samplesinset, samplesetname,
-                sheetname=sheetname, sheetcreds=sheetcreds)
-
+  #print("updating the tracker")
+  #updateTracker(refworkspace, set(renaming.keys()) - set(['transcript_id(s)']), failed,
+  #              lowqual[lowqual.sum(1) > 3].index.tolist(),
+  #              ccle_refsamples, samplesetname,
+  #              sheetname=sheetname, sheetcreds=sheetcreds)
+  import pdb; pdb.set_trace()
   print("uploading to taiga")
   tc.update_dataset(changes_description="new "+samplesetname+" release!",
                     dataset_permaname=taiga_dataset,
                     upload_files=[
                         {
-                            "path": "temp/"+samplesetname+"/expression_proteincoding_tpm_logp1.csv",
+                            "path": folder+"proteincoding_genes_tpm_logp1.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_transcripts_tpm_logp1.csv",
+                            "path": folder+"transcripts_tpm_logp1.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_genes_tpm_logp1.csv",
+                            "path": folder+"genes_tpm_logp1.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_genes_tpm.csv",
+                            "path": folder+"genes_tpm.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_transcripts_tpm.csv",
+                            "path": folder+"transcripts_tpm.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_proteincoding_tpm.csv",
+                            "path": folder+"proteincoding_genes_tpm.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_transcripts_expectedcount.csv",
+                            "path": folder+"transcripts_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_proteincoding_expectedcount.csv",
+                            "path": folder+"proteincoding_genes_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_genes_expectedcount.csv",
+                            "path": folder+"genes_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": 'temp/'+samplesetname+'/gene_sets_all.csv',
+                            "path": folder+'gene_sets_all.csv',
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },

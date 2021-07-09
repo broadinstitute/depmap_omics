@@ -132,7 +132,7 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   return mutations
 
 
-def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKSPACE, 
+async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKSPACE, 
                       samplesetname=SAMPLESETNAME, todrop=KNOWN_DROP,
                        AllSamplesetName='all', doCleanup=False,
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
@@ -377,7 +377,7 @@ def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKS
                     upload_async=False,
                     dataset_description=taiga_description)
 
-def analyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', folder="temp/",
+async def analyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', folder="temp/",
                       subsetcol=[SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id',
                                  'Chromosome', 'Start_position', 'End_position',
                                  'Variant_Classification', 'Variant_Type', 'Reference_Allele',

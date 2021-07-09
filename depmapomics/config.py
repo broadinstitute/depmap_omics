@@ -272,7 +272,7 @@ GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/ge
 
 RNAGSPATH38="gs://cclebams/rnasq_hg38/"
 
-STARBAMCOLTERRA = [ "star_bam_file", 'star_bam_index']
+STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 
 RSEM_TRANSCRIPTS = ['rsem_transcripts_expected_count',
                     'rsem_transcripts_tpm']
