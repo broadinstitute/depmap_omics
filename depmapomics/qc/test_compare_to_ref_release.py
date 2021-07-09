@@ -59,8 +59,12 @@ def test_compare_column_names(data):
 PARAMS_matrix_correlations = [(x['file'],
     CORRELATION_THRESHOLDS['CCLE_gene_cn'] if (x['file'] == 'CCLE_gene_cn') else CORRELATION_THRESHOLDS['all_expressions'])
     for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix'] & (x['omicssource']=='RNA')]
-@pytest.mark.parametrize('method', ['spearman', 'pearson'])
-@pytest.mark.parametrize('axisname', ['pergene', 'persample'])
+@pytest.mark.parametrize('method', ['spearman',
+                         pytest.param('pearson',
+                         marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+@pytest.mark.parametrize('axisname', ['persample',
+                        pytest.param('pergene',
+                        marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
 @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
 @pytest.mark.compare
 def test_matrix_correlations(data, threshold, axisname, method):
@@ -69,7 +73,7 @@ def test_matrix_correlations(data, threshold, axisname, method):
     corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
     # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
     corrs.dropna(inplace=True)
-    assert (corrs >= threshold).all(), 'the samples which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+    assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
 
 
 PARAMS_fraction_of_unequl_columns_from_merged_file = [((x['file'], x['merge_cols']), x['expected_changed_cols'])
