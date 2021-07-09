@@ -47,14 +47,11 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   
   if doCleanup:
     print('cleaning up')
+    res = wm.get_samples()
     for val in toremove:
-        wm.disable_hound().delete_entity_attributes('samples', toremove)
-    a = wm.get_samples()
-    e = []
-    for i in a[toremove].values.tolist():
-        if i is not np.nan:
-            e.extend(i)
-    gcp.rmFiles(e)
+      if val in res.columns.tolist():
+        wm.disable_hound().delete_entity_attributes(
+            'sample', res[val], delete_files=True)
   
   segments = pd.read_csv(wm.get_entities(
         'sample_set').loc[sampleset, colname], sep='\t').rename(columns=colRenaming)
@@ -249,7 +246,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   return segments, genecn, failed
 
 
-def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
+async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                        samplesetname=SAMPLESETNAME, AllSamplesetName='all',
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                        sheetcreds=SHEETCREDS, sheetname=SHEETNAME,
@@ -285,6 +282,7 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
       procqc ([type], optional): [description]. Defaults to PROCQC.
       source_rename ([type], optional): [description]. Defaults to SOURCE_RENAME.
   """
+  print('new')
   if prevgenecn is 'ccle':
     prevgenecn = tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn')
 
@@ -307,18 +305,19 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   wesrenaming = managingDuplicates(set(wessegments[SAMPLEID]), (set(
       wesfailed) - set(priority)) | set(todropwes), "wes", tracker)
   h.dictToFile(wesrenaming, folder+"sample_renaming.json")
+  
+  # annotating source
+  for v in set(wessegments[SAMPLEID]):
+    wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
+                 'Source'] = tracker[tracker.index == v].source.values[0]
+    wessegments.Source = wessegments.Source.replace(source_rename)
+    wessegments.Source += ' WES'
+  
   print('renaming')
   wespriosegments = wessegments[wessegments[SAMPLEID].isin(set(wesrenaming.keys()))].replace(
     {SAMPLEID: wesrenaming}).reset_index(drop = True)
   wespriogenecn = genecn[genecn.index.isin(set(wesrenaming.keys()))].rename(index=wesrenaming)
 
-  # annotating source
-  for v in set(wespriosegments.DepMap_ID):
-    wespriosegments.loc[wespriosegments[wespriosegments.DepMap_ID == v].index,
-                 'Source'] = tracker[tracker.index == v].source.values[0]
-    wespriosegments.Source = wespriosegments.Source.replace(source_rename)
-    wespriosegments.Source += ' WES'
-  
   #saving prio
   wespriosegments.to_csv(folder+"segments_all_latest.csv", index=False)
   wespriogenecn.to_csv(folder+"genecn_all_latest.csv")
@@ -338,18 +337,18 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
 
   h.dictToFile(wgsrenaming, folder+"sample_renaming.json")
 
+  # annotating source
+  for v in set(wgssegments[SAMPLEID]):
+    wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
+                        'Source'] = tracker[tracker.index == v].source.values[0]
+    wgssegments.Source = wgssegments.Source.replace(source_rename)
+    wgssegments.Source += ' WGS'
+
   print('renaming')
-  wgspriosegments = wessegments[wessegments[SAMPLEID].isin(set(wgsrenaming.keys()))].replace(
+  wgspriosegments = wgssegments[wgssegments[SAMPLEID].isin(set(wgsrenaming.keys()))].replace(
     {SAMPLEID: wgsrenaming}).reset_index(drop = True)
   wgspriogenecn = genecn[genecn.index.isin(set(wgsrenaming.keys()))].rename(index=wgsrenaming)
   
-  # annotating source
-  for v in set(wgspriosegments.DepMap_ID):
-    wgspriosegments.loc[wgspriosegments[wgspriosegments.DepMap_ID == v].index,
-                 'Source'] = tracker[tracker.index == v].source.values[0]
-    wgspriosegments.Source = wgspriosegments.Source.replace(source_rename)
-    wgspriosegments.Source += ' WGS'
-
   #saving prio
   wgspriosegments.to_csv(folder+ "segments_all_latest.csv", index=False)
   wgspriogenecn.to_csv(folder+ "genecn_all_latest.csv")
@@ -361,6 +360,7 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   #adding to the sample tracker the sequencing that were selected and the ones that failed QC
   selected = {j:i for i,j in wesrenaming.items()}
   selected.update({j:i for i,j in wgsrenaming.items()})
+  import pdb; pdb.set_trace()
   try:
     wgssamplesinset=[i['entityName'] for i in wesrefwm.get_entities(
             'sample_set').loc[samplesetname].samples]
