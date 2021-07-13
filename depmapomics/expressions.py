@@ -365,7 +365,7 @@ async def postProcess(refworkspace, samplesetname,
   print("renaming files")
   # gene level
   if len(geneLevelCols) > 0:
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     files = extractProtCod(files, mybiomart[mybiomart.gene_biotype == 'protein_coding'],
                            protcod_rename, dropNonMatching=dropNonMatching,
                            filenames=geneLevelCols)
@@ -497,7 +497,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
   #              lowqual[lowqual.sum(1) > 3].index.tolist(),
   #              ccle_refsamples, samplesetname,
   #              sheetname=sheetname, sheetcreds=sheetcreds)
-  import pdb; pdb.set_trace()
+  #import pdb; pdb.set_trace()
   print("uploading to taiga")
   tc.update_dataset(changes_description="new "+samplesetname+" release!",
                     dataset_permaname=taiga_dataset,
