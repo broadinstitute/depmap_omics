@@ -313,7 +313,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
       wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
                   'Source'] = tracker[tracker.index == v].source.values[0]
       wessegments.Source = wessegments.Source.replace(source_rename)
-      wessegments.Source += ' WES'
+    wessegments.Source += ' WES'
     
     print('renaming')
     wespriosegments = wessegments[wessegments[SAMPLEID].isin(set(wesrenaming.keys()))].replace(
@@ -350,7 +350,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
     wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
                         'Source'] = tracker[tracker.index == v].source.values[0]
     wgssegments.Source = wgssegments.Source.replace(source_rename)
-    wgssegments.Source += ' WGS'
+  wgssegments.Source += ' WGS'
 
   print('renaming')
   wgspriosegments = wgssegments[wgssegments[SAMPLEID].isin(set(wgsrenaming.keys()))].replace(
@@ -368,7 +368,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
   #adding to the sample tracker the sequencing that were selected and the ones that failed QC
   selected = {j:i for i,j in wesrenaming.items()}
   selected.update({j:i for i,j in wgsrenaming.items()})
-  import pdb; pdb.set_trace()
+  # import pdb; pdb.set_trace()
   try:
     wgssamplesinset=[i['entityName'] for i in wgsrefwm.get_entities(
             'sample_set').loc[samplesetname].samples]
@@ -393,7 +393,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
     set(wgspriogenecn.index))])
 
   mergedgenecn.to_csv(folder+ "merged_genecn_all.csv")
-  mergedsegments.to_csv(folder+ "merged_segments_all_.csv",index=False)
+  mergedsegments.to_csv(folder+ "merged_segments_all.csv",index=False)
 
   #uploading to taiga
   print('uploading to taiga')
@@ -425,11 +425,11 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8"
                       },
-#                       {
-#                         "path": folder+"/merged_segments_all.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
+                      {
+                        "path": folder+"/merged_segments_all.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
                       {
                         "path": folder+"/wgs_segments_all.csv",
                         "format": "TableCSV",
