@@ -177,7 +177,7 @@ def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
       print(dup)
       raise ValueError('duplicate '+index)
     file.index = r
-    
+
     file = file.rename(index=rename_transcript if len(
         rename_transcript) != 0 else gene_rename).T
     files[val] = file
@@ -224,11 +224,11 @@ def extractProtCod(files, mybiomart, protcod_rename,
         a = files[name].loc[dup].sum()
         files[name].drop(index=dup)
         files[name].loc[dup] = a
-    
+
   return files
 
 
-async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
+def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
                  geneset_file=SSGSEAFILEPATH, recompute=True):
   """the way we run ssGSEA on the CCLE dataset
 
@@ -259,7 +259,7 @@ async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
   #### merging splicing variants into the same gene
   #counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
-  enrichments = (await rna.gsva(tpm_genes.T, pathtogenepy=pathtogenepy,
+  enrichments = (rna.gsva(tpm_genes.T, pathtogenepy=pathtogenepy,
                                 geneset_file=geneset_file, method='ssgsea', recompute=recompute)).T
   enrichments.index = [i.replace('.', '-') for i in enrichments.index]
   return enrichments
@@ -279,7 +279,7 @@ def saveFiles(files, folder=TMP_PATH, rep=('rsem', 'expression')):
                                                               '_logp1.csv'))
 
 
-async def postProcess(refworkspace, samplesetname,
+def postProcess(refworkspace, samplesetname,
                 save_output="", doCleanup=False,
                 colstoclean=[], ensemblserver=ENSEMBL_SERVER_V,
                 todrop=[], samplesetToLoad="all", priority=[],
@@ -289,8 +289,8 @@ async def postProcess(refworkspace, samplesetname,
                 dropNonMatching=False, recompute_ssgsea=True,
                 ):
   """postprocess a set of aggregated Expression table from RSEM in the CCLE way
-  
-  (usually using the aggregate_RSEM terra worklow) 
+
+  (usually using the aggregate_RSEM terra worklow)
 
   Args:
       refworkspace ([type]): [description]
@@ -341,10 +341,10 @@ async def postProcess(refworkspace, samplesetname,
         print(val+' not in the workspace\'s data')
 
   print("generating gene names")
-  
+
   mybiomart = utils.generateGeneNames(
       ensemble_server=ensemblserver, useCache=useCache)
-  # creating renaming index, keeping top name first 
+  # creating renaming index, keeping top name first
   gene_rename = {}
   for _, i in mybiomart.iterrows():
     if i.ensembl_gene_id not in gene_rename:
@@ -354,7 +354,7 @@ async def postProcess(refworkspace, samplesetname,
                             (mybiomart.gene_biotype == 'protein_coding')].iterrows():
     if i.ensembl_gene_id not in protcod_rename:
       protcod_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'})
-  
+
   print("loading files")
   files, renaming = loadFromRSEMaggregate(refworkspace, todrop=failed, filenames=trancriptLevelCols+geneLevelCols,
                                           sampleset=samplesetToLoad, renamingFunc=renamingFunc)
@@ -369,14 +369,16 @@ async def postProcess(refworkspace, samplesetname,
     files = extractProtCod(files, mybiomart[mybiomart.gene_biotype == 'protein_coding'],
                            protcod_rename, dropNonMatching=dropNonMatching,
                            filenames=geneLevelCols)
+    assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
     files = subsetGenes(files, gene_rename, filenames=geneLevelCols,
                         index="gene_id", drop="transcript_id")
+    assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
   if len(trancriptLevelCols) > 0:
     files = subsetGenes(
         files, gene_rename, filenames=trancriptLevelCols, drop="gene_id", index="transcript_id")
-
+  assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
   print("doing ssGSEA")
-  enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
+  enrichments = ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
   print("saving files")
   enrichments.to_csv(save_output+'gene_sets_all.csv')
   saveFiles(files, save_output)
@@ -385,7 +387,7 @@ async def postProcess(refworkspace, samplesetname,
   return files, enrichments, failed, samplesinset, renaming, lowqual
 
 
-async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
+def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
                        colstoclean=['fastq1', 'fastq2',
                                     'recalibrated_bam', 'recalibrated_bam_index'],
                        ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
@@ -444,13 +446,13 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
     return renaming
 
   folder = os.path.join("temp", samplesetname, "")
-  files, _, failed, _, renaming, lowqual = await postProcess(refworkspace, samplesetname,
+  files, _, failed, _, renaming, lowqual = postProcess(refworkspace, samplesetname,
                                                                   save_output=folder, doCleanup=doCleanup, priority=priority,
                                                                   colstoclean=colstoclean, ensemblserver=ensemblserver,
                                                                   todrop=todrop, samplesetToLoad=samplesetToLoad,
                                                                   geneLevelCols=RSEMFILENAME_GENE,
                                                                   trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
-                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn, 
+                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn,
                                                                   dropNonMatching=dropNonMatching, **kwargs)
 
   print("doing validation")
