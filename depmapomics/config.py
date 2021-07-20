@@ -277,8 +277,8 @@ STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 RSEM_TRANSCRIPTS = ['rsem_transcripts_expected_count',
                     'rsem_transcripts_tpm']
 
-RSEMFILENAME_GENE=["genes_tpm",
-                   "genes_expected_count"]
+RSEMFILENAME_GENE=["genes_tpm", "genes_expected_count"]
+PROTEINEFILENAMES = ['proteincoding_genes_tpm', 'proteincoding_genes_expected_count']
 
 RSEMFILENAME_TRANSCRIPTS=["transcripts_tpm", "transcripts_expected_count"]
 

@@ -165,7 +165,7 @@ def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
       for _, v in files[val].iterrows():
         if v['gene_id'].split('.')[0] in gene_rename:
           rename_transcript[v['transcript_id']] = gene_rename[
-              v['gene_id'].split('.')[0]].split(' (')[0] + ' (' + v.transcript_id + ')'
+              v['gene_id'].split('.')[0]].split(' (')[0] + ' (' + v.transcript_id.split('.')[0] + ')'
         else:
           missing.append(v.gene_id.split('.')[0])
       print('missing: '+str(len(missing))+' genes')
@@ -224,6 +224,7 @@ def extractProtCod(files, mybiomart, protcod_rename,
         a = files[name].loc[dup].sum()
         files[name].drop(index=dup)
         files[name].loc[dup] = a
+    files[name] = files[name].T
 
   return files
 
@@ -369,18 +370,19 @@ def postProcess(refworkspace, samplesetname,
     files = extractProtCod(files, mybiomart[mybiomart.gene_biotype == 'protein_coding'],
                            protcod_rename, dropNonMatching=dropNonMatching,
                            filenames=geneLevelCols)
-    assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
+    # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
     files = subsetGenes(files, gene_rename, filenames=geneLevelCols,
                         index="gene_id", drop="transcript_id")
-    assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
+    # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
   if len(trancriptLevelCols) > 0:
     files = subsetGenes(
         files, gene_rename, filenames=trancriptLevelCols, drop="gene_id", index="transcript_id")
-  assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
+  # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
   print("doing ssGSEA")
-  enrichments = ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
-  print("saving files")
-  enrichments.to_csv(save_output+'gene_sets_all.csv')
+  # enrichments = ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
+  enrichments = None
+  # print("saving files")
+  # enrichments.to_csv(save_output+'gene_sets_all.csv')
   saveFiles(files, save_output)
   print("done")
 
@@ -446,6 +448,7 @@ def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, r
     return renaming
 
   folder = os.path.join("temp", samplesetname, "")
+  folder = "" # TODO: seems like this is not implemented in genepy
   files, _, failed, _, renaming, lowqual = postProcess(refworkspace, samplesetname,
                                                                   save_output=folder, doCleanup=doCleanup, priority=priority,
                                                                   colstoclean=colstoclean, ensemblserver=ensemblserver,
@@ -548,12 +551,12 @@ def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, r
                             "path": folder+"genes_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+'gene_sets_all.csv',
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
+                        }
+                        # {
+                        #     "path": folder+'gene_sets_all.csv',
+                        #     "format": "NumericMatrixCSV",
+                        #     "encoding": "utf-8"
+                        # },
                     ],
                     upload_async=False,
                     dataset_description=dataset_description)

@@ -71,7 +71,7 @@ def add_variant_annotation_column(maf):
 def managingDuplicates(samples, failed, datatype, tracker):
   # selecting the right arxspan id (latest version)
   renaming = tracker.removeOlderVersions(names=samples,
-                                         refsamples=tracker[tracker.datatype == datatype], 
+                                         refsamples=tracker[tracker.datatype == datatype],
                                          priority="prioritized")
 
   # reparing QC when we have a better duplicate
@@ -92,7 +92,7 @@ def managingDuplicates(samples, failed, datatype, tracker):
 
 
 def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", doCleanup=False,
-        rename_cols={"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID, 
+        rename_cols={"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID,
         "Tumor_Seq_Allele2": "Tumor_Allele"},):
   """post process an aggregated MAF file the CCLE way
 
@@ -114,7 +114,7 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   if save_output:
     terra.saveConfigs(refworkspace, save_output + 'config/')
   refwm = dm.WorkspaceManager(refworkspace)
-  mutations = pd.read_csv(refwm.get_sample_sets().loc[sampleset, 'filtered_CGA_MAF_aggregated'], sep='\t') 
+  mutations = pd.read_csv(refwm.get_sample_sets().loc[sampleset, 'filtered_CGA_MAF_aggregated'], sep='\t')
   mutations = mutations.rename(columns=rename_cols).drop(
       columns=['Center', 'Tumor_Seq_Allele1'])
 
@@ -124,7 +124,7 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   mutations = mut.filterAllelicFraction(mutations, loc=[mutCol], sep=':',frac=0.1)
   mutations = addAnnotation(mutations, NCBI_Build='37', Strand="+")
   mutations = annotateLikelyImmortalized(mutations,
-                                          TCGAlocs=['TCGAhsCnt', 'COSMIChsCnt'], 
+                                          TCGAlocs=['TCGAhsCnt', 'COSMIChsCnt'],
                                           max_recurrence=0.05, min_tcga_true_cancer=5)
 
   mutations.to_csv(save_output + 'somatic_mutations_all.csv', index=None)
@@ -132,7 +132,7 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   return mutations
 
 
-async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKSPACE, 
+def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                       samplesetname=SAMPLESETNAME, todrop=KNOWN_DROP,
                        AllSamplesetName='all', doCleanup=False,
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
@@ -160,7 +160,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
       mutation_groups ([type], optional): [description]. Defaults to MUTATION_GROUPS.
       prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
       minfreqtocall (float, optional): [description]. Defaults to 0.05.
-  """  
+  """
   if prev == 'ccle':
     prev = tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')
   if doCleanup:
@@ -172,7 +172,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
   # doing wes
   print('doing wes')
   folder=os.path.join("temp", samplesetname, "wes_")
-  
+
   wesmutations = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
                              save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
 
@@ -181,9 +181,9 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
   #wesrenaming = track.removeOlderVersions(names=set(
   #    wesmutations[SAMPLEID]), refsamples=wesrefwm.get_samples(),
   #    arxspan_id="arxspan_id", version="version", priority=priority)
-  
+
   wesrenaming = h.fileToDict(folder+"sample_renaming.json")
-  
+
   wesmutations = wesmutations[wesmutations[SAMPLEID].isin(wesrenaming.keys())].replace({
       SAMPLEID: wesrenaming})
   wesmutations.to_csv(folder + 'somatic_mutations_latest.csv', index=None)
@@ -191,7 +191,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
   # doing wgs
   print('doing wgs')
   folder=os.path.join("temp", samplesetname, "wgs_")
-  
+
   wgsmutations = postProcess(wgsrefworkspace, "allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
                          save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
 
@@ -222,8 +222,8 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
   # binary mutations matrices
   mut.mafToMat(priomutations[(priomutations.isDeleterious)], minfreqtocall=minfreqtocall).astype(
       int).T.to_csv(folder+'somatic_mutations_boolmatrix_deleterious.csv')
-  mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot | 
-                               priomutations.isTCGAhotspot | 
+  mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot |
+                               priomutations.isTCGAhotspot |
                                priomutations['Variant_Classification'] == 'Silent')], minfreqtocall=minfreqtocall).astype(int).T.to_csv(
       folder+'somatic_mutations_boolmatrix_other.csv')
   mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)], minfreqtocall=minfreqtocall).astype(
@@ -231,11 +231,11 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
 
 
   # genotyped mutations matrices
-  mut.mafToMat(priomutations[(priomutations.isDeleterious)], mode="genotype", 
+  mut.mafToMat(priomutations[(priomutations.isDeleterious)], mode="genotype",
               ).T.to_csv(folder+'somatic_mutations_matrix_deleterious.csv')
-  mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot | 
+  mut.mafToMat(priomutations[~(priomutations.isDeleterious | priomutations.isCOSMIChotspot |
                                priomutations.isTCGAhotspot |
-                               priomutations['Variant_Classification'] == 'Silent')], 
+                               priomutations['Variant_Classification'] == 'Silent')],
                 mode="genotype").T.to_csv(
                   folder+'somatic_mutations_matrix_other.csv')
   mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)],
@@ -263,7 +263,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
 
   merged = merged[merged['tumor_f'] > 0.05]
   merged = annotateLikelyImmortalized(merged, TCGAlocs=[
-                                                'TCGAhsCnt', 'COSMIChsCnt'], max_recurrence=0.05, 
+                                                'TCGAhsCnt', 'COSMIChsCnt'], max_recurrence=0.05,
                                                 min_tcga_true_cancer=5)
   print("changing variant annotations")
   rename = {}
@@ -282,7 +282,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
   print(b-a)
 
   # making a depmap version
-  # removing immortalized ffor now 
+  # removing immortalized ffor now
   merged = merged[~merged['is_likely_immortalization']]
   #reverting to previous versions
   merged = merged[MUTCOL_DEPMAP].rename(columns={
@@ -292,13 +292,13 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
   # making binary matrices
   merged = merged[merged['Entrez_Gene_Id'] != 0]
   merged['mutname'] = merged['Hugo_Symbol'] + " (" + merged["Entrez_Gene_Id"].astype(str) + ")"
-  mut.mafToMat(merged[(merged.Variant_annotation=="damaging")], mode='bool', 
+  mut.mafToMat(merged[(merged.Variant_annotation=="damaging")], mode='bool',
     mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_damaging.csv')
-  mut.mafToMat(merged[(merged.Variant_annotation=="other conserving")], mode='bool', 
+  mut.mafToMat(merged[(merged.Variant_annotation=="other conserving")], mode='bool',
     mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_othercons.csv')
-  mut.mafToMat(merged[(merged.Variant_annotation=="other non-conserving")], mode='bool', 
+  mut.mafToMat(merged[(merged.Variant_annotation=="other non-conserving")], mode='bool',
     mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_othernoncons.csv')
-  mut.mafToMat(merged[(merged.isCOSMIChotspot | merged.isTCGAhotspot)], mode='bool', 
+  mut.mafToMat(merged[(merged.isCOSMIChotspot | merged.isTCGAhotspot)], mode='bool',
     mutNameCol="mutname", minfreqtocall=minfreqtocall).astype(int).T.to_csv(folder+'somatic_mutations_boolmatrix_fordepmap_hotspot.csv')
 
   # uploading to taiga
@@ -418,7 +418,7 @@ async def analyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', folder="
   del unfiltered
   tc.update_dataset(changes_description="adding unfiltered mutations",
                   dataset_permaname=taiga_dataset,
-                  upload_files=[  
+                  upload_files=[
                     {
                         "path": folder+"mutation_somatic_unfiltered_withreplicates_subseted.csv",
                         "format": "TableCSV",

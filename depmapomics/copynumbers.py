@@ -223,11 +223,13 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   # validation step
   print('summary of the gene cn data:')
   print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
-  mut.checkGeneChangeAccrossAll(genecn, thresh=genechangethresh)
-  failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
+  # mut.checkGeneChangeAccrossAll(genecn, thresh=genechangethresh)
+  # failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
+  failed = []
 
   print("failed our QC")
   print(failed)
+
   if source_rename:
     segments = segments.replace({'Source': source_rename})
   if save_output:
@@ -483,6 +485,17 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   # i[3:] for i in legacy_segments[legacy_segments.Chromosome.str.contains("chr")].Chromosome]
   legacy_segments['Chromosome'] = legacy_segments['Chromosome'].map(lambda x: x[3:] if x.startswith('chr') else x)
 
+  # based on the first tab of:
+  # https://docs.google.com/spreadsheets/d/1_O5uwwzIgqv-rTfeGpmFA37XW9FzG3u0LtH-MKt-QRo/edit?usp=sharing
+  # the following lines had WES that was blacklisted
+  # to be safe we should not use these WES data from the legacy data
+  WES_legacy_blacklist = ['ACH-001096', 'ACH-001196', 'ACH-000961', 'ACH-000511',
+                          'ACH-000375', 'ACH-000278', 'ACH-001709', 'ACH-002475',
+                          'ACH-001063', 'ACH-000641', 'ACH-000090', 'ACH-000658']
+  legacy_segments = legacy_segments[(~legacy_segments['DepMap_ID'].isin(WES_legacy_blacklist)) | \
+                                    legacy_segments['Source'].isin(['Broad SNP'])
+    ]
+
   # check that each arxspan ID only has one datasource
   # as of 07/14/2021: 4:08PM the following samples
   # had both Broad SNP and Broad WES in the legacy data
@@ -490,6 +503,14 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   # ACH-000246, ACH-000272, ACH-000658
   # if this is not fixed `manageGapsInSegments` will throw the following error
   # ValueError("start comes after end")
+  # This is messy right now, but reverting to SNP array for ACH-000658
+  # since its WES was dropped during fingerprinting and it's unclear where
+  # the WES data in the 'legacy' segment file comes from.
+  # TODO: figure out if we can default to SNP array for all the three lines
+  # mentioned above
+  # legacy_segments = legacy_segments[~((legacy_segments['DepMap_ID'] == 'ACH-000658') &
+  #                                     (legacy_segments['Source'] == 'Broad SNP'))]
+
   data_sources = pd.crosstab(index=legacy_segments['DepMap_ID'], columns=legacy_segments['Source'])
   data_source_duplicates = data_sources[(data_sources > 0).sum(axis=1) > 1]
   duplicate_arxspans = data_source_duplicates.index.tolist()
@@ -508,7 +529,8 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
 
   bad_fp = ['ACH-001078', 'ACH-002184', 'ACH-001146', # these were dropped in 21Q3 for fingerprinting
             'ACH-002022', 'ACH-001173', 'ACH-001790',
-            'ACH-001543', 'ACH-001741', 'ACH-000010']
+            'ACH-002260', 'ACH-001741', 'ACH-000010',
+            'ACH-002475', 'ACH-001543']
 
   onlyinleg=onlyinleg - set(bad + bad_fp)
   print('found samples that are only in the legacy datasets')
