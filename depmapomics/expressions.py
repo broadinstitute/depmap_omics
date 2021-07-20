@@ -177,7 +177,7 @@ def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
       print(dup)
       raise ValueError('duplicate '+index)
     file.index = r
-
+    rename_transcript = {k.split('.')[0]:v for k,v in rename_transcript.items()}
     file = file.rename(index=rename_transcript if len(
         rename_transcript) != 0 else gene_rename).T
     files[val] = file
@@ -375,6 +375,8 @@ def postProcess(refworkspace, samplesetname,
                         index="gene_id", drop="transcript_id")
     # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
   if len(trancriptLevelCols) > 0:
+    import pickle
+    pickle.dump([files, gene_rename, trancriptLevelCols], open('transcript.pkl', 'wb'))
     files = subsetGenes(
         files, gene_rename, filenames=trancriptLevelCols, drop="gene_id", index="transcript_id")
   # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
