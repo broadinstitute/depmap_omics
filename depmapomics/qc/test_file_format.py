@@ -38,9 +38,11 @@ def test_symbol_and_enstid_in_column(data):
     p3 = p1 + r'\s\(' + p2 + r'\)' # gene symbol (ensembl id)
     p4 = r'ERCC-(?:\d{5})' # ERCC
     p  = '|'.join([p2, p3, p4])
-    matches = data.columns.map(lambda x: re.fullmatch(p, x))
-    assert  matches.notnull().all(), \
-        'some columns do not follow the symbol (ensembl transcript id) format. The first few are: \n{}'.format(data.columns[matches.isnull()][:20])
+    matches1 = data.columns.map(lambda x: re.fullmatch(p, x))
+    matches2 = data.columns.map(lambda x: re.fullmatch(p3, x))
+    assert  matches1.notnull().all() & matches2.notnull().any(), \
+        'some columns do not follow the symbol (ensembl transcript id) format. The first few are: \n{}'.format(
+            data.columns[matches1.isnull() | matches2.isnull()][:20])
 
 
 PARAMS_test_symbol_and_ensgid_in_column = [x['file'] for x in FILE_ATTRIBUTES if x['ismatrix'] and x['gene_id']=='ensg']
@@ -52,9 +54,11 @@ def test_symbol_and_ensgid_in_column(data):
     p3 = p1 + r'\s\(' + p2 + r'\)' # gene symbol (ensembl id)
     p4 = r'ERCC-(?:\d{5})' # ERCC
     p  = '|'.join([p2, p3, p4])
-    matches = data.columns.map(lambda x: re.fullmatch(p, x))
-    assert  matches.notnull().all(), \
-        'some columns do not follow the symbol (ensembl gene id) format. The first few are: \n{}'.format(data.columns[matches.isnull()][:20])
+    matches1 = data.columns.map(lambda x: re.fullmatch(p, x))
+    matches2 = data.columns.map(lambda x: re.fullmatch(p3, x))
+    assert  matches1.notnull().all() & matches2.notnull().any(), \
+        'some columns do not follow the symbol (ensembl gene id) format. The first few are: \n{}'.format(
+            data.columns[matches1.isnull() | matches2.isnull()][:20])
 
 
 PARAMS_test_arxspan_ids = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]

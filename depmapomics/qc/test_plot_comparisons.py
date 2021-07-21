@@ -22,7 +22,11 @@ def get_data_stack(file, number_of_points=1000000, random_state=0):
 
     if number_of_points > 0:
         data1_stack = data1_stack.sample(number_of_points, random_state=random_state)
-    data2_stack = data2_stack.loc[data1_stack.index]
+
+    idx = list(set(data1_stack.index) & set(data2_stack.index))
+
+    data1_stack = data1_stack.loc[idx]
+    data2_stack = data2_stack.loc[idx]
 
     data_stack = pd.concat([data1_stack, data2_stack], axis=1)
 
