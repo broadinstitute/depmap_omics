@@ -58,7 +58,7 @@ def test_compare_column_names(data):
 
 PARAMS_matrix_correlations = [(x['file'],
     CORRELATION_THRESHOLDS['CCLE_gene_cn'] if (x['file'] == 'CCLE_gene_cn') else CORRELATION_THRESHOLDS['all_expressions'])
-    for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix'] & (x['omicssource']=='RNA')]
+    for x in FILE_ATTRIBUTES_PAIRED if x['ismatrix']]# & (x['omicssource']=='RNA')]
 @pytest.mark.parametrize('method', ['spearman',
                          pytest.param('pearson',
                          marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
@@ -175,7 +175,8 @@ def test_source_changes(data):
     data1, data2 = data
     source1 = data1.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
     source2 = data2.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
-    source_changes = pd.concat([source1, source2], axis=1, keys=['old', 'new'])
+    source_changes = pd.concat([source1, source2], axis=1, join='inner', keys=['old', 'new'])
+    source_changes.fillna('NA', inplace=True)
     source_changes_matrix = source_changes.groupby(['old', 'new']).size().unstack(fill_value=0)
     source_changes = source_changes[source_changes['old'] != source_changes['new']]
 

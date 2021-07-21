@@ -3,7 +3,7 @@ from depmapomics.qc.archive import get_cell_line_set as gcl
 import pickle
 import pandas as pd
 
-lines_to_release_21q1_sheet = 'https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=0'
+lines_to_release_sheet = 'https://docs.google.com/spreadsheets/d/1-Iz_TrLy2DT2hFZKr6m-GJsVeQbKMA06Uf2RmGRlUdA/edit?usp=sharing'
 
 taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 17],
                     'dmc': ['dmc-21q1-0e11', 18],
@@ -29,9 +29,9 @@ def main(recompute=False, lines_to_remove={'ACH-001189', 'ACH-002303', 'ACH-0023
   else:
       arxspan_dict = pickle.load(open('arxspan_dict.pkl', 'br'))
 
-  
+
   # lines_to_remove = set()
-  lines_to_release_21q1 = gcl.get_expected_lines(lines_to_release_21q1_sheet)
+  lines_to_release_21q1 = gcl.get_expected_lines(lines_to_release_sheet)
   text = gcl.pretty_print_diff(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'], savefile=True)
 
   gcl.check_if_fusion_has_expression_released(arxspan_dict, quarter='21q1')
@@ -43,8 +43,8 @@ def main(recompute=False, lines_to_remove={'ACH-001189', 'ACH-002303', 'ACH-0023
   #     'ACH-002217': "no bam found: Sanger",
   #     'ACH-002335': "no bam found: Chordoma",
   #     'ACH-002378': "no bam found: Sanger",
-  #     'ACH-001956': "failed qc wes (chordoma)", 
-  #     'ACH-001955': "failed qc wes (chordoma)", 
+  #     'ACH-001956': "failed qc wes (chordoma)",
+  #     'ACH-001955': "failed qc wes (chordoma)",
   #     'ACH-001957': "failed qc wes (chordoma)",
   #     'ACH-001011': 'wrong new (should only have HC)',
   #     'ACH-001108': 'wrong new (should only have HC)',
@@ -53,10 +53,7 @@ def main(recompute=False, lines_to_remove={'ACH-001189', 'ACH-002303', 'ACH-0023
   #     'ACH-002303': 'wrong (from 20Q4)',
   #     'ACH-002315': 'wrong (from 20Q4)',
   #     'ACH-001675': 'wrong (from 20Q4)',
-  #     'ACH-003000': 'wrong engineered', 
-  #     'ACH-002875': 'wrong engineered', 
+  #     'ACH-003000': 'wrong engineered',
+  #     'ACH-002875': 'wrong engineered',
   #     'ACH-002874': 'wrong engineered'
   # }
-
-
-

@@ -1,9 +1,12 @@
 # there are some issues in the older versions of omics data on virtual that this flag deals with
 # some columns got renamed in the mutation file and some data was uploaded as tsv instead of csv
+from gsheets.api import Sheets
+
+
 LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 15}
+TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 28}
 VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
 # VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
 REFERENCE_RELEASE = {'name': 'internal-21q2-9d16', 'version': 17} # old release used as ground truth
@@ -33,6 +36,12 @@ SKIP_ARXSPAN_COMPARISON = True # set to False if you want to test whether some a
 
 PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_' # location/prefix for saving output plots
 
+LINES_TO_RELEASE_SHEET = 'https://docs.google.com/spreadsheets/d/1-Iz_TrLy2DT2hFZKr6m-GJsVeQbKMA06Uf2RmGRlUdA/edit?usp=sharing'
+sheets_obj = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
+sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET).sheets
+LINES_TO_RELEASE = sheets[0].to_frame(header=0, index_col=None)
+LINES_TO_RELEASE.columns = LINES_TO_RELEASE.columns.str.lower()
+
 # all the file attributes
 FILE_ATTRIBUTES = [
     {'file': 'CCLE_expression', 'ismatrix': True, 'hasNA': False, 'gene_id': 'entrez', 'omicssource':'RNA'},
@@ -43,7 +52,7 @@ FILE_ATTRIBUTES = [
     {'file': 'CCLE_RNAseq_reads', 'ismatrix': True, 'hasNA': False, 'gene_id': 'ensg', 'omicssource':'RNA'},
     {'file': 'CCLE_fusions', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS, 'expected_changed_cols':['CCLE_count']},
     {'file': 'CCLE_fusions_unfiltered', 'ismatrix': False, 'omicssource':'RNA', 'merge_cols': FUSIONS_MERGE_COLS, 'expected_changed_cols':['CCLE_count']},
-    {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'hasNA': False,'omicssource':'RNA', 'gene_id': None},
+    # {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'hasNA': False,'omicssource':'RNA', 'gene_id': None},
     {'file': 'CCLE_gene_cn', 'ismatrix': True, 'hasNA': True, 'gene_id': 'entrez', 'omicssource':'DNA'},
     {'file': 'CCLE_segment_cn', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': SEGMENT_CN_MERGE_COLS, 'expected_changed_cols':[]},
     {'file': 'CCLE_mutations', 'ismatrix': False, 'omicssource':'DNA', 'merge_cols': MUTATIONS_MERGE_COLS, 'expected_changed_cols':[]},
@@ -54,13 +63,15 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if x['omicssource'] in ['RNA']]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_gene_cn', 'CCLE_segment_cn'])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA'])]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
 FUSIONS_TAIGA_ID = 'fusions-95c9'
 EXPRESSION_TAIGA_ID = 'expression-d035'
 CN_TAIGA_ID = 'cn-achilles-version-06ca'
+# CN_TAIGA_ID = 'cn-latest-d8d4'
 
 TAIGA_IDS_LATEST = {
     MUTATIONS_TAIGA_ID:[
@@ -81,10 +92,12 @@ TAIGA_IDS_LATEST = {
         ('CCLE_expression', 'proteincoding_genes_tpm_logp1'),
         ('CCLE_expression_proteincoding_genes_expected_count', 'proteincoding_genes_expected_count'),
         ('CCLE_expression_transcripts_expected_count', 'transcripts_expected_count'),
-        ('CCLE_ssGSEA', 'gene_sets_all')
+        # ('CCLE_ssGSEA', 'gene_sets_all')
     ],
     CN_TAIGA_ID:[
-        ('CCLE_gene_cn', 'all_21Q2_gene_cn'),
-        ('CCLE_segment_cn', 'all_21Q2_segment')
+        ('CCLE_gene_cn', 'achilles_gene_cn'),
+        ('CCLE_segment_cn', 'achilles_segment')
+        # ('CCLE_gene_cn', 'merged_genecn_all'),
+        # ('CCLE_segment_cn', 'merged_segments_all')
     ]
 }
