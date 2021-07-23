@@ -6,7 +6,7 @@ from gsheets.api import Sheets
 LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 28}
+TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 33}
 VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
 # VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
 REFERENCE_RELEASE = {'name': 'internal-21q2-9d16', 'version': 17} # old release used as ground truth
@@ -64,7 +64,9 @@ FILE_ATTRIBUTES = [
 
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_gene_cn', 'CCLE_segment_cn'])]
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
@@ -75,11 +77,11 @@ CN_TAIGA_ID = 'cn-achilles-version-06ca'
 
 TAIGA_IDS_LATEST = {
     MUTATIONS_TAIGA_ID:[
-        ('CCLE_mutations', 'all_somatic_mutations_all_21Q2_depmapversion'),
-        ('CCLE_mutations_bool_damaging', 'all_somatic_mutations_boolmatrix_fordepmap_damaging'),
-        ('CCLE_mutations_bool_nonconserving', 'all_somatic_mutations_boolmatrix_fordepmap_othernoncons'),
-        ('CCLE_mutations_bool_otherconserving', 'all_somatic_mutations_boolmatrix_fordepmap_othercons'),
-        ('CCLE_mutations_bool_hotspot', 'all_somatic_mutations_boolmatrix_fordepmap_hotspot')
+        ('CCLE_mutations', 'merged_somatic_mutations_withlegacy'),
+        ('CCLE_mutations_bool_damaging', 'merged_somatic_mutations_boolmatrix_fordepmap_damaging'),
+        ('CCLE_mutations_bool_nonconserving', 'merged_somatic_mutations_boolmatrix_fordepmap_othernoncons'),
+        ('CCLE_mutations_bool_otherconserving', 'merged_somatic_mutations_boolmatrix_fordepmap_othercons'),
+        ('CCLE_mutations_bool_hotspot', 'merged_somatic_mutations_boolmatrix_fordepmap_hotspot')
     ],
     FUSIONS_TAIGA_ID:[
         ('CCLE_fusions_unfiltered', 'fusions_latest'),
