@@ -1,6 +1,8 @@
+import re
 import numpy as np
 import pandas as pd
 import pytest
+
 from depmapomics.qc.config import (CORRELATION_THRESHOLDS, LEGACY_PATCH_FLAGS,
                                       FILE_ATTRIBUTES, FILES_RELEASED_BEFORE,
                                       REFERENCE_RELEASE,
@@ -30,6 +32,26 @@ def get_both_releases_from_taiga(file):
         data1.rename(columns={'Tumor_Allele': 'Tumor_Seq_Allele1'}, inplace=True)
     return data1, data2
 
+def get_arxspan_ids(data, isMatrix):
+    if isMatrix:
+        arxspans = set(data.index)
+    else:
+        assert 'DepMap_ID' in data.columns
+        arxspans = set(data['DepMap_ID'])
+
+    matches = [re.match(r'ACH-[\d]{6}$', x) for x in arxspans]
+    assert all([x is not None for x in matches]), \
+        "At least some arxspans do not match the ACH-#### format. Here are a few examples:\n {}".format(list(arxspans)[:5])
+    return arxspans
+
+def get_both_release_lists_from_taiga(file):
+    data1, data2 = get_both_releases_from_taiga(file)
+
+    arxspans1 = get_arxspan_ids(data1, 'DepMap_ID' not in data1.columns)
+    arxspans2 = get_arxspan_ids(data2, 'DepMap_ID' not in data2.columns)
+
+    return arxspans1, arxspans2
+
 def merge_dataframes(file, merge_columns):
     # TODO: figure out how to call the data fixture instead
     data1, data2 = get_both_releases_from_taiga(file)
@@ -53,7 +75,9 @@ PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES_PAIRED]
 @pytest.mark.compare
 def test_compare_column_names(data):
     data1, data2 = data
-    assert set(data1.columns) == set(data2.columns)
+    assert set(data1.columns) == set(data2.columns), \
+        'there are {} added columns and {} missing columns'.format(
+            len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
 
 
 PARAMS_matrix_correlations = [(x['file'],
@@ -183,6 +207,36 @@ def test_source_changes(data):
     assert source_changes.empty, 'the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}'.format(source_changes, source_changes_matrix)
 
 
+@pytest.mark.skipif([1 for x in FILE_ATTRIBUTES_PAIRED if x['file']=='CCLE_mutations'] == [], reason='skipped by user')
+@pytest.mark.parametrize('data', ['CCLE_mutations'], indirect=['data'])
+@pytest.mark.compare
+def test_mutation_legacy_data(data):
+    data1, data2 = data
+    AC_cols = ['CGA_WES_AC', 'HC_AC', 'RD_AC', 'RNAseq_AC', 'SangerWES_AC', 'WGS_AC']
+    mut_notnull1 = data1.groupby('DepMap_ID')[AC_cols].apply(lambda x: x.notnull().any())
+    mut_notnull2 = data2.groupby('DepMap_ID')[AC_cols].apply(lambda x: x.notnull().any())
+    shared_lines = set(mut_notnull1.index) & set(mut_notnull2.index)
+    mut_notnull_diff = mut_notnull2.loc[shared_lines].astype(int) + 2*mut_notnull1.loc[shared_lines].astype(int)
+    mut_notnull_diff.replace({0: '00', 1: '01', 2: '10', 3: '11'}, inplace=True)
+    expression_file = 'CCLE_expression'
+    arxspans1, arxspans2 = get_both_release_lists_from_taiga(expression_file)
+    mut_notnull_diff[expression_file] = mut_notnull_diff.index.map(
+        lambda x: '{}{}'.format(int(x in arxspans1), int(x in arxspans2)))
+    mut_notnull_diff = mut_notnull_diff[(
+        (mut_notnull_diff[AC_cols] == '10') |
+        (mut_notnull_diff[AC_cols] == '01') |
+        (mut_notnull_diff['RNAseq_AC'].isin(['01', '11']) & # available in the new rna mutation
+            mut_notnull_diff[expression_file].isin(['10', '00'])) # available in the new expression data
+        ).any(axis=1)]
+    rna_change_mismatch = mut_notnull_diff['RNAseq_AC'].isin(['01', '11']) & mut_notnull_diff[expression_file].isin(['10', '00'])
+    rna_change_mismatch = rna_change_mismatch.map(lambda x: '*' if x else '')
+    # rna_change_mismatch = mut_notnull_diff.apply(lambda x: '' if x['RNAseq_AC']==x['CCLE_expression'] else '*', axis=1)
+    mut_notnull_diff['RNAseq_AC'] =  rna_change_mismatch + mut_notnull_diff['RNAseq_AC']
+    assert mut_notnull_diff.empty, '''For shared cell lines between the two releases, the following data
+sources have changed in the mutation data
+(00:still absent, 01:added, 10:dropped, 11:still present{})\n{}'''.format(
+    ', *:expression drop has not propagated to RNAseq_AC' if '*' in set(rna_change_mismatch) else '',
+    mut_notnull_diff)
 
 # TODO: implement the assert almost equal version of the tests
 # from pandas.testing import assert_frame_equal
