@@ -38,17 +38,17 @@ def arxspans(request):
 
 if __name__ == '__main__':
     # CN + mutations
-    # file = 'CCLE_gene_cn'
-    # lines_to_drop = {'ACH-001078', 'ACH-002184', 'ACH-001146',
-    #                  'ACH-002022', 'ACH-001173', 'ACH-001790',
-    #                  'ACH-002260', 'ACH-001741', 'ACH-000010', 'ACH-002475'}
+    file = 'CCLE_mutations'
+    lines_to_drop = {'ACH-001078', 'ACH-002184', 'ACH-001146',
+                     'ACH-002022', 'ACH-001173', 'ACH-001790',
+                     'ACH-002260', 'ACH-001741', 'ACH-000010', 'ACH-002475'}
 
     # expression
-    file = 'CCLE_fusions'
-    lines_to_drop = {'ACH-001078', 'ACH-002184', 'ACH-001146',
-                    'ACH-002022', 'ACH-001173', 'ACH-001790',
-                    'ACH-002260', 'ACH-001741', 'ACH-000010',
-                    'ACH-001316', 'ACH-001212'}
+    # file = 'CCLE_fusions'
+    # lines_to_drop = {'ACH-001078', 'ACH-002184', 'ACH-001146',
+    #                 'ACH-002022', 'ACH-001173', 'ACH-001790',
+    #                 'ACH-002260', 'ACH-001741', 'ACH-000010',
+    #                 'ACH-001316', 'ACH-001212'}
 
     arxspans1, arxspans2 = get_both_release_lists_from_taiga(file)
 
@@ -66,8 +66,7 @@ if __name__ == '__main__':
     print('failed_to_drop: ', failed_to_drop)
     print('unexpected_added_lines: ', unexpected_added_lines)
 
-    # arxspan = 'ACH-001981'
-    # print(arxspan in lines_to_release_all)
-    # print(arxspan in unexpected_added_lines)
-    # print(arxspan in arxspans1, arxspan in arxspans2)
-    # print('ACH-002707' in arxspans2)
+
+    def test_unexpected_dropped_lines(unexpected_dropped_lines):
+        assert not unexpected_dropped_lines, \
+            'Dropped lines: {}'.format(unexpected_dropped_lines)
