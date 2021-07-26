@@ -6,8 +6,9 @@ from gsheets.api import Sheets
 LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 33}
-VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
+# TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 33}
+# VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
+VIRTUAL_RELEASE = {'name': 'internal-21q3-9281', 'version': 2}
 # VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
 REFERENCE_RELEASE = {'name': 'internal-21q2-9d16', 'version': 17} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
