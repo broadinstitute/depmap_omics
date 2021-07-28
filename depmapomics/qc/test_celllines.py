@@ -44,7 +44,7 @@ if __name__ == '__main__':
                      'ACH-002260', 'ACH-001741', 'ACH-000010', 'ACH-002475'}
 
     # expression
-    # file = 'CCLE_fusions'
+    # file = 'CCLE_expression'
     # lines_to_drop = {'ACH-001078', 'ACH-002184', 'ACH-001146',
     #                 'ACH-002022', 'ACH-001173', 'ACH-001790',
     #                 'ACH-002260', 'ACH-001741', 'ACH-000010',
