@@ -224,7 +224,6 @@ def extractProtCod(files, mybiomart, protcod_rename,
         a = files[name].loc[dup].sum()
         files[name].drop(index=dup)
         files[name].loc[dup] = a
-    files[name] = files[name].T
 
   return files
 

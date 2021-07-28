@@ -223,9 +223,8 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   # validation step
   print('summary of the gene cn data:')
   print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
-  # mut.checkGeneChangeAccrossAll(genecn, thresh=genechangethresh)
-  # failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
-  failed = []
+  mut.checkGeneChangeAccrossAll(genecn, thresh=genechangethresh)
+  failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
   print("failed our QC")
   print(failed)
@@ -249,7 +248,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   return segments, genecn, failed
 
 
-def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
+async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                        samplesetname=SAMPLESETNAME, AllSamplesetName='all',
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                        sheetcreds=SHEETCREDS, sheetname=SHEETNAME,
@@ -301,7 +300,6 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
     print('doing wes')
     priority=tracker[(tracker.datatype=='wes')&(tracker.prioritized == 1)].index.tolist()
     todropwes=todrop+tracker[(tracker.datatype=='wes')&(tracker.blacklist == 1)].index.tolist()
-    todropwes+=['CDS-GNOJc5', 'CDS-P4ZoH4', 'CDS-ywnbJT']
     wessegments, genecn, wesfailed = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
                 todrop=todropwes,
                 save_output=folder,
@@ -338,7 +336,6 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   folder=os.path.join("temp", samplesetname, "wgs_")
   priority=tracker[(tracker.datatype=='wgs')&(tracker.prioritized == 1)].index.tolist()
   todropwgs=todrop+tracker[(tracker.datatype=='wgs')&(tracker.blacklist == 1)].index.tolist()
-  todropwgs+=['CDS-ymRIxH']
   wgssegments, genecn, wgsfailed = postProcess(wgsrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
               todrop=todropwgs,
               save_output=folder,
@@ -481,35 +478,8 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   legacy_segments=tc.get(
     name=taiga_legacy_loc, file=taiga_legacy_filename).drop(columns='Unnamed: 0')
   legacy_segments['Status']='U'
-  # legacy_segments.loc[legacy_segments[legacy_segments.Chromosome.str.contains("chr")].index, "Chromosome"]=[
-  # i[3:] for i in legacy_segments[legacy_segments.Chromosome.str.contains("chr")].Chromosome]
   legacy_segments['Chromosome'] = legacy_segments['Chromosome'].map(lambda x: x[3:] if x.startswith('chr') else x)
 
-  # based on the first tab of:
-  # https://docs.google.com/spreadsheets/d/1_O5uwwzIgqv-rTfeGpmFA37XW9FzG3u0LtH-MKt-QRo/edit?usp=sharing
-  # the following lines had WES that was blacklisted
-  # to be safe we should not use these WES data from the legacy data
-  WES_legacy_blacklist = ['ACH-001096', 'ACH-001196', 'ACH-000961', 'ACH-000511',
-                          'ACH-000375', 'ACH-000278', 'ACH-001709', 'ACH-002475',
-                          'ACH-001063', 'ACH-000641', 'ACH-000090', 'ACH-000658']
-  legacy_segments = legacy_segments[(~legacy_segments['DepMap_ID'].isin(WES_legacy_blacklist)) | \
-                                    legacy_segments['Source'].isin(['Broad SNP'])
-    ]
-
-  # check that each arxspan ID only has one datasource
-  # as of 07/14/2021: 4:08PM the following samples
-  # had both Broad SNP and Broad WES in the legacy data
-  # as `source`:
-  # ACH-000246, ACH-000272, ACH-000658
-  # if this is not fixed `manageGapsInSegments` will throw the following error
-  # ValueError("start comes after end")
-  # This is messy right now, but reverting to SNP array for ACH-000658
-  # since its WES was dropped during fingerprinting and it's unclear where
-  # the WES data in the 'legacy' segment file comes from.
-  # TODO: figure out if we can default to SNP array for all the three lines
-  # mentioned above
-  # legacy_segments = legacy_segments[~((legacy_segments['DepMap_ID'] == 'ACH-000658') &
-  #                                     (legacy_segments['Source'] == 'Broad SNP'))]
 
   data_sources = pd.crosstab(index=legacy_segments['DepMap_ID'], columns=legacy_segments['Source'])
   data_source_duplicates = data_sources[(data_sources > 0).sum(axis=1) > 1]
