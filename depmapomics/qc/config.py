@@ -8,7 +8,7 @@ LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 # release ids on taiga
 # TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': 33}
 # VIRTUAL_RELEASE = TENTATIVE_VIRTUAL # new release
-VIRTUAL_RELEASE = {'name': 'internal-21q3-9281', 'version': 2}
+VIRTUAL_RELEASE = {'name': 'internal-21q3-fe4c', 'version': 2}
 # VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
 REFERENCE_RELEASE = {'name': 'internal-21q2-9d16', 'version': 17} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
@@ -66,7 +66,7 @@ FILE_ATTRIBUTES = [
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_gene_cn', 'CCLE_segment_cn'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA'])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['DNA'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
