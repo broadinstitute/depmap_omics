@@ -194,6 +194,7 @@ dmypy.json
 
 # VS code project
 .codeworkspace.code-workspace
+.code-workspace.code-workspace
 
 #biomart
 .pybiomart.sqlite
