@@ -58,10 +58,10 @@ LINES_TO_RELEASE = [
 ]
 
 VIRTUAL = {
-  'internal': 'internal-21q3-9281',
-  'ibm': 'internal-21q3-9281',
-  'dmc': 'internal-21q3-9281',
-  'public': 'internal-21q3-9281',
+  'internal': 'internal-21q3-fe4c',
+  'ibm': 'ibm-21q3-179f',
+  'dmc': 'dmc-21q3-482c',
+  'public': 'public-21q3-bf1e',
   }
 
 PREV_VIRTUAL = {}

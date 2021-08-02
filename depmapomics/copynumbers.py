@@ -217,9 +217,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
                             ' (' + str(i['entrezgene_id']).split('.')[0] +
                             ')' for _, i in mybiomart.iterrows()]
   mybiomart = mybiomart.drop_duplicates('gene_name', keep="first")
-  # import pdb; pdb.set_trace()
   genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
-
   # validation step
   print('summary of the gene cn data:')
   print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
@@ -248,7 +246,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   return segments, genecn, failed
 
 
-async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
+def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                        samplesetname=SAMPLESETNAME, AllSamplesetName='all',
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                        sheetcreds=SHEETCREDS, sheetname=SHEETNAME,
