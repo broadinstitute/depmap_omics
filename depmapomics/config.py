@@ -10,11 +10,11 @@ SHEETCREDS = '../.credentials.json'
 MY_ID = '~/.client_secret.json'
 MYSTORAGE_ID = "~/.storage.json"
 
-SHEETNAME = 'ccle sample tracker'
+SHEETNAME = 'ccle sample tracker sandbox'
 
 TAIGA_ETERNAL = 'depmap-a0ab'
 
-REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
+REFSHEET_URL = "https://docs.google.com/spreadsheets/d/161mmmHF5nc3nFhgpp_7zub5Erod8xDbXnNZ-u-7BWKI"
 
 PRIVACY_RELEASE = "https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4"
 DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
@@ -151,7 +151,7 @@ rnasource6 = "ccle"
 rnasource7 = "ibm"
 
 ## our working workspace (reference)
-RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
+RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq-sandbox"
 
 ## curent WGS GP buckets
 wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
@@ -161,9 +161,9 @@ wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
 wgssource1 = "ccle"
 wgssource2 = "ibm"
 
-WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
-WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
-WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
+WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN-sandbox"
+WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38-sandbox"
+WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline-sandbox"
 
 ############## DNAseq
 
