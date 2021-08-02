@@ -27,8 +27,6 @@ SAMPLEID="DepMap_ID"
 
 SAMPLESETNAME = "21Q3"
 
-RELEASE = SAMPLESETNAME
-
 isCCLE = True
 
 doCleanup = True
@@ -59,6 +57,13 @@ LINES_TO_RELEASE = [
     "ACH-002707",
 ]
 
+VIRTUAL = {
+  'internal': 'internal-21q3-9281',
+  'ibm': 'internal-21q3-9281',
+  'dmc': 'internal-21q3-9281',
+  'public': 'internal-21q3-9281',
+  }
+
 PREV_VIRTUAL = {}
 
 #20Q3
@@ -75,14 +80,26 @@ PREV_VIRTUAL = {}
 #PREV_VIRTUAL['internal'] = 'internal-20q4-2540'
 
 #21Q1
-PREV_VIRTUAL['public'] = 'public-21q1-4b39'
-PREV_VIRTUAL['ibm'] = 'ibm-21q1-abd9'
-PREV_VIRTUAL['dmc'] = 'dmc-21q1-0e11'
-PREV_VIRTUAL['internal'] = 'internal-21q1-4fc4'
+#PREV_VIRTUAL['public'] = 'public-21q1-4b39'
+#PREV_VIRTUAL['ibm'] = 'ibm-21q1-abd9'
+#PREV_VIRTUAL['dmc'] = 'dmc-21q1-0e11'
+#PREV_VIRTUAL['internal'] = 'internal-21q1-4fc4'
 
-CHANGES = """
+#21Q2
+PREV_VIRTUAL['public'] = 'public-21q2-110d'
+PREV_VIRTUAL['ibm'] = 'ibm-21q2-9ed1'
+PREV_VIRTUAL['dmc'] = 'dmc-21q2-27e1'
+PREV_VIRTUAL['internal'] = 'internal-21q2-9d16'
 
-"""
+TAIGA_MUTATION = "mutations-latest-ed72"
+
+TAIGA_CN="cn-latest-d8d4"
+
+TAIGA_EXPRESSION="expression-d035"
+
+TAIGA_FUSION = "fusions-95c9"
+
+datasets = ['internal', 'ibm', 'dmc', 'public']
 
 RUN_NOTEBOOKS = ['WGS_CCLE.ipynb', 'RNA_CCLE.ipynb']
 
@@ -307,35 +324,6 @@ PREVIOUS_QC_FAIL = ['CDS-12DTEw', 'CDS-9hv1zM', 'CDS-A6GSeQ', 'CDS-aWlMRt', 'CDS
 
 ###################### README
 
-#20Q3
-#prev_virtual['public'] = 'public-20q3-3d35'
-#prev_virtual['dmc'] = 'dmc-20q3-deprecated-never-released--5f55'
-#prev_virtual['internal'] = 'internal-20q3-00d0'
-
-#20Q4
-# prev_virtual['public'] = 'public-20q4-a4b3'
-# prev_virtual['dmc'] = 'dmc-20q4-fcf4'
-# prev_virtual['ibm'] = 'ibm-20q4-269f'
-# prev_virtual['internal'] = 'internal-20q4-2540'
-
-#21Q1
-PREV_VIRTUAL = {
-  'public': 'public-21q1-4b39',
-  'ibm': 'ibm-21q1-abd9',
-  'dmc': 'dmc-21q1-0e11',
-  'internal': 'internal-21q1-4fc4',
-}
-
-TAIGA_MUTATION = "mutations-latest-ed72"
-
-TAIGA_CN="cn-latest-d8d4"
-
-TAIGA_EXPRESSION="expression-d035"
-
-TAIGA_FUSION = "fusions-95c9"
-
-datasets = ['internal', 'ibm', 'dmc', 'public']
-
 README_folder = "../depmap-release-readmes/"
 
 README_currentfolder = README_folder+"release-"+RELEASE+"/"
@@ -344,6 +332,8 @@ README_changes = """
 
 
 """
+
+SKIP_UPLOADING_README = True
 
 FUSIONreadme = """
 # Fusions
