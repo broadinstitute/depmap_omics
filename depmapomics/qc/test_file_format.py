@@ -2,14 +2,14 @@ import re
 
 import numpy as np
 import pytest
-from depmapomics.qc.config import (FILE_ATTRIBUTES, VIRTUAL_RELEASE)
+from depmapomics.qc.config import (FILE_ATTRIBUTES, NEW_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
 
 @pytest.fixture(scope='module')
 def data(request):
-    return tc.get(name=VIRTUAL_RELEASE['name'], file=request.param, version=VIRTUAL_RELEASE['version'])
+    return tc.get(name=NEW_RELEASE['name'], file=request.param, version=NEW_RELEASE['version'])
 
 
 PARAMS_wrong_columns = [x['file'] for x in FILE_ATTRIBUTES]

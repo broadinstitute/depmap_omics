@@ -4,9 +4,8 @@ import pandas as pd
 import pytest
 
 from depmapomics.qc.config import (CORRELATION_THRESHOLDS, LEGACY_PATCH_FLAGS,
-                                      FILE_ATTRIBUTES, FILES_RELEASED_BEFORE,
-                                      REFERENCE_RELEASE,
-                                      SKIP_ARXSPAN_COMPARISON, VIRTUAL_RELEASE)
+                                   FILE_ATTRIBUTES, FILES_RELEASED_BEFORE,
+                                   PREV_RELEASE, SKIP_ARXSPAN_COMPARISON, NEW_RELEASE)
 from taigapy import TaigaClient
 
 tc = TaigaClient()
@@ -21,8 +20,8 @@ def tsv2csv(df):
 
 ####### FIXTURES ####
 def get_both_releases_from_taiga(file):
-    data1 = tc.get(name=REFERENCE_RELEASE['name'], file=file, version=REFERENCE_RELEASE['version'])
-    data2 = tc.get(name=VIRTUAL_RELEASE['name'], file=file, version=VIRTUAL_RELEASE['version'])
+    data1 = tc.get(name=PREV_RELEASE['name'], file=file, version=PREV_RELEASE['version'])
+    data2 = tc.get(name=NEW_RELEASE['name'], file=file, version=NEW_RELEASE['version'])
     if LEGACY_PATCH_FLAGS['tsv2csv']:
         # some older taiga data formats (probably 20q1 and older) are tsv and deprecated
         data1 = tsv2csv(data1)
@@ -206,6 +205,33 @@ def test_source_changes(data):
 
     assert source_changes.empty, 'the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}'.format(source_changes, source_changes_matrix)
 
+def calculate_source_changes(data1, data2):
+    source1 = data1.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
+    source2 = data2.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
+
+    name_changes = {'Broad WGS': 'BG', 'Broad WES': 'BX',
+                    'Sanger WGS': 'SG', 'Sanger WES': 'SX',
+                    'Chordoma WGS': 'CG', 'Chordoma WES': 'CX',
+                    'Broad SNP': 'BS'}
+    source1.replace(name_changes, inplace=True)
+    source2.replace(name_changes, inplace=True)
+
+    source_changes = pd.concat([source1, source2], axis=1, join='inner', keys=['old', 'new'])
+    source_changes.fillna('NA', inplace=True)
+
+    source_changes = source_changes.apply(lambda x: '>'.join(x), axis=1)
+    source_changes = source_changes.to_frame().rename(columns={0: 'CNV'})
+    # source1 = source1.to_frame()
+    # source1['release'] = 0
+    # source2 = source2.to_frame()
+    # source2['release'] = 1
+
+    # sources = pd.concat([source1, source2])
+
+    # source_changes = sources.groupby(['DepMap_ID', 'Source'])['release'].apply(
+    #     lambda x: '{}{}'.format(int(0 in set(x)), int(1 in set(x))))
+    # source_changes = source_changes.unstack(fill_value='00')
+    return source_changes
 
 @pytest.mark.skipif([1 for x in FILE_ATTRIBUTES_PAIRED if x['file']=='CCLE_mutations'] == [], reason='skipped by user')
 @pytest.mark.parametrize('data', ['CCLE_mutations'], indirect=['data'])
@@ -218,25 +244,38 @@ def test_mutation_legacy_data(data):
     shared_lines = set(mut_notnull1.index) & set(mut_notnull2.index)
     mut_notnull_diff = mut_notnull2.loc[shared_lines].astype(int) + 2*mut_notnull1.loc[shared_lines].astype(int)
     mut_notnull_diff.replace({0: '00', 1: '01', 2: '10', 3: '11'}, inplace=True)
+
+    # add expression changes
     expression_file = 'CCLE_expression'
+    expression_col = 'RNA'
     arxspans1, arxspans2 = get_both_release_lists_from_taiga(expression_file)
-    mut_notnull_diff[expression_file] = mut_notnull_diff.index.map(
+    mut_notnull_diff[expression_col] = mut_notnull_diff.index.map(
         lambda x: '{}{}'.format(int(x in arxspans1), int(x in arxspans2)))
     mut_notnull_diff = mut_notnull_diff[(
         (mut_notnull_diff[AC_cols] == '10') |
         (mut_notnull_diff[AC_cols] == '01') |
         (mut_notnull_diff['RNAseq_AC'].isin(['01', '11']) & # available in the new rna mutation
-            mut_notnull_diff[expression_file].isin(['10', '00'])) # available in the new expression data
+            mut_notnull_diff[expression_col].isin(['10', '00'])) # available in the new expression data
         ).any(axis=1)]
-    rna_change_mismatch = mut_notnull_diff['RNAseq_AC'].isin(['01', '11']) & mut_notnull_diff[expression_file].isin(['10', '00'])
+    rna_change_mismatch = mut_notnull_diff['RNAseq_AC'].isin(['01', '11']) & mut_notnull_diff[expression_col].isin(['10', '00'])
     rna_change_mismatch = rna_change_mismatch.map(lambda x: '*' if x else '')
     # rna_change_mismatch = mut_notnull_diff.apply(lambda x: '' if x['RNAseq_AC']==x['CCLE_expression'] else '*', axis=1)
     mut_notnull_diff['RNAseq_AC'] =  rna_change_mismatch + mut_notnull_diff['RNAseq_AC']
+
+    # add CN changes
+    segment_data = 'CCLE_segment_cn'
+    data1, data2 = get_both_releases_from_taiga(segment_data)
+    source_changes = calculate_source_changes(data1, data2)
+
+    mut_notnull_diff = pd.merge(mut_notnull_diff, source_changes,
+                                left_index=True, right_index=True, how='left')
+
     assert mut_notnull_diff.empty, '''For shared cell lines between the two releases, the following data
 sources have changed in the mutation data
-(00:still absent, 01:added, 10:dropped, 11:still present{})\n{}'''.format(
-    ', *:expression drop has not propagated to RNAseq_AC' if '*' in set(rna_change_mismatch) else '',
-    mut_notnull_diff)
+(00:still absent, 01:added, 10:dropped, 11:still present,
+*:expression drop has not propagated to RNAseq_AC,
+BG: Broad WGS, BX: Broad WES, SG: Sanger WGS, SX: Sanger WES,
+CG: Chordoma WGS, CX: Chordoma WES, BS: Broad SNP)\n{}'''.format(mut_notnull_diff)
 
 # TODO: implement the assert almost equal version of the tests
 # from pandas.testing import assert_frame_equal
