@@ -4,7 +4,7 @@ import pytest
 import seaborn as sns
 from depmapomics.qc.config import PLOTS_OUTPUT_FILENAME_PREFIX
 from depmapomics.qc.test_compare_to_ref_release import (
-    FILE_ATTRIBUTES_PAIRED, REFERENCE_RELEASE, VIRTUAL_RELEASE, data,
+    FILE_ATTRIBUTES_PAIRED, PREV_RELEASE, NEW_RELEASE, data,
     get_both_releases_from_taiga)
 
 NEW_TO_OLD_CORRELATION_THRESHOLD = 0.95
@@ -30,8 +30,8 @@ def get_data_stack(file, number_of_points=1000000, random_state=0):
 
     data_stack = pd.concat([data1_stack, data2_stack], axis=1)
 
-    cols = ['{:s}.{:d}'.format(REFERENCE_RELEASE['name'], REFERENCE_RELEASE['version']),
-            '{:s}.{:d}'.format(VIRTUAL_RELEASE['name'], VIRTUAL_RELEASE['version'])]
+    cols = ['{:s}.{:d}'.format(PREV_RELEASE['name'], PREV_RELEASE['version']),
+            '{:s}.{:d}'.format(NEW_RELEASE['name'], NEW_RELEASE['version'])]
     data_stack.columns = cols
     data_stack.reset_index(inplace=True)
     data_stack.rename(columns={'level_0': 'DepMap_ID', 'level_1': 'gene'}, inplace=True)
@@ -48,7 +48,7 @@ def data_stack(request):
 def CCLE_gene_cn_with_source_change():
     CCLE_gene_cn_12, cols = get_data_stack('CCLE_gene_cn')
 
-    names = [REFERENCE_RELEASE['name'], VIRTUAL_RELEASE['name']]
+    names = [PREV_RELEASE['name'], NEW_RELEASE['name']]
 
     CCLE_segment_cn_1, CCLE_segment_cn_2 = get_both_releases_from_taiga('CCLE_segment_cn')
 

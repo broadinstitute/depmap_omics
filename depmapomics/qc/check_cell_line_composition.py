@@ -1,21 +1,29 @@
 from gsheets import Sheets
 from depmapomics.qc.archive import get_cell_line_set as gcl
+from depmapomics.qc.config import LINES_TO_RELEASE_SHEET
 import pickle
 import pandas as pd
 
-lines_to_release_sheet = 'https://docs.google.com/spreadsheets/d/1-Iz_TrLy2DT2hFZKr6m-GJsVeQbKMA06Uf2RmGRlUdA/edit?usp=sharing'
+# PREV_VIRTUAL = {'public': 'public-21q2-110d',
+#                 'ibm': 'ibm-21q2-9ed1',
+#                 'dmc': 'dmc-21q2-27e1',
+#                 'internal': 'internal-21q2-9d16'}
 
-taiga_dict = {'21q1': {'public': ['public-21q1-4b39', 17],
-                    'dmc': ['dmc-21q1-0e11', 18],
-                    'ibm': ['ibm-21q1-abd9', 20],
-                    'internal': ['internal-21q1-4fc4', 21]},
-            #  '20q3': {'public': ['public-20q3-3d35', 33],
-            #         'dmc': ['dmc-20q3-deprecated-never-released--5f55', 18],
-            #         'internal': ['internal-20q3-00d0', 9]},
-             '20q4': {'public': ['public-20q4-a4b3', 46],
-             'dmc': ['dmc-20q4-fcf4', 38],
-             'internal': ['internal-20q4-2540', 45]}
-                    }
+# VIRTUAL = {'internal': 'internal-21q3-fe4c',
+#            'ibm': 'ibm-21q3-179f',
+#            'dmc': 'dmc-21q3-482c',
+#            'public': 'public-21q3-bf1e'}
+
+taiga_dict = {'21q2': {'public': ['public-21q2-110d', 13],
+                       'ibm': ['ibm-21q2-9ed1', 15],
+                       'dmc': ['dmc-21q2-27e1', 14],
+                       'internal': ['internal-21q2-9d16', 17]},
+              '21q3': {'internal': ['internal-21q3-fe4c', 12],
+                       'ibm': ['ibm-21q3-179f', 8],
+                       'dmc': ['dmc-21q3-482c', 7],
+                       'public': ['public-21q3-bf1e', 7]}
+             }
+
 
 
 def main(recompute=False, lines_to_remove={'ACH-001189', 'ACH-002303', 'ACH-002315', 'ACH-002341', 'ACH-002359'}):
@@ -32,11 +40,11 @@ def main(recompute=False, lines_to_remove={'ACH-001189', 'ACH-002303', 'ACH-0023
 
   # lines_to_remove = set()
   lines_to_release_21q1 = gcl.get_expected_lines(lines_to_release_sheet)
-  text = gcl.pretty_print_diff(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'], savefile=True)
+  text = gcl.pretty_print_diff(arxspan_dict, LINES_TO_RELEASE_SHEET, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'], savefile=True)
 
   gcl.check_if_fusion_has_expression_released(arxspan_dict, quarter='21q1')
   gcl.check_acciddental_release(arxspan_dict, quarter = '21q1')
-  gcl.plot_diff_heatmap(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'])
+#   gcl.plot_diff_heatmap(arxspan_dict, lines_to_release_21q1, lines_to_remove=lines_to_remove, quarters = ['20q4', '21q1'])
 
 
   # lines_to_drop_dict = {
