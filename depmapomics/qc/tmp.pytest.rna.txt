@@ -1,0 +1,1260 @@
+REFERENCE_RELEASE: internal-21q2-9d16.17
+VIRTUAL_RELEASE: internal-21q3-fe4c.5
+============================= test session starts ==============================
+platform linux -- Python 3.8.5, pytest-6.2.4, py-1.10.0, pluggy-0.13.1 -- /home/jnoorbak/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /home/jnoorbak/projects/depmap_omics/depmapomics/qc, configfile: pytest.ini
+plugins: anyio-3.0.1
+collecting ... collected 109 items
+
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression] FAILED [  0%]
+test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions-allcells] FAILED [  1%]
+test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions-sharedcells] FAILED [  2%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression-pd_dtypes] PASSED [  3%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression-map_type] PASSED [  4%]
+test_compare_to_ref_release.py::test_source_changes[CCLE_segment_cn] SKIPPED [  5%]
+test_compare_to_ref_release.py::test_mutation_legacy_data[CCLE_mutations] SKIPPED [  6%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_proteincoding_genes_expected_count] FAILED [  7%]
+test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions_unfiltered-allcells] FAILED [  8%]
+test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions_unfiltered-sharedcells] FAILED [  9%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression_proteincoding_genes_expected_count-pd_dtypes] PASSED [ 10%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression_proteincoding_genes_expected_count-map_type] PASSED [ 11%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_RNAseq_transcripts] FAILED [ 11%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_RNAseq_transcripts-pd_dtypes] PASSED [ 12%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_RNAseq_transcripts-map_type] PASSED [ 13%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_transcripts_expected_count] FAILED [ 14%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression_transcripts_expected_count-pd_dtypes] PASSED [ 15%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression_transcripts_expected_count-map_type] PASSED [ 16%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_full] FAILED [ 17%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression_full-pd_dtypes] PASSED [ 18%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_expression_full-map_type] PASSED [ 19%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_RNAseq_reads] FAILED [ 20%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_RNAseq_reads-pd_dtypes] PASSED [ 21%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_RNAseq_reads-map_type] PASSED [ 22%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_fusions] FAILED [ 22%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions-pd_dtypes] FAILED [ 23%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions-map_type] FAILED [ 24%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_fusions_unfiltered] FAILED [ 25%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions_unfiltered-pd_dtypes] FAILED [ 26%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions_unfiltered-map_type] FAILED [ 27%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression-0.99999-persample-spearman] FAILED [ 28%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression-0.99999-persample-pearson] SKIPPED [ 29%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression-0.99999-pergene-spearman] SKIPPED [ 30%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression-0.99999-pergene-pearson] SKIPPED [ 31%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_proteincoding_genes_expected_count-0.99999-persample-spearman] FAILED [ 32%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_proteincoding_genes_expected_count-0.99999-persample-pearson] SKIPPED [ 33%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_proteincoding_genes_expected_count-0.99999-pergene-spearman] SKIPPED [ 33%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_proteincoding_genes_expected_count-0.99999-pergene-pearson] SKIPPED [ 34%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_transcripts-0.99999-persample-spearman] FAILED [ 35%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_transcripts-0.99999-persample-pearson] SKIPPED [ 36%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_transcripts-0.99999-pergene-spearman] SKIPPED [ 37%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_transcripts-0.99999-pergene-pearson] SKIPPED [ 38%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_transcripts_expected_count-0.99999-persample-spearman] FAILED [ 39%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_transcripts_expected_count-0.99999-persample-pearson] SKIPPED [ 40%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_transcripts_expected_count-0.99999-pergene-spearman] SKIPPED [ 41%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_transcripts_expected_count-0.99999-pergene-pearson] SKIPPED [ 42%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_full-0.99999-persample-spearman] FAILED [ 43%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_full-0.99999-persample-pearson] SKIPPED [ 44%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_full-0.99999-pergene-spearman] SKIPPED [ 44%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_full-0.99999-pergene-pearson] SKIPPED [ 45%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_reads-0.99999-persample-spearman] FAILED [ 46%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_reads-0.99999-persample-pearson] SKIPPED [ 47%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_reads-0.99999-pergene-spearman] SKIPPED [ 48%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_reads-0.99999-pergene-pearson] SKIPPED [ 49%]
+test_compare_to_ref_release.py::test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions] ERROR [ 50%]
+test_compare_to_ref_release.py::test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions_unfiltered] ERROR [ 51%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_expression-index] SKIPPED [ 52%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_expression_proteincoding_genes_expected_count-index] SKIPPED [ 53%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_RNAseq_transcripts-index] SKIPPED [ 54%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_expression_transcripts_expected_count-index] SKIPPED [ 55%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_expression_full-index] SKIPPED [ 55%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_RNAseq_reads-index] SKIPPED [ 56%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_fusions-DepMap_ID] SKIPPED [ 57%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_fusions_unfiltered-DepMap_ID] SKIPPED [ 58%]
+test_file_format.py::test_wrong_columns[CCLE_expression] PASSED          [ 59%]
+test_file_format.py::test_symbol_and_entrezid_in_column[CCLE_expression] PASSED [ 60%]
+test_file_format.py::test_symbol_and_enstid_in_column[CCLE_RNAseq_transcripts] PASSED [ 61%]
+test_file_format.py::test_symbol_and_ensgid_in_column[CCLE_expression_full] PASSED [ 62%]
+test_file_format.py::test_arxspan_ids[CCLE_fusions] FAILED               [ 63%]
+test_file_format.py::test_null_values[CCLE_expression] PASSED            [ 64%]
+test_file_format.py::test_matrix_datatypes[CCLE_expression] PASSED       [ 65%]
+test_file_format.py::test_expression_logtransform[CCLE_expression_full] PASSED [ 66%]
+test_file_format.py::test_chromosome_names[CCLE_segment_cn] PASSED       [ 66%]
+test_file_format.py::test_wrong_columns[CCLE_expression_proteincoding_genes_expected_count] PASSED [ 67%]
+test_file_format.py::test_symbol_and_entrezid_in_column[CCLE_expression_proteincoding_genes_expected_count] PASSED [ 68%]
+test_file_format.py::test_symbol_and_enstid_in_column[CCLE_expression_transcripts_expected_count] PASSED [ 69%]
+test_file_format.py::test_symbol_and_ensgid_in_column[CCLE_RNAseq_reads] PASSED [ 70%]
+test_file_format.py::test_arxspan_ids[CCLE_fusions_unfiltered] FAILED    [ 71%]
+test_file_format.py::test_null_values[CCLE_expression_proteincoding_genes_expected_count] PASSED [ 72%]
+test_file_format.py::test_matrix_datatypes[CCLE_expression_proteincoding_genes_expected_count] PASSED [ 73%]
+test_file_format.py::test_chromosome_names[CCLE_mutations] PASSED        [ 74%]
+test_file_format.py::test_wrong_columns[CCLE_RNAseq_transcripts] PASSED  [ 75%]
+test_file_format.py::test_null_values[CCLE_RNAseq_transcripts] PASSED    [ 76%]
+test_file_format.py::test_matrix_datatypes[CCLE_RNAseq_transcripts] PASSED [ 77%]
+test_file_format.py::test_wrong_columns[CCLE_expression_transcripts_expected_count] PASSED [ 77%]
+test_file_format.py::test_null_values[CCLE_expression_transcripts_expected_count] PASSED [ 78%]
+test_file_format.py::test_matrix_datatypes[CCLE_expression_transcripts_expected_count] PASSED [ 79%]
+test_file_format.py::test_wrong_columns[CCLE_expression_full] PASSED     [ 80%]
+test_file_format.py::test_null_values[CCLE_expression_full] PASSED       [ 81%]
+test_file_format.py::test_matrix_datatypes[CCLE_expression_full] PASSED  [ 82%]
+test_file_format.py::test_wrong_columns[CCLE_RNAseq_reads] PASSED        [ 83%]
+test_file_format.py::test_null_values[CCLE_RNAseq_reads] PASSED          [ 84%]
+test_file_format.py::test_matrix_datatypes[CCLE_RNAseq_reads] PASSED     [ 85%]
+test_file_format.py::test_wrong_columns[CCLE_fusions] FAILED             [ 86%]
+test_file_format.py::test_wrong_columns[CCLE_fusions_unfiltered] FAILED  [ 87%]
+test_file_format.py::test_cnv_logtransform SKIPPED (not implemented)     [ 88%]
+test_plot_comparisons.py::test_plot_gene_cn_comparison SKIPPED (skip...) [ 88%]
+test_plot_comparisons.py::test_plot_per_gene_means[CCLE_expression-file_attr0] PASSED [ 89%]
+test_plot_comparisons.py::test_plot_per_gene_means[CCLE_expression_proteincoding_genes_expected_count-file_attr1] PASSED [ 90%]
+test_plot_comparisons.py::test_plot_per_gene_means[CCLE_RNAseq_transcripts-file_attr2] PASSED [ 91%]
+test_plot_comparisons.py::test_plot_per_gene_means[CCLE_expression_transcripts_expected_count-file_attr3] PASSED [ 92%]
+test_plot_comparisons.py::test_plot_per_gene_means[CCLE_expression_full-file_attr4] PASSED [ 93%]
+test_plot_comparisons.py::test_plot_per_gene_means[CCLE_RNAseq_reads-file_attr5] PASSED [ 94%]
+test_plot_comparisons.py::test_plot_matrix_comparison[CCLE_expression-CCLE_expression] PASSED [ 95%]
+test_plot_comparisons.py::test_plot_matrix_comparison[CCLE_expression_proteincoding_genes_expected_count-CCLE_expression_proteincoding_genes_expected_count] PASSED [ 96%]
+test_plot_comparisons.py::test_plot_matrix_comparison[CCLE_RNAseq_transcripts-CCLE_RNAseq_transcripts] PASSED [ 97%]
+test_plot_comparisons.py::test_plot_matrix_comparison[CCLE_expression_transcripts_expected_count-CCLE_expression_transcripts_expected_count] PASSED [ 98%]
+test_plot_comparisons.py::test_plot_matrix_comparison[CCLE_expression_full-CCLE_expression_full] PASSED [ 99%]
+test_plot_comparisons.py::test_plot_matrix_comparison[CCLE_RNAseq_reads-CCLE_RNAseq_reads] PASSED [100%]
+
+==================================== ERRORS ====================================
+_ ERROR at setup of test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions] _
+
+request = <SubRequest 'dataframes_merged' for <Function test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions]>>
+
+    @pytest.fixture(scope='module')
+    def dataframes_merged(request):
+>       merged_df =  merge_dataframes(request.param[0], request.param[1])
+
+test_compare_to_ref_release.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_compare_to_ref_release.py:58: in merge_dataframes
+    data_merged = pd.merge(data1, data2, on=merge_columns, indicator=True, how='outer')
+../../../../miniconda3/lib/python3.8/site-packages/pandas/core/reshape/merge.py:74: in merge
+    op = _MergeOperation(
+../../../../miniconda3/lib/python3.8/site-packages/pandas/core/reshape/merge.py:599: in __init__
+    _right = _validate_operand(right)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = None
+
+    def _validate_operand(obj: FrameOrSeries) -> "DataFrame":
+        if isinstance(obj, ABCDataFrame):
+            return obj
+        elif isinstance(obj, ABCSeries):
+            if obj.name is None:
+                raise ValueError("Cannot merge a Series without a name")
+            else:
+                return obj.to_frame()
+        else:
+>           raise TypeError(
+                f"Can only merge Series or DataFrame objects, a {type(obj)} was passed"
+            )
+E           TypeError: Can only merge Series or DataFrame objects, a <class 'NoneType'> was passed
+
+../../../../miniconda3/lib/python3.8/site-packages/pandas/core/reshape/merge.py:2148: TypeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+_ ERROR at setup of test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions_unfiltered] _
+
+request = <SubRequest 'dataframes_merged' for <Function test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions_unfiltered]>>
+
+    @pytest.fixture(scope='module')
+    def dataframes_merged(request):
+>       merged_df =  merge_dataframes(request.param[0], request.param[1])
+
+test_compare_to_ref_release.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_compare_to_ref_release.py:58: in merge_dataframes
+    data_merged = pd.merge(data1, data2, on=merge_columns, indicator=True, how='outer')
+../../../../miniconda3/lib/python3.8/site-packages/pandas/core/reshape/merge.py:74: in merge
+    op = _MergeOperation(
+../../../../miniconda3/lib/python3.8/site-packages/pandas/core/reshape/merge.py:599: in __init__
+    _right = _validate_operand(right)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = None
+
+    def _validate_operand(obj: FrameOrSeries) -> "DataFrame":
+        if isinstance(obj, ABCDataFrame):
+            return obj
+        elif isinstance(obj, ABCSeries):
+            if obj.name is None:
+                raise ValueError("Cannot merge a Series without a name")
+            else:
+                return obj.to_frame()
+        else:
+>           raise TypeError(
+                f"Can only merge Series or DataFrame objects, a {type(obj)} was passed"
+            )
+E           TypeError: Can only merge Series or DataFrame objects, a <class 'NoneType'> was passed
+
+../../../../miniconda3/lib/python3.8/site-packages/pandas/core/reshape/merge.py:2148: TypeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions_unfiltered', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+=================================== FAILURES ===================================
+__________________ test_compare_column_names[CCLE_expression] __________________
+
+data = (            TSPAN6 (7105)  ...  AC113348.1 (102724657)
+ACH-001113       4.990501  ...                0.000000
+ACH-001...05292  ...                0.000000
+ACH-000052       4.870858  ...                0.000000
+
+[1412 rows x 19177 columns])
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AssertionError: there are 76 added columns and 76 missing columns
+E       assert {'A1BG (1)', ...(53947)', ...} == {'A1BG (1)', ...(53947)', ...}
+E         Extra items in the left set:
+E         'MRPL23 (107987373)'
+E         'SUMF1 (100130207)'
+E         'PDXK (105372824)'
+E         'PDE10A (90632)'
+E         'XG (100132596)'
+E         'BACH1 (100379661)'...
+E         
+E         ...Full output truncated (19478 lines hidden), use '-vv' to show
+
+test_compare_to_ref_release.py:78: AssertionError
+______________ test_compare_nan_fractions[CCLE_fusions-allcells] _______________
+
+data = (        DepMap_ID  ... CCLE_count
+0      ACH-001113  ...          2
+1      ACH-001113  ...          2
+2      ACH-0011...2  ...         12
+44414  ACH-000052  ...          3
+44415  ACH-000052  ...         64
+
+[44416 rows x 17 columns], None)
+arxspans = 'allcells', atol = 0.01
+
+    @pytest.mark.parametrize('arxspans', ['allcells', 'sharedcells'])
+    @pytest.mark.parametrize('data', PARAMS_compare_nan_fractions, indirect=True)
+    @pytest.mark.compare
+    def test_compare_nan_fractions(data, arxspans, atol=1e-2):
+        data1, data2 = data
+        if arxspans == 'sharedcells':
+            # subset data1 and data2 by shared arxspan IDs
+            arxspans_ids = set(data1['DepMap_ID']) & set(data2['DepMap_ID'])
+            data1 = data1[data1['DepMap_ID'].isin(arxspans_ids)]
+            data2 = data2[data2['DepMap_ID'].isin(arxspans_ids)]
+        elif arxspans != 'allcells':
+            raise Exception('unknown value for arxspans')
+    
+>       nan_fractions = pd.concat([data1.isnull().mean(), data2.isnull().mean()], axis=1, join='inner', keys=['old', 'new'])
+E       AttributeError: 'NoneType' object has no attribute 'isnull'
+
+test_compare_to_ref_release.py:152: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+_____________ test_compare_nan_fractions[CCLE_fusions-sharedcells] _____________
+
+data = (        DepMap_ID  ... CCLE_count
+0      ACH-001113  ...          2
+1      ACH-001113  ...          2
+2      ACH-0011...2  ...         12
+44414  ACH-000052  ...          3
+44415  ACH-000052  ...         64
+
+[44416 rows x 17 columns], None)
+arxspans = 'sharedcells', atol = 0.01
+
+    @pytest.mark.parametrize('arxspans', ['allcells', 'sharedcells'])
+    @pytest.mark.parametrize('data', PARAMS_compare_nan_fractions, indirect=True)
+    @pytest.mark.compare
+    def test_compare_nan_fractions(data, arxspans, atol=1e-2):
+        data1, data2 = data
+        if arxspans == 'sharedcells':
+            # subset data1 and data2 by shared arxspan IDs
+>           arxspans_ids = set(data1['DepMap_ID']) & set(data2['DepMap_ID'])
+E           TypeError: 'NoneType' object is not subscriptable
+
+test_compare_to_ref_release.py:146: TypeError
+_ test_compare_column_names[CCLE_expression_proteincoding_genes_expected_count] _
+
+data = (            TSPAN6 (7105)  ...  AC113348.1 (102724657)
+ACH-001113         2383.0  ...                     0.0
+ACH-001...694.0  ...                     0.0
+ACH-000052         3188.0  ...                     0.0
+
+[1412 rows x 19177 columns])
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AssertionError: there are 76 added columns and 76 missing columns
+E       assert {'A1BG (1)', ...(53947)', ...} == {'A1BG (1)', ...(53947)', ...}
+E         Extra items in the left set:
+E         'MRPL23 (107987373)'
+E         'SUMF1 (100130207)'
+E         'PDXK (105372824)'
+E         'PDE10A (90632)'
+E         'XG (100132596)'
+E         'BACH1 (100379661)'...
+E         
+E         ...Full output truncated (19478 lines hidden), use '-vv' to show
+
+test_compare_to_ref_release.py:78: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+[                      ]N/A% |   0.0 s/B |   0.0 B /  54.1 MiB | ETA:  --:--:--
+[#                 ]  7% |  59.5 MiB/s |   4.0 MiB /  54.1 MiB | ETA:   0:00:00
+[##                ] 12% |  58.8 MiB/s |   7.0 MiB /  54.1 MiB | ETA:   0:00:00
+[###               ] 18% |  58.5 MiB/s |  10.0 MiB /  54.1 MiB | ETA:   0:00:00
+[####              ] 24% |  58.0 MiB/s |  13.0 MiB /  54.1 MiB | ETA:   0:00:00
+[#####             ] 29% |  57.9 MiB/s |  16.0 MiB /  54.1 MiB | ETA:   0:00:00
+[#####             ] 33% |  50.9 MiB/s |  18.0 MiB /  54.1 MiB | ETA:   0:00:00
+[######            ] 35% |  45.7 MiB/s |  19.0 MiB /  54.1 MiB | ETA:   0:00:00
+[#######           ] 40% |  47.1 MiB/s |  22.0 MiB /  54.1 MiB | ETA:   0:00:00
+[#######           ] 44% |  43.2 MiB/s |  24.0 MiB /  54.1 MiB | ETA:   0:00:00
+[########          ] 46% |  41.2 MiB/s |  25.0 MiB /  54.1 MiB | ETA:   0:00:00
+[#########         ] 51% |  42.5 MiB/s |  28.0 MiB /  54.1 MiB | ETA:   0:00:00
+[##########        ] 57% |  41.4 MiB/s |  31.0 MiB /  54.1 MiB | ETA:   0:00:00
+[##########        ] 59% |  38.5 MiB/s |  32.0 MiB /  54.1 MiB | ETA:   0:00:00
+[###########       ] 64% |  39.5 MiB/s |  35.0 MiB /  54.1 MiB | ETA:   0:00:00
+[############      ] 70% |  40.5 MiB/s |  38.0 MiB /  54.1 MiB | ETA:   0:00:00
+[############      ] 72% |  36.9 MiB/s |  39.0 MiB /  54.1 MiB | ETA:   0:00:00
+[#############     ] 73% |  32.1 MiB/s |  40.0 MiB /  54.1 MiB | ETA:   0:00:00
+[##############    ] 79% |  33.1 MiB/s |  43.0 MiB /  54.1 MiB | ETA:   0:00:00
+[###############   ] 85% |  34.0 MiB/s |  46.0 MiB /  54.1 MiB | ETA:   0:00:00
+[###############   ] 86% |  29.6 MiB/s |  47.0 MiB /  54.1 MiB | ETA:   0:00:00
+[###############   ] 88% |  29.0 MiB/s |  48.0 MiB /  54.1 MiB | ETA:   0:00:00
+[################  ] 94% |  29.5 MiB/s |  51.0 MiB /  54.1 MiB | ETA:   0:00:00
+[################# ] 98% |  29.3 MiB/s |  53.0 MiB /  54.1 MiB | ETA:   0:00:00
+[##################]100% |  29.5 MiB/s |  54.1 MiB /  54.1 MiB | Time:  0:00:01
+_________ test_compare_nan_fractions[CCLE_fusions_unfiltered-allcells] _________
+
+data = (         DepMap_ID  ... CCLE_count
+0       ACH-001113  ...          1
+1       ACH-001113  ...          1
+2       ACH-......         26
+357579  ACH-000052  ...        190
+357580  ACH-000052  ...         29
+
+[357581 rows x 17 columns], None)
+arxspans = 'allcells', atol = 0.01
+
+    @pytest.mark.parametrize('arxspans', ['allcells', 'sharedcells'])
+    @pytest.mark.parametrize('data', PARAMS_compare_nan_fractions, indirect=True)
+    @pytest.mark.compare
+    def test_compare_nan_fractions(data, arxspans, atol=1e-2):
+        data1, data2 = data
+        if arxspans == 'sharedcells':
+            # subset data1 and data2 by shared arxspan IDs
+            arxspans_ids = set(data1['DepMap_ID']) & set(data2['DepMap_ID'])
+            data1 = data1[data1['DepMap_ID'].isin(arxspans_ids)]
+            data2 = data2[data2['DepMap_ID'].isin(arxspans_ids)]
+        elif arxspans != 'allcells':
+            raise Exception('unknown value for arxspans')
+    
+>       nan_fractions = pd.concat([data1.isnull().mean(), data2.isnull().mean()], axis=1, join='inner', keys=['old', 'new'])
+E       AttributeError: 'NoneType' object has no attribute 'isnull'
+
+test_compare_to_ref_release.py:152: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions_unfiltered', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+_______ test_compare_nan_fractions[CCLE_fusions_unfiltered-sharedcells] ________
+
+data = (         DepMap_ID  ... CCLE_count
+0       ACH-001113  ...          1
+1       ACH-001113  ...          1
+2       ACH-......         26
+357579  ACH-000052  ...        190
+357580  ACH-000052  ...         29
+
+[357581 rows x 17 columns], None)
+arxspans = 'sharedcells', atol = 0.01
+
+    @pytest.mark.parametrize('arxspans', ['allcells', 'sharedcells'])
+    @pytest.mark.parametrize('data', PARAMS_compare_nan_fractions, indirect=True)
+    @pytest.mark.compare
+    def test_compare_nan_fractions(data, arxspans, atol=1e-2):
+        data1, data2 = data
+        if arxspans == 'sharedcells':
+            # subset data1 and data2 by shared arxspan IDs
+>           arxspans_ids = set(data1['DepMap_ID']) & set(data2['DepMap_ID'])
+E           TypeError: 'NoneType' object is not subscriptable
+
+test_compare_to_ref_release.py:146: TypeError
+______________ test_compare_column_names[CCLE_RNAseq_transcripts] ______________
+
+data = (            TSPAN6 (ENST00000373020)  ...  ERCC-00171
+ACH-001113                  4.895787  ...    7.053872
+ACH-00128...         5.751142  ...    8.399043
+ACH-000052                  4.730640  ...    0.000000
+
+[1412 rows x 198840 columns])
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AssertionError: there are 26 added columns and 23 missing columns
+E       assert {'A1BG (ENST0...593374)', ...} == {'A1BG (ENST0...593374)', ...}
+E         Extra items in the left set:
+E         'OR5M3 (ENST00000641993)'
+E         'LINC00856 (ENST00000634735)'
+E         'LINC00856 (ENST00000476909)'
+E         'LINC00856 (ENST00000415959)'
+E         'LINC00856 (ENST00000635545)'
+E         'LINC00856 (ENST00000635520)'...
+E         
+E         ...Full output truncated (198911 lines hidden), use '-vv' to show
+
+test_compare_to_ref_release.py:78: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+[                      ]N/A% |   0.0 s/B |   0.0 B / 518.8 MiB | ETA:  --:--:--
+[                  ]  0% |  47.0 MiB/s |   5.0 MiB / 518.8 MiB | ETA:   0:00:10
+[                  ]  1% |  44.1 MiB/s |  10.0 MiB / 518.8 MiB | ETA:   0:00:11
+[                  ]  2% |  43.3 MiB/s |  14.0 MiB / 518.8 MiB | ETA:   0:00:11
+[                  ]  3% |  42.5 MiB/s |  18.0 MiB / 518.8 MiB | ETA:   0:00:11
+[                  ]  4% |  42.1 MiB/s |  23.0 MiB / 518.8 MiB | ETA:   0:00:11
+[                  ]  5% |  41.8 MiB/s |  27.0 MiB / 518.8 MiB | ETA:   0:00:11
+[#                 ]  6% |  41.5 MiB/s |  32.0 MiB / 518.8 MiB | ETA:   0:00:11
+[#                 ]  7% |  41.4 MiB/s |  37.0 MiB / 518.8 MiB | ETA:   0:00:11
+[#                 ]  7% |  41.4 MiB/s |  40.0 MiB / 518.8 MiB | ETA:   0:00:11
+[#                 ]  8% |  41.4 MiB/s |  45.0 MiB / 518.8 MiB | ETA:   0:00:11
+[#                 ]  9% |  41.5 MiB/s |  50.0 MiB / 518.8 MiB | ETA:   0:00:11
+[#                 ] 10% |  41.5 MiB/s |  53.0 MiB / 518.8 MiB | ETA:   0:00:11
+[##                ] 11% |  41.6 MiB/s |  58.0 MiB / 518.8 MiB | ETA:   0:00:11
+[##                ] 12% |  41.7 MiB/s |  63.0 MiB / 518.8 MiB | ETA:   0:00:10
+[##                ] 12% |  41.7 MiB/s |  66.0 MiB / 518.8 MiB | ETA:   0:00:10
+[##                ] 13% |  41.7 MiB/s |  71.0 MiB / 518.8 MiB | ETA:   0:00:10
+[##                ] 14% |  41.2 MiB/s |  73.0 MiB / 518.8 MiB | ETA:   0:00:10
+[##                ] 15% |  41.2 MiB/s |  78.0 MiB / 518.8 MiB | ETA:   0:00:10
+[##                ] 15% |  41.2 MiB/s |  83.0 MiB / 518.8 MiB | ETA:   0:00:10
+[##                ] 16% |  41.2 MiB/s |  86.0 MiB / 518.8 MiB | ETA:   0:00:10
+[###               ] 17% |  41.2 MiB/s |  91.0 MiB / 518.8 MiB | ETA:   0:00:10
+[###               ] 18% |  38.1 MiB/s |  96.0 MiB / 518.8 MiB | ETA:   0:00:11
+[###               ] 19% |  38.2 MiB/s |  99.0 MiB / 518.8 MiB | ETA:   0:00:10
+[###               ] 20% |  38.4 MiB/s | 104.0 MiB / 518.8 MiB | ETA:   0:00:10
+[###               ] 21% |  38.5 MiB/s | 109.0 MiB / 518.8 MiB | ETA:   0:00:10
+[###               ] 21% |  38.5 MiB/s | 112.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 22% |  38.4 MiB/s | 116.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 22% |  38.4 MiB/s | 119.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 23% |  37.1 MiB/s | 120.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 24% |  37.3 MiB/s | 125.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 24% |  36.4 MiB/s | 128.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 25% |  35.5 MiB/s | 131.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 26% |  35.7 MiB/s | 135.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 26% |  35.7 MiB/s | 138.0 MiB / 518.8 MiB | ETA:   0:00:10
+[####              ] 27% |  35.9 MiB/s | 143.0 MiB / 518.8 MiB | ETA:   0:00:10
+[#####             ] 27% |  35.4 MiB/s | 145.0 MiB / 518.8 MiB | ETA:   0:00:10
+[#####             ] 28% |  35.5 MiB/s | 150.0 MiB / 518.8 MiB | ETA:   0:00:10
+[#####             ] 29% |  35.5 MiB/s | 152.0 MiB / 518.8 MiB | ETA:   0:00:10
+[#####             ] 30% |  35.7 MiB/s | 157.0 MiB / 518.8 MiB | ETA:   0:00:10
+[#####             ] 31% |  35.8 MiB/s | 162.0 MiB / 518.8 MiB | ETA:   0:00:09
+[#####             ] 31% |  35.9 MiB/s | 165.0 MiB / 518.8 MiB | ETA:   0:00:09
+[#####             ] 32% |  36.0 MiB/s | 170.0 MiB / 518.8 MiB | ETA:   0:00:09
+[######            ] 33% |  36.1 MiB/s | 174.0 MiB / 518.8 MiB | ETA:   0:00:09
+[######            ] 34% |  36.2 MiB/s | 178.0 MiB / 518.8 MiB | ETA:   0:00:09
+[######            ] 35% |  36.4 MiB/s | 183.0 MiB / 518.8 MiB | ETA:   0:00:09
+[######            ] 36% |  36.5 MiB/s | 188.0 MiB / 518.8 MiB | ETA:   0:00:09
+[######            ] 36% |  36.5 MiB/s | 191.0 MiB / 518.8 MiB | ETA:   0:00:08
+[######            ] 37% |  36.6 MiB/s | 196.0 MiB / 518.8 MiB | ETA:   0:00:08
+[######            ] 38% |  36.7 MiB/s | 198.0 MiB / 518.8 MiB | ETA:   0:00:08
+[#######           ] 39% |  36.8 MiB/s | 203.0 MiB / 518.8 MiB | ETA:   0:00:08
+[#######           ] 40% |  36.9 MiB/s | 208.0 MiB / 518.8 MiB | ETA:   0:00:08
+[#######           ] 40% |  36.9 MiB/s | 211.0 MiB / 518.8 MiB | ETA:   0:00:08
+[#######           ] 41% |  37.0 MiB/s | 216.0 MiB / 518.8 MiB | ETA:   0:00:08
+[#######           ] 42% |  37.1 MiB/s | 221.0 MiB / 518.8 MiB | ETA:   0:00:08
+[#######           ] 43% |  37.2 MiB/s | 224.0 MiB / 518.8 MiB | ETA:   0:00:07
+[#######           ] 44% |  37.3 MiB/s | 229.0 MiB / 518.8 MiB | ETA:   0:00:07
+[########          ] 44% |  37.3 MiB/s | 233.0 MiB / 518.8 MiB | ETA:   0:00:07
+[########          ] 45% |  37.3 MiB/s | 237.0 MiB / 518.8 MiB | ETA:   0:00:07
+[########          ] 46% |  37.4 MiB/s | 242.0 MiB / 518.8 MiB | ETA:   0:00:07
+[########          ] 47% |  37.5 MiB/s | 247.0 MiB / 518.8 MiB | ETA:   0:00:07
+[########          ] 47% |  37.0 MiB/s | 249.0 MiB / 518.8 MiB | ETA:   0:00:07
+[########          ] 48% |  37.1 MiB/s | 254.0 MiB / 518.8 MiB | ETA:   0:00:07
+[########          ] 49% |  36.9 MiB/s | 257.0 MiB / 518.8 MiB | ETA:   0:00:07
+[#########         ] 50% |  37.0 MiB/s | 262.0 MiB / 518.8 MiB | ETA:   0:00:06
+[#########         ] 51% |  37.1 MiB/s | 267.0 MiB / 518.8 MiB | ETA:   0:00:06
+[#########         ] 52% |  37.1 MiB/s | 270.0 MiB / 518.8 MiB | ETA:   0:00:06
+[#########         ] 52% |  36.6 MiB/s | 272.0 MiB / 518.8 MiB | ETA:   0:00:06
+[#########         ] 53% |  36.7 MiB/s | 276.0 MiB / 518.8 MiB | ETA:   0:00:06
+[#########         ] 53% |  36.3 MiB/s | 279.0 MiB / 518.8 MiB | ETA:   0:00:06
+[#########         ] 54% |  36.0 MiB/s | 281.0 MiB / 518.8 MiB | ETA:   0:00:06
+[#########         ] 55% |  36.1 MiB/s | 286.0 MiB / 518.8 MiB | ETA:   0:00:06
+[##########        ] 55% |  36.2 MiB/s | 289.0 MiB / 518.8 MiB | ETA:   0:00:06
+[##########        ] 56% |  36.2 MiB/s | 294.0 MiB / 518.8 MiB | ETA:   0:00:06
+[##########        ] 57% |  36.1 MiB/s | 296.0 MiB / 518.8 MiB | ETA:   0:00:06
+[##########        ] 58% |  36.2 MiB/s | 301.0 MiB / 518.8 MiB | ETA:   0:00:06
+[##########        ] 58% |  36.3 MiB/s | 306.0 MiB / 518.8 MiB | ETA:   0:00:05
+[##########        ] 59% |  36.4 MiB/s | 309.0 MiB / 518.8 MiB | ETA:   0:00:05
+[##########        ] 60% |  36.4 MiB/s | 314.0 MiB / 518.8 MiB | ETA:   0:00:05
+[###########       ] 61% |  36.5 MiB/s | 319.0 MiB / 518.8 MiB | ETA:   0:00:05
+[###########       ] 62% |  36.5 MiB/s | 322.0 MiB / 518.8 MiB | ETA:   0:00:05
+[###########       ] 63% |  36.6 MiB/s | 327.0 MiB / 518.8 MiB | ETA:   0:00:05
+[###########       ] 63% |  36.7 MiB/s | 331.0 MiB / 518.8 MiB | ETA:   0:00:05
+[###########       ] 64% |  36.7 MiB/s | 335.0 MiB / 518.8 MiB | ETA:   0:00:05
+[###########       ] 65% |  36.7 MiB/s | 340.0 MiB / 518.8 MiB | ETA:   0:00:04
+[###########       ] 66% |  36.8 MiB/s | 345.0 MiB / 518.8 MiB | ETA:   0:00:04
+[############      ] 67% |  36.8 MiB/s | 349.0 MiB / 518.8 MiB | ETA:   0:00:04
+[############      ] 68% |  36.8 MiB/s | 353.0 MiB / 518.8 MiB | ETA:   0:00:04
+[############      ] 69% |  36.9 MiB/s | 358.0 MiB / 518.8 MiB | ETA:   0:00:04
+[############      ] 69% |  36.9 MiB/s | 362.0 MiB / 518.8 MiB | ETA:   0:00:04
+[############      ] 70% |  37.0 MiB/s | 367.0 MiB / 518.8 MiB | ETA:   0:00:04
+[############      ] 71% |  37.1 MiB/s | 372.0 MiB / 518.8 MiB | ETA:   0:00:03
+[#############     ] 72% |  37.1 MiB/s | 375.0 MiB / 518.8 MiB | ETA:   0:00:03
+[#############     ] 73% |  37.2 MiB/s | 380.0 MiB / 518.8 MiB | ETA:   0:00:03
+[#############     ] 74% |  37.3 MiB/s | 385.0 MiB / 518.8 MiB | ETA:   0:00:03
+[#############     ] 74% |  37.3 MiB/s | 388.0 MiB / 518.8 MiB | ETA:   0:00:03
+[#############     ] 75% |  37.4 MiB/s | 393.0 MiB / 518.8 MiB | ETA:   0:00:03
+[#############     ] 76% |  37.4 MiB/s | 398.0 MiB / 518.8 MiB | ETA:   0:00:03
+[#############     ] 77% |  37.4 MiB/s | 401.0 MiB / 518.8 MiB | ETA:   0:00:03
+[##############    ] 78% |  37.5 MiB/s | 406.0 MiB / 518.8 MiB | ETA:   0:00:03
+[##############    ] 79% |  37.5 MiB/s | 411.0 MiB / 518.8 MiB | ETA:   0:00:02
+[##############    ] 79% |  37.6 MiB/s | 414.0 MiB / 518.8 MiB | ETA:   0:00:02
+[##############    ] 80% |  37.6 MiB/s | 419.0 MiB / 518.8 MiB | ETA:   0:00:02
+[##############    ] 81% |  37.7 MiB/s | 424.0 MiB / 518.8 MiB | ETA:   0:00:02
+[##############    ] 82% |  37.7 MiB/s | 427.0 MiB / 518.8 MiB | ETA:   0:00:02
+[##############    ] 83% |  37.3 MiB/s | 432.0 MiB / 518.8 MiB | ETA:   0:00:02
+[###############   ] 84% |  37.3 MiB/s | 437.0 MiB / 518.8 MiB | ETA:   0:00:02
+[###############   ] 85% |  37.3 MiB/s | 441.0 MiB / 518.8 MiB | ETA:   0:00:02
+[###############   ] 85% |  37.3 MiB/s | 446.0 MiB / 518.8 MiB | ETA:   0:00:01
+[###############   ] 86% |  37.4 MiB/s | 451.0 MiB / 518.8 MiB | ETA:   0:00:01
+[###############   ] 87% |  37.4 MiB/s | 454.0 MiB / 518.8 MiB | ETA:   0:00:01
+[###############   ] 88% |  37.4 MiB/s | 459.0 MiB / 518.8 MiB | ETA:   0:00:01
+[################  ] 89% |  37.5 MiB/s | 464.0 MiB / 518.8 MiB | ETA:   0:00:01
+[################  ] 90% |  37.5 MiB/s | 467.0 MiB / 518.8 MiB | ETA:   0:00:01
+[################  ] 90% |  37.5 MiB/s | 472.0 MiB / 518.8 MiB | ETA:   0:00:01
+[################  ] 91% |  37.5 MiB/s | 476.0 MiB / 518.8 MiB | ETA:   0:00:01
+[################  ] 92% |  37.4 MiB/s | 479.0 MiB / 518.8 MiB | ETA:   0:00:01
+[################  ] 92% |  37.1 MiB/s | 480.0 MiB / 518.8 MiB | ETA:   0:00:01
+[################  ] 93% |  37.2 MiB/s | 485.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################  ] 94% |  37.2 MiB/s | 489.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 95% |  37.2 MiB/s | 493.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 95% |  37.0 MiB/s | 496.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 96% |  37.0 MiB/s | 500.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 97% |  36.8 MiB/s | 504.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 97% |  36.5 MiB/s | 505.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 98% |  36.6 MiB/s | 510.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 98% |  36.3 MiB/s | 512.0 MiB / 518.8 MiB | ETA:   0:00:00
+[################# ] 99% |  36.3 MiB/s | 517.0 MiB / 518.8 MiB | ETA:   0:00:00
+[##################]100% |  36.4 MiB/s | 518.8 MiB / 518.8 MiB | Time:  0:00:14
+____ test_compare_column_names[CCLE_expression_transcripts_expected_count] _____
+
+data = (            TSPAN6 (ENST00000373020)  ...  ERCC-00171
+ACH-001113                    2272.9  ...      1059.0
+ACH-00128...          40350.0  ...     27312.0
+ACH-000052                    2956.3  ...         0.0
+
+[1412 rows x 199272 columns])
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AssertionError: there are 28 added columns and 22 missing columns
+E       assert {'A1BG (ENST0...593374)', ...} == {'A1BG (ENST0...593374)', ...}
+E         Extra items in the left set:
+E         'OR5M3 (ENST00000641993)'
+E         'LINC00856 (ENST00000634735)'
+E         'LINC00856 (ENST00000476909)'
+E         'CDY17P (ENST00000414121)'
+E         'LINC00856 (ENST00000415959)'
+E         'LINC00856 (ENST00000635545)'...
+E         
+E         ...Full output truncated (199343 lines hidden), use '-vv' to show
+
+test_compare_to_ref_release.py:78: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+[                      ]N/A% |   0.0 s/B |   0.0 B / 386.5 MiB | ETA:  --:--:--
+[                  ]  1% |  52.6 MiB/s |   5.0 MiB / 386.5 MiB | ETA:   0:00:07
+[                  ]  2% |  51.9 MiB/s |  10.0 MiB / 386.5 MiB | ETA:   0:00:07
+[                  ]  3% |  51.6 MiB/s |  15.0 MiB / 386.5 MiB | ETA:   0:00:07
+[                  ]  5% |  51.5 MiB/s |  20.0 MiB / 386.5 MiB | ETA:   0:00:07
+[#                 ]  6% |  51.5 MiB/s |  25.0 MiB / 386.5 MiB | ETA:   0:00:07
+[#                 ]  7% |  51.5 MiB/s |  30.0 MiB / 386.5 MiB | ETA:   0:00:06
+[#                 ]  8% |  48.0 MiB/s |  33.0 MiB / 386.5 MiB | ETA:   0:00:07
+[#                 ]  9% |  43.5 MiB/s |  35.0 MiB / 386.5 MiB | ETA:   0:00:08
+[#                 ] 10% |  44.3 MiB/s |  40.0 MiB / 386.5 MiB | ETA:   0:00:07
+[##                ] 11% |  44.9 MiB/s |  45.0 MiB / 386.5 MiB | ETA:   0:00:07
+[##                ] 12% |  42.4 MiB/s |  49.0 MiB / 386.5 MiB | ETA:   0:00:07
+[##                ] 13% |  43.1 MiB/s |  54.0 MiB / 386.5 MiB | ETA:   0:00:07
+[##                ] 14% |  39.7 MiB/s |  56.0 MiB / 386.5 MiB | ETA:   0:00:08
+[##                ] 15% |  40.2 MiB/s |  59.0 MiB / 386.5 MiB | ETA:   0:00:08
+[##                ] 16% |  40.0 MiB/s |  64.0 MiB / 386.5 MiB | ETA:   0:00:08
+[###               ] 17% |  40.7 MiB/s |  69.0 MiB / 386.5 MiB | ETA:   0:00:07
+[###               ] 19% |  41.2 MiB/s |  74.0 MiB / 386.5 MiB | ETA:   0:00:07
+[###               ] 20% |  41.7 MiB/s |  79.0 MiB / 386.5 MiB | ETA:   0:00:07
+[###               ] 21% |  42.1 MiB/s |  84.0 MiB / 386.5 MiB | ETA:   0:00:07
+[####              ] 23% |  42.4 MiB/s |  89.0 MiB / 386.5 MiB | ETA:   0:00:07
+[####              ] 24% |  42.7 MiB/s |  93.0 MiB / 386.5 MiB | ETA:   0:00:06
+[####              ] 25% |  42.3 MiB/s |  97.0 MiB / 386.5 MiB | ETA:   0:00:06
+[####              ] 26% |  42.7 MiB/s | 103.0 MiB / 386.5 MiB | ETA:   0:00:06
+[####              ] 27% |  41.9 MiB/s | 106.0 MiB / 386.5 MiB | ETA:   0:00:06
+[#####             ] 28% |  42.0 MiB/s | 111.0 MiB / 386.5 MiB | ETA:   0:00:06
+[#####             ] 28% |  40.6 MiB/s | 112.0 MiB / 386.5 MiB | ETA:   0:00:06
+[#####             ] 30% |  41.0 MiB/s | 118.0 MiB / 386.5 MiB | ETA:   0:00:06
+[#####             ] 31% |  41.2 MiB/s | 123.0 MiB / 386.5 MiB | ETA:   0:00:06
+[#####             ] 33% |  41.4 MiB/s | 128.0 MiB / 386.5 MiB | ETA:   0:00:06
+[######            ] 34% |  41.7 MiB/s | 133.0 MiB / 386.5 MiB | ETA:   0:00:06
+[######            ] 35% |  41.8 MiB/s | 137.0 MiB / 386.5 MiB | ETA:   0:00:05
+[######            ] 36% |  42.0 MiB/s | 142.0 MiB / 386.5 MiB | ETA:   0:00:05
+[######            ] 37% |  42.0 MiB/s | 146.0 MiB / 386.5 MiB | ETA:   0:00:05
+[#######           ] 39% |  42.1 MiB/s | 151.0 MiB / 386.5 MiB | ETA:   0:00:05
+[#######           ] 39% |  40.3 MiB/s | 152.0 MiB / 386.5 MiB | ETA:   0:00:05
+[#######           ] 40% |  40.6 MiB/s | 157.0 MiB / 386.5 MiB | ETA:   0:00:05
+[#######           ] 41% |  40.0 MiB/s | 160.0 MiB / 386.5 MiB | ETA:   0:00:05
+[#######           ] 42% |  40.3 MiB/s | 166.0 MiB / 386.5 MiB | ETA:   0:00:05
+[########          ] 44% |  40.6 MiB/s | 172.0 MiB / 386.5 MiB | ETA:   0:00:05
+[########          ] 45% |  40.0 MiB/s | 176.0 MiB / 386.5 MiB | ETA:   0:00:05
+[########          ] 46% |  40.2 MiB/s | 181.0 MiB / 386.5 MiB | ETA:   0:00:05
+[########          ] 48% |  40.3 MiB/s | 186.0 MiB / 386.5 MiB | ETA:   0:00:04
+[########          ] 49% |  40.3 MiB/s | 191.0 MiB / 386.5 MiB | ETA:   0:00:04
+[#########         ] 50% |  40.0 MiB/s | 194.0 MiB / 386.5 MiB | ETA:   0:00:04
+[#########         ] 50% |  39.9 MiB/s | 196.0 MiB / 386.5 MiB | ETA:   0:00:04
+[#########         ] 51% |  39.7 MiB/s | 200.0 MiB / 386.5 MiB | ETA:   0:00:04
+[#########         ] 53% |  40.0 MiB/s | 206.0 MiB / 386.5 MiB | ETA:   0:00:04
+[#########         ] 54% |  40.1 MiB/s | 211.0 MiB / 386.5 MiB | ETA:   0:00:04
+[##########        ] 55% |  40.3 MiB/s | 216.0 MiB / 386.5 MiB | ETA:   0:00:04
+[##########        ] 57% |  40.5 MiB/s | 221.0 MiB / 386.5 MiB | ETA:   0:00:04
+[##########        ] 58% |  40.7 MiB/s | 226.0 MiB / 386.5 MiB | ETA:   0:00:03
+[##########        ] 59% |  40.8 MiB/s | 230.0 MiB / 386.5 MiB | ETA:   0:00:03
+[##########        ] 60% |  40.2 MiB/s | 232.0 MiB / 386.5 MiB | ETA:   0:00:03
+[##########        ] 60% |  39.3 MiB/s | 233.0 MiB / 386.5 MiB | ETA:   0:00:03
+[###########       ] 61% |  39.6 MiB/s | 239.0 MiB / 386.5 MiB | ETA:   0:00:03
+[###########       ] 62% |  39.2 MiB/s | 240.0 MiB / 386.5 MiB | ETA:   0:00:03
+[###########       ] 62% |  38.5 MiB/s | 243.0 MiB / 386.5 MiB | ETA:   0:00:03
+[###########       ] 64% |  38.5 MiB/s | 248.0 MiB / 386.5 MiB | ETA:   0:00:03
+[###########       ] 65% |  38.7 MiB/s | 254.0 MiB / 386.5 MiB | ETA:   0:00:03
+[############      ] 67% |  38.9 MiB/s | 260.0 MiB / 386.5 MiB | ETA:   0:00:03
+[############      ] 68% |  39.1 MiB/s | 265.0 MiB / 386.5 MiB | ETA:   0:00:03
+[############      ] 69% |  39.3 MiB/s | 270.0 MiB / 386.5 MiB | ETA:   0:00:02
+[############      ] 70% |  39.4 MiB/s | 274.0 MiB / 386.5 MiB | ETA:   0:00:02
+[############      ] 72% |  39.6 MiB/s | 279.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 72% |  39.0 MiB/s | 280.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 73% |  39.2 MiB/s | 284.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 74% |  39.0 MiB/s | 287.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 74% |  38.8 MiB/s | 289.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 76% |  39.0 MiB/s | 294.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 76% |  38.0 MiB/s | 295.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 76% |  37.5 MiB/s | 296.0 MiB / 386.5 MiB | ETA:   0:00:02
+[#############     ] 77% |  37.6 MiB/s | 299.0 MiB / 386.5 MiB | ETA:   0:00:02
+[##############    ] 78% |  37.7 MiB/s | 304.0 MiB / 386.5 MiB | ETA:   0:00:02
+[##############    ] 79% |  37.9 MiB/s | 309.0 MiB / 386.5 MiB | ETA:   0:00:02
+[##############    ] 81% |  38.0 MiB/s | 314.0 MiB / 386.5 MiB | ETA:   0:00:01
+[##############    ] 82% |  38.1 MiB/s | 318.0 MiB / 386.5 MiB | ETA:   0:00:01
+[###############   ] 83% |  38.2 MiB/s | 323.0 MiB / 386.5 MiB | ETA:   0:00:01
+[###############   ] 84% |  38.1 MiB/s | 328.0 MiB / 386.5 MiB | ETA:   0:00:01
+[###############   ] 86% |  38.3 MiB/s | 333.0 MiB / 386.5 MiB | ETA:   0:00:01
+[###############   ] 86% |  37.9 MiB/s | 336.0 MiB / 386.5 MiB | ETA:   0:00:01
+[###############   ] 88% |  38.1 MiB/s | 342.0 MiB / 386.5 MiB | ETA:   0:00:01
+[################  ] 89% |  37.8 MiB/s | 344.0 MiB / 386.5 MiB | ETA:   0:00:01
+[################  ] 90% |  38.0 MiB/s | 348.0 MiB / 386.5 MiB | ETA:   0:00:01
+[################  ] 91% |  38.1 MiB/s | 353.0 MiB / 386.5 MiB | ETA:   0:00:00
+[################  ] 92% |  38.3 MiB/s | 358.0 MiB / 386.5 MiB | ETA:   0:00:00
+[################  ] 93% |  38.4 MiB/s | 362.0 MiB / 386.5 MiB | ETA:   0:00:00
+[################# ] 94% |  38.5 MiB/s | 367.0 MiB / 386.5 MiB | ETA:   0:00:00
+[################# ] 95% |  38.3 MiB/s | 370.0 MiB / 386.5 MiB | ETA:   0:00:00
+[################# ] 97% |  38.3 MiB/s | 376.0 MiB / 386.5 MiB | ETA:   0:00:00
+[################# ] 98% |  38.4 MiB/s | 382.0 MiB / 386.5 MiB | ETA:   0:00:00
+[################# ] 99% |  38.3 MiB/s | 385.0 MiB / 386.5 MiB | ETA:   0:00:00
+[##################]100% |  38.3 MiB/s | 386.5 MiB / 386.5 MiB | Time:  0:00:10
+_______________ test_compare_column_names[CCLE_expression_full] ________________
+
+data = (            TSPAN6 (ENSG00000000003)  ...  ERCC-00171
+ACH-001113                  4.990501  ...    7.053872
+ACH-00128...          5.805292  ...    8.399043
+ACH-000052                  4.870858  ...    0.000000
+
+[1412 rows x 52054 columns])
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AssertionError: there are 2 added columns and 3 missing columns
+E       assert {'A1BG (ENSG0...166535)', ...} == {'A1BG (ENSG0...166535)', ...}
+E         Extra items in the left set:
+E         'RN7SL691P (ENSG00000239464)'
+E         'LINC00856 (ENSG00000230417)'
+E         'MTND6P16 (ENSG00000249893)'
+E         Extra items in the right set:
+E         'LINC00595 (ENSG00000230417)'
+E         'LINC01884 (ENSG00000233587)'...
+E         
+E         ...Full output truncated (52061 lines hidden), use '-vv' to show
+
+test_compare_to_ref_release.py:78: AssertionError
+_________________ test_compare_column_names[CCLE_RNAseq_reads] _________________
+
+data = (            TSPAN6 (ENSG00000000003)  ...  ERCC-00171
+ACH-001113                    2383.0  ...      1059.0
+ACH-00128...           41694.0  ...     27312.0
+ACH-000052                    3188.0  ...         0.0
+
+[1412 rows x 52439 columns])
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AssertionError: there are 4 added columns and 4 missing columns
+E       assert {'A1BG (ENSG0...166535)', ...} == {'A1BG (ENSG0...166535)', ...}
+E         Extra items in the left set:
+E         'CDY17P (ENSG00000231375)'
+E         'RN7SL691P (ENSG00000239464)'
+E         'LINC00856 (ENSG00000230417)'
+E         'MTND6P16 (ENSG00000249893)'
+E         Extra items in the right set:
+E         'AL137067.1 (ENSG00000277465)'...
+E         
+E         ...Full output truncated (52450 lines hidden), use '-vv' to show
+
+test_compare_to_ref_release.py:78: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+[                      ]N/A% |   0.0 s/B |   0.0 B /  87.7 MiB | ETA:  --:--:--
+[                  ]  4% |  56.6 MiB/s |   4.0 MiB /  87.7 MiB | ETA:   0:00:01
+[#                 ]  7% |  52.9 MiB/s |   7.0 MiB /  87.7 MiB | ETA:   0:00:01
+[##                ] 11% |  51.5 MiB/s |  10.0 MiB /  87.7 MiB | ETA:   0:00:01
+[##                ] 14% |  50.6 MiB/s |  13.0 MiB /  87.7 MiB | ETA:   0:00:01
+[###               ] 18% |  45.2 MiB/s |  16.0 MiB /  87.7 MiB | ETA:   0:00:01
+[###               ] 21% |  45.7 MiB/s |  19.0 MiB /  87.7 MiB | ETA:   0:00:01
+[####              ] 25% |  46.3 MiB/s |  22.0 MiB /  87.7 MiB | ETA:   0:00:01
+[####              ] 26% |  35.0 MiB/s |  23.0 MiB /  87.7 MiB | ETA:   0:00:01
+[####              ] 27% |  31.7 MiB/s |  24.0 MiB /  87.7 MiB | ETA:   0:00:02
+[#####             ] 30% |  33.0 MiB/s |  27.0 MiB /  87.7 MiB | ETA:   0:00:01
+[######            ] 34% |  34.1 MiB/s |  30.0 MiB /  87.7 MiB | ETA:   0:00:01
+[######            ] 36% |  29.9 MiB/s |  32.0 MiB /  87.7 MiB | ETA:   0:00:01
+[#######           ] 39% |  30.9 MiB/s |  35.0 MiB /  87.7 MiB | ETA:   0:00:01
+[#######           ] 43% |  31.6 MiB/s |  38.0 MiB /  87.7 MiB | ETA:   0:00:01
+[########          ] 45% |  31.3 MiB/s |  40.0 MiB /  87.7 MiB | ETA:   0:00:01
+[########          ] 49% |  32.1 MiB/s |  43.0 MiB /  87.7 MiB | ETA:   0:00:01
+[#########         ] 52% |  32.8 MiB/s |  46.0 MiB /  87.7 MiB | ETA:   0:00:01
+[#########         ] 54% |  33.0 MiB/s |  48.0 MiB /  87.7 MiB | ETA:   0:00:01
+[##########        ] 59% |  33.8 MiB/s |  52.0 MiB /  87.7 MiB | ETA:   0:00:01
+[###########       ] 62% |  32.5 MiB/s |  55.0 MiB /  87.7 MiB | ETA:   0:00:01
+[###########       ] 63% |  29.3 MiB/s |  56.0 MiB /  87.7 MiB | ETA:   0:00:01
+[############      ] 67% |  29.9 MiB/s |  59.0 MiB /  87.7 MiB | ETA:   0:00:00
+[############      ] 70% |  30.5 MiB/s |  62.0 MiB /  87.7 MiB | ETA:   0:00:00
+[#############     ] 72% |  28.4 MiB/s |  64.0 MiB /  87.7 MiB | ETA:   0:00:00
+[#############     ] 74% |  27.7 MiB/s |  65.0 MiB /  87.7 MiB | ETA:   0:00:00
+[#############     ] 77% |  28.2 MiB/s |  68.0 MiB /  87.7 MiB | ETA:   0:00:00
+[##############    ] 82% |  28.9 MiB/s |  72.0 MiB /  87.7 MiB | ETA:   0:00:00
+[###############   ] 85% |  29.3 MiB/s |  75.0 MiB /  87.7 MiB | ETA:   0:00:00
+[################  ] 88% |  29.8 MiB/s |  78.0 MiB /  87.7 MiB | ETA:   0:00:00
+[################  ] 91% |  28.9 MiB/s |  80.0 MiB /  87.7 MiB | ETA:   0:00:00
+[################# ] 94% |  29.3 MiB/s |  83.0 MiB /  87.7 MiB | ETA:   0:00:00
+[################# ] 98% |  29.8 MiB/s |  86.0 MiB /  87.7 MiB | ETA:   0:00:00
+[##################]100% |  30.0 MiB/s |  87.7 MiB /  87.7 MiB | Time:  0:00:02
+___________________ test_compare_column_names[CCLE_fusions] ____________________
+
+data = (        DepMap_ID  ... CCLE_count
+0      ACH-001113  ...          2
+1      ACH-001113  ...          2
+2      ACH-0011...2  ...         12
+44414  ACH-000052  ...          3
+44415  ACH-000052  ...         64
+
+[44416 rows x 17 columns], None)
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AttributeError: 'NoneType' object has no attribute 'columns'
+
+test_compare_to_ref_release.py:78: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+______________ test_compare_column_dtypes[CCLE_fusions-pd_dtypes] ______________
+
+data = (        DepMap_ID  ... CCLE_count
+0      ACH-001113  ...          2
+1      ACH-001113  ...          2
+2      ACH-0011...2  ...         12
+44414  ACH-000052  ...          3
+44415  ACH-000052  ...         64
+
+[44416 rows x 17 columns], None)
+method = 'pd_dtypes'
+
+    @pytest.mark.parametrize('method', ['pd_dtypes', 'map_type'])
+    @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_dtypes(data, method):
+        data1, data2 = data
+        if method == 'pd_dtypes': # per column dtype
+            get_dtypes = lambda df: df.dtypes
+        elif method == 'map_type': # per element type
+            get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+        else:
+            raise Exception('bad values for dtype method')
+    
+>       dtypes_compare = pd.concat([get_dtypes(data1), get_dtypes(data2)], axis=1, keys=['reference', 'virtual'])
+
+test_compare_to_ref_release.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df = None
+
+>   get_dtypes = lambda df: df.dtypes
+E   AttributeError: 'NoneType' object has no attribute 'dtypes'
+
+test_compare_to_ref_release.py:165: AttributeError
+______________ test_compare_column_dtypes[CCLE_fusions-map_type] _______________
+
+data = (        DepMap_ID  ... CCLE_count
+0      ACH-001113  ...          2
+1      ACH-001113  ...          2
+2      ACH-0011...2  ...         12
+44414  ACH-000052  ...          3
+44415  ACH-000052  ...         64
+
+[44416 rows x 17 columns], None)
+method = 'map_type'
+
+    @pytest.mark.parametrize('method', ['pd_dtypes', 'map_type'])
+    @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_dtypes(data, method):
+        data1, data2 = data
+        if method == 'pd_dtypes': # per column dtype
+            get_dtypes = lambda df: df.dtypes
+        elif method == 'map_type': # per element type
+            get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+        else:
+            raise Exception('bad values for dtype method')
+    
+>       dtypes_compare = pd.concat([get_dtypes(data1), get_dtypes(data2)], axis=1, keys=['reference', 'virtual'])
+
+test_compare_to_ref_release.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df = None
+
+>   get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+E   AttributeError: 'NoneType' object has no attribute 'apply'
+
+test_compare_to_ref_release.py:167: AttributeError
+______________ test_compare_column_names[CCLE_fusions_unfiltered] ______________
+
+data = (         DepMap_ID  ... CCLE_count
+0       ACH-001113  ...          1
+1       ACH-001113  ...          1
+2       ACH-......         26
+357579  ACH-000052  ...        190
+357580  ACH-000052  ...         29
+
+[357581 rows x 17 columns], None)
+
+    @pytest.mark.parametrize('data', PARAMS_compare_column_names, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_names(data):
+        data1, data2 = data
+>       assert set(data1.columns) == set(data2.columns), \
+            'there are {} added columns and {} missing columns'.format(
+                len(set(data2.columns) - set(data1.columns)), len(set(data1.columns) - set(data2.columns)))
+E       AttributeError: 'NoneType' object has no attribute 'columns'
+
+test_compare_to_ref_release.py:78: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions_unfiltered', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+________ test_compare_column_dtypes[CCLE_fusions_unfiltered-pd_dtypes] _________
+
+data = (         DepMap_ID  ... CCLE_count
+0       ACH-001113  ...          1
+1       ACH-001113  ...          1
+2       ACH-......         26
+357579  ACH-000052  ...        190
+357580  ACH-000052  ...         29
+
+[357581 rows x 17 columns], None)
+method = 'pd_dtypes'
+
+    @pytest.mark.parametrize('method', ['pd_dtypes', 'map_type'])
+    @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_dtypes(data, method):
+        data1, data2 = data
+        if method == 'pd_dtypes': # per column dtype
+            get_dtypes = lambda df: df.dtypes
+        elif method == 'map_type': # per element type
+            get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+        else:
+            raise Exception('bad values for dtype method')
+    
+>       dtypes_compare = pd.concat([get_dtypes(data1), get_dtypes(data2)], axis=1, keys=['reference', 'virtual'])
+
+test_compare_to_ref_release.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df = None
+
+>   get_dtypes = lambda df: df.dtypes
+E   AttributeError: 'NoneType' object has no attribute 'dtypes'
+
+test_compare_to_ref_release.py:165: AttributeError
+_________ test_compare_column_dtypes[CCLE_fusions_unfiltered-map_type] _________
+
+data = (         DepMap_ID  ... CCLE_count
+0       ACH-001113  ...          1
+1       ACH-001113  ...          1
+2       ACH-......         26
+357579  ACH-000052  ...        190
+357580  ACH-000052  ...         29
+
+[357581 rows x 17 columns], None)
+method = 'map_type'
+
+    @pytest.mark.parametrize('method', ['pd_dtypes', 'map_type'])
+    @pytest.mark.parametrize('data', PARAMS_compare_column_dtypes, indirect=['data'])
+    @pytest.mark.compare
+    def test_compare_column_dtypes(data, method):
+        data1, data2 = data
+        if method == 'pd_dtypes': # per column dtype
+            get_dtypes = lambda df: df.dtypes
+        elif method == 'map_type': # per element type
+            get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+        else:
+            raise Exception('bad values for dtype method')
+    
+>       dtypes_compare = pd.concat([get_dtypes(data1), get_dtypes(data2)], axis=1, keys=['reference', 'virtual'])
+
+test_compare_to_ref_release.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df = None
+
+>   get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+E   AttributeError: 'NoneType' object has no attribute 'apply'
+
+test_compare_to_ref_release.py:167: AttributeError
+_____ test_matrix_correlations[CCLE_expression-0.99999-persample-spearman] _____
+
+data = (            TSPAN6 (7105)  ...  AC113348.1 (102724657)
+ACH-001113       4.990501  ...                0.000000
+ACH-001...05292  ...                0.000000
+ACH-000052       4.870858  ...                0.000000
+
+[1412 rows x 19177 columns])
+threshold = 0.99999, axisname = 'persample', method = 'spearman'
+
+    @pytest.mark.parametrize('method', ['spearman',
+                             pytest.param('pearson',
+                             marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+    @pytest.mark.parametrize('axisname', ['persample',
+                            pytest.param('pergene',
+                            marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
+    @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+    @pytest.mark.compare
+    def test_matrix_correlations(data, threshold, axisname, method):
+        axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
+        data1, data2 = data
+        corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
+        # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+        corrs.dropna(inplace=True)
+>       assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+E       AssertionError: the cases which did not pass the tests are:
+E         ACH-001163    0.862828
+E         ACH-001196    0.913189
+E         ACH-001096    0.913189
+E         dtype: float64
+E       assert False
+E        +  where False = <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool>()
+E        +    where <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool> = ACH-001113    1.0\nACH-001289    1.0\nACH-001339    1.0\nACH-001538    1.0\nACH-000242    1.0\n             ... \nACH-000750    1.0\nACH-000285    1.0\nACH-001858    1.0\nACH-001997    1.0\nACH-000052    1.0\nLength: 1410, dtype: float64 >= 0.99999.all
+
+test_compare_to_ref_release.py:100: AssertionError
+_ test_matrix_correlations[CCLE_expression_proteincoding_genes_expected_count-0.99999-persample-spearman] _
+
+data = (            TSPAN6 (7105)  ...  AC113348.1 (102724657)
+ACH-001113         2383.0  ...                     0.0
+ACH-001...694.0  ...                     0.0
+ACH-000052         3188.0  ...                     0.0
+
+[1412 rows x 19177 columns])
+threshold = 0.99999, axisname = 'persample', method = 'spearman'
+
+    @pytest.mark.parametrize('method', ['spearman',
+                             pytest.param('pearson',
+                             marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+    @pytest.mark.parametrize('axisname', ['persample',
+                            pytest.param('pergene',
+                            marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
+    @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+    @pytest.mark.compare
+    def test_matrix_correlations(data, threshold, axisname, method):
+        axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
+        data1, data2 = data
+        corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
+        # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+        corrs.dropna(inplace=True)
+>       assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+E       AssertionError: the cases which did not pass the tests are:
+E         ACH-001163    0.864193
+E         ACH-001196    0.913645
+E         ACH-001096    0.913645
+E         dtype: float64
+E       assert False
+E        +  where False = <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool>()
+E        +    where <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool> = ACH-001113    1.0\nACH-001289    1.0\nACH-001339    1.0\nACH-001538    1.0\nACH-000242    1.0\n             ... \nACH-000750    1.0\nACH-000285    1.0\nACH-001858    1.0\nACH-001997    1.0\nACH-000052    1.0\nLength: 1410, dtype: float64 >= 0.99999.all
+
+test_compare_to_ref_release.py:100: AssertionError
+_ test_matrix_correlations[CCLE_RNAseq_transcripts-0.99999-persample-spearman] _
+
+data = (            TSPAN6 (ENST00000373020)  ...  ERCC-00171
+ACH-001113                  4.895787  ...    7.053872
+ACH-00128...         5.751142  ...    8.399043
+ACH-000052                  4.730640  ...    0.000000
+
+[1412 rows x 198840 columns])
+threshold = 0.99999, axisname = 'persample', method = 'spearman'
+
+    @pytest.mark.parametrize('method', ['spearman',
+                             pytest.param('pearson',
+                             marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+    @pytest.mark.parametrize('axisname', ['persample',
+                            pytest.param('pergene',
+                            marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
+    @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+    @pytest.mark.compare
+    def test_matrix_correlations(data, threshold, axisname, method):
+        axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
+        data1, data2 = data
+        corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
+        # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+        corrs.dropna(inplace=True)
+>       assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+E       AssertionError: the cases which did not pass the tests are:
+E         ACH-001163    0.717008
+E         ACH-001196    0.751678
+E         ACH-001096    0.751678
+E         dtype: float64
+E       assert False
+E        +  where False = <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool>()
+E        +    where <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool> = ACH-001113    1.0\nACH-001289    1.0\nACH-001339    1.0\nACH-001538    1.0\nACH-000242    1.0\n             ... \nACH-000750    1.0\nACH-000285    1.0\nACH-001858    1.0\nACH-001997    1.0\nACH-000052    1.0\nLength: 1410, dtype: float64 >= 0.99999.all
+
+test_compare_to_ref_release.py:100: AssertionError
+_ test_matrix_correlations[CCLE_expression_transcripts_expected_count-0.99999-persample-spearman] _
+
+data = (            TSPAN6 (ENST00000373020)  ...  ERCC-00171
+ACH-001113                    2272.9  ...      1059.0
+ACH-00128...          40350.0  ...     27312.0
+ACH-000052                    2956.3  ...         0.0
+
+[1412 rows x 199272 columns])
+threshold = 0.99999, axisname = 'persample', method = 'spearman'
+
+    @pytest.mark.parametrize('method', ['spearman',
+                             pytest.param('pearson',
+                             marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+    @pytest.mark.parametrize('axisname', ['persample',
+                            pytest.param('pergene',
+                            marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
+    @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+    @pytest.mark.compare
+    def test_matrix_correlations(data, threshold, axisname, method):
+        axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
+        data1, data2 = data
+        corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
+        # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+        corrs.dropna(inplace=True)
+>       assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+E       AssertionError: the cases which did not pass the tests are:
+E         ACH-001163    0.735616
+E         ACH-001196    0.769013
+E         ACH-001096    0.769013
+E         dtype: float64
+E       assert False
+E        +  where False = <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool>()
+E        +    where <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool> = ACH-001113    1.0\nACH-001289    1.0\nACH-001339    1.0\nACH-001538    1.0\nACH-000242    1.0\n             ... \nACH-000750    1.0\nACH-000285    1.0\nACH-001858    1.0\nACH-001997    1.0\nACH-000052    1.0\nLength: 1410, dtype: float64 >= 0.99999.all
+
+test_compare_to_ref_release.py:100: AssertionError
+__ test_matrix_correlations[CCLE_expression_full-0.99999-persample-spearman] ___
+
+data = (            TSPAN6 (ENSG00000000003)  ...  ERCC-00171
+ACH-001113                  4.990501  ...    7.053872
+ACH-00128...          5.805292  ...    8.399043
+ACH-000052                  4.870858  ...    0.000000
+
+[1412 rows x 52054 columns])
+threshold = 0.99999, axisname = 'persample', method = 'spearman'
+
+    @pytest.mark.parametrize('method', ['spearman',
+                             pytest.param('pearson',
+                             marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+    @pytest.mark.parametrize('axisname', ['persample',
+                            pytest.param('pergene',
+                            marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
+    @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+    @pytest.mark.compare
+    def test_matrix_correlations(data, threshold, axisname, method):
+        axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
+        data1, data2 = data
+        corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
+        # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+        corrs.dropna(inplace=True)
+>       assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+E       AssertionError: the cases which did not pass the tests are:
+E         ACH-001163    0.833263
+E         ACH-001196    0.859933
+E         ACH-001096    0.859933
+E         dtype: float64
+E       assert False
+E        +  where False = <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool>()
+E        +    where <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool> = ACH-001113    1.0\nACH-001289    1.0\nACH-001339    1.0\nACH-001538    1.0\nACH-000242    1.0\n             ... \nACH-000750    1.0\nACH-000285    1.0\nACH-001858    1.0\nACH-001997    1.0\nACH-000052    1.0\nLength: 1410, dtype: float64 >= 0.99999.all
+
+test_compare_to_ref_release.py:100: AssertionError
+____ test_matrix_correlations[CCLE_RNAseq_reads-0.99999-persample-spearman] ____
+
+data = (            TSPAN6 (ENSG00000000003)  ...  ERCC-00171
+ACH-001113                    2383.0  ...      1059.0
+ACH-00128...           41694.0  ...     27312.0
+ACH-000052                    3188.0  ...         0.0
+
+[1412 rows x 52439 columns])
+threshold = 0.99999, axisname = 'persample', method = 'spearman'
+
+    @pytest.mark.parametrize('method', ['spearman',
+                             pytest.param('pearson',
+                             marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+    @pytest.mark.parametrize('axisname', ['persample',
+                            pytest.param('pergene',
+                            marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
+    @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+    @pytest.mark.compare
+    def test_matrix_correlations(data, threshold, axisname, method):
+        axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
+        data1, data2 = data
+        corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
+        # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+        corrs.dropna(inplace=True)
+>       assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+E       AssertionError: the cases which did not pass the tests are:
+E         ACH-001163    0.848882
+E         ACH-001096    0.873526
+E         ACH-001196    0.873526
+E         dtype: float64
+E       assert False
+E        +  where False = <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool>()
+E        +    where <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-001113    True\nACH-001289    True\nACH-001339    True...H-000750    True\nACH-000285    True\nACH-001858    True\nACH-001997    True\nACH-000052    True\nLength: 1410, dtype: bool> = ACH-001113    1.0\nACH-001289    1.0\nACH-001339    1.0\nACH-001538    1.0\nACH-000242    1.0\n             ... \nACH-000750    1.0\nACH-000285    1.0\nACH-001858    1.0\nACH-001997    1.0\nACH-000052    1.0\nLength: 1410, dtype: float64 >= 0.99999.all
+
+test_compare_to_ref_release.py:100: AssertionError
+________________________ test_arxspan_ids[CCLE_fusions] ________________________
+
+data = None
+
+    @pytest.mark.parametrize('data', PARAMS_test_arxspan_ids, indirect=True)
+    @pytest.mark.format
+    def test_arxspan_ids(data):
+>       assert 'DepMap_ID' in data.columns
+E       AttributeError: 'NoneType' object has no attribute 'columns'
+
+test_file_format.py:68: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+__________________ test_arxspan_ids[CCLE_fusions_unfiltered] ___________________
+
+data = None
+
+    @pytest.mark.parametrize('data', PARAMS_test_arxspan_ids, indirect=True)
+    @pytest.mark.format
+    def test_arxspan_ids(data):
+>       assert 'DepMap_ID' in data.columns
+E       AttributeError: 'NoneType' object has no attribute 'columns'
+
+test_file_format.py:68: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions_unfiltered', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+_______________________ test_wrong_columns[CCLE_fusions] _______________________
+
+data = None
+
+    @pytest.mark.parametrize('data', PARAMS_wrong_columns, indirect=True)
+    @pytest.mark.format
+    def test_wrong_columns(data):
+        wrong_columns = {'Unnamed: 0'}
+>       assert wrong_columns & set(data.columns) == set()
+E       AttributeError: 'NoneType' object has no attribute 'columns'
+
+test_file_format.py:20: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+_________________ test_wrong_columns[CCLE_fusions_unfiltered] __________________
+
+data = None
+
+    @pytest.mark.parametrize('data', PARAMS_wrong_columns, indirect=True)
+    @pytest.mark.format
+    def test_wrong_columns(data):
+        wrong_columns = {'Unnamed: 0'}
+>       assert wrong_columns & set(data.columns) == set()
+E       AttributeError: 'NoneType' object has no attribute 'columns'
+
+test_file_format.py:20: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Received a not found error. Are you sure about your credentials and/or the data parameters? params: {'dataset_permaname': 'internal-21q3-fe4c', 'version': '5', 'datafile_name': 'CCLE_fusions_unfiltered', 'format': 'metadata', 'taigapy_version': '3.3.2'}
+=============================== warnings summary ===============================
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_proteincoding_genes_expected_count]
+  /home/jnoorbak/miniconda3/lib/python3.8/site-packages/ipykernel/zmqshell.py:57: DeprecationWarning: ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub
+    from ipykernel.datapub import ZMQDataPublisher
+
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_proteincoding_genes_expected_count]
+  /home/jnoorbak/miniconda3/lib/python3.8/site-packages/ipykernel/datapub.py:21: DeprecationWarning: ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize
+    from ipykernel.serialize import serialize_object
+
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_proteincoding_genes_expected_count]
+  /home/jnoorbak/miniconda3/lib/python3.8/site-packages/ipykernel/serialize.py:25: DeprecationWarning: ipykernel.pickleutil is deprecated. It has moved to ipyparallel.
+    from ipykernel.pickleutil import (
+
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_proteincoding_genes_expected_count]
+  /home/jnoorbak/miniconda3/lib/python3.8/site-packages/ipykernel/pickleutil.py:26: DeprecationWarning: ipykernel.codeutil is deprecated since IPykernel 4.3.1. It has moved to ipyparallel.serialize
+    from ipykernel import codeutil
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression]
+FAILED test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions-allcells]
+FAILED test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions-sharedcells]
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_proteincoding_genes_expected_count]
+FAILED test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions_unfiltered-allcells]
+FAILED test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_fusions_unfiltered-sharedcells]
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_RNAseq_transcripts]
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_transcripts_expected_count]
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_expression_full]
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_RNAseq_reads]
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_fusions]
+FAILED test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions-pd_dtypes]
+FAILED test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions-map_type]
+FAILED test_compare_to_ref_release.py::test_compare_column_names[CCLE_fusions_unfiltered]
+FAILED test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions_unfiltered-pd_dtypes]
+FAILED test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_fusions_unfiltered-map_type]
+FAILED test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression-0.99999-persample-spearman]
+FAILED test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_proteincoding_genes_expected_count-0.99999-persample-spearman]
+FAILED test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_transcripts-0.99999-persample-spearman]
+FAILED test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_transcripts_expected_count-0.99999-persample-spearman]
+FAILED test_compare_to_ref_release.py::test_matrix_correlations[CCLE_expression_full-0.99999-persample-spearman]
+FAILED test_compare_to_ref_release.py::test_matrix_correlations[CCLE_RNAseq_reads-0.99999-persample-spearman]
+FAILED test_file_format.py::test_arxspan_ids[CCLE_fusions] - AttributeError: ...
+FAILED test_file_format.py::test_arxspan_ids[CCLE_fusions_unfiltered] - Attri...
+FAILED test_file_format.py::test_wrong_columns[CCLE_fusions] - AttributeError...
+FAILED test_file_format.py::test_wrong_columns[CCLE_fusions_unfiltered] - Att...
+ERROR test_compare_to_ref_release.py::test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions]
+ERROR test_compare_to_ref_release.py::test_fraction_of_unequal_columns_from_merged_file[CCLE_fusions_unfiltered]
+= 26 failed, 51 passed, 30 skipped, 4 warnings, 2 errors in 2976.39s (0:49:36) =
