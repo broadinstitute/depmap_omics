@@ -12,6 +12,8 @@ MYSTORAGE_ID = "~/.storage.json"
 
 SHEETNAME = 'ccle sample tracker'
 
+GCS_PAYER_PROJECT = 'broad-firecloud-ccle'
+
 TAIGA_ETERNAL = 'depmap-a0ab'
 
 REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
@@ -25,11 +27,39 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID="DepMap_ID"
 
-SAMPLESETNAME = "21Q2"
+SAMPLESETNAME = "21Q3"
 
 RELEASE = SAMPLESETNAME
 
 isCCLE = True
+
+doCleanup = True
+
+LINES_TO_RELEASE = [
+    "ACH-000023",
+    "ACH-000145",
+    "ACH-000205",
+    "ACH-000345",
+    "ACH-000359",
+    "ACH-000399",
+    "ACH-000409",
+    "ACH-000515",
+    "ACH-000664",
+    "ACH-000744",
+    "ACH-000992",
+    "ACH-001032",
+    "ACH-001373",
+    "ACH-001393",
+    "ACH-001410",
+    "ACH-001558",
+    "ACH-001679",
+    "ACH-001696",
+    "ACH-002022",
+    "ACH-002060",
+    "ACH-002659",
+    "ACH-002687",
+    "ACH-002707",
+]
 
 PREV_VIRTUAL = {}
 
@@ -89,7 +119,7 @@ TO_UPDATE = {'primary_disease': ['Primary Disease'],
             "cellosaurus_id": ["RRID"],
             "age": ["CCLF Age"]}
 
-MAXAGE = '2021-02-01'
+MAXAGE = '2021-01-01'
 
 EXTRACT_TO_CHANGE = {'from_arxspan_id': 'participant'}
 
@@ -98,7 +128,7 @@ REPLACE = {'T': 'Tumor', 'N': 'Normal', 'm': 'Unknown', 'L': 'Unknown'}
 values = ['legacy_bam_filepath', 'legacy_bai_filepath'],
 
 filetypes = ['bam', 'bai']
-   
+
 MATCH=['ACH-', 'CDS-']
 
 ## old GP storage buckets
@@ -177,7 +207,7 @@ BAMQC = ["duplication_metrics", "bqsr_report",
          "tumor_bam_quality_distribution_metrics",
          "tumor_bam_quality_yield_metrics"]
 
-KNOWN_DROP = ['CDS-R22IHj',]
+KNOWN_DROP = ['CDS-R22IHj', 'CDS-xMnTwN']
 
 ############## CN
 
@@ -197,7 +227,7 @@ SOURCE_RENAME = {'CCLF': 'Broad', 'CHORDOMA': 'Chordoma',
                 np.nan: 'Broad', 'DEPMAP': 'Broad',
                 'IBM WES': "Broad WES", 'Broad CCLF': "Broad WES"}
 
-wrongwes_arxspan = {'ACH-001189', 'ACH-002303', 'ACH-002315', 'ACH-002341', 'ACH-001011', 
+wrongwes_arxspan = {'ACH-001189', 'ACH-002303', 'ACH-002315', 'ACH-002341', 'ACH-001011',
                     'ACH-001108', 'ACH-001187', 'ACH-002875', 'ACH-002874',
                     "ACH-001955",  # chordoma lines
                     "ACH-001956",
@@ -244,7 +274,7 @@ GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/ge
 
 RNAGSPATH38="gs://cclebams/rnasq_hg38/"
 
-STARBAMCOLTERRA = [ "star_bam_file", 'star_bam_index']
+STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 
 RSEM_TRANSCRIPTS = ['rsem_transcripts_expected_count',
                     'rsem_transcripts_tpm']
@@ -273,8 +303,8 @@ RNASEQC_THRESHOLDS_FAILED = {'minmapping': 0.7, 'minendmapping': 0.66, 'mineffic
                              "maxalt": 0.5, "maxchim": 0.2, "minreads": 20000000,
                              "minlength": 80, "maxgenes": 35000, "mingenes": 10000}
 
-PREVIOUS_QC_FAIL = ['CDS-12DTEw', 'CDS-9hv1zM', 'CDS-A6GSeQ', 'CDS-aWlMRt', 'CDS-B1ywOH', 'CDS-BixxtG', 
-                    'CDS-DRM3l2', 'CDS-jOlYT4', 'CDS-KMhiT9', 'CDS-M6mnMA', 'CDS-pYwECX', 'CDS-v6E624', 
+PREVIOUS_QC_FAIL = ['CDS-12DTEw', 'CDS-9hv1zM', 'CDS-A6GSeQ', 'CDS-aWlMRt', 'CDS-B1ywOH', 'CDS-BixxtG',
+                    'CDS-DRM3l2', 'CDS-jOlYT4', 'CDS-KMhiT9', 'CDS-M6mnMA', 'CDS-pYwECX', 'CDS-v6E624',
                     'CDS-vxTqNJ', 'CDS-YxtmkI',"CDS-fk564T","CDS-kU30H5","CDS-G0F5f5","CDS-ABH0uZ"]
 
 ###################### README

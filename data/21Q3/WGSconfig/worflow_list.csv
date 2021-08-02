@@ -1,0 +1,17 @@
+,name,namespace,rootEntityType,methodName,methodVersion,methodNamespace,methodUri,sourceRepo,methodPath
+0,aggregate_vcfs_indels,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora,
+1,aggregate_vcfs_snp,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora,
+2,aggregate_vcfs_sv,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora,
+3,aggregate_vcfs_sv_somatic,broad-firecloud-ccle,sample_set,aggregate_vcfs,22,jkobject,agora://jkobject/aggregate_vcfs/22,agora,
+4,cnn-variant-filter,broad-firecloud-ccle,sample,,master,,dockstore://github.com%2Fbroadinstitute%2Fdepmap_omics%2Fcnn-variant-filter/master,dockstore,github.com/broadinstitute/depmap_omics/cnn-variant-filter
+5,Manta_SomaticSV_original,broad-firecloud-ccle,sample,Manta_SomaticSV,9,GP-TAG,agora://GP-TAG/Manta_SomaticSV/9,agora,
+6,WGS_aggregate,broad-firecloud-ccle,sample_set,,master,,dockstore://github.com%2Fbroadinstitute%2Fdepmap_omics%2FWGS_aggregate/master,dockstore,github.com/broadinstitute/depmap_omics/WGS_aggregate
+7,WGS_pipeline,broad-firecloud-ccle,sample,,master,,dockstore://github.com%2Fbroadinstitute%2Fdepmap_omics%2FWGS_pipeline/master,dockstore,github.com/broadinstitute/depmap_omics/WGS_pipeline
+8,CNV_Somatic_Pair_Workflow,gatk,,CNV_Somatic_Pair_Workflow,15,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/15,agora,
+9,CNV_Somatic_Workflow_on_Sample,gatk,sample,CNV_Somatic_Pair_Workflow,15,gatk,agora://gatk/CNV_Somatic_Pair_Workflow/15,agora,
+10,PreProcessingForVariantDiscovery_GATK4,gatk,sample,PreProcessingForVariantDiscovery_GATK4,8,gatk,agora://gatk/PreProcessingForVariantDiscovery_GATK4/8,agora,
+11,Aggregate_CN_seg_files,gkugener,sample_set,Aggregate_CN_seg_files,2,gkugener,agora://gkugener/Aggregate_CN_seg_files/2,agora,
+12,ArrayOfFilesToTxt,gkugener,sample,ArrayOfFilesToTxt,1,gkugener,agora://gkugener/ArrayOfFilesToTxt/1,agora,
+13,liftover,jkobject,sample,liftover,10,jkobject,agora://jkobject/liftover/10,agora,
+14,Manta_SomaticSV,jkobject,sample,Manta_SomaticSV,1,jkobject,agora://jkobject/Manta_SomaticSV/1,agora,
+15,BamToUnmappedRGBams,vdauwera,sample,BamToUnmappedRGBams,3,vdauwera,agora://vdauwera/BamToUnmappedRGBams/3,agora,
