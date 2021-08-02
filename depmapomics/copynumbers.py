@@ -369,6 +369,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
   except:
     print('no wgs for this sampleset')
   
+  """
   try:
     wessamplesinset=[i['entityName'] for i in wgsrefwm.get_entities(
         'sample_set').loc[samplesetname].samples]
@@ -445,6 +446,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
                     ],
                     dataset_description=dataset_description)
   print("done")
+  """
   return wespriosegments, wgspriosegments
 
 
