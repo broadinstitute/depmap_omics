@@ -1,0 +1,178 @@
+REFERENCE_RELEASE: internal-21q2-9d16.17
+VIRTUAL_RELEASE: tentative-virtual-d84e.26
+============================= test session starts ==============================
+platform darwin -- Python 3.8.5, pytest-6.2.2, py-1.10.0, pluggy-0.13.1 -- /Users/jnoorbak/opt/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/jnoorbak/broad/projects/depmap-omics/ccle_processing/depmapomics/qc, configfile: pytest.ini
+plugins: anyio-2.2.0, plt-1.1.0
+collecting ... collected 31 items
+
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_gene_cn] PASSED [  3%]
+test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_segment_cn-allcells] PASSED [  6%]
+test_compare_to_ref_release.py::test_compare_nan_fractions[CCLE_segment_cn-sharedcells] PASSED [  9%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_gene_cn-pd_dtypes] PASSED [ 12%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_gene_cn-map_type] PASSED [ 16%]
+test_compare_to_ref_release.py::test_source_changes[CCLE_segment_cn] FAILED [ 19%]
+test_compare_to_ref_release.py::test_compare_column_names[CCLE_segment_cn] PASSED [ 22%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_segment_cn-pd_dtypes] PASSED [ 25%]
+test_compare_to_ref_release.py::test_compare_column_dtypes[CCLE_segment_cn-map_type] PASSED [ 29%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_gene_cn-0.99-persample-spearman] FAILED [ 32%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_gene_cn-0.99-persample-pearson] SKIPPED [ 35%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_gene_cn-0.99-pergene-spearman] SKIPPED [ 38%]
+test_compare_to_ref_release.py::test_matrix_correlations[CCLE_gene_cn-0.99-pergene-pearson] SKIPPED [ 41%]
+test_compare_to_ref_release.py::test_fraction_of_unequal_columns_from_merged_file[CCLE_segment_cn] FAILED [ 45%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_gene_cn-index] SKIPPED [ 48%]
+test_compare_to_ref_release.py::test_compare_cell_lines_released[CCLE_segment_cn-DepMap_ID] SKIPPED [ 51%]
+test_file_format.py::test_wrong_columns[CCLE_gene_cn] PASSED             [ 54%]
+test_file_format.py::test_symbol_and_entrezid_in_column[CCLE_gene_cn] PASSED [ 58%]
+test_file_format.py::test_symbol_and_enstid_in_column[data0] SKIPPED     [ 61%]
+test_file_format.py::test_symbol_and_ensgid_in_column[data0] SKIPPED     [ 64%]
+test_file_format.py::test_arxspan_ids[CCLE_segment_cn] PASSED            [ 67%]
+test_file_format.py::test_null_values[CCLE_gene_cn] XFAIL                [ 70%]
+test_file_format.py::test_matrix_datatypes[CCLE_gene_cn] PASSED          [ 74%]
+test_file_format.py::test_expression_logtransform[CCLE_expression_full] PASSED [ 77%]
+test_file_format.py::test_chromosome_names[CCLE_segment_cn] PASSED       [ 80%]
+test_file_format.py::test_wrong_columns[CCLE_segment_cn] PASSED          [ 83%]
+test_file_format.py::test_chromosome_names[CCLE_mutations] PASSED        [ 87%]
+test_file_format.py::test_cnv_logtransform SKIPPED (not implemented)     [ 90%]
+test_plot_comparisons.py::test_plot_gene_cn_comparison PASSED            [ 93%]
+test_plot_comparisons.py::test_plot_per_gene_means[CCLE_gene_cn-file_attr0] PASSED [ 96%]
+test_plot_comparisons.py::test_plot_matrix_comparison[CCLE_gene_cn-CCLE_gene_cn] PASSED [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_source_changes[CCLE_segment_cn] _____________________
+
+data = (         DepMap_ID Chromosome     Start  ...  Num_Probes  Status     Source
+0       ACH-000001          1         0  ... -  Sanger WES
+807676  ACH-003210          Y  19718793  ...          18       -  Sanger WES
+
+[807677 rows x 8 columns])
+
+    @pytest.mark.skipif([1 for x in FILE_ATTRIBUTES_PAIRED if x['file']=='CCLE_segment_cn'] == [], reason='skipped by user')
+    @pytest.mark.parametrize('data', ['CCLE_segment_cn'], indirect=['data'])
+    @pytest.mark.compare
+    def test_source_changes(data):
+        data1, data2 = data
+        source1 = data1.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
+        source2 = data2.groupby('DepMap_ID')['Source'].apply(lambda x: x.iloc[0])
+        source_changes = pd.concat([source1, source2], axis=1, join='inner', keys=['old', 'new'])
+        source_changes.fillna('NA', inplace=True)
+        source_changes_matrix = source_changes.groupby(['old', 'new']).size().unstack(fill_value=0)
+        source_changes = source_changes[source_changes['old'] != source_changes['new']]
+    
+>       assert source_changes.empty, 'the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}'.format(source_changes, source_changes_matrix)
+E       AssertionError: the following cell lines have had a source change in CCLE_segment_cn:
+E                           old        new
+E         DepMap_ID                       
+E         ACH-000014  Broad WGS  Broad SNP
+E         ACH-000658  Broad WES  Broad SNP
+E         ACH-001036  Broad SNP  Broad WGS
+E         ACH-001709  Broad WES  Broad WGS
+E         
+E         Source change matrix (counting cell lines):
+E          new           Broad SNP  Broad WES  Broad WGS  Chordoma WES  Sanger WES
+E         old                                                                    
+E         Broad SNP            69          0          1             0           0
+E         Broad WES             1        719          1             0           0
+E         Broad WGS             1          0        398             0           0
+E         Chordoma WES          0          0          0             4           0
+E         Sanger WES            0          0          0             0         571
+E       assert False
+E        +  where False =                   old        new\nDepMap_ID                       \nACH-000014  Broad WGS  Broad SNP\nACH-000658  Broad WES  Broad SNP\nACH-001036  Broad SNP  Broad WGS\nACH-001709  Broad WES  Broad WGS.empty
+
+test_compare_to_ref_release.py:183: AssertionError
+________ test_matrix_correlations[CCLE_gene_cn-0.99-persample-spearman] ________
+
+data = (            DDX11L1 (100287102)  WASH7P (653635)  ...   DAZ1 (1617)  DAZ2 (57055)
+ACH-000322             0.849081    ...808e-01
+ACH-001616             0.982393         0.982393  ...  1.045958e-09  1.045958e-09
+
+[1865 rows x 27562 columns])
+threshold = 0.99, axisname = 'persample', method = 'spearman'
+
+    @pytest.mark.parametrize('method', ['spearman',
+                             pytest.param('pearson',
+                             marks=pytest.mark.skip(reason='Pearson can be sensitive to outliers'))])
+    @pytest.mark.parametrize('axisname', ['persample',
+                            pytest.param('pergene',
+                            marks=pytest.mark.skip(reason='If persample fails usually this fails too'))])
+    @pytest.mark.parametrize('data, threshold', PARAMS_matrix_correlations, indirect=['data'])
+    @pytest.mark.compare
+    def test_matrix_correlations(data, threshold, axisname, method):
+        axis = 0 if axisname == 'pergene' else 1 if axisname == 'persample' else None
+        data1, data2 = data
+        corrs = data1.corrwith(data2, axis=axis, drop=True, method=method)
+        # TODO: tests for NAs instead of dropping them. It seems like NA can happen if there are all zeros in one of the vectors, so let's dropna for now
+        corrs.dropna(inplace=True)
+>       assert (corrs >= threshold).all(), 'the cases which did not pass the tests are:\n{}'.format(corrs[corrs<threshold].sort_values())
+E       AssertionError: the cases which did not pass the tests are:
+E         ACH-001096    0.009677
+E         ACH-001196    0.009677
+E         ACH-001709    0.317918
+E         ACH-000658    0.436026
+E         ACH-000014    0.814667
+E         ACH-001036    0.927682
+E         dtype: float64
+E       assert False
+E        +  where False = <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-000322    True\nACH-001094    True\nACH-000141    True...H-000157    True\nACH-000875    True\nACH-002015    True\nACH-000916    True\nACH-002285    True\nLength: 1765, dtype: bool>()
+E        +    where <bound method NDFrame._add_numeric_operations.<locals>.all of ACH-000322    True\nACH-001094    True\nACH-000141    True...H-000157    True\nACH-000875    True\nACH-002015    True\nACH-000916    True\nACH-002285    True\nLength: 1765, dtype: bool> = ACH-000322    1.0\nACH-001094    1.0\nACH-000141    1.0\nACH-002366    1.0\nACH-001750    1.0\n             ... \nACH-000157    1.0\nACH-000875    1.0\nACH-002015    1.0\nACH-000916    1.0\nACH-002285    1.0\nLength: 1765, dtype: float64 >= 0.99.all
+
+test_compare_to_ref_release.py:76: AssertionError
+______ test_fraction_of_unequal_columns_from_merged_file[CCLE_segment_cn] ______
+
+dataframes_merged =          DepMap_ID Chromosome     Start  ...  Status_y    Source_y      _merge
+0       ACH-000001          1         0...  right_only
+812493  ACH-003210          Y  19718793  ...         -  Sanger WES  right_only
+
+[812494 rows x 13 columns]
+expected_changed_cols = []
+
+    @pytest.mark.parametrize('dataframes_merged, expected_changed_cols', PARAMS_fraction_of_unequl_columns_from_merged_file,
+                             indirect=['dataframes_merged'], ids=[x[0][0] for x in PARAMS_fraction_of_unequl_columns_from_merged_file])
+    @pytest.mark.compare
+    def test_fraction_of_unequal_columns_from_merged_file(dataframes_merged, expected_changed_cols):
+        dataframes_merged.drop([x+'_x' for x in expected_changed_cols], inplace=True, axis=1)
+        dataframes_merged.drop([x+'_y' for x in expected_changed_cols], inplace=True, axis=1)
+        cols = list(set([x[:-2] for x in dataframes_merged.columns if x.endswith('_x') | x.endswith('_y')]))
+        dataframe_merge_both = dataframes_merged[dataframes_merged['_merge'] == 'both']
+        dataframe_merge_both.set_index('DepMap_ID', inplace=True)
+        unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
+        cols_dtype = dataframe_merge_both[[col+'_x' for col in cols]].dtypes
+        equal_nonNA = lambda a, b: (a == b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
+        almost_equal_nonNA = lambda a, b: np.isclose(a, b) | ((a != a) & (b != b)) # this is a regular equality tests with the exception that NA==NA
+        for col in cols:
+            if cols_dtype[col+'_x'] == np.dtype('float64'): # otherwise very close values will look different
+                unequal_values[col] = ~almost_equal_nonNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
+            else:
+                unequal_values[col] = ~equal_nonNA(dataframe_merge_both[col+'_x'], dataframe_merge_both[col+'_y'])
+    
+        unequal_columns = unequal_values.agg(['mean', 'sum']).T
+        unequal_columns.sort_values('mean', ascending=False, inplace=True)
+        unequal_columns['sum'] = unequal_columns['sum'].astype(int)
+        unequal_columns = unequal_columns[unequal_columns['sum'] > 0]
+        unequal_columns.rename(columns={'mean': 'freq', 'sum': 'count'}, inplace=True)
+    
+        unequal_values_sum = unequal_values.groupby('DepMap_ID').sum()
+        unequal_values_sum = unequal_values_sum[(unequal_values_sum > 0).any(axis=1)]
+        unequal_values_sum = unequal_values_sum.loc[:, (unequal_values_sum > 0).all()]
+    
+>       assert unequal_columns.empty, 'fraction of unequal values in each column that are expected to be equal:\n{}\
+            \n\ncell lines affected by these changes:\n{}'.format(unequal_columns, unequal_values_sum)
+E       AssertionError: fraction of unequal values in each column that are expected to be equal:
+E                           freq  count
+E         Segment_Mean  0.000003      2        
+E         
+E         cell lines affected by these changes:
+E                     Segment_Mean
+E         DepMap_ID               
+E         ACH-001096             1
+E         ACH-001196             1
+E       assert False
+E        +  where False =                   freq  count\nSegment_Mean  0.000003      2.empty
+
+test_compare_to_ref_release.py:110: AssertionError
+=========================== short test summary info ============================
+FAILED test_compare_to_ref_release.py::test_source_changes[CCLE_segment_cn]
+FAILED test_compare_to_ref_release.py::test_matrix_correlations[CCLE_gene_cn-0.99-persample-spearman]
+FAILED test_compare_to_ref_release.py::test_fraction_of_unequal_columns_from_merged_file[CCLE_segment_cn]
+======== 3 failed, 19 passed, 8 skipped, 1 xfailed in 341.00s (0:05:40) ========

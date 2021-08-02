@@ -33,7 +33,7 @@ def renameColumns(df):
   """
   return df.rename(columns=COLRENAMING)
 
-def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Start", "End"], 
+def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Start", "End"],
                             save_output='', doCleanup=True,
                             todrop=[], showPlots=False, colname="combined_seg_file",
                             plotColname="modeled_segments_plot_tumor", tempFolder="temp/",
@@ -44,7 +44,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   wm = dm.WorkspaceManager(refworkspace)
   if save_output:
     terra.saveConfigs(refworkspace, os.path.join(save_output, 'terra/'))
-  
+
   if doCleanup:
     print('cleaning up')
     res = wm.get_samples()
@@ -52,10 +52,10 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
       if val in res.columns.tolist():
         wm.disable_hound().delete_entity_attributes(
             'sample', res[val], delete_files=True)
-  
+
   segments = pd.read_csv(wm.get_entities(
         'sample_set').loc[sampleset, colname], sep='\t').rename(columns=colRenaming)
- 
+
   segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
   if "chr" in segments['Chromosome'][0]:
      segments['Chromosome'] = [i[3:] for i in segments['Chromosome']]
@@ -65,7 +65,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   segments.loc[segments[segments.Chromosome.isin(
     ['X', 'Y'])].index, 'Segment_Mean'] = segments[segments.Chromosome.isin(['X', 'Y'])]['Segment_Mean']/2
   segments = segments.sort_values(by=sortby)
-  
+
   print("loading "+ str(len(set(segments[SAMPLEID])))+ " rows")
   if showPlots:
     # plotting results of CN calls for this new sample set
@@ -86,12 +86,12 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
                   sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
                   ):
-  
+
   # updating locations of bam files and extracting infos
   if newgs and refworkspace is not None:
 
     res, _=terra.changeGSlocation(refworkspace, newgs=newgs, onlycol=onlycol,
-                                  entity='sample', keeppath=False, dry_run=False, 
+                                  entity='sample', keeppath=False, dry_run=False,
                                   onlysamples=samplesinset)
     tracker.loc[res.index.tolist()][['legacy_size', 'legacy_crc32c_hash']
                                       ] = tracker.loc[
@@ -126,7 +126,7 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
     a = tracker.loc[k,'bam_qc']
     a = '' if a is np.nan else a
     tracker.loc[k,'bam_qc'] = str(v) + ',' + a
-  
+
   tracker.loc[tracker[tracker.datatype.isin(['wes',"wgs"])].index, samplesetname]=0
   len(selected)
   tracker.loc[selected, samplesetname]=1
@@ -151,7 +151,7 @@ def managingDuplicates(samples, failed, datatype, tracker):
       [type]: [description]
   """
   # selecting the right arxspan id (latest version)
-  renaming = track.removeOlderVersions(names=samples, 
+  renaming = track.removeOlderVersions(names=samples,
     refsamples=tracker[tracker.datatype == datatype], priority="prioritized")
 
   # reparing QC when we have a better duplicate
@@ -291,7 +291,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
   tracker = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
 
   wesrefwm = dm.WorkspaceManager(wesrefworkspace)
-  wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)  
+  wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)
 
   # doing wes
   folder = os.path.join("temp", samplesetname, "wes_")
@@ -303,18 +303,18 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
                 todrop=todropwes,
                 save_output=folder,
                 priority=priority, **kwargs)
-    
+
     wesrenaming = managingDuplicates(set(wessegments[SAMPLEID]), (set(
         wesfailed) - set(priority)) | set(todropwes), "wes", tracker)
     h.dictToFile(wesrenaming, folder+"sample_renaming.json")
-    
+
     # annotating source
     for v in set(wessegments[SAMPLEID]):
       wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
                   'Source'] = tracker[tracker.index == v].source.values[0]
       wessegments.Source = wessegments.Source.replace(source_rename)
     wessegments.Source += ' WES'
-    
+
     print('renaming')
     wespriosegments = wessegments[wessegments[SAMPLEID].isin(set(wesrenaming.keys()))].replace(
       {SAMPLEID: wesrenaming}).reset_index(drop = True)
@@ -328,7 +328,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
     wesfailed = h.fileToList((wesfolder if wesfolder else folder)+'failed.txt')
     wesrenaming = h.fileToDict((wesfolder if wesfolder else folder)+"sample_renaming.json")
     wespriosegments = pd.read_csv(folder+"segments_all_latest.csv")
-    wespriogenecn = pd.read_csv(folder+"genecn_all_latest.csv", index_col=0) 
+    wespriogenecn = pd.read_csv(folder+"genecn_all_latest.csv", index_col=0)
 
   # doing wgs
   print('doing wgs')
@@ -341,7 +341,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
               priority=priority, **kwargs)
 
   wgsrenaming = managingDuplicates(set(wgssegments[SAMPLEID]), (set(
-      wgsfailed) - set(priority)) | set(todropwgs), "wgs", tracker)  
+      wgsfailed) - set(priority)) | set(todropwgs), "wgs", tracker)
 
   h.dictToFile(wgsrenaming, folder+"sample_renaming.json")
 
@@ -356,15 +356,14 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
   wgspriosegments = wgssegments[wgssegments[SAMPLEID].isin(set(wgsrenaming.keys()))].replace(
     {SAMPLEID: wgsrenaming}).reset_index(drop = True)
   wgspriogenecn = genecn[genecn.index.isin(set(wgsrenaming.keys()))].rename(index=wgsrenaming)
-  
   #saving prio
   wgspriosegments.to_csv(folder+ "segments_all_latest.csv", index=False)
   wgspriogenecn.to_csv(folder+ "genecn_all_latest.csv")
-   
+
   print('comparing to previous version')
   #h.compareDfs(priosegments, tc.get(name='depmap-a0ab', file='CCLE_segment_cn'))
   h.compareDfs(wespriogenecn, prevgenecn)
-  
+
   #adding to the sample tracker the sequencing that were selected and the ones that failed QC
   selected = {j:i for i,j in wesrenaming.items()}
   selected.update({j:i for i,j in wgsrenaming.items()})
@@ -376,7 +375,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
                   list(wgsfailed), sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
   except:
     print('no wgs for this sampleset')
-  
+
   try:
     wessamplesinset=[i['entityName'] for i in wesrefwm.get_entities(
         'sample_set').loc[samplesetname].samples]
@@ -384,7 +383,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
                   list(wesfailed), sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
   except:
     print('no wes for this sampleset')
-  
+
   #merging WES/WGS
   folder=os.path.join("temp", samplesetname, '')
   mergedsegments =  wgspriosegments.append(wespriosegments[~wespriosegments[SAMPLEID].isin(
@@ -466,12 +465,12 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset="cn-wes-achilles-4dcd",
                        dataset_description=Achillesreadme,
-                       cytobandloc='data/hg38_cytoband.gz', 
+                       cytobandloc='data/hg38_cytoband.gz',
                        gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),
                        prevsegments=tc.get(name=TAIGA_ETERNAL, file='CCLE_segment_cn'),
                        prevgenecn=(
                            2**tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn'))-1,
-                       gene_expected_count=tc.get(name=TAIGA_ETERNAL, 
+                       gene_expected_count=tc.get(name=TAIGA_ETERNAL,
                         file='CCLE_expression_proteincoding_genes_expected_count')):
   # load legacy_segments
   legacy_segments=tc.get(
@@ -487,19 +486,19 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   onlyinleg=onlyinleg - set(bad)
   print('found samples that are only in the legacy datasets')
   print(onlyinleg)
-  # merging 
+  # merging
   print('merging wes/wgs/legacy')
   mergedsegments=wespriosegs[~wespriosegs[SAMPLEID].isin(list(onlyinleg))].append(
     legacy_segments[legacy_segments[SAMPLEID].isin(list(onlyinleg))]).reset_index(drop=True)
-  
+
   mergedsegments=wgspriosegs.append(
     mergedsegments[~mergedsegments[SAMPLEID].isin(set(wgspriosegs[SAMPLEID]))])
 
-  mergedsegments=mergedsegments[[SAMPLEID, 'Chromosome', 'Start', 'End', 
+  mergedsegments=mergedsegments[[SAMPLEID, 'Chromosome', 'Start', 'End',
   'Segment_Mean', 'Num_Probes', 'Status', 'Source']].sort_values(by=
     [SAMPLEID, 'Chromosome', 'Start', 'End']).reset_index(drop=True)
-  
-  #setting amplification status to U for X chromosome as it is artificially 
+
+  #setting amplification status to U for X chromosome as it is artificially
   #amplified in female samples:
   mergedsegments.loc[mergedsegments[mergedsegments.Chromosome ==
                                     "X"].index, 'Status']='U'
@@ -522,12 +521,12 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   print('copy number change with previous release')
   cn.plotCNchanges(mergedgenecn, prevgenecn.apply(
       lambda x: np.log2(1+x)), mergedsegments, prevsegments)
-  
+
   if(mergedgenecn.values.max() > 100):
     print("\n\n\nTOO HIGH, not LOG2 transformed!")
   if(len(mergedgenecn.index) > len(set(mergedgenecn.index))):
     print("Duplicate CL, not reprioritized well!")
-  
+
 
   # computing relationship with RNAseq
   print('correlation with RNAseq:')
@@ -540,7 +539,7 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   h.compareDfs(mergedgenecn, prevgenecn)
   #h.compareDfs(mergedsegments, tc.get(name='depmap-a0ab', file='CCLE_segment_cn'))
 
-  # saving 
+  # saving
   print('saving')
   mergedgenecn.to_csv('temp/'+samplesetname+'/achilles_gene_cn.csv')
   mergedsegments.to_csv('temp/'+samplesetname+'/achilles_segment.csv', index=False)
@@ -548,7 +547,7 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   #saving to taiga
   print('uploading to taiga')
 
-  tc.update_dataset(changes_description="updated to new " + samplesetname + 
+  tc.update_dataset(changes_description="updated to new " + samplesetname +
     " release! (updated from relabelling see google drive file for more info)",
                     dataset_permaname=taiga_dataset,
                     upload_files=[
