@@ -270,7 +270,7 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
 ## genomic annotations (v35)
 GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.annotation.gff3.gz'
 
-BAM_GCS_BUCKET = 'gs://cclebams'
+BAM_GCS_BUCKET = 'gs://cclebams-sandbox'
 RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
 RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
 WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
