@@ -271,6 +271,9 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
 GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.annotation.gff3.gz'
 
 RNAGSPATH38="gs://cclebams/rnasq_hg38/"
+RNA_GCS_PATH = "gs://cclebams/rna/"
+WGS_GCS_PATH = "gs://cclebams/wgs/"
+WES_GCS_PATH = "gs://cclebams/wes/"
 
 STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 
