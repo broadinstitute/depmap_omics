@@ -327,12 +327,12 @@ PREV_VIRTUAL = {
 }
 
 TAIGA_MUTATION = "mutations-latest-ed72"
-
-TAIGA_CN="cn-latest-bce6"
-
-TAIGA_EXPRESSION="expression-d035"
-
+TAIGA_CN = "cn-latest-bce6"
+TAIGA_CN_ACHILLES = "cn-achilles-version-06ca"
+TAIGA_EXPRESSION = "expression-d035"
 TAIGA_FUSION = "fusions-95c9"
+
+TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
 
 datasets = ['internal', 'ibm', 'dmc', 'public']
 
