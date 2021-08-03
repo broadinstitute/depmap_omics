@@ -1,5 +1,5 @@
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/rsem_aggregate_results.wdl" as rsem_aggregate_results
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/Aggregate_Fusion_Calls.wdl" as Aggregate_Fusion_Calls
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/simone-sandbox/RNA_pipeline/rsem_aggregate_results.wdl" as rsem_aggregate_results
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/simone-sandbox/RNA_pipeline/Aggregate_Fusion_Calls.wdl" as Aggregate_Fusion_Calls
 
 
 workflow RNA_aggregate {
