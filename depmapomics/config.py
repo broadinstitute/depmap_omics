@@ -326,13 +326,13 @@ PREV_VIRTUAL = {
   'internal': 'internal-21q1-4fc4',
 }
 
-TAIGA_MUTATION = "mutations-latest-ed72"
+TAIGA_MUTATION = "mutations-latest-f263"
 
-TAIGA_CN="cn-latest-bce6"
+TAIGA_CN="cn-latest-8bea"
 
-TAIGA_EXPRESSION="expression-d035"
+TAIGA_EXPRESSION="expression-869e"
 
-TAIGA_FUSION = "fusions-95c9"
+TAIGA_FUSION = "fusions-64c4"
 
 datasets = ['internal', 'ibm', 'dmc', 'public']
 
