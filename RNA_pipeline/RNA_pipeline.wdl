@@ -1,8 +1,8 @@
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/samtofastq_v1-0_BETA_cfg.wdl" as samtofastq_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/star_v1-0_BETA_cfg.wdl" as star_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/rnaseqc2_v1-0_BETA_cfg.wdl" as rnaseqc2_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/rsem_v1-0_BETA_cfg.wdl" as rsem_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/hg38_STAR_fusion.wdl" as hg38_STAR_fusion 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/simone-sandbox/RNA_pipeline/samtofastq_v1-0_BETA_cfg.wdl" as samtofastq_v1 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/simone-sandbox/RNA_pipeline/star_v1-0_BETA_cfg.wdl" as star_v1 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/simone-sandbox/RNA_pipeline/rnaseqc2_v1-0_BETA_cfg.wdl" as rnaseqc2_v1 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/simone-sandbox/RNA_pipeline/rsem_v1-0_BETA_cfg.wdl" as rsem_v1 
+import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/simone-sandbox/RNA_pipeline/hg38_STAR_fusion.wdl" as hg38_STAR_fusion 
 
 
 workflow RNA_pipeline {

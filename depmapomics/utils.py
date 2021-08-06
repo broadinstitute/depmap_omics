@@ -6,6 +6,16 @@ from genepy.utils.helper import createFoldersFor
 
 from depmapomics.config import CACHE_PATH, ENSEMBL_SERVER_V
 
+defattr = ['ensembl_gene_id', 'clone_based_ensembl_gene', 'hgnc_symbol', 'gene_biotype',
+  'entrezgene_id']
+
+def _fetchFromServer(ensemble_server, attributes):
+  server = BiomartServer(ensemble_server)
+  ensmbl = server.datasets['hsapiens_gene_ensembl']
+  res = pd.read_csv(io.StringIO(ensmbl.search({
+    'attributes': defattr+attributes
+  }, header=1).content.decode()), sep='\t')
+  return res
 
 def generateGeneNames(ensemble_server=ENSEMBL_SERVER_V, useCache=False, cache_folder=CACHE_PATH,
   attributes=[]):
@@ -22,22 +32,17 @@ def generateGeneNames(ensemble_server=ENSEMBL_SERVER_V, useCache=False, cache_fo
   Returns:
       [type]: [description]
   """
-  defattr = ['ensembl_gene_id', 'clone_based_ensembl_gene', 'hgnc_symbol', 'gene_biotype',
-  'entrezgene_id']
   assert cache_folder[-1] == '/'
+  cache_folder = os.path.expanduser(cache_folder)
   createFoldersFor(cache_folder)
+  assert(os.path.exists(cache_folder))
   cachefile = os.path.join(cache_folder, 'biomart_ensembltohgnc.csv')
-  cachefile = os.path.expanduser(cachefile)
   if useCache & os.path.isfile(cachefile):
     print('fetching gene names from biomart cache')
     res = pd.read_csv(cachefile)
   else:
     print('downloading gene names from biomart')
-    server = BiomartServer(ensemble_server)
-    ensmbl = server.datasets['hsapiens_gene_ensembl']
-    res = pd.read_csv(io.StringIO(ensmbl.search({
-      'attributes': defattr+attributes
-    }, header=1).content.decode()), sep='\t')
+    res = _fetchFromServer(ensemble_server, attributes)
     res.to_csv(cachefile, index=False)
 
   res.columns = defattr+attributes
@@ -50,6 +55,3 @@ def generateGeneNames(ensemble_server=ENSEMBL_SERVER_V, useCache=False, cache_fo
                   ]['clone_based_ensembl_gene']
 
   return res
-
-
-###
