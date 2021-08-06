@@ -48,7 +48,7 @@ def findIssue(tracker, dup=['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'prima
   print(tracker[(tracker['internal_bam_filepath'].isna() | tracker['internal_bai_filepath'].isna())].index)
 
 
-def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
+def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', 
                       participant_id='participant_id', toupdate={}):
   """update a list of samples' missing information from what is known in the ccle sample tracker
 
@@ -95,16 +95,16 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
     samples.loc[index, k] = v
   len(samples.loc[notfound][participant_id]
     ), samples.loc[notfound][participant_id].tolist()
-  return samples, notfound
+  return samples, notfound    
 
 
-def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
+def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", 
                         version="version", priority=None):
   """
   will set it to your sample_ids using the latest version available for each sample
 
-  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed
-  by the same ids, will set it to your sample_ids using the latest version
+  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed 
+  by the same ids, will set it to your sample_ids using the latest version 
   available for each sample
 
   Args:
@@ -171,8 +171,8 @@ def updateIsogenecity(di, tracker, unset=False):
       print('into')
       print(tracker.loc[tracker[tracker.participant_id == b.participant_id[0]].index,
                   ['participant_id', 'age', 'sex', "matched_normal"]].values)
-      tracker.loc[tracker[tracker.participant_id==b.participant_id[0]].index,
-                  ['participant_id', 'age', 'sex', "matched_normal"]] = a.loc[a.index[0],
+      tracker.loc[tracker[tracker.participant_id==b.participant_id[0]].index, 
+                  ['participant_id', 'age', 'sex', "matched_normal"]] = a.loc[a.index[0], 
                   ['participant_id', 'age', 'sex', "matched_normal"]].tolist()
   return tracker
 
@@ -366,9 +366,9 @@ def resolveIssues(tracker, issus, arxspid, cols):
 
 
 def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={}, my_id='~/.client_secret.json',
-                            stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id",
+                            stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id", 
                             mystorage_id="~/.storage.json",
-                            depmappvlink=DEPMAP_PV):
+                            depmappvlink="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"):
   """
   Given a List of samples with no arxspan ids, will try to retrieve an arxspan id and associated data from trackers
 
