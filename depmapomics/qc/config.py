@@ -16,7 +16,7 @@ LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 # REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47}; LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-20q1-f1a0', 'version': 15}; LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
 # REFERENCE_RELEASE = {'name': 'internal-20q2-7f46', 'version': 18} # old release used as ground truth
-PORTAL = 'ibm'
+PORTAL = 'internal'
 
 VIRTUAL_RELEASES = {'21q2': {'public': {'name': 'public-21q2-110d', 'version': 13},
                              'ibm': {'name': 'ibm-21q2-9ed1', 'version': 15},
@@ -85,7 +85,7 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_expression', 'CCLE_gene_cn'])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_expression', 'CCLE_gene_cn'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
