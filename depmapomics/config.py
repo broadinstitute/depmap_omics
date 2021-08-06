@@ -6,15 +6,21 @@ CACHE_PATH = '~/.depmapomics/'
 TMP_PATH = '/tmp/'
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
+# Set up gcloud credentials (see quickstart here: https://gsheets.readthedocs.io/en/stable/) to obtain the following json files:
+# Go to console (https://console.developers.google.com/), acquire access if you don't have it already
+# Credentials -> + Create Credentials -> OAuth Client ID -> application type=Desktop app -> Create
+# Download client_secret.json to home directory
+# After calling from_files for the first time, log in via google following prompt in browser, storage.json will be saved automatically
+
 SHEETCREDS = '../.credentials.json'
 MY_ID = '~/.client_secret.json'
 MYSTORAGE_ID = "~/.storage.json"
 
-SHEETNAME = 'ccle sample tracker'
+SHEETNAME = 'ccle sample tracker sandbox'
 
 TAIGA_ETERNAL = 'depmap-a0ab'
 
-REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
+REFSHEET_URL = "https://docs.google.com/spreadsheets/d/161mmmHF5nc3nFhgpp_7zub5Erod8xDbXnNZ-u-7BWKI"
 
 PRIVACY_RELEASE = "https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4"
 DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
@@ -151,7 +157,7 @@ rnasource6 = "ccle"
 rnasource7 = "ibm"
 
 ## our working workspace (reference)
-RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
+RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq-sandbox"
 
 ## curent WGS GP buckets
 wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
@@ -161,9 +167,9 @@ wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
 wgssource1 = "ccle"
 wgssource2 = "ibm"
 
-WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
-WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
-WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
+WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN-sandbox"
+WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38-sandbox"
+WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline-sandbox"
 
 ############## DNAseq
 
@@ -330,11 +336,12 @@ PREV_VIRTUAL = {
   'internal': 'internal-21q1-4fc4',
 }
 
-TAIGA_MUTATION = "mutations-latest-ed72"
-TAIGA_CN = "cn-latest-bce6"
-TAIGA_CN_ACHILLES = "cn-achilles-version-06ca"
-TAIGA_EXPRESSION = "expression-d035"
-TAIGA_FUSION = "fusions-95c9"
+TAIGA_MUTATION = "mutations-latest-f263"
+TAIGA_CN="cn-latest-8bea"
+TAIGA_EXPRESSION="expression-869e"
+TAIGA_FUSION = "fusions-64c4"
+TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
+
 
 TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
 
