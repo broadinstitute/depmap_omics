@@ -6,6 +6,12 @@ CACHE_PATH = '~/.depmapomics/'
 TMP_PATH = '/tmp/'
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
+# Set up gcloud credentials (see quickstart here: https://gsheets.readthedocs.io/en/stable/) to obtain the following json files:
+# Go to console (https://console.developers.google.com/), acquire access if you don't have it already
+# Credentials -> + Create Credentials -> OAuth Client ID -> application type=Desktop app -> Create
+# Download client_secret.json to home directory
+# After calling from_files for the first time, log in via google following prompt in browser, storage.json will be saved automatically
+
 SHEETCREDS = '../.credentials.json'
 MY_ID = '~/.client_secret.json'
 MYSTORAGE_ID = "~/.storage.json"

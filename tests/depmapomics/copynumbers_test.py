@@ -17,10 +17,28 @@ from genepy.google import gcp
 from genepy import rna
 import matplotlib.pyplot as plt
 
+
 def test_loadFromGATKAggregation(tmpdir, monkeypatch):
-    loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Start", "End"], 
-                            save_output='', doCleanup=True,
-                            todrop=[], showPlots=False, colname="combined_seg_file",
+    # no need to test plotting
+    # called by postProcess(). called by CCLEPostProcessing()
+    # CCLEPostProcessing only cares about wgs and wes?
+    # call params directly from config or define new globals?
+    # add dummy columns to ws to be removed later
+    dummy_cols = ['a', 'b', 'c']
+
+    
+
+    output = loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Start", "End"], 
+                            save_output='', doCleanup=False,
+                            todrop=[], colname="combined_seg_file",
                             plotColname="modeled_segments_plot_tumor", tempFolder="temp/",
                             toremove=["readgroup_ubams", ],
-                            sampleset="all", colRenaming=COLRENAMING)
+                            sampleset="all", colRenaming=colrenaming_sandbox)
+
+    assert(isinstance(output, pd.DataFrame), "Output is not a dataframe")
+    # if colremoves are removed
+    # if headers are renamed correctly
+    # type of each col
+    # (how) is output indexed
+    
+
