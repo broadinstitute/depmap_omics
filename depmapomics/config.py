@@ -276,7 +276,11 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
 ## genomic annotations (v35)
 GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.annotation.gff3.gz'
 
-RNAGSPATH38="gs://cclebams/rnasq_hg38/"
+BAM_GCS_BUCKET = 'gs://cclebams-sandbox'
+RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
+RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
+WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
+WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
 
 STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 
@@ -333,12 +337,13 @@ PREV_VIRTUAL = {
 }
 
 TAIGA_MUTATION = "mutations-latest-f263"
-
 TAIGA_CN="cn-latest-8bea"
-
 TAIGA_EXPRESSION="expression-869e"
-
 TAIGA_FUSION = "fusions-64c4"
+TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
+
+
+TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
 
 datasets = ['internal', 'ibm', 'dmc', 'public']
 

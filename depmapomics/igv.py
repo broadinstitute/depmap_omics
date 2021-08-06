@@ -1,6 +1,9 @@
-import igv
 from genepy.utils.helper import parrun
 from gsheets import Sheets
+
+import igv
+from depmapomics.tracker import getCCLETracker
+
 
 def get_gcloud_auth_token():
     parrun(["echo $(gcloud auth application-default print-access-token) > /tmp/gcloud_token"], cores=1)
@@ -11,11 +14,7 @@ def get_gcloud_auth_token():
 
 
 def load_sample_tracker():
-    SAMPLE_TRACKER_URL = 'https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY'
-    sheets_obj = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
-
-    sheets = sheets_obj.get(SAMPLE_TRACKER_URL).sheets
-    depmap_samples = sheets[0].to_frame(header=0, index_col=0)
+    depmap_samples = getCCLETracker()
 
     depmap_samples.drop_duplicates(inplace=True)
 
