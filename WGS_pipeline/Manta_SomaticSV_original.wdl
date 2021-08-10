@@ -105,7 +105,7 @@ task ConvertToBedTabix {
         /usr/gitc/tabix -p bed ${output_bed}.gz
     >>>
     runtime {
-        docker: "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.3.3-1525357118"
+        docker: "us-docker.pkg.dev/depmap-omics/public/genomes-in-the-cloud:2.3.3-1525357118"
         memory: "2 GB"
         preemptible: 3
     }

@@ -6,15 +6,15 @@ workflow aggregate_CN_segments_wrkflw {
 task aggregate_CN_segments {
     Array[File] sample_seg_files
     String sample_set_id
-    
+
     Int memory
     Int disk_space
     Int num_preempt
 
-    
+
     command {
         git clone https://github.com/broadinstitute/ccle_processing.git
-        Rscript ccle_processing/WGS_pipeline/generate_single_seg_file.R "${sample_set_id}.called.seg" ${write_lines(sample_seg_files)} 
+        Rscript ccle_processing/WGS_pipeline/generate_single_seg_file.R "${sample_set_id}.called.seg" ${write_lines(sample_seg_files)}
     }
 
     output {
@@ -22,7 +22,7 @@ task aggregate_CN_segments {
     }
 
     runtime {
-        docker: "docker.io/jkobject/ccle_rnaseq:latest"
+        docker: "us-docker.pkg.dev/depmap-omics/public/cds-shiny:latest"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         preemptible: "${num_preempt}"
