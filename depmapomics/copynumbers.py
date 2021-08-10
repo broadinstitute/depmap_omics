@@ -218,7 +218,6 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
                             ')' for _, i in mybiomart.iterrows()]
   mybiomart = mybiomart.drop_duplicates('gene_name', keep="first")
   genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
-
   # validation step
   print('summary of the gene cn data:')
   print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
@@ -227,6 +226,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
 
   print("failed our QC")
   print(failed)
+
   if source_rename:
     segments = segments.replace({'Source': source_rename})
   if save_output:
@@ -246,7 +246,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   return segments, genecn, failed
 
 
-async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
+def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                        samplesetname=SAMPLESETNAME, AllSamplesetName='all',
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                        sheetcreds=SHEETCREDS, sheetname=SHEETNAME,
@@ -503,7 +503,12 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
       (set(wespriosegs[SAMPLEID]) | (set(wgspriosegs[SAMPLEID])))
   #samegenes = set(prevgenecn.columns) & set(priogenecn.columns)
 
-  onlyinleg=onlyinleg - set(bad)
+  bad_fp = ['ACH-001078', 'ACH-002184', 'ACH-001146', # these were dropped in 21Q3 for fingerprinting
+            'ACH-002022', 'ACH-001173', 'ACH-001790',
+            'ACH-002260', 'ACH-001741', 'ACH-000010',
+            'ACH-002475', 'ACH-001543']
+
+  onlyinleg=onlyinleg - set(bad + bad_fp)
   print('found samples that are only in the legacy datasets')
   print(onlyinleg)
   # merging
