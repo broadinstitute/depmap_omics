@@ -23,7 +23,7 @@ ACH-001709 WES
 ## took already
 
 removed blacklist status: (?)
-CDS-VnMBYD (ACH-000164) wgs 
+CDS-VnMBYD (ACH-000164) wgs
 CDS-Rd4nMx (ACH-000454) wgs
 CDS-dgxjAa (ACH-000550) wgs
 CDS-TGTiB8 (ACH-000739) wgs
@@ -73,6 +73,15 @@ Changed CDS-uNAcAR to ACH-000201, (and changed CDS-eaMPk2 (ACH-000201) to versio
 
 removed from legacy: (V)
 {'ACH-001096', 'ACH-001196', 'ACH-000961', 'ACH-000511', 'ACH-000375', 'ACH-000278', 'ACH-001709', 'ACH-002475', 'ACH-001063', 'ACH-000641', 'ACH-000090', 'ACH-000658','ACH-001146', 'ACH-002260', 'ACH-000010', 'ACH-001078'}
+
+ACH-001709 is being added back in the code
+
+DROP_LEGACY = {'WGS': ['ACH-000014'],
+                'HC': ['ACH-001078', 'ACH-001146'],
+                'RNA': ['ACH-001212', 'ACH-001078', 'ACH-000010'],
+                'Sanger WES': ['ACH-000641']}
+
+RENAME_SANGER_WES = {'ACH-002260': 'ACH-001543'}
 
 
 ## NOT TOOK yet

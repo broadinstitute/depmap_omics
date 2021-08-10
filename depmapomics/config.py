@@ -347,6 +347,8 @@ README_changes = """
 
 """
 
+SKIP_UPLOADING_README = True
+
 FUSIONreadme = """
 # Fusions
 
