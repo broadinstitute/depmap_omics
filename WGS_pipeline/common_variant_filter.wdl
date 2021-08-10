@@ -4,14 +4,14 @@ workflow CommonVariantFilter {
 
     Int min_exac_ac = 10
     Int min_filter_depth = 0
-    Boolean? disable_whitelist = false
+    Boolean? disable_known_sites = false
     Boolean? filter_noncoding = false
 
     Int RAM = 8
     Int SSD = 60
     Int preemptible = 3
 
-    String docker_tag = "1.0.3"
+    String docker_tag = "1.0.4"
 
     meta {
         author: "Brendan Reardon"
@@ -27,7 +27,7 @@ workflow CommonVariantFilter {
             maf=maf,
             min_exac_ac=min_exac_ac,
             min_filter_depth=min_filter_depth,
-            disable_whitelist=disable_whitelist,
+            disable_known_sites=disable_known_sites,
             filter_noncoding=filter_noncoding,
             RAM=RAM,
             SSD=SSD,
@@ -51,7 +51,7 @@ task commonfilterTask {
 
     Int min_exac_ac
     Int min_filter_depth
-    Boolean? disable_whitelist
+    Boolean? disable_known_sites
     Boolean? filter_noncoding
 
     Int? RAM
@@ -64,7 +64,7 @@ task commonfilterTask {
         args="--min_exac_ac "${min_exac_ac}" "
         args+="--min_filter_depth "${min_filter_depth}" "
         args+=${true="--filter_noncoding" false="" filter_noncoding}" "
-        args+=${true="--disable_wl" false="" disable_whitelist}" "
+        args+=${true="--disable_known_sites" false="" disable_known_sites}" "
 
         sed '/^#/ d' < ${maf} > uncommented_maf.maf
         python /common_variant_filter.py --id ${sampleId} --maf uncommented_maf.maf $args

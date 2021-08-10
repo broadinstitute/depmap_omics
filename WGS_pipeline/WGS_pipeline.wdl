@@ -1,7 +1,7 @@
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams 
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt 
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample 
+import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.0.0/scripts/cnv_wdl/somatic/cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample 
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/cnn-variant-filter.wdl" as cnn_variant_filter 
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/Manta_SomaticSV.wdl" as Manta_SomaticSV 
 import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGSmut_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0 
@@ -12,6 +12,7 @@ import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/
 workflow WGS_pipeline {
 
 	#BamToUnmappedRGBams
+	#"broadinstitute/genomes-in-the-cloud:2.3.1-1504795437"
 	File ref_fasta
 	File ref_fasta_index
 
@@ -27,6 +28,8 @@ workflow WGS_pipeline {
 	String sample_name #this.name
 
 	#PreProcessingForVariantDiscovery_GATK4
+	#"broadinstitute/gatk:4.beta.3"
+	#"broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
 	String ref_name
 
 	File ref_dict
@@ -43,15 +46,18 @@ workflow WGS_pipeline {
 
 	String gotc_path
 
-	#CNVSomaticPairWorkflow
+	#CNV_Somatic_Workflow_on_Sample
+	#us.gcr.io/broad-gatk/gatk:4.1.5.0
 	File common_sites
 	File intervals
 
 	#cnn_variant_filter
-
+	#"broadinstitute/gatk:4.1.4.0"
 	# Manta
 
 	#CGA_Production_Analysis_Workflow
+	#gs://ccle_default_params/references/gatk-package-4.0.5.1-local.jar
+	#gs://getzlab-workflows-reference_files-oa/gatk-protected.jar
 	File ref_fasta_H19
 	File ref_fasta_H19_index
 	File ref_fasta_H19_dict
@@ -62,7 +68,6 @@ workflow WGS_pipeline {
 			ref_fasta_index=ref_fasta_index,
 			input_bam=input_bam,
 			picard_path=picard_path,
-			picard_docker=picard_docker,
 			preemptible_tries=preemptible_tries 
 	}
 
@@ -85,8 +90,6 @@ workflow WGS_pipeline {
 			known_indels_sites_VCFs=known_indels_sites_VCFs,
 			known_indels_sites_indices=known_indels_sites_indices,
 			gotc_docker=gotc_docker,
-			picard_docker=picard_docker,
-			gatk_docker=gatk_docker,
 			python_docker=python_docker,
 			gotc_path=gotc_path,
 			picard_path=picard_path,
@@ -96,7 +99,6 @@ workflow WGS_pipeline {
 	call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
 		input:
 			common_sites=common_sites,
-			gatk_docker=gatk_docker,
 			intervals=intervals,
 			ref_fasta=ref_fasta,
 			ref_fasta_dict=ref_dict,
@@ -112,7 +114,6 @@ workflow WGS_pipeline {
 			reference_fasta=ref_fasta,
 			reference_dict=ref_dict,
 			reference_fasta_index=ref_fasta_index,
-			gatk_docker=gatk_docker,
 			output_prefix=sample_name
 	}
 
