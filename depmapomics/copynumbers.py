@@ -217,7 +217,6 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
                             ' (' + str(i['entrezgene_id']).split('.')[0] +
                             ')' for _, i in mybiomart.iterrows()]
   mybiomart = mybiomart.drop_duplicates('gene_name', keep="first")
-  # import pdb; pdb.set_trace()
   genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
 
   # validation step
@@ -461,7 +460,21 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
                         "ACH-002291"  # added for some reason?
                         # much more than that..
                         "ACH-002010",
-                        "ACH-000314"], taiga_legacy_loc='depmap-wes-cn-data--08f3',
+                        "ACH-000314"
+                        # bad fp
+                        # these were dropped in 21Q3 for fingerprinting
+                        'ACH-001078',
+                        'ACH-002184',
+                        'ACH-001146',
+                        'ACH-002022',
+                        'ACH-001173',
+                        'ACH-001790',
+                        'ACH-002260',
+                        'ACH-001741',
+                        'ACH-000010',
+                        'ACH-002475',
+                        'ACH-001543'
+                        ], taiga_legacy_loc='depmap-wes-cn-data--08f3',
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset="cn-wes-achilles-4dcd",
                        dataset_description=Achillesreadme,
@@ -476,8 +489,15 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   legacy_segments=tc.get(
     name=taiga_legacy_loc, file=taiga_legacy_filename).drop(columns='Unnamed: 0')
   legacy_segments['Status']='U'
-  legacy_segments.loc[legacy_segments[legacy_segments.Chromosome.str.contains("chr")].index, "Chromosome"]=[
-  i[3:] for i in legacy_segments[legacy_segments.Chromosome.str.contains("chr")].Chromosome]
+  legacy_segments['Chromosome'] = legacy_segments['Chromosome'].map(lambda x: x[3:] if x.startswith('chr') else x)
+
+  data_sources = pd.crosstab(
+      index=legacy_segments['DepMap_ID'], columns=legacy_segments['Source'])
+  data_source_duplicates = data_sources[(data_sources > 0).sum(axis=1) > 1]
+  duplicate_arxspans = data_source_duplicates.index.tolist()
+
+  # TODO: replace with assert if the data is updated on taiga
+  assert data_source_duplicates.empty
 
   onlyinleg = set(legacy_segments[SAMPLEID]) - \
       (set(wespriosegs[SAMPLEID]) | (set(wgspriosegs[SAMPLEID])))
@@ -513,6 +533,8 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   gene_mapping['gene_name'] = [i['symbol'] +
                             ' (' + str(i['ensembl_id']).split('.')[0] +
                             ')' for _, i in gene_mapping.iterrows()]
+  gene_mapping = gene_mapping.rename(columns={'ensembl_id': 'entrezgene_id'})
+
   mergedsegments=mut.manageGapsInSegments(mergedsegments, cyto=cyto)
   mergedgenecn=mut.toGeneMatrix(
       mergedsegments, gene_mapping, ).apply(lambda x: np.log2(1+x))

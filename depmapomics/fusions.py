@@ -98,7 +98,7 @@ def standardizeGeneNames(fusions):
       fusions ():
 
   Returns:
-      ():  
+      ():
   """
   fusions[['LeftGene', 'RightGene']] = fusions[['LeftGene', 'RightGene']]\
     .applymap(lambda x: '{} ({})'.format(*x.split(r'^')))
@@ -131,26 +131,26 @@ async def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   refwm = dm.WorkspaceManager(refworkspace)
   if save_output:
     terra.saveWorkspace(refworkspace, save_output + 'config/')
-  
+
   print("loading fusions")
   aggregated = refwm.get_sample_sets().loc[samplesetToLoad]['fusions_star']
   fusions = pd.read_csv(aggregated,
                         names=[sampleCol]+colnames, skiprows=1, sep='\t')
-  
+
   fusions[sampleCol] = fusions[sampleCol].str.split('.').str[0]
   print("postprocessing fusions")
   fusions.RightGene = renameFusionGene(fusions.RightGene)
   fusions.LeftGene = renameFusionGene(fusions.LeftGene)
-  
+
   count = fusions[['LeftBreakpoint', 'RightBreakpoint']]\
     .value_counts()\
     .to_frame(name=countCol)
   fusions = pd.merge(fusions, count, on=[
                       'LeftBreakpoint', 'RightBreakpoint'])
-  
+
   # removing failed
   fusions = fusions[~fusions[sampleCol].isin(todrop)]
-  
+
   print("saving")
   fusions.to_csv(os.path.join(save_output,'fusions_all.csv'), index=False)
   if rnFunc is not None or renaming is not None:
@@ -159,19 +159,19 @@ async def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
     fusions = fusions[fusions[sampleCol].isin(renaming.keys())].replace(
         {sampleCol: renaming}).reset_index(drop=True)
     fusions.to_csv(os.path.join(save_output, 'fusions_latest.csv'), index=False)
-  
+
   fusions_filtered = filterFusions(
       fusions, sampleCol=sampleCol, countCol=countCol, **kwargs)
   if doplot:
     sns.kdeplot(fusions[countCol])
   fusions_filtered.to_csv(os.path.join(
     save_output, 'filteredfusions_latest.csv'), index=False)
-  
+
   print("done")
   return fusions, fusions_filtered
 
 
-async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, 
+async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME,
                       fusionSamplecol=SAMPLEID, refsheet_url=REFSHEET_URL,  todrop=KNOWN_DROP,
                       taiga_dataset=TAIGA_FUSION, dataset_description=FUSIONreadme,
                       my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
@@ -197,7 +197,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
            file='CCLE_fusions_unfiltered')
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
-  
+
   previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
   folder=os.path.join("temp", samplesetname, "")
@@ -206,7 +206,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
   fusions, _ = await postProcess(refworkspace,
                            todrop=previousQCfail, renaming=renaming, save_output=folder,
     **kwargs)
-  
+
   print('comparing to previous version')
   print('new')
   print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
@@ -227,7 +227,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
   pf["sid"] = pf[fusionSamplecol]+"_"+pf["FusionName"] + \
       "_" + pf["JunctionReadCount"].astype(str)
   print(len(set(pf[~pf.sid.isin(f.sid.tolist())][fusionSamplecol])))
-  
+
   #taiga
   print("uploading to taiga")
   tc.update_dataset(dataset_permaname=taiga_dataset,
