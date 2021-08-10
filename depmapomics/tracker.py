@@ -119,8 +119,12 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
     the subsetted dataframe
 
   """
+  # pandas throws an error if index is unavailable
+  names = [x for x in names if x in refsamples.index.tolist()]
+
   lennames = len(names)
   res = {}
+
   refsamples = refsamples.loc[names].copy()
   if lennames > len(refsamples):
     print(set(names) - set(refsamples.index))

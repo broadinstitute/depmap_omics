@@ -105,7 +105,7 @@ def standardizeGeneNames(fusions):
   return fusions
 
 
-async def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
+def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
                         colnames=FUSION_COLNAME, todrop=[], doplot=True,
                         countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
                         **kwargs ):
@@ -202,8 +202,15 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
 
   folder=os.path.join("temp", samplesetname, "")
   renaming = h.fileToDict(folder+"rna_sample_renaming.json")
+  # TODO: include in rna_sample_renaming.json instead
+  # lower priority versions of these lines were used
+  # because of manual changes in the tracker. Manually
+  # updating the code here
+  renaming.pop('CDS-tTwJLo')
+  renaming.pop('CDS-Fauu92')
+  renaming.update({'CDS-pvNwpR': 'ACH-000833', 'CDS-V5yMiU': 'ACH-001164'})
 
-  fusions, _ = await postProcess(refworkspace,
+  fusions, _ = postProcess(refworkspace,
                            todrop=previousQCfail, renaming=renaming, save_output=folder,
     **kwargs)
 
