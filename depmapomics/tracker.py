@@ -119,6 +119,9 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
     the subsetted dataframe
 
   """
+
+  names = [x for x in names if x in refsamples.index.tolist()]
+
   lennames = len(names)
   res = {}
   refsamples = refsamples.loc[names].copy()

@@ -718,7 +718,7 @@ def load(samplesetname, workspaces,
   if len(noarxspan) > 0:
     print("we found "+str(len(noarxspan))+" samples without arxspan_ids!!")
     noarxspan = noarxspan.sort_values(by = 'stripped_cell_line_name')
-    dfToSheet(samples, "depmap ALL samples not found", creds)
+    # dfToSheet(samples, "depmap ALL samples not found", creds)
     noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
     if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
       finished, else write no to quit and they will not be added"):
@@ -750,7 +750,7 @@ def load(samplesetname, workspaces,
       depmap_taiga=depmap_taiga)
     if len(unk) > 0:
       print("some samples could still not be inferred")
-      dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
+      # dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
       samples.loc[notfound].to_csv('temp/notfound_'+stype+'_'+release+'.csv')
       if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
         finished, else write no to quit and they will not be added"):
@@ -760,7 +760,7 @@ def load(samplesetname, workspaces,
           0].to_frame().set_index('sample_id')
         samples.loc[updated_samples.index, updated_samples.columns] = updated_samples.values
 
-  dfToSheet(samples, 'depmap ALL samples found', secret=creds)
+  # dfToSheet(samples, 'depmap ALL samples found', secret=creds)
   samples.to_csv('temp/new_'+stype+'_'+release+'.csv')
   return samples
 
@@ -889,8 +889,13 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
       refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
   """
   # uploading to our bucket (now a new function)
+  # terra.changeToBucket(samples, bucket, name_col=name_col,
+    #                    values=values, filetypes=filetypes, catchdup=True, dryrun=False)
+
+
+  # dryrun is not an argument?
   terra.changeToBucket(samples, bucket, name_col=name_col,
-                       values=values, filetypes=filetypes, catchdup=True, dryrun=False)
+                       values=values, filetypes=filetypes, catchdup=True)
 
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
