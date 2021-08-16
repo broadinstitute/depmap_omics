@@ -12,6 +12,10 @@ ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 # Download client_secret.json to home directory
 # After calling from_files for the first time, log in via google following prompt in browser, storage.json will be saved automatically
 
+# In order to get credentials.json, follow https://cloud.google.com/docs/authentication/production?authuser=1#create_service_account
+# unclear why this is necessary if we have client_secret.json already
+# in order to interact with gsheet by their name, remember to share gsheets to the service account ("client_email") in the json file
+
 SHEETCREDS = '../.credentials.json'
 MY_ID = '~/.client_secret.json'
 MYSTORAGE_ID = "~/.storage.json"
@@ -43,6 +47,7 @@ LINES_TO_RELEASE = [
     "ACH-000023",
     "ACH-000145",
     "ACH-000205",
+    """
     "ACH-000345",
     "ACH-000359",
     "ACH-000399",
@@ -63,6 +68,7 @@ LINES_TO_RELEASE = [
     "ACH-002659",
     "ACH-002687",
     "ACH-002707",
+    """
 ]
 
 PREV_VIRTUAL = {}
@@ -96,7 +102,7 @@ UPLOAD_NOTEBOOK = ['DepMap_Upload.ipynb']
 
 NOTEBOOKS = RUN_NOTEBOOKS+UPLOAD_NOTEBOOK
 
-VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
+# VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
 RELEASE = SAMPLESETNAME.lower()
 
