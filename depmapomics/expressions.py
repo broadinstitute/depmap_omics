@@ -224,7 +224,7 @@ def extractProtCod(files, mybiomart, protcod_rename,
         a = files[name].loc[dup].sum()
         files[name].drop(index=dup)
         files[name].loc[dup] = a
-    
+
   return files
 
 
@@ -289,8 +289,8 @@ async def postProcess(refworkspace, samplesetname,
                 dropNonMatching=False, recompute_ssgsea=True,
                 ):
   """postprocess a set of aggregated Expression table from RSEM in the CCLE way
-  
-  (usually using the aggregate_RSEM terra worklow) 
+
+  (usually using the aggregate_RSEM terra worklow)
 
   Args:
       refworkspace ([type]): [description]
@@ -341,10 +341,10 @@ async def postProcess(refworkspace, samplesetname,
         print(val+' not in the workspace\'s data')
 
   print("generating gene names")
-  
+
   mybiomart = utils.generateGeneNames(
       ensemble_server=ensemblserver, useCache=useCache)
-  # creating renaming index, keeping top name first 
+  # creating renaming index, keeping top name first
   gene_rename = {}
   for _, i in mybiomart.iterrows():
     if i.ensembl_gene_id not in gene_rename:
@@ -354,7 +354,7 @@ async def postProcess(refworkspace, samplesetname,
                             (mybiomart.gene_biotype == 'protein_coding')].iterrows():
     if i.ensembl_gene_id not in protcod_rename:
       protcod_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'})
-  
+
   print("loading files")
   files, renaming = loadFromRSEMaggregate(refworkspace, todrop=failed, filenames=trancriptLevelCols+geneLevelCols,
                                           sampleset=samplesetToLoad, renamingFunc=renamingFunc)
@@ -450,7 +450,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
                                                                   todrop=todrop, samplesetToLoad=samplesetToLoad,
                                                                   geneLevelCols=RSEMFILENAME_GENE,
                                                                   trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
-                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn, 
+                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn,
                                                                   dropNonMatching=dropNonMatching, **kwargs)
 
   print("doing validation")
