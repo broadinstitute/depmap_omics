@@ -314,8 +314,8 @@ async def postProcess(refworkspace, samplesetname,
   if not samplesetToLoad:
     samplesetToLoad = samplesetname
   refwm = dm.WorkspaceManager(refworkspace)
-  if save_output:
-    terra.saveWorkspace(refworkspace, save_output+'terra/')
+  # if save_output:
+    # terra.saveWorkspace(refworkspace, save_output+'terra/')
   print("load QC and generate QC report")
   samplesinset = [i['entityName'] for i in refwm.get_entities(
       'sample_set').loc[samplesetname].samples]
@@ -365,7 +365,7 @@ async def postProcess(refworkspace, samplesetname,
   print("renaming files")
   # gene level
   if len(geneLevelCols) > 0:
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     files = extractProtCod(files, mybiomart[mybiomart.gene_biotype == 'protein_coding'],
                            protcod_rename, dropNonMatching=dropNonMatching,
                            filenames=geneLevelCols)
@@ -376,9 +376,10 @@ async def postProcess(refworkspace, samplesetname,
         files, gene_rename, filenames=trancriptLevelCols, drop="gene_id", index="transcript_id")
 
   print("doing ssGSEA")
-  enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
-  print("saving files")
-  enrichments.to_csv(save_output+'gene_sets_all.csv')
+  # enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
+  enrichments = None
+  # print("saving files")
+  # enrichments.to_csv(save_output+'gene_sets_all.csv')
   saveFiles(files, save_output)
   print("done")
 
@@ -497,7 +498,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
   #              lowqual[lowqual.sum(1) > 3].index.tolist(),
   #              ccle_refsamples, samplesetname,
   #              sheetname=sheetname, sheetcreds=sheetcreds)
-  import pdb; pdb.set_trace()
+  # import pdb; pdb.set_trace()
   print("uploading to taiga")
   tc.update_dataset(changes_description="new "+samplesetname+" release!",
                     dataset_permaname=taiga_dataset,
@@ -547,11 +548,11 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
-                        {
-                            "path": folder+'gene_sets_all.csv',
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
+                        # {
+                        #     "path": folder+'gene_sets_all.csv',
+                        #     "format": "NumericMatrixCSV",
+                        #     "encoding": "utf-8"
+                        # },
                     ],
                     upload_async=False,
                     dataset_description=dataset_description)
