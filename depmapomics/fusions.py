@@ -129,8 +129,8 @@ async def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
       [type]: [description]
   """
   refwm = dm.WorkspaceManager(refworkspace)
-  if save_output:
-    terra.saveWorkspace(refworkspace, save_output + 'config/')
+  # if save_output:
+  #   terra.saveWorkspace(refworkspace, save_output + 'config/')
   
   print("loading fusions")
   aggregated = refwm.get_sample_sets().loc[samplesetToLoad]['fusions_star']
