@@ -31,7 +31,24 @@ def merge(tracker, new, old, arxspid, cols):
   return False
 
 
-def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id', 
+def findIssue(tracker, dup=['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
+                            'subtype', 'origin', 'stripped_cell_line_name'],
+                            ):
+  """
+  """
+  print('things that are from the same patient but don\'t have the same value')
+  dup = tracker[dup].set_index('arxspan_id').drop_duplicates()
+  print(dup.loc[h.dups(dup.index)])
+  print('things that have duplicate versions')
+  print(h.dups(tracker['arxspan_id']+"_"+tracker['datatype'] +
+               "_"+tracker['version'].astype(str)))
+  print('things that don\'t have their legacy bam file')
+  print(tracker[tracker['datatype'].isin(['rna','wes','wgs'])&(tracker['legacy_bam_filepath'].isna()|tracker['legacy_bai_filepath'].isna())].index)
+  print('things that don\'t have their bam file path')
+  print(tracker[(tracker['internal_bam_filepath'].isna() | tracker['internal_bai_filepath'].isna())].index)
+
+
+def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
                       participant_id='participant_id', toupdate={}):
   """update a list of samples' missing information from what is known in the ccle sample tracker
 
@@ -78,16 +95,16 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
     samples.loc[index, k] = v
   len(samples.loc[notfound][participant_id]
     ), samples.loc[notfound][participant_id].tolist()
-  return samples, notfound    
+  return samples, notfound
 
 
-def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id", 
+def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
                         version="version", priority=None):
   """
   will set it to your sample_ids using the latest version available for each sample
 
-  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed 
-  by the same ids, will set it to your sample_ids using the latest version 
+  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed
+  by the same ids, will set it to your sample_ids using the latest version
   available for each sample
 
   Args:
@@ -102,8 +119,12 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
     the subsetted dataframe
 
   """
+  # pandas throws an error if index is unavailable
+  names = [x for x in names if x in refsamples.index.tolist()]
+
   lennames = len(names)
   res = {}
+
   refsamples = refsamples.loc[names].copy()
   if lennames > len(refsamples):
     print(set(names) - set(refsamples.index))
@@ -127,7 +148,37 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   # remove all the reference metadata columns except the arxspan ID
   return res
 
-
+def updateIsogenecity(di, tracker, unset=False):
+  tracker = tracker.copy()
+  for k,v in di.items():
+    print('________________________________')
+    a = tracker[tracker.arxspan_id==k]
+    b = tracker[tracker.arxspan_id==v]
+    if len(a) == 0:
+      print(v, "does not exist")
+    if len(b)==0:
+      print(k, "does not exist")
+    if (len(set(a.participant_id)) >1 or len(set(b.participant_id)) >1):
+      raise ValueError("not same participant for same cell line")
+    if a.participant_id[0] == b.participant_id[0] or (
+        unset and a.participant_id[0] != b.participant_id[0]):
+      print('already set')
+      continue
+    print('merging:')
+    print(k,v)
+    if unset:
+      print('changing participant_id of ',v)
+      tracker.loc[b.index, 'participant_id'] = 'PT-'+h.randomString()
+    else:
+      print('doing:')
+      print(a.loc[a.index[0], ['participant_id', 'age', 'sex', "matched_normal"]].values)
+      print('into')
+      print(tracker.loc[tracker[tracker.participant_id == b.participant_id[0]].index,
+                  ['participant_id', 'age', 'sex', "matched_normal"]].values)
+      tracker.loc[tracker[tracker.participant_id==b.participant_id[0]].index,
+                  ['participant_id', 'age', 'sex', "matched_normal"]] = a.loc[a.index[0],
+                  ['participant_id', 'age', 'sex', "matched_normal"]].tolist()
+  return tracker
 
 def changeCellLineNameInNew(ref, new, datatype, dupdict, toupdate=['stripped_cell_line_name',
                                                                       'arxspan_id', "patient_id",
@@ -319,7 +370,7 @@ def resolveIssues(tracker, issus, arxspid, cols):
 
 
 def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={}, my_id='~/.client_secret.json',
-                            stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id", 
+                            stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id",
                             mystorage_id="~/.storage.json",
                             depmappvlink="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"):
   """
@@ -412,3 +463,44 @@ def makeCCLE2(tracker, source='CCLE2'):
     ccle[val +
           '_bai'] = a[~a.index.duplicated(keep='first')]['internal_bai_filepath']
   return ccle
+
+
+def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
+  """
+  """
+  if cellosaurus is None:
+    cellosaurus = h.makeCellosaurusExport()
+  nol = []
+  for val in set(cellosaurus.patient_id):
+    mcellosaurus = set(cellosaurus[cellosaurus.patient_id == val].depmap_id) - {''}
+    if len(mcellosaurus) > 0:
+      pref = set(ref[ref.arxspan_id.isin(mcellosaurus)].participant_id)
+      if len(pref) < 1:
+        nol.append(mcellosaurus)
+        continue
+      elif len(pref) > 1:
+        print("unmatching lines in the ref:")
+        print(mcellosaurus)
+      other = set()
+      # finding if linked to other
+      for val in pref:
+        other.update(
+            ref[ref.participant_id == val].arxspan_id.tolist())
+      if len(other - mcellosaurus) > 0:
+        print('we have some unmatch to the ref:')
+        print(other - mcellosaurus)
+      ref.loc[ref[ref.arxspan_id.isin(
+          other)].index, 'participant_id'] = pref.pop()
+  print('\n_________________\nno lines found:')
+  print(nol)
+  print('\n_________________________\nparents:')
+  for val in set(ref.arxspan_id):
+    pos = cellosaurus[cellosaurus.depmap_id == val]
+    if len(pos) > 0:
+      pcellosaurus = pos.parent_id[0]
+      if pcellosaurus in cellosaurus.index.tolist():
+        a = cellosaurus.loc[pcellosaurus, "depmap_id"]
+        if a in set(ref.arxspan_id):
+          print(val, '<--', a)
+          ref.loc[ref[ref.arxspan_id == val].index, 'parent_id'] = a
+  return ref

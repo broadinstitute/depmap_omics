@@ -20,7 +20,7 @@ We are using a set of key tools to process the sequencing output:
 - __mutect__: 
   - [https://software.broadinstitute.org/cancer/cga/mutect](https://software.broadinstitute.org/cancer/cga/mutect)
   - [https://youtu.be/rN-cLrb5aGs](https://youtu.be/rN-cLrb5aGs)
-  - [https://software.broadinstitute.org/gatk/documentation/tooldocs/4.beta.4/org_broadinstitute_hellbender_tools_walkers_mutect_Mutect2.php](https://software.broadinstitute.org/gatk/documentation/tooldocs/4.beta.4/org_broadinstitute_hellbender_tools_walkers_mutect_Mutect2.php)
+  - [https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2](https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2)
   - [https://www.nature.com/articles/nbt.2514](https://www.nature.com/articles/nbt.2514)
 - __gatk cnv__:
   - [https://software.broadinstitute.org/gatk/documentation/article?id=11682](https://software.broadinstitute.org/gatk/documentation/article?id=11682)
@@ -63,7 +63,8 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
 
 ## For Broad People
 
-> Mind that you need to know about the tools listed above 
+> Mind that you need to know about the tools listed above
+- Ask dbgap access to your supervisor
 
 ### Getting Terra Access
 
@@ -120,7 +121,7 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 ## For External Users:
 
-> Mind that you need to know about the tools listed above 
+> Mind that you need to know about the tools listed above
 
 ### Creating your Terra Workspaces:
 

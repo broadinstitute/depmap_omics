@@ -1,12 +1,13 @@
 import "BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams
 import "PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.0.0/scripts/cnv_wdl/somatic/cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample
+import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
 import "cnn-variant-filter.wdl" as cnn_variant_filter
 import "Manta_SomaticSV.wdl" as Manta_SomaticSV
 import "../WGSmut_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0
 import "../WGSmut_pipeline/common_variant_filter.wdl" as common_variant_filter
 import "../WGSmut_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_pipeline
 import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
+
 
 
 workflow WGS_pipeline {
@@ -107,15 +108,15 @@ workflow WGS_pipeline {
 			tumor_bam_idx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
 	}
 
-	call cnn_variant_filter.Cram2FilteredVcf as Cram2FilteredVcf {
-		input:
-			input_file=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-			input_file_index=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
-			reference_fasta=ref_fasta,
-			reference_dict=ref_dict,
-			reference_fasta_index=ref_fasta_index,
-			output_prefix=sample_name
-	}
+	#call cnn_variant_filter.Cram2FilteredVcf as Cram2FilteredVcf {
+	#	input:
+	#		input_file=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
+	#		input_file_index=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+	#		reference_fasta=ref_fasta,
+	#		reference_dict=ref_dict,
+	#		reference_fasta_index=ref_fasta_index,
+	#		output_prefix=sample_name
+	#}
 
 	call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
 		input:
@@ -193,8 +194,8 @@ workflow WGS_pipeline {
 		File oncotated_called_file_tumor = CNVSomaticPairWorkflow.oncotated_called_file_tumor
 		File oncotated_called_gene_list_file_tumor = CNVSomaticPairWorkflow.oncotated_called_gene_list_file_tumor
 		#cnn-variant-filter
-		File cnn_filtered_vcf = Cram2FilteredVcf.cnn_filtered_vcf
-		File cnn_filtered_vcf_index= Cram2FilteredVcf.cnn_filtered_vcf_index
+		#File cnn_filtered_vcf = Cram2FilteredVcf.cnn_filtered_vcf
+		#File cnn_filtered_vcf_index= Cram2FilteredVcf.cnn_filtered_vcf_index
 		#MantaSomaticSV
 		File candidate_indel_vcf= MantaSomaticSV.candidate_indel_vcf
 		File candidate_indel_vcf_index= MantaSomaticSV.candidate_indel_vcf_index
