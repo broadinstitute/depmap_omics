@@ -3,9 +3,9 @@ import "PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDi
 import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
 import "cnn-variant-filter.wdl" as cnn_variant_filter
 import "Manta_SomaticSV.wdl" as Manta_SomaticSV
-import "../WGSmut_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0
-import "../WGSmut_pipeline/common_variant_filter.wdl" as common_variant_filter
-import "../WGSmut_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_pipeline
+import "../mutation_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0
+import "../mutation_pipeline/common_variant_filter.wdl" as common_variant_filter
+import "../mutation_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_pipeline
 import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 
 
