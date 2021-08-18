@@ -1,4 +1,4 @@
-import os.getenv
+import os
 
 def fileToList(filename):
   """
@@ -8,7 +8,7 @@ def fileToList(filename):
     return [val[:-1] for val in f.readlines()]
 
 
-if fileToList("../.git/HEAD")[0].split('/')[-1] == "master" or os.getenv('DEPMAP_ENV') == "PROD":
+if fileToList('/'.join(__file__.split('/')[:-2])+"/.git/HEAD")[0].split('/')[-1] == "master" or os.getenv('DEPMAP_ENV') == "PROD":
   from depmapomics.config_prod import *
 else:
   from depmapomics.config_dev import *
