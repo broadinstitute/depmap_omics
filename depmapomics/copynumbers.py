@@ -1,4 +1,4 @@
-#cn.py
+# cn.py
 
 import numpy as np
 from gsheets import Sheets
@@ -218,7 +218,6 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
                             ')' for _, i in mybiomart.iterrows()]
   mybiomart = mybiomart.drop_duplicates('gene_name', keep="first")
   genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
-
   # validation step
   print('summary of the gene cn data:')
   print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
@@ -227,6 +226,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
 
   print("failed our QC")
   print(failed)
+
   if source_rename:
     segments = segments.replace({'Source': source_rename})
   if save_output:
@@ -246,7 +246,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   return segments, genecn, failed
 
 
-async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
+def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                        samplesetname=SAMPLESETNAME, AllSamplesetName='all',
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                        sheetcreds=SHEETCREDS, sheetname=SHEETNAME,
@@ -258,7 +258,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
                                    'Num_Probes', 'Status', 'Source'],
                        bamqc=BAMQC,
                        procqc=PROCQC,
-                       source_rename=SOURCE_RENAME,
+                       source_rename=SOURCE_RENAME, redoWES=False, wesfolder="",
                       **kwargs):
   """the full CCLE Copy Number post processing pipeline (used only by CCLE)
 
@@ -293,34 +293,43 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
   wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)
 
   # doing wes
-  print('doing wes')
-  folder=os.path.join("temp", samplesetname, "wes_")
-  priority=tracker[(tracker.datatype=='wes')&(tracker.prioritized == 1)].index.tolist()
-  todropwes=todrop+tracker[(tracker.datatype=='wes')&(tracker.blacklist == 1)].index.tolist()
-  wessegments, genecn, wesfailed = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
-              todrop=todropwes,
-              save_output=folder,
-              priority=priority, **kwargs)
+  folder = os.path.join("temp", samplesetname, "wes_")
+  if redoWES:
+    print('doing wes')
+    priority=tracker[(tracker.datatype=='wes')&(tracker.prioritized == 1)].index.tolist()
+    todropwes=todrop+tracker[(tracker.datatype=='wes')&(tracker.blacklist == 1)].index.tolist()
+    wessegments, genecn, wesfailed = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
+                todrop=todropwes,
+                save_output=folder,
+                priority=priority, **kwargs)
 
-  wesrenaming = managingDuplicates(set(wessegments[SAMPLEID]), (set(
-      wesfailed) - set(priority)) | set(todropwes), "wes", tracker)
-  h.dictToFile(wesrenaming, folder+"sample_renaming.json")
+    wesrenaming = managingDuplicates(set(wessegments[SAMPLEID]), (set(
+        wesfailed) - set(priority)) | set(todropwes), "wes", tracker)
+    h.dictToFile(wesrenaming, folder+"sample_renaming.json")
 
-  # annotating source
-  for v in set(wessegments[SAMPLEID]):
-    wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
-                 'Source'] = tracker[tracker.index == v].source.values[0]
+    # annotating source
+    for v in set(wessegments[SAMPLEID]):
+      if len(tracker[tracker.index == v].source.values) > 0:
+        wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
+                  'Source'] = tracker[tracker.index == v].source.values[0]
+
     wessegments.Source = wessegments.Source.replace(source_rename)
     wessegments.Source += ' WES'
 
-  print('renaming')
-  wespriosegments = wessegments[wessegments[SAMPLEID].isin(set(wesrenaming.keys()))].replace(
-    {SAMPLEID: wesrenaming}).reset_index(drop = True)
-  wespriogenecn = genecn[genecn.index.isin(set(wesrenaming.keys()))].rename(index=wesrenaming)
+    print('renaming')
+    wespriosegments = wessegments[wessegments[SAMPLEID].isin(set(wesrenaming.keys()))].replace(
+      {SAMPLEID: wesrenaming}).reset_index(drop = True)
+    wespriogenecn = genecn[genecn.index.isin(set(wesrenaming.keys()))].rename(index=wesrenaming)
 
-  #saving prio
-  wespriosegments.to_csv(folder+"segments_all_latest.csv", index=False)
-  wespriogenecn.to_csv(folder+"genecn_all_latest.csv")
+    #saving prio
+    wespriosegments.to_csv(folder+"segments_all_latest.csv", index=False)
+    wespriogenecn.to_csv(folder+"genecn_all_latest.csv")
+  else:
+    print('bypassing WES using folder: '+wesfolder if wesfolder else folder)
+    wesfailed = h.fileToList((wesfolder if wesfolder else folder)+'failed.txt')
+    wesrenaming = h.fileToDict((wesfolder if wesfolder else folder)+"sample_renaming.json")
+    wespriosegments = pd.read_csv(folder+"segments_all_latest.csv")
+    wespriogenecn = pd.read_csv(folder+"genecn_all_latest.csv", index_col=0)
 
   # doing wgs
   print('doing wgs')
@@ -339,10 +348,11 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
 
   # annotating source
   for v in set(wgssegments[SAMPLEID]):
-    wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
+    if len(tracker[tracker.index == v].source.values) > 0:
+      wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
                         'Source'] = tracker[tracker.index == v].source.values[0]
-    wgssegments.Source = wgssegments.Source.replace(source_rename)
-    wgssegments.Source += ' WGS'
+  wgssegments.Source = wgssegments.Source.replace(source_rename)
+  wgssegments.Source += ' WGS'
 
   print('renaming')
   wgspriosegments = wgssegments[wgssegments[SAMPLEID].isin(set(wgsrenaming.keys()))].replace(
@@ -360,9 +370,9 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
   #adding to the sample tracker the sequencing that were selected and the ones that failed QC
   selected = {j:i for i,j in wesrenaming.items()}
   selected.update({j:i for i,j in wgsrenaming.items()})
-  import pdb; pdb.set_trace()
+  # import pdb; pdb.set_trace()
   try:
-    wgssamplesinset=[i['entityName'] for i in wesrefwm.get_entities(
+    wgssamplesinset=[i['entityName'] for i in wgsrefwm.get_entities(
             'sample_set').loc[samplesetname].samples]
     updateTracker(tracker, selected, wgssamplesinset, samplesetname,
                   list(wgsfailed), sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
@@ -370,7 +380,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
     print('no wgs for this sampleset')
 
   try:
-    wessamplesinset=[i['entityName'] for i in wgsrefwm.get_entities(
+    wessamplesinset=[i['entityName'] for i in wesrefwm.get_entities(
         'sample_set').loc[samplesetname].samples]
     updateTracker(tracker, selected, wessamplesinset, samplesetname,
                   list(wesfailed), sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
@@ -378,73 +388,75 @@ async def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGS
     print('no wes for this sampleset')
 
   #merging WES/WGS
-  folder=os.path.join("data", samplesetname, '')
+  folder=os.path.join("temp", samplesetname, '')
   mergedsegments =  wgspriosegments.append(wespriosegments[~wespriosegments[SAMPLEID].isin(
     set(wgspriosegments[SAMPLEID]))])[subsetsegs]
   mergedgenecn =  wgspriogenecn.append(wespriogenecn[~wespriogenecn.index.isin(
     set(wgspriogenecn.index))])
 
   mergedgenecn.to_csv(folder+ "merged_genecn_all.csv")
-  mergedsegments.to_csv(folder+ "merged_segments_all_.csv",index=False)
+  mergedsegments.to_csv(folder+ "merged_segments_all.csv",index=False)
+
 
   #uploading to taiga
-  print('uploading to taiga')
-  tc.update_dataset(changes_description="new "+samplesetname+" release! (removed misslabellings, see changelog)",
-                    dataset_permaname=taiga_dataset,
-                    upload_files=[
-                      {
-                        "path": "temp/"+samplesetname+"/wes_segments_all_latest.csv",
-                        "format": "TableCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/wes_genecn_all_latest_.csv",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/wes_segments_all.csv",
-                        "format": "TableCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/wes_genecn_all.csv",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/merged_genecn_all.csv",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/merged_segments_all.csv",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/wgs_segments_all.csv",
-                        "format": "TableCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/wgs_genecn_all.csv",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/wgs_segments_all_latest.csv",
-                        "format": "TableCSV",
-                        "encoding": "utf-8"
-                      },
-                      {
-                        "path": "temp/"+samplesetname+"/wgs_genecn_all_latest.csv",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8"
-                      },
-                    ],
-                    dataset_description=dataset_description)
-  print("done")
+#   print('uploading to taiga')
+#   tc.update_dataset(changes_description="new "+samplesetname+" release! (removed misslabellings, see changelog)",
+#                     dataset_permaname=taiga_dataset,
+#                     upload_files=[
+#                       {
+#                         "path": folder+"/wes_segments_all_latest.csv",
+#                         "format": "TableCSV",
+#                         "encoding": "utf-8"
+#                       },
+# # #                      {
+# #                         "path": folder+"/wes_genecn_all_latest_.csv",
+# #                         "format": "NumericMatrixCSV",
+# #                         "encoding": "utf-8"
+# #                       },
+#                       {
+#                         "path": folder+"/wes_segments_all.csv",
+#                         "format": "TableCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                       {
+#                         "path": folder+"/wes_genecn_all.csv",
+#                         "format": "NumericMatrixCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                       {
+#                         "path": folder+"/merged_genecn_all.csv",
+#                         "format": "NumericMatrixCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                       {
+#                         "path": folder+"/merged_segments_all.csv",
+#                         "format": "TableCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                       {
+#                         "path": folder+"/wgs_segments_all.csv",
+#                         "format": "TableCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                       {
+#                         "path": folder+"/wgs_genecn_all.csv",
+#                         "format": "NumericMatrixCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                       {
+#                         "path": folder+"/wgs_segments_all_latest.csv",
+#                         "format": "TableCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                       {
+#                         "path": folder+"/wgs_genecn_all_latest.csv",
+#                         "format": "NumericMatrixCSV",
+#                         "encoding": "utf-8"
+#                       },
+#                     ],
+#                     dataset_description=dataset_description)
+#   print("done")
+
   return wespriosegments, wgspriosegments
 
 
@@ -454,9 +466,9 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
                         "ACH-002291"  # added for some reason?
                         # much more than that..
                         "ACH-002010",
-                        "ACH-000314"], taiga_legacy_loc=TAIGA_LEGACY_CN,
+                        "ACH-000314"], taiga_legacy_loc='depmap-wes-cn-data--08f3',
                        taiga_legacy_filename='legacy_segments',
-                       taiga_dataset=TAIGA_CN_ACHILLES,
+                       taiga_dataset="cn-wes-achilles-4dcd",
                        dataset_description=Achillesreadme,
                        cytobandloc='data/hg38_cytoband.gz',
                        gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),
@@ -469,14 +481,31 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   legacy_segments=tc.get(
     name=taiga_legacy_loc, file=taiga_legacy_filename).drop(columns='Unnamed: 0')
   legacy_segments['Status']='U'
-  legacy_segments.loc[legacy_segments[legacy_segments.Chromosome.str.contains("chr")].index, "Chromosome"]=[
-  i[3:] for i in legacy_segments[legacy_segments.Chromosome.str.contains("chr")].Chromosome]
+  legacy_segments['Chromosome'] = legacy_segments['Chromosome'].map(lambda x: x[3:] if x.startswith('chr') else x)
+
+
+  data_sources = pd.crosstab(index=legacy_segments['DepMap_ID'], columns=legacy_segments['Source'])
+  data_source_duplicates = data_sources[(data_sources > 0).sum(axis=1) > 1]
+  duplicate_arxspans = data_source_duplicates.index.tolist()
+  if not data_source_duplicates.empty: # TODO: replace with assert if the data is updated on taiga
+    print('Duplicate data found. Dropping SNP data from the \
+      following legacy segment values:\n{}'.format(duplicate_arxspans))
+    # TODO: upload the following variable to Taiga
+    # then the following line can be safely removed
+    legacy_segments = legacy_segments[~((legacy_segments['DepMap_ID'].isin(duplicate_arxspans)) &
+                                      (legacy_segments['Source'] == 'Broad SNP'))]
+
 
   onlyinleg = set(legacy_segments[SAMPLEID]) - \
       (set(wespriosegs[SAMPLEID]) | (set(wgspriosegs[SAMPLEID])))
   #samegenes = set(prevgenecn.columns) & set(priogenecn.columns)
 
-  onlyinleg=onlyinleg - set(bad)
+  bad_fp = ['ACH-001078', 'ACH-002184', 'ACH-001146', # these were dropped in 21Q3 for fingerprinting
+            'ACH-002022', 'ACH-001173', 'ACH-001790',
+            'ACH-002260', 'ACH-001741', 'ACH-000010',
+            'ACH-002475', 'ACH-001543']
+
+  onlyinleg=onlyinleg - set(bad + bad_fp)
   print('found samples that are only in the legacy datasets')
   print(onlyinleg)
   # merging
@@ -506,6 +535,10 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   gene_mapping['gene_name'] = [i['symbol'] +
                             ' (' + str(i['ensembl_id']).split('.')[0] +
                             ')' for _, i in gene_mapping.iterrows()]
+  # TODO: the gene_mapping reference file seems to mistakenly have used
+  # 'ensemble_id' instead of 'entrez_id'
+  gene_mapping.rename(columns={'ensembl_id': 'entrezgene_id'}, inplace=True)
+
   mergedsegments=mut.manageGapsInSegments(mergedsegments, cyto=cyto)
   mergedgenecn=mut.toGeneMatrix(
       mergedsegments, gene_mapping, ).apply(lambda x: np.log2(1+x))
