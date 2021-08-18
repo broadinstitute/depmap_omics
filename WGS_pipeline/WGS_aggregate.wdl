@@ -1,6 +1,6 @@
-<<<<<<< HEAD
 import "Aggregate_CN_seg_files.wdl" as Aggregate_CN_seg_files
 import "../mutation_pipeline/aggregateMAFs_selectFields_copy.wdl" as aggregateMAFs_selectFields_copy
+
 workflow WGS_aggregate {
 
   String name
