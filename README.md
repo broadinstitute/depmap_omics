@@ -63,7 +63,8 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
 
 ## For Broad People
 
-> Mind that you need to know about the tools listed above 
+> Mind that you need to know about the tools listed above
+- Ask dbgap access to your supervisor
 
 ### Getting Terra Access
 
@@ -120,7 +121,7 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 ## For External Users:
 
-> Mind that you need to know about the tools listed above 
+> Mind that you need to know about the tools listed above
 
 ### Creating your Terra Workspaces:
 
