@@ -164,8 +164,8 @@ def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
     if len(rename_transcript) == 0 and index == "transcript_id":
       for _, v in files[val].iterrows():
         if v['gene_id'].split('.')[0] in gene_rename:
-          rename_transcript[v['transcript_id']] = gene_rename[
-              v['gene_id'].split('.')[0]].split(' (')[0] + ' (' + v.transcript_id + ')'
+          rename_transcript[v['transcript_id'].split('.')[0]] = gene_rename[
+              v['gene_id'].split('.')[0]].split(' (')[0] + ' (' + v.transcript_id.split('.')[0] + ')'
         else:
           missing.append(v.gene_id.split('.')[0])
       print('missing: '+str(len(missing))+' genes')
@@ -177,7 +177,6 @@ def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
       print(dup)
       raise ValueError('duplicate '+index)
     file.index = r
-    
     file = file.rename(index=rename_transcript if len(
         rename_transcript) != 0 else gene_rename).T
     files[val] = file
@@ -224,11 +223,11 @@ def extractProtCod(files, mybiomart, protcod_rename,
         a = files[name].loc[dup].sum()
         files[name].drop(index=dup)
         files[name].loc[dup] = a
-    
+
   return files
 
 
-async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
+def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
                  geneset_file=SSGSEAFILEPATH, recompute=True):
   """the way we run ssGSEA on the CCLE dataset
 
@@ -259,7 +258,7 @@ async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
   #### merging splicing variants into the same gene
   #counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
-  enrichments = (await rna.gsva(tpm_genes.T, pathtogenepy=pathtogenepy,
+  enrichments = (rna.gsva(tpm_genes.T, pathtogenepy=pathtogenepy,
                                 geneset_file=geneset_file, method='ssgsea', recompute=recompute)).T
   enrichments.index = [i.replace('.', '-') for i in enrichments.index]
   return enrichments
@@ -279,7 +278,7 @@ def saveFiles(files, folder=TMP_PATH, rep=('rsem', 'expression')):
                                                               '_logp1.csv'))
 
 
-async def postProcess(refworkspace, samplesetname,
+def postProcess(refworkspace, samplesetname,
                 save_output="", doCleanup=False,
                 colstoclean=[], ensemblserver=ENSEMBL_SERVER_V,
                 todrop=[], samplesetToLoad="all", priority=[],
@@ -287,10 +286,11 @@ async def postProcess(refworkspace, samplesetname,
                 trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
                 ssGSEAcol="genes_tpm", renamingFunc=None, useCache=False,
                 dropNonMatching=False, recompute_ssgsea=True,
+                compute_enrichment=True,
                 ):
   """postprocess a set of aggregated Expression table from RSEM in the CCLE way
-  
-  (usually using the aggregate_RSEM terra worklow) 
+
+  (usually using the aggregate_RSEM terra worklow)
 
   Args:
       refworkspace ([type]): [description]
@@ -307,7 +307,9 @@ async def postProcess(refworkspace, samplesetname,
       ssGSEAcol (str, optional): [description]. Defaults to "genes_tpm".
       renamingFunc ([type], optional): [description]. Defaults to None.
       useCache (bool, optional): [description]. Defaults to False.
-
+      compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
+      dropNonMatching (bool, optional): . Defaults to False.
+      recompute_ssgsea (bool, optional): [description]. Defaults to True.
   Returns:
       [type]: [description]
   """
@@ -341,10 +343,10 @@ async def postProcess(refworkspace, samplesetname,
         print(val+' not in the workspace\'s data')
 
   print("generating gene names")
-  
+
   mybiomart = utils.generateGeneNames(
       ensemble_server=ensemblserver, useCache=useCache)
-  # creating renaming index, keeping top name first 
+  # creating renaming index, keeping top name first
   gene_rename = {}
   for _, i in mybiomart.iterrows():
     if i.ensembl_gene_id not in gene_rename:
@@ -354,7 +356,7 @@ async def postProcess(refworkspace, samplesetname,
                             (mybiomart.gene_biotype == 'protein_coding')].iterrows():
     if i.ensembl_gene_id not in protcod_rename:
       protcod_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'})
-  
+
   print("loading files")
   files, renaming = loadFromRSEMaggregate(refworkspace, todrop=failed, filenames=trancriptLevelCols+geneLevelCols,
                                           sampleset=samplesetToLoad, renamingFunc=renamingFunc)
@@ -365,13 +367,17 @@ async def postProcess(refworkspace, samplesetname,
   print("renaming files")
   # gene level
   if len(geneLevelCols) > 0:
-    # import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     files = extractProtCod(files, mybiomart[mybiomart.gene_biotype == 'protein_coding'],
                            protcod_rename, dropNonMatching=dropNonMatching,
                            filenames=geneLevelCols)
+    # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
     files = subsetGenes(files, gene_rename, filenames=geneLevelCols,
                         index="gene_id", drop="transcript_id")
+    # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
   if len(trancriptLevelCols) > 0:
+    import pickle
+    pickle.dump([files, gene_rename, trancriptLevelCols], open('transcript.pkl', 'wb'))
     files = subsetGenes(
         files, gene_rename, filenames=trancriptLevelCols, drop="gene_id", index="transcript_id")
 
@@ -386,7 +392,7 @@ async def postProcess(refworkspace, samplesetname,
   return files, enrichments, failed, samplesinset, renaming, lowqual
 
 
-async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
+def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
                        colstoclean=['fastq1', 'fastq2',
                                     'recalibrated_bam', 'recalibrated_bam_index'],
                        ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
@@ -445,13 +451,14 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
     return renaming
 
   folder = os.path.join("temp", samplesetname, "")
+  h.createFoldersFor(folder)
   files, _, failed, _, renaming, lowqual = await postProcess(refworkspace, samplesetname,
                                                                   save_output=folder, doCleanup=doCleanup, priority=priority,
                                                                   colstoclean=colstoclean, ensemblserver=ensemblserver,
                                                                   todrop=todrop, samplesetToLoad=samplesetToLoad,
                                                                   geneLevelCols=RSEMFILENAME_GENE,
                                                                   trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
-                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn, 
+                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn,
                                                                   dropNonMatching=dropNonMatching, **kwargs)
 
   print("doing validation")
@@ -488,17 +495,17 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
     _, omissmatchCols, _, omissmatchInds, newNAs, new0s = h.compareDfs(
         files[key], tc.get(name=TAIGA_ETERNAL, file=val))
     print(key)
-    # assert omissmatchCols == 0
-    # assert omissmatchInds == 0
-    # assert newNAs == 0
-    # assert new0s == 0
+    assert omissmatchCols == 0
+    assert omissmatchInds == 0
+    assert newNAs == 0
+    assert new0s == 0
 
-  #print("updating the tracker")
-  #updateTracker(refworkspace, set(renaming.keys()) - set(['transcript_id(s)']), failed,
-  #              lowqual[lowqual.sum(1) > 3].index.tolist(),
-  #              ccle_refsamples, samplesetname,
-  #              sheetname=sheetname, sheetcreds=sheetcreds)
-  # import pdb; pdb.set_trace()
+  print("updating the tracker")
+  updateTracker(refworkspace, set(renaming.keys()) - set(['transcript_id(s)']), failed,
+                lowqual[lowqual.sum(1) > 3].index.tolist(),
+                ccle_refsamples, samplesetname,
+                sheetname=sheetname, sheetcreds=sheetcreds)
+
   print("uploading to taiga")
   tc.update_dataset(changes_description="new "+samplesetname+" release!",
                     dataset_permaname=taiga_dataset,
@@ -547,7 +554,7 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
                             "path": folder+"genes_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
-                        },
+                        }
                         # {
                         #     "path": folder+'gene_sets_all.csv',
                         #     "format": "NumericMatrixCSV",

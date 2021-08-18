@@ -22,6 +22,8 @@ MYSTORAGE_ID = "~/.storage.json"
 
 SHEETNAME = 'ccle sample tracker sandbox'
 
+GCS_PAYER_PROJECT = 'broad-firecloud-ccle'
+
 TAIGA_ETERNAL = 'depmap-a0ab'
 
 REFSHEET_URL = "https://docs.google.com/spreadsheets/d/161mmmHF5nc3nFhgpp_7zub5Erod8xDbXnNZ-u-7BWKI"
@@ -36,8 +38,6 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 SAMPLEID="DepMap_ID"
 
 SAMPLESETNAME = "21Q3"
-
-RELEASE = SAMPLESETNAME
 
 isCCLE = True
 
@@ -71,6 +71,13 @@ LINES_TO_RELEASE = [
     """
 ]
 
+VIRTUAL = {
+  'internal': 'internal-21q3-fe4c',
+  'ibm': 'ibm-21q3-179f',
+  'dmc': 'dmc-21q3-482c',
+  'public': 'public-21q3-bf1e',
+  }
+
 PREV_VIRTUAL = {}
 
 #20Q3
@@ -87,14 +94,26 @@ PREV_VIRTUAL = {}
 #PREV_VIRTUAL['internal'] = 'internal-20q4-2540'
 
 #21Q1
-PREV_VIRTUAL['public'] = 'public-21q1-4b39'
-PREV_VIRTUAL['ibm'] = 'ibm-21q1-abd9'
-PREV_VIRTUAL['dmc'] = 'dmc-21q1-0e11'
-PREV_VIRTUAL['internal'] = 'internal-21q1-4fc4'
+#PREV_VIRTUAL['public'] = 'public-21q1-4b39'
+#PREV_VIRTUAL['ibm'] = 'ibm-21q1-abd9'
+#PREV_VIRTUAL['dmc'] = 'dmc-21q1-0e11'
+#PREV_VIRTUAL['internal'] = 'internal-21q1-4fc4'
 
-CHANGES = """
+#21Q2
+PREV_VIRTUAL['public'] = 'public-21q2-110d'
+PREV_VIRTUAL['ibm'] = 'ibm-21q2-9ed1'
+PREV_VIRTUAL['dmc'] = 'dmc-21q2-27e1'
+PREV_VIRTUAL['internal'] = 'internal-21q2-9d16'
 
-"""
+TAIGA_MUTATION = "mutations-latest-ed72"
+
+TAIGA_CN="cn-latest-d8d4"
+
+TAIGA_EXPRESSION="expression-d035"
+
+TAIGA_FUSION = "fusions-95c9"
+
+datasets = ['internal', 'ibm', 'dmc', 'public']
 
 RUN_NOTEBOOKS = ['WGS_CCLE.ipynb', 'RNA_CCLE.ipynb']
 
@@ -293,8 +312,8 @@ STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 RSEM_TRANSCRIPTS = ['rsem_transcripts_expected_count',
                     'rsem_transcripts_tpm']
 
-RSEMFILENAME_GENE=["genes_tpm",
-                   "genes_expected_count"]
+RSEMFILENAME_GENE=["genes_tpm", "genes_expected_count"]
+PROTEINEFILENAMES = ['proteincoding_genes_tpm', 'proteincoding_genes_expected_count']
 
 RSEMFILENAME_TRANSCRIPTS=["transcripts_tpm", "transcripts_expected_count"]
 
@@ -361,6 +380,8 @@ README_changes = """
 
 
 """
+
+SKIP_UPLOADING_README = True
 
 FUSIONreadme = """
 # Fusions
