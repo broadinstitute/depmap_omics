@@ -1,5 +1,5 @@
-import "/RNA_pipeline/rsem_aggregate_results.wdl" as rsem_aggregate_results
-import "/RNA_pipeline/Aggregate_Fusion_Calls.wdl" as Aggregate_Fusion_Calls
+import "rsem_aggregate_results.wdl" as rsem_aggregate_results
+import "Aggregate_Fusion_Calls.wdl" as Aggregate_Fusion_Calls
 
 
 workflow RNA_aggregate {
