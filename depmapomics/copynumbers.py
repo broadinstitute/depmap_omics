@@ -358,7 +358,6 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   wgspriosegments = wgssegments[wgssegments[SAMPLEID].isin(set(wgsrenaming.keys()))].replace(
     {SAMPLEID: wgsrenaming}).reset_index(drop = True)
   wgspriogenecn = genecn[genecn.index.isin(set(wgsrenaming.keys()))].rename(index=wgsrenaming)
-
   #saving prio
   wgspriosegments.to_csv(folder+ "segments_all_latest.csv", index=False)
   wgspriogenecn.to_csv(folder+ "genecn_all_latest.csv")
@@ -397,66 +396,64 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   mergedgenecn.to_csv(folder+ "merged_genecn_all.csv")
   mergedsegments.to_csv(folder+ "merged_segments_all.csv",index=False)
 
-
   #uploading to taiga
-#   print('uploading to taiga')
-#   tc.update_dataset(changes_description="new "+samplesetname+" release! (removed misslabellings, see changelog)",
-#                     dataset_permaname=taiga_dataset,
-#                     upload_files=[
-#                       {
-#                         "path": folder+"/wes_segments_all_latest.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-# # #                      {
-# #                         "path": folder+"/wes_genecn_all_latest_.csv",
-# #                         "format": "NumericMatrixCSV",
-# #                         "encoding": "utf-8"
-# #                       },
-#                       {
-#                         "path": folder+"/wes_segments_all.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wes_genecn_all.csv",
+  print('uploading to taiga')
+  tc.update_dataset(changes_description="new "+samplesetname+" release! (removed misslabellings, see changelog)",
+                    dataset_permaname=taiga_dataset,
+                    upload_files=[
+                      {
+                        "path": folder+"/wes_segments_all_latest.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+# #                      {
+#                         "path": folder+"/wes_genecn_all_latest_.csv",
 #                         "format": "NumericMatrixCSV",
 #                         "encoding": "utf-8"
 #                       },
-#                       {
-#                         "path": folder+"/merged_genecn_all.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/merged_segments_all.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_segments_all.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_genecn_all.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_segments_all_latest.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_genecn_all_latest.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                     ],
-#                     dataset_description=dataset_description)
-#   print("done")
-
+                      {
+                        "path": folder+"/wes_segments_all.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wes_genecn_all.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/merged_genecn_all.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/merged_segments_all.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_segments_all.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_genecn_all.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_segments_all_latest.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_genecn_all_latest.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                    ],
+                    dataset_description=dataset_description)
+  print("done")
   return wespriosegments, wgspriosegments
 
 
@@ -466,7 +463,21 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
                         "ACH-002291"  # added for some reason?
                         # much more than that..
                         "ACH-002010",
-                        "ACH-000314"], taiga_legacy_loc='depmap-wes-cn-data--08f3',
+                        "ACH-000314"
+                        # bad fp
+                        # these were dropped in 21Q3 for fingerprinting
+                        'ACH-001078',
+                        'ACH-002184',
+                        'ACH-001146',
+                        'ACH-002022',
+                        'ACH-001173',
+                        'ACH-001790',
+                        'ACH-002260',
+                        'ACH-001741',
+                        'ACH-000010',
+                        'ACH-002475',
+                        'ACH-001543'
+                        ], taiga_legacy_loc='depmap-wes-cn-data--08f3',
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset="cn-wes-achilles-4dcd",
                        dataset_description=Achillesreadme,
@@ -483,18 +494,13 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   legacy_segments['Status']='U'
   legacy_segments['Chromosome'] = legacy_segments['Chromosome'].map(lambda x: x[3:] if x.startswith('chr') else x)
 
-
-  data_sources = pd.crosstab(index=legacy_segments['DepMap_ID'], columns=legacy_segments['Source'])
+  data_sources = pd.crosstab(
+      index=legacy_segments['DepMap_ID'], columns=legacy_segments['Source'])
   data_source_duplicates = data_sources[(data_sources > 0).sum(axis=1) > 1]
   duplicate_arxspans = data_source_duplicates.index.tolist()
-  if not data_source_duplicates.empty: # TODO: replace with assert if the data is updated on taiga
-    print('Duplicate data found. Dropping SNP data from the \
-      following legacy segment values:\n{}'.format(duplicate_arxspans))
-    # TODO: upload the following variable to Taiga
-    # then the following line can be safely removed
-    legacy_segments = legacy_segments[~((legacy_segments['DepMap_ID'].isin(duplicate_arxspans)) &
-                                      (legacy_segments['Source'] == 'Broad SNP'))]
 
+  # TODO: replace with assert if the data is updated on taiga
+  assert data_source_duplicates.empty
 
   onlyinleg = set(legacy_segments[SAMPLEID]) - \
       (set(wespriosegs[SAMPLEID]) | (set(wgspriosegs[SAMPLEID])))
@@ -535,9 +541,7 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
   gene_mapping['gene_name'] = [i['symbol'] +
                             ' (' + str(i['ensembl_id']).split('.')[0] +
                             ')' for _, i in gene_mapping.iterrows()]
-  # TODO: the gene_mapping reference file seems to mistakenly have used
-  # 'ensemble_id' instead of 'entrez_id'
-  gene_mapping.rename(columns={'ensembl_id': 'entrezgene_id'}, inplace=True)
+  gene_mapping = gene_mapping.rename(columns={'ensembl_id': 'entrezgene_id'})
 
   mergedsegments=mut.manageGapsInSegments(mergedsegments, cyto=cyto)
   mergedgenecn=mut.toGeneMatrix(

@@ -201,5 +201,4 @@ dmypy.json
 
 # tmp
 tmp.py
-
-# End of https://www.gitignore.io/api/linux,macos,python,jupyternotebook
+tmp.*
