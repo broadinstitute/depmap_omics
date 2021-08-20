@@ -105,13 +105,11 @@ PREV_VIRTUAL['ibm'] = 'ibm-21q2-9ed1'
 PREV_VIRTUAL['dmc'] = 'dmc-21q2-27e1'
 PREV_VIRTUAL['internal'] = 'internal-21q2-9d16'
 
-TAIGA_MUTATION = "mutations-latest-ed72"
-
-TAIGA_CN="cn-latest-d8d4"
-
-TAIGA_EXPRESSION="expression-d035"
-
-TAIGA_FUSION = "fusions-95c9"
+TAIGA_MUTATION = "mutations-latest-f263"
+TAIGA_CN = "cn-latest-8bea"
+TAIGA_EXPRESSION = "expression-869e"
+TAIGA_FUSION = "fusions-64c4"
+TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
 
 datasets = ['internal', 'ibm', 'dmc', 'public']
 
