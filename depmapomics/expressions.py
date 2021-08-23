@@ -16,8 +16,6 @@ from depmapomics import tracker as track
 
 from depmapomics.config import *
 from gsheets import Sheets
-from taigapy import TaigaClient
-tc = TaigaClient()
 
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
@@ -391,7 +389,7 @@ def postProcess(refworkspace, samplesetname,
   return files, enrichments, failed, samplesinset, renaming, lowqual
 
 
-def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
+def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
                        colstoclean=['fastq1', 'fastq2',
                                     'recalibrated_bam', 'recalibrated_bam_index'],
                        ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
@@ -428,6 +426,9 @@ def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, r
   Returns:
       [type]: [description]
   """
+  from taigapy import TaigaClient
+  tc = TaigaClient()
+  
   if prevcounts is "ccle":
     prevcounts = tc.get(name=TAIGA_ETERNAL,
            file='CCLE_RNAseq_reads')

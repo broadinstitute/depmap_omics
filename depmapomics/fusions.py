@@ -7,9 +7,6 @@ import seaborn as sns
 from depmapomics.config import *
 from genepy import terra
 
-from taigapy import TaigaClient
-tc = TaigaClient()
-
 
 def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
   """
@@ -171,7 +168,7 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   return fusions, fusions_filtered
 
 
-async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME,
+async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME,
                       fusionSamplecol=SAMPLEID, refsheet_url=REFSHEET_URL,  todrop=KNOWN_DROP,
                       taiga_dataset=TAIGA_FUSION, dataset_description=FUSIONreadme,
                       my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
@@ -192,6 +189,9 @@ async def CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETN
       mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
       prevdataset ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_fusions_unfiltered').
   """
+  from taigapy import TaigaClient
+  tc = TaigaClient()
+  
   if prevdataset is 'ccle':
     prevdataset = tc.get(name=TAIGA_ETERNAL,
            file='CCLE_fusions_unfiltered')

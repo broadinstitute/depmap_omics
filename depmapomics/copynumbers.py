@@ -8,8 +8,6 @@ from depmapomics.config import *
 from IPython.display import Image, display
 import dalmatian as dm
 import pandas as pd
-from taigapy import TaigaClient
-tc = TaigaClient()
 import os
 from genepy import mutations as mut
 from genepy.utils import helper as h
@@ -245,7 +243,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   return segments, genecn, failed
 
 
-def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
+def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                        samplesetname=SAMPLESETNAME, AllSamplesetName='all',
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
                        sheetcreds=SHEETCREDS, sheetname=SHEETNAME,
@@ -281,7 +279,9 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
       procqc ([type], optional): [description]. Defaults to PROCQC.
       source_rename ([type], optional): [description]. Defaults to SOURCE_RENAME.
   """
-  print('new')
+  from taigapy import TaigaClient
+  tc = TaigaClient()
+  
   if prevgenecn is 'ccle':
     prevgenecn = tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn')
 
@@ -453,7 +453,7 @@ def CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKSP
   return wespriosegments, wgspriosegments
 
 
-def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, bad=["ACH-001011",
+def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, bad=["ACH-001011",
                         "ACH-001108",
                         "ACH-001187",
                         "ACH-002291"  # added for some reason?
@@ -479,12 +479,22 @@ def ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, ba
                        dataset_description=Achillesreadme,
                        cytobandloc='data/hg38_cytoband.gz',
                        gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),
-                       prevsegments=tc.get(name=TAIGA_ETERNAL, file='CCLE_segment_cn'),
-                       prevgenecn=(
-                           2**tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn'))-1,
-                       gene_expected_count=tc.get(name=TAIGA_ETERNAL,
-                        file='CCLE_expression_proteincoding_genes_expected_count')):
+                       prevsegments="ccle",
+                       prevgenecn="ccle",
+                       gene_expected_count="ccle"):
   # load legacy_segments
+  from taigapy import TaigaClient
+  tc = TaigaClient()
+  
+  if prevsegments == "ccle":
+    prevsegments = tc.get(name=TAIGA_ETERNAL, file='CCLE_segment_cn')
+  if prevgenecn == "ccle":
+    prevgenecn = (
+        2**tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn'))-1
+  if gene_expected_count == "ccle":
+    gene_expected_count = tc.get(name=TAIGA_ETERNAL,
+                                 file='CCLE_expression_proteincoding_genes_expected_count')
+  
   legacy_segments=tc.get(
     name=taiga_legacy_loc, file=taiga_legacy_filename).drop(columns='Unnamed: 0')
   legacy_segments['Status']='U'
