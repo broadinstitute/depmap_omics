@@ -3,7 +3,6 @@
 import numpy as np
 from gsheets import Sheets
 from depmapomics import tracker as track
-from depmapomics import utils
 from depmapomics.qc import cn
 from depmapomics.config import *
 from IPython.display import Image, display
@@ -202,7 +201,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
       refworkspace, sampleset=sampleset, sortby=sortby, todrop=todrop, doCleanup=doCleanup)
   print('making gene level copy number')
 
-  mybiomart = utils.generateGeneNames(
+  mybiomart = h.generateGeneNames(
       ensemble_server=ensemblserver, useCache=useCache,
       attributes=['start_position', 'end_position', "chromosome_name"])
   mybiomart = mybiomart.rename(columns={'start_position': 'start',

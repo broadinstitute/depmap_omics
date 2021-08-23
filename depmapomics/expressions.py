@@ -12,7 +12,6 @@ from genepy import rna, terra
 
 from depmapomics import terra as myterra
 from depmapomics.qc import rna as myQC
-from depmapomics import utils
 from depmapomics import tracker as track
 
 from depmapomics.config import *
@@ -344,7 +343,7 @@ def postProcess(refworkspace, samplesetname,
 
   print("generating gene names")
 
-  mybiomart = utils.generateGeneNames(
+  mybiomart = h.generateGeneNames(
       ensemble_server=ensemblserver, useCache=useCache)
   # creating renaming index, keeping top name first
   gene_rename = {}
