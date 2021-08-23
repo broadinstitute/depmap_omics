@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>20Q4 post mortem</title>
+        <style>
+/* From extension zhuangtongfa.material-theme */
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body {
+  box-sizing: border-box;
+  min-width: 200px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body blockquote {
+  background-color: initial;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre {
+  color: initial;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body code {
+  color: inherit;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre code {
+  color: initial;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body code > div {
+  background: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table th, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table td {
+  border: 1px solid rgba(171, 178, 191, 0.5) !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body.showEditorSelection .code-active-line:before {
+  border-left: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body.showEditorSelection .code-line:hover:before {
+  border-left: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body.showEditorSelection .code-line .code-line:hover:before {
+  border-left: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body p, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body blockquote, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body dl, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+/* Generated from 'node_modules/github-markdown-css/github-markdown.css' */
+@font-face {
+  font-family: octicons-link;
+  src: url(data:font/woff;charset=utf-8;base64,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) format("woff");
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body {
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  line-height: 1.5;
+  color: #abb2bf;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 16px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  background: #282c34;
+  padding-top: 20px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-c {
+  color: #6a737d;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-c1, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-s .pl-v {
+  color: #005cc5;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-e, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-en {
+  color: #6f42c1;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-smi, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-s .pl-s1 {
+  color: #24292e;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-ent {
+  color: #22863a;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-k {
+  color: #d73a49;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-s, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-pds, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-s .pl-pse .pl-s1, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-sr, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-sr .pl-cce, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-sr .pl-sre, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-sr .pl-sra {
+  color: #032f62;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-v, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-smw {
+  color: #e36209;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-bu {
+  color: #b31d28;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-ii {
+  color: #fafbfc;
+  background-color: #b31d28;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-c2 {
+  color: #fafbfc;
+  background-color: #d73a49;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-c2::before {
+  content: "^M";
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-sr .pl-cce {
+  font-weight: bold;
+  color: #22863a;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-ml {
+  color: #735c0f;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mh, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mh .pl-en, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-ms {
+  font-weight: bold;
+  color: #005cc5;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mi {
+  font-style: italic;
+  color: #24292e;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mb {
+  font-weight: bold;
+  color: #24292e;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-md {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mi1 {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mc {
+  color: #e36209;
+  background-color: #ffebda;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mi2 {
+  color: #f6f8fa;
+  background-color: #005cc5;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-mdr {
+  font-weight: bold;
+  color: #6f42c1;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-ba {
+  color: #586069;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-sg {
+  color: #959da5;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-corl {
+  text-decoration: underline;
+  color: #032f62;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .octicon {
+  display: inline-block;
+  vertical-align: text-top;
+  fill: currentColor;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body a {
+  background-color: transparent;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body a:active, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body a:hover {
+  outline-width: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body strong {
+  font-weight: inherit;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body strong {
+  font-weight: bolder;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body img {
+  border-style: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body code, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body kbd, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body hr {
+  box-sizing: content-box;
+  height: 0;
+  overflow: visible;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body input {
+  font: inherit;
+  margin: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body input {
+  overflow: visible;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body [type=checkbox] {
+  box-sizing: border-box;
+  padding: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body * {
+  box-sizing: border-box;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body input {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body a {
+  color: #528bff;
+  text-decoration: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body a:hover {
+  text-decoration: underline;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body strong {
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body hr {
+  height: 0;
+  margin: 15px 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #dfe2e5;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body hr::before {
+  display: table;
+  content: "";
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body hr::after {
+  display: table;
+  clear: both;
+  content: "";
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body td, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body th {
+  padding: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h2, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h3, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h4, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h5, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h6 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1 {
+  font-size: 32px;
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h2 {
+  font-size: 24px;
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h3 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h4 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h5 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h6 {
+  font-size: 12px;
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body blockquote {
+  margin: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol {
+  padding-left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul ol {
+  list-style-type: lower-roman;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul ul ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul ol ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol ul ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol ol ol {
+  list-style-type: lower-alpha;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body dd {
+  margin-left: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .octicon {
+  vertical-align: text-bottom;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-0 {
+  padding-left: 0 !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-1 {
+  padding-left: 4px !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-2 {
+  padding-left: 8px !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-3 {
+  padding-left: 16px !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-4 {
+  padding-left: 24px !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-5 {
+  padding-left: 32px !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .pl-6 {
+  padding-left: 40px !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body::before {
+  display: table;
+  content: "";
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body::after {
+  display: table;
+  clear: both;
+  content: "";
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body > *:first-child {
+  margin-top: 0 !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body > *:last-child {
+  margin-bottom: 0 !important;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body a:not([href]) {
+  color: inherit;
+  text-decoration: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .anchor {
+  float: left;
+  padding-right: 4px;
+  margin-left: -20px;
+  line-height: 1;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .anchor:focus {
+  outline: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body p, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body blockquote, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body dl, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: #e1e4e8;
+  border: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body blockquote {
+  /* padding: 0 1em;
+  color: #6a737d;
+  border-left: 0.25em solid #dfe2e5; */
+  padding: 8.5px 17px;
+  margin: 1.5em 0;
+  font-size: inherit;
+  color: #7c879c;
+  border-color: #4b5362;
+  border-width: 4px;
+  border-left: 5px solid #4b5362;
+  background: transparent;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body blockquote > :first-child {
+  margin-top: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #444d56;
+  vertical-align: middle;
+  background-color: #fafbfc;
+  border: solid 1px #c6cbd1;
+  border-bottom-color: #959da5;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #959da5;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h2, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h3, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h4, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h5, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #f0f0f0;
+  border-bottom: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1 .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h2 .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h3 .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h4 .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h5 .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h6 .octicon-link {
+  color: #1b1f23;
+  vertical-align: middle;
+  visibility: hidden;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1:hover .anchor, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h2:hover .anchor, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h3:hover .anchor, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h4:hover .anchor, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h5:hover .anchor, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h6:hover .anchor {
+  text-decoration: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1:hover .anchor .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h2:hover .anchor .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h3:hover .anchor .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h4:hover .anchor .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h5:hover .anchor .octicon-link, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h6:hover .anchor .octicon-link {
+  visibility: visible;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h1 {
+  padding-bottom: 0.3em;
+  font-size: 2em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h2 {
+  padding-bottom: 0.3em;
+  font-size: 1.5em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h3 {
+  font-size: 1.25em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h4 {
+  font-size: 1em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h5 {
+  font-size: 0.875em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body h6 {
+  font-size: 0.85em;
+  color: #6a737d;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol {
+  padding-left: 2em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul ul, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ul ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol ol, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body ol ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body li {
+  word-wrap: break-all;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body li > p {
+  margin-top: 16px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body li + li {
+  margin-top: 0.25em;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body dl {
+  padding: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body dl dt {
+  padding: 0;
+  margin-top: 16px;
+  font-size: 1em;
+  font-style: italic;
+  font-weight: 600;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body dl dd {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table th {
+  font-weight: 700;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table th, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table td {
+  padding: 6px 13px;
+  /* border: 1px solid #dfe2e5; */
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table tr {
+  /* background-color: #fff; */
+  /* border-top: 1px solid #c6cbd1; */
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body table tr:nth-child(2n) {
+  /* background-color: #f6f8fa; */
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body img {
+  max-width: 100%;
+  box-sizing: content-box;
+  display: inline-block;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body img[align=right] {
+  padding-left: 20px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body img[align=left] {
+  padding-right: 20px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: #3a3f4b;
+  border-radius: 3px;
+  color: white;
+  margin: 0 1px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre {
+  word-wrap: normal;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre > code {
+  padding: 0;
+  margin: 0;
+  font-size: 100%;
+  word-break: normal;
+  white-space: pre;
+  background: transparent;
+  border: 0;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .highlight {
+  margin-bottom: 16px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .highlight pre {
+  margin-bottom: 0;
+  word-break: normal;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .highlight pre, .vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  /* background-color: #f6f8fa; */
+  border-radius: 3px;
+  background-color: #31363f;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body pre code {
+  display: inline;
+  max-width: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: transparent;
+  border: 0;
+  color: #abb2bf;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .full-commit .btn-outline:not(:disabled):hover {
+  color: #005cc5;
+  border-color: #005cc5;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font: 11px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  line-height: 10px;
+  color: #444d56;
+  vertical-align: middle;
+  background-color: #fafbfc;
+  border: solid 1px #d1d5da;
+  border-bottom-color: #c6cbd1;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #c6cbd1;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body :checked + .radio-label {
+  position: relative;
+  z-index: 1;
+  border-color: #0366d6;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .task-list-item {
+  list-style-type: none;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .task-list-item + .task-list-item {
+  margin-top: 3px;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body .task-list-item input {
+  margin: 0 0.2em 0.25em -1.6em;
+  vertical-align: middle;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"].vscode-body hr {
+  border-bottom-color: #eee;
+}
+
+/*
+
+Atom One Dark by Daniel Gamage
+Original One Dark Syntax theme from https://github.com/atom/one-dark-syntax
+
+base:    #282c34
+mono-1:  #abb2bf
+mono-2:  #818896
+mono-3:  #5c6370
+hue-1:   #56b6c2
+hue-2:   #61aeee
+hue-3:   #c678dd
+hue-4:   #98c379
+hue-5:   #e06c75
+hue-5-2: #be5046
+hue-6:   #d19a66
+hue-6-2: #e6c07b
+
+*/
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  color: #abb2bf;
+  background: #282c34;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-comment,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-doctag,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-keyword,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-formula {
+  color: #c678dd;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-section,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-name,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-selector-tag,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-deletion,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-subst {
+  color: #e06c75;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-literal {
+  color: #56b6c2;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-string,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-regexp,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-addition,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-attribute,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-meta-string {
+  color: #98c379;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-built_in,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-attr,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-variable,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-template-variable,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-type,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-selector-class,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-selector-attr,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-selector-pseudo,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-number {
+  color: #d19a66;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-symbol,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-bullet,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-link,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-meta,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-selector-id,
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-title {
+  color: #61aeee;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-emphasis {
+  font-style: italic;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-strong {
+  font-weight: bold;
+}
+.vscode-dark[data-vscode-theme-name="One Dark Pro"] .hljs-link {
+  text-decoration: underline;
+}
+
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <h1 id="20q4-post-mortem">20Q4 post mortem</h1>
+<h2 id="recap">Recap:</h2>
+<p>in 19Q3 I was given a set of very bancal code to try to run with a bunch of sisues to solve.
+I had only brief supervision by Neekesh related mostly to the biology and some ideas of why things were the way they were.
+I was explained extrermely briefly the process. I made many  mistakes for the first 2 releases. Mostly regarding how I understood the data should be delivered and in what format.
+I built a pipeline from this and tried to make it so that it could runw while solving blocking issues that it had.
+we had many people coming to us with issues regarding the data.
+out of all of this we laid out a plan with neekesh, in what to do to solve them and what to do next for ccle;
+This plan was set as series of tasks to be done in asana.
+I explained the plan to javad (maybe too early) and worked on it since 19Q4.
+A lot of the changes were not seen until 20Q2 as we postponned them until the last moment.
+I am working on the pipeline only during the release: 3-4 week process. I have only half my time on ccle so 6-8 weeks which is 2 months. I have a third of my time in doing things related to sciencea and research: 2-3 weeks / Quarters.
+When I was hired I was promised by neekesh that the pipeline would not be more than a week every 3 months.</p>
+<p>Now I end up doing 2/3 of my time at the Broad doing soft engineering and being extremelly stressed by deadlines etc.</p>
+<p>-&gt; not what I came to the US for.</p>
+<h2 id="issues">Issues:</h2>
+<ul>
+<li>We have had 2 issues during this release:
+<ul>
+<li>some samples were added from 2 Quarters ago.</li>
+<li>disrepency between the way we checked samples</li>
+<li>issues with managing the changelog changes (too many got added / removed...)</li>
+<li>some columns/files got added to the releaases and should not have been.</li>
+<li>modifications in logtransfrom/filenames</li>
+</ul>
+</li>
+</ul>
+<p>this has led to some distrust.</p>
+<ul>
+<li>At the end this release I have seen people taking notes for me.</li>
+<li>going over the details of everything I have to do;</li>
+<li>wanting to redo some of my analysis.</li>
+</ul>
+<p>I don't think that is useful to do and it overlooks the real issues.
+Hear me here: I am extremelly convinced that anyone else would face at least as much issues given the state of things.</p>
+<ul>
+<li>the first one is a missunderstanding from what happened before and highlights the many good changes that undertakes but might lead to confusion between what happened before and what happens now.</li>
+<li>the secondd ones highlight the issues in communication between our teams. Not helped with covid.</li>
+<li>the other ones also show the state of the pipeline. it is yet hard to make different version of the data</li>
+</ul>
+<h2 id="solutions">solutions</h2>
+<h3 id="create-a-review-process-for-updates-to-the-pipelines">create a review process for updates to the pipelines.</h3>
+<ul>
+<li>everything is always on the asana task. and changes are well in advance in the subproject.</li>
+<li>We should have a meeting a couple weeks before the start of the release to discuss some non postponable changes.</li>
+<li>There is a latest dataset on taiga. the idea was for all non required changes to go there and be used as the latest version of the pipeline (tried on by achilles and the portal team)</li>
+</ul>
+<h3 id="changes-in-the-way-we-code">changes in the way we code</h3>
+<ul>
+<li>create two version of the pipeline: dev/prod (soft eng). it is so that we can always manage the updates and keep the previous working version. (yes it should have been done sooner. but I started with a ffile on google drive)</li>
+<li>portal team and ccle team need to work on the same sample subsetting. we can't have two versions. For code you don't create two function that do the same things. you create one that works. Most of the isssuues we found were because oof pipelines doing things differently. We need to work on the same file/set of function to do this. Not have eacch our own code and not talking to each other nor understanding how it works.</li>
+</ul>
+<h3 id="have-direct-communications">Have direct communications.</h3>
+<ul>
+<li>Becky can't always be in between the portal team, the CCLE team, Achilles team. some information will get lost and it would be more efficient to have meetings between us.</li>
+<li>I need to be present with you javad when you present changes to the pipeline. you told me that at many occasions you could not explain the detail of things. that is normal. I need to be present to explain why things cannot be done differently and understand why the other group need things the way they are. the more intermediatee the more chancce for confusion.</li>
+</ul>
+<h2 id="current-ccle-issues">Current CCLE Issues:</h2>
+<ul>
+<li>binary matrices are bad</li>
+<li>starfusion out of date (even more now than before). not the same data for all of them</li>
+<li>Many ,way-too-different copy-number data.</li>
+<li>around a dozen duplicates to be removed</li>
+<li>around a dozen samples are likely misslabelled</li>
+<li>portal hotspot needs to be removed and showcased as stars.</li>
+<li>never know what to add in the log file. who is it for. is there an acuutal changelog?</li>
+<li>logFoldChange just some data. users get conofused</li>
+<li>no easy way to remove files from the terra pipelines. storage costs getting pretty high.</li>
+<li>duplicates:</li>
+</ul>
+<p>REH Reh
+{'ACH-000960', 'ACH-000473'}
+RERF-LC-AI RERFLCAI
+{'ACH-000261', 'ACH-000960'}
+Hs 852.T HS852T
+{'ACH-000274', 'ACH-001523'}
+RT112 RT-112
+{'ACH-000398', 'ACH-000473'}
+CH157MN CH-157MN
+{'ACH-000511', 'ACH-000025'}
+CORL47 COR-L47
+{'ACH-000695', 'ACH-000662'}
+CALU1 Calu-1
+{'ACH-000608', 'ACH-000511'}
+COR-L23 CORL23
+{'ACH-001339', 'ACH-000662'}</p>
+<h2 id="todo">TODO:</h2>
+<ul>
+<li>starfusion/star needs to be updated</li>
+<li>send email to bits to regain access to github</li>
+<li>create a wdl update script</li>
+<li>create 2 erase script for files generated by our pipelines (when a job fails &amp; unused files)</li>
+</ul>
+<h2 id="postponned-changes">postponned changes</h2>
+<ul>
+<li>renaming most files to better acknowledge the new files that we will have either this release or the next one:
+<ul>
+<li>all_merged_genes_cn: CCLE_gene_cn</li>
+<li>all_merged_segments: CCLE_segment_cn</li>
+<li>all_somatic_mutations_withlegacy: CCLE_mutations</li>
+<li>expression_transcripts_tpm: CCLE_RNAseq_transcripts</li>
+<li>expression_genes_tpm: CCLE_expression_full</li>
+<li>expression_genes_expected_count: CCLE_RNAseq_reads</li>
+<li>expression_proteincoding_genes_tpm: CCLE_expression</li>
+</ul>
+</li>
+<li>removed log2+1 transform for all datasets that had it, so that it is consitent everywhere and does not lead to missinterpretations</li>
+<li>unmerged datasets (CN WGS, Mutations non, legacy only)</li>
+<li>full CN reprocessing</li>
+<li>new binary matrix release</li>
+<li>binary matrix for
+<ul>
+<li>all_somatic_mutations_boolmatrix_fordepmap_damaging</li>
+<li>all_somatic_mutations_boolmatrix_fordepmap_othercons</li>
+<li>all_somatic_mutations_boolmatrix_fordepmap_othernoncons</li>
+<li>all_somatic_mutations_boolmatrix_fordepmap_hotspot</li>
+</ul>
+</li>
+<li>additional columns in mutations</li>
+<li>unfiltered mutations</li>
+<li>GSEA file</li>
+</ul>
+<h2 id="people-to-do">People to do:</h2>
+<ul>
+<li>Latest datastet. &lt;-- if everything goes well, what is in the latest dataset will be in the next dataset on the next release. it should be use to prepare your pipelines for the new datatype. Every changes made are explained in the readme (if no new files --&gt; no changes</li>
+<li>unfiltered mutations (the raw somatic mutations calls from our pipeline. no quality filtering.</li>
+<li>rerun achilles on new CN dataset</li>
+<li>rerun TDA on new mutation matrices and new CN</li>
+<li>try to release some more files in the portals (unfiltered mutations for ex?)</li>
+</ul>
+<h3 id="made-a-document-explainnig-the-pipelines">Made a document explainnig the pipelines.</h3>
+<h3 id="made-a-document-explainnig-time-spent-on-things">Made a document explainnig time spent on things.</h3>
+<h2 id="time-management">Time management</h2>
+<h3 id="data-loading">data loading:</h3>
+<p>1-4 days</p>
+<ul>
+<li>if any changes in the release process</li>
+<li>if more samples</li>
+</ul>
+<ul>
+<li>if more sm-id and check on cellosaurus in advance <em>(GP's decision, Ops Fix)</em></li>
+<li>if check for duplicates in advances <em>(GP's decision, Ops Fix)</em>
+Best: 20mns</li>
+</ul>
+<h3 id="terra-processing">Terra processing</h3>
+<p>3-7 days</p>
+<ul>
+<li>change in the bam files</li>
+<li>adding/updating pipelines</li>
+<li>change in who get the samples from</li>
+<li>unknown changes in Terra</li>
+<li>unknown changes in groups we use pipelines from</li>
+</ul>
+<ul>
+<li>productionalization (<em>everything set up in asana. 5-6 months of work minimum. requires a computationalist</em>)
+Best: 1 day</li>
+</ul>
+<h3 id="post-processing">Post processing</h3>
+<p>2-7 days:</p>
+<ul>
+<li>new data generated</li>
+<li>issues to fix</li>
+<li>quality of the samples</li>
+</ul>
+<ul>
+<li>finish auto QCs (CN/Mutations) <em>(are we all ok with automated QCs, 1-2 months of work, some thinking to do)</em></li>
+<li>do pre-releases (<em>not enough bandwidth</em>)
+Best: 1 day</li>
+</ul>
+<h3 id="taiga-upload">Taiga Upload</h3>
+<p>1-2 days</p>
+<ul>
+<li>changes in the release process</li>
+<li>changes in the subsetting process</li>
+<li>new datasets</li>
+</ul>
+<ul>
+<li>do the subset on the portal's side (<em>to decide</em>)</li>
+</ul>
+<p>Best:
+2 hours</p>
+<p>Most important factor: changing things.
+Most relevant todo: get productionalization, work on the input and output processes
+If everything is decided: possible to run the pipeline without much supervisions, with more control from OPs' side, all in ~2days</p>
+
+    </body>
+    </html>
