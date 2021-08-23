@@ -5,15 +5,13 @@ import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
 from depmapomics.config import *
-from taigapy import TaigaClient
-tc = TaigaClient()
 
 
-def getCCLETracker():
+def getTracker():
   return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
 
 
-def getDEPMAPPV(pv_index="arxspan_id",
+def _getDEPMAPPV(pv_index="arxspan_id",
                 pv_tokeep=[],
                 index="DepMap_ID"):
   depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
