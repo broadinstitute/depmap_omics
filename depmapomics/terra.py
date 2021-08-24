@@ -2,8 +2,6 @@
 from gsheets import Sheets
 import pandas as pd
 import dalmatian as dm
-from taigapy import TaigaClient
-tc = TaigaClient()
 from genepy import terra
 
 def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', 
