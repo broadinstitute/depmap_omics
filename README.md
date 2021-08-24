@@ -63,7 +63,8 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
 
 ## For Broad People
 
-> Mind that you need to know about the tools listed above 
+> Mind that you need to know about the tools listed above
+- Ask dbgap access to your supervisor
 
 ### Getting Terra Access
 
@@ -120,24 +121,37 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 ## For External Users:
 
-> Mind that you need to know about the tools listed above 
+> Mind that you need to know about the tools listed above
 
 ### Creating your Terra Workspaces:
 
-use the `data/xQx/.json` which lists the parameters used for each workflows of each off the 3 workspaces in our pipeline (the csv lists the workflows with their correct name):
-- import the workflows, with their parameters listed in here.
-- import the workspace parameters/data listed in the `GENERAL` field.
+1. Your first need a terra account with correct billing setup
+2. use the different *_pipeline folders, they contain everything to setup the workspace correctly
+  1. use the WDL scripts available in:
+    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline
+    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate
+    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline
+    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/RNA_aggregate
+  2. export them to your workspace
+  3. add he required workspace data listed in all_configs.json (under GENERAL.workspace.attributes)
+  4. setup the right inputs and outpus for your workflows using the inputs_[WORKFLOW_NAME].json and outputs_[WORKFLOW_NAME].json files
+3. load your samples so that their bam and bam index google storage filepath get listed in the right data column to WGS_pipeline and RNA pipeline.
+4. create a sample set with the set of samples you want to analyse.
 
-Once you have set up your workspace with the corresponding workflows, workspace data and workflow input/output parameters, you can import your data to be processed. __Tools available in `TerraFunction` in the `JKBio` package as well as the `dalmatian` package can be used to automate this process.__
+Once this is done, you can run your jupyter notebook server and open the `CCLE_\*` jupyter files corresponding to our RNA pipeline and WGS pipeline (older versions for WES (CN and mutations are available in a previous commit labelled 20Q4)).
 
-Once this is done, you can run your jupyter notebook server and open one of the 3 `CCLE_\*` jupyter files corresponding to our 3 pipelines.
+Remark:
+  1. you cannot run the `_...()` functions listed in the notebooks.
+  2. you will need to use the `postProcesssing()` functions for post processing instead of the CCLE ones.
+  3. you will need to change some of the variables in the prod config file.
+  4. you wont be able to run the function conditional on the CCLE boolean. You can however reimplement them to create your own pipeline.
 
-This notebook architecture is as follows:
+The notebook architectures are as follows:
 
 1. UpLoading and preprocessing
-2. Running Terra Pipelines
-3. DownLoading and postProcessing
-4. QC, grouping and uploading to the portal
+2. Running the Terra Pipelines
+3. DownLoading and postProcessing the samples
+4. QC, grouping and uploading to the DepMap portal
 
 ## Running the pipeline
 
