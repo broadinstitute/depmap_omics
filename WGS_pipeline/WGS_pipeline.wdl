@@ -9,7 +9,6 @@ import "../mutation_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_
 import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 
 
-
 workflow WGS_pipeline {
 
 	#BamToUnmappedRGBams

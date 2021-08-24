@@ -1,0 +1,5 @@
+gs://fc-effb3f55-962a-4b1f-b41d-63234d7e5735/seq/picard_aggregation/G32831/DAN-G/v1/DAN-G.bam
+gs://fc-effb3f55-962a-4b1f-b41d-63234d7e5735/seq/picard_aggregation/G32831/MDA-MB-134-VI/v1/MDA-MB-134
+gs://fc-effb3f55-962a-4b1f-b41d-63234d7e5735/seq/picard_aggregation/G32831/QGP-1/v1/QGP-1.bam
+gs://fc-effb3f55-962a-4b1f-b41d-63234d7e5735/seq/picard_aggregation/G16343/DMS_114/v1/DMS_114.bam
+gs://fc-effb3f55-962a-4b1f-b41d-63234d7e5735/seq/picard_aggregation/G32831/MDA-MB-175-VII/v2/MDA-MB-175
