@@ -1,19 +1,17 @@
 #tracker.py
 from genepy.utils import helper as h
-import ipdb
+import pdb
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
 from depmapomics.config import *
-from taigapy import TaigaClient
-tc = TaigaClient()
 
 
-def getCCLETracker():
+def getTracker():
   return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
 
 
-def getDEPMAPPV(pv_index="arxspan_id",
+def _getDEPMAPPV(pv_index="arxspan_id",
                 pv_tokeep=[],
                 index="DepMap_ID"):
   depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
@@ -128,7 +126,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   refsamples = refsamples.loc[names].copy()
   if lennames > len(refsamples):
     print(set(names) - set(refsamples.index))
-    ipdb.set_trace()
+    pdb.set_trace()
     raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
   for arxspan in set(refsamples[arxspan_id]):
     allv = refsamples[refsamples[arxspan_id] == arxspan]
