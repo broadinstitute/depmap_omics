@@ -14,8 +14,6 @@ from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from taigapy import TaigaClient
-tc = TaigaClient()
 from depmapomics import tracker
 from depmapomics.config import *
 from depmapomics import terra as myterra
@@ -541,7 +539,8 @@ def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE,
       [type]: [description]
   """
   di = {k: [] for k, _ in toupdate.items()}
-
+  from taigapy import TaigaClient
+  tc = TaigaClient()
   sheets = Sheets.from_files(my_id, mystorage_id)
 
   depmap_pv = sheets.get(depmap_pv).sheets[0].to_frame(header=2)

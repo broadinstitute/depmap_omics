@@ -145,7 +145,7 @@ taiga_dataset, taiga_filename):
 
   # finding issues with the dataset
   v = updated_lod_mat.loc[new_ids]
-  ref = tracker.getCCLETracker()
+  ref = tracker.getTracker()
   ref = ref.append(samples)
   should = {}
   print("\n\nsamples that should match but don't:")
