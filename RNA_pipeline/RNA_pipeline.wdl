@@ -1,8 +1,8 @@
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/samtofastq_v1-0_BETA_cfg.wdl" as samtofastq_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/star_v1-0_BETA_cfg.wdl" as star_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/rnaseqc2_v1-0_BETA_cfg.wdl" as rnaseqc2_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/rsem_v1-0_BETA_cfg.wdl" as rsem_v1 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/RNA_pipeline/hg38_STAR_fusion.wdl" as hg38_STAR_fusion 
+import "samtofastq_v1-0_BETA_cfg.wdl" as samtofastq_v1
+import "star_v1-0_BETA_cfg.wdl" as star_v1
+import "rnaseqc2_v1-0_BETA_cfg.wdl" as rnaseqc2_v1
+import "rsem_v1-0_BETA_cfg.wdl" as rsem_v1
+import "hg38_STAR_fusion.wdl" as hg38_STAR_fusion
 
 
 workflow RNA_pipeline {
@@ -10,7 +10,7 @@ workflow RNA_pipeline {
   #samtofastq_v1
   File input_bam_cram
   File reference_fasta
-  
+
   #rnaseqc2_v1
   File genes_gtf
   String sample_id
@@ -77,3 +77,4 @@ workflow RNA_pipeline {
     File fusion_predictions_abridged=StarFusion.fusion_predictions_abridged
   }
 }
+
