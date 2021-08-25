@@ -12,8 +12,6 @@ from depmapomics.config import *
 
 import dalmatian as dm
 import pandas as pd
-from taigapy import TaigaClient
-tc = TaigaClient()
 from gsheets import Sheets
 
 ALSO_DROP_FROM_LEGACY =  {'ACH-001146', 'ACH-002260', 'ACH-000010', 'ACH-001078'}
@@ -139,7 +137,7 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   return mutations
 
 
-async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
+async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WGSWORKSPACE,
                       samplesetname=SAMPLESETNAME, todrop=KNOWN_DROP,
                        AllSamplesetName='all', doCleanup=False,
                        my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
@@ -168,6 +166,8 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
       prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
       minfreqtocall (float, optional): [description]. Defaults to 0.05.
   """
+  from taigapy import TaigaClient
+  tc = TaigaClient()
   if prev == 'ccle':
     prev = tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')
   if doCleanup:
@@ -432,7 +432,7 @@ async def CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=WG
                     upload_async=False,
                     dataset_description=taiga_description)
 
-async def analyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', folder="temp/",
+async def _CCLEAnalyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', folder="temp/",
                       subsetcol=[SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id',
                                  'Chromosome', 'Start_position', 'End_position',
                                  'Variant_Classification', 'Variant_Type', 'Reference_Allele',
@@ -444,6 +444,8 @@ async def analyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', folder="
 
   print("retrieving unfiltered")
   ####### WES
+  from taigapy import TaigaClient
+  tc = TaigaClient()
   res = dm.WorkspaceManager(workspace).get_sample_sets()
   unfiltered = pd.read_csv(res.loc[allsampleset, 'unfiltered_CGA_MAF_aggregated'], sep='\t',
   encoding='L6',na_values=["__UNKNOWN__",'.'], engine='c', dtype=str)
