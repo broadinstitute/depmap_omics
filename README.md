@@ -2,7 +2,7 @@
 
 __have a look at [DepMap](https://www.depmap.org)__
 
-![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/depmap-logo.png)
+![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/depmap-logo.jpeg)
 
 What you need to process the Quarterly DepMap-Omics releases from Terra.
 
@@ -72,8 +72,9 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_hg38_RNAseq
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
+  - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WGS_CN
 The current owners of these workspaces should give you access.
-2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows): https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit?usp=sharing
+2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows): https://docs.google.com/document/d/1Hq7QEAOjT2mpdbjKn3sJxNKA_Q3q5x53hFQ6vWtAMK4/edit?usp=sharing
 3. Ask Sarah Young for access to required billing projects (e.g. broad-firecloud-ccle)
 4. Get access to the following Terra groups:
   - DEPMAP_CCLE_DATA
@@ -81,21 +82,26 @@ The current owners of these workspaces should give you access.
   - CCLE2-DATA
   - CCLE-PIPELINE
 5. If you need to get access to the depmap data:
-  - __Exome__ [IBM](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/Getz_IBM_CellLines_Exomes/data)
-  - __Exome__ [Broad](https://firecloud.terra.bio/#workspaces/broad-firecloud-ccle/CCLE_DepMap_WES)
-  - __Exome__ [Broad](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/CCLE_DepMap_WES)
-  - __rna__ [IBM](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/Getz_IBM_CellLines_RNASeqData/data)
-  - __rna__ [Broad](https://firecloud.terra.bio/#workspaces/broad-firecloud-ccle/CCLE_DepMap_RNAseq)
-  - __rna__ [Broad](https://firecloud.terra.bio/#workspaces/broad-genomics-delivery/CCLE_DepMap_RNAseq)
-6. Request access to the data bucket `gs://ccle_bams/`
+  - __Exome__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
+  - __Exome__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
+  - __RNA__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData)
+  - __RNA__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_RNAseq)
+  - __WGS__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_WGS)
+  - __WGS__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/DepMap_WGS)
+6. Request access to the data bucket `gs://cclebams/`
 7. You will need also access to the billing project `broad-firecloud-ccle`
 
 
-*more information on the firecloud workspaces and what they might contain is available on this [document](https://www.github.com/broadinstitute/ccle_processing/firecloud_documentation.html)
+*more information on Terra workspaces and what they might contain is available on this [document](http://htmlpreview.github.io/?https://github.com/broadinstitute/depmap_omics/blob/master/documentation/firecloud_documentation.html
 
 ### additional logins:
-- in order to run the imports [gsheets](https://pypi.org/project/gsheets/) and [taigapy](https://pypi.org/project/taigapy/), you will need to create a [taiga](https://cds.team/taiga) account and link your broad google account to access the cell line sheets.
+- In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites).
+- In order to run the imports [gsheets](https://pypi.org/project/gsheets/), you need to make sure your broad google account has access to the cell line info sheets. In addition, you will need to obtain the following google API credential files:
+  - Go to [console](https://console.developers.google.com/), acquire access if you don't have it already. Under credentials -> create credentials -> OAuth Client ID -> application type = Desktop app -> create. Download `client_secreat.json` and save as `~/.client_secret.json`. (Refer to quickstart [here](https://gsheets.readthedocs.io/en/stable/)).
+  - After calling `gsheets.from_files` for the first time using `~/.client_secret.json`, log in via google following the prompt in browser, `storage.json` will be created automatically. Save it as `~/.storage.json`.
+  - Follow instruction [here](https://cloud.google.com/docs/authentication/production?authuser=1#create_service_account), create service account if needed, and save key file as `../.credentials.json`.
 
+*Remember to share relevant gsheets with the service account (`client_email`) in the json file
 
 ### boot up
 
@@ -107,7 +113,7 @@ We are instantiating all the parameters needed for this pipeline to run
 
 We are looking for new samples in a range of workspaces.
 
-They are quite messy and might contains duplicates, contain broken file paths...
+They are quite messy and might contain duplicates and/or broken file paths...
 
 - We are thus looking at the bam files one by one and comparing them with our own bams. 
 - We remove broken files, duplicates and add new version of a cell line's bam if we find some.
@@ -279,7 +285,7 @@ We are currently using Illumina ICE intervals and Agilent intervals. you can fin
 
 ## CCLE Pipelines inner workings:
 
-![schema](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/architecture_diagram.png)
+![schema](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/architecture_diagram.jpeg)
 
 To run the CCLE pipeline we follow the installation process above and then boot up a GCP instance to run the notebooks from it.
 
@@ -356,12 +362,12 @@ There are several other tasks in this workspace. In brief:
 
 We are running a set of 6 functions/workflows To generate the expression/fusion dataset:
 
-We use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/v9/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, run the following tasks on all samples that you need, in this order:
+We use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, run the following tasks on all samples that you need, in this order:
 
    1. [**samtofastq_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/samtofastq_v1-0_BETA/6): Converts bam files to fastq.
    2. [**star_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/star_v1-0_BETA/7): uses STAR to align fastq files to [hg38 reference genome](https://console.cloud.google.com/storage/browser/fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/references/gtex?authuser=2).
-   3. [**rsem_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_v1-0_BETA/5): run RSEM to quantify transcript abundances.
-   4. [**rsem_aggregate_results_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA/3)
+   3. [**rsem_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_v1-0_BETA/6): run RSEM to quantify transcript abundances.
+   4. [**rsem_aggregate_results_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA/4)
 
 The outputs to be downloaded will be saved under the sample set that you ran. The outputs we use for the release are:
 
