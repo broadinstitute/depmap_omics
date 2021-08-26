@@ -2,7 +2,7 @@
 
 __have a look at [DepMap](https://www.depmap.org)__
 
-![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/depmap-logo.jpeg)
+![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/depmap-logo_white.png)
 
 What you need to process the Quarterly DepMap-Omics releases from Terra.
 
@@ -97,11 +97,11 @@ The current owners of these workspaces should give you access.
 ### additional logins:
 - In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites).
 - In order to run the imports [gsheets](https://pypi.org/project/gsheets/), you need to make sure your broad google account has access to the cell line info sheets. In addition, you will need to obtain the following google API credential files:
-  - Go to [console](https://console.developers.google.com/), acquire access if you don't have it already. Under credentials -> create credentials -> OAuth Client ID -> application type = Desktop app -> create. Download `client_secreat.json` and save as `~/.client_secret.json`. (Refer to quickstart [here](https://gsheets.readthedocs.io/en/stable/)).
+  - Go to [console](https://console.developers.google.com/), acquire access if you don't have it already. Under credentials -> create credentials -> OAuth Client ID -> application type = Desktop app -> create. Download `client_secreat.json` and save as `~/.client_secret.json` (Refer to quickstart [here](https://gsheets.readthedocs.io/en/stable/)).
   - After calling `gsheets.from_files` for the first time using `~/.client_secret.json`, log in via google following the prompt in browser, `storage.json` will be created automatically. Save it as `~/.storage.json`.
   - Follow instruction [here](https://cloud.google.com/docs/authentication/production?authuser=1#create_service_account), create service account if needed, and save key file as `../.credentials.json`.
 
-*Remember to share relevant gsheets with the service account (`client_email`) in the json file
+*Remember to share relevant gsheets with the service account (`client_email`) in `../.credentials.json`.
 
 ### boot up
 
@@ -285,7 +285,7 @@ We are currently using Illumina ICE intervals and Agilent intervals. you can fin
 
 ## CCLE Pipelines inner workings:
 
-![schema](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/architecture_diagram.jpeg)
+![schema](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/architecture_diagram_white.png)
 
 To run the CCLE pipeline we follow the installation process above and then boot up a GCP instance to run the notebooks from it.
 
