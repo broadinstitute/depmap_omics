@@ -308,9 +308,11 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
 
     # annotating source
     for v in set(wessegments[SAMPLEID]):
-      wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
+      if len(tracker[tracker.index == v].source.values) > 0:
+        wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
                   'Source'] = tracker[tracker.index == v].source.values[0]
-      wessegments.Source = wessegments.Source.replace(source_rename)
+
+    wessegments.Source = wessegments.Source.replace(source_rename)
     wessegments.Source += ' WES'
 
     print('renaming')
@@ -345,9 +347,10 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
 
   # annotating source
   for v in set(wgssegments[SAMPLEID]):
-    wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
+    if len(tracker[tracker.index == v].source.values) > 0:
+      wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
                         'Source'] = tracker[tracker.index == v].source.values[0]
-    wgssegments.Source = wgssegments.Source.replace(source_rename)
+  wgssegments.Source = wgssegments.Source.replace(source_rename)
   wgssegments.Source += ' WGS'
 
   print('renaming')
@@ -459,23 +462,9 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                         "ACH-002291"  # added for some reason?
                         # much more than that..
                         "ACH-002010",
-                        "ACH-000314"
-                        # bad fp
-                        # these were dropped in 21Q3 for fingerprinting
-                        'ACH-001078',
-                        'ACH-002184',
-                        'ACH-001146',
-                        'ACH-002022',
-                        'ACH-001173',
-                        'ACH-001790',
-                        'ACH-002260',
-                        'ACH-001741',
-                        'ACH-000010',
-                        'ACH-002475',
-                        'ACH-001543'
-                        ], taiga_legacy_loc='depmap-wes-cn-data--08f3',
+                        "ACH-000314"], taiga_legacy_loc=TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
-                       taiga_dataset="cn-wes-achilles-4dcd",
+                       taiga_dataset=TAIGA_CN_ACHILLES,
                        dataset_description=Achillesreadme,
                        cytobandloc='data/hg38_cytoband.gz',
                        gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),

@@ -290,3 +290,17 @@ CG: Chordoma WGS, CX: Chordoma WES, BS: Broad SNP)\n{}'''.format(mut_notnull_dif
 #     data1_ = data1.loc[row, col].T
 #     data2_ = data2.loc[row, col].T
 #     assert_frame_equal(data1_, data2_, rtol=rtol)
+
+PARAMS_sharedcellines_are_equal = [((x['file'], x['merge_cols']), x['merge_cols'])
+                                                      for x in FILE_ATTRIBUTES_PAIRED if 'merge_cols' in x]
+@pytest.mark.parametrize('dataframes_merged, merge_cols', PARAMS_sharedcellines_are_equal,
+                         indirect=['dataframes_merged'], ids=[x[0][0] for x in PARAMS_sharedcellines_are_equal])
+@pytest.mark.compare
+def test_sharedcellines_are_equal(dataframes_merged, merge_cols):
+    row_changes = dataframes_merged.groupby(['DepMap_ID', '_merge']).size().unstack()
+    shared_arxspans = set(dataframes_merged[dataframes_merged['_merge'] == 'both']['DepMap_ID'])
+    row_changes = row_changes.loc[shared_arxspans][['left_only', 'right_only']]
+    row_changes = row_changes[row_changes['left_only'] != row_changes['right_only']]
+    row_changes.rename(columns={'left_only': 'counts1', 'right_only': 'counts2'}, inplace=True)
+    assert row_changes.empty, '''For the following shared cell lines between the two releases,
+there are different count of mismatching rows when comparing the columns {}:\n{}'''.format(merge_cols, row_changes)
