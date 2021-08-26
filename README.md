@@ -2,7 +2,7 @@
 
 __have a look at [DepMap](https://www.depmap.org)__
 
-![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/depmap-logo_white.png)
+![](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/depmap-logo_white.png)
 
 What you need to process the Quarterly DepMap-Omics releases from Terra.
 
@@ -285,7 +285,7 @@ We are currently using Illumina ICE intervals and Agilent intervals. you can fin
 
 ## CCLE Pipelines inner workings:
 
-![schema](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/architecture_diagram_white.png)
+![schema](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/architecture_diagram_white.png)
 
 To run the CCLE pipeline we follow the installation process above and then boot up a GCP instance to run the notebooks from it.
 
