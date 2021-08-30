@@ -73,7 +73,7 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WGS_CN
 The current owners of these workspaces should give you access.
-2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows). See CCLE/new hiree section on Asana for details.
+2. For the mutation pipeline you will also need to request dbGaP access (required for TCGA workflows). See CCLE/new hiree section on Asana for details.
 3. Aquire access to required billing projects (e.g. broad-firecloud-ccle). See CCLE/new hiree section on Asana for details.
 4. Get access to the following Terra groups:
   - DEPMAP_CCLE_DATA
