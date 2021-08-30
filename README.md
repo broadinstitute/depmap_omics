@@ -64,7 +64,6 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
 ## For Broad People
 
 > Mind that you need to know about the tools listed above
-- Ask dbgap access to your supervisor
 
 ### Getting Terra Access
 
@@ -74,8 +73,8 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WGS_CN
 The current owners of these workspaces should give you access.
-2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows): https://docs.google.com/document/d/1Hq7QEAOjT2mpdbjKn3sJxNKA_Q3q5x53hFQ6vWtAMK4/edit?usp=sharing
-3. Ask Sarah Young for access to required billing projects (e.g. broad-firecloud-ccle)
+2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows). See CCLE/new hiree section on Asana for details.
+3. Aquire access to required billing projects (e.g. broad-firecloud-ccle). See CCLE/new hiree section on Asana for details.
 4. Get access to the following Terra groups:
   - DEPMAP_CCLE_DATA
   - DEPMAP-PIPELINES
@@ -92,7 +91,7 @@ The current owners of these workspaces should give you access.
 7. You will need also access to the billing project `broad-firecloud-ccle`
 
 
-*more information on Terra workspaces and what they might contain is available on this [document](http://htmlpreview.github.io/?https://github.com/broadinstitute/depmap_omics/blob/master/documentation/firecloud_documentation.html
+*more information on Terra workspaces and what they might contain is available on this [document](http://htmlpreview.github.io/?https://github.com/broadinstitute/depmap_omics/blob/master/documentation/firecloud_documentation.html)
 
 ### additional logins:
 - In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites).
@@ -101,7 +100,7 @@ The current owners of these workspaces should give you access.
   - After calling `gsheets.from_files` for the first time using `~/.client_secret.json`, log in via google following the prompt in browser, `storage.json` will be created automatically. Save it as `~/.storage.json`.
   - Follow instruction [here](https://cloud.google.com/docs/authentication/production?authuser=1#create_service_account), create service account if needed, and save key file as `../.credentials.json`.
 
-*Remember to share relevant gsheets with the service account (`client_email`) in `../.credentials.json`.
+*Remember to share relevant gsheets with the service account (`client_email` in `../.credentials.json`).
 
 ### boot up
 
