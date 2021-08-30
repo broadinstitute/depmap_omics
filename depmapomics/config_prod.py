@@ -101,6 +101,10 @@ TAIGA_EXPRESSION="expression-d035"
 
 TAIGA_FUSION = "fusions-95c9"
 
+TAIGA_CN_ACHILLES = "cn-wes-achilles-4dcd"
+
+TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
+
 datasets = ['internal', 'ibm', 'dmc', 'public']
 
 RUN_NOTEBOOKS = ['WGS_CCLE.ipynb', 'RNA_CCLE.ipynb']
