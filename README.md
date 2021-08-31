@@ -56,12 +56,16 @@ If you are not familiar with these notions, we will first recommend you get more
 
 ### Installatiion <a name="installation"></a>
 
-`git clone http://github.com/BroadInstitute/ccle_processing.git && cd ccle_processing`
+`git clone http://github.com/BroadInstitute/depmap_omics.git && cd depmap_omics`
+
+`pip install .`
+
 ### :warning: this repository needs other repos
 
-Some important data and code from the [JKBio Library](https://www.github.com/jkobject/JKBio).
+Some important data and code from the [genepy Library](https://github.com/broadinstitute/genepy).
 
-`pip install JKBio`
+Use the instructions in the genepy page to install the package.
+
 ### :warning: you would need the approriate R packages and python packages
 
 1. You will need to install jupyter notetbooks and google cloud sdk
