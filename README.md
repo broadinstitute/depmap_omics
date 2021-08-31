@@ -1,4 +1,4 @@
-# ccle_processing
+# depmap_omics
 
 __have a look at [DepMap](https://www.depmap.org)__
 
@@ -18,32 +18,9 @@ What you need to process the Quarterly DepMap-Omics releases from Terra.
   - [Running Terra Pipelines](#running-terra-pipelines)
   - [Downloading and Postprocessing](#downloading-postprocessing)
   - [QC, Groupding and Uploading](#qc-grouping-uploading)
-- [File Structure](#file-structure)
-- [Data](#data)
-- [Development](#development)
-  - [Setup](#setup)
-  - [Running Tests](#running-tests)
-  - [Publishing Taigapy](#publishing-taigapy)
-
-We are using a set of key tools to process the sequencing output:
-- __star__:
-  - [https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886)
-  - [https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
-- __rsem__: 
-  - [https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323)
-- __star fusion__: 
-  - [https://github.com/STAR-Fusion/STAR-Fusion/wiki](https://github.com/STAR-Fusion/STAR-Fusion/wiki)
-  - [http://biorxiv.org/content/early/2017/03/24/120295](http://biorxiv.org/content/early/2017/03/24/120295)
-- __mutect__: 
-  - [https://software.broadinstitute.org/cancer/cga/mutect](https://software.broadinstitute.org/cancer/cga/mutect)
-  - [https://youtu.be/rN-cLrb5aGs](https://youtu.be/rN-cLrb5aGs)
-  - [https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2](https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2)
-  - [https://www.nature.com/articles/nbt.2514](https://www.nature.com/articles/nbt.2514)
-- __gatk cnv__:
-  - [https://software.broadinstitute.org/gatk/documentation/article?id=11682](https://software.broadinstitute.org/gatk/documentation/article?id=11682)
-- __strelka__:
-  - [https://www.nature.com/articles/s41592-018-0051-x](https://www.nature.com/articles/s41592-018-0051-x)
-  - [https://github.com/Illumina/strelka](https://github.com/Illumina/strelka)
+- [Repository File Structure](#file-structure)
+- [Auxiliary Data for the Pipeline](#data)
+- [Pipeline Walkthrough](#walkthru)
 
 ## Getting Started <a name="quickstart"></a>
 
@@ -84,7 +61,7 @@ Use the instructions in the genepy page to install the package.
 
 ## For Internal Users <a name="internal-users"></a>
 
-> Mind that you need to know about the tools listed above
+> To learn about the tools we use in the pipeline, see [here](#walkthru) for a detailed walkthrough
 
 ### Getting Terra Access
 
@@ -147,7 +124,7 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 ## For External Users <a name="external-users"></a>
 
-> Mind that you need to know about the tools listed above
+> To learn about the tools we use in the pipeline, see [here](#walkthru) for a detailed walkthrough
 
 ### Creating your Terra Workspaces:
 
@@ -181,7 +158,7 @@ The notebook architectures are as follows:
 
 ## Running the pipeline <a name="running-pipeline"></a>
 
-### 1. UpLoading and preprocessing <a name="upload-preprocess"></a>
+### 1. Uploading and Preprocessing <a name="upload-preprocess"></a>
 
 The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
 
@@ -199,7 +176,7 @@ You can then run this part for the pipeline to run on your samples. It should ta
 - for the mutation pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table. (workflows works as well with or without matched normals.)
 - for the expression pipeline, we have an additional set of workflows to call mutations from RNAseq, this might not be relevant to your need.
 
-### 3. DownLoading and postProcessing (often called **2.2-4 on local** in the notebooks) <a name="downloading-postprocessing"></a>
+### 3. Downloading and Postprocessing (often called **2.2-4 on local** in the notebooks) <a name="downloading-postprocessing"></a>
 
 This step will do a set of tasks:
 - clean some of the workspace for large useless files.
@@ -244,7 +221,7 @@ So amongst these functions, some of them might be of a lesser interest to an ext
 - we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters
 
 
-### 4. QC, grouping and uploading to the portal <a name="qc-grouping-uploading"></a>
+### 4. QC, Grouping and Uploading to the Portal <a name="qc-grouping-uploading"></a>
 
 These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
 
@@ -253,7 +230,7 @@ We are also preparing the data to be released to different groups, removing the 
 We are then uploading the data to a server called taiga where it will be used in the depmap portal
 
 
-## File structure
+## Repository File Structure <a name="file-structure"></a>
 
 There is for now 3 computation pipeline for depmap omics:
 - Expression
@@ -285,7 +262,7 @@ __temp__ Contains the temp file that can get removed after processing (should be
 __documentation__ Contains some additional files for documenting the pipelines
 
 
-## Data
+## Auxiliary Data for the Pipeline <a name="data"></a>
 
 
 ### PONS
@@ -311,9 +288,29 @@ To run the CCLE pipeline we follow the installation process above and then boot 
 
 You can find more documentation about the range of workspaces that have been created: [here](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/firecloud_documentation.md)
 
-Note: Slide 7 of the [CCLE pipelines and datasets presentation](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_240) provides another good view of what the pipeline is doing.
+We are using a set of key tools to process the sequencing output:
+- __star__:
+  - [https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886)
+  - [https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
+- __rsem__: 
+  - [https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323)
+- __star fusion__: 
+  - [https://github.com/STAR-Fusion/STAR-Fusion/wiki](https://github.com/STAR-Fusion/STAR-Fusion/wiki)
+  - [http://biorxiv.org/content/early/2017/03/24/120295](http://biorxiv.org/content/early/2017/03/24/120295)
+- __mutect__: 
+  - [https://software.broadinstitute.org/cancer/cga/mutect](https://software.broadinstitute.org/cancer/cga/mutect)
+  - [https://youtu.be/rN-cLrb5aGs](https://youtu.be/rN-cLrb5aGs)
+  - [https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2](https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2)
+  - [https://www.nature.com/articles/nbt.2514](https://www.nature.com/articles/nbt.2514)
+- __gatk cnv__:
+  - [https://software.broadinstitute.org/gatk/documentation/article?id=11682](https://software.broadinstitute.org/gatk/documentation/article?id=11682)
+- __strelka__:
+  - [https://www.nature.com/articles/s41592-018-0051-x](https://www.nature.com/articles/s41592-018-0051-x)
+  - [https://github.com/Illumina/strelka](https://github.com/Illumina/strelka)
 
-![](https://github.com/broadinstitute/ccle_processing/blob/master/documentation/slide7.png)
+The following flowchart provides another good overview of what the pipeline is doing.
+
+![](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/updated-flowchart.png)
 
 _What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
 
@@ -432,11 +429,6 @@ The post processing happens in R using guillaume's and Allie's functions, in bri
 - filterForCCLE
 - interpolateGapsInSegmented
 - extendEndsOfSegments
-- reprioritizeData
-
-dataPrioritization is done as explained in fig. 5 of https://www.biorxiv.org/content/10.1101/720243v1.full.pdf
-
-![](documentation/prioritization.png)
 
 ##### creating gene copy number
 
