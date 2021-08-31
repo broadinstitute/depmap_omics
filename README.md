@@ -14,6 +14,12 @@ What you need to process the Quarterly DepMap-Omics releases from Terra.
   - [For Internal Users](#internal-users)
   - [For External Users](#external-users)
 - [Running the Pipeline](#running-pipeline)
+  - [Uploading and Preprocessing](#upload-preprocess)
+  - [Running Terra Pipelines](#running-terra-pipelines)
+  - [Downloading and Postprocessing](#downloading-postprocessing)
+  - [QC, Groupding and Uploading](#qc-grouping-uploading)
+- [File Structure](#file-structure)
+- [Data](#data)
 - [Development](#development)
   - [Setup](#setup)
   - [Running Tests](#running-tests)
@@ -175,7 +181,7 @@ The notebook architectures are as follows:
 
 ## Running the pipeline <a name="running-pipeline"></a>
 
-### 1. UpLoading and preprocessing 
+### 1. UpLoading and preprocessing <a name="upload-preprocess"></a>
 
 The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
 
@@ -183,7 +189,7 @@ The first phase really is about getting samples generated at the broad and locat
 - in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
 - feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs.
 
-### 2. Running Terra Pipelines 
+### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
 
 Before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
 You can then run this part for the pipeline to run on your samples. It should take around a day.
@@ -193,7 +199,7 @@ You can then run this part for the pipeline to run on your samples. It should ta
 - for the mutation pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table. (workflows works as well with or without matched normals.)
 - for the expression pipeline, we have an additional set of workflows to call mutations from RNAseq, this might not be relevant to your need.
 
-### 3. DownLoading and postProcessing (often called **2.2-4 on local** in the notebooks)
+### 3. DownLoading and postProcessing (often called **2.2-4 on local** in the notebooks) <a name="downloading-postprocessing"></a>
 
 This step will do a set of tasks:
 - clean some of the workspace for large useless files.
@@ -238,7 +244,7 @@ So amongst these functions, some of them might be of a lesser interest to an ext
 - we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters
 
 
-### 4. QC, grouping and uploading to the portal
+### 4. QC, grouping and uploading to the portal <a name="qc-grouping-uploading"></a>
 
 These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
 
