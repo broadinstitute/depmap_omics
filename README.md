@@ -13,7 +13,7 @@ What you need to process the Quarterly DepMap-Omics releases from Terra.
   - [Installation](#installation)
   - [For Internal Users](#internal-users)
   - [For External Users](#external-users)
-- [Support](#support)
+- [Running the Pipeline](#running-pipeline)
 - [Development](#development)
   - [Setup](#setup)
   - [Running Tests](#running-tests)
@@ -169,7 +169,7 @@ The notebook architectures are as follows:
 3. DownLoading and postProcessing the samples
 4. QC, grouping and uploading to the DepMap portal
 
-## Running the pipeline
+## Running the pipeline <a name="running-pipeline"></a>
 
 ### 1. UpLoading and preprocessing 
 
@@ -179,7 +179,7 @@ The first phase really is about getting samples generated at the broad and locat
 - in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
 - feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs.
 
-### 2. Running Terra Pipelines
+### 2. Running Terra Pipelines 
 
 Before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
 You can then run this part for the pipeline to run on your samples. It should take around a day.
