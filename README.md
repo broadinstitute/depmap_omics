@@ -39,7 +39,7 @@ We are using a set of key tools to process the sequencing output:
   - [https://www.nature.com/articles/s41592-018-0051-x](https://www.nature.com/articles/s41592-018-0051-x)
   - [https://github.com/Illumina/strelka](https://github.com/Illumina/strelka)
 
-## Getting Started
+## Getting Started <a name="quickstart"></a>
 
 If you are not familiar with these notions, we will first recommend you get more knowledge into each:
 
@@ -54,7 +54,7 @@ If you are not familiar with these notions, we will first recommend you get more
 - [Terra and gcp](https://docs.google.com/document/d/1zTtaN-Px64f8JvgydZNdBbzBpFWyZzEpshSNxQh43Oc/edit#heading=h.dz5wh0l4bu9g)
 
 
-### Installatiion 
+### Installatiion <a name="installation"></a>
 
 `git clone http://github.com/BroadInstitute/ccle_processing.git && cd ccle_processing`
 ### :warning: this repository needs other repos
@@ -72,7 +72,7 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
 
 3. For Python use the requirements.txt file `pip install -r requirements.txt` 
 
-## For Internal Users
+## For Internal Users <a name="internal-users"></a>
 
 > Mind that you need to know about the tools listed above
 
@@ -135,7 +135,7 @@ This involves comparing to the list in the Google sheet "Cell Line Profiling Sta
 _As the list cannot be parsed, we are not comparing it for now_
 
 
-## For External Users:
+## For External Users <a name="external-users"></a>
 
 > Mind that you need to know about the tools listed above
 
