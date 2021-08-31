@@ -91,7 +91,7 @@ The current owners of these workspaces should give you access.
 
 *more information on Terra workspaces and what they might contain is available on this [document](http://htmlpreview.github.io/?https://github.com/broadinstitute/depmap_omics/blob/master/documentation/firecloud_documentation.html)
 
-### additional logins:
+### Additional Logins:
 - In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites).
 - In order to run the imports [gsheets](https://pypi.org/project/gsheets/), you need to make sure your broad google account has access to the cell line info sheets. In addition, you will need to obtain the following google API credential files:
   - Go to [console](https://console.developers.google.com/), acquire access if you don't have it already. Under credentials -> create credentials -> OAuth Client ID -> application type = Desktop app -> create. Download `client_secreat.json` and save as `~/.client_secret.json` (Refer to quickstart [here](https://gsheets.readthedocs.io/en/stable/)).
@@ -100,7 +100,7 @@ The current owners of these workspaces should give you access.
 
 *Remember to share relevant gsheets with the service account (`client_email` in `../.credentials.json`).
 
-### boot up
+### Boot up
 
 - You first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
 
@@ -280,7 +280,7 @@ The data we are presenting comes from different WES targets/baits/intervals.
 We are currently using Illumina ICE intervals and Agilent intervals. you can find their related PON files and interval files as parameters in our workspace files in `data/xQx.json`
 
 
-## CCLE Pipelines inner workings:
+## Pipelines Walkthrough <a name="walkthru"></a>
 
 ![schema](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/architecture_diagram_white.png)
 
