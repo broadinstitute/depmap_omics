@@ -19,7 +19,7 @@ nsamples = length(samples)
 # Iterate across samples, read tsv, add the DepMap_ID column and keep the rest of them
 for(i in 1:nsamples){
   f <- samples[i] 
-  sample <- f %>% gsub('\\..*', '', .) %>% gsub('.*/', '', .) # Remove file paths info
+  sample <- f %>% gsub('.*/', '', .) %>% gsub('\\..*', '', .) # Remove file paths info
   
   segs <- read_tsv(f, comment = '@', col_names = TRUE, cols(
     CONTIG = col_character(),

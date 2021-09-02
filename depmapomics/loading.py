@@ -14,8 +14,6 @@ from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from taigapy import TaigaClient
-tc = TaigaClient()
 from depmapomics import tracker
 from depmapomics.config import *
 from depmapomics import terra as myterra
@@ -238,7 +236,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
         toremov.add(l)
     #elif len(refsamples[refsamples[extract['size']] == withsamesize[extract["size"]][0]]):
       #toremov.add(k)
-  print("removed because exist in duplicate in the workspace: ")
+  print("removed because exist in duplicte in the workspace: ")
   print(toremov)
   for i in toremov:
     wrongsampless = wrongsampless.drop(i)
@@ -246,30 +244,32 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
   # TODO: we should be able to remove this block
   for i, v in wrongsampless.iterrows():
     if not gcp.exists(v[extract['ref_bam']]):
-      print(v.ccle_name)
+      print(v.ccle_name, i)
       wrongsampless = wrongsampless.drop(i)
  
   a = len(sampless)
-  sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
+  #import pdb; pdb.set_trace()
   sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
   print('removed: '+str(a-len(sampless))+" samples from size alone (too similar to a replicate)")
   wrongsampless = wrongsampless[~wrongsampless[extract['legacy_size']].isin(set(refsamples[extract['legacy_size']]))]
-  wrongsampless = wrongsampless[~wrongsampless[extract['legacy_size']].isin(set(refsamples[extract['legacy_size']]))]
   wrongsampless = deleteClosest(
       wrongsampless, refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
-  wrongsampless = deleteClosest(
-      wrongsampless, refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
-  #removing duplicate PDOs
-  a = len(sampless)
-  wrongsampless = wrongsampless[~wrongsampless[extract['PDO_id']].isin(set(refsamples[extract['PDO_id']]))]
-  sampless = sampless[~sampless[extract['PDO_id']].isin(
-      set(refsamples[extract['PDO_id']]))]
-  print('removed: '+str(a-len(sampless)) +
-        " samples with duplicat PDO ids ")
+  ##removing duplicate PDOs
+  #a = len(sampless)
+  #wrongsampless = wrongsampless[~wrongsampless[extract['PDO_id']].isin(set(refsamples[extract['PDO_id']]))]
+  #sampless = sampless[~sampless[extract['PDO_id']].isin(
+  #    set(refsamples[extract['PDO_id']]))]
+  #print('removed: '+str(a-len(sampless)) +
+  #      " samples with duplicat PDO ids ")
   # removing anything too old
   a = len(sampless)
+  print('removed, because too old:')
+  print(wrongsampless[wrongsampless[extract['update_time']] < maxage][extract['ref_bam']])
+  print(sampless[sampless[extract['update_time']] < maxage][extract['ref_bam']])
   wrongsampless = wrongsampless[wrongsampless[extract['update_time']] > maxage]
   sampless = sampless[sampless[extract['update_time']]>maxage]
+  
+
   print('removed: '+str(a-len(sampless))+" samples that have not changed since last time (likely\
      duplicate having been removed)")
   return sampless, pairs, wrongsampless
@@ -302,11 +302,13 @@ def deleteClosest(sampless, refsamples, size='legacy_size', ref_size='legacy_siz
     samples: pd dataframe the filtered sample list
   """
   sizes = refsamples[ref_size].tolist()
+  print('deleting closest samples:')
   for k,v in sampless.iterrows():
     if type(v[size]) is int:
       val = refsamples.iloc[sizes.index(h.closest(sizes, v[size]))]
       if val[arxspid] == v[arxspid]:
         sampless = sampless.drop(v.name)
+        print(v.name)
   return sampless
 
 
@@ -541,7 +543,8 @@ def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE,
       [type]: [description]
   """
   di = {k: [] for k, _ in toupdate.items()}
-
+  from taigapy import TaigaClient
+  tc = TaigaClient()
   sheets = Sheets.from_files(my_id, mystorage_id)
 
   depmap_pv = sheets.get(depmap_pv).sheets[0].to_frame(header=2)
@@ -605,6 +608,7 @@ def loadWGS(samplesetname,
 
   @see load()
   """
+  #print(MAXAGE)
   return load(samplesetname=samplesetname, workspaces=workspaces,
               sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
@@ -697,7 +701,7 @@ def load(samplesetname, workspaces,
                                                         accept_unknowntypes=accept_unknowntypes, 
                                                         extract=extract_to_change, 
                                                         recomputehash=recomputehash)
-
+  #import pdb; pdb.set_trace()
   ### finding back arxspan
   noarxspan = tracker.retrieveFromCellLineName(noarxspan, ccle_refsamples, 
   datatype=stype, depmappvlink=depmappvlink, extract=extract_to_change)
@@ -709,6 +713,10 @@ def load(samplesetname, workspaces,
   extract_defaults.update(extract_to_change)
   samples = assessAllSamples(
       samples, ccle_refsamples, stype=stype, rename={}, extract=extract_defaults)
+
+  # converting date to str
+  samples[extract_defaults['release_date']] = [h.inttodate(i) for i in
+      samples[extract_defaults['release_date']]]
 
   if len(noarxspan) > 0:
     print("we found "+str(len(noarxspan))+" samples without arxspan_ids!!")
@@ -882,12 +890,10 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
       sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
       refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
   """
-
   # uploading to our bucket (now a new function)
   terra.changeToBucket(samples, bucket, name_col=name_col,
                        values=values, filetypes=filetypes, catchdup=True, dryrun=False)
 
-  samplesetname
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
 
