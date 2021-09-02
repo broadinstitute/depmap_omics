@@ -765,7 +765,7 @@ def load(samplesetname, workspaces,
 
 
 def updateWES(samples, samplesetname, bucket=WES_GCS_PATH,
-                name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'],
+                name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'], 
                 filetypes=['bam', 'bai'],
                 my_id=MY_ID,
                 mystorage_id=MYSTORAGE_ID,
