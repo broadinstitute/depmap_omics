@@ -203,3 +203,5 @@ dmypy.json
 tmp.py
 tmp.*
 testSheets.ipynb
+testSheets.ipynb
+debug.py
