@@ -462,7 +462,20 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                         "ACH-002291"  # added for some reason?
                         # much more than that..
                         "ACH-002010",
-                        "ACH-000314"], taiga_legacy_loc=TAIGA_LEGACY_CN,
+                        "ACH-000314",
+                        # bad fp
+                        # these were dropped in 21Q3 for fingerprinting
+                        'ACH-001078',
+                        'ACH-002184',
+                        'ACH-001146',
+                        'ACH-002022',
+                        'ACH-001173',
+                        'ACH-001790',
+                        'ACH-002260',
+                        'ACH-001741',
+                        'ACH-000010',
+                        'ACH-002475',
+                        'ACH-001543'], taiga_legacy_loc=TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset=TAIGA_CN_ACHILLES,
                        dataset_description=Achillesreadme,
