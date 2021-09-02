@@ -1,5 +1,4 @@
 import os.path
-import asyncio
 
 import dalmatian as dm
 import pandas as pd
@@ -13,14 +12,10 @@ from genepy import rna, terra
 
 from depmapomics import terra as myterra
 from depmapomics.qc import rna as myQC
-from depmapomics import utils
 from depmapomics import tracker as track
 
 from depmapomics.config import *
-from functools import lru_cache
 from gsheets import Sheets
-from taigapy import TaigaClient
-tc = TaigaClient()
 
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
@@ -68,6 +63,8 @@ def solveQC(tracker, failed, save=""):
   rename = {}
   # finding other replicates to solve failed ones
   for val in failed:
+    if val not in tracker:
+      continue
     a = tracker.loc[val].arxspan_id
     res = tracker[(tracker.datatype == 'rna')
                   & (tracker.arxspan_id == a)]
@@ -84,14 +81,16 @@ def solveQC(tracker, failed, save=""):
   return rename
 
 
-def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesinset, samplesetname,
+def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetname,
                   sheetname=SHEETNAME, sheetcreds=SHEETCREDS,
                   onlycol=STARBAMCOLTERRA, newgs=RNAGSPATH38,
                   dry_run=False, keeppath=False, qcname="star_logs", match=".Log.final.out"):
   """
   # TODO: to document
   """
-
+  refwm = dm.WorkspaceManager(refworkspace)
+  samplesinset = [i['entityName'] for i in refwm.get_entities(
+      'sample_set').loc[samplesetname].samples]
   starlogs = myterra.getQC(workspace=refworkspace, only=samplesinset,
                            qcname=qcname, match=match)
   for k, v in starlogs.items():
@@ -118,7 +117,7 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesinset
   tracker.loc[selected, samplesetname] = 1
   tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']] = 0
   tracker.loc[lowqual, 'low_quality'] = 1
-  tracker.loc[failed, 'blacklist'] = 1
+  tracker.loc[set(failed)&set(tracker.index), 'blacklist'] = 1
   dfToSheet(tracker, sheetname, secret=sheetcreds)
   print("updated the sheet, please reactivate protections")
 
@@ -162,8 +161,8 @@ def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
     if len(rename_transcript) == 0 and index == "transcript_id":
       for _, v in files[val].iterrows():
         if v['gene_id'].split('.')[0] in gene_rename:
-          rename_transcript[v['transcript_id']] = gene_rename[
-              v['gene_id'].split('.')[0]].split(' (')[0] + ' (' + v.transcript_id + ')'
+          rename_transcript[v['transcript_id'].split('.')[0]] = gene_rename[
+              v['gene_id'].split('.')[0]].split(' (')[0] + ' (' + v.transcript_id.split('.')[0] + ')'
         else:
           missing.append(v.gene_id.split('.')[0])
       print('missing: '+str(len(missing))+' genes')
@@ -175,7 +174,6 @@ def subsetGenes(files, gene_rename, filenames=RSEM_TRANSCRIPTS,
       print(dup)
       raise ValueError('duplicate '+index)
     file.index = r
-    
     file = file.rename(index=rename_transcript if len(
         rename_transcript) != 0 else gene_rename).T
     files[val] = file
@@ -210,27 +208,24 @@ def extractProtCod(files, mybiomart, protcod_rename,
         print(dup)
         raise ValueError('duplicate genes')
     files[name].index = r
-    files[name][(files[name].sum(1) != 0) & (files[name].var(1) != 0)]
-
-    files[name][files[name].index.isin(set(mybiomart.ensembl_gene_id))]
-    files[name] = files[name].rename(columns=protcod_rename)
+    files[name] = files[name][files[name].index.isin(set(mybiomart.ensembl_gene_id))].rename(index=protcod_rename)
     # removing genes that did not match.. pretty unfortunate
     if dropNonMatching:
-      files[name] = files[name][[i for i in files[name].columns if ' (' in i]]
+      files[name] = files[name].loc[[i for i in files[name].index if ' (' in i]]
     # check: do we have any duplicates?
     # if we do, managing duplicates
-    if len(set(h.dups(files[name].columns.tolist()))) > 0:
+    if len(set(h.dups(files[name].index.tolist()))) > 0:
       print("we have duplicate gene names!!")
-      for dup in h.dups(files[name].columns):
-        a = files[name][dup].sum()
-        files[name].drop(columns=dup)
-        files[name][dup] = a
-    
+      for dup in h.dups(files[name].index):
+        a = files[name].loc[dup].sum()
+        files[name].drop(index=dup)
+        files[name].loc[dup] = a
+
   return files
 
 
-async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
-                 geneset_file=SSGSEAFILEPATH):
+def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
+                 geneset_file=SSGSEAFILEPATH, recompute=True):
   """the way we run ssGSEA on the CCLE dataset
 
   Args:
@@ -260,8 +255,8 @@ async def ssGSEA(tpm_genes, pathtogenepy=PATHTOGENEPY,
   #### merging splicing variants into the same gene
   #counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
-  enrichments = asyncio.run(rna.gsva(tpm_genes.T, pathtogenepy=pathtogenepy,
-                                geneset_file=geneset_file, method='ssgsea')).T
+  enrichments = (rna.gsva(tpm_genes.T, pathtogenepy=pathtogenepy,
+                                geneset_file=geneset_file, method='ssgsea', recompute=recompute)).T
   enrichments.index = [i.replace('.', '-') for i in enrichments.index]
   return enrichments
 
@@ -287,11 +282,12 @@ def postProcess(refworkspace, samplesetname,
                 geneLevelCols=RSEMFILENAME_GENE,
                 trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
                 ssGSEAcol="genes_tpm", renamingFunc=None, useCache=False,
-                dropNonMatching=False
+                dropNonMatching=False, recompute_ssgsea=True,
+                compute_enrichment=True,
                 ):
   """postprocess a set of aggregated Expression table from RSEM in the CCLE way
-  
-  (usually using the aggregate_RSEM terra worklow) 
+
+  (usually using the aggregate_RSEM terra worklow)
 
   Args:
       refworkspace ([type]): [description]
@@ -308,7 +304,9 @@ def postProcess(refworkspace, samplesetname,
       ssGSEAcol (str, optional): [description]. Defaults to "genes_tpm".
       renamingFunc ([type], optional): [description]. Defaults to None.
       useCache (bool, optional): [description]. Defaults to False.
-
+      compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
+      dropNonMatching (bool, optional): . Defaults to False.
+      recompute_ssgsea (bool, optional): [description]. Defaults to True.
   Returns:
       [type]: [description]
   """
@@ -316,7 +314,7 @@ def postProcess(refworkspace, samplesetname,
     samplesetToLoad = samplesetname
   refwm = dm.WorkspaceManager(refworkspace)
   if save_output:
-    terra.saveConfigs(refworkspace, save_output+'terra/')
+    terra.saveWorkspace(refworkspace, save_output+'terra/')
   print("load QC and generate QC report")
   samplesinset = [i['entityName'] for i in refwm.get_entities(
       'sample_set').loc[samplesetname].samples]
@@ -342,20 +340,20 @@ def postProcess(refworkspace, samplesetname,
         print(val+' not in the workspace\'s data')
 
   print("generating gene names")
-  
-  mybiomart = utils.generateGeneNames(
+
+  mybiomart = h.generateGeneNames(
       ensemble_server=ensemblserver, useCache=useCache)
-  # creating renaming index, keeping top name first 
+  # creating renaming index, keeping top name first
   gene_rename = {}
   for _, i in mybiomart.iterrows():
-    if i not in gene_rename:
+    if i.ensembl_gene_id not in gene_rename:
       gene_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+i.ensembl_gene_id+')'})
   protcod_rename = {}
   for _, i in mybiomart[(~mybiomart.entrezgene_id.isna()) &
                             (mybiomart.gene_biotype == 'protein_coding')].iterrows():
-    if i not in protcod_rename:
+    if i.ensembl_gene_id not in protcod_rename:
       protcod_rename.update({i.ensembl_gene_id: i.hgnc_symbol+' ('+str(int(i.entrezgene_id))+')'})
-  
+
   print("loading files")
   files, renaming = loadFromRSEMaggregate(refworkspace, todrop=failed, filenames=trancriptLevelCols+geneLevelCols,
                                           sampleset=samplesetToLoad, renamingFunc=renamingFunc)
@@ -366,27 +364,32 @@ def postProcess(refworkspace, samplesetname,
   print("renaming files")
   # gene level
   if len(geneLevelCols) > 0:
+    #import pdb; pdb.set_trace()
     files = extractProtCod(files, mybiomart[mybiomart.gene_biotype == 'protein_coding'],
                            protcod_rename, dropNonMatching=dropNonMatching,
                            filenames=geneLevelCols)
+    # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
     files = subsetGenes(files, gene_rename, filenames=geneLevelCols,
                         index="gene_id", drop="transcript_id")
+    # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
   if len(trancriptLevelCols) > 0:
+    import pickle
+    pickle.dump([files, gene_rename, trancriptLevelCols], open('transcript.pkl', 'wb'))
     files = subsetGenes(
         files, gene_rename, filenames=trancriptLevelCols, drop="gene_id", index="transcript_id")
 
-  print("doing ssGSEA")
-  enrichments = asyncio.run(ssGSEA(files[ssGSEAcol]))
-  print("saving files")
-  enrichments.to_csv(save_output+'gene_sets_all.csv')
+  if compute_enrichment:
+    print("doing ssGSEA")
+    enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
+    print("saving files")
+    enrichments.to_csv(save_output+'gene_sets_all.csv')
   saveFiles(files, save_output)
   print("done")
 
   return files, enrichments, failed, samplesinset, renaming, lowqual
 
 
-@lru_cache(maxsize=None)
-def CCLEPostProcessing(refworkspace=rnaworkspace, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
+def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
                        colstoclean=['fastq1', 'fastq2',
                                     'recalibrated_bam', 'recalibrated_bam_index'],
                        ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
@@ -395,8 +398,7 @@ def CCLEPostProcessing(refworkspace=rnaworkspace, samplesetname=SAMPLESETNAME, r
                                   "genes_tpm": "CCLE_expression_full",
                                   "proteincoding_genes_tpm": "CCLE_expression"},
                        sheetname=SHEETNAME, sheetcreds=SHEETCREDS, todrop=KNOWN_DROP,
-                       prevcounts=tc.get(name=TAIGA_ETERNAL,
-                                         file='CCLE_RNAseq_reads'),
+                       prevcounts='ccle',
                        taiga_dataset=TAIGA_EXPRESSION, minsimi=0.95, dropNonMatching=True,
                        dataset_description=RNAseqreadme, **kwargs):
   """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -424,6 +426,12 @@ def CCLEPostProcessing(refworkspace=rnaworkspace, samplesetname=SAMPLESETNAME, r
   Returns:
       [type]: [description]
   """
+  from taigapy import TaigaClient
+  tc = TaigaClient()
+  
+  if prevcounts is "ccle":
+    prevcounts = tc.get(name=TAIGA_ETERNAL,
+           file='CCLE_RNAseq_reads')
 
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
@@ -443,13 +451,14 @@ def CCLEPostProcessing(refworkspace=rnaworkspace, samplesetname=SAMPLESETNAME, r
     return renaming
 
   folder = os.path.join("temp", samplesetname, "")
-  files, _, failed, samplesinset, renaming, lowqual = postProcess(refworkspace, samplesetname,
+  h.createFoldersFor(folder)
+  files, _, failed, _, renaming, lowqual = await postProcess(refworkspace, samplesetname,
                                                                   save_output=folder, doCleanup=doCleanup, priority=priority,
                                                                   colstoclean=colstoclean, ensemblserver=ensemblserver,
                                                                   todrop=todrop, samplesetToLoad=samplesetToLoad,
                                                                   geneLevelCols=RSEMFILENAME_GENE,
                                                                   trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
-                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn, 
+                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn,
                                                                   dropNonMatching=dropNonMatching, **kwargs)
 
   print("doing validation")
@@ -494,7 +503,7 @@ def CCLEPostProcessing(refworkspace=rnaworkspace, samplesetname=SAMPLESETNAME, r
   print("updating the tracker")
   updateTracker(refworkspace, set(renaming.keys()) - set(['transcript_id(s)']), failed,
                 lowqual[lowqual.sum(1) > 3].index.tolist(),
-                ccle_refsamples, samplesinset, samplesetname,
+                ccle_refsamples, samplesetname,
                 sheetname=sheetname, sheetcreds=sheetcreds)
 
   print("uploading to taiga")
@@ -502,55 +511,55 @@ def CCLEPostProcessing(refworkspace=rnaworkspace, samplesetname=SAMPLESETNAME, r
                     dataset_permaname=taiga_dataset,
                     upload_files=[
                         {
-                            "path": "temp/"+samplesetname+"/expression_proteincoding_tpm_logp1.csv",
+                            "path": folder+"proteincoding_genes_tpm_logp1.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_transcripts_tpm_logp1.csv",
+                            "path": folder+"transcripts_tpm_logp1.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_genes_tpm_logp1.csv",
+                            "path": folder+"genes_tpm_logp1.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_genes_tpm.csv",
+                            "path": folder+"genes_tpm.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_transcripts_tpm.csv",
+                            "path": folder+"transcripts_tpm.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_proteincoding_tpm.csv",
+                            "path": folder+"proteincoding_genes_tpm.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_transcripts_expectedcount.csv",
+                            "path": folder+"transcripts_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_proteincoding_expectedcount.csv",
+                            "path": folder+"proteincoding_genes_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
                         },
                         {
-                            "path": "temp/"+samplesetname+"/expression_genes_expectedcount.csv",
+                            "path": folder+"genes_expected_count.csv",
                             "format": "NumericMatrixCSV",
                             "encoding": "utf-8"
-                        },
-                        {
-                            "path": 'temp/'+samplesetname+'/gene_sets_all.csv',
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
+                        }
+                        # {
+                        #     "path": folder+'gene_sets_all.csv',
+                        #     "format": "NumericMatrixCSV",
+                        #     "encoding": "utf-8"
+                        # },
                     ],
                     upload_async=False,
                     dataset_description=dataset_description)
