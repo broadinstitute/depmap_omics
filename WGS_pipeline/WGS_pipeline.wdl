@@ -1,12 +1,12 @@
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/cnn-variant-filter.wdl" as cnn_variant_filter 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGS_pipeline/Manta_SomaticSV.wdl" as Manta_SomaticSV 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/WGSmut_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/mutation_pipeline/common_variant_filter.wdl" as common_variant_filter 
-import "https://raw.githubusercontent.com/broadinstitute/ccle_processing/master/mutation_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_pipeline 
+import "BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams
+import "PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4
+import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
+import "cnn-variant-filter.wdl" as cnn_variant_filter
+import "Manta_SomaticSV.wdl" as Manta_SomaticSV
+import "../mutation_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0
+import "../mutation_pipeline/common_variant_filter.wdl" as common_variant_filter
+import "../mutation_pipeline/filterMAF_on_CGA_pipeline.wdl" as filterMAF_on_CGA_pipeline
+import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 
 
 workflow WGS_pipeline {
@@ -18,7 +18,7 @@ workflow WGS_pipeline {
 
 	File input_bam
 	File input_bam_index
-	
+
 	String picard_path
 	String picard_docker
 
@@ -68,7 +68,7 @@ workflow WGS_pipeline {
 			ref_fasta_index=ref_fasta_index,
 			input_bam=input_bam,
 			picard_path=picard_path,
-			preemptible_tries=preemptible_tries 
+			preemptible_tries=preemptible_tries
 	}
 
 	call ArrayOfFilesToTxt.CreateTxt as CreateTxt {
@@ -260,13 +260,13 @@ workflow WGS_pipeline {
 		# Gathered MuTect1 and MuTect2 calls stats
 		File MUTECT1_CS_SNV = CGA_Production_Analysis_Workflow.MUTECT1_CS_SNV
 		File MUTECT2_VCF_ALL = CGA_Production_Analysis_Workflow.MUTECT2_VCF_ALL
-		File MUTECT2_VCF_INDELS = CGA_Production_Analysis_Workflow.MUTECT2_VCF_INDELS        
+		File MUTECT2_VCF_INDELS = CGA_Production_Analysis_Workflow.MUTECT2_VCF_INDELS
 		# Variant Effector Predictor Task
 		File MUTECT1_VEP_annotated_vcf = CGA_Production_Analysis_Workflow.MUTECT1_VEP_annotated_vcf
 		File MUTECT2_VEP_annotated_vcf = CGA_Production_Analysis_Workflow.MUTECT2_VEP_annotated_vcf
 		File STRELKA_VEP_annotated_vcf = CGA_Production_Analysis_Workflow.STRELKA_VEP_annotated_vcf
 		# Oncotator Output
-		File mutect1_snv_mutect2_indel_strelka_indel_annotated_maf = CGA_Production_Analysis_Workflow.mutect1_snv_mutect2_indel_strelka_indel_annotated_maf       
+		File mutect1_snv_mutect2_indel_strelka_indel_annotated_maf = CGA_Production_Analysis_Workflow.mutect1_snv_mutect2_indel_strelka_indel_annotated_maf
 		####### Filtering Tasks Outputs #######
 		# Orientation Bias Filter - OxoG
 		Float oxoG_OBF_q_val = CGA_Production_Analysis_Workflow.oxoG_OBF_q_val
@@ -302,7 +302,7 @@ workflow WGS_pipeline {
 		####### Copy Number - GATK CNV & Allelic CapSeg #######
 		File gatk_cnv_tn_coverage = CGA_Production_Analysis_Workflow.gatk_cnv_tn_coverage
 		File gatk_cnv_pre_tn_coverage = CGA_Production_Analysis_Workflow.gatk_cnv_pre_tn_coverage
-		File gatk_het_ad_tumor = CGA_Production_Analysis_Workflow.gatk_het_ad_tumor 
+		File gatk_het_ad_tumor = CGA_Production_Analysis_Workflow.gatk_het_ad_tumor
 		File alleliccapseg_plot = CGA_Production_Analysis_Workflow.alleliccapseg_plot
 		File alleliccapseg_tsv = CGA_Production_Analysis_Workflow.alleliccapseg_tsv
 		Float alleliccapseg_skew = CGA_Production_Analysis_Workflow.alleliccapseg_skew
