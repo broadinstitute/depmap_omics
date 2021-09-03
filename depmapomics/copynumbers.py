@@ -36,8 +36,25 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
                             plotColname="modeled_segments_plot_tumor", tempFolder="temp/",
                             toremove=["readgroup_ubams", ],
                             sampleset="all", colRenaming=COLRENAMING):
-  """
-   """
+  """fetching the data from the Terra and loading it into a dataframe
+
+  Args:
+      refworkspace (str): workspace path
+      sortby (list, optional): columns to sort df. Defaults to [SAMPLEID, 'Chromosome', "Start", "End"].
+      save_output (str, optional): location to save output. Defaults to ''.
+      doCleanup (bool, optional): if do cleanup of Terra workspace unused output and logs. Defaults to True.
+      todrop (list, optional): [description]. Defaults to [].
+      showPlots (bool, optional): [description]. Defaults to False.
+      colname (str, optional): [description]. Defaults to "combined_seg_file".
+      plotColname (str, optional): [description]. Defaults to "modeled_segments_plot_tumor".
+      tempFolder (str, optional): [description]. Defaults to "temp/".
+      toremove (list, optional): [description]. Defaults to ["readgroup_ubams", ].
+      sampleset (str, optional): [description]. Defaults to "all".
+      colRenaming ([type], optional): [description]. Defaults to COLRENAMING.
+
+  Returns:
+      [type]: [description]
+  """  """"""
   wm = dm.WorkspaceManager(refworkspace)
   if save_output:
     terra.saveConfigs(refworkspace, os.path.join(save_output, 'terra/'))
@@ -53,9 +70,11 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   segments = pd.read_csv(wm.get_entities(
         'sample_set').loc[sampleset, colname], sep='\t').rename(columns=colRenaming)
 
+  # removing the duplicates
   segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
   if "chr" in segments['Chromosome'][0]:
      segments['Chromosome'] = [i[3:] for i in segments['Chromosome']]
+  # tranforming the df
   segments.Segment_Mean = 2**segments.Segment_Mean
   segments.Start = segments.Start.astype(int)
   segments.End = segments.End.astype(int)
@@ -83,7 +102,22 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
                   sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
                   ):
+  """updates the sample tracker with the new samples and the QC metrics
 
+  Args:
+      tracker (df): [description]
+      selected (list[str]): which samples were selected in the release of the analysis
+      samplesetname (str): the name of the sample set or of the current analysis
+      samplesinset (list[str]):
+      lowqual ([type]): [description]
+      newgs (str, optional): [description]. Defaults to ''.
+      sheetcreds ([type], optional): [description]. Defaults to SHEETCREDS.
+      sheetname ([type], optional): [description]. Defaults to SHEETNAME.
+      procqc (list, optional): [description]. Defaults to [].
+      bamqc (list, optional): [description]. Defaults to [].
+      refworkspace ([type], optional): [description]. Defaults to None.
+      onlycol (list, optional): [description]. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+  """
   # updating locations of bam files and extracting infos
   if newgs and refworkspace is not None:
 
@@ -174,12 +208,13 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
         source_rename={}, useCache=False):
   """post process an aggregated CN segment file, the CCLE way
 
-  (usually a CN segment file from the Aggregate_CN terra workflow)
+  take a CN segment file from the Aggregate_WGS master terra workflow and post process it
+  in the CCLE way.
 
   Args:
-      refworkspace ([type]): [description]
-      sampleset (str, optional): [description]. Defaults to 'all'.
-      save_output (str, optional): [description]. Defaults to "".
+      refworkspace (str): terra workspace where the ref data is stored
+      sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+      save_output (str, optional): whether to save our data. Defaults to "".
       doCleanup (bool, optional): [description]. Defaults to True.
       sortby (list, optional): [description]. Defaults to [ SAMPLEID, 'Chromosome', "Start", "End"].
       todrop (list, optional): [description]. Defaults to [].
@@ -191,7 +226,9 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
       useCache (bool, optional): [description]. Defaults to False.
 
   Returns:
-      [type]: [description]
+      pd.dataframe: a dataframe with the post processed segment file as a bed file concatenated over all samples.
+      pd.dataframe: a dataframe with the post processed gene CN file as a bed file of samples x genes.
+      list: list of samples that failed to be processed.
   """
   h.createFoldersFor(save_output)
   print('loading CN from Terra')
@@ -259,29 +296,29 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
                       **kwargs):
   """the full CCLE Copy Number post processing pipeline (used only by CCLE)
 
-  see postprocessing() to reproduce our analysis
+  see postprocessing() to reproduce most of our analysis and find out about additional parameters
 
   Args:
-      wesrefworkspace ([type]): [description]
-      wgsrefworkspace ([type]): [description]
-      samplesetname ([type]): [description]
-      AllSamplesetName (str, optional): [description]. Defaults to ''.
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      sheetcreds ([type], optional): [description]. Defaults to SHEETCREDS.
-      sheetname ([type], optional): [description]. Defaults to SHEETNAME.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-      prevgenecn ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn').
+      wesrefworkspace (str): wes terra workspace where the ref data is stored
+      wgsrefworkspace (str): wgs terra workspace where the ref data is stored
+      samplesetname (str): name of the current release
+      AllSamplesetName (str, optional): name of the sample set to get the data from (should contain everything). Defaults to 'all'.
+      my_id (str, optional): google sheet user id to access the ref sheets . Defaults to MY_ID.
+      mystorage_id (str, optional): google sheet storage id to access the ref sheets . Defaults to MYSTORAGE_ID.
+      sheetcreds (str, optional): [description]. Defaults to SHEETCREDS.
+      sheetname (str, optional): [description]. Defaults to SHEETNAME.
+      refsheet_url (str, optional): [description]. Defaults to REFSHEET_URL.
+      prevgenecn (str, optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn').
       taiga_dataset (str, optional): [description]. Defaults to TAIGA_CN.
-      dataset_description ([type], optional): [description]. Defaults to CNreadme.
-      subsetsegs (list, optional): [description]. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
+      dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to CNreadme.
+      subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
       bamqc ([type], optional): [description]. Defaults to BAMQC.
       procqc ([type], optional): [description]. Defaults to PROCQC.
       source_rename ([type], optional): [description]. Defaults to SOURCE_RENAME.
   """
   from taigapy import TaigaClient
   tc = TaigaClient()
-  
+
   if prevgenecn is 'ccle':
     prevgenecn = tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn')
 
@@ -359,13 +396,11 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   wgspriogenecn.to_csv(folder+ "genecn_all_latest.csv")
 
   print('comparing to previous version')
-  #h.compareDfs(priosegments, tc.get(name='depmap-a0ab', file='CCLE_segment_cn'))
   h.compareDfs(wespriogenecn, prevgenecn)
 
   #adding to the sample tracker the sequencing that were selected and the ones that failed QC
   selected = {j:i for i,j in wesrenaming.items()}
   selected.update({j:i for i,j in wgsrenaming.items()})
-  # import pdb; pdb.set_trace()
   try:
     wgssamplesinset=[i['entityName'] for i in wgsrefwm.get_entities(
             'sample_set').loc[samplesetname].samples]
@@ -402,11 +437,11 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
                         "format": "TableCSV",
                         "encoding": "utf-8"
                       },
-# #                      {
-#                         "path": folder+"/wes_genecn_all_latest_.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
+                      {
+                        "path": folder+"/wes_genecn_all_latest_.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
                       {
                         "path": folder+"/wes_segments_all.csv",
                         "format": "TableCSV",
@@ -473,6 +508,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                         'ACH-000010',
                         'ACH-002475',
                         'ACH-001543'
+                        # TODO: drop these elements directly in the legacy datasets and should be blacklisted in the tracker
                         ], taiga_legacy_loc='depmap-wes-cn-data--08f3',
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset="cn-wes-achilles-4dcd",
@@ -482,10 +518,27 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                        prevsegments="ccle",
                        prevgenecn="ccle",
                        gene_expected_count="ccle"):
+  """runs the Achilles specific part of the pipeline
+
+  Args:
+      wespriosegs ([type]): set of wes to priorise
+      wgspriosegs ([type]): set of wgs to priorise
+      samplesetname ([type], optional): [description]. Defaults to SAMPLESETNAME.
+      bad (list, optional): list of known samples that should not be inclusded.
+      taiga_legacy_loc (str, optional): [description]. Defaults to 'depmap-wes-cn-data--08f3'.
+      taiga_legacy_filename (str, optional): [description]. Defaults to 'legacy_segments'.
+      taiga_dataset (str, optional): [description]. Defaults to "cn-wes-achilles-4dcd".
+      dataset_description ([type], optional): [description]. Defaults to Achillesreadme.
+      cytobandloc (str, optional): [description]. Defaults to 'data/hg38_cytoband.gz'.
+      gene_mapping ([type], optional): [description]. Defaults to pd.read_csv('data/genemapping_19Q1.csv').
+      prevsegments (str, optional): [description]. Defaults to "ccle".
+      prevgenecn (str, optional): [description]. Defaults to "ccle".
+      gene_expected_count (str, optional): [description]. Defaults to "ccle".
+  """
   # load legacy_segments
   from taigapy import TaigaClient
   tc = TaigaClient()
-  
+
   if prevsegments == "ccle":
     prevsegments = tc.get(name=TAIGA_ETERNAL, file='CCLE_segment_cn')
   if prevgenecn == "ccle":
@@ -494,7 +547,8 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
   if gene_expected_count == "ccle":
     gene_expected_count = tc.get(name=TAIGA_ETERNAL,
                                  file='CCLE_expression_proteincoding_genes_expected_count')
-  
+
+  # load the legacy taiga dataset
   legacy_segments=tc.get(
     name=taiga_legacy_loc, file=taiga_legacy_filename).drop(columns='Unnamed: 0')
   legacy_segments['Status']='U'
@@ -506,16 +560,10 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
   duplicate_arxspans = data_source_duplicates.index.tolist()
 
   # TODO: replace with assert if the data is updated on taiga
-  assert data_source_duplicates.empty
-
+  assert data_source_duplicates.empty, "Duplicate data sources found in the taiga dataset"
   onlyinleg = set(legacy_segments[SAMPLEID]) - \
       (set(wespriosegs[SAMPLEID]) | (set(wgspriosegs[SAMPLEID])))
   #samegenes = set(prevgenecn.columns) & set(priogenecn.columns)
-
-  bad_fp = ['ACH-001078', 'ACH-002184', 'ACH-001146', # these were dropped in 21Q3 for fingerprinting
-            'ACH-002022', 'ACH-001173', 'ACH-001790',
-            'ACH-002260', 'ACH-001741', 'ACH-000010',
-            'ACH-002475', 'ACH-001543']
 
   onlyinleg=onlyinleg - set(bad + bad_fp)
   print('found samples that are only in the legacy datasets')
@@ -524,7 +572,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
   print('merging wes/wgs/legacy')
   mergedsegments=wespriosegs[~wespriosegs[SAMPLEID].isin(list(onlyinleg))].append(
     legacy_segments[legacy_segments[SAMPLEID].isin(list(onlyinleg))]).reset_index(drop=True)
-
+  # adding wgs to wes
   mergedsegments=wgspriosegs.append(
     mergedsegments[~mergedsegments[SAMPLEID].isin(set(wgspriosegs[SAMPLEID]))])
 
@@ -572,6 +620,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
   rna.rnaseqcorrelation(prevgenecn[prevgenecn.index.isin(
       mergedgenecn.index.tolist())], gene_expected_count.fillna(0), ax, name="prev")
 
+  # TODO: compute sample specific correlation (see James' function)
   h.compareDfs(mergedgenecn, prevgenecn)
   #h.compareDfs(mergedsegments, tc.get(name='depmap-a0ab', file='CCLE_segment_cn'))
 
