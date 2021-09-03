@@ -14,8 +14,6 @@ from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from taigapy import TaigaClient
-tc = TaigaClient()
 from depmapomics import tracker
 from depmapomics.config import *
 from depmapomics import terra as myterra
@@ -541,7 +539,8 @@ def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE,
       [type]: [description]
   """
   di = {k: [] for k, _ in toupdate.items()}
-
+  from taigapy import TaigaClient
+  tc = TaigaClient()
   sheets = Sheets.from_files(my_id, mystorage_id)
 
   depmap_pv = sheets.get(depmap_pv).sheets[0].to_frame(header=2)
@@ -763,7 +762,7 @@ def load(samplesetname, workspaces,
   return samples
 
 
-def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
+def updateWES(samples, samplesetname, bucket=WES_GCS_PATH,
                 name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'], 
                 filetypes=['bam', 'bai'],
                 my_id=MY_ID,
