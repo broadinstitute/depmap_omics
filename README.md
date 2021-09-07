@@ -20,7 +20,6 @@ What you need to process the Quarterly DepMap-Omics releases from Terra.
   - [QC, Groupding and Uploading](#qc-grouping-uploading)
 - [Repository File Structure](#file-structure)
 - [Auxiliary Data for the Pipeline](#data)
-- [Pipeline Walkthrough](#walkthru)
 
 ## Getting Started <a name="quickstart"></a>
 
@@ -78,7 +77,7 @@ The current owners of these workspaces should give you access.
   - DEPMAP-PIPELINES
   - CCLE2-DATA
   - CCLE-PIPELINE
-5. If you need to get access to the depmap data:
+5. If you need to get access to the depmap data, use the following links:
   - __Exome__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
   - __Exome__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
   - __RNA__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData)
@@ -88,8 +87,6 @@ The current owners of these workspaces should give you access.
 6. Request access to the data bucket `gs://cclebams/`
 7. You will need also access to the billing project `broad-firecloud-ccle`
 
-
-*more information on Terra workspaces and what they might contain is available on this [document](http://htmlpreview.github.io/?https://github.com/broadinstitute/depmap_omics/blob/master/documentation/firecloud_documentation.html)
 
 ### Additional Logins:
 - In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites).
@@ -128,7 +125,7 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 ### Creating your Terra Workspaces:
 
-1. Your first need a terra account with correct billing setup
+1. You first need a terra account with correct billing setup
 2. use the different *_pipeline folders, they contain everything to setup the workspace correctly
   1. use the WDL scripts available in:
     - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline
@@ -156,131 +153,7 @@ The notebook architectures are as follows:
 3. DownLoading and postProcessing the samples
 4. QC, grouping and uploading to the DepMap portal
 
-## Running the pipeline <a name="running-pipeline"></a>
-
-### 1. Uploading and Preprocessing <a name="upload-preprocess"></a>
-
-The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
-
-**Remarks:** 
-- in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
-- feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs.
-
-### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
-
-Before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
-You can then run this part for the pipeline to run on your samples. It should take around a day.
-
-**Remarks:**
-- for the copy number pipeline we have parametrized both an XX version and an XY version, we recommend using the XY version as it covers the entire genome
-- for the mutation pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table. (workflows works as well with or without matched normals.)
-- for the expression pipeline, we have an additional set of workflows to call mutations from RNAseq, this might not be relevant to your need.
-
-### 3. Downloading and Postprocessing (often called **2.2-4 on local** in the notebooks) <a name="downloading-postprocessing"></a>
-
-This step will do a set of tasks:
-- clean some of the workspace for large useless files.
-- retrieve from the workspace interesting QC results.
-- copy realigned bam files to some bucket.
-- download the results.
-- remove all duplicate samples from our downloaded file (keeping only thee latest version of each samples).
-- saving the current pipeline configuration.
-
-_You would only be interested here at minima in the result downloading_
- 
-...and post processing tasks.
-
-> Unfortunately for now the postProcessing tasks are not all made to be easily run outside of the CCLE pipeline. Most of them are in R and are run with the Rpy2 tool.
-
-So amongst these functions, some of them might be of a lesser interest to an external user. The most important ones for each pipelines are:
-
-- `processSegments`
-- `interpolateGapsInSegmented`
-- `extendEndsOfSegments`
-- `generateEntrezGenes`
-- `generateGeneLevelMatrixFromSegments`
-
-- `readMutations`
-- `createSNPs`
-- `filterAllelicFraction`
-- `filterMinCoverage` *you would need to rewrite this function as it now runs on DepMap columns. In one line it requires that the total coverage of that site (aggregated across methods) > 8 and that there are at least 4 alternate alleles for each mutations*
-- `maf_add_variant_annotations`
-- `mutation_maf_to_binary_matrix`
-
-- `readTranscripts`
-- `readCounts`
-- `readTPM`
-- `readFusions`
-- `filterFusions`
-- the `step 2.2.5` where we remove samples with more then 39k transcripts with 0 readcounts.
-- `prepare_depmap_\*\_for_taiga`
-
-**Remarks:**
-- in the RNAseq pipeline we have an additional sub-pipeline at the end of the notebook to process the fusion calls from starFusion
-- to get the exact same results as in CCLE, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to the genecn dataframe in the CNV pipeline (present at the end of the validation steps).
-- we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters
-
-
-### 4. QC, Grouping and Uploading to the Portal <a name="qc-grouping-uploading"></a>
-
-These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
-
-We are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
-
-We are then uploading the data to a server called taiga where it will be used in the depmap portal
-
-
-## Repository File Structure <a name="file-structure"></a>
-
-There is for now 3 computation pipeline for depmap omics:
-- Expression
-- Mutations
-- Copy number
-
-Each:
-- is contained in an jupyter notebook file
-- gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
-- updates the sample TSVs on Terra with path to the files, 
-- compute the results for each samples by running workflows, 
-- download the results, post process them with additional local functions and QC them.
-- uploads them to taiga.
-
-__data/__ Contains important information used for processing
-
-__src__ Contains the location of function files
-
-__\*\_pipeline__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
-
-__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform
-
-__legacy__ Contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
-
-__readmes__ Contains some of the depmap readmes 
-
-__temp__ Contains the temp file that can get removed after processing (should be empty)
-
-__documentation__ Contains some additional files for documenting the pipelines
-
-
-## Auxiliary Data for the Pipeline <a name="data"></a>
-
-
-### PONS
-
-for CN pons are made from a set of ~400 normals from the GTEx project as they were sequenced in the same fashion as CCLE samples with the same set of baits. you can see the ID of the samples in `data/samples_for_pons.csv`.
-We have created pons for each bait set and using XY only.
-We have used workflow from the pipeline:
-`gatk/CNV_Somatic_Panel_Workflow`
-
-
-### targets
-
-The data we are presenting comes from different WES targets/baits/intervals.
-
-We are currently using Illumina ICE intervals and Agilent intervals. you can find their related PON files and interval files as parameters in our workspace files in `data/xQx.json`
-
-
-## Pipelines Walkthrough <a name="walkthru"></a>
+## Pipeline Walkthrough <a name="running-pipeline"></a>
 
 ![schema](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/architecture_diagram_white.png)
 
@@ -315,33 +188,28 @@ The following flowchart provides another good overview of what the pipeline is d
 _What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
 
 
-### run Terra pipeline
+### 1. Uploading and Preprocessing <a name="upload-preprocess"></a>
 
-We are using Dalmatian to send request to Terra, 
+The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
+
+**Remarks:** 
+- in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
+- feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs.
+
+### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
+
+We are using Dalmatian to send request to Terra, so before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
+You can then run this part for the pipeline to run on your samples. It should take around a day.
 
 #### Copy Numbers
 
-We are running a set of 5 functions/workflows To generate the copy number dataset in the following order:
+We are running the following workflows in this order to generate the copy number dataset:
 
-1. [**BamToUnmappedRGBams_MC**](https://portal.firecloud.org/?return=terra#methods/vdauwera/BamToUnmappedRGBams/4)
-2. [**Generate_uBAM_File_List**](https://portal.firecloud.org/?return=terra#methods/gkugener/ArrayOfFilesToTxt/1)
-3. [**Realign_WES_GATK4**](https://portal.firecloud.org/?return=terra#methods/gatk/PreProcessingForVariantDiscovery_GATK4/7): This pipeline realigns bams to hg38 using BWA-MEM, marks duplicates, and applies Base Quality Score Recalibration ([BQSR](https://gatk.broadinstitute.org/hc/en-us/articles/360035890531-Base-Quality-Score-Recalibration-BQSR-)) to the final bam files.
-4. [**CNV_sample_XX**](https://portal.firecloud.org/?return=terra#methods/gatk/CNV_Somatic_Pair_Workflow/9/wdl): This pipeline recieves read counts, which are the output of previous step, and determines the copy number segments and assigns them the deletion/amplification/neutral status. The pipeline requires an input PoN, which currently is defaulted on [hg38 ICE WES capture kit](gs://ccle_default_params/pons/hg38_ice_pon_XX.pon.hdf5). The following tools are run in the order shown:
-   1. [*gatk DenoiseReadCounts*](https://gatk.broadinstitute.org/hc/en-us/articles/360037593691-DenoiseReadCounts): Denoises read counts to produce denoised copy ratios
-   2. [*gatk ModelSegments*](https://gatk.broadinstitute.org/hc/en-us/articles/360036350172-ModelSegments): Models segmented copy ratios from denoised read counts and segmented minor-allele fractions from allelic counts
-   3. [*gatk CallCopyRatioSegments*](https://gatk.broadinstitute.org/hc/en-us/articles/360036730311-CallCopyRatioSegments): Calls copy-ratio segments as amplified, deleted, or copy-number neutral
-   4. *PlotDenoisedCopyRatios*
-   5. *PlotModeledSegments*
-5. [**Aggregate_CN_seg_files**](https://portal.firecloud.org/?return=terra#methods/gkugener/Aggregate_CN_seg_files/2)
+[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) imports and runs several sub-processes to generate copy number segments.
+
+[WGS_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate:master?tab=info) aggregates CN segment files into one.
 
 This output file for download will be saved under the sample set under the combined_seg_file attribute.
-
-There are several other tasks in this workspace. In brief:
-
-*   **CNV_Somatic_Panel_Workflow_Agilent_XX** gatk/CNV_Somatic_Panel_WorkflowSnapshot ID: 11. This task was used in this workspace to generate the Sanger PON. In the Sanger dataset, there is a set of 40 normal cell lines samples (cell lines derived from matched normal tissue). We can use these to generate a PON to normalize to rather than using the Agilent PON we use for the other CCLE cell lines. This leads to less noisy results. HOWEVER, results using the PON from this workflow should not use the X chromosome, as the sanger normals are not exclusively female or male (it is likely a mix).
-*   **SANGER_PON_CNV_sample_XX** gatk/CNV_Somatic_Pair_WorkflowSnapshot ID: 9. Same as the CNV_sample_XX_gatk, except that is uses the Sanger based PON. Should be used only for the Sanger cell lines.
-*   **Sanger_PON_Aggregate_CN_seg_files** gkugener/Aggregate_CN_seg_filesSnapshot ID: 2. Aggregates the segment files for the samples that were run using the Sanger PON based CNV workflow. 
-
 
 #### Mutation
 
@@ -349,13 +217,7 @@ We are running a set of 6 functions/workflows To generate the mutation dataset:
 
 *   For new samples in DepMap, run the ICE version of this task. CCLE2 samples used Agilent targets, so this pipeline should be used instead. The pipelines are identical in terms of their outputs, but the proper targets, baits, and pseudo normal should be used based on how the samples were sequenced.
 
-*    **ICE_CGA_Production_Analysis_Pipeline_Cell_Lines_copy** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22) OR
-*    **AGILENT_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22)
 
-1. [**CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019**](https://portal.firecloud.org/?return=terra#methods/getzlab/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019/1): Run the CGA pipeline for mutation calling.
-2. [**common_variant_filter**](https://portal.firecloud.org/?return=terra#methods/breardon/common_variant_filter/18): Apply common variant filters as described [here](https://github.com/vanallenlab/common_variant_filter).
-3. [**filterMAF_on_CGA_pipeline**](https://portal.firecloud.org/?return=terra#methods/gkugener/filterMAF_on_CGA_pipeline/9): Applies several filters to the maf file including minimum allele frequency, Exac, COSMIC, and TCGA hotspot filters, retainin only coding regions, minimum coverage, and alternative reads filter, etc. Detailed process can be found in *gs://ccle_default_params/scripts/filterMAF.R*. The whitelisted mutations can be found here: *gs://ccle_default_params/references/all_hotspots_for_Mahmoud_083116_ExAC_filt.tsv*. Currently no mutations are blacklisted in this step.
-4. [**aggregateMAFs_selectFields**](https://portal.firecloud.org/?return=terra#methods/gkugener/aggregateMAFs_selectFields_copy/1): Reads selected fields from maf files and aggregates them. Currently these fields are: *Hugo_Symbol, Entrez_Gene_Id, Center, NCBI_Build, Chromosome, Start_position, End_position, Strand, Variant_Classification, Variant_Type, Reference_Allele, Tumor_Seq_Allele1, Tumor_Seq_Allele2, dbSNP_RS, dbSNP_Val_Status, Genome_Change, Annotation_Transcript, Tumor_Sample_Barcode, cDNA_Change, Codon_Change, Protein_Change, t_alt_count, t_ref_count, tumor_f, isDeleterious, isTCGAhotspot, TCGAhsCnt, isCOSMIChotspot, COSMIChsCnt, i_ExAC_AF, PASS*. The script can be found in *gs://ccle_default_params/scripts/scripts_aggregate_selectedFields_MAF.R*
 
 *NOTE:* Some further filtering occurs afterwards within the Jupyter Notebook, including hard filtering of allele frequency and coverage (see the section on local data analysis).
 
@@ -419,7 +281,35 @@ __,delete unmapped bams generated during the process__
 __and move the hg38 aligned bams to our own datastorage bucket__
 __We download and reprocess removing the appended version and keeping only the newest versions__
 
-### post Procesing
+
+**Remarks:**
+- for the copy number pipeline we have parametrized both an XX version and an XY version, we recommend using the XY version as it covers the entire genome
+- for the mutation pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table. (workflows works as well with or without matched normals.)
+- for the expression pipeline, we have an additional set of workflows to call mutations from RNAseq, this might not be relevant to your need.
+
+### 3. Downloading and Postprocessing (often called **2.2-4 on local** in the notebooks) <a name="downloading-postprocessing"></a>
+
+This step will do a set of tasks:
+- clean some of the workspace for large useless files.
+- retrieve from the workspace interesting QC results.
+- copy realigned bam files to some bucket.
+- download the results.
+- remove all duplicate samples from our downloaded file (keeping only thee latest version of each samples).
+- saving the current pipeline configuration.
+
+_You would only be interested here at minima in the result downloading_
+ 
+...and post processing tasks. The main postprocessing functions (and their wrappers for internal use) can be found in the following files:
+
+`copynumbers.py`: `postProcess()` is responsible for CN postprocessing (segmentes and gene-level CN files)
+
+`expressions.py`: `postProcess()` is responsible for postprocessing expression data 
+
+`fusions.py`: `postProcess()` is responsible for postprocessing aggregated fusion files
+
+`mutations.py`: `postProcess()` is responsible for postprocessing aggregated MAF files
+
+Please refer to the files and functions above for more details.
 
 The post processing happens in R using guillaume's and Allie's functions, in brief:
 
@@ -508,22 +398,73 @@ With the functions:
 - filterFusions
 - prepare_depmap_fusion_data_for_taiga
 
-### Upload to taiga (Broad only)
 
-- We load the blacklisted/embargoed sample ids
-- We log2 transform and create a file for each release (and one containing everything)
-- We upload the files using taigapy in a corresponding taiga dataset with the corresponding description and also upload it to its virtual dataset
+**Remarks:**
+- in the RNAseq pipeline we have an additional sub-pipeline at the end of the notebook to process the fusion calls from starFusion
+- to get the exact same results as in CCLE, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to the genecn dataframe in the CNV pipeline (present at the end of the validation steps).
+- we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters
 
 
-# Previous PiPelines
+### 4. QC, Grouping and Uploading to the Portal <a name="qc-grouping-uploading"></a>
 
-https://docs.google.com/document/d/1O6ZWGAnG6CO_smtaA-fqQmSqV64TF1GHFbj-ZeIqD6U/edit?usp=sharing
+These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
 
-https://docs.google.com/document/d/1qHnqO3QGdubu8IvB9zI13Z48EbKwDTpgRg0TnT6GULw/edit?usp=sharing
+We are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
 
-https://docs.google.com/document/d/189K81MOIYlvg4ePvtHPBSfMen1sgYm7G1EncG5N8tFk/edit?usp=sharing
+We are then uploading the data to a server called taiga where it will be used in the depmap portal
 
-https://docs.google.com/document/d/19MvCIpRID12vfIlc5i2XmJB8yT2jJ2xwNM_PI1HRC0A/edit?usp=sharing
+
+## Repository File Structure <a name="file-structure"></a>
+
+There is for now 3 computation pipeline for depmap omics:
+- Expression
+- Mutations
+- Copy number
+
+Each:
+- is contained in an jupyter notebook file
+- gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
+- updates the sample TSVs on Terra with path to the files, 
+- compute the results for each samples by running workflows, 
+- download the results, post process them with additional local functions and QC them.
+- uploads them to taiga.
+
+__data/__ Contains important information used for processing
+
+__src__ Contains the location of function files
+
+__\*\_pipeline__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
+
+__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform
+
+__legacy__ Contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
+
+__readmes__ Contains some of the depmap readmes 
+
+__temp__ Contains the temp file that can get removed after processing (should be empty)
+
+__documentation__ Contains some additional files for documenting the pipelines
+
+
+## Auxiliary Data for the Pipeline <a name="data"></a>
+
+
+### PONS
+
+for CN pons are made from a set of ~400 normals from the GTEx project as they were sequenced in the same fashion as CCLE samples with the same set of baits. you can see the ID of the samples in `data/samples_for_pons.csv`.
+We have created pons for each bait set and using XY only.
+We have used workflow from the pipeline:
+`gatk/CNV_Somatic_Panel_Workflow`
+
+
+### targets
+
+The data we are presenting comes from different WES targets/baits/intervals.
+
+We are currently using Illumina ICE intervals and Agilent intervals. you can find their related PON files and interval files as parameters in our workspace files in `data/xQx.json`
+
+
+
 
 @[jkobject](https://www.jkobject.com)
 @gkugener
