@@ -227,6 +227,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
   # and see if I have to get data for them or if I should just throw them out
   toremov = set()
   for k, val in wrongsampless.iterrows():
+    
     withsamesize = wrongsampless[wrongsampless[extract["legacy_size"]] == val[extract["legacy_size"]]]
     if (val[extract["legacy_size"]] in sampless[extract["legacy_size"]].tolist()) or (val[extract["legacy_size"]] in refsamples[extract["size"]]):
       toremov.add(k)
@@ -239,10 +240,13 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
   print(toremov)
   for i in toremov:
     wrongsampless = wrongsampless.drop(i)
+  
+  # TODO: we should be able to remove this block
   for i, v in wrongsampless.iterrows():
     if not gcp.exists(v[extract['ref_bam']]):
       print(v.ccle_name, i)
       wrongsampless = wrongsampless.drop(i)
+ 
   a = len(sampless)
   #import pdb; pdb.set_trace()
   sampless = deleteClosest(sampless,refsamples, extract['legacy_size'], extract['legacy_size'], extract['ref_arxspan_id'])
@@ -428,9 +432,8 @@ def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, acc
 
   tolookfor = [val[extract['ref_bam']] for _, val in samples.iterrows() if val[extract['ref_arxspan_id']] in set(refsamples[extract['ref_arxspan_id']])]
   print("found " + str(len(tolookfor)) + ' likely replicate')
-  sample_hash = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
-  dups_to_remove = [sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['legacy_size']])]
-  dups_to_remove.extend([sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['legacy_size']])])
+  sample_size = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
+  dups_to_remove = [sample_size[a] for a in set(sample_size.keys()) & set(refsamples[extract['legacy_size']])]
   # remove the duplicates from consideration
   print("Len of samples before removal: " + str(len(samples)))
   print("Dups from this workspace has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
@@ -499,6 +502,7 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
     val = val[extract['ref_arxspan_id']]
     names.append(val)
     sampless.loc[k, extract['version']] = len(subrefsamples[subrefsamples[extract['ref_arxspan_id']] == val]) + names.count(val)
+    # TODO: copy the patient id too
   sampless[extract['version']] = sampless[extract['version']].astype(int)
 
   sampless[extract['patient_id']] = [val[extract['patient_id']] if
@@ -726,6 +730,7 @@ def load(samplesetname, workspaces,
         "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
           0].to_frame().set_index('sample_id')
       samples = pd.concat([samples, updated_samples], sort=False)
+  
   samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
 
   for val in toraise:
