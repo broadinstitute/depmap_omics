@@ -98,11 +98,6 @@ TAIGA_CN = "cn-latest-8bea"
 TAIGA_EXPRESSION = "expression-869e"
 TAIGA_FUSION = "fusions-64c4"
 TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
-
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
-
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
 
 
 datasets = ['internal', 'ibm', 'dmc', 'public']

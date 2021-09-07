@@ -344,11 +344,9 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
 
     # annotating source
     for v in set(wessegments[SAMPLEID]):
-      if len(tracker[tracker.index == v].source.values) > 0:
-        wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
+      wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
                   'Source'] = tracker[tracker.index == v].source.values[0]
-
-    wessegments.Source = wessegments.Source.replace(source_rename)
+      wessegments.Source = wessegments.Source.replace(source_rename)
     wessegments.Source += ' WES'
 
     print('renaming')
@@ -383,10 +381,9 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
 
   # annotating source
   for v in set(wgssegments[SAMPLEID]):
-    if len(tracker[tracker.index == v].source.values) > 0:
-      wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
+    wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
                         'Source'] = tracker[tracker.index == v].source.values[0]
-  wgssegments.Source = wgssegments.Source.replace(source_rename)
+    wgssegments.Source = wgssegments.Source.replace(source_rename)
   wgssegments.Source += ' WGS'
 
   print('renaming')
@@ -496,7 +493,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                         "ACH-002291"  # added for some reason?
                         # much more than that..
                         "ACH-002010",
-                        "ACH-000314",
+                        "ACH-000314"
                         # bad fp
                         # these were dropped in 21Q3 for fingerprinting
                         'ACH-001078',
@@ -509,9 +506,11 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                         'ACH-001741',
                         'ACH-000010',
                         'ACH-002475',
-                        'ACH-001543'], taiga_legacy_loc=TAIGA_LEGACY_CN,
+                        'ACH-001543'
+                        # TODO: drop these elements directly in the legacy datasets and should be blacklisted in the tracker
+                        ], taiga_legacy_loc='depmap-wes-cn-data--08f3',
                        taiga_legacy_filename='legacy_segments',
-                       taiga_dataset=TAIGA_CN_ACHILLES,
+                       taiga_dataset="cn-wes-achilles-4dcd",
                        dataset_description=Achillesreadme,
                        cytobandloc='data/hg38_cytoband.gz',
                        gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),
