@@ -313,8 +313,8 @@ def postProcess(refworkspace, samplesetname,
   if not samplesetToLoad:
     samplesetToLoad = samplesetname
   refwm = dm.WorkspaceManager(refworkspace)
-  if save_output:
-    terra.saveWorkspace(refworkspace, save_output+'terra/')
+  # if save_output:
+    # terra.saveWorkspace(refworkspace, save_output+'terra/')
   print("load QC and generate QC report")
   samplesinset = [i['entityName'] for i in refwm.get_entities(
       'sample_set').loc[samplesetname].samples]
@@ -378,11 +378,11 @@ def postProcess(refworkspace, samplesetname,
     files = subsetGenes(
         files, gene_rename, filenames=trancriptLevelCols, drop="gene_id", index="transcript_id")
 
-  if compute_enrichment:
-    print("doing ssGSEA")
-    enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
-    print("saving files")
-    enrichments.to_csv(save_output+'gene_sets_all.csv')
+  print("doing ssGSEA")
+  # enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
+  enrichments = None
+  # print("saving files")
+  # enrichments.to_csv(save_output+'gene_sets_all.csv')
   saveFiles(files, save_output)
   print("done")
 

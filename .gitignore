@@ -148,7 +148,10 @@ target/
 profile_default/
 ipython_config.py
 
-ccle_tasks/data/
+ccle_tasks/data/*
+
+temp/*
+**/temp/*
 # pyenv
 .python-version
 
@@ -202,3 +205,6 @@ dmypy.json
 # tmp
 tmp.py
 tmp.*
+testSheets.ipynb
+testSheets.ipynb
+debug.py
