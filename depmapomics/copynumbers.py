@@ -397,61 +397,61 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
 
   #uploading to taiga
   print('uploading to taiga')
-#   tc.update_dataset(changes_description="new "+samplesetname+" release! (removed misslabellings, see changelog)",
-#                     dataset_permaname=taiga_dataset,
-#                     upload_files=[
-#                       {
-#                         "path": folder+"/wes_segments_all_latest.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-# # #                      {
-# #                         "path": folder+"/wes_genecn_all_latest_.csv",
-# #                         "format": "NumericMatrixCSV",
-# #                         "encoding": "utf-8"
-# #                       },
-#                       {
-#                         "path": folder+"/wes_segments_all.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wes_genecn_all.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/merged_genecn_all.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/merged_segments_all.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_segments_all.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_genecn_all.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_segments_all_latest.csv",
-#                         "format": "TableCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                       {
-#                         "path": folder+"/wgs_genecn_all_latest.csv",
-#                         "format": "NumericMatrixCSV",
-#                         "encoding": "utf-8"
-#                       },
-#                     ],
-#                     dataset_description=dataset_description)
+  tc.update_dataset(changes_description="new "+samplesetname+" release! (removed misslabellings, see changelog)",
+                    dataset_permaname=taiga_dataset,
+                    upload_files=[
+                      {
+                        "path": folder+"/wes_segments_all_latest.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wes_genecn_all_latest_.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wes_segments_all.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wes_genecn_all.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/merged_genecn_all.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/merged_segments_all.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_segments_all.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_genecn_all.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_segments_all_latest.csv",
+                        "format": "TableCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"/wgs_genecn_all_latest.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                    ],
+                    dataset_description=dataset_description)
   print("done")
   return wespriosegments, wgspriosegments
 
