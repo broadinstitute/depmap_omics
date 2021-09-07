@@ -25,8 +25,7 @@ VIRTUAL_RELEASES = {'21q2': {'public': {'name': 'public-21q2-110d', 'version': 1
                     '21q3': {'internal': {'name': 'internal-21q3-fe4c', 'version': 12},
                              'ibm': {'name': 'ibm-21q3-179f', 'version': 8},
                              'dmc': {'name': 'dmc-21q3-482c', 'version': 7},
-                             'public': {'name': 'public-21q3-bf1e', 'version': 7}},
-                    '21q1': {'internal': {'name': 'internal-21q1-4fc4', 'version': 40}}
+                             'public': {'name': 'public-21q3-bf1e', 'version': 7}}
                     } # release ids on taiga
 
 PREV_RELEASE = VIRTUAL_RELEASES['21q2'][PORTAL]
@@ -86,8 +85,8 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_expression', 'CCLE_gene_cn'])]
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_expression', 'CCLE_gene_cn'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
