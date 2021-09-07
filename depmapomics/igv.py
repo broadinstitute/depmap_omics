@@ -3,7 +3,7 @@ from gsheets import Sheets
 from depmapomics.config import GCS_PAYER_PROJECT
 
 import igv
-from depmapomics.tracker import getCCLETracker
+from depmapomics.tracker import getTracker
 
 
 def get_gcloud_auth_token():
@@ -15,7 +15,7 @@ def get_gcloud_auth_token():
 
 
 def load_sample_tracker():
-    depmap_samples = getCCLETracker()
+    depmap_samples = getTracker()
 
     depmap_samples.drop_duplicates(inplace=True)
 
