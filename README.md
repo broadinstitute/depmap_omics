@@ -60,7 +60,7 @@ Use the instructions in the genepy page to install the package.
 
 ## For Internal Users <a name="internal-users"></a>
 
-> To learn about the tools we use in the pipeline, see [here](#walkthru) for a detailed walkthrough
+> To learn about the tools we use in the pipeline, see [here](#running-pipeline) for a detailed walkthrough
 
 ### Getting Terra Access
 
@@ -121,7 +121,7 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 ## For External Users <a name="external-users"></a>
 
-> To learn about the tools we use in the pipeline, see [here](#walkthru) for a detailed walkthrough
+> To learn about the tools we use in the pipeline, see [here](#running-pipeline) for a detailed walkthrough
 
 ### Creating your Terra Workspaces:
 
