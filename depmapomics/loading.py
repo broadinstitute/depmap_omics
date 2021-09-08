@@ -434,6 +434,7 @@ def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, acc
   print("found " + str(len(tolookfor)) + ' likely replicate')
   sample_size = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
   dups_to_remove = [sample_size[a] for a in set(sample_size.keys()) & set(refsamples[extract['legacy_size']])]
+  dups_to_remove.extend([sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['legacy_size']])])
   # remove the duplicates from consideration
   print("Len of samples before removal: " + str(len(samples)))
   print("Dups from this workspace has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
