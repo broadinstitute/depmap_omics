@@ -7,7 +7,7 @@ def fileToList(filename):
   with open(filename) as f:
     return [val[:-1] for val in f.readlines()]
 
-
+# if we are on master, will use the master config file except if stipulated otherwise in the DEPMAP_ENV environment variable
 if fileToList('/'.join(__file__.split('/')[:-2])+"/.git/HEAD")[0].split('/')[-1] == "master" or os.getenv('DEPMAP_ENV') == "PROD":
   from depmapomics.config_prod import *
 else:
