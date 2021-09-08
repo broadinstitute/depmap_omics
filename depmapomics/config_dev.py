@@ -100,10 +100,6 @@ TAIGA_FUSION = "fusions-64c4"
 TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
 TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
 
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
-
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
-
 
 datasets = ['internal', 'ibm', 'dmc', 'public']
 
@@ -289,10 +285,6 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
                       'Greger_Normal', 'Babiceanu_Normal', 'ConjoinG', 'NEIGHBORS']
 
 ############## EXPRESSION
-
-## genomic annotations (v35)
-GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.annotation.gff3.gz'
-
 
 BAM_GCS_BUCKET = 'gs://cclebams-sandbox'
 
