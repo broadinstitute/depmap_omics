@@ -268,7 +268,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
   print(sampless[sampless[extract['update_time']] < maxage][extract['ref_bam']])
   wrongsampless = wrongsampless[wrongsampless[extract['update_time']] > maxage]
   sampless = sampless[sampless[extract['update_time']]>maxage]
-
+  
 
   print('removed: '+str(a-len(sampless))+" samples that have not changed since last time (likely\
      duplicate having been removed)")
@@ -312,7 +312,7 @@ def deleteClosest(sampless, refsamples, size='legacy_size', ref_size='legacy_siz
   return sampless
 
 
-def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True,
+def extractFromWorkspace(samples, stype, recomputeTime=True, recomputesize=True, 
                          recomputedate=True, recompute_hash=True, extract={}):
   """
   Extract more information from a list of samples found on GP workspaces
@@ -434,7 +434,6 @@ def resolveFromWorkspace(samples, refsamples, match, participantslicepos=10, acc
   print("found " + str(len(tolookfor)) + ' likely replicate')
   sample_size = {gcp.extractSize(val)[1]: gcp.extractSize(val)[0] for val in gcp.lsFiles(tolookfor, "-la")}
   dups_to_remove = [sample_size[a] for a in set(sample_size.keys()) & set(refsamples[extract['legacy_size']])]
-  dups_to_remove.extend([sample_hash[a] for a in set(sample_hash.keys()) & set(refsamples[extract['legacy_size']])])
   # remove the duplicates from consideration
   print("Len of samples before removal: " + str(len(samples)))
   print("Dups from this workspace has len " + str(len(dups_to_remove)) + ":\n " + str(dups_to_remove))
@@ -514,7 +513,7 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
   return sampless
 
 
-def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE,
+def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE, 
                             my_id=MY_ID,
                             pv_index=SAMPLEID,
                             master_index="arxspan_id",
@@ -578,7 +577,7 @@ def completeFromMasterSheet(samples, notfound, toupdate=TO_UPDATE,
     samples.loc[notfound, k] = v
   return samples, unk
 
-def loadWES(samplesetname,
+def loadWES(samplesetname, 
             workspaces=[
             "terra-broad-cancer-prod/CCLE_DepMap_WES",
             "terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes"],
@@ -595,7 +594,7 @@ def loadWES(samplesetname,
   return load(samplesetname=samplesetname, workspaces=workspaces,
               sources=sources, maxage=maxage, baits=baits, stype=stype, **kwargs)
 
-def loadWGS(samplesetname,
+def loadWGS(samplesetname, 
             workspaces=[
                 wgsworkspace1,
                 wgsworkspace2],
@@ -622,7 +621,7 @@ def loadRNA(samplesetname=SAMPLESETNAME,
             baits='polyA',
             stype="rna", **kwargs):
   """
-  function to load RNA data from GP workspaces
+  function to load RNA data from GP workspaces 
 
   @see load()
   """
@@ -693,18 +692,18 @@ def load(samplesetname, workspaces,
   ## Adding new data
 
   # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "primary_site", "primary_disease", "subtype", "subsubtype", "origin", "comments"
-  #when SMid: match==
-  samples, _, noarxspan = GetNewCellLinesFromWorkspaces(stype=stype,
-                                                        maxage=maxage, refurl=refsheet_url,
+  #when SMid: match== 
+  samples, _, noarxspan = GetNewCellLinesFromWorkspaces(stype=stype, 
+                                                        maxage=maxage, refurl=refsheet_url, 
                                                         wmfroms=workspaces,
-                                                        sources=sources, match=match,
-                                                        participantslicepos=participantslicepos,
-                                                        accept_unknowntypes=accept_unknowntypes,
-                                                        extract=extract_to_change,
+                                                        sources=sources, match=match, 
+                                                        participantslicepos=participantslicepos, 
+                                                        accept_unknowntypes=accept_unknowntypes, 
+                                                        extract=extract_to_change, 
                                                         recomputehash=recomputehash)
   #import pdb; pdb.set_trace()
   ### finding back arxspan
-  noarxspan = tracker.retrieveFromCellLineName(noarxspan, ccle_refsamples,
+  noarxspan = tracker.retrieveFromCellLineName(noarxspan, ccle_refsamples, 
   datatype=stype, depmappvlink=depmappvlink, extract=extract_to_change)
 
   #assess any potential issues
@@ -726,24 +725,23 @@ def load(samplesetname, workspaces,
     noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
     if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
       finished, else write no to quit and they will not be added"):
-      # TODO: what is this sheet? move to config
       updated_samples = sheets.get(
         "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
           0].to_frame().set_index('sample_id')
       samples = pd.concat([samples, updated_samples], sort=False)
   
   samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
-
+  
   for val in toraise:
     if val in samples['arxspan_id'].tolist():
       raise ValueError('some samples were amongst the known wrong samples')
-
+  
   samples['baits'] = baits
   if len(samples.loc[notfound])>0:
     print("we found some samples where we could not get annotations. \
       trying to infer it from depmap master sheet and arxspan export")
-    samples, unk = completeFromMasterSheet(samples, notfound,
-      toupdate=toupdate,
+    samples, unk = completeFromMasterSheet(samples, notfound, 
+      toupdate=toupdate, 
       my_id=my_id,
       pv_index=pv_index,
       master_index=master_index,
@@ -755,22 +753,21 @@ def load(samplesetname, workspaces,
       depmap_taiga=depmap_taiga)
     if len(unk) > 0:
       print("some samples could still not be inferred")
-      # dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
+      dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
       samples.loc[notfound].to_csv('temp/notfound_'+stype+'_'+release+'.csv')
       if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
         finished, else write no to quit and they will not be added"):
-        # TODO: what is this sheet? move to config
         updated_samples = sheets.get(
           "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
           0].to_frame().set_index('sample_id')
         samples.loc[updated_samples.index, updated_samples.columns] = updated_samples.values
-
-  # dfToSheet(samples, 'depmap ALL samples found', secret=creds)
+  
+  dfToSheet(samples, 'depmap ALL samples found', secret=creds)
   samples.to_csv('temp/new_'+stype+'_'+release+'.csv')
   return samples
 
 
-def updateWES(samples, samplesetname, bucket=WES_GCS_PATH,
+def updateWES(samples, samplesetname, bucket="gs://cclebams/wes/",
                 name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'], 
                 filetypes=['bam', 'bai'],
                 my_id=MY_ID,
@@ -807,7 +804,7 @@ def updateWES(samples, samplesetname, bucket=WES_GCS_PATH,
   # uploading to our bucket (now a new function)
   terra.changeToBucket(samples, bucket, name_col=name_col,
                         values=values, filetypes=filetypes, catchdup=True, test=False)
-
+  
   extract.update(extract_defaults)
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
@@ -896,7 +893,6 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
   # uploading to our bucket (now a new function)
   terra.changeToBucket(samples, bucket, name_col=name_col,
                        values=values, filetypes=filetypes, catchdup=True, dryrun=False)
-
 
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)

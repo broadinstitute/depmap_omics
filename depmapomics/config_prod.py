@@ -83,17 +83,14 @@ TAIGA_MUTATION = "mutations-latest-ed72"
 
 TAIGA_CN="cn-latest-d8d4"
 
-TAIGA_EXPRESSION="expression-d035"                   
-
+TAIGA_EXPRESSION="expression-d035"
 TAIGA_FUSION = "fusions-95c9"
 
-TAIGA_CN_ACHILLES = "cn-wes-achilles-4dcd"
-
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
-
-
-
 datasets = ['internal', 'ibm', 'dmc', 'public']
+
+VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
+
+## RUN SPECIFIC
 
 VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
