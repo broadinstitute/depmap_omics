@@ -198,7 +198,7 @@ The first phase really is about getting samples generated at the broad and locat
 
 ### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
 
-We are using Dalmatian to send request to Terra, so before running this part, you need to make sure that your dalmatian `workspacemanager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
+We are using Dalmatian to send request to Terra, so before running this part, you need to make sure that your dalmatian `WorkspaceManager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
 You can then run this part for the pipeline to run on your samples. It should take around a day.
 
 #### Copy Numbers
@@ -239,40 +239,18 @@ There are several other tasks in this workspace. In brief:
 
 #### RNAseq
 
-We are running a set of 6 functions/workflows To generate the expression/fusion dataset:
+We are generating both expression and fusion datasets with RNAseq data. We use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, and [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs) that can be large and might cost a lot to store. Run the following tasks on all samples that you need, in this order:
 
-We use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, run the following tasks on all samples that you need, in this order:
+[RNA_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline:master?tab=info) imports and runs several sub-processes to generate RNA expression and fusion data matrices.
 
-   1. [**samtofastq_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/samtofastq_v1-0_BETA/6): Converts bam files to fastq.
-   2. [**star_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/star_v1-0_BETA/7): uses STAR to align fastq files to [hg38 reference genome](https://console.cloud.google.com/storage/browser/fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/references/gtex?authuser=2).
-   3. [**rsem_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_v1-0_BETA/6): run RSEM to quantify transcript abundances.
-   4. [**rsem_aggregate_results_v1-0_BETA_cfg**](https://portal.firecloud.org/?return=terra#methods/broadinstitute_gtex/rsem_aggregate_results_v1-0_BETA/4)
+[RNA_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_aggregate:master?tab=info) aggregates expression and fusion data files into their respective aggregated file.
 
 The outputs to be downloaded will be saved under the sample set that you ran. The outputs we use for the release are:
 
 *   rsem_genes_expected_count
 *   rsem_genes_tpm
 *   rsem_transcripts_tpm
-
-****Make sure that you delete the intermediate files. These files are quite large so cost a lot to store. To delete, you can either write a task that deletes them or use gsutil rm*****
-
-We use [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls by running the following workflows:
-
-1. [**hg38_STAR_fusion**](https://portal.firecloud.org/?return=terra#methods/gkugener/STAR_fusion/14)
-2. [**Aggregate_Fusion_Calls**](https://portal.firecloud.org/?return=terra#methods/gkugener/Aggregate_files_set/2)
-
-The outputs to be downloaded will be saved under the sample set you ran. The outputs we use for the release are: 
-
 *   fusions_star
-
-This task uses the same samtofastq_v1-0_BETA_cfg task as in the expression pipeline, although in the current implementation, this task will be run twice. It might be worth combing the expression/fusion calling into a single workflow. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs). 
-
-There are several other tasks in this workspace. In brief:
-
-*   Tasks prefixed with **EXPENSIVE** or **CHEAP** are identical to their non-prefixed version, except that they specify different memory, disk space, etc. parameters. These versions can be used when samples fail the normal version of the task due to memory errors.
-*   The following tasks are part of the GTEx pipeline but we do not use them (we use RSEM exclusively): markduplicates_v1-0_BETA_cfg (broadinstitute_gtex/markduplicates_v1-0_BETA Snapshot ID: 2), rnaseqc2_v1-0_BETA_cfg (broadinstitute_gtex/rnaseqc2_v1-0_BETA Snapshot ID: 2)
-*   **ExonUsage_hg38_fixed** (gkugener/ExonUsage_fixed Snapshot ID: 1): this task calculates exon usage ratios. The non-fixed version contains a bug in the script that is not able to handle chromosome values prefixed with ‘chr’. The ‘fixed’ version resolves this issue.
-*   **AggregateExonUsageRObj_hg38** (ccle_mg/AggregateExonUsageRObj Snapshot ID: 2): combines the exon usage ratios into a matrices that are saved in an R object.
 
 ### On local
 
