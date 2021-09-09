@@ -277,18 +277,11 @@ This step will do a set of tasks:
 
 _You would only be interested here at minima in the result downloading_
  
-...and post processing tasks. The main postprocessing functions (and their wrappers for internal use) can be found in the following files:
-
-
-`mutations.py`: `postProcess()` is responsible for postprocessing aggregated MAF files
-
-Please refer to the files and functions above for more details.
-
-The post processing happens in R using guillaume's and Allie's functions, in brief:
+...and postprocessing tasks. The main postprocessing steps for each pipeline are as followed:
 
 #### CN
 
-`copynumbers.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for CN postprocessing (segments and gene-level CN files).
+`copynumbers.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for postprocessing segments and gene-level CN files.
 
 #### Mutation
 
