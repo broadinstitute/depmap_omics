@@ -69,7 +69,9 @@ Use the instructions in the genepy page to install the package.
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_hg38_RNAseq
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WGS_CN
+
 The current owners of these workspaces should give you access.
+
 2. For the mutation pipeline you will also need to request dbGaP access (required for TCGA workflows). See CCLE/new hiree section on Asana for details.
 3. Aquire access to required billing projects (e.g. broad-firecloud-ccle). See CCLE/new hiree section on Asana for details.
 4. Get access to the following Terra groups:
@@ -209,15 +211,13 @@ We are running the following workflows in this order to generate the copy number
 
 [WGS_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate:master?tab=info) aggregates CN segment files into one.
 
-This output file for download will be saved under the sample set under the combined_seg_file attribute.
+This output file for download will be saved under the sample set under the `combined_seg_file` attribute.
 
 #### Mutation
 
 We are running a set of 6 functions/workflows To generate the mutation dataset:
 
 *   For new samples in DepMap, run the ICE version of this task. CCLE2 samples used Agilent targets, so this pipeline should be used instead. The pipelines are identical in terms of their outputs, but the proper targets, baits, and pseudo normal should be used based on how the samples were sequenced.
-
-
 
 *NOTE:* Some further filtering occurs afterwards within the Jupyter Notebook, including hard filtering of allele frequency and coverage (see the section on local data analysis).
 
@@ -239,7 +239,7 @@ There are several other tasks in this workspace. In brief:
 
 #### RNAseq
 
-We are generating both expression and fusion datasets with RNAseq data. We use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, and [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs) that can be large and might cost a lot to store. Run the following tasks on all samples that you need, in this order:
+We are generating both expression and fusion datasets with RNAseq data. Specifically, we use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, and [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs) that can be large and might cost a lot to store. Run the following tasks on all samples that you need, in this order:
 
 [RNA_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline:master?tab=info) imports and runs several sub-processes to generate RNA expression and fusion data matrices.
 
@@ -265,7 +265,7 @@ __We download and reprocess removing the appended version and keeping only the n
 - for the mutation pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table. (workflows works as well with or without matched normals.)
 - for the expression pipeline, we have an additional set of workflows to call mutations from RNAseq, this might not be relevant to your need.
 
-### 3. Downloading and Postprocessing (often called **2.2-4 on local** in the notebooks) <a name="downloading-postprocessing"></a>
+### 3. Downloading and Postprocessing (often called **on local** in the notebooks) <a name="downloading-postprocessing"></a>
 
 This step will do a set of tasks:
 - clean some of the workspace for large useless files.
@@ -279,11 +279,6 @@ _You would only be interested here at minima in the result downloading_
  
 ...and post processing tasks. The main postprocessing functions (and their wrappers for internal use) can be found in the following files:
 
-`copynumbers.py`: `postProcess()` is responsible for CN postprocessing (segmentes and gene-level CN files)
-
-`expressions.py`: `postProcess()` is responsible for postprocessing expression data 
-
-`fusions.py`: `postProcess()` is responsible for postprocessing aggregated fusion files
 
 `mutations.py`: `postProcess()` is responsible for postprocessing aggregated MAF files
 
@@ -293,88 +288,25 @@ The post processing happens in R using guillaume's and Allie's functions, in bri
 
 #### CN
 
-- processSegments
-- filterForCCLE
-- interpolateGapsInSegmented
-- extendEndsOfSegments
-
-##### creating gene copy number
-
-- generateEntrezGenes
-- generateGeneLevelMatrixFromSegments
-
-##### Validation step
-
-Once the files are saved, we load them back in python and do some validations, in brief:
-
-- mean,max,var...
-- to previous version: same mean,max,var...
-- checkAmountOfSegments: flag any samples with a very high number of segments
-- checkGeneChangeAccrossAll: flag any genes which stay at a similar value across all samples
+`copynumbers.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for CN postprocessing (segments and gene-level CN files).
 
 #### Mutation
 
-Here, rather than rerunning the entire analysis, because we know we are adding only WES samples, we can download the previous release's MAF, add the samples, update any annotations, and perform any global filters at the end.
-
-First we need to do an additional step of filtering on coverage and number 
-
-- readMutations
-- createSNPs
-- addToMainMutation
-- filterAllelicFraction
-- filterMinCoverage
-- mergeAnnotations
-- addAnnotation
-- maf_add_variant_annotations
-- mutation_maf_to_binary_matrix (x3)
-
-##### validation
-
-__Compare to previous release (broad only)__
-
-I would run some checks here comparing the results to the previous releases MAF. Namely:
-
-- Count the total number of mutations per cell line, split by type (SNP, INS, DEL)
-- Count the total number of mutations observed by position (group by chromosome, start position, end position and count the number of mutations)
-- Look at specific differences between the two MAFs (join on DepMap_ID, Chromosome, Start position, End position, Variant_Type). I would do this for WES only
-
-__check if important mutations are present or not__
+`postProcess()` in `mutations.py` is responsible for postprocessing aggregated MAF files. Here, rather than rerunning the entire analysis, because we know we are adding only WES samples, we can download the previous release's MAF, add the samples, update any annotations, and perform any global filters at the end.
 
 #### RNA
 
-Here we get all data and remove the duplicates directly with the function `removeDuplicates`
+`expressions.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for postprocessing aggregated expression data from RSEM, which removes duplicates, renames genes, filters and log transforms entires.
 
-We then run:
+##### Fusion
 
-- readTranscripts
-- readCounts
-- readTPM
-- renameFunction
-
-- Allie's gene renaming / filtering and log transform
-
-##### Validation
-
-- mean,max,var...
-- to previous version: same mean,max,var...
-- we QC on the amount of genes with 0 counts for each samples
-
-##### Generate filtered fusion table
-
-Release: `r release`
-
-We want to apply filters to the fusion table to reduce the number of artifacts in the dataset. Specifically, we filter the following:
+Functions responsible for postprocessing aggregated fusion data can be found in `fusions.py`. We want to apply filters to the fusion table to reduce the number of artifacts in the dataset. Specifically, we filter the following:
 
 * Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes
 * Remove red herring fusions (from STAR-Fusion annotations column)
 * Remove recurrent in CCLE (>= 25 samples)
 * Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
 * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
-
-With the functions:
-- readFusions
-- filterFusions
-- prepare_depmap_fusion_data_for_taiga
 
 
 **Remarks:**
@@ -385,13 +317,41 @@ With the functions:
 
 ### 4. QC, Grouping and Uploading to the Portal <a name="qc-grouping-uploading"></a>
 
-These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
+We then perform the following QC tasks for each dataset. These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
 
-We are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
+#### CN
+
+Once the CN files are saved, we load them back in python and do some validations, in brief:
+
+- mean, max, var...
+- to previous version: same mean, max, var...
+- checkAmountOfSegments: flag any samples with a very high number of segments
+- checkGeneChangeAccrossAll: flag any genes which stay at a similar value across all samples
+
+#### Mutation
+
+__Compare to previous release (broad only)__
+
+We compare the results to the previous releases MAF. Namely:
+
+- Count the total number of mutations per cell line, split by type (SNP, INS, DEL)
+- Count the total number of mutations observed by position (group by chromosome, start position, end position and count the number of mutations)
+- Look at specific differences between the two MAFs (join on DepMap_ID, Chromosome, Start position, End position, Variant_Type). This is done for WES only
+
+__check if important mutations are present or not__
+
+
+#### RNA
+
+Once the expression files are saved, we do the following validations:
+- mean,max,var...
+- to previous version: same mean, max, var...
+- we QC on the amount of genes with 0 counts for each samples
+
+
+Besides QC, we are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
 
 We are then uploading the data to a server called taiga where it will be used in the depmap portal
-
-
 ## Repository File Structure <a name="file-structure"></a>
 
 There is for now 3 computation pipeline for depmap omics:
