@@ -12,9 +12,10 @@ import os
 from genepy import mutations as mut
 from genepy.utils import helper as h
 from genepy import terra
-from genepy.google import gcp
 from genepy import rna
 import matplotlib.pyplot as plt
+from depmapomics import terra as myterra
+
 
 def renameColumns(df):
   """
@@ -121,11 +122,11 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
   # computing QC
   print('looking for QC..')
   dataProc={}
-  dataBam={}
   if procqc and refworkspace is not None:
-    dataProc=getQC(workspace=refworkspace, only=samplesinset, qcname=procqc)
+    dataProc=myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=procqc)
+  dataBam={}
   if bamqc and refworkspace is not None:
-    dataBam=getQC(workspace=refworkspace, only=samplesinset, qcname=bamqc)
+    dataBam=myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=bamqc)
   for k,v in dataProc.items():
     if k =='nan':
       continue
@@ -197,7 +198,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
       priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
       genechangethresh (float, optional): above this threshold of variance of gene CN, the sample is considered failed. Defaults to 0.025.
       segmentsthresh (int, optional): above this threshold of number of segments the WGS sample is considered failed. Defaults to 2000.
-      ensemblserver ([type], optional): ensembl server biomart version . Defaults to ENSEMBL_SERVER_V.
+      ensemblserver (str, optional): ensembl server biomart version . Defaults to ENSEMBL_SERVER_V.
       source_rename (dict, optional): dict to rename the source column if needed. Defaults to {}.
       useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
 

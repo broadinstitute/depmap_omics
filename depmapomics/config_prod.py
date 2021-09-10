@@ -315,8 +315,6 @@ RSEMFILENAME = RSEMFILENAME_GENE+RSEMFILENAME_TRANSCRIPTS
 
 SSGSEAFILEPATH = "data/genesets/msigdb.v7.2.symbols.gmt"
 
-PATHTOGENEPY = "../"
-
 RNASEQC_THRESHOLDS_LOWQUAL = {'minmapping': 0.85, 'minendmapping': 0.75, 'minefficiency': 0.75,
                               'maxendmismatch': 0.02, 'maxmismatch': 0.02, 'minhighqual': 0.8,
                               'minexon': 0.7, "maxambiguous": 0.05, "maxsplits": 0.1,
