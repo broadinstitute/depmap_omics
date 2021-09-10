@@ -5,7 +5,8 @@ import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
 from depmapomics.config import *
-
+from genepy import terra
+from genepy.google import gcp
 
 def getTracker():
   return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
@@ -502,3 +503,39 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
           print(val, '<--', a)
           ref.loc[ref[ref.arxspan_id == val].index, 'parent_id'] = a
   return ref
+
+
+def update(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
+                  sheetcreds=SHEETCREDS, sheetname=SHEETNAME, refworkspace=None,
+                  onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
+                  dry_run=True
+                  ):
+
+  # updating locations of bam files and extracting infos
+  if newgs and refworkspace is not None:
+    res, _=terra.changeGSlocation(refworkspace, newgs=newgs, onlycol=onlycol,
+                                  entity='sample', keeppath=False, dry_run=dry_run,
+                                  onlysamples=samplesinset)
+    tracker.loc[res.index.tolist()][['legacy_size', 'legacy_crc32c_hash']
+                                      ] = tracker.loc[
+                                        res.index.tolist()][
+                                          ['size', 'crc32c_hash']].values
+    tracker.loc[res.index.tolist()][HG38BAMCOL]=res[onlycol[:2]].values
+    tracker.loc[res.index.tolist(), 'size']=[gcp.extractSize(
+      i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
+    tracker.loc[res.index.tolist(), 'crc32c_hash']=[gcp.extractHash(
+      i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
+    tracker.loc[res.index.tolist(), 'md5_hash']=gcp.catFiles(
+      dm.WorkspaceManager(refworkspace).get_samples().loc[
+        samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
+
+  len(selected)
+  tracker.loc[selected, samplesetname]=1
+  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
+  tracker.loc[lowqual,'low_quality']=1
+  tracker.loc[lowqual,'blacklist']=1
+  if dry_run:
+    return tracker
+  else:
+    dfToSheet(tracker, sheetname, secret=sheetcreds)
+  print("updated the sheet, please reactivate protections")
