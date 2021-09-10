@@ -1,6 +1,5 @@
 #tracker.py
 from genepy.utils import helper as h
-import pdb
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
@@ -26,7 +25,7 @@ def _getDEPMAPPV(pv_index="arxspan_id",
       index (str, optional): [description]. Defaults to "DepMap_ID".
 
   Returns:
-      [type]: [description]
+      (pandas.DataFrame): the DEPMAP master spreadsheet
   """
   depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
     DEPMAP_PV).sheets[0].to_frame(header=2)
@@ -74,14 +73,15 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
   """update a list of samples' missing information from what is known in the ccle sample tracker
 
   Args:
-      samples ([type]): [description]
-      ccle_refsamples ([type]): [description]
-      arxspan_id (str, optional): [description]. Defaults to 'arxspan_id'.
-      participant_id (str, optional): [description]. Defaults to 'participant_id'.
-      toupdate (dict, optional): [description]. Defaults to {}.
+      samples (pandas.DataFrame): the samples to update
+      ccle_refsamples (pandas.DataFrame): the ccle sample tracker
+      arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
+      participant_id (str, optional): the name of the participant id column. Defaults to 'participant_id'.
+      toupdate (dict(str, []), optional): the columns to update. Defaults to {}.
 
   Returns:
-      [type]: [description]
+      (pandas.DataFrame): the updated samples
+      (list(str)): the list of samples that were not found in the ccle sample tracker
   """
   # If I have a previous samples I can update unknown data directly
   index = []
@@ -130,14 +130,14 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
 
   Args:
   -----
-    refsamples: df[id, version, arxspan_id,...] the reference metadata
-    names: list[id] only do it on this set of samples
-    arxspan_id: the name of the id field
-    version: the name of the version field
+    refsamples (pd.df): the reference metadata. should contain [id, version, arxspan_id,...]
+    names (list[str]): only do it on this set of samples.
+    arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
+    version (str, optional): the name of the version column. Defaults to 'version'.
 
   Returns:
   --------
-    the subsetted dataframe
+    (dict): the subseted samples
 
   """
   # pandas throws an error if index is unavailable
@@ -149,7 +149,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   refsamples = refsamples.loc[names].copy()
   if lennames > len(refsamples):
     print(set(names) - set(refsamples.index))
-    pdb.set_trace()
+    import pdb; pdb.set_trace()
     raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
   for arxspan in set(refsamples[arxspan_id]):
     allv = refsamples[refsamples[arxspan_id] == arxspan]
@@ -170,7 +170,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   return res
 
 def updateIsogenecity(di, tracker, unset=False):
-  """[summary]
+  """
 
   Args:
       di ([type]): [description]
@@ -459,7 +459,12 @@ def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={}, m
 
 def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
   """
-  given a list of samples, a release name and our sample tracker, will set these samples as 1 for this releasename and the rest at 0
+  given a list of samples, a release name and our sample tracker, 
+  
+  will set these samples as 1 for this releasename and the rest at 0
+
+  Args:
+    refsamples (): of the sample tracker
   """
   refsamples[releaseName] = '0'
   refsamples.loc[samples, releaseName] = '1'
@@ -472,11 +477,11 @@ def makeCCLE2(tracker, source='CCLE2'):
   this means it will return a table with arxspan ids, cell line name, ...[bam file type]
 
   Args:
-      tracker ([type]): [description]
-      source (str, optional): [description]. Defaults to 'CCLE2'.
+      tracker (dataframe): the sample tracker
+      source (str, optional): the source column to use. Defaults to 'CCLE2'.
 
   Returns:
-      pd.DF: a table with arxspan ids, cell line name, ...[bam file type]
+      pd.df: a table with arxspan ids, cell line name, ...[bam file type]
   """
   tracker = tracker[tracker.source == source]
   ccle = pd.DataFrame(index=set(tracker.arxspan_id),
@@ -558,8 +563,6 @@ def update(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
       newgs (str, optional): google storage path where to move the files. Defaults to ''.
       sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
       sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
-      procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
-      bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
       refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
       onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
   """
