@@ -55,9 +55,18 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
                    index=False, index_label=False, compression='gzip')
 
 
-def solveQC(tracker, failed, save=""):
-  """
-  # TODO todocument
+def solveQC(tracker, failed, save="", newname="arxspan_id"):
+  """create a renaming dict to rename the columns of the QC file
+
+  based on which samples have failed QC and which are blacklisted int he sample tracker
+
+  Args:
+      tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
+      failed (list): list of samples that failed QC
+      save (str): save the renaming dict to a file
+      newname (str): name of the column in the tracker to rename to
+  Returns:
+      dict: a dict to rename the samples to
   """
   newfail = []
   rename = {}
@@ -65,9 +74,9 @@ def solveQC(tracker, failed, save=""):
   for val in failed:
     if val not in tracker:
       continue
-    a = tracker.loc[val].arxspan_id
+    a = tracker.loc[val][newname]
     res = tracker[(tracker.datatype == 'rna')
-                  & (tracker.arxspan_id == a)]
+                  & (tracker[newname] == a)]
     if len(res) > 1:
       for k in res.index:
         if k not in failed:
@@ -86,7 +95,7 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetnam
                   onlycol=STARBAMCOLTERRA, newgs=RNAGSPATH38,
                   dry_run=False, keeppath=False, qcname="star_logs", match=".Log.final.out"):
   """
-  # TODO: to document
+  # TODO: to merge with the CN's version
   """
   refwm = dm.WorkspaceManager(refworkspace)
   samplesinset = [i['entityName'] for i in refwm.get_entities(
@@ -96,30 +105,14 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetnam
   for k, v in starlogs.items():
     if k == 'nan':
       continue
+    a = tracker.loc[k, 'processing_qc']
+    a = '' if a is np.nan else a
+    tracker.loc[k, 'processing_qc'] = str(v) + ',' + a
     if tracker.loc[k, 'bam_qc'] != v[0]:
       tracker.loc[k, 'bam_qc'] = v[0]
 
-  ## copy star bam file to our cclebams/rnasq_hg38/ bucket
-  renamed, _ = terra.changeGSlocation(workspacefrom=refworkspace, newgs=newgs,
-                                      onlysamples=samplesinset, onlycol=onlycol,
-                                      entity="sample", keeppath=keeppath, dry_run=dry_run)
-
-  tracker.loc[samplesinset, ['legacy_size', 'legacy_crc32c_hash']
-              ] = tracker.loc[samplesinset][['size', 'crc32c_hash']].values
-  tracker.loc[samplesinset, HG38BAMCOL] = renamed[onlycol[:2]].values
-  tracker.loc[samplesinset, 'size'] = [gcp.extractSize(
-      i)[1] for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-l')]
-  tracker.loc[samplesinset, 'crc32c_hash'] = [gcp.extractHash(
-      i) for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
-  tracker.loc[samplesinset, 'md5_hash'] = [gcp.extractHash(
-      i, "md5") for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
-
-  tracker.loc[selected, samplesetname] = 1
-  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']] = 0
-  tracker.loc[lowqual, 'low_quality'] = 1
-  tracker.loc[set(failed)&set(tracker.index), 'blacklist'] = 1
-  dfToSheet(tracker, sheetname, secret=sheetcreds)
-  print("updated the sheet, please reactivate protections")
+  tracker.loc[tracker[tracker.datatype.isin(
+    ['rna'])].index, samplesetname] = 0
 
 
 def loadFromRSEMaggregate(refworkspace, todrop=[], filenames=RSEMFILENAME,
@@ -428,7 +421,7 @@ def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, 
   """
   from taigapy import TaigaClient
   tc = TaigaClient()
-  
+
   if prevcounts is "ccle":
     prevcounts = tc.get(name=TAIGA_ETERNAL,
            file='CCLE_RNAseq_reads')
@@ -453,13 +446,13 @@ def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, 
   folder = os.path.join("temp", samplesetname, "")
   h.createFoldersFor(folder)
   files, _, failed, _, renaming, lowqual = await postProcess(refworkspace, samplesetname,
-                                                                  save_output=folder, doCleanup=doCleanup, priority=priority,
-                                                                  colstoclean=colstoclean, ensemblserver=ensemblserver,
-                                                                  todrop=todrop, samplesetToLoad=samplesetToLoad,
-                                                                  geneLevelCols=RSEMFILENAME_GENE,
-                                                                  trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
-                                                                  ssGSEAcol="genes_tpm", renamingFunc=rn,
-                                                                  dropNonMatching=dropNonMatching, **kwargs)
+                                                    save_output=folder, doCleanup=doCleanup, priority=priority,
+                                                    colstoclean=colstoclean, ensemblserver=ensemblserver,
+                                                    todrop=todrop, samplesetToLoad=samplesetToLoad,
+                                                    geneLevelCols=RSEMFILENAME_GENE,
+                                                    trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
+                                                    ssGSEAcol="genes_tpm", renamingFunc=rn,
+                                                    dropNonMatching=dropNonMatching, **kwargs)
 
   print("doing validation")
   nonoverlap = set(prevcounts.columns) ^ set(

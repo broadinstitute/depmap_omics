@@ -8,12 +8,25 @@ from depmapomics.config import *
 
 
 def getTracker():
+  """
+  get the tracker from google sheets
+  """
   return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
 
 
 def _getDEPMAPPV(pv_index="arxspan_id",
                 pv_tokeep=[],
                 index="DepMap_ID"):
+  """get the DEPMAP master spreadsheet from google sheet
+
+  Args:
+      pv_index (str, optional): [description]. Defaults to "arxspan_id".
+      pv_tokeep (list, optional): [description]. Defaults to [].
+      index (str, optional): [description]. Defaults to "DepMap_ID".
+
+  Returns:
+      [type]: [description]
+  """
   depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
     DEPMAP_PV).sheets[0].to_frame(header=2)
   depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
@@ -24,15 +37,24 @@ def _getDEPMAPPV(pv_index="arxspan_id",
 def merge(tracker, new, old, arxspid, cols):
   """
   given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
+
+  Args:
+      tracker (pandas.DataFrame): the tracker
+      new (str): the new arxspan id
+      old (str): the old arxspan id
+      arxspid (str): the column name of the arxspan id
+      cols (list): the columns to merge on
+
+  Returns:
   """
   #loc = tracker[tracker[arxspid]==old].index
   return False
 
 
 def findIssue(tracker, dup=['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
-                            'subtype', 'origin', 'stripped_cell_line_name'],
-                            ):
+                            'subtype', 'origin', 'stripped_cell_line_name']):
   """
+
   """
   print('things that are from the same patient but don\'t have the same value')
   dup = tracker[dup].set_index('arxspan_id').drop_duplicates()
@@ -147,6 +169,19 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   return res
 
 def updateIsogenecity(di, tracker, unset=False):
+  """[summary]
+
+  Args:
+      di ([type]): [description]
+      tracker ([type]): [description]
+      unset (bool, optional): [description]. Defaults to False.
+
+  Raises:
+      ValueError: [description]
+
+  Returns:
+      [type]: [description]
+  """
   tracker = tracker.copy()
   for k,v in di.items():
     print('________________________________')
@@ -244,6 +279,7 @@ def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
 
   It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
   """
+  return False
 
 def cleanVersions(tracker, samplecol='arxspan_id', dryrun=False, datatypecol='datatype', versioncol="version"):
   """
@@ -365,6 +401,7 @@ def resolveIssues(tracker, issus, arxspid, cols):
   ach-00002 : rh13
   """
   #for val in issus:
+  return False
 
 
 def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={}, my_id='~/.client_secret.json',
@@ -502,3 +539,52 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
           print(val, '<--', a)
           ref.loc[ref[ref.arxspan_id == val].index, 'parent_id'] = a
   return ref
+
+
+def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
+                  sheetcreds=SHEETCREDS,
+                  sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
+                  onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
+                  ):
+  """updates the sample tracker with the new samples and the QC metrics
+
+  Args:
+      tracker (df): [description]
+      selected (list[str]): which samples were selected in the release of the analysis
+      samplesetname (str): the name of the sample set or of the current analysis
+      samplesinset (list[str]): list of samples in the analysis.
+      lowqual (list[str]): list of samples that failed QC
+      newgs (str, optional): google storage path where to move the files. Defaults to ''.
+      sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
+      sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
+      procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
+      bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
+      refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
+      onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+  """
+  # updating locations of bam files and extracting infos
+  if newgs and refworkspace is not None:
+    res, _ = terra.changeGSlocation(refworkspace, newgs=newgs, onlycol=onlycol,
+                                    entity='sample', keeppath=False, dry_run=False,
+                                    onlysamples=samplesinset)
+    tracker.loc[res.index.tolist()][['legacy_size', 'legacy_crc32c_hash']
+                                    ] = tracker.loc[
+        res.index.tolist()][
+        ['size', 'crc32c_hash']].values
+    tracker.loc[res.index.tolist()][HG38BAMCOL] = res[onlycol[:2]].values
+    tracker.loc[res.index.tolist(), 'size'] = [gcp.extractSize(
+        i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
+    tracker.loc[res.index.tolist(), 'crc32c_hash'] = [gcp.extractHash(
+        i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
+    tracker.loc[res.index.tolist(), 'md5_hash'] = gcp.catFiles(
+        dm.WorkspaceManager(refworkspace).get_samples().loc[
+            samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
+
+  tracker.loc[tracker[tracker.datatype.isin(
+      ['wes', "wgs"])].index, samplesetname] = 0
+  tracker.loc[selected, samplesetname] = 1
+  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']] = 0
+  tracker.loc[lowqual, 'low_quality'] = 1
+  tracker.loc[lowqual, 'blacklist'] = 1
+  dfToSheet(tracker, sheetname, secret=sheetcreds)
+  print("updated the sheet, please reactivate protections")

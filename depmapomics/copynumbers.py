@@ -105,7 +105,7 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
   """updates the sample tracker with the new samples and the QC metrics
 
   Args:
-      tracker (df): [description]
+      tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
       selected (list[str]): which samples were selected in the release of the analysis
       samplesetname (str): the name of the sample set or of the current analysis
       samplesinset (list[str]): list of samples in the analysis.
@@ -118,24 +118,6 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
       refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
       onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
   """
-  # updating locations of bam files and extracting infos
-  if newgs and refworkspace is not None:
-    res, _=terra.changeGSlocation(refworkspace, newgs=newgs, onlycol=onlycol,
-                                  entity='sample', keeppath=False, dry_run=False,
-                                  onlysamples=samplesinset)
-    tracker.loc[res.index.tolist()][['legacy_size', 'legacy_crc32c_hash']
-                                      ] = tracker.loc[
-                                        res.index.tolist()][
-                                          ['size', 'crc32c_hash']].values
-    tracker.loc[res.index.tolist()][HG38BAMCOL]=res[onlycol[:2]].values
-    tracker.loc[res.index.tolist(), 'size']=[gcp.extractSize(
-      i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
-    tracker.loc[res.index.tolist(), 'crc32c_hash']=[gcp.extractHash(
-      i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
-    tracker.loc[res.index.tolist(), 'md5_hash']=gcp.catFiles(
-      dm.WorkspaceManager(refworkspace).get_samples().loc[
-        samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
-
   # computing QC
   print('looking for QC..')
   dataProc={}
@@ -158,13 +140,7 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
     tracker.loc[k,'bam_qc'] = str(v) + ',' + a
 
   tracker.loc[tracker[tracker.datatype.isin(['wes',"wgs"])].index, samplesetname]=0
-  len(selected)
-  tracker.loc[selected, samplesetname]=1
-  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
-  tracker.loc[lowqual,'low_quality']=1
-  tracker.loc[lowqual,'blacklist']=1
-  dfToSheet(tracker, sheetname, secret=sheetcreds)
-  print("updated the sheet, please reactivate protections")
+
 
 
 def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id"):
