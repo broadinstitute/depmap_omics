@@ -56,9 +56,18 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
 
 
 def solveQC(tracker, failed, save=""):
-  """
-  # TODO todocument
-  """
+  """finds how to rename the samples and how to drop the failed ones
+
+  based on the sample tracker and the QC data
+
+  Args:
+      tracker (pd.df): the sample tracker
+      failed (list[str]): the list of failed samples
+      save (str, optional): location to save results into. Defaults to "".
+
+  Returns:
+      dict: a dict of the renaming not containing the samples to drop
+  """  
   newfail = []
   rename = {}
   # finding other replicates to solve failed ones
@@ -86,7 +95,7 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetnam
                   onlycol=STARBAMCOLTERRA, newgs=RNAGSPATH38,
                   dry_run=False, keeppath=False, qcname="star_logs", match=".Log.final.out"):
   """
-  # TODO: to document
+  
   """
   refwm = dm.WorkspaceManager(refworkspace)
   samplesinset = [i['entityName'] for i in refwm.get_entities(
