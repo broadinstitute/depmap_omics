@@ -3,7 +3,7 @@
 # Edit at https://www.gitignore.io/?templates=linux,macos,python,jupyternotebook
 
 ## mine ##
-ccle_tasks/CCLE data cleaning/data/*
+ccle_tasks/CCLE\ data\ cleaning/data/*
 
 
 ### JupyterNotebook ###
