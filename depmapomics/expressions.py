@@ -93,7 +93,7 @@ def solveQC(tracker, failed, save=""):
 def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetname,
                   sheetname=SHEETNAME, sheetcreds=SHEETCREDS,
                   onlycol=STARBAMCOLTERRA, newgs=RNAGSPATH38,
-                  dry_run=False, keeppath=False, qcname="star_logs", match=".Log.final.out"):
+                  dry_run=False, qcname="star_logs", match=".Log.final.out"):
   """
   
   """
@@ -107,28 +107,9 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetnam
       continue
     if tracker.loc[k, 'bam_qc'] != v[0]:
       tracker.loc[k, 'bam_qc'] = v[0]
-
-  ## copy star bam file to our cclebams/rnasq_hg38/ bucket
-  renamed, _ = terra.changeGSlocation(workspacefrom=refworkspace, newgs=newgs,
-                                      onlysamples=samplesinset, onlycol=onlycol,
-                                      entity="sample", keeppath=keeppath, dry_run=dry_run)
-
-  tracker.loc[samplesinset, ['legacy_size', 'legacy_crc32c_hash']
-              ] = tracker.loc[samplesinset][['size', 'crc32c_hash']].values
-  tracker.loc[samplesinset, HG38BAMCOL] = renamed[onlycol[:2]].values
-  tracker.loc[samplesinset, 'size'] = [gcp.extractSize(
-      i)[1] for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-l')]
-  tracker.loc[samplesinset, 'crc32c_hash'] = [gcp.extractHash(
-      i) for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
-  tracker.loc[samplesinset, 'md5_hash'] = [gcp.extractHash(
-      i, "md5") for i in gcp.lsFiles(renamed[onlycol[0]].tolist(), '-L')]
-
-  tracker.loc[selected, samplesetname] = 1
-  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']] = 0
-  tracker.loc[lowqual, 'low_quality'] = 1
-  tracker.loc[set(failed)&set(tracker.index), 'blacklist'] = 1
-  dfToSheet(tracker, sheetname, secret=sheetcreds)
-  print("updated the sheet, please reactivate protections")
+  tracker.loc[tracker[tracker.datatype.isin(['rna'])].index, samplesetname]=0
+  track.update(tracker, selected,samplesetname, failed, lowqual, newgs,
+                     sheetname, sheetcreds, refworkspace, onlycol,  dry_run)
 
 
 def loadFromRSEMaggregate(refworkspace, todrop=[], filenames=RSEMFILENAME,
