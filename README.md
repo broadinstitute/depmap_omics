@@ -54,7 +54,7 @@ Use the instructions in the genepy page to install the package.
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
   - authenticate my SDK account by running `gcloud auth application-default login` in the terminal.
 
-2. and GSVA for ssGSEA in R `R` run `R -e 'if(!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")};BiocManager::install(c("GSEABase", "erccdashboard", "GSVA", "DESeq2"));`
+2. and GSVA for ssGSEA in R `R` run `R -e 'if(!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")};BiocManager::install(c("GSEABase", "erccdashboard", "GSVA", "DESeq2"));'`
 
 3. For Python use the requirements.txt file `pip install -r requirements.txt` 
 
@@ -200,41 +200,18 @@ The first phase really is about getting samples generated at the broad and locat
 
 ### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
 
-We are using Dalmatian to send request to Terra, so before running this part, you need to make sure that your dalmatian `WorkspaceManager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name
-You can then run this part for the pipeline to run on your samples. It should take around a day.
+We are using Dalmatian to send requests to Terra, so before running this part, you need to make sure that your dalmatian `WorkspaceManager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name.
+You can then run the following two pipelines on your samples. The whole process may take 3-7 days.
 
 #### Copy Numbers
 
-We are running the following workflows in this order to generate the copy number dataset:
+We are running the following workflows in this order to generate copy number and mutation datasets:
 
-[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) imports and runs several sub-processes to generate copy number segments.
+[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) imports and runs several sub-processes to generate copy number segments and MAF data.
 
-[WGS_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate:master?tab=info) aggregates CN segment files into one.
+[WGS_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate:master?tab=info) aggregates CN segments and MAFs into their respective files.
 
-This output file for download will be saved under the sample set under the `combined_seg_file` attribute.
-
-#### Mutation
-
-We are running a set of 6 functions/workflows To generate the mutation dataset:
-
-*   For new samples in DepMap, run the ICE version of this task. CCLE2 samples used Agilent targets, so this pipeline should be used instead. The pipelines are identical in terms of their outputs, but the proper targets, baits, and pseudo normal should be used based on how the samples were sequenced.
-
-*NOTE:* Some further filtering occurs afterwards within the Jupyter Notebook, including hard filtering of allele frequency and coverage (see the section on local data analysis).
-
-This outputs to be downloaded will be saved in the sample set that was run. The output we use for the release is:
-
-
-*   **passedCGA_filteredMAF_aggregated** 
-
-There are several other tasks in this workspace. In brief:
-
-*   **CGA_Production_Analysis_Pipeline_Cell_Lines** (lelagina/CGA_Production_Analysis_Pipeline_Cell_LinesSnapshot ID: 12). This task is the same as the ICE and AGILENT prefixed version above, except that it relied on pulling the baits and targets to use from the metadata stored for the samples. Having AGILENT and ICE versions specified made the uploading and running process easier.
-*   **SANGER_CGA_Production_Analysis_Pipeline_Cell_Lines** (cclf/CGA_Production_Analysis_Pipeline_Cell_Lines_debuggingSnapshot ID: 22). This task was trying to run the CGA pipeline on the Sanger WES data, using a Sanger pseudo normal. In its current implementation, this task fails to complete for the samples.
-*   **UNFILTERED_aggregateMAFs_selectFields** (ccle_mg/aggregateMAFs_selectFieldsSnapshot ID: 1). Aggregates the MAF outputted by the CGA cell line pipeline prior to the common variant filter and germline filtering tasks. This can give us insight to which mutations are getting filtered out when. We may want to potentially include this MAF in the release so people can see why certain mutations of interest may be getting filtered out.
-*   WES_DM_Mutation_Calling_Pipeline_(standard |expensive) (gkugener/WES_DM_Mutation_Calling_PipelineSnapshot ID: 2). This was a previous mutation calling pipeline implemented for CCLE. We do not use this pipeline any more as the CGA pipeline looks better.
-*   aggregate_filterMAF_CGA (CCLE/aggregate_filterMAF_CGASnapshot ID: 1). An aggregation MAF task that we used in the past. We do not use this task anymore.
-*   calculate_mutational_burden (breardon/calculate_mutational_burdenSnapshot ID: 21). This task can be used to calculate the mutational rate of the samples. We do not make use of this data in the release although it could be of interest.
-*   summarizeWigFile (breardon/summarizeWigFileSnapshot ID: 5). CCLF ran this task (might be necessary for the mutational burden task). For our workflow, we do not run it.
+The output files for download will be saved under the sample set under the `combined_seg_file`, `filtered_CGA_MAF_aggregated` attribute.
 
 
 #### RNAseq
