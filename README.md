@@ -2,7 +2,7 @@
 
 __have a look at [DepMap](https://www.depmap.org)__
 
-![](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/depmap-logo_white.png)
+![](documentation/depmap-logo_white.png)
 
 What you need to process the Quarterly DepMap-Omics releases from Terra.
 
@@ -157,7 +157,7 @@ The notebook architectures are as follows:
 
 ## Pipeline Walkthrough <a name="running-pipeline"></a>
 
-![schema](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/architecture_diagram_white.png)
+![schema](documentation/architecture_diagram_white.png)
 
 To run the CCLE pipeline we follow the installation process above and then boot up a GCP instance to run the notebooks from it.
 
@@ -185,7 +185,7 @@ We are using a set of key tools to process the sequencing output:
 
 The following flowchart provides another good overview of what the pipeline is doing.
 
-![](https://github.com/broadinstitute/ccle_processing/blob/editREADME/documentation/updated-flowchart.png)
+![](documentation/updated-flowchart.png)
 
 _What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
 
