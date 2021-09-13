@@ -327,18 +327,17 @@ Besides QC, we are also preparing the data to be released to different groups, r
 We are then uploading the data to a server called taiga where it will be used in the depmap portal
 ## Repository File Structure <a name="file-structure"></a>
 
-There is for now 3 computation pipeline for depmap omics:
-- Expression
-- Mutations
-- Copy number
+For our 2 computation pipelines for depmap omics:
+- Expression (RNA)
+- Copy number and Mutations (WGS)
 
 Each:
-- is contained in an jupyter notebook file
+- is contained in a jupyter notebook file,
 - gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
 - updates the sample TSVs on Terra with path to the files, 
-- compute the results for each samples by running workflows, 
-- download the results, post process them with additional local functions and QC them.
-- uploads them to taiga.
+- computes the results for each samples by running workflows, 
+- downloads the results and postprocesses them with additional local functions,
+- performs QC and uploads them to taiga (internal only).
 
 __data/__ Contains important information used for processing
 
