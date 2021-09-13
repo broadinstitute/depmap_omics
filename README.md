@@ -78,7 +78,7 @@ The current owners of these workspaces should give you access.
   - DEPMAP-PIPELINES
   - CCLE2-DATA
   - CCLE-PIPELINE
-5. If you need to get access to the depmap data, use the following links:
+5. If you need to get access to the data delivered by GP, use the following links:
   - __WES__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
   - __WES__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
   - __RNA__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData)
@@ -126,7 +126,7 @@ _As the list cannot be parsed, we are not comparing it for now_
 
 ### Creating your Terra Workspaces:
 
-1. You first need a terra account with correct billing setup
+1. You first need a [Terra](https://app.terra.bio/#) account with correct billing setup. See [here](https://support.terra.bio/hc/en-us/articles/360034677651-Account-setup-and-exploring-Terra) for a tutorial on getting started.
 2. use the different *_pipeline folders, they contain everything to setup the workspace correctly
   1. use the WDL scripts available in:
     - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline
@@ -174,8 +174,9 @@ We are using a set of key tools to process the sequencing output:
 - __mutect__: 
   - [https://software.broadinstitute.org/cancer/cga/mutect](https://software.broadinstitute.org/cancer/cga/mutect)
   - [https://youtu.be/rN-cLrb5aGs](https://youtu.be/rN-cLrb5aGs)
-  - [https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2](https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2)
   - [https://www.nature.com/articles/nbt.2514](https://www.nature.com/articles/nbt.2514)
+- __mutect2__:
+  - [https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2](https://gatk.broadinstitute.org/hc/en-us/articles/360036490432-Mutect2)
 - __gatk cnv__:
   - [https://software.broadinstitute.org/gatk/documentation/article?id=11682](https://software.broadinstitute.org/gatk/documentation/article?id=11682)
 - __strelka__:
@@ -202,7 +203,7 @@ The first phase really is about getting samples generated at the broad and locat
 We are using Dalmatian to send requests to Terra, so before running this part, you need to make sure that your dalmatian `WorkspaceManager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name.
 You can then run the following two pipelines on your samples. The whole process may take 3-7 days.
 
-#### Copy Numbers
+#### Copy Numbers and Somatic Mutations
 
 We are running the following workflows in this order to generate copy number and mutation datasets:
 
@@ -210,8 +211,13 @@ We are running the following workflows in this order to generate copy number and
 
 [WGS_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate:master?tab=info) aggregates CN segments and MAFs into their respective files.
 
-The output files for download will be saved under the sample set under the `combined_seg_file`, `filtered_CGA_MAF_aggregated` attribute.
+The outputs to be downloaded will be saved under the sample set that you ran. The outputs we use for the release are:
 
+*   combined_seg_file
+*   filtered_CGA_MAF_aggregated
+*   unfiltered_CGA_MAF_aggregated
+
+* Note that additional files are used for QC
 
 #### RNAseq
 
@@ -257,7 +263,7 @@ _You would only be interested here at minima in the result downloading_
 
 #### CN
 
-`copynumbers.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for postprocessing segments and gene-level CN files.
+`copynumbers.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for postprocessing segments and creating gene-level CN files.
 
 #### Mutation
 
@@ -265,7 +271,7 @@ _You would only be interested here at minima in the result downloading_
 
 #### RNA
 
-`expressions.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for postprocessing aggregated expression data from RSEM, which removes duplicates, renames genes, filters and log transforms entires.
+`expressions.py` contains the main postprocessing function (`postProcess()` and their wrappers for internal use) responsible for postprocessing aggregated expression data from RSEM, which removes duplicates, renames genes, filters and log transforms entries, and generates protein-level expression data files.
 
 ##### Fusion
 
@@ -284,7 +290,7 @@ Functions responsible for postprocessing aggregated fusion data can be found in 
 - we do not yet have integrated our germline calling in the mutation pipeline but you can still find the haplotypeCaller\|DeepVariant workflows and their parameters
 
 
-### 4. QC, Grouping and Uploading to the Portal <a name="qc-grouping-uploading"></a>
+### 4. QC, Grouping and Uploading to the Portal (internal use only) <a name="qc-grouping-uploading"></a>
 
 We then perform the following QC tasks for each dataset. These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
 
@@ -306,8 +312,6 @@ We compare the results to the previous releases MAF. Namely:
 - Count the total number of mutations per cell line, split by type (SNP, INS, DEL)
 - Count the total number of mutations observed by position (group by chromosome, start position, end position and count the number of mutations)
 - Look at specific differences between the two MAFs (join on DepMap_ID, Chromosome, Start position, End position, Variant_Type). This is done for WES only
-
-__check if important mutations are present or not__
 
 
 #### RNA
@@ -376,6 +380,7 @@ We are currently using Illumina ICE intervals and Agilent intervals. you can fin
 @[jkobject](https://www.jkobject.com)
 @gkugener
 @gmiller
+@5im1z
 @__[BroadInsitute](https://www.broadinstitute.org)
 
 For any questions/issues, send us an email at ccle-help@broadinstitute.org or write down an issue on the github repo
