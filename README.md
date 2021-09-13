@@ -40,7 +40,7 @@ If you are not familiar with these notions, we will first recommend you get more
 
 `git clone http://github.com/BroadInstitute/depmap_omics.git && cd depmap_omics`
 
-`pip install .`
+`pip install -e .`
 
 ### :warning: this repository needs other repos
 
@@ -65,10 +65,9 @@ Use the instructions in the genepy page to install the package.
 ### Getting Terra Access
 
 1. You will need to request access to the following terra workspaces:
-  - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline
-  - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_hg38_RNAseq
-  - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
-  - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WGS_CN
+  - [RNASeq](https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_hg38_RNAseq)
+  - [WES](https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38)
+  - [WGS (including the mutation pipeline)](https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WGS_CN)
 
 The current owners of these workspaces should give you access.
 
@@ -80,8 +79,8 @@ The current owners of these workspaces should give you access.
   - CCLE2-DATA
   - CCLE-PIPELINE
 5. If you need to get access to the depmap data, use the following links:
-  - __Exome__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
-  - __Exome__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
+  - __WES__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
+  - __WES__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
   - __RNA__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData)
   - __RNA__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_RNAseq)
   - __WGS__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_WGS)
