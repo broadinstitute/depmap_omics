@@ -55,7 +55,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
 
   Returns:
       pd.dataframe: dataframe containing the segments concatenated in a bed like format
-  """  """"""
+  """
   wm = dm.WorkspaceManager(refworkspace)
   if save_output:
     terra.saveConfigs(refworkspace, os.path.join(save_output, 'terra/'))
