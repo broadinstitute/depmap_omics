@@ -34,7 +34,6 @@ MYSTORAGE_ID = "~/.storage.json"
 SHEETNAME = 'ccle sample tracker'
 REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
 
-PRIVACY_RELEASE = "https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4"
 DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
 
 POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
@@ -174,29 +173,29 @@ WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 
 
 LINES_TO_RELEASE = [
-    "ACH-000023",
-    "ACH-000145",
-    "ACH-000205",
-    "ACH-000345",
-    "ACH-000359",
-    "ACH-000399",
-    "ACH-000409",
-    "ACH-000515",
-    "ACH-000664",
-    "ACH-000744",
-    "ACH-000992",
-    "ACH-001032",
-    "ACH-001373",
-    "ACH-001393",
-    "ACH-001410",
-    "ACH-001558",
-    "ACH-001679",
-    "ACH-001696",
-    "ACH-002022",
-    "ACH-002060",
-    "ACH-002659",
-    "ACH-002687",
-    "ACH-002707",
+  "ACH-000023",
+  "ACH-000145",
+  "ACH-000205",
+  "ACH-000345",
+  "ACH-000359",
+  "ACH-000399",
+  "ACH-000409",
+  "ACH-000515",
+  "ACH-000664",
+  "ACH-000744",
+  "ACH-000992",
+  "ACH-001032",
+  "ACH-001373",
+  "ACH-001393",
+  "ACH-001410",
+  "ACH-001558",
+  "ACH-001679",
+  "ACH-001696",
+  "ACH-002022",
+  "ACH-002060",
+  "ACH-002659",
+  "ACH-002687",
+  "ACH-002707",
 ]
 
 ############## DNAseq
