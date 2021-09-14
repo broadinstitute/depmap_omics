@@ -361,7 +361,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   for v in set(wgssegments[SAMPLEID]):
     wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
                         'Source'] = tracker[tracker.index == v].source.values[0]
-    wgssegments.Source = wgssegments.Source.replace(source_rename)
+  wgssegments.Source = wgssegments.Source.replace(source_rename)
   wgssegments.Source += ' WGS'
 
   print('renaming')
