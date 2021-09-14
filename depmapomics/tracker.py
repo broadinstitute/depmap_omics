@@ -409,7 +409,7 @@ def resolveIssues(tracker, issus, arxspid, cols):
 def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={}, my_id='~/.client_secret.json',
                             stripped_cell_line_name="stripped_cell_line_name", arxspan_id="arxspan_id",
                             mystorage_id="~/.storage.json",
-                            depmappvlink="https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"):
+                            depmappvlink=DEPMAP_PV):
   """
   Given a List of samples with no arxspan ids, will try to retrieve an arxspan id and associated data from trackers
 
