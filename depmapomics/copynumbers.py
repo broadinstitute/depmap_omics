@@ -486,7 +486,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                         'ACH-002475',
                         'ACH-001543'
                         # TODO: drop these elements directly in the legacy datasets and should be blacklisted in the tracker
-                        ], taiga_legacy_loc='depmap-wes-cn-data--08f3',
+                        ], taiga_legacy_loc= TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset="cn-wes-achilles-4dcd",
                        dataset_description=Achillesreadme,
