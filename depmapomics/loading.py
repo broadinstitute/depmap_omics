@@ -236,7 +236,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
         toremov.add(l)
     #elif len(refsamples[refsamples[extract['size']] == withsamesize[extract["size"]][0]]):
       #toremov.add(k)
-  print("removed because exist in duplicte in the workspace: ")
+  print("removed because exist in duplicate in the workspace: ")
   print(toremov)
   for i in toremov:
     wrongsampless = wrongsampless.drop(i)
