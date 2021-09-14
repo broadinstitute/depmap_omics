@@ -169,7 +169,8 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   # remove all the reference metadata columns except the arxspan ID
   return res
 
-def updateIsogenecity(di, tracker, unset=False):
+def updateIsogenecity(di, tracker, unset=False, 
+  toupdate=['participant_id', 'age', 'sex', "matched_normal"]):
   """
 
   Args:
@@ -205,13 +206,13 @@ def updateIsogenecity(di, tracker, unset=False):
       tracker.loc[b.index, 'participant_id'] = 'PT-'+h.randomString()
     else:
       print('doing:')
-      print(a.loc[a.index[0], ['participant_id', 'age', 'sex', "matched_normal"]].values)
+      print(a.loc[a.index[0], toupdate].values)
       print('into')
       print(tracker.loc[tracker[tracker.participant_id == b.participant_id[0]].index,
-                  ['participant_id', 'age', 'sex', "matched_normal"]].values)
+                  toupdate].values)
       tracker.loc[tracker[tracker.participant_id==b.participant_id[0]].index,
-                  ['participant_id', 'age', 'sex', "matched_normal"]] = a.loc[a.index[0],
-                  ['participant_id', 'age', 'sex', "matched_normal"]].tolist()
+                  toupdate] = a.loc[a.index[0],
+                  toupdate].tolist()
   return tracker
 
 def changeCellLineNameInNew(ref, new, datatype, dupdict, toupdate=['stripped_cell_line_name',
