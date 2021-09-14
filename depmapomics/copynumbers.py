@@ -488,7 +488,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
                         # TODO: drop these elements directly in the legacy datasets and should be blacklisted in the tracker
                         ], taiga_legacy_loc= TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
-                       taiga_dataset="cn-wes-achilles-4dcd",
+                       taiga_dataset= TAIGA_CN_ACHILLES,
                        dataset_description=Achillesreadme,
                        cytobandloc='data/hg38_cytoband.gz',
                        gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),
