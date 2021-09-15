@@ -98,7 +98,6 @@ TAIGA_CN = "cn-latest-8bea"
 TAIGA_EXPRESSION = "expression-869e"
 TAIGA_FUSION = "fusions-64c4"
 TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
-
 TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
 
 
@@ -287,10 +286,6 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
 
 ############## EXPRESSION
 
-## genomic annotations (v35)
-GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.annotation.gff3.gz'
-
-
 BAM_GCS_BUCKET = 'gs://cclebams-sandbox'
 
 RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
@@ -311,8 +306,6 @@ RSEMFILENAME_TRANSCRIPTS=["transcripts_tpm", "transcripts_expected_count"]
 RSEMFILENAME = RSEMFILENAME_GENE+RSEMFILENAME_TRANSCRIPTS
 
 SSGSEAFILEPATH = "data/genesets/msigdb.v7.2.symbols.gmt"
-
-PATHTOGENEPY = "../"
 
 RNASEQC_THRESHOLDS_LOWQUAL = {'minmapping': 0.85, 'minendmapping': 0.75, 'minefficiency': 0.75,
                               'maxendmismatch': 0.02, 'maxmismatch': 0.02, 'minhighqual': 0.8,

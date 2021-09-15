@@ -2,28 +2,10 @@ import numpy as np
 
 ########################## GENERIC PARAMS
 
+## General
 CACHE_PATH = '~/.depmapomics/'
 TMP_PATH = '/tmp/'
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
-
-SHEETCREDS = '../.credentials.json'
-MY_ID = '~/.client_secret.json'
-MYSTORAGE_ID = "~/.storage.json"
-
-SHEETNAME = 'ccle sample tracker'
-
-GCS_PAYER_PROJECT = 'broad-firecloud-ccle'
-
-TAIGA_ETERNAL = 'depmap-a0ab'
-
-REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
-
-PRIVACY_RELEASE = "https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4"
-DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
-
-POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
-
-DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID="DepMap_ID"
 
@@ -33,31 +15,34 @@ isCCLE = True
 
 doCleanup = True
 
-LINES_TO_RELEASE = [
-    "ACH-000023",
-    "ACH-000145",
-    "ACH-000205",
-    "ACH-000345",
-    "ACH-000359",
-    "ACH-000399",
-    "ACH-000409",
-    "ACH-000515",
-    "ACH-000664",
-    "ACH-000744",
-    "ACH-000992",
-    "ACH-001032",
-    "ACH-001373",
-    "ACH-001393",
-    "ACH-001410",
-    "ACH-001558",
-    "ACH-001679",
-    "ACH-001696",
-    "ACH-002022",
-    "ACH-002060",
-    "ACH-002659",
-    "ACH-002687",
-    "ACH-002707",
-]
+## google storage
+
+GCS_PAYER_PROJECT = 'broad-firecloud-ccle'
+
+BAM_GCS_BUCKET = 'gs://cclebams'
+
+RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
+RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
+WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
+WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
+
+### google sheet specific
+SHEETCREDS = '../.credentials.json'
+MY_ID = '~/.client_secret.json'
+MYSTORAGE_ID = "~/.storage.json"
+
+SHEETNAME = 'ccle sample tracker'
+REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
+
+DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
+
+POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
+
+## TAIGA specific
+
+TAIGA_ETERNAL = 'depmap-a0ab'
+
+DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 VIRTUAL = {
   'internal': 'internal-21q3-fe4c',
@@ -98,24 +83,19 @@ TAIGA_MUTATION = "mutations-latest-ed72"
 TAIGA_CN="cn-latest-d8d4"
 
 TAIGA_EXPRESSION="expression-d035"
-
 TAIGA_FUSION = "fusions-95c9"
 
-TAIGA_CN_ACHILLES = "cn-wes-achilles-4dcd"
-
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
-
-
-
 datasets = ['internal', 'ibm', 'dmc', 'public']
+
+VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
+
+## RUN SPECIFIC
 
 RUN_NOTEBOOKS = ['WGS_CCLE.ipynb', 'RNA_CCLE.ipynb']
 
 UPLOAD_NOTEBOOK = ['DepMap_Upload.ipynb']
 
 NOTEBOOKS = RUN_NOTEBOOKS+UPLOAD_NOTEBOOK
-
-VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
 RELEASE = SAMPLESETNAME.lower()
 
@@ -189,6 +169,33 @@ wgssource2 = "ibm"
 WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
 WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
+
+
+LINES_TO_RELEASE = [
+  "ACH-000023",
+  "ACH-000145",
+  "ACH-000205",
+  "ACH-000345",
+  "ACH-000359",
+  "ACH-000399",
+  "ACH-000409",
+  "ACH-000515",
+  "ACH-000664",
+  "ACH-000744",
+  "ACH-000992",
+  "ACH-001032",
+  "ACH-001373",
+  "ACH-001393",
+  "ACH-001410",
+  "ACH-001558",
+  "ACH-001679",
+  "ACH-001696",
+  "ACH-002022",
+  "ACH-002060",
+  "ACH-002659",
+  "ACH-002687",
+  "ACH-002707",
+]
 
 ############## DNAseq
 
@@ -292,17 +299,6 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
 
 ############## EXPRESSION
 
-## genomic annotations (v35)
-GENCODE = 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.annotation.gff3.gz'
-
-BAM_GCS_BUCKET = 'gs://cclebams'
-
-RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
-RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
-WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
-WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
-
-
 STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 
 RSEM_TRANSCRIPTS = ['rsem_transcripts_expected_count',
@@ -316,8 +312,6 @@ RSEMFILENAME_TRANSCRIPTS=["transcripts_tpm", "transcripts_expected_count"]
 RSEMFILENAME = RSEMFILENAME_GENE+RSEMFILENAME_TRANSCRIPTS
 
 SSGSEAFILEPATH = "data/genesets/msigdb.v7.2.symbols.gmt"
-
-PATHTOGENEPY = "../"
 
 RNASEQC_THRESHOLDS_LOWQUAL = {'minmapping': 0.85, 'minendmapping': 0.75, 'minefficiency': 0.75,
                               'maxendmismatch': 0.02, 'maxmismatch': 0.02, 'minhighqual': 0.8,
@@ -336,7 +330,7 @@ PREVIOUS_QC_FAIL = ['CDS-12DTEw', 'CDS-9hv1zM', 'CDS-A6GSeQ', 'CDS-aWlMRt', 'CDS
                     'CDS-DRM3l2', 'CDS-jOlYT4', 'CDS-KMhiT9', 'CDS-M6mnMA', 'CDS-pYwECX', 'CDS-v6E624',
                     'CDS-vxTqNJ', 'CDS-YxtmkI',"CDS-fk564T","CDS-kU30H5","CDS-G0F5f5","CDS-ABH0uZ"]
 
-###################### README
+###################### READMEs output
 
 README_folder = "../depmap-release-readmes/"
 
