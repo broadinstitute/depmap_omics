@@ -465,28 +465,8 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   return wespriosegments, wgspriosegments
 
 
-def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, bad=["ACH-001011",
-                        "ACH-001108",
-                        "ACH-001187",
-                        "ACH-002291"  # added for some reason?
-                        # much more than that..
-                        "ACH-002010",
-                        "ACH-000314"
-                        # bad fp
-                        # these were dropped in 21Q3 for fingerprinting
-                        'ACH-001078',
-                        'ACH-002184',
-                        'ACH-001146',
-                        'ACH-002022',
-                        'ACH-001173',
-                        'ACH-001790',
-                        'ACH-002260',
-                        'ACH-001741',
-                        'ACH-000010',
-                        'ACH-002475',
-                        'ACH-001543'
-                        # TODO: drop these elements directly in the legacy datasets and should be blacklisted in the tracker
-                        ], taiga_legacy_loc= TAIGA_LEGACY_CN,
+def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, bad=[], 
+                       taiga_legacy_loc= TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset= TAIGA_CN_ACHILLES,
                        dataset_description=Achillesreadme,
@@ -542,7 +522,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, b
       (set(wespriosegs[SAMPLEID]) | (set(wgspriosegs[SAMPLEID])))
   #samegenes = set(prevgenecn.columns) & set(priogenecn.columns)
 
-  onlyinleg=onlyinleg - set(bad + bad_fp)
+  onlyinleg=onlyinleg - set(bad)
   print('found samples that are only in the legacy datasets')
   print(onlyinleg)
   # merging
