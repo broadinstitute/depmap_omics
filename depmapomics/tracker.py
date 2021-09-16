@@ -572,16 +572,17 @@ def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
   """
   # updating locations of bam files and extracting infos
   if newgs and refworkspace is not None:
-    samplesinset = [i['entityName'] for i in dm.WorkspaceManager(refworkspace).get_entities(
+    if not samplesinset:
+      samplesinset = [i['entityName'] for i in dm.WorkspaceManager(refworkspace).get_entities(
             'sample_set').loc[samplesetname].samples]
     res, _=terra.changeGSlocation(refworkspace, newgs=newgs, onlycol=onlycol,
                                   entity='sample', keeppath=False, dry_run=dry_run,
-                                  onlysamples=samplesinset)
+                                  onlysamples=samplesinset, workspaceto=refworkspace)
     tracker.loc[res.index.tolist()][['legacy_size', 'legacy_crc32c_hash']
                                       ] = tracker.loc[
                                         res.index.tolist()][
                                           ['size', 'crc32c_hash']].values
-    tracker.loc[res.index.tolist()][HG38BAMCOL]=res[onlycol[:2]].values
+    tracker.loc[res.index.tolist(), HG38BAMCOL]=res[onlycol[:2]].values
     tracker.loc[res.index.tolist(), 'size']=[gcp.extractSize(
       i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
     tracker.loc[res.index.tolist(), 'crc32c_hash']=[gcp.extractHash(
@@ -590,7 +591,6 @@ def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
       dm.WorkspaceManager(refworkspace).get_samples().loc[
         samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
 
-  len(selected)
   tracker.loc[selected, samplesetname]=1
   tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
   tracker.loc[lowqual,'low_quality']=1
