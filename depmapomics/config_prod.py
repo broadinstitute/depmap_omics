@@ -21,9 +21,10 @@ GCS_PAYER_PROJECT = 'broad-firecloud-ccle'
 
 BAM_GCS_BUCKET = 'gs://cclebams'
 
-RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
+RNA_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
 RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
 WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
+WGS_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/wgs_hg38/"
 WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
 
 ### google sheet specific

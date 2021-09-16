@@ -288,10 +288,12 @@ FUSION_RED_HERRING = ['GTEx_recurrent', 'DGD_PARALOGS', 'HGNC_GENEFAM',
 
 BAM_GCS_BUCKET = 'gs://cclebams-sandbox'
 
-RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
+RNA_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
 RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
 WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
 WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
+WGS_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/wgs_hg38/"
+
 
 STARBAMCOLTERRA = [ "internal_bam_filepath", 'internal_bai_filepath']
 

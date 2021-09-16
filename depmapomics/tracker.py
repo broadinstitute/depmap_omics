@@ -6,6 +6,9 @@ from gsheets import Sheets
 from depmapomics.config import *
 from genepy import terra
 from genepy.google import gcp
+from genepy.google.google_sheet import dfToSheet
+import dalmatian as dm
+
 
 def getTracker():
   """
@@ -548,10 +551,10 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
   return ref
 
 
-def update(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
+def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
                   sheetcreds=SHEETCREDS, sheetname=SHEETNAME, refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
-                  dry_run=True
+                  dry_run=True, samplesinset=[],
                   ):
   """updates the sample tracker with the new samples and the QC metrics
 
@@ -569,6 +572,8 @@ def update(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
   """
   # updating locations of bam files and extracting infos
   if newgs and refworkspace is not None:
+    samplesinset = [i['entityName'] for i in dm.WorkspaceManager(refworkspace).get_entities(
+            'sample_set').loc[samplesetname].samples]
     res, _=terra.changeGSlocation(refworkspace, newgs=newgs, onlycol=onlycol,
                                   entity='sample', keeppath=False, dry_run=dry_run,
                                   onlysamples=samplesinset)
@@ -589,7 +594,7 @@ def update(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
   tracker.loc[selected, samplesetname]=1
   tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
   tracker.loc[lowqual,'low_quality']=1
-  tracker.loc[lowqual,'blacklist']=1
+  tracker.loc[failed,'blacklist']=1
   if dry_run:
     return tracker
   else:

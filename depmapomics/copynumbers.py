@@ -98,7 +98,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   return segments
 
 
-def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
+def updateTracker(tracker, selected, samplesetname, lowqual, newgs=WGS_GCS_PATH_HG38,
                   sheetcreds = SHEETCREDS,
                   sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
@@ -121,26 +121,25 @@ def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs
   """
   # computing QC
   print('looking for QC..')
-  dataProc={}
-  if procqc and refworkspace is not None:
-    dataProc=myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=procqc)
-  dataBam={}
-  if bamqc and refworkspace is not None:
-    dataBam=myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=bamqc)
-  for k,v in dataProc.items():
-    if k =='nan':
-      continue
-    a = tracker.loc[k,'processing_qc']
-    a = '' if a is np.nan else a
-    tracker.loc[k,'processing_qc'] = str(v) + ',' + a
-  for k,v in dataBam.items():
-    if k =='nan':
-      continue
-    a = tracker.loc[k,'bam_qc']
-    a = '' if a is np.nan else a
-    tracker.loc[k,'bam_qc'] = str(v) + ',' + a
+  if refworkspace is not None:
+    samplesinset=[i['entityName'] for i in dm.WorkspaceManager(refworkspace).get_entities(
+      'sample_set').loc[samplesetname].samples]
+    dataProc = {} if procqc else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=procqc)
+    dataBam = {} if bamqc else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=bamqc)
+    for k,v in dataProc.items():
+      if k =='nan':
+        continue
+      a = tracker.loc[k,'processing_qc']
+      a = '' if a is np.nan else a
+      tracker.loc[k,'processing_qc'] = str(v) + ',' + a
+    for k,v in dataBam.items():
+      if k =='nan':
+        continue
+      a = tracker.loc[k,'bam_qc']
+      a = '' if a is np.nan else a
+      tracker.loc[k,'bam_qc'] = str(v) + ',' + a
   tracker.loc[tracker[tracker.datatype.isin(['wes',"wgs"])].index, samplesetname]=0
-  track.update(tracker, selected, samplesetname, samplesinset, lowqual, newgs,
+  track.update(tracker, selected, samplesetname, lowqual, lowqual, newgs,
                       sheetcreds, sheetname, refworkspace, onlycol, dry_run)
 
 
@@ -302,9 +301,6 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   sheets = Sheets.from_files(my_id, mystorage_id)
   tracker = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
 
-  wesrefwm = dm.WorkspaceManager(wesrefworkspace)
-  wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)
-
   # doing wes
   folder = os.path.join("temp", samplesetname, "wes_")
   if redoWES:
@@ -314,6 +310,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
     wessegments, genecn, wesfailed = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
                 todrop=todropwes,
                 save_output=folder,
+                segmentsthresh=850,
                 priority=priority, **kwargs)
 
     wesrenaming = managingDuplicates(set(wessegments[SAMPLEID]), (set(
@@ -350,6 +347,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   wgssegments, genecn, wgsfailed = postProcess(wgsrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
               todrop=todropwgs,
               save_output=folder,
+              segmentsthresh=2000,
               priority=priority, **kwargs)
 
   wgsrenaming = managingDuplicates(set(wgssegments[SAMPLEID]), (set(
@@ -379,18 +377,14 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   selected = {j:i for i,j in wesrenaming.items()}
   selected.update({j:i for i,j in wgsrenaming.items()})
   try:
-    wgssamplesinset=[i['entityName'] for i in wgsrefwm.get_entities(
-            'sample_set').loc[samplesetname].samples]
-    updateTracker(tracker, selected, wgssamplesinset, samplesetname,
-                  list(wgsfailed), sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
+    updateTracker(tracker, selected, samplesetname, list(wgsfailed), 
+        sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
   except:
     print('no wgs for this sampleset')
 
   try:
-    wessamplesinset=[i['entityName'] for i in wesrefwm.get_entities(
-        'sample_set').loc[samplesetname].samples]
-    updateTracker(tracker, selected, wessamplesinset, samplesetname,
-                  list(wesfailed), sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc)
+    updateTracker(tracker, selected, samplesetname, list(wesfailed), sheetcreds=sheetcreds, 
+        sheetname=sheetname, bamqc=bamqc, procqc=procqc)
   except:
     print('no wes for this sampleset')
 
@@ -465,13 +459,14 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   return wespriosegments, wgspriosegments
 
 
-def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, bad=[], 
+def _ProcessForAchilles(wespriosegs, wgspriosegs, 
+                       cytobandloc,#='data/hg38_cytoband.gz',
+                       gene_mapping,#=pd.read_csv('data/genemapping_19Q1.csv'),
+                       samplesetname=SAMPLESETNAME, bad=[], 
                        taiga_legacy_loc= TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset= TAIGA_CN_ACHILLES,
                        dataset_description=Achillesreadme,
-                       cytobandloc='data/hg38_cytoband.gz',
-                       gene_mapping=pd.read_csv('data/genemapping_19Q1.csv'),
                        prevsegments="ccle",
                        prevgenecn="ccle",
                        gene_expected_count="ccle"):
