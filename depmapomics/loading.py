@@ -718,6 +718,9 @@ def load(samplesetname, workspaces,
   samples[extract_defaults['release_date']] = [h.inttodate(i) for i in
       samples[extract_defaults['release_date']]]
 
+  if os.path.isdir('temp/') == False:
+    os.makedirs('temp/')
+
   if len(noarxspan) > 0:
     print("we found "+str(len(noarxspan))+" samples without arxspan_ids!!")
     noarxspan = noarxspan.sort_values(by = 'stripped_cell_line_name')
