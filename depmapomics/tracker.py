@@ -1,19 +1,32 @@
 #tracker.py
 from genepy.utils import helper as h
-import pdb
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
 from depmapomics.config import *
-
+from genepy import terra
+from genepy.google import gcp
 
 def getTracker():
+  """
+  get the tracker from google sheets
+  """
   return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
 
 
 def _getDEPMAPPV(pv_index="arxspan_id",
                 pv_tokeep=[],
                 index="DepMap_ID"):
+  """get the DEPMAP master spreadsheet from google sheet
+
+  Args:
+      pv_index (str, optional): [description]. Defaults to "arxspan_id".
+      pv_tokeep (list, optional): [description]. Defaults to [].
+      index (str, optional): [description]. Defaults to "DepMap_ID".
+
+  Returns:
+      (pandas.DataFrame): the DEPMAP master spreadsheet
+  """
   depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
     DEPMAP_PV).sheets[0].to_frame(header=2)
   depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
@@ -24,15 +37,24 @@ def _getDEPMAPPV(pv_index="arxspan_id",
 def merge(tracker, new, old, arxspid, cols):
   """
   given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
+
+  Args:
+      tracker (pandas.DataFrame): the tracker
+      new (str): the new arxspan id
+      old (str): the old arxspan id
+      arxspid (str): the column name of the arxspan id
+      cols (list): the columns to merge on
+
+  Returns:
   """
   #loc = tracker[tracker[arxspid]==old].index
   return False
 
 
 def findIssue(tracker, dup=['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
-                            'subtype', 'origin', 'stripped_cell_line_name'],
-                            ):
+                            'subtype', 'origin', 'stripped_cell_line_name']):
   """
+
   """
   print('things that are from the same patient but don\'t have the same value')
   dup = tracker[dup].set_index('arxspan_id').drop_duplicates()
@@ -51,14 +73,15 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
   """update a list of samples' missing information from what is known in the ccle sample tracker
 
   Args:
-      samples ([type]): [description]
-      ccle_refsamples ([type]): [description]
-      arxspan_id (str, optional): [description]. Defaults to 'arxspan_id'.
-      participant_id (str, optional): [description]. Defaults to 'participant_id'.
-      toupdate (dict, optional): [description]. Defaults to {}.
+      samples (pandas.DataFrame): the samples to update
+      ccle_refsamples (pandas.DataFrame): the ccle sample tracker
+      arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
+      participant_id (str, optional): the name of the participant id column. Defaults to 'participant_id'.
+      toupdate (dict(str, []), optional): the columns to update. Defaults to {}.
 
   Returns:
-      [type]: [description]
+      (pandas.DataFrame): the updated samples
+      (list(str)): the list of samples that were not found in the ccle sample tracker
   """
   # If I have a previous samples I can update unknown data directly
   index = []
@@ -107,14 +130,14 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
 
   Args:
   -----
-    refsamples: df[id, version, arxspan_id,...] the reference metadata
-    names: list[id] only do it on this set of samples
-    arxspan_id: the name of the id field
-    version: the name of the version field
+    refsamples (pd.df): the reference metadata. should contain [id, version, arxspan_id,...]
+    names (list[str]): only do it on this set of samples.
+    arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
+    version (str, optional): the name of the version column. Defaults to 'version'.
 
   Returns:
   --------
-    the subsetted dataframe
+    (dict): the subseted samples
 
   """
   # pandas throws an error if index is unavailable
@@ -126,7 +149,7 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   refsamples = refsamples.loc[names].copy()
   if lennames > len(refsamples):
     print(set(names) - set(refsamples.index))
-    pdb.set_trace()
+    import pdb; pdb.set_trace()
     raise ValueError('we had some ids in our dataset not registered in this refsample dataframe')
   for arxspan in set(refsamples[arxspan_id]):
     allv = refsamples[refsamples[arxspan_id] == arxspan]
@@ -146,7 +169,21 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
   # remove all the reference metadata columns except the arxspan ID
   return res
 
-def updateIsogenecity(di, tracker, unset=False):
+def updateIsogenecity(di, tracker, unset=False, 
+  toupdate=['participant_id', 'age', 'sex', "matched_normal"]):
+  """
+
+  Args:
+      di ([type]): [description]
+      tracker ([type]): [description]
+      unset (bool, optional): [description]. Defaults to False.
+
+  Raises:
+      ValueError: [description]
+
+  Returns:
+      [type]: [description]
+  """
   tracker = tracker.copy()
   for k,v in di.items():
     print('________________________________')
@@ -169,13 +206,13 @@ def updateIsogenecity(di, tracker, unset=False):
       tracker.loc[b.index, 'participant_id'] = 'PT-'+h.randomString()
     else:
       print('doing:')
-      print(a.loc[a.index[0], ['participant_id', 'age', 'sex', "matched_normal"]].values)
+      print(a.loc[a.index[0], toupdate].values)
       print('into')
       print(tracker.loc[tracker[tracker.participant_id == b.participant_id[0]].index,
-                  ['participant_id', 'age', 'sex', "matched_normal"]].values)
+                  toupdate].values)
       tracker.loc[tracker[tracker.participant_id==b.participant_id[0]].index,
-                  ['participant_id', 'age', 'sex', "matched_normal"]] = a.loc[a.index[0],
-                  ['participant_id', 'age', 'sex', "matched_normal"]].tolist()
+                  toupdate] = a.loc[a.index[0],
+                  toupdate].tolist()
   return tracker
 
 def changeCellLineNameInNew(ref, new, datatype, dupdict, toupdate=['stripped_cell_line_name',
@@ -244,6 +281,7 @@ def updatePairs(workspaceID, tracker, removeDataFiles=True, ):
 
   It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
   """
+  return False
 
 def cleanVersions(tracker, samplecol='arxspan_id', dryrun=False, datatypecol='datatype', versioncol="version"):
   """
@@ -365,6 +403,7 @@ def resolveIssues(tracker, issus, arxspid, cols):
   ach-00002 : rh13
   """
   #for val in issus:
+  return False
 
 
 def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={}, my_id='~/.client_secret.json',
@@ -421,7 +460,12 @@ def retrieveFromCellLineName(noarxspan, ccle_refsamples, datatype, extract={}, m
 
 def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
   """
-  given a list of samples, a release name and our sample tracker, will set these samples as 1 for this releasename and the rest at 0
+  given a list of samples, a release name and our sample tracker, 
+  
+  will set these samples as 1 for this releasename and the rest at 0
+
+  Args:
+    refsamples (): of the sample tracker
   """
   refsamples[releaseName] = '0'
   refsamples.loc[samples, releaseName] = '1'
@@ -434,11 +478,11 @@ def makeCCLE2(tracker, source='CCLE2'):
   this means it will return a table with arxspan ids, cell line name, ...[bam file type]
 
   Args:
-      tracker ([type]): [description]
-      source (str, optional): [description]. Defaults to 'CCLE2'.
+      tracker (dataframe): the sample tracker
+      source (str, optional): the source column to use. Defaults to 'CCLE2'.
 
   Returns:
-      pd.DF: a table with arxspan ids, cell line name, ...[bam file type]
+      pd.df: a table with arxspan ids, cell line name, ...[bam file type]
   """
   tracker = tracker[tracker.source == source]
   ccle = pd.DataFrame(index=set(tracker.arxspan_id),
@@ -502,3 +546,52 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
           print(val, '<--', a)
           ref.loc[ref[ref.arxspan_id == val].index, 'parent_id'] = a
   return ref
+
+
+def update(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
+                  sheetcreds=SHEETCREDS, sheetname=SHEETNAME, refworkspace=None,
+                  onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
+                  dry_run=True
+                  ):
+  """updates the sample tracker with the new samples and the QC metrics
+
+  Args:
+      tracker (df): [description]
+      selected (list[str]): which samples were selected in the release of the analysis
+      samplesetname (str): the name of the sample set or of the current analysis
+      samplesinset (list[str]): list of samples in the analysis.
+      lowqual (list[str]): list of samples that failed QC
+      newgs (str, optional): google storage path where to move the files. Defaults to ''.
+      sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
+      sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
+      refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
+      onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+  """
+  # updating locations of bam files and extracting infos
+  if newgs and refworkspace is not None:
+    res, _=terra.changeGSlocation(refworkspace, newgs=newgs, onlycol=onlycol,
+                                  entity='sample', keeppath=False, dry_run=dry_run,
+                                  onlysamples=samplesinset)
+    tracker.loc[res.index.tolist()][['legacy_size', 'legacy_crc32c_hash']
+                                      ] = tracker.loc[
+                                        res.index.tolist()][
+                                          ['size', 'crc32c_hash']].values
+    tracker.loc[res.index.tolist()][HG38BAMCOL]=res[onlycol[:2]].values
+    tracker.loc[res.index.tolist(), 'size']=[gcp.extractSize(
+      i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
+    tracker.loc[res.index.tolist(), 'crc32c_hash']=[gcp.extractHash(
+      i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
+    tracker.loc[res.index.tolist(), 'md5_hash']=gcp.catFiles(
+      dm.WorkspaceManager(refworkspace).get_samples().loc[
+        samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
+
+  len(selected)
+  tracker.loc[selected, samplesetname]=1
+  tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
+  tracker.loc[lowqual,'low_quality']=1
+  tracker.loc[lowqual,'blacklist']=1
+  if dry_run:
+    return tracker
+  else:
+    dfToSheet(tracker, sheetname, secret=sheetcreds)
+  print("updated the sheet, please reactivate protections")
