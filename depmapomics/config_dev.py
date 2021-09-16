@@ -27,37 +27,71 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID="DepMap_ID"
 
-SAMPLESETNAME = "21Q3"
+SAMPLESETNAME = "21Q4"
 
 isCCLE = True
 
 doCleanup = True
 
-LINES_TO_RELEASE = [
-    "ACH-000023",
-    "ACH-000145",
-    "ACH-000205",
-    "ACH-000345",
-    "ACH-000359",
-    "ACH-000399",
-    "ACH-000409",
-    "ACH-000515",
-    "ACH-000664",
-    "ACH-000744",
-    "ACH-000992",
-    "ACH-001032",
-    "ACH-001373",
-    "ACH-001393",
-    "ACH-001410",
-    "ACH-001558",
-    "ACH-001679",
-    "ACH-001696",
-    "ACH-002022",
-    "ACH-002060",
-    "ACH-002659",
-    "ACH-002687",
-    "ACH-002707",
-]
+LINES_TO_RELEASE = ['ACH-000145',
+ 'ACH-000359',
+ 'ACH-000532',
+ 'ACH-000860',
+ 'ACH-000871',
+ 'ACH-001350',
+ 'ACH-001393',
+ 'ACH-001558',
+ 'ACH-001662',
+ 'ACH-001683',
+ 'ACH-001695',
+ 'ACH-001986',
+ 'ACH-001990',
+ 'ACH-002020',
+ 'ACH-002035',
+ 'ACH-002040',
+ 'ACH-002043',
+ 'ACH-002050',
+ 'ACH-002051',
+ 'ACH-002052',
+ 'ACH-002077',
+ 'ACH-002214',
+ 'ACH-002215',
+ 'ACH-002291',
+ 'ACH-002345',
+ 'ACH-002478',
+ 'ACH-002486',
+ 'ACH-002490',
+ 'ACH-002516',
+ 'ACH-002523',
+ 'ACH-002529',
+ 'ACH-002530',
+ 'ACH-002531',
+ 'ACH-002533',
+ 'ACH-002535',
+ 'ACH-002538',
+ 'ACH-002544',
+ 'ACH-002647',
+ 'ACH-002650',
+ 'ACH-002660',
+ 'ACH-002662',
+ 'ACH-002664',
+ 'ACH-002669',
+ 'ACH-002672',
+ 'ACH-002677',
+ 'ACH-002680',
+ 'ACH-002681',
+ 'ACH-002693',
+ 'ACH-002695',
+ 'ACH-002705',
+ 'ACH-002706',
+ 'ACH-002708',
+ 'ACH-002710',
+ 'ACH-002782',
+ 'ACH-002785',
+ 'ACH-002799',
+ 'ACH-002834',
+ 'ACH-002847',
+ 'ACH-002926']
 
 VIRTUAL = {
   'internal': '',
@@ -98,7 +132,7 @@ TAIGA_CN = "cn-latest-8bea"
 TAIGA_EXPRESSION = "expression-869e"
 TAIGA_FUSION = "fusions-64c4"
 TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
-TAIGA_LEGACY_CN = 'depmap-wes-cn-data--08f3'
+TAIGA_LEGACY_CN = 'copy-number-5f61'
 
 
 datasets = ['internal', 'ibm', 'dmc', 'public']
