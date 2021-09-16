@@ -99,7 +99,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
 
 
 def updateTracker(tracker, selected, samplesetname, lowqual, newgs=WGS_GCS_PATH_HG38,
-                  sheetcreds = SHEETCREDS,
+                  sheetcreds = SHEETCREDS, samplesinset=[],
                   sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
                   dry_run=False):
@@ -122,8 +122,9 @@ def updateTracker(tracker, selected, samplesetname, lowqual, newgs=WGS_GCS_PATH_
   # computing QC
   print('looking for QC..')
   if refworkspace is not None:
-    samplesinset=[i['entityName'] for i in dm.WorkspaceManager(refworkspace).get_entities(
-      'sample_set').loc[samplesetname].samples]
+    if not samplesinset:
+      samplesinset=[i['entityName'] for i in dm.WorkspaceManager(refworkspace).get_entities(
+        'sample_set').loc[samplesetname].samples]
     dataProc = {} if procqc else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=procqc)
     dataBam = {} if bamqc else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=bamqc)
     for k,v in dataProc.items():
@@ -139,8 +140,8 @@ def updateTracker(tracker, selected, samplesetname, lowqual, newgs=WGS_GCS_PATH_
       a = '' if a is np.nan else a
       tracker.loc[k,'bam_qc'] = str(v) + ',' + a
   tracker.loc[tracker[tracker.datatype.isin(['wes',"wgs"])].index, samplesetname]=0
-  track.update(tracker, selected, samplesetname, lowqual, lowqual, newgs,
-                      sheetcreds, sheetname, refworkspace, onlycol, dry_run)
+  return track.update(tracker, selected, samplesetname, lowqual, lowqual, newgs,
+                      sheetcreds, sheetname, refworkspace, onlycol, dry_run, samplesinset)
 
 
 
@@ -463,9 +464,9 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs,
                        cytobandloc,#='data/hg38_cytoband.gz',
                        gene_mapping,#=pd.read_csv('data/genemapping_19Q1.csv'),
                        samplesetname=SAMPLESETNAME, bad=[], 
-                       taiga_legacy_loc= TAIGA_LEGACY_CN,
+                       taiga_legacy_loc= "",#TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
-                       taiga_dataset= TAIGA_CN_ACHILLES,
+                       taiga_dataset= "",#TAIGA_CN_ACHILLES,
                        dataset_description=Achillesreadme,
                        prevsegments="ccle",
                        prevgenecn="ccle",
