@@ -16,6 +16,17 @@ from genepy import rna
 import matplotlib.pyplot as plt
 from depmapomics import terra as myterra
 
+def display_terra_plot(sample, plotColname='modeled_segments_plot_tumor', tempFolder='/tmp/'):
+  """display the plot for a given sample
+  sample (pd.Series): the sample to display
+  plotColname (str, optional): the column on terra where the plots exist in sample. Defaults to "modeled_segments_plot_tumor".
+  tempFolder (str, optional): where to put temp files. Defaults to "/tmp/".
+  """
+  plot = sample[plotColname]
+  os.system('gsutil cp {} {}'.format(plot, tempFolder))
+  print(sample.name, sample['arxspan_id'], sample['sex'])
+  display(Image(os.path.join(tempFolder, plot.split('/')[-1])))
+
 
 def renameColumns(df):
   """
@@ -86,17 +97,9 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   print("loading "+ str(len(set(segments[SAMPLEID])))+ " rows")
   if showPlots:
     # plotting results of CN calls for this new sample set
-    for i, (k, val) in enumerate(wm.get_samples().loc[wm.get_sample_sets().loc[
-        sampleset].samples].iterrows()):
-      plot = val[plotColname]
-      os.system('gsutil cp '+plot+' '+tempFolder)
-      print(k)
-      print(val['arxspan_id'], val['sex'])
-      if i > 30:
-        continue
-      display(Image(os.path.join(tempFolder,plot.split('/')[-1])))
+    samples_to_display = wm.get_samples().loc[wm.get_sample_sets().loc[sampleset].samples].iloc[:30]
+    samples_to_display.apply(lambda x: display_terra_plot(x, plotColname=plotColname, tempFolder=tempFolder), axis=1)
   return segments
-
 
 def updateTracker(tracker, selected, samplesetname, samplesinset, lowqual, newgs='',
                   sheetcreds = SHEETCREDS,
@@ -465,7 +468,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   return wespriosegments, wgspriosegments
 
 
-def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, bad=[], 
+def _ProcessForAchilles(wespriosegs, wgspriosegs, samplesetname=SAMPLESETNAME, bad=[],
                        taiga_legacy_loc= TAIGA_LEGACY_CN,
                        taiga_legacy_filename='legacy_segments',
                        taiga_dataset= TAIGA_CN_ACHILLES,
