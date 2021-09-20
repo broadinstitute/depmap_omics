@@ -300,7 +300,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   from taigapy import TaigaClient
   tc = TaigaClient()
 
-  if prevgenecn is 'ccle':
+  if prevgenecn == 'ccle':
     prevgenecn = tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn')
 
   sheets = Sheets.from_files(my_id, mystorage_id)
