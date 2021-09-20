@@ -17,15 +17,13 @@ def getTracker():
   return Sheets.from_files(MY_ID, MYSTORAGE_ID).get(REFSHEET_URL).sheets[0].to_frame(index_col=0)
 
 
-def _getDEPMAPPV(pv_index="arxspan_id",
-                pv_tokeep=[],
+def _getDEPMAPPV(pv_tokeep=[],
                 index="DepMap_ID"):
   """get the DEPMAP master spreadsheet from google sheet
 
   Args:
-      pv_index (str, optional): [description]. Defaults to "arxspan_id".
-      pv_tokeep (list, optional): [description]. Defaults to [].
-      index (str, optional): [description]. Defaults to "DepMap_ID".
+      pv_tokeep (list, optional): the list of columns to filter on. Defaults to [].
+      index (str, optional): the column to index on. Defaults to "DepMap_ID".
 
   Returns:
       (pandas.DataFrame): the DEPMAP master spreadsheet
@@ -57,7 +55,18 @@ def merge(tracker, new, old, arxspid, cols):
 def findIssue(tracker, dup=['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
                             'subtype', 'origin', 'stripped_cell_line_name']):
   """
+  findIssue looks at a couple metrics:
 
+  'things that are from the same patient but don\'t have the same value'
+  'things that have duplicate versions'
+  'things that don\'t have their legacy bam file'
+  'things that don\'t have their bam file path'
+
+  Args:
+    tracker (pandas.DataFrame): the tracker
+    dup (list, optional): the list of columns to check for duplicates. 
+      Defaults to ['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
+      'subtype', 'origin', 'stripped_cell_line_name']
   """
   print('things that are from the same patient but don\'t have the same value')
   dup = tracker[dup].set_index('arxspan_id').drop_duplicates()
@@ -174,18 +183,18 @@ def removeOlderVersions(names, refsamples, arxspan_id="arxspan_id",
 
 def updateIsogenecity(di, tracker, unset=False, 
   toupdate=['participant_id', 'age', 'sex', "matched_normal"]):
-  """
+  """updateIsogenecity will update participant_id relationship for a set of samples
 
   Args:
-      di ([type]): [description]
-      tracker ([type]): [description]
-      unset (bool, optional): [description]. Defaults to False.
+      di (dict): the renaming dict (arxspan_id:arxspand_id) those two are now isogenic
+      tracker (pandas.DataFrame): the sample tracker
+      unset (bool, optional): if True, will remove the isogenecity. Defaults to False.
 
   Raises:
-      ValueError: [description]
+      ValueError: not same participant for all cell lines (bug to solve in the sample tracker)
 
   Returns:
-      [type]: [description]
+      (pandas.DataFrame): the updated sample tracker
   """
   tracker = tracker.copy()
   for k,v in di.items():
@@ -227,10 +236,11 @@ def changeCellLineNameInNew(ref, new, datatype, dupdict, toupdate=['stripped_cel
   """
   Rename a/some line in a DF and takes care of corresponding metadata and versions from the sample tracker
 
+  !!!! DOES NOT YET WORK !!!! version compute is wrong
   Args:
   -----
-    new: change the cell line name in this dataframe
-    dupdict: dict(tochange,newname)
+    new: change the cell line name in this dataframe 
+    dupdict: dict(tochange,newname) (arxspan_id:arxspan_id)
     datatype: str for a ref with many datatype (to get the right version number)
 
   Returns:
@@ -261,7 +271,7 @@ def changeCellLineName(tracker, datatype, dupdict, toupdate=["stripped_cell_line
 
   Args:
   -----
-    dupdict: dict(tochange,newname)
+    dupdict: dict(tochange,newname): the dict of the new name for the cell line: cds-id: arxspan_id
     datatype: str for a tracker with many datatype (to get the right version number)
 
   Returns:

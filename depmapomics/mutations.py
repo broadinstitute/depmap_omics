@@ -42,6 +42,21 @@ def download_maf_from_workspace(refwm, sample_set_ids=['all_ice', 'all_agilent']
 def annotateLikelyImmortalized(maf, sample_col=SAMPLEID,
                                genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt', 'COSMIChsCnt'],
                                max_recurrence=0.05, min_tcga_true_cancer=5):
+  """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
+
+  Based on occurence accross samples
+
+  Args:
+      maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
+      sample_col (str): the column name of the sample id
+      genome_change_col (str, optional): the column name of the genome change. Defaults to "Genome_Change".
+      TCGAlocs (list, optional): the column names of the counts that would make the mutation non immortalization induced. Defaults to ['TCGAhsCnt', 'COSMIChsCnt'].
+      max_recurrence (float, optional): the maximum recurrence rate to call immortalize. Defaults to 0.05.
+      min_tcga_true_cancer (int, optional): the minimum number of TCGA true cancer samples to not call immortalize. Defaults to 5.
+
+  Returns:
+      pandas.DataFrame: the maf file with the added column: immortalized
+  """
   maf['is_likely_immortalization'] = False
   leng = len(set(maf[sample_col]))
   tocheck = []
@@ -58,6 +73,14 @@ def annotateLikelyImmortalized(maf, sample_col=SAMPLEID,
 def addAnnotation(maf, NCBI_Build='37', Strand="+"):
   """
   adds NCBI_Build and Strand annotation on the whole maf file
+
+  Args:
+    maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
+    NCBI_Build (str, optional): the NCBI build. Defaults to "37".
+    Strand (str, optional): the strand. Defaults to "+".
+
+  Returns:
+    pandas.DataFrame: the maf file with the added columns: NCBI_Build, Strand
   """
   maf['NCBI_Build'] = NCBI_Build
   maf['Strand'] = Strand
@@ -65,15 +88,38 @@ def addAnnotation(maf, NCBI_Build='37', Strand="+"):
 
 
 def add_variant_annotation_column(maf):
-    rename = {}
-    for k, v in MUTATION_GROUPS.items():
-      for e in v:
-        rename[e] = k
-    maf['Variant_annotation'] = [rename[i] for i in maf['Variant_Classification'].tolist()]
-    return maf
+  """
+  adds variant annotation column to the maf file
+
+  Args:
+    maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
+
+  Returns:
+    pandas.DataFrame: the maf file with the added column: variant_annotation
+  """
+  rename = {}
+  for k, v in MUTATION_GROUPS.items():
+    for e in v:
+      rename[e] = k
+  maf['Variant_annotation'] = [rename[i] for i in maf['Variant_Classification'].tolist()]
+  return maf
 
 
 def managingDuplicates(samples, failed, datatype, tracker):
+  """
+  managingDuplicates manages the duplicates in the samples 
+  
+  by only keeping the ones that are not old and did not fail QC
+
+  Args:
+    samples (list): the list of samples
+    failed (list): the list of failed samples
+    datatype (str): the data type to look at in the sample tracker
+    tracker (pd.df): the sample tracker
+
+  Returns:
+    dict: the renaming dict
+  """
   # selecting the right arxspan id (latest version)
   renaming = tracker.removeOlderVersions(names=samples,
                                          refsamples=tracker[tracker.datatype == datatype],
@@ -104,15 +150,18 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   (usually a MAF file from the Aggregate_MAF Terra worklflow)
 
   Args:
-      refworkspace ([type]): [description]
-      sampleset (str, optional): [description]. Defaults to 'all'.
-      mutCol (str, optional): [description]. Defaults to "mut_AC".
-      save_output (str, optional): [description]. Defaults to "".
-      doCleanup (bool, optional): [description]. Defaults to False.
-      rename_cols (dict, optional): [description]. Defaults to {"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID, "Tumor_Seq_Allele2": "Tumor_Allele"}.
+      refworkspace (str): the reference workspace
+      sampleset (str, optional): the sample set to use. Defaults to 'all'.
+      mutCol (str, optional): the mutation column name. Defaults to "mut_AC".
+      save_output (str, optional): the output file name to save results into. Defaults to "".
+      doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
+      rename_cols (dict, optional): the rename dict for the columns.
+        Defaults to {"i_ExAC_AF": "ExAC_AF", 
+                    "Tumor_Sample_Barcode": SAMPLEID,
+                     "Tumor_Seq_Allele2": "Tumor_Allele"}.
 
   Returns:
-      [type]: [description]
+      pandas.DataFrame: the maf file with the added columns: variant_annotation
   """
   h.createFoldersFor(save_output)
   print('loading from Terra')
@@ -152,19 +201,20 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   see postprocess() to reproduce our analysis
 
   Args:
-      wesrefworkspace ([type]): [description]
-      wgsrefworkspace ([type]): [description]
-      samplesetname ([type]): [description]
-      AllSamplesetName (str, optional): [description]. Defaults to 'all'.
-      doCleanup (bool, optional): [description]. Defaults to False.
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-      taiga_description ([type], optional): [description]. Defaults to Mutationsreadme.
-      taiga_dataset (str, optional): [description]. Defaults to TAIGA_MUTATION.
-      mutation_groups ([type], optional): [description]. Defaults to MUTATION_GROUPS.
-      prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
-      minfreqtocall (float, optional): [description]. Defaults to 0.05.
+      wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
+      wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to WGSWORKSPACE.
+      samplesetname (str, optional): the sample set name to use (for the release). Defaults to SAMPLESETNAME.
+      AllSamplesetName (str, optional): the sample set to use for all samples. Defaults to 'all'.
+      doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
+      my_id (str, optional): filepath for google cloud access id file. Defaults to MY_ID.
+      mystorage_id (str, optional): filepath to a google cloud storage access file. Defaults to MYSTORAGE_ID.
+      refsheet_url (str, optional): path to the sample tracker google sheet. Defaults to REFSHEET_URL.
+      taiga_description (str, optional): description of the dataset on taiga. Defaults to Mutationsreadme.
+      taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_MUTATION.
+      mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
+      prev (pd.df, optional): the previous release dataset (to do QC). 
+        Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
+      minfreqtocall (float, optional): the minimum frequency to call a mutation. Defaults to 0.25.
   """
   from taigapy import TaigaClient
   tc = TaigaClient()
@@ -441,7 +491,26 @@ async def _CCLEAnalyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', fol
                                  'HGVS_protein_change',  'Protein_Change',
                                  't_alt_count', 't_ref_count', 'tumor_f', 'CGA_WES_AC'],
                       taiga_dataset=TAIGA_MUTATION,):
+  """_CCLEAnalyzeUnfiltered function to subset and filter the CGA unfiltered maf file.
 
+  This will output a much bigger maf file without CGA filters (usefull for QC and more).
+  Will take a lot of memory (expect ~32GB minimum). if you don't have that amount of RAM, don't use.
+
+  Args:
+      workspace (str): workspace name. Default is WGSWORKSPACE.
+      allsampleset (str, optional): sampleset name. Default is 'all'.
+      folder (str, optional): folder name. Default is 'temp/'.
+      subsetcol (list, optional): list of columns to subset the maf file on. 
+        will also output the unfiltered version of themaf file.
+        Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id', 
+                    'Chromosome', 'Start_position', 'End_position', 
+                    'Variant_Classification', 'Variant_Type', 'Reference_Allele', 
+                    'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change', 
+                    'Annotation_Transcript', 'cDNA_Change', 'Codon_Change', 
+                    'HGVS_protein_change',  'Protein_Change', 't_alt_count', 
+                    't_ref_count', 'tumor_f', 'CGA_WES_AC'].
+      taiga_dataset (str, optional): taiga dataset path. Default is TAIGA_MUTATION.
+  """
   print("retrieving unfiltered")
   ####### WES
   from taigapy import TaigaClient
