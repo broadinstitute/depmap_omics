@@ -90,9 +90,9 @@ def solveQC(tracker, failed, save="", newname="arxspan_id"):
   return rename
 
 
-def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetname,
+def updateTracker(selected, failed, lowqual, tracker, samplesetname, refworkspace=RNAWORKSPACE,
                   sheetname=SHEETNAME, sheetcreds=SHEETCREDS,
-                  onlycol=STARBAMCOLTERRA, newgs=RNAGSPATH38,
+                  onlycol=STARBAMCOLTERRA, newgs=RNA_GCS_PATH_HG38,
                   dry_run=False, qcname="star_logs", match=".Log.final.out"):
   """updates the sample tracker with the new samples and the QC metrics
 
@@ -124,8 +124,8 @@ def updateTracker(refworkspace, selected, failed, lowqual, tracker, samplesetnam
     if tracker.loc[k, 'bam_qc'] != v[0]:
       tracker.loc[k, 'bam_qc'] = v[0]
   tracker.loc[tracker[tracker.datatype.isin(['rna'])].index, samplesetname]=0
-  track.update(tracker, selected,samplesetname, failed, lowqual, newgs,
-                     sheetname, sheetcreds, refworkspace, onlycol,  dry_run)
+  track.update(tracker, selected, samplesetname, failed, lowqual, newgs,
+                     sheetcreds, sheetname, refworkspace, onlycol,  dry_run)
 
 
 def loadFromRSEMaggregate(refworkspace, todrop=[], filenames=RSEMFILENAME,
@@ -418,7 +418,7 @@ async def postProcess(refworkspace, samplesetname,
   saveFiles(files, save_output)
   print("done")
 
-  return files, enrichments, failed, samplesinset, renaming, lowqual
+  return files, failed, samplesinset, renaming, lowqual, enrichments if compute_enrichment else None
 
 
 async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
@@ -546,9 +546,9 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
     assert new0s == 0
 
   print("updating the tracker")
-  updateTracker(refworkspace, set(renaming.keys()) - set(['transcript_id(s)']), failed,
+  updateTracker(set(renaming.keys()) - set(['transcript_id(s)']), failed,
                 lowqual[lowqual.sum(1) > 3].index.tolist(),
-                ccle_refsamples, samplesetname,
+                ccle_refsamples, samplesetname, refworkspace,
                 sheetname=sheetname, sheetcreds=sheetcreds)
 
   print("uploading to taiga")
