@@ -224,11 +224,6 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, sampleset=SAMPLESETNAME
   renaming = h.fileToDict(folder+"rna_sample_renaming.json")
   # TODO: include in rna_sample_renaming.json instead
   # lower priority versions of these lines were used
-  # because of manual changes in the tracker. Manually
-  # updating the code here
-  renaming.pop('CDS-tTwJLo')
-  renaming.pop('CDS-Fauu92')
-  renaming.update({'CDS-pvNwpR': 'ACH-000833', 'CDS-V5yMiU': 'ACH-001164'})
 
   fusions, _ = postProcess(refworkspace,
                            todrop=previousQCfail, renaming=renaming, save_output=folder,
