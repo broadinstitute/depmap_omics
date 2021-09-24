@@ -9,6 +9,7 @@ import numpy as np
 from collections import Counter
 
 from depmapomics.config import *
+from depmapomics import tracker as track
 
 import dalmatian as dm
 import pandas as pd
@@ -235,9 +236,9 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
 
   # renaming
   print('renaming')
-  #wesrenaming = track.removeOlderVersions(names=set(
-  #    wesmutations[SAMPLEID]), refsamples=wesrefwm.get_samples(),
-  #    arxspan_id="arxspan_id", version="version", priority=priority)
+  wesrenaming = track.removeOlderVersions(names=set(
+      wesmutations[SAMPLEID]), refsamples=wesrefwm.get_samples(),
+      arxspan_id="arxspan_id", version="version", priority=priority)
 
   wesrenaming = h.fileToDict(folder+"sample_renaming.json")
 
@@ -254,9 +255,9 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
 
   # renaming
   print('renaming')
-  #wgsrenaming = track.removeOlderVersions(names=set(
-  #    wesmutations[SAMPLEID]), refsamples=wgsrefwm.get_samples(),
-  #    arxspan_id="arxspan_id", version="version", priority=priority)
+  wgsrenaming = track.removeOlderVersions(names=set(
+      wesmutations[SAMPLEID]), refsamples=wgsrefwm.get_samples(),
+      arxspan_id="arxspan_id", version="version", priority=priority)
 
   wgsrenaming = h.fileToDict(folder+"sample_renaming.json")
   wgsrenaming.update(WGS_EXTRA_RENAMES)
@@ -287,7 +288,6 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)], minfreqtocall=minfreqtocall).astype(
     int).T.to_csv(folder+'somatic_mutations_boolmatrix_hotspot.csv')
 
-
   # genotyped mutations matrices
   mut.mafToMat(priomutations[(priomutations.isDeleterious)], mode="genotype",
               ).T.to_csv(folder+'somatic_mutations_matrix_deleterious.csv')
@@ -306,47 +306,7 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   legacy_raindance = tc.get(name='mutations-da6a', file='legacy_raindance')
   legacy_rna = tc.get(name='mutations-da6a', file='legacy_rna')
   legacy_wes_sanger = tc.get(name='mutations-da6a', file='legacy_wes_sanger')
-  # legacy_wgs_exoniconly = tc.get(name='mutations-da6a', file='legacy_wgs_exoniconly')
-
-  #####################################################
-  # TODO: upload the correct version to taiga
-  # it seems like some lines were dropped going from
-  # version 1 to 3 in mutations-da6a (legacy_wgs_exoniconly).
-  # These are lines that seem to have failed QC in the original
-  # WGS qc but we decided to drop this qc in 21Q3
-  # The following code takes version 1 and reformats it to be
-  # similar to version 3 on taiga
-  legacy_wgs_exoniconly = tc.get(name='mutations-da6a', version=1, file='legacy_wgs_exoniconly_somatic_mutations')
-  legacy_wgs_exoniconly = legacy_wgs_exoniconly.drop(['Unnamed: 0', 'Tumor_Sample_Barcode'], axis=1).rename(
-      columns={'Tumor_Seq_Allele1': 'Tumor_Allele'})
-  freqs = legacy_wgs_exoniconly.apply(lambda x: [int(y) for y in x['WGS_AC'].split(':')], result_type='expand', axis=1)
-  freqs.columns = ['t_alt_count', 't_ref_count']
-  freqs['tumor_f'] = freqs.astype(float).apply(
-      lambda row: row['t_alt_count'] / (row['t_alt_count'] + row['t_ref_count']), axis=1)
-  legacy_wgs_exoniconly = pd.concat([legacy_wgs_exoniconly, freqs], axis=1)
-  # for some bizarre reason about 13 lines have their Genome_Change set to NA
-  # in v1 but not v3. This code fixes that
-  legacy_wgs_exoniconly['Genome_Change'] = legacy_wgs_exoniconly.apply(
-      lambda row: row['Genome_Change'] if row['Genome_Change'] is not None else
-      'g.chr{}:{}{}>{}'.format(
-      *row[['Chromosome', 'Start_position', 'Reference_Allele','Tumor_Allele']]), axis=1)
-
-  # The following lines should not appear in the legacy data:
-  DROP_LEGACY = {'WGS': ['ACH-000014'],
-                 'HC': ['ACH-001078', 'ACH-001146'],
-                 'RNA': ['ACH-001212', 'ACH-001078', 'ACH-000010'],
-                 'Sanger WES': ['ACH-000641']}
-
-  legacy_hybridcapture = legacy_hybridcapture[~legacy_hybridcapture['DepMap_ID'].isin(DROP_LEGACY['HC'])]
-  legacy_rna = legacy_rna[~legacy_rna['DepMap_ID'].isin(DROP_LEGACY['RNA'])]
-  legacy_wes_sanger = legacy_wes_sanger[~legacy_wes_sanger['DepMap_ID'].isin(DROP_LEGACY['Sanger WES'])]
-
-  # for sanger rename ACH-002260 to ACH-001543
-  RENAME_SANGER_WES = {'ACH-002260': 'ACH-001543'}
-  assert 'ACH-001543' not in set(legacy_wes_sanger['DepMap_ID'])
-  legacy_wes_sanger['DepMap_ID'].replace(RENAME_SANGER_WES, inplace=True)
-  #####################################################
-
+  legacy_wgs_exoniconly = tc.get(name='mutations-da6a', file='legacy_wgs_exoniconly')
 
   merged = mut.mergeAnnotations(
       priomutations, legacy_hybridcapture, "HC_AC", useSecondForConflict=True, dry_run=False)
@@ -358,8 +318,6 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
     merged, legacy_wes_sanger, "SangerWES_AC", useSecondForConflict=False, dry_run=False)
   merged = mut.mergeAnnotations(
     merged, legacy_rna, "RNAseq_AC", useSecondForConflict=False, dry_run=False)
-
-  merged = merged[~merged['DepMap_ID'].isin(ALSO_DROP_FROM_LEGACY)]
 
   merged = merged[merged['tumor_f'] > 0.05]
   merged = annotateLikelyImmortalized(merged, TCGAlocs=[
@@ -374,7 +332,6 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
 
   print('compare to previous release')
   a = set(merged[SAMPLEID])
-  # tc.get(name='internal-20q2-7f46', version=18, file='CCLE_mutations')
   b = set(prev[SAMPLEID])
   print("new lines:")
   print(a-b)
