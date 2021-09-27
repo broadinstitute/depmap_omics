@@ -6,16 +6,7 @@ from gsheets.api import Sheets
 LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-# VIRTUAL_RELEASE = {'name': 'tentative-virtual-d84e', 'version': 33}
-# VIRTUAL_RELEASE = {'name': 'internal-21q3-fe4c', 'version': 12}
-# VIRTUAL_RELEASE = {'name': 'internal-21q2-9d16', 'version': 6} # new release
-# REFERENCE_RELEASE = {'name': 'internal-21q2-9d16', 'version': 17} # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
-# VIRTUAL_RELEASE = {'name': 'internal-21q1-4fc4', 'version': 39} # old release used as ground truth
-# REFERENCE_RELEASE = TENTATIVE_VIRTUAL # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'internal-20q4-2540', 'version': 47}; LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'internal-20q1-f1a0', 'version': 15}; LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': True} # old release used as ground truth
-# REFERENCE_RELEASE = {'name': 'internal-20q2-7f46', 'version': 18} # old release used as ground truth
+TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': None}
 PORTAL = 'internal'
 
 VIRTUAL_RELEASES = {'21q2': {'public': {'name': 'public-21q2-110d', 'version': 13},
@@ -28,8 +19,8 @@ VIRTUAL_RELEASES = {'21q2': {'public': {'name': 'public-21q2-110d', 'version': 1
                              'public': {'name': 'public-21q3-bf1e', 'version': 7}}
                     } # release ids on taiga
 
-PREV_RELEASE = VIRTUAL_RELEASES['21q2'][PORTAL]
-NEW_RELEASE = VIRTUAL_RELEASES['21q3'][PORTAL]
+PREV_RELEASE = VIRTUAL_RELEASES['21q3'][PORTAL]
+NEW_RELEASE = TENTATIVE_VIRTUAL
 
 
 LINES_TO_DROP_COMMON = {'ACH-000010', 'ACH-001078', 'ACH-001146', 'ACH-001173',
@@ -85,9 +76,9 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_expression', 'CCLE_gene_cn'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_expression', 'CCLE_expression_full'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA'])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
