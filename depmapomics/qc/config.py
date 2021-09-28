@@ -1,12 +1,17 @@
+from gsheets.api import Sheets
+from taigapy import TaigaClient
+
 # there are some issues in the older versions of omics data on virtual that this flag deals with
 # some columns got renamed in the mutation file and some data was uploaded as tsv instead of csv
-from gsheets.api import Sheets
-
-
 LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
 
 # release ids on taiga
-TENTATIVE_VIRTUAL = {'name': 'tentative-virtual-d84e', 'version': None}
+tc = TaigaClient()
+taiga_latest_version = lambda dataset_name: int(tc.get_dataset_metadata(dataset_name)['versions'][-1]['name'])
+taiga_latest_path = lambda dataset_name: {'name': dataset_name,
+                                          'version': taiga_latest_version(dataset_name)}
+
+TENTATIVE_VIRTUAL = taiga_latest_path('tentative-virtual-d84e')
 PORTAL = 'internal'
 
 VIRTUAL_RELEASES = {'21q2': {'public': {'name': 'public-21q2-110d', 'version': 13},
