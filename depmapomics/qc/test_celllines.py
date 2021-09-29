@@ -1,12 +1,15 @@
 import re
-from gsheets.api import Sheets
+
 import numpy as np
 import pandas as pd
 import pytest
-from depmapomics.qc.test_compare_to_ref_release import get_both_release_lists_from_taiga
-from depmapomics.qc.config import (LEGACY_PATCH_FLAGS, LINES_TO_RELEASE, LINES_TO_DROP, PORTAL,
-                                   PREV_RELEASE, NEW_RELEASE, FILE_ATTRIBUTES)
+from depmapomics.qc.config import (FILE_ATTRIBUTES, LINES_TO_DROP,
+                                   LINES_TO_RELEASE, PORTAL)
+from depmapomics.qc.test_compare_to_ref_release import \
+    get_both_release_lists_from_taiga
+from gsheets.api import Sheets
 from taigapy import TaigaClient
+
 tc = TaigaClient()
 
 ####### FIXTURES ####
