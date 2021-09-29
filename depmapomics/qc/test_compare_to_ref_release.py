@@ -54,7 +54,7 @@ def get_both_release_lists_from_taiga(file):
 def merge_dataframes(file, merge_columns):
     # TODO: figure out how to call the data fixture instead
     data1, data2 = get_both_releases_from_taiga(file)
-    data_merged = pd.merge(data1, data2, on=merge_columns, indicator=True, how='outer')
+    data_merged = pd.merge(data1, data2, on=merge_columns, indicator=True, how='inner')
     return data_merged
 
 @pytest.fixture(scope='module')

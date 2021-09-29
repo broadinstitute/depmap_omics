@@ -12,7 +12,6 @@ taiga_latest_path = lambda dataset_name: {'name': dataset_name,
                                           'version': taiga_latest_version(dataset_name)}
 
 TENTATIVE_VIRTUAL = taiga_latest_path('tentative-virtual-d84e')
-PORTAL = 'internal'
 
 VIRTUAL_RELEASES = {'21q2': {'public': {'name': 'public-21q2-110d', 'version': 13},
                              'ibm': {'name': 'ibm-21q2-9ed1', 'version': 15},
@@ -24,16 +23,30 @@ VIRTUAL_RELEASES = {'21q2': {'public': {'name': 'public-21q2-110d', 'version': 1
                              'public': {'name': 'public-21q3-bf1e', 'version': 7}}
                     } # release ids on taiga
 
-PREV_RELEASE = VIRTUAL_RELEASES['21q3'][PORTAL]
+PORTAL = 'all'
+PREV_QUARTER = '21Q3'
+NEW_QUARTER = '21Q4'
+
+PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER.lower()]['internal' if PORTAL=='all' else PORTAL]
 NEW_RELEASE = TENTATIVE_VIRTUAL
 
 
-LINES_TO_DROP_COMMON = {'ACH-000010', 'ACH-001078', 'ACH-001146', 'ACH-001173',
-                        'ACH-001741', 'ACH-001790', 'ACH-002022', 'ACH-002184',
-                        'ACH-002260'}
-LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON | {'ACH-002475'}
-LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {'ACH-000658', 'ACH-001212', 'ACH-001316'}
+LINES_TO_DROP_COMMON = set()
+LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
+LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP = {'DNA': LINES_TO_DROP_DNA, 'RNA': LINES_TO_DROP_RNA}
+
+
+
+LINES_TO_RELEASE_SHEET = 'https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=1929030925'
+sheets_obj = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
+sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET)
+# LINES_TO_RELEASE = sheets.sheets[0]
+LINES_TO_RELEASE = sheets.find(NEW_QUARTER)
+LINES_TO_RELEASE = LINES_TO_RELEASE.to_frame(header=0, index_col=None)
+LINES_TO_RELEASE.columns = LINES_TO_RELEASE.columns.str.lower()
+
+
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
@@ -53,12 +66,6 @@ CORRELATION_THRESHOLDS = {'CCLE_gene_cn': 0.99, 'all_expressions': 0.99999}
 SKIP_ARXSPAN_COMPARISON = True # set to False if you want to test whether some arxspans were added/removed
 
 PLOTS_OUTPUT_FILENAME_PREFIX = '/tmp/plots_' # location/prefix for saving output plots
-
-LINES_TO_RELEASE_SHEET = 'https://docs.google.com/spreadsheets/d/1-Iz_TrLy2DT2hFZKr6m-GJsVeQbKMA06Uf2RmGRlUdA/edit?usp=sharing'
-sheets_obj = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
-sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET).sheets
-LINES_TO_RELEASE = sheets[0].to_frame(header=0, index_col=None)
-LINES_TO_RELEASE.columns = LINES_TO_RELEASE.columns.str.lower()
 
 # all the file attributes
 FILE_ATTRIBUTES = [
@@ -83,8 +90,8 @@ FILE_ATTRIBUTES = [
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_expression', 'CCLE_expression_full'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = 'mutations-latest-ed72'
