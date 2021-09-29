@@ -27,8 +27,8 @@ def get_both_releases_from_taiga(file):
         data1 = tsv2csv(data1)
 
     if LEGACY_PATCH_FLAGS['rename_column']:
-        # in 21q1 CCLE_mutations file this column was renamed
-        data1.rename(columns={'Tumor_Allele': 'Tumor_Seq_Allele1'}, inplace=True)
+        # in 21q4 CCLE_mutations file this column was renamed
+        data1.rename(columns={'Tumor_Seq_Allele1': 'Alternate_Allele'}, inplace=True)
     return data1, data2
 
 def get_arxspan_ids(data, isMatrix):
