@@ -3,7 +3,7 @@ from taigapy import TaigaClient
 
 # there are some issues in the older versions of omics data on virtual that this flag deals with
 # some columns got renamed in the mutation file and some data was uploaded as tsv instead of csv
-LEGACY_PATCH_FLAGS = {'rename_column': False, 'tsv2csv': False}
+LEGACY_PATCH_FLAGS = {'rename_column': True, 'tsv2csv': False}
 
 # release ids on taiga
 tc = TaigaClient()
@@ -52,7 +52,7 @@ LINES_TO_RELEASE.columns = LINES_TO_RELEASE.columns.str.lower()
 # should uniquely identify each row of the file to find equal values in each column
 FUSIONS_MERGE_COLS = ['DepMap_ID', 'LeftGene', 'RightGene', 'LeftBreakpoint', 'RightBreakpoint']
 SEGMENT_CN_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start', 'End']
-MUTATIONS_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start_position', 'End_position', 'Tumor_Seq_Allele1']
+MUTATIONS_MERGE_COLS = ['DepMap_ID', 'Chromosome', 'Start_position', 'End_position', 'Alternate_Allele']
 
 # if there are new files that were added in the previous release, add them here
 FILES_RELEASED_BEFORE = ['CCLE_expression', 'CCLE_expression_proteincoding_genes_expected_count',
@@ -88,8 +88,8 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_segment_cn', 'CCLE_gene_cn'])]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_segment_cn', 'CCLE_gene_cn'])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
