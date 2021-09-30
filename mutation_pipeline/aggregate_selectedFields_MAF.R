@@ -23,8 +23,8 @@ readsel <- function(fn, selFields) {
   if (length(which(is.na(ii))) > 0) {
     cat("\n Warning: some fields not found: ", fn, " ", selFields[which(is.na(ii))])
   }
-  print(length(res))
   res <- f[, ii]
+  print(length(res))
   return(res)
 }
 
