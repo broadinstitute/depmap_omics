@@ -23,7 +23,7 @@ jobs:
           python -m pip install --upgrade pylint
       - name: Run pylint
         run: |
-          pylint depmap_omic
+          pylint depmap_omics
 
 #      - name: Test with pytest
 #        run: |
