@@ -728,9 +728,7 @@ def load(samplesetname, workspaces,
     noarxspan.to_csv('temp/noarxspan_'+stype+'_' + release + '.csv')
     if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
       finished, else write no to quit and they will not be added"):
-      updated_samples = sheets.get(
-        "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
-          0].to_frame().set_index('sample_id')
+      updated_samples = _read_depmap_samples_not_found(sheets)
       samples = pd.concat([samples, updated_samples], sort=False)
   
   samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
@@ -760,15 +758,17 @@ def load(samplesetname, workspaces,
       samples.loc[notfound].to_csv('temp/notfound_'+stype+'_'+release+'.csv')
       if h.askif("Please review the samples (on 'depmap samples not found') and write yes once \
         finished, else write no to quit and they will not be added"):
-        updated_samples = sheets.get(
-          "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
-          0].to_frame().set_index('sample_id')
+        updated_samples = _read_depmap_samples_not_found(sheets)
         samples.loc[updated_samples.index, updated_samples.columns] = updated_samples.values
   
   dfToSheet(samples, 'depmap ALL samples found', secret=creds)
   samples.to_csv('temp/new_'+stype+'_'+release+'.csv')
   return samples
 
+def _read_depmap_samples_not_found(sheets):
+  return sheets.get(
+          "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg").sheets[
+          0].to_frame().set_index('sample_id')
 
 def updateWES(samples, samplesetname, bucket=WES_GCS_PATH,
                 name_col="index", values=['legacy_bam_filepath', 'legacy_bai_filepath'], 
