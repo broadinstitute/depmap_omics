@@ -31,7 +31,7 @@ PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER.lower()]['internal' if PORTAL=='all
 NEW_RELEASE = TENTATIVE_VIRTUAL
 
 
-LINES_TO_DROP_COMMON = set()
+LINES_TO_DROP_COMMON = {'ACH-001108', 'ACH-001011'}
 LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP = {'DNA': LINES_TO_DROP_DNA, 'RNA': LINES_TO_DROP_RNA}
@@ -88,8 +88,9 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_segment_cn', 'CCLE_gene_cn'])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_segment_cn', 'CCLE_gene_cn'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'].startswith('CCLE_mutations'))]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
