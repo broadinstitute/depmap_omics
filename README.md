@@ -322,7 +322,7 @@ Once the expression files are saved, we do the following validations:
 - we QC on the amount of genes with 0 counts for each samples
 
 
-Besides QC, we are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
+> Besides QC, we are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
 
 We are then uploading the data to a server called taiga where it will be used in the depmap portal
 ## Repository File Structure <a name="file-structure"></a>
@@ -373,7 +373,7 @@ The data we are presenting comes from different WES targets/baits/intervals.
 
 We are currently using Illumina ICE intervals and Agilent intervals. you can find their related PON files and interval files as parameters in our workspace files in `data/xQx.json`
 
-
+__additional auxilliary data is used and listed in some of our workflow, like the CGA pipeline. You will be able to find them by looking at the wdl scripts of each pipelines and looking into the data/xQx.json` files for workspace data files.__
 
 
 @[jkobject](https://www.jkobject.com)
