@@ -34,15 +34,15 @@ VIRTUAL_RELEASES = {
     },
 }  # release ids on taiga
 
-PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PORTAL = "internal"  # used for 'not bookkeeping' markers
+# PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
+PORTAL = "dmc"  # used for 'not bookkeeping' markers
 PREV_QUARTER = "21Q3"
 NEW_QUARTER = "21Q4"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
 # NEW_RELEASE = TENTATIVE_VIRTUAL
-# PORTALS = ["internal"]
+PORTALS = [PORTAL]
 
 
 LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011"}
@@ -222,9 +222,9 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-FILE_ATTRIBUTES = [
-    x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
-]
+# FILE_ATTRIBUTES = [
+#     x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
+# ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [
 #     x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
