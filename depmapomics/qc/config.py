@@ -18,28 +18,28 @@ taiga_latest_path = lambda dataset_name: {
 TENTATIVE_VIRTUAL = taiga_latest_path("tentative-virtual-d84e")
 
 VIRTUAL_RELEASES = {
-    "21q2": {
-        "public": {"name": "public-21q2-110d", "version": 13},
-        "ibm": {"name": "ibm-21q2-9ed1", "version": 15},
-        "dmc": {"name": "dmc-21q2-27e1", "version": 14},
-        "internal": {"name": "internal-21q2-9d16", "version": 17},
-    },
-    "21q3": {
+    "21Q3": {
         "internal": {"name": "internal-21q3-fe4c", "version": 12},
         "ibm": {"name": "ibm-21q3-179f", "version": 8},
         "dmc": {"name": "dmc-21q3-482c", "version": 7},
         "public": {"name": "public-21q3-bf1e", "version": 7},
     },
+    "21Q4": {
+        "internal": taiga_latest_path("internal-21q4-ac0a"),
+        "ibm": taiga_latest_path("ibm-21q4-4e18"),
+        "dmc": taiga_latest_path("dmc-21q4-5725"),
+        "public": taiga_latest_path("public-21q4-a0d6"),
+    },
 }  # release ids on taiga
 
-PORTAL = "all"
+PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
+PORTAL = "internal"  # used for 'not bookkeeping' markers
 PREV_QUARTER = "21Q3"
 NEW_QUARTER = "21Q4"
 
-PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER.lower()][
-    "internal" if PORTAL == "all" else PORTAL
-]
-NEW_RELEASE = TENTATIVE_VIRTUAL
+PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
+NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
+# NEW_RELEASE = TENTATIVE_VIRTUAL
 
 
 LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011"}
@@ -52,9 +52,18 @@ LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzy
 sheets_obj = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
 sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET)
 # LINES_TO_RELEASE = sheets.sheets[0]
-LINES_TO_RELEASE = sheets.find(NEW_QUARTER)
-LINES_TO_RELEASE = LINES_TO_RELEASE.to_frame(header=0, index_col=None)
-LINES_TO_RELEASE.columns = LINES_TO_RELEASE.columns.str.lower()
+LINES_TO_RELEASE_DF = sheets.find(NEW_QUARTER)
+LINES_TO_RELEASE_DF = LINES_TO_RELEASE_DF.to_frame(header=0, index_col=None)
+LINES_TO_RELEASE_DF.columns = LINES_TO_RELEASE_DF.columns.str.lower()
+
+
+LINES_TO_RELEASE = {}
+LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"])
+LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(LINES_TO_RELEASE_DF["dmc"])
+LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(LINES_TO_RELEASE_DF["ibm"])
+LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
+    LINES_TO_RELEASE_DF["internal"]
+)
 
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
@@ -212,9 +221,9 @@ FILE_ATTRIBUTES = [
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_segment_cn', 'CCLE_gene_cn'])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-FILE_ATTRIBUTES = [
-    x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
-]
+# FILE_ATTRIBUTES = [
+#     x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
+# ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
