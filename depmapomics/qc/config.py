@@ -15,6 +15,8 @@ taiga_latest_path = lambda dataset_name: {
     "version": taiga_latest_version(dataset_name),
 }
 
+# from depmapomics.qc.create_dataset import update_tentative_virtual
+# update_tentative_virtual()
 TENTATIVE_VIRTUAL = taiga_latest_path("tentative-virtual-d84e")
 
 VIRTUAL_RELEASES = {
@@ -40,6 +42,7 @@ NEW_QUARTER = "21Q4"
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
 # NEW_RELEASE = TENTATIVE_VIRTUAL
+# PORTALS = ["internal"]
 
 
 LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011"}
@@ -64,7 +67,7 @@ LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(LINES_TO_RELEASE_DF["ibm
 LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
     LINES_TO_RELEASE_DF["internal"]
 )
-
+IGNORE_FAILED_TO_RELEASE = True
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
@@ -219,7 +222,9 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_segment_cn', 'CCLE_gene_cn'])]
+FILE_ATTRIBUTES = [
+    x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
+]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [
 #     x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
