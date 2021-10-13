@@ -7,6 +7,7 @@ from depmapomics.qc.config import (
     FILE_ATTRIBUTES,
     LINES_TO_DROP,
     LINES_TO_RELEASE,
+    IGNORE_FAILED_TO_RELEASE,
     PORTALS,
 )
 from depmapomics.qc.test_compare_to_ref_release import get_both_release_lists_from_taiga
@@ -47,7 +48,10 @@ def test_unexpected_arxspans(arxspans, omicssource, portal):
     lines_to_drop = LINES_TO_DROP[omicssource]
     unexpected_dropped_lines = dropped_lines - lines_to_drop
     failed_to_drop = lines_to_drop & arxspans2
-    failed_to_release = lines_to_release - arxspans2
+    if IGNORE_FAILED_TO_RELEASE:
+        failed_to_release = set()
+    else:
+        failed_to_release = lines_to_release - arxspans2
 
     assert (
         (not unexpected_added_lines)
