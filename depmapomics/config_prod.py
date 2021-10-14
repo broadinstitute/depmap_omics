@@ -45,12 +45,12 @@ TAIGA_ETERNAL = 'depmap-a0ab'
 
 DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
-VIRTUAL = {
-  'internal': 'internal-21q3-fe4c',
-  'ibm': 'ibm-21q3-179f',
-  'dmc': 'dmc-21q3-482c',
-  'public': 'public-21q3-bf1e',
-  }
+# VIRTUAL = {
+#   'internal': 'internal-21q3-fe4c',
+#   'ibm': 'ibm-21q3-179f',
+#   'dmc': 'dmc-21q3-482c',
+#   'public': 'public-21q3-bf1e',
+#   }
 
 PREV_VIRTUAL = {}
 
@@ -74,10 +74,16 @@ PREV_VIRTUAL = {}
 #PREV_VIRTUAL['internal'] = 'internal-21q1-4fc4'
 
 #21Q2
-PREV_VIRTUAL['public'] = 'public-21q2-110d'
-PREV_VIRTUAL['ibm'] = 'ibm-21q2-9ed1'
-PREV_VIRTUAL['dmc'] = 'dmc-21q2-27e1'
-PREV_VIRTUAL['internal'] = 'internal-21q2-9d16'
+# PREV_VIRTUAL['public'] = 'public-21q2-110d'
+# PREV_VIRTUAL['ibm'] = 'ibm-21q2-9ed1'
+# PREV_VIRTUAL['dmc'] = 'dmc-21q2-27e1'
+# PREV_VIRTUAL['internal'] = 'internal-21q2-9d16'
+
+#21Q3
+PREV_VIRTUAL['public'] = 'public-21q3-bf1e'
+PREV_VIRTUAL['ibm'] = 'ibm-21q3-179f'
+PREV_VIRTUAL['dmc'] = 'dmc-21q3-482c'
+PREV_VIRTUAL['internal'] = 'internal-21q3-fe4c'
 
 TAIGA_MUTATION = "mutations-latest-ed72"
 
@@ -89,7 +95,7 @@ TAIGA_LEGACY_CN = 'copy-number-5f61'
 
 datasets = ['internal', 'ibm', 'dmc', 'public']
 
-VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
+FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
 ## RUN SPECIFIC
 
@@ -176,7 +182,6 @@ WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 LINES_TO_RELEASE = ['ACH-000145',
  'ACH-000359',
  'ACH-000532',
- 'ACH-000860',
  'ACH-000871',
  'ACH-001350',
  'ACH-001393',
@@ -274,6 +279,17 @@ BAMQC = ["duplication_metrics", "bqsr_report",
          "tumor_bam_quality_yield_metrics"]
 
 KNOWN_DROP = ['CDS-R22IHj', 'CDS-xMnTwN']
+
+# rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
+RESCUE_FOR_MUTATION_WES = {'CDS-Rl87Z1': 'ACH-001956',
+                     'CDS-mys9Dm': 'ACH-001955',
+                     'CDS-TzQAjG': 'ACH-001957',
+                     'CDS-TuKZau': 'ACH-001709',
+                     'CDS-4lWqEA': 'ACH-000859',
+                     'CDS-Fyjj8I': 'ACH-000116'}
+
+RESCUE_FOR_MUTATION_WGS = {'CDS-AqZLna': 'ACH-002512'}
+
 
 ############## CN
 
@@ -446,7 +462,7 @@ allWES: all data comes from the WExomeS samples we posses
 
 allWGS: all data comes from the WGenomeS samples we posses
 
-withreplicates: if we have two different sequencing from a sample, we kept both, see the depmap sample tracker for annotations [https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE](https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE). this dataset is more geared toward QC or in-depth analysis of a particular cell line.
+withreplicates: if we have two different sequencing from a sample, we kept both, see the depmap sample tracker for annotations [https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY](https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY). this dataset is more geared toward QC or in-depth analysis of a particular cell line.
 
 merged: everything from both WGS and WES
 

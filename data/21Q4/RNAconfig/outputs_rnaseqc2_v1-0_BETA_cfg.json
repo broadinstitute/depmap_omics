@@ -1,0 +1,1 @@
+{"rnaseqc2_workflow.rnaseqc2.gene_counts": "this.rnaseqc2_gene_counts", "rnaseqc2_workflow.rnaseqc2.exon_counts": "this.rnaseqc2_exon_counts", "rnaseqc2_workflow.rnaseqc2.metrics": "this.rnaseqc2_metrics", "rnaseqc2_workflow.rnaseqc2.gene_tpm": "this.rnaseqc2_gene_tpm", "rnaseqc2_workflow.rnaseqc2.insertsize_distr": "this.rnaseqc2_insertsize_distr"}
