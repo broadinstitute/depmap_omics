@@ -188,6 +188,8 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
                        refsheet_url=REFSHEET_URL,
                        taiga_description=Mutationsreadme, taiga_dataset=TAIGA_MUTATION,
                        mutation_groups=MUTATION_GROUPS,
+                       tokeep_wes=RESCUE_FOR_MUTATION_WES,
+                       tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
                        prev='ccle',
                        minfreqtocall=0.25,
                        **kwargs):
@@ -236,7 +238,7 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
       arxspan_id="arxspan_id", version="version")
 
   wesrenaming = h.fileToDict(folder+"sample_renaming.json")
-  wesrenaming.update(RESCUE_FOR_MUTATION_WES)
+  wesrenaming.update(tokeep_wes)
 
   wesmutations = wesmutations[wesmutations[SAMPLEID].isin(wesrenaming.keys())].replace({
       SAMPLEID: wesrenaming})
@@ -257,7 +259,7 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
       arxspan_id="arxspan_id", version="version")
 
   wgsrenaming = h.fileToDict(folder+"sample_renaming.json")
-  wgsrenaming.update(RESCUE_FOR_MUTATION_WGS)
+  wgsrenaming.update(tokeep_wgs)
 
   wgsmutations = wgsmutations[wgsmutations[SAMPLEID].isin(wgsrenaming.keys())].replace({
       SAMPLEID: wgsrenaming})
