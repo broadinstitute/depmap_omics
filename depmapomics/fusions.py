@@ -111,27 +111,27 @@ def standardizeGeneNames(fusions):
 
 
 def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
-                        colnames=FUSION_COLNAME, todrop=[], doplot=True,
-                        countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
-                        **kwargs ):
+                colnames=FUSION_COLNAME, todrop=[], doplot=True,
+                countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
+                **kwargs):
   """post process an aggregated fusion files in the CCLE way
 
   (usually from the aggregate_Fusion terra workflow)
 
   Args:
-      refworkspace (str): terra workspace where the ref data is stored
-      sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
-      save_output (str, optional): whether and where to save our data. Defaults to "".
-      todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
-      samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-      sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
-      colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.  
-      doplot (bool, optional): whether to plot the data. Defaults to True.
-      countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
-      save_output (str, optional): whether and where to save our data. Defaults to "".
-      rnFunc (function, optional): function to rename the sample names
-        (takes a list of sample names and returns a list of sample names). Defaults to None.
-      renaming (dict(str:str), optional): dictionary to rename the sample names otherwise. Defaults to None.
+    refworkspace (str): terra workspace where the ref data is stored
+    sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+    save_output (str, optional): whether and where to save our data. Defaults to "".
+    todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
+    samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
+    sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
+    colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.  
+    doplot (bool, optional): whether to plot the data. Defaults to True.
+    countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
+    save_output (str, optional): whether and where to save our data. Defaults to "".
+    rnFunc (function, optional): function to rename the sample names
+      (takes a list of sample names and returns a list of sample names). Defaults to None.
+    renaming (dict(str:str), optional): dictionary to rename the sample names otherwise. Defaults to None.
 
   Returns:
     (pd.df): fusion dataframe
@@ -191,29 +191,29 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, sampleset=SAMPLESETNAME
   see postprocessing() to reproduce our analysis
 
   Args:
-      refworkspace (str): terra workspace where the ref data is stored
-      sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
-      save_output (str, optional): whether and where to save our data. Defaults to "".
-      todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
-      samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-      fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
-      taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
-      dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
-      sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
-      refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
-      my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
-      mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
-      prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
+    refworkspace (str): terra workspace where the ref data is stored
+    sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+    save_output (str, optional): whether and where to save our data. Defaults to "".
+    todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
+    samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
+    fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
+    taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
+    dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
+    sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
+    refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
+    my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
+    mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
+    prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
   
   Returns:
-      (pd.df): fusion dataframe
-      (pd.df): filtered fusion dataframe
+    (pd.df): fusion dataframe
+    (pd.df): filtered fusion dataframe
   """
   from taigapy import TaigaClient
   tc = TaigaClient()
   
   if prevdataset is 'ccle':
-    prevdataset = tc.get(name=TAIGA_ETERNAL,
+    prevdataset = tc.get(name=TAIGA_FUSION,
            file='CCLE_fusions_unfiltered')
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
@@ -243,7 +243,7 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, sampleset=SAMPLESETNAME
   f["id"] = f[fusionSamplecol]+"_"+f["FusionName"]
   print(len(set(pf[~pf.id.isin(f.id.tolist())][fusionSamplecol])))
 
-  print("changes in junction readd counts")
+  print("changes in junction read counts")
   f["sid"] = f[fusionSamplecol]+"_"+f["FusionName"] + \
       "_" + f["JunctionReadCount"].astype(str)
   pf["sid"] = pf[fusionSamplecol]+"_"+pf["FusionName"] + \

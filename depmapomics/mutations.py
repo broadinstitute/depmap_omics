@@ -15,13 +15,7 @@ import dalmatian as dm
 import pandas as pd
 from gsheets import Sheets
 
-ALSO_DROP_FROM_LEGACY =  {'ACH-001146', 'ACH-002260', 'ACH-000010', 'ACH-001078'}
-WES_EXTRA_RENAMES = {'CDS-Rl87Z1': 'ACH-001956',
-                     'CDS-mys9Dm': 'ACH-001955',
-                     'CDS-TzQAjG': 'ACH-001957',
-                     'CDS-TuKZau': 'ACH-001709'}
 
-WGS_EXTRA_RENAMES = {'CDS-xvtYY4': 'ACH-001709'}
 
 def download_maf_from_workspace(refwm, sample_set_ids=['all_ice', 'all_agilent'],
                                 output_maf='/tmp/mutation_filtered_terra_merged.txt'):
@@ -194,6 +188,8 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
                        refsheet_url=REFSHEET_URL,
                        taiga_description=Mutationsreadme, taiga_dataset=TAIGA_MUTATION,
                        mutation_groups=MUTATION_GROUPS,
+                       tokeep_wes=RESCUE_FOR_MUTATION_WES,
+                       tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
                        prev='ccle',
                        minfreqtocall=0.25,
                        **kwargs):
@@ -236,11 +232,13 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
 
   # renaming
   print('renaming')
+  wesrefwm = dm.WorkspaceManager(wesrefworkspace)
   wesrenaming = track.removeOlderVersions(names=set(
       wesmutations[SAMPLEID]), refsamples=wesrefwm.get_samples(),
-      arxspan_id="arxspan_id", version="version", priority=priority)
+      arxspan_id="arxspan_id", version="version")
 
   wesrenaming = h.fileToDict(folder+"sample_renaming.json")
+  wesrenaming.update(tokeep_wes)
 
   wesmutations = wesmutations[wesmutations[SAMPLEID].isin(wesrenaming.keys())].replace({
       SAMPLEID: wesrenaming})
@@ -250,17 +248,18 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   print('doing wgs')
   folder=os.path.join("temp", samplesetname, "wgs_")
 
-  wgsmutations = postProcess(wgsrefworkspace, "allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
+  wgsmutations = postProcess(wgsrefworkspace, sampleset="allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
                          save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
 
   # renaming
   print('renaming')
+  wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)
   wgsrenaming = track.removeOlderVersions(names=set(
       wesmutations[SAMPLEID]), refsamples=wgsrefwm.get_samples(),
-      arxspan_id="arxspan_id", version="version", priority=priority)
+      arxspan_id="arxspan_id", version="version")
 
   wgsrenaming = h.fileToDict(folder+"sample_renaming.json")
-  wgsrenaming.update(WGS_EXTRA_RENAMES)
+  wgsrenaming.update(tokeep_wgs)
 
   wgsmutations = wgsmutations[wgsmutations[SAMPLEID].isin(wgsrenaming.keys())].replace({
       SAMPLEID: wgsrenaming})
@@ -343,7 +342,7 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   merged = merged[~merged['is_likely_immortalization']]
   #reverting to previous versions
   merged_maf = merged[MUTCOL_DEPMAP].rename(columns={
-      "Tumor_Allele": "Tumor_Seq_Allele1"})
+      "Tumor_Allele": "Alternate_Allele"})
   merged_maf.to_csv(folder+'somatic_mutations_withlegacy.csv', index=False)
 
   # making binary matrices
@@ -474,7 +473,7 @@ async def _CCLEAnalyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', fol
   tc = TaigaClient()
   res = dm.WorkspaceManager(workspace).get_sample_sets()
   unfiltered = pd.read_csv(res.loc[allsampleset, 'unfiltered_CGA_MAF_aggregated'], sep='\t',
-  encoding='L6',na_values=["__UNKNOWN__",'.'], engine='c', dtype=str)
+                          encoding='L6',na_values=["__UNKNOWN__",'.'], engine='c', dtype=str)
   unfiltered['somatic'] = unfiltered['somatic'].replace('nan','False')
   unfiltered['HGNC_Status'] = unfiltered['HGNC_Status'].replace('nan','Unapproved')
   unfiltered['judgement'] = unfiltered['judgement'].replace('nan','REMOVE')
