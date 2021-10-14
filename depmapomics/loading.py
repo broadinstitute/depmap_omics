@@ -218,7 +218,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
 
   if len(sampless) == 0:
     print("no new data available")
-    return sampless, pd.DataFrame()
+    return sampless, None, pd.DataFrame()
 
   sampless = assessAllSamples(sampless, refsamples, stype, rename, extract)
   # creating pairs
