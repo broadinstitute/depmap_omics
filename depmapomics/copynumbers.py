@@ -40,21 +40,21 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   """fetching the data from the Terra and loading it into a dataframe
 
   Args:
-      refworkspace (str): workspace path
-      sortby (list, optional): columns to sort df. Defaults to [SAMPLEID, 'Chromosome', "Start", "End"].
-      save_output (str, optional): location to save output. Defaults to ''.
-      doCleanup (bool, optional): if do cleanup of Terra workspace unused output and logs. Defaults to True.
-      todrop (list, optional): [description]. Defaults to [].
-      showPlots (bool, optional): whether to show plot output from the GATK pipeline. Defaults to False.
-      colname (str, optional): the column in Terra where the file is saved in sampleset. Defaults to "combined_seg_file".
-      plotColname (str, optional): the column on terra where the plots exist in sample. Defaults to "modeled_segments_plot_tumor".
-      tempFolder (str, optional): where to put temp files. Defaults to "temp/".
-      toremove (list, optional): columns in Terra samples to remove (and delete corresponding data). Defaults to ["readgroup_ubams", ].
-      sampleset (str, optional): sample set to load in terra. Defaults to "all".
-      colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
+    refworkspace (str): workspace path
+    sortby (list, optional): columns to sort df. Defaults to [SAMPLEID, 'Chromosome', "Start", "End"].
+    save_output (str, optional): location to save output. Defaults to ''.
+    doCleanup (bool, optional): if do cleanup of Terra workspace unused output and logs. Defaults to True.
+    todrop (list, optional): [description]. Defaults to [].
+    showPlots (bool, optional): whether to show plot output from the GATK pipeline. Defaults to False.
+    colname (str, optional): the column in Terra where the file is saved in sampleset. Defaults to "combined_seg_file".
+    plotColname (str, optional): the column on terra where the plots exist in sample. Defaults to "modeled_segments_plot_tumor".
+    tempFolder (str, optional): where to put temp files. Defaults to "temp/".
+    toremove (list, optional): columns in Terra samples to remove (and delete corresponding data). Defaults to ["readgroup_ubams", ].
+    sampleset (str, optional): sample set to load in terra. Defaults to "all".
+    colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
 
   Returns:
-      pd.dataframe: dataframe containing the segments concatenated in a bed like format
+    pd.dataframe: dataframe containing the segments concatenated in a bed like format
   """
   wm = dm.WorkspaceManager(refworkspace)
   if save_output:
@@ -102,22 +102,22 @@ def updateTracker(tracker, selected, samplesetname, lowqual, newgs=WGS_GCS_PATH_
                   sheetcreds = SHEETCREDS, samplesinset=[],
                   sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
-                  dry_run=False, datatype=''):
+                  dry_run=False, datatype=['wes', 'wgs']):
   """updates the sample tracker with the new samples and the QC metrics
 
   Args:
-      tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
-      selected (list[str]): which samples were selected in the release of the analysis
-      samplesetname (str): the name of the sample set or of the current analysis
-      samplesinset (list[str]): list of samples in the analysis.
-      lowqual (list[str]): list of samples that failed QC
-      newgs (str, optional): google storage path where to move the files. Defaults to ''.
-      sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
-      sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
-      procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
-      bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
-      refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-      onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+    tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
+    selected (list[str]): which samples were selected in the release of the analysis
+    samplesetname (str): the name of the sample set or of the current analysis
+    samplesinset (list[str]): list of samples in the analysis.
+    lowqual (list[str]): list of samples that failed QC
+    newgs (str, optional): google storage path where to move the files. Defaults to ''.
+    sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
+    sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
+    procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
+    bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
+    refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
+    onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
   """
   # computing QC
   print('looking for QC..')
@@ -149,14 +149,14 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
   """removes duplicates and solves failed data
 
   Args:
-      failed (list): list of samples that failed QC
-      datatype (str): 'wes' or 'wgs'
-      tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
-      samples (list): list of samples to filter
-      newname (str): name of the new sample set
+    failed (list): list of samples that failed QC
+    datatype (str): 'wes' or 'wgs'
+    tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
+    samples (list): list of samples to filter
+    newname (str): name of the new sample set
 
   Returns:
-      dict: a dict of duplicates to keep and their newname name
+    dict: a dict of duplicates to keep and their newname name
   """
   # selecting the right arxspan id (latest version)
   renaming = track.removeOlderVersions(names=samples,
@@ -277,22 +277,22 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   see postprocessing() to reproduce most of our analysis and find out about additional parameters
 
   Args:
-      wesrefworkspace (str): wes terra workspace where the ref data is stored
-      wgsrefworkspace (str): wgs terra workspace where the ref data is stored
-      samplesetname (str): name of the current release
-      AllSamplesetName (str, optional): name of the sample set to get the data from (should contain everything). Defaults to 'all'.
-      my_id (str, optional): google sheet user id to access the ref sheets . Defaults to MY_ID.
-      mystorage_id (str, optional): google sheet storage id to access the ref sheets . Defaults to MYSTORAGE_ID.
-      sheetcreds (str, optional): @see updateTracker. Defaults to SHEETCREDS.
-      sheetname (str, optional): @see updateTracker. Defaults to SHEETNAME.
-      refsheet_url (str, optional): @see updateTracker. Defaults to REFSHEET_URL.
-      prevgenecn (str, optional): where the previous version exists on taiga (for QC purposes). Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn').
-      taiga_dataset (str, optional): where to save the output to on taiga. Defaults to TAIGA_CN.
-      dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to CNreadme.
-      subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
-      bamqc ([type], optional): @see updateTracker. Defaults to BAMQC.
-      procqc ([type], optional): @see updateTracker. Defaults to PROCQC.
-      source_rename ([type], optional): @see managing duplicates. Defaults to SOURCE_RENAME.
+    wesrefworkspace (str): wes terra workspace where the ref data is stored
+    wgsrefworkspace (str): wgs terra workspace where the ref data is stored
+    samplesetname (str): name of the current release
+    AllSamplesetName (str, optional): name of the sample set to get the data from (should contain everything). Defaults to 'all'.
+    my_id (str, optional): google sheet user id to access the ref sheets . Defaults to MY_ID.
+    mystorage_id (str, optional): google sheet storage id to access the ref sheets . Defaults to MYSTORAGE_ID.
+    sheetcreds (str, optional): @see updateTracker. Defaults to SHEETCREDS.
+    sheetname (str, optional): @see updateTracker. Defaults to SHEETNAME.
+    refsheet_url (str, optional): @see updateTracker. Defaults to REFSHEET_URL.
+    prevgenecn (str, optional): where the previous version exists on taiga (for QC purposes). Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn').
+    taiga_dataset (str, optional): where to save the output to on taiga. Defaults to TAIGA_CN.
+    dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to CNreadme.
+    subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
+    bamqc ([type], optional): @see updateTracker. Defaults to BAMQC.
+    procqc ([type], optional): @see updateTracker. Defaults to PROCQC.
+    source_rename ([type], optional): @see managing duplicates. Defaults to SOURCE_RENAME.
   """
   from taigapy import TaigaClient
   tc = TaigaClient()
@@ -321,9 +321,8 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
 
     # annotating source
     for v in set(wessegments[SAMPLEID]):
-      if len(tracker[tracker.index == v].source.values) > 0:
-        wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
-                  'Source'] = tracker[tracker.index == v].source.values[0]
+      wessegments.loc[wessegments[wessegments[SAMPLEID] == v].index,
+                'Source'] = tracker.loc[v, "source"]
 
     wessegments.Source = wessegments.Source.replace(source_rename)
     wessegments.Source += ' WES'
@@ -361,9 +360,8 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
 
   # annotating source
   for v in set(wgssegments[SAMPLEID]):
-    if len(tracker[tracker.index == v].source.values) > 0:
-      wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
-                        'Source'] = tracker[tracker.index == v].source.values[0]
+    wgssegments.loc[wgssegments[wgssegments[SAMPLEID] == v].index,
+              'Source'] = tracker.loc[v, "source"]
 
   wgssegments.Source = wgssegments.Source.replace(source_rename)
   wgssegments.Source += ' WGS'
@@ -380,17 +378,17 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   h.compareDfs(wespriogenecn, prevgenecn)
 
   #adding to the sample tracker the sequencing that were selected and the ones that failed QC
-  wgsselected = {i for i,j in wgsrenaming.items()}
-  wesselected = {i for i,j in wesrenaming.items()}
+  selected = {i for i,j in wgsrenaming.items()}
+  selected.update({i for i,j in wesrenaming.items()})
 
   try:
-    updateTracker(tracker, wgsselected, samplesetname, wgsfailed, 
+    updateTracker(tracker, selected, samplesetname, wgsfailed, 
               sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc, refworkspace=WGSWORKSPACE, datatype='wgs')
   except:
     print('no wgs for this sampleset')
 
   try:
-    updateTracker(tracker, wesselected, samplesetname, list(wesfailed), sheetcreds=sheetcreds, 
+    updateTracker(tracker, selected, samplesetname, list(wesfailed), sheetcreds=sheetcreds, 
         sheetname=sheetname, bamqc=bamqc, procqc=procqc, datatype='wes')
   except:
     print('no wes for this sampleset')
@@ -480,19 +478,19 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs,
   """runs the Achilles specific part of the pipeline
 
   Args:
-      wespriosegs (pd.dataframe): set of wes to priorise, output of _CCLEPostProcessing
-      wgspriosegs ([type]): set of wgs to priorise, output of _CCLEPostProcessing
-      samplesetname ([type], optional): . Defaults to SAMPLESETNAME.
-      bad (list, optional): list of known samples that should not be inclusded.
-      taiga_legacy_loc (str, optional): where the legacy segments file lies. Defaults to 'depmap-wes-cn-data--08f3'.
-      taiga_legacy_filename (str, optional): what the legacy segments file is named. Defaults to 'legacy_segments'.
-      taiga_dataset (str, optional): where we should upload the output on taiga to. Defaults to "cn-wes-achilles-4dcd".
-      dataset_description ([type], optional): README to add to the taiga dataset. Defaults to Achillesreadme.
-      cytobandloc (str, optional): bed file containing genomic chromosomal regions to extend segments (needed for Achilles). Defaults to 'data/hg38_cytoband.gz'.
-      gene_mapping ([type], optional): bed file containing gene names. Defaults to pd.read_csv('data/genemapping_19Q1.csv').
-      prevsegments (str, optional): if ccle, gets taiga, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
-      prevgenecn (str, optional): if ccle, gets taiga, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
-      gene_expected_count (str, optional): if ccle, gets taiga's expression file, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
+    wespriosegs (pd.dataframe): set of wes to priorise, output of _CCLEPostProcessing
+    wgspriosegs ([type]): set of wgs to priorise, output of _CCLEPostProcessing
+    samplesetname ([type], optional): . Defaults to SAMPLESETNAME.
+    bad (list, optional): list of known samples that should not be inclusded.
+    taiga_legacy_loc (str, optional): where the legacy segments file lies. Defaults to 'depmap-wes-cn-data--08f3'.
+    taiga_legacy_filename (str, optional): what the legacy segments file is named. Defaults to 'legacy_segments'.
+    taiga_dataset (str, optional): where we should upload the output on taiga to. Defaults to "cn-wes-achilles-4dcd".
+    dataset_description ([type], optional): README to add to the taiga dataset. Defaults to Achillesreadme.
+    cytobandloc (str, optional): bed file containing genomic chromosomal regions to extend segments (needed for Achilles). Defaults to 'data/hg38_cytoband.gz'.
+    gene_mapping ([type], optional): bed file containing gene names. Defaults to pd.read_csv('data/genemapping_19Q1.csv').
+    prevsegments (str, optional): if ccle, gets taiga, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
+    prevgenecn (str, optional): if ccle, gets taiga, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
+    gene_expected_count (str, optional): if ccle, gets taiga's expression file, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
   """
   # load legacy_segments
   from taigapy import TaigaClient

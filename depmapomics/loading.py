@@ -913,17 +913,17 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
   ccle_refsamples = ccle_refsamples.append(samples, sort=False)
   dfToSheet(ccle_refsamples, sampletrackername, secret=creds)
 
-  #uploading new samples to mut
+  #uploading new samples
   samples.index.name = 'sample_id'
   refwm = dm.WorkspaceManager(refworkspace).disable_hound()
   refwm.upload_samples(samples)
-  sam = refwm.get_samples()
 
   #creating a sample set
   refwm.update_sample_set(sample_set_id=samplesetname,
                           sample_ids=samples.index)
+
   refwm.update_sample_set(sample_set_id='all', sample_ids=[
-                          i for i in sam.index.tolist() if i != 'nan'])
+                          i for i in refwm.get_samples().index.tolist() if i != 'nan'])
   
   # add new samples to additional sample_sets
   for sname in add_to_samplesets:
