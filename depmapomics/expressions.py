@@ -93,7 +93,7 @@ def solveQC(tracker, failed, save="", newname="arxspan_id"):
 def updateTracker(selected, failed, lowqual, tracker, samplesetname, refworkspace=RNAWORKSPACE,
                   sheetname=SHEETNAME, sheetcreds=SHEETCREDS,
                   onlycol=STARBAMCOLTERRA, newgs=RNA_GCS_PATH_HG38,
-                  dry_run=False, qcname="star_logs", match=".Log.final.out"):
+                  dry_run=False, qcname="star_logs", match=".Log.final.out", todrop=[]):
   """updates the sample tracker with the new samples and the QC metrics
 
   Args:
@@ -125,7 +125,7 @@ def updateTracker(selected, failed, lowqual, tracker, samplesetname, refworkspac
       tracker.loc[k, 'bam_qc'] = v[0]
   tracker.loc[tracker[tracker.datatype.isin(['rna'])].index, samplesetname]=0
   track.update(tracker, selected, samplesetname, failed, lowqual, newgs,
-                     sheetcreds, sheetname, refworkspace, onlycol,  dry_run)
+                     sheetcreds, sheetname, refworkspace, onlycol,  dry_run, todrop=todrop)
 
 
 def loadFromRSEMaggregate(refworkspace, todrop=[], filenames=RSEMFILENAME,
@@ -247,11 +247,12 @@ def extractProtCod(files, mybiomart, protcod_rename,
         a = files[name].loc[dup].sum()
         files[name].drop(index=dup)
         files[name].loc[dup] = a
+    files[name] = files[name].T
 
   return files
 
 
-def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
+async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
   """the way we run ssGSEA on the CCLE dataset
 
   Args:
@@ -280,7 +281,7 @@ def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
   #### merging splicing variants into the same gene
   #counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
-  enrichments = (rna.gsva(tpm_genes.T,
+  enrichments = (await rna.gsva(tpm_genes.T,
                                 geneset_file=geneset_file, method='ssgsea', recompute=recompute)).T
   enrichments.index = [i.replace('.', '-') for i in enrichments.index]
   return enrichments
@@ -430,7 +431,7 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
                                   "genes_tpm": "CCLE_expression_full",
                                   "proteincoding_genes_tpm": "CCLE_expression"},
                        sheetname=SHEETNAME, sheetcreds=SHEETCREDS, todrop=KNOWN_DROP,
-                       prevcounts='ccle',
+                       prevcounts='ccle', recompute_ssgsea=True,
                        taiga_dataset=TAIGA_EXPRESSION, minsimi=0.95, dropNonMatching=True,
                        dataset_description=RNAseqreadme, **kwargs):
   """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -474,7 +475,7 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
   from taigapy import TaigaClient
   tc = TaigaClient()
 
-  if prevcounts is "ccle":
+  if prevcounts == "ccle":
     prevcounts = tc.get(name=TAIGA_ETERNAL,
            file='CCLE_RNAseq_reads')
 
@@ -497,12 +498,12 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
 
   folder = os.path.join("temp", samplesetname, "")
   h.createFoldersFor(folder)
-  files, _, failed, _, renaming, lowqual = await postProcess(refworkspace, samplesetname,
+  files, failed, _, renaming, lowqual, _ = await postProcess(refworkspace, samplesetname,
                                                     save_output=folder, doCleanup=doCleanup, priority=priority,
                                                     colstoclean=colstoclean, ensemblserver=ensemblserver,
                                                     todrop=todrop, samplesetToLoad=samplesetToLoad,
                                                     geneLevelCols=RSEMFILENAME_GENE,
-                                                    trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
+                                                    trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS, #compute_enrichment=False,
                                                     ssGSEAcol="genes_tpm", renamingFunc=rn,
                                                     dropNonMatching=dropNonMatching, **kwargs)
 
@@ -540,16 +541,17 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
     _, omissmatchCols, _, omissmatchInds, newNAs, new0s = h.compareDfs(
         files[key], tc.get(name=TAIGA_ETERNAL, file=val))
     print(key)
-    assert omissmatchCols == 0
-    assert omissmatchInds == 0
+    assert len(omissmatchCols) == 0
+    assert len(omissmatchInds) == 0
     assert newNAs == 0
-    assert new0s == 0
+    print("New 0s: ", new0s)
 
   print("updating the tracker")
+
   updateTracker(set(renaming.keys()) - set(['transcript_id(s)']), failed,
                 lowqual[lowqual.sum(1) > 3].index.tolist(),
                 ccle_refsamples, samplesetname, refworkspace,
-                sheetname=sheetname, sheetcreds=sheetcreds)
+                sheetname=sheetname, sheetcreds=sheetcreds, todrop=todrop)
 
   print("uploading to taiga")
   tc.update_dataset(changes_description="new "+samplesetname+" release!",

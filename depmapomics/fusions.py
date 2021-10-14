@@ -170,7 +170,7 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
     fusions.to_csv(os.path.join(save_output, 'fusions_latest.csv'), index=False)
 
   fusions_filtered = filterFusions(
-      fusions, sampleCol=sampleCol, countCol=countCol, **kwargs)
+      fusions, sampleCol=sampleCol, countCol=countCol)
   if doplot:
     sns.kdeplot(fusions[countCol])
   fusions_filtered.to_csv(os.path.join(
@@ -213,7 +213,7 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, sampleset=SAMPLESETNAME
   tc = TaigaClient()
   
   if prevdataset is 'ccle':
-    prevdataset = tc.get(name=TAIGA_ETERNAL,
+    prevdataset = tc.get(name=TAIGA_FUSION,
            file='CCLE_fusions_unfiltered')
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
@@ -243,7 +243,7 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, sampleset=SAMPLESETNAME
   f["id"] = f[fusionSamplecol]+"_"+f["FusionName"]
   print(len(set(pf[~pf.id.isin(f.id.tolist())][fusionSamplecol])))
 
-  print("changes in junction readd counts")
+  print("changes in junction read counts")
   f["sid"] = f[fusionSamplecol]+"_"+f["FusionName"] + \
       "_" + f["JunctionReadCount"].astype(str)
   pf["sid"] = pf[fusionSamplecol]+"_"+pf["FusionName"] + \

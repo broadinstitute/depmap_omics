@@ -564,7 +564,7 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
 def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
                   sheetcreds=SHEETCREDS, sheetname=SHEETNAME, refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
-                  dry_run=True, samplesinset=[],
+                  dry_run=True, samplesinset=[], todrop=[],
                   ):
   """updates the sample tracker with the new samples and the QC metrics
 
@@ -597,14 +597,15 @@ def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
       i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
     tracker.loc[res.index.tolist(), 'crc32c_hash']=[gcp.extractHash(
       i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
-    tracker.loc[res.index.tolist(), 'md5_hash']=gcp.catFiles(
-      dm.WorkspaceManager(refworkspace).get_samples().loc[
-        samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
+    tracker.loc[res.index.tolist(), 'md5_hash']=[gcp.extractHash(
+      i, typ="md5") for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
 
   tracker.loc[selected, samplesetname]=1
   tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
   tracker.loc[lowqual,'low_quality']=1
-  tracker.loc[failed,'blacklist']=1
+  failed_not_dropped = list(set(failed) - set(todrop))
+  #print(todrop)
+  tracker.loc[failed_not_dropped,'blacklist']=1
   if dry_run:
     return tracker
   else:
