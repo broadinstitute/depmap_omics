@@ -611,3 +611,5 @@ def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
   else:
     dfToSheet(tracker, sheetname, secret=sheetcreds)
   print("updated the sheet, please reactivate protections")
+  return None
+
