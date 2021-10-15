@@ -62,6 +62,7 @@ class depmap_igv(igv.Browser):
         #self.payer_project_uri_parameter = '?userProject='+GCS_PAYER_PROJECT
         super().__init__({**config, "oauthToken": get_gcloud_auth_token()})
         self.depmap_samples = load_sample_tracker()
+        self.depmap_samples_subset = None
 
     def get_the_track(self, row, fileformat='bam'):
         sample_info = row[1]
@@ -70,8 +71,8 @@ class depmap_igv(igv.Browser):
                 "name": '{} ({}): {}'.format(sample_info['arxspan_id'],
                                              sample_info['stripped_cell_line_name'],
                                              sample_info['datatype']),
-                "url": sample_info['{}_bam'.format(self.config['genome'])]#+self.payer_project_uri_parameter,
-                'indexURL': sample_info['{}_bai'.format(self.config['genome'])]#+self.payer_project_uri_parameter,
+                "url": sample_info['{}_bam'.format(self.config['genome'])],#+self.payer_project_uri_parameter,
+                'indexURL': sample_info['{}_bai'.format(self.config['genome'])],#+self.payer_project_uri_parameter,
                 "format": fileformat
             })
 
