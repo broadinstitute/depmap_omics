@@ -13,8 +13,8 @@ import os
 tc = TaigaClient()
 
 
-async def addToFingerPrint(samples, sampleset=, allsampleset="all", workspace=WORKSPACE, sid=, vcf_list=None, 
-vcf_list_dir=, working_dir, crosscheck_batch_size, recreate_batch, bamcolname,
+async def addToFingerPrint(samples, sampleset, allsampleset, workspace, sid, vcf_list, 
+vcf_list_dir, working_dir, crosscheck_batch_size, recreate_batch, bamcolname,
 taiga_dataset, taiga_filename):
   """1.1  Generate Fingerprint VCFs
 
