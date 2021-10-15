@@ -893,6 +893,7 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
       creds ([type], optional): [description]. Defaults to SHEETCREDS.
       sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
       refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+      add_to_samplesets (list, optional): add new samples to additional sample_sets on terra. Defaults to []
   """
   # uploading to our bucket (now a new function)
   samples = terra.changeToBucket(samples, bucket, name_col=name_col,
