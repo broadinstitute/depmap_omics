@@ -384,7 +384,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   selected.update({i for i,j in wesrenaming.items()})
 
   try:
-    updateTracker(tracker, selected, samplesetname, wgsfailed, datatype=['wgs','wes']
+    updateTracker(tracker, selected, samplesetname, wgsfailed, datatype=['wgs','wes'],
               sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc, refworkspace=wgsrefworkspace)
   except:
     print('no wgs for this sampleset')
@@ -482,6 +482,7 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs,
   Args:
     wespriosegs (pd.dataframe): set of wes to priorise, output of _CCLEPostProcessing
     wgspriosegs ([type]): set of wgs to priorise, output of _CCLEPostProcessing
+    gene_mapping (str): 'biomart' or local bed file containing gene names
     samplesetname ([type], optional): . Defaults to SAMPLESETNAME.
     bad (list, optional): list of known samples that should not be inclusded.
     taiga_legacy_loc (str, optional): where the legacy segments file lies. Defaults to 'depmap-wes-cn-data--08f3'.
@@ -489,7 +490,6 @@ def _ProcessForAchilles(wespriosegs, wgspriosegs,
     taiga_dataset (str, optional): where we should upload the output on taiga to. Defaults to "cn-wes-achilles-4dcd".
     dataset_description ([type], optional): README to add to the taiga dataset. Defaults to Achillesreadme.
     cytobandloc (str, optional): bed file containing genomic chromosomal regions to extend segments (needed for Achilles). Defaults to 'data/hg38_cytoband.gz'.
-    gene_mapping ([type], optional): bed file containing gene names. Defaults to pd.read_csv('data/genemapping_19Q1.csv').
     prevsegments (str, optional): if ccle, gets taiga, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
     prevgenecn (str, optional): if ccle, gets taiga, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".
     gene_expected_count (str, optional): if ccle, gets taiga's expression file, else can provide your own file instead of taiga's (used for QC). Defaults to "ccle".

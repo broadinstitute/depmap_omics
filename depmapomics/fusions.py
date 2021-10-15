@@ -213,7 +213,7 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, sampleset=SAMPLESETNAME
   tc = TaigaClient()
   
   if prevdataset is 'ccle':
-    prevdataset = tc.get(name=TAIGA_FUSION,
+    prevdataset = tc.get(name=TAIGA_ETERNAL,
            file='CCLE_fusions_unfiltered')
   sheets = Sheets.from_files(my_id, mystorage_id)
   ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)

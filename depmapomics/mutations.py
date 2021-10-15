@@ -209,6 +209,8 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
       taiga_description (str, optional): description of the dataset on taiga. Defaults to Mutationsreadme.
       taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_MUTATION.
       mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
+      tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
+      tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
       prev (pd.df, optional): the previous release dataset (to do QC). 
         Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
       minfreqtocall (float, optional): the minimum frequency to call a mutation. Defaults to 0.25.

@@ -103,10 +103,10 @@ def updateTracker(selected, failed, lowqual, tracker, samplesetname, refworkspac
     newgs (str, optional): google storage path where to move the files. Defaults to ''.
     sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
     sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
-    procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
-    bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
+    qcname (str, optional): Terra column containing QC files. Defaults to "star_logs".
     refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-    onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+    onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
+    todrop (list, optional): list of samples to be dropped. Defaults to []
   """
   refwm = dm.WorkspaceManager(refworkspace)
   samplesinset = [i['entityName'] for i in refwm.get_entities(
