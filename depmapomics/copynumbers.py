@@ -98,11 +98,11 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
   return segments
 
 
-def updateTracker(tracker, selected, samplesetname, lowqual, newgs=WGS_GCS_PATH_HG38,
+def updateTracker(tracker, selected, samplesetname, lowqual, datatype, newgs=WGS_GCS_PATH_HG38,
                   sheetcreds = SHEETCREDS, samplesinset=[],
                   sheetname=SHEETNAME, procqc=[], bamqc=[], refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
-                  dry_run=False, datatype=['wes', 'wgs']):
+                  dry_run=False):
   """updates the sample tracker with the new samples and the QC metrics
 
   Args:
@@ -139,7 +139,9 @@ def updateTracker(tracker, selected, samplesetname, lowqual, newgs=WGS_GCS_PATH_
       a = tracker.loc[k,'bam_qc']
       a = '' if a is np.nan else a
       tracker.loc[k,'bam_qc'] = str(v) + ',' + a
-  tracker.loc[tracker[tracker.datatype.isin([datatype])].index, samplesetname]=0
+  if type(datatype) is str:
+    datatype = [datatype]
+  tracker.loc[tracker[tracker.datatype.isin(datatype)].index, samplesetname]=0
   track.update(tracker, selected, samplesetname, lowqual, lowqual, newgs,
                       sheetcreds, sheetname, refworkspace, onlycol, dry_run, samplesinset)
 
@@ -382,14 +384,14 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   selected.update({i for i,j in wesrenaming.items()})
 
   try:
-    updateTracker(tracker, selected, samplesetname, wgsfailed, 
-              sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc, refworkspace=WGSWORKSPACE, datatype='wgs')
+    updateTracker(tracker, selected, samplesetname, wgsfailed, datatype=['wgs','wes']
+              sheetcreds=sheetcreds, sheetname=sheetname, bamqc=bamqc, procqc=procqc, refworkspace=wgsrefworkspace)
   except:
     print('no wgs for this sampleset')
 
   try:
-    updateTracker(tracker, selected, samplesetname, list(wesfailed), sheetcreds=sheetcreds, 
-        sheetname=sheetname, bamqc=bamqc, procqc=procqc, datatype='wes')
+    updateTracker(tracker, selected, samplesetname, list(wesfailed), datatype=['wes', "wgs"], sheetcreds=sheetcreds, 
+        sheetname=sheetname, bamqc=bamqc, procqc=procqc, refworkspace=wesrefworkspace)
   except:
     print('no wes for this sampleset')
 

@@ -5,9 +5,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import zscore
 
-from genepy.google import gcp
 from genepy.utils import helper as h
-from genepy.google.google_sheet import dfToSheet
 from genepy import rna, terra
 
 from depmapomics import terra as myterra
