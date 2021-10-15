@@ -70,8 +70,8 @@ class depmap_igv(igv.Browser):
                 "name": '{} ({}): {}'.format(sample_info['arxspan_id'],
                                              sample_info['stripped_cell_line_name'],
                                              sample_info['datatype']),
-                "url": sample_info['{}_bam'.format(self.config['genome'])]#+self.payer_project_uri_parameter,
-                'indexURL': sample_info['{}_bai'.format(self.config['genome'])]#+self.payer_project_uri_parameter,
+                "url": sample_info['{}_bam'.format(self.config['genome'])],#+self.payer_project_uri_parameter,
+                'indexURL': sample_info['{}_bai'.format(self.config['genome'])],#+self.payer_project_uri_parameter,
                 "format": fileformat
             })
 
