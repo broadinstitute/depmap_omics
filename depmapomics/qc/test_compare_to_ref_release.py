@@ -8,10 +8,11 @@ from depmapomics.qc.config import (
     LEGACY_PATCH_FLAGS,
     FILE_ATTRIBUTES,
     FILES_RELEASED_BEFORE,
-    PORTAL,
+    PORTALS,
     PREV_RELEASE,
     SKIP_ARXSPAN_COMPARISON,
     NEW_RELEASE,
+    DEFAULT_PORTAL,
 )
 from taigapy import TaigaClient
 
@@ -29,11 +30,17 @@ def tsv2csv(df):
 
 
 ####### FIXTURES ####
-def get_both_releases_from_taiga(file, portal=PORTAL):
+def get_both_releases_from_taiga(file, portal):
     data1 = tc.get(
-        name=PREV_RELEASE["name"], file=file, version=PREV_RELEASE["version"]
+        name=PREV_RELEASE[portal]["name"],
+        file=file,
+        version=PREV_RELEASE[portal]["version"],
     )
-    data2 = tc.get(name=NEW_RELEASE["name"], file=file, version=NEW_RELEASE["version"])
+    data2 = tc.get(
+        name=NEW_RELEASE[portal]["name"],
+        file=file,
+        version=NEW_RELEASE[portal]["version"],
+    )
     if LEGACY_PATCH_FLAGS["tsv2csv"]:
         # some older taiga data formats (probably 20q1 and older) are tsv and deprecated
         data1 = tsv2csv(data1)
@@ -60,8 +67,8 @@ def get_arxspan_ids(data, isMatrix):
     return arxspans
 
 
-def get_both_release_lists_from_taiga(file):
-    data1, data2 = get_both_releases_from_taiga(file)
+def get_both_release_lists_from_taiga(file, portal):
+    data1, data2 = get_both_releases_from_taiga(file, portal)
 
     arxspans1 = get_arxspan_ids(data1, "DepMap_ID" not in data1.columns)
     arxspans2 = get_arxspan_ids(data2, "DepMap_ID" not in data2.columns)
@@ -69,21 +76,31 @@ def get_both_release_lists_from_taiga(file):
     return arxspans1, arxspans2
 
 
-def merge_dataframes(file, merge_columns):
+def merge_dataframes(file, merge_columns, portal):
     # TODO: figure out how to call the data fixture instead
-    data1, data2 = get_both_releases_from_taiga(file)
+    data1, data2 = get_both_releases_from_taiga(file, portal)
     data_merged = pd.merge(data1, data2, on=merge_columns, indicator=True, how="inner")
     return data_merged
 
 
 @pytest.fixture(scope="module")
 def data(request):
-    return get_both_releases_from_taiga(request.param)
+    if type(request.param) not in [tuple, list]:
+        file = request.param
+        portal = DEFAULT_PORTAL
+    else:
+        file, portal = request.param
+    return get_both_releases_from_taiga(file, portal)
 
 
 @pytest.fixture(scope="module")
 def dataframes_merged(request):
-    merged_df = merge_dataframes(request.param[0], request.param[1])
+    if len(request.param) == 2:
+        portal = DEFAULT_PORTAL
+    else:
+        portal = request.param[2]
+
+    merged_df = merge_dataframes(request.param[0], request.param[1], portal)
     return merged_df
 
 
@@ -383,9 +400,10 @@ def calculate_source_changes(data1, data2):
     [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "CCLE_mutations"] == [],
     reason="skipped by user",
 )
+@pytest.mark.parametrize("portal", PORTALS)
 @pytest.mark.parametrize("data", ["CCLE_mutations"], indirect=["data"])
 @pytest.mark.compare
-def test_mutation_legacy_data(data):
+def test_mutation_legacy_data(data, portal):
     data1, data2 = data
     AC_cols = ["CGA_WES_AC", "HC_AC", "RD_AC", "RNAseq_AC", "SangerWES_AC", "WGS_AC"]
     mut_notnull1 = data1.groupby("DepMap_ID")[AC_cols].apply(
@@ -403,7 +421,7 @@ def test_mutation_legacy_data(data):
     # add expression changes
     expression_file = "CCLE_expression"
     expression_col = "RNA"
-    arxspans1, arxspans2 = get_both_release_lists_from_taiga(expression_file)
+    arxspans1, arxspans2 = get_both_release_lists_from_taiga(expression_file, portal)
     mut_notnull_diff[expression_col] = mut_notnull_diff.index.map(
         lambda x: "{}{}".format(int(x in arxspans1), int(x in arxspans2))
     )
@@ -428,7 +446,7 @@ def test_mutation_legacy_data(data):
 
     # add CN changes
     segment_data = "CCLE_segment_cn"
-    data1, data2 = get_both_releases_from_taiga(segment_data)
+    data1, data2 = get_both_releases_from_taiga(segment_data, portal)
     source_changes = calculate_source_changes(data1, data2)
 
     mut_notnull_diff = pd.merge(

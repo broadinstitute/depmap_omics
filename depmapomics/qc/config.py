@@ -17,7 +17,8 @@ taiga_latest_path = lambda dataset_name: {
 
 # from depmapomics.qc.create_dataset import update_tentative_virtual
 # update_tentative_virtual()
-TENTATIVE_VIRTUAL = taiga_latest_path("tentative-virtual-d84e")
+DEFAULT_PORTAL = "internal"
+TENTATIVE_VIRTUAL = {DEFAULT_PORTAL: taiga_latest_path("tentative-virtual-d84e")}
 
 VIRTUAL_RELEASES = {
     "21Q3": {
@@ -34,21 +35,25 @@ VIRTUAL_RELEASES = {
     },
 }  # release ids on taiga
 
-# PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PORTAL = "dmc"  # used for 'not bookkeeping' markers
+PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
 PREV_QUARTER = "21Q3"
 NEW_QUARTER = "21Q4"
 
-PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
-NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
+PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER]
+NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER]
 # NEW_RELEASE = TENTATIVE_VIRTUAL
-PORTALS = [PORTAL]
+# PORTALS = [PORTAL]
 
 
 LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011"}
 LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
+LINES_TO_DROP_CNV = {"ACH-002335", "ACH-002512"}
+LINES_TO_DROP_PER_FILE = {
+    "CCLE_segment_cn": LINES_TO_DROP_CNV,
+    "CCLE_gene_cn": LINES_TO_DROP_CNV,
+}
 
 
 LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=1929030925"

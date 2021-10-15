@@ -9,6 +9,7 @@ from depmapomics.qc.config import (
     LINES_TO_RELEASE,
     IGNORE_FAILED_TO_RELEASE,
     PORTALS,
+    LINES_TO_DROP_PER_FILE,
 )
 from depmapomics.qc.test_compare_to_ref_release import get_both_release_lists_from_taiga
 from gsheets.api import Sheets
@@ -25,18 +26,23 @@ def tsv2csv(df):
 
 @pytest.fixture(scope="module")
 def arxspans(request):
-    return get_both_release_lists_from_taiga(request.param)
+    return get_both_release_lists_from_taiga(request.param[0], request.param[1])
 
 
-PARAMS_unexpected_arxspans = [(x["file"], x["omicssource"]) for x in FILE_ATTRIBUTES]
+PARAMS_unexpected_arxspans = [
+    ((x["file"], portal), x["file"], portal, x["omicssource"])
+    for x in FILE_ATTRIBUTES
+    for portal in PORTALS
+]
 
 
 @pytest.mark.parametrize(
-    "arxspans, omicssource", PARAMS_unexpected_arxspans, indirect=["arxspans"]
+    "arxspans, file, portal, omicssource",
+    PARAMS_unexpected_arxspans,
+    indirect=["arxspans"],
 )
-@pytest.mark.parametrize("portal", PORTALS)
 @pytest.mark.bookkeeping
-def test_unexpected_arxspans(arxspans, omicssource, portal):
+def test_unexpected_arxspans(arxspans, omicssource, portal, file):
     arxspans1, arxspans2 = arxspans
 
     lines_to_release = LINES_TO_RELEASE[portal]
@@ -45,7 +51,11 @@ def test_unexpected_arxspans(arxspans, omicssource, portal):
     added_lines = arxspans2 - arxspans1
 
     unexpected_added_lines = added_lines - lines_to_release
+
     lines_to_drop = LINES_TO_DROP[omicssource]
+    if file in LINES_TO_DROP_PER_FILE.keys():
+        lines_to_drop = lines_to_drop | LINES_TO_DROP_PER_FILE[file]
+
     unexpected_dropped_lines = dropped_lines - lines_to_drop
     failed_to_drop = lines_to_drop & arxspans2
     if IGNORE_FAILED_TO_RELEASE:
