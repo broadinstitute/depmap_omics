@@ -9,18 +9,13 @@ import numpy as np
 from collections import Counter
 
 from depmapomics.config import *
+from depmapomics import tracker as track
 
 import dalmatian as dm
 import pandas as pd
 from gsheets import Sheets
 
-ALSO_DROP_FROM_LEGACY =  {'ACH-001146', 'ACH-002260', 'ACH-000010', 'ACH-001078'}
-WES_EXTRA_RENAMES = {'CDS-Rl87Z1': 'ACH-001956',
-                     'CDS-mys9Dm': 'ACH-001955',
-                     'CDS-TzQAjG': 'ACH-001957',
-                     'CDS-TuKZau': 'ACH-001709'}
 
-WGS_EXTRA_RENAMES = {'CDS-xvtYY4': 'ACH-001709'}
 
 def download_maf_from_workspace(refwm, sample_set_ids=['all_ice', 'all_agilent'],
                                 output_maf='/tmp/mutation_filtered_terra_merged.txt'):
@@ -42,6 +37,21 @@ def download_maf_from_workspace(refwm, sample_set_ids=['all_ice', 'all_agilent']
 def annotateLikelyImmortalized(maf, sample_col=SAMPLEID,
                                genome_change_col="Genome_Change", TCGAlocs=['TCGAhsCnt', 'COSMIChsCnt'],
                                max_recurrence=0.05, min_tcga_true_cancer=5):
+  """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
+
+  Based on occurence accross samples
+
+  Args:
+      maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
+      sample_col (str): the column name of the sample id
+      genome_change_col (str, optional): the column name of the genome change. Defaults to "Genome_Change".
+      TCGAlocs (list, optional): the column names of the counts that would make the mutation non immortalization induced. Defaults to ['TCGAhsCnt', 'COSMIChsCnt'].
+      max_recurrence (float, optional): the maximum recurrence rate to call immortalize. Defaults to 0.05.
+      min_tcga_true_cancer (int, optional): the minimum number of TCGA true cancer samples to not call immortalize. Defaults to 5.
+
+  Returns:
+      pandas.DataFrame: the maf file with the added column: immortalized
+  """
   maf['is_likely_immortalization'] = False
   leng = len(set(maf[sample_col]))
   tocheck = []
@@ -58,6 +68,14 @@ def annotateLikelyImmortalized(maf, sample_col=SAMPLEID,
 def addAnnotation(maf, NCBI_Build='37', Strand="+"):
   """
   adds NCBI_Build and Strand annotation on the whole maf file
+
+  Args:
+    maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
+    NCBI_Build (str, optional): the NCBI build. Defaults to "37".
+    Strand (str, optional): the strand. Defaults to "+".
+
+  Returns:
+    pandas.DataFrame: the maf file with the added columns: NCBI_Build, Strand
   """
   maf['NCBI_Build'] = NCBI_Build
   maf['Strand'] = Strand
@@ -65,15 +83,38 @@ def addAnnotation(maf, NCBI_Build='37', Strand="+"):
 
 
 def add_variant_annotation_column(maf):
-    rename = {}
-    for k, v in MUTATION_GROUPS.items():
-      for e in v:
-        rename[e] = k
-    maf['Variant_annotation'] = [rename[i] for i in maf['Variant_Classification'].tolist()]
-    return maf
+  """
+  adds variant annotation column to the maf file
+
+  Args:
+    maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
+
+  Returns:
+    pandas.DataFrame: the maf file with the added column: variant_annotation
+  """
+  rename = {}
+  for k, v in MUTATION_GROUPS.items():
+    for e in v:
+      rename[e] = k
+  maf['Variant_annotation'] = [rename[i] for i in maf['Variant_Classification'].tolist()]
+  return maf
 
 
 def managingDuplicates(samples, failed, datatype, tracker):
+  """
+  managingDuplicates manages the duplicates in the samples 
+  
+  by only keeping the ones that are not old and did not fail QC
+
+  Args:
+    samples (list): the list of samples
+    failed (list): the list of failed samples
+    datatype (str): the data type to look at in the sample tracker
+    tracker (pd.df): the sample tracker
+
+  Returns:
+    dict: the renaming dict
+  """
   # selecting the right arxspan id (latest version)
   renaming = tracker.removeOlderVersions(names=samples,
                                          refsamples=tracker[tracker.datatype == datatype],
@@ -104,15 +145,18 @@ def postProcess(refworkspace, sampleset='all', mutCol="mut_AC", save_output="", 
   (usually a MAF file from the Aggregate_MAF Terra worklflow)
 
   Args:
-      refworkspace ([type]): [description]
-      sampleset (str, optional): [description]. Defaults to 'all'.
-      mutCol (str, optional): [description]. Defaults to "mut_AC".
-      save_output (str, optional): [description]. Defaults to "".
-      doCleanup (bool, optional): [description]. Defaults to False.
-      rename_cols (dict, optional): [description]. Defaults to {"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID, "Tumor_Seq_Allele2": "Tumor_Allele"}.
+      refworkspace (str): the reference workspace
+      sampleset (str, optional): the sample set to use. Defaults to 'all'.
+      mutCol (str, optional): the mutation column name. Defaults to "mut_AC".
+      save_output (str, optional): the output file name to save results into. Defaults to "".
+      doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
+      rename_cols (dict, optional): the rename dict for the columns.
+        Defaults to {"i_ExAC_AF": "ExAC_AF", 
+                    "Tumor_Sample_Barcode": SAMPLEID,
+                     "Tumor_Seq_Allele2": "Tumor_Allele"}.
 
   Returns:
-      [type]: [description]
+      pandas.DataFrame: the maf file with the added columns: variant_annotation
   """
   h.createFoldersFor(save_output)
   print('loading from Terra')
@@ -144,6 +188,8 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
                        refsheet_url=REFSHEET_URL,
                        taiga_description=Mutationsreadme, taiga_dataset=TAIGA_MUTATION,
                        mutation_groups=MUTATION_GROUPS,
+                       tokeep_wes=RESCUE_FOR_MUTATION_WES,
+                       tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
                        prev='ccle',
                        minfreqtocall=0.25,
                        **kwargs):
@@ -152,19 +198,22 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   see postprocess() to reproduce our analysis
 
   Args:
-      wesrefworkspace ([type]): [description]
-      wgsrefworkspace ([type]): [description]
-      samplesetname ([type]): [description]
-      AllSamplesetName (str, optional): [description]. Defaults to 'all'.
-      doCleanup (bool, optional): [description]. Defaults to False.
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-      taiga_description ([type], optional): [description]. Defaults to Mutationsreadme.
-      taiga_dataset (str, optional): [description]. Defaults to TAIGA_MUTATION.
-      mutation_groups ([type], optional): [description]. Defaults to MUTATION_GROUPS.
-      prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
-      minfreqtocall (float, optional): [description]. Defaults to 0.05.
+      wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
+      wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to WGSWORKSPACE.
+      samplesetname (str, optional): the sample set name to use (for the release). Defaults to SAMPLESETNAME.
+      AllSamplesetName (str, optional): the sample set to use for all samples. Defaults to 'all'.
+      doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
+      my_id (str, optional): filepath for google cloud access id file. Defaults to MY_ID.
+      mystorage_id (str, optional): filepath to a google cloud storage access file. Defaults to MYSTORAGE_ID.
+      refsheet_url (str, optional): path to the sample tracker google sheet. Defaults to REFSHEET_URL.
+      taiga_description (str, optional): description of the dataset on taiga. Defaults to Mutationsreadme.
+      taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_MUTATION.
+      mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
+      tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
+      tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
+      prev (pd.df, optional): the previous release dataset (to do QC). 
+        Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
+      minfreqtocall (float, optional): the minimum frequency to call a mutation. Defaults to 0.25.
   """
   from taigapy import TaigaClient
   tc = TaigaClient()
@@ -185,11 +234,13 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
 
   # renaming
   print('renaming')
-  #wesrenaming = track.removeOlderVersions(names=set(
-  #    wesmutations[SAMPLEID]), refsamples=wesrefwm.get_samples(),
-  #    arxspan_id="arxspan_id", version="version", priority=priority)
+  wesrefwm = dm.WorkspaceManager(wesrefworkspace)
+  wesrenaming = track.removeOlderVersions(names=set(
+      wesmutations[SAMPLEID]), refsamples=wesrefwm.get_samples(),
+      arxspan_id="arxspan_id", version="version")
 
   wesrenaming = h.fileToDict(folder+"sample_renaming.json")
+  wesrenaming.update(tokeep_wes)
 
   wesmutations = wesmutations[wesmutations[SAMPLEID].isin(wesrenaming.keys())].replace({
       SAMPLEID: wesrenaming})
@@ -199,17 +250,18 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   print('doing wgs')
   folder=os.path.join("temp", samplesetname, "wgs_")
 
-  wgsmutations = postProcess(wgsrefworkspace, "allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
+  wgsmutations = postProcess(wgsrefworkspace, sampleset="allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
                          save_output=folder, doCleanup=True, mutCol="CGA_WES_AC", **kwargs)
 
   # renaming
   print('renaming')
-  #wgsrenaming = track.removeOlderVersions(names=set(
-  #    wesmutations[SAMPLEID]), refsamples=wgsrefwm.get_samples(),
-  #    arxspan_id="arxspan_id", version="version", priority=priority)
+  wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)
+  wgsrenaming = track.removeOlderVersions(names=set(
+      wesmutations[SAMPLEID]), refsamples=wgsrefwm.get_samples(),
+      arxspan_id="arxspan_id", version="version")
 
   wgsrenaming = h.fileToDict(folder+"sample_renaming.json")
-  wgsrenaming.update(WGS_EXTRA_RENAMES)
+  wgsrenaming.update(tokeep_wgs)
 
   wgsmutations = wgsmutations[wgsmutations[SAMPLEID].isin(wgsrenaming.keys())].replace({
       SAMPLEID: wgsrenaming})
@@ -237,7 +289,6 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   mut.mafToMat(priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)], minfreqtocall=minfreqtocall).astype(
     int).T.to_csv(folder+'somatic_mutations_boolmatrix_hotspot.csv')
 
-
   # genotyped mutations matrices
   mut.mafToMat(priomutations[(priomutations.isDeleterious)], mode="genotype",
               ).T.to_csv(folder+'somatic_mutations_matrix_deleterious.csv')
@@ -256,47 +307,7 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   legacy_raindance = tc.get(name='mutations-da6a', file='legacy_raindance')
   legacy_rna = tc.get(name='mutations-da6a', file='legacy_rna')
   legacy_wes_sanger = tc.get(name='mutations-da6a', file='legacy_wes_sanger')
-  # legacy_wgs_exoniconly = tc.get(name='mutations-da6a', file='legacy_wgs_exoniconly')
-
-  #####################################################
-  # TODO: upload the correct version to taiga
-  # it seems like some lines were dropped going from
-  # version 1 to 3 in mutations-da6a (legacy_wgs_exoniconly).
-  # These are lines that seem to have failed QC in the original
-  # WGS qc but we decided to drop this qc in 21Q3
-  # The following code takes version 1 and reformats it to be
-  # similar to version 3 on taiga
-  legacy_wgs_exoniconly = tc.get(name='mutations-da6a', version=1, file='legacy_wgs_exoniconly_somatic_mutations')
-  legacy_wgs_exoniconly = legacy_wgs_exoniconly.drop(['Unnamed: 0', 'Tumor_Sample_Barcode'], axis=1).rename(
-      columns={'Tumor_Seq_Allele1': 'Tumor_Allele'})
-  freqs = legacy_wgs_exoniconly.apply(lambda x: [int(y) for y in x['WGS_AC'].split(':')], result_type='expand', axis=1)
-  freqs.columns = ['t_alt_count', 't_ref_count']
-  freqs['tumor_f'] = freqs.astype(float).apply(
-      lambda row: row['t_alt_count'] / (row['t_alt_count'] + row['t_ref_count']), axis=1)
-  legacy_wgs_exoniconly = pd.concat([legacy_wgs_exoniconly, freqs], axis=1)
-  # for some bizarre reason about 13 lines have their Genome_Change set to NA
-  # in v1 but not v3. This code fixes that
-  legacy_wgs_exoniconly['Genome_Change'] = legacy_wgs_exoniconly.apply(
-      lambda row: row['Genome_Change'] if row['Genome_Change'] is not None else
-      'g.chr{}:{}{}>{}'.format(
-      *row[['Chromosome', 'Start_position', 'Reference_Allele','Tumor_Allele']]), axis=1)
-
-  # The following lines should not appear in the legacy data:
-  DROP_LEGACY = {'WGS': ['ACH-000014'],
-                 'HC': ['ACH-001078', 'ACH-001146'],
-                 'RNA': ['ACH-001212', 'ACH-001078', 'ACH-000010'],
-                 'Sanger WES': ['ACH-000641']}
-
-  legacy_hybridcapture = legacy_hybridcapture[~legacy_hybridcapture['DepMap_ID'].isin(DROP_LEGACY['HC'])]
-  legacy_rna = legacy_rna[~legacy_rna['DepMap_ID'].isin(DROP_LEGACY['RNA'])]
-  legacy_wes_sanger = legacy_wes_sanger[~legacy_wes_sanger['DepMap_ID'].isin(DROP_LEGACY['Sanger WES'])]
-
-  # for sanger rename ACH-002260 to ACH-001543
-  RENAME_SANGER_WES = {'ACH-002260': 'ACH-001543'}
-  assert 'ACH-001543' not in set(legacy_wes_sanger['DepMap_ID'])
-  legacy_wes_sanger['DepMap_ID'].replace(RENAME_SANGER_WES, inplace=True)
-  #####################################################
-
+  legacy_wgs_exoniconly = tc.get(name='mutations-da6a', file='legacy_wgs_exoniconly')
 
   merged = mut.mergeAnnotations(
       priomutations, legacy_hybridcapture, "HC_AC", useSecondForConflict=True, dry_run=False)
@@ -308,8 +319,6 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
     merged, legacy_wes_sanger, "SangerWES_AC", useSecondForConflict=False, dry_run=False)
   merged = mut.mergeAnnotations(
     merged, legacy_rna, "RNAseq_AC", useSecondForConflict=False, dry_run=False)
-
-  merged = merged[~merged['DepMap_ID'].isin(ALSO_DROP_FROM_LEGACY)]
 
   merged = merged[merged['tumor_f'] > 0.05]
   merged = annotateLikelyImmortalized(merged, TCGAlocs=[
@@ -324,7 +333,6 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
 
   print('compare to previous release')
   a = set(merged[SAMPLEID])
-  # tc.get(name='internal-20q2-7f46', version=18, file='CCLE_mutations')
   b = set(prev[SAMPLEID])
   print("new lines:")
   print(a-b)
@@ -336,7 +344,7 @@ async def _CCLEPostProcessing(wesrefworkspace=WESMUTWORKSPACE, wgsrefworkspace=W
   merged = merged[~merged['is_likely_immortalization']]
   #reverting to previous versions
   merged_maf = merged[MUTCOL_DEPMAP].rename(columns={
-      "Tumor_Allele": "Tumor_Seq_Allele1"})
+      "Tumor_Allele": "Alternate_Allele"})
   merged_maf.to_csv(folder+'somatic_mutations_withlegacy.csv', index=False)
 
   # making binary matrices
@@ -441,14 +449,33 @@ async def _CCLEAnalyzeUnfiltered(workspace=WGSWORKSPACE, allsampleset='all', fol
                                  'HGVS_protein_change',  'Protein_Change',
                                  't_alt_count', 't_ref_count', 'tumor_f', 'CGA_WES_AC'],
                       taiga_dataset=TAIGA_MUTATION,):
+  """_CCLEAnalyzeUnfiltered function to subset and filter the CGA unfiltered maf file.
 
+  This will output a much bigger maf file without CGA filters (usefull for QC and more).
+  Will take a lot of memory (expect ~32GB minimum). if you don't have that amount of RAM, don't use.
+
+  Args:
+      workspace (str): workspace name. Default is WGSWORKSPACE.
+      allsampleset (str, optional): sampleset name. Default is 'all'.
+      folder (str, optional): folder name. Default is 'temp/'.
+      subsetcol (list, optional): list of columns to subset the maf file on. 
+        will also output the unfiltered version of themaf file.
+        Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id', 
+                    'Chromosome', 'Start_position', 'End_position', 
+                    'Variant_Classification', 'Variant_Type', 'Reference_Allele', 
+                    'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change', 
+                    'Annotation_Transcript', 'cDNA_Change', 'Codon_Change', 
+                    'HGVS_protein_change',  'Protein_Change', 't_alt_count', 
+                    't_ref_count', 'tumor_f', 'CGA_WES_AC'].
+      taiga_dataset (str, optional): taiga dataset path. Default is TAIGA_MUTATION.
+  """
   print("retrieving unfiltered")
   ####### WES
   from taigapy import TaigaClient
   tc = TaigaClient()
   res = dm.WorkspaceManager(workspace).get_sample_sets()
   unfiltered = pd.read_csv(res.loc[allsampleset, 'unfiltered_CGA_MAF_aggregated'], sep='\t',
-  encoding='L6',na_values=["__UNKNOWN__",'.'], engine='c', dtype=str)
+                          encoding='L6',na_values=["__UNKNOWN__",'.'], engine='c', dtype=str)
   unfiltered['somatic'] = unfiltered['somatic'].replace('nan','False')
   unfiltered['HGNC_Status'] = unfiltered['HGNC_Status'].replace('nan','Unapproved')
   unfiltered['judgement'] = unfiltered['judgement'].replace('nan','REMOVE')

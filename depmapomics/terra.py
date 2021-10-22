@@ -94,6 +94,12 @@ def setupPairsFromSamples(sampless, refsamples, extract):
   """
   Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)
 
+  Args:
+  -----
+    sampless: pd.df samples to compute pairs for
+    refsamples: pd.df samples to match to
+    extract: str the name of the column to extract from the samples
+
   Returns:
   -------
     pairs that can be uploaded to the portal team
@@ -126,10 +132,10 @@ def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id",
                                                     "sm_id",
                                                     "datatype",
                                                     "size",
-                                                   "ccle_name",
-                                                   "stripped_cell_line_name",
-                                                   "participant_id",
-                                                   "cellosaurus_id",
+                                                    "ccle_name",
+                                                    "stripped_cell_line_name",
+                                                    "participant_id",
+                                                    "cellosaurus_id",
                                                     "bam_public_sra_path",
                                                     "internal_bam_filepath",
                                                     "internal_bai_filepath",

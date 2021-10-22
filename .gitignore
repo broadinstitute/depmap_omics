@@ -1,10 +1,8 @@
-
 # Created by https://www.gitignore.io/api/linux,macos,python,jupyternotebook
 # Edit at https://www.gitignore.io/?templates=linux,macos,python,jupyternotebook
 
 ## mine ##
-ccle_tasks/CCLE data cleaning/data/*
-
+ccle_tasks/CCLE\ data\ cleaning/data/*
 
 ### JupyterNotebook ###
 .ipynb_checkpoints
@@ -47,9 +45,7 @@ Icon
 ._*
 
 # perso
-.vscode
 temp/*
-temp
 
 # Files that might appear in the root of a volume
 .DocumentRevisions-V100
@@ -148,10 +144,7 @@ target/
 profile_default/
 ipython_config.py
 
-ccle_tasks/data/*
-
-temp/*
-**/temp/*
+ccle_tasks/data/
 # pyenv
 .python-version
 
