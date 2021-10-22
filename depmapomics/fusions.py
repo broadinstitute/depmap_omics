@@ -49,13 +49,15 @@ def filterFusions(fusions, sampleCol, maxfreq=0.1, minffpm=0.05, maxffpm=0.1, co
   * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
 
   Args:
-  -----
-    fusions: dataframe the fusion as a dataframe should contain: LeftBreakpoint, RightBreakpoint, FusionName, annots, SpliceType, LargeAnchorSupport, FFPM columns
-    maxfreq: int the max allowed frequency of that fusion across our samples
-    samplecol str: colname for the sample ids
-    countCol: str: colname where are stored counts of that fusion name across our samples
-    minffpm: int minimum ffpm freq to filter on
-    red_herring: list[str] of flags to filter on
+    fusions (pd.df): the fusion data. Should contain: LeftBreakpoint, RightBreakpoint, FusionName, annots, SpliceType, LargeAnchorSupport, FFPM columns
+    maxfreq (int): the max allowed frequency of that fusion across our samples. default is 0.1
+    samplecol (str): colname for the sample ids. Should be in the fusions dataframe.
+    countCol (str): colname where are stored counts of that fusion name across our samples. Default is "CCLE_count"
+    minffpm (int): minimum ffpm freq to filter on. Default is 0.05
+    red_herring (list[str]): flags to filter on. default is FUSION_RED_HERRING
+
+  Returns:
+    (pd.df): the filtered fusion dataframe
   """
   fusions = fusions.copy()
   # remove recurrent
@@ -81,6 +83,12 @@ def filterFusions(fusions, sampleCol, maxfreq=0.1, minffpm=0.05, maxffpm=0.1, co
 def renameFusionGene(a):
   """
   Given a list of fusion names from star-fusion, renames and returns them
+
+  Args:
+    a (list[str]): list of fusion names from star-fusion
+
+  Returns:
+    (list[str]): list of renamed fusion names
   """
   return [str(i.split('^')).replace(', ', ' (').replace("'", "")[1:-1]+')' for i in a]
 
@@ -92,10 +100,10 @@ def standardizeGeneNames(fusions):
   Example: "SMAD4^ENSG00000141646.14" --> "SMAD4 (ENSG00000141646.14)"
 
   Args:
-      fusions ():
+    fusions (pd.df): fusion dataframe
 
   Returns:
-      ():
+    (pd.df): fusion dataframe with standardized gene names
   """
   fusions[['LeftGene', 'RightGene']] = fusions[['LeftGene', 'RightGene']]\
     .applymap(lambda x: '{} ({})'.format(*x.split(r'^')))
@@ -103,27 +111,31 @@ def standardizeGeneNames(fusions):
 
 
 def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
-                        colnames=FUSION_COLNAME, todrop=[], doplot=True,
-                        countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
-                        **kwargs ):
+                colnames=FUSION_COLNAME, todrop=[], doplot=True,
+                countCol="CCLE_count", save_output="", rnFunc=None, renaming=None,
+                **kwargs):
   """post process an aggregated fusion files in the CCLE way
 
   (usually from the aggregate_Fusion terra workflow)
 
   Args:
-      refworkspace ([type]): [description]
-      sampleCol ([type], optional): [description]. Defaults to SAMPLEID.
-      samplesetToLoad (str, optional): [description]. Defaults to 'all'.
-      colnames ([type], optional): [description]. Defaults to FUSION_COLNAME.
-      todrop (list, optional): [description]. Defaults to [].
-      doplot (bool, optional): [description]. Defaults to True.
-      countCol (str, optional): [description]. Defaults to "CCLE_count".
-      save_output (str, optional): [description]. Defaults to "".
-      rnFunc ([type], optional): [description]. Defaults to None.
-      renaming ([type], optional): [description]. Defaults to None.
+    refworkspace (str): terra workspace where the ref data is stored
+    sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+    save_output (str, optional): whether and where to save our data. Defaults to "".
+    todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
+    samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
+    sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
+    colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.  
+    doplot (bool, optional): whether to plot the data. Defaults to True.
+    countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
+    save_output (str, optional): whether and where to save our data. Defaults to "".
+    rnFunc (function, optional): function to rename the sample names
+      (takes a list of sample names and returns a list of sample names). Defaults to None.
+    renaming (dict(str:str), optional): dictionary to rename the sample names otherwise. Defaults to None.
 
   Returns:
-      [type]: [description]
+    (pd.df): fusion dataframe
+    (pd.df): filtered fusion dataframe
   """
   refwm = dm.WorkspaceManager(refworkspace)
   if save_output:
@@ -168,7 +180,7 @@ def postProcess(refworkspace, sampleCol=SAMPLEID, samplesetToLoad = 'all',
   return fusions, fusions_filtered
 
 
-async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME,
+async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, sampleset=SAMPLESETNAME,
                       fusionSamplecol=SAMPLEID, refsheet_url=REFSHEET_URL,  todrop=KNOWN_DROP,
                       taiga_dataset=TAIGA_FUSION, dataset_description=FUSIONreadme,
                       my_id=MY_ID, mystorage_id=MYSTORAGE_ID,
@@ -179,15 +191,23 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
   see postprocessing() to reproduce our analysis
 
   Args:
-      refworkspace ([type]): [description]
-      samplesetname ([type]): [description]
-      fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-      taiga_dataset (str, optional): [description]. Defaults to TAIGA_FUSION.
-      dataset_description ([type], optional): [description]. Defaults to FUSIONreadme.
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      prevdataset ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_fusions_unfiltered').
+    refworkspace (str): terra workspace where the ref data is stored
+    sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+    save_output (str, optional): whether and where to save our data. Defaults to "".
+    todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
+    samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
+    fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
+    taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
+    dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
+    sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
+    refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
+    my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
+    mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
+    prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
+  
+  Returns:
+    (pd.df): fusion dataframe
+    (pd.df): filtered fusion dataframe
   """
   from taigapy import TaigaClient
   tc = TaigaClient()
@@ -200,15 +220,10 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
 
   previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
-  folder=os.path.join("temp", samplesetname, "")
+  folder=os.path.join("temp", sampleset, "")
   renaming = h.fileToDict(folder+"rna_sample_renaming.json")
   # TODO: include in rna_sample_renaming.json instead
   # lower priority versions of these lines were used
-  # because of manual changes in the tracker. Manually
-  # updating the code here
-  renaming.pop('CDS-tTwJLo')
-  renaming.pop('CDS-Fauu92')
-  renaming.update({'CDS-pvNwpR': 'ACH-000833', 'CDS-V5yMiU': 'ACH-001164'})
 
   fusions, _ = postProcess(refworkspace,
                            todrop=previousQCfail, renaming=renaming, save_output=folder,
@@ -228,7 +243,7 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
   f["id"] = f[fusionSamplecol]+"_"+f["FusionName"]
   print(len(set(pf[~pf.id.isin(f.id.tolist())][fusionSamplecol])))
 
-  print("changes in junction readd counts")
+  print("changes in junction read counts")
   f["sid"] = f[fusionSamplecol]+"_"+f["FusionName"] + \
       "_" + f["JunctionReadCount"].astype(str)
   pf["sid"] = pf[fusionSamplecol]+"_"+pf["FusionName"] + \
@@ -238,20 +253,20 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
   #taiga
   print("uploading to taiga")
   tc.update_dataset(dataset_permaname=taiga_dataset,
-                    changes_description="new "+samplesetname+" release!",
+                    changes_description="new "+sampleset+" release!",
                     upload_files=[
                       {
-                          "path": 'temp/'+samplesetname+'/fusions_latest.csv',
+                          "path": 'temp/'+sampleset+'/fusions_latest.csv',
                           "format": "TableCSV",
                           "encoding": "utf-8"
                       },
                       {
-                          "path": 'temp/'+samplesetname+'/filteredfusions_latest.csv',
+                          "path": 'temp/'+sampleset+'/filteredfusions_latest.csv',
                           "format": "TableCSV",
                           "encoding": "utf-8"
                       },
                       {
-                          "path": "temp/"+samplesetname+"/fusions_all.csv",
+                          "path": "temp/"+sampleset+"/fusions_all.csv",
                           "format": "TableCSV",
                           "encoding": "utf-8"
                       },
