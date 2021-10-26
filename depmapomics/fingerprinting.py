@@ -10,12 +10,27 @@ from genepy import terra
 from depmapomics import tracker
 import os 
 
-tc = TaigaClient()
+
+def recreateBatch(vcf_list, vcf_list_dir, working_dir, wm, crosscheck_batch_size):
+  # Create batch files listing all vcfs in fingerprints dir and upload to bucket
+  # (NEW VERSION ONLY) will only needed if need to recreate batches
+  if not vcf_list:
+    vcf_list = gcp.lsFiles([vcf_list_dir])
+  vcf_list = wm.get_samples()["fingerprint_vcf"].tolist()
+  batches = []
+  for i, l in enumerate(range(0, len(vcf_list), crosscheck_batch_size)):
+    f = open(working_dir + "vcf_batch_"+str(i), 'w')
+    f.write("\n".join(vcf_list[l:l + crosscheck_batch_size]))
+    f.close()
+    batches.append(working_dir+"vcf_batch_"+str(i))
+  gcp.cpFiles(batches, vcf_list_dir)
+  return batches
 
 
-async def addToFingerPrint(samples, sampleset=, allsampleset="all", workspace=WORKSPACE, sid=, vcf_list=None, 
-vcf_list_dir=, working_dir, crosscheck_batch_size, recreate_batch, bamcolname,
-taiga_dataset, taiga_filename):
+
+async def addToFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLSAMPLESET, workspace=FPWORKSPACE, vcf_list=None, 
+  vcf_list_dir=VCF_LIST_DIR, working_dir=WORKING_DIR, crosscheck_batch_size=CROSSCHECK_BATCH_SIZE, recreate_batch=RECREATE_BATCH, bamcolname=LEGACY_BAM_COLNAMES,
+  taiga_dataset=TAIGA_FP, taiga_filename=TAIGA_FP_FILENAME):
   """1.1  Generate Fingerprint VCFs
 
   Here we use Dalmatian to run the fingerprint_bam_with_liftover workflow on Terra.
@@ -38,29 +53,22 @@ taiga_dataset, taiga_filename):
   Author:
       William Colgan (wcolgan@broadinstitute.org)
   """
+  tc = TaigaClient()
+  
+  sid = 'id'
   bams = samples[bamcolname]
   bams[sid] = bams.index
   print('adding '+str(len(bams))+' new samples to the fingerprint')
   wm = dm.WorkspaceManager(workspace).disable_hound()
-  
-  # Create batch files listing all vcfs in fingerprints dir and upload to bucket
-  # (NEW VERSION ONLY) will only needed if need to recreate batches
+
+  batches = []
   if recreate_batch:
-    if not vcf_list:
-      vcf_list = gcp.lsFiles([vcf_list_dir])
-    vcf_list = wm.get_samples()["fingerprint_vcf"].tolist()
-    batches = []
-    for i, l in enumerate(range(0, len(vcf_list), crosscheck_batch_size)):
-      f = open(working_dir + "vcf_batch_"+str(i), 'w')
-      f.write("\n".join(vcf_list[l:l + crosscheck_batch_size]))
-      f.close()
-      batches.append(working_dir+"vcf_batch_"+str(i))
-    gcp.cpFiles(batches, vcf_list_dir)
+    print('recreating batch')
+    batches = recreateBatch(vcf_list, vcf_list_dir, working_dir, wm, crosscheck_batch_size)
 
   # Upload sample sheet
   samples_df = pd.DataFrame()
-  samples_df[["bam_filepath", "bai_filepath", "sample_id",
-              "participant_id"]] = bams[bamcolname + [sid, sid]].values
+  samples_df = pd.DataFrame(bams[bamcolname + [sid, sid]].values, columns = ["bam_filepath", "bai_filepath", "sample_id", "participant_id"])
   samples_df = samples_df.set_index('sample_id')
   wm.upload_samples(samples_df, add_participant_samples=True)
   wm.update_sample_set(sampleset, samples_df.index)
@@ -178,4 +186,3 @@ taiga_dataset, taiga_filename):
                                     'participant_id', 'stripped_cell_line_name']].values))
       previ = i
   return updated_lod_mat, should, shouldnt
-  
