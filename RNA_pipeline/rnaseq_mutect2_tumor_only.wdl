@@ -520,12 +520,12 @@ task ScatterIntervalList_GATK4 {
     mkdir out
     gatk --java-options "-Xms2g" \
       IntervalListTools \
-      --SCATTER_COUNT=~{scatter_count} \
-      --SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
-      --UNIQUE=true \
-      --SORT=true \
-      --INPUT=~{interval_list} \
-      --OUTPUT=out
+      --SCATTER_COUNT ~{scatter_count} \
+      --SUBDIVISION_MODE BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
+      --UNIQUE true \
+      --SORT true \
+      --INPUT ~{interval_list} \
+      --OUTPUT out
     python <<CODE
       import glob, os
       # Works around a JES limitation where multiples files with the same name overwrite each other when globbed
