@@ -350,14 +350,14 @@ task SplitNCigarReads_GATK4 {
     gatk \
       --java-options "-Xmx6G" \
       SplitNCigarReads \
-      -R ${ref_fasta} \
-      -I ${input_bam} \
-      -O ${base_name}.bam
+      -R ~{ref_fasta} \
+      -I ~{input_bam} \
+      -O ~{base_name}.bam
   >>>
 
   output {
-    File output_bam = "${base_name}.bam"
-    File output_bam_index = "${base_name}.bai"
+    File output_bam = "~{base_name}.bam"
+    File output_bam_index = "~{base_name}.bai"
   }
 
   runtime {
@@ -398,12 +398,12 @@ task BaseRecalibrator {
       -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails \
       -Xloggc:gc_log.log -Xms8192m" \
       BaseRecalibrator \
-      -R ${ref_fasta} \
-      -I ${input_bam} \
+      -R ~{ref_fasta} \
+      -I ~{input_bam} \
       --use-original-qualities \
-      -O ${recal_output_file} \
-      -known-sites ${dbSNP_vcf} \
-      -known-sites ${sep=" --known-sites " known_indels_sites_VCFs}
+      -O ~{recal_output_file} \
+      -known-sites ~{dbSNP_vcf} \
+      -known-sites ~{sep=" --known-sites " known_indels_sites_VCFs}
   >>>
 
   output {
@@ -444,16 +444,16 @@ task ApplyBQSR {
     --java-options "-Xms8196m" \
     ApplyBQSR \
     --add-output-sam-program-record \
-    -R ${ref_fasta} \
-    -I ${input_bam} \
+    -R ~{ref_fasta} \
+    -I ~{input_bam} \
     --use-original-qualities \
-    -O ${base_name}.bam \
-    --bqsr-recal-file ${recalibration_report}
+    -O ~{base_name}.bam \
+    --bqsr-recal-file ~{recalibration_report}
   >>>
 
   output {
-    File output_bam = "${base_name}.bam"
-    File output_bam_index = "${base_name}.bai"
+    File output_bam = "~{base_name}.bam"
+    File output_bam_index = "~{base_name}.bai"
   }
 
   runtime {
@@ -487,13 +487,13 @@ task MergeVCFs {
 
     gatk --java-options "-Xms4096m"  \
       MergeVcfs \
-      --INPUT ${sep=' --INPUT=' input_vcfs} \
-      --OUTPUT ${output_vcf_name}
+      --INPUT ~{sep=' --INPUT=' input_vcfs} \
+      --OUTPUT ~{output_vcf_name}
   >>>
 
   output {
     File output_vcf = output_vcf_name
-    File output_vcf_index = "${output_vcf_name}.tbi"
+    File output_vcf_index = "~{output_vcf_name}.tbi"
   }
 
   runtime {
@@ -520,11 +520,11 @@ task ScatterIntervalList_GATK4 {
     mkdir out
     gatk --java-options "-Xms2g" \
       IntervalListTools \
-      --SCATTER_COUNT=${scatter_count} \
+      --SCATTER_COUNT=~{scatter_count} \
       --SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
       --UNIQUE=true \
       --SORT=true \
-      --INPUT=${interval_list} \
+      --INPUT=~{interval_list} \
       --OUTPUT=out
     python <<CODE
       import glob, os
@@ -573,16 +573,16 @@ task RevertSam {
 
     gatk \
       RevertSam \
-      --INPUT ${input_bam} \
-      --OUTPUT ${base_name}.bam \
+      --INPUT ~{input_bam} \
+      --OUTPUT ~{base_name}.bam \
       --VALIDATION_STRINGENCY SILENT \
       --ATTRIBUTE_TO_CLEAR FT \
       --ATTRIBUTE_TO_CLEAR CO \
-      --SORT_ORDER ${sort_order}
+      --SORT_ORDER ~{sort_order}
   >>>
 
   output {
-    File output_bam = "${base_name}.bam"
+    File output_bam = "~{base_name}.bam"
   }
 
   runtime {
@@ -988,20 +988,20 @@ task VariantFiltration {
 
     gatk \
       VariantFiltration \
-    --R ${ref_fasta} \
-    --V ${input_vcf} \
+    --R ~{ref_fasta} \
+    --V ~{input_vcf} \
     --window 35 \
     --cluster 3 \
     --filter-name "FS" \
     --filter "FS > 30.0" \
     --filter-name "QD" \
     --filter "QD < 2.0" \
-    -O ${base_name}
+    -O ~{base_name}
   >>>
 
   output {
-    File output_vcf = "${base_name}"
-    File output_vcf_index = "${base_name}.tbi"
+    File output_vcf = "~{base_name}"
+    File output_vcf_index = "~{base_name}.tbi"
   }
 
   runtime {
