@@ -150,8 +150,6 @@ workflow RNAseq_mutect2 {
 
   String gitc_docker = select_first([gitc_docker_override, "broadinstitute/genomes-in-the-cloud:2.3.1-1512499786"])
 
-  String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
-
   ## Optional user optimizations
 
   Runtime standard_runtime = {"gatk_docker": gatk_docker, "gatk_override": gatk_override,
@@ -170,7 +168,6 @@ workflow RNAseq_mutect2 {
       interval_list = intervals,
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
-      gatk_path = gatk_path
   }
 
   call BaseRecalibrator {
@@ -187,7 +184,6 @@ workflow RNAseq_mutect2 {
       ref_fasta_index = ref_fai,
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
-      gatk_path = gatk_path
   }
 
   call ApplyBQSR {
@@ -201,7 +197,6 @@ workflow RNAseq_mutect2 {
       recalibration_report = BaseRecalibrator.recalibration_report,
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
-      gatk_path = gatk_path
   }
 
   call ScatterIntervalList_GATK4 {
@@ -210,7 +205,6 @@ workflow RNAseq_mutect2 {
       scatter_count = scatter_count,
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
-      gatk_path = gatk_path
   }
 
   Int tumor_bam_size = ceil(size(tumor_bam, "GB") + size(tumor_bai, "GB"))
@@ -257,7 +251,6 @@ workflow RNAseq_mutect2 {
       output_vcf_name = output_basename + ".g.vcf.gz",
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
-      gatk_path = gatk_path
   }
 
   call MergeStats { input: stats = M2.stats, runtime_params = standard_runtime }
@@ -288,7 +281,6 @@ workflow RNAseq_mutect2 {
       ref_dict = ref_dict,
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
-      gatk_path = gatk_path
   }
 
   if (run_funcotator_or_default) {
@@ -345,7 +337,7 @@ task SplitNCigarReads_GATK4 {
     File ref_fasta_index
     File ref_dict
 
-    String gatk_path
+    String? gatk_override
     String docker
     Int preemptible_count
     Int? memory
@@ -353,7 +345,9 @@ task SplitNCigarReads_GATK4 {
   }
 
   command <<<
-    ${gatk_path} \
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
+
+    gatk \
       --java-options "-Xmx6G" \
       SplitNCigarReads \
       -R ${ref_fasta} \
@@ -389,7 +383,7 @@ task BaseRecalibrator {
     File ref_fasta
     File ref_fasta_index
 
-    String gatk_path
+    String? gatk_override
 
     String docker
     Int preemptible_count
@@ -398,7 +392,9 @@ task BaseRecalibrator {
   }
 
   command <<<
-    ${gatk_path} --java-options "-XX:GCTimeLimit=100 -XX:GCHeapFreeLimit=5 -XX:+PrintFlagsFinal \
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
+
+    gatk --java-options "-XX:GCTimeLimit=100 -XX:GCHeapFreeLimit=5 -XX:+PrintFlagsFinal \
       -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCDetails \
       -Xloggc:gc_log.log -Xms8192m" \
       BaseRecalibrator \
@@ -434,7 +430,7 @@ task ApplyBQSR {
     File ref_fasta
     File ref_fasta_index
 
-    String gatk_path
+    String? gatk_override
 
     String docker
     Int preemptible_count
@@ -442,7 +438,9 @@ task ApplyBQSR {
   }
 
   command <<<
-    ${gatk_path} \
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
+
+    gatk \
     --java-options "-Xms8196m" \
     ApplyBQSR \
     --add-output-sam-program-record \
@@ -476,7 +474,7 @@ task MergeVCFs {
     Int? disk_size = 10
     Int? memory
 
-    String gatk_path
+    String? gatk_override
 
     String docker
     Int preemptible_count
@@ -485,7 +483,9 @@ task MergeVCFs {
   # Using MergeVcfs instead of GatherVcfs so we can create indices
   # See https://github.com/broadinstitute/picard/issues/789 for relevant GatherVcfs ticket
   command <<<
-    ${gatk_path} --java-options "-Xms4096m"  \
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
+
+    gatk --java-options "-Xms4096m"  \
       MergeVcfs \
       --INPUT ${sep=' --INPUT=' input_vcfs} \
       --OUTPUT ${output_vcf_name}
@@ -508,7 +508,7 @@ task ScatterIntervalList_GATK4 {
   input {
     File interval_list
     Int scatter_count
-    String gatk_path
+    String? gatk_override
     String docker
     Int preemptible_count
     Int? memory
@@ -516,8 +516,9 @@ task ScatterIntervalList_GATK4 {
 
   command <<<
     set -e
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
     mkdir out
-    ${gatk_path} --java-options "-Xms2g" \
+    gatk --java-options "-Xms2g" \
       IntervalListTools \
       --SCATTER_COUNT=${scatter_count} \
       --SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
@@ -559,7 +560,7 @@ task RevertSam {
     String base_name
     String sort_order
 
-    String gatk_path
+    String? gatk_override
 
     String docker
     Int preemptible_count
@@ -568,7 +569,9 @@ task RevertSam {
   }
 
   command <<<
-    ${gatk_path} \
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
+
+    gatk \
       RevertSam \
       --INPUT ${input_bam} \
       --OUTPUT ${base_name}.bam \
@@ -973,7 +976,7 @@ task VariantFiltration {
     File ref_fasta
     File ref_fasta_index
 
-    String gatk_path
+    String? gatk_override
     String docker
     Int preemptible_count
     Int? memory
@@ -981,7 +984,9 @@ task VariantFiltration {
   }
 
   command <<<
-    ${gatk_path} \
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
+
+    gatk \
       VariantFiltration \
     --R ${ref_fasta} \
     --V ${input_vcf} \
