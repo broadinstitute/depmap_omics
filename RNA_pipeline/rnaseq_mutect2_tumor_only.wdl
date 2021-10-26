@@ -525,7 +525,7 @@ task ScatterIntervalList_GATK4 {
       --SORT=true \
       --INPUT=${interval_list} \
       --OUTPUT=out
-
+  >>>
     python3 <<CODE
       import glob, os
       # Works around a JES limitation where multiples files with the same name overwrite each other when globbed
@@ -538,7 +538,7 @@ task ScatterIntervalList_GATK4 {
       f = open("interval_count.txt", "w+")
       f.write(str(len(intervals)))
       f.close()
-      CODE
+    CODE
   >>>
 
   output {
