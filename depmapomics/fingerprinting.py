@@ -7,6 +7,7 @@ from taigapy import TaigaClient
 from genepy.google import gcp
 import asyncio
 from genepy import terra
+from genepy.utils import helper as h
 from depmapomics import tracker
 import os 
 
@@ -27,8 +28,49 @@ def recreateBatch(vcf_list, vcf_list_dir, working_dir, wm, crosscheck_batch_size
   return batches
 
 
+def updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir):
+  #Here we update the fingerprint LOD matrix on taiga with the new fingerprints
+  # Generate matrix with LOD score for new fingerprint vcfs
+  new_lod_list = []
+  samples_df = wm.get_entities("sample_group")['cross_checks_out'].tolist()
+  for batch in samples_df:
+    # could be pd concat
+    df = pd.read_csv(batch, sep='\t', comment='#')
+    lod_mat = df.pivot(index="LEFT_SAMPLE",
+                      columns="RIGHT_SAMPLE", values="LOD_SCORE")
+    new_lod_list.append(lod_mat)
+  new_lod_mat = pd.concat(new_lod_list)
+  new_lod_mat.index.name = None
+  new_lod_mat = new_lod_mat.T
 
-async def addToFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLSAMPLESET, workspace=FPWORKSPACE, vcf_list=None, 
+  # Update LOD matrix ( have to update (A+a)*(B+b) = (AB)+(aB)+(Ab)+(ab))
+  tc = TaigaClient()
+  prev_lod_mat =  tc.get(name=taiga_dataset,file=taiga_filename)
+  new_ids = set(new_lod_mat.index)
+  old_ids = set(prev_lod_mat.index) - set(new_ids)
+  updated_lod_mat = pd.concat((prev_lod_mat.loc[old_ids,old_ids],
+                               new_lod_mat.loc[new_ids,old_ids]), axis=0)
+  updated_lod_mat = pd.concat((updated_lod_mat.loc[new_ids.union(old_ids), old_ids], 
+                              new_lod_mat.transpose().loc[new_ids.union(old_ids, new_ids)]), axis=1)
+  updated_lod_mat.to_csv(working_dir+taiga_filename+'.csv')
+  
+  # Upload updated LOD matrix to Tiaga
+  tc.update_dataset(dataset_permaname=taiga_dataset,
+                    changes_description="New bam fingerprints added for "+sampleset,
+                    upload_files=[
+                        {
+                            "path": working_dir+taiga_filename+'.csv',
+                            "name": taiga_filename,
+                            "format": "NumericMatrixCSV",
+                            "encoding": "utf-8"
+                        }
+                    ],
+                    add_all_existing_files=True)
+  return new_ids, updated_lod_mat
+
+
+
+async def _CCLEFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLSAMPLESET, workspace=FPWORKSPACE, vcf_list=None, 
   vcf_list_dir=VCF_LIST_DIR, working_dir=WORKING_DIR, crosscheck_batch_size=CROSSCHECK_BATCH_SIZE, recreate_batch=RECREATE_BATCH, bamcolname=LEGACY_BAM_COLNAMES,
   taiga_dataset=TAIGA_FP, taiga_filename=TAIGA_FP_FILENAME):
   """1.1  Generate Fingerprint VCFs
@@ -53,8 +95,7 @@ async def addToFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLS
   Author:
       William Colgan (wcolgan@broadinstitute.org)
   """
-  tc = TaigaClient()
-  
+
   sid = 'id'
   bams = samples[bamcolname]
   bams[sid] = bams.index
@@ -96,60 +137,37 @@ async def addToFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLS
     sample_group_df = pd.DataFrame(data={"entity:sample_group_id" : [sampleset], "vcf_group" : [vcf_list_dir+sampleset]}).set_index('entity:sample_group_id')
   
   print(wm.get_entities('sample_group').index.tolist())
-  wm.upload_entities("sample_group", sample_group_df)
+
   try:
-    wm.update_entity_set("sample_group", set_id=allsampleset,
-                         entity_ids=wm.get_entities('sample_group').index)
+    wm.upload_entities("sample_group", sample_group_df)
   except:
-    print("still can't update entitis, please upload directly from the file in ../temp.tsv")
+    print("still can't update entities")
     #in case it does not work
     sample_group_df.to_csv("../temp.tsv", sep='\t')
+    if h.askif("Please upload the file ../temp.tsv to the terra workspace as a new sample_group, and type yes once \
+      finished, else write no to quit and they will not be added"):
+      print('sample_group ' + sampleset + ' manually added as a sample_group')
+  
+  try:
+    wm.update_entity_set("sample_group_set", set_id=allsampleset,
+                         entity_ids=wm.get_entities('sample_group').index)
+  except:
+    print("still can't update entities")
+    #in case it does not work
+    if h.askif("Please go to the sample_group_set tab on terra and add the sample_group name to the all_samples set, and type yes once \
+      finished, else write no to quit and they will not be added"):
+      print(allsampleset + ' manually updated')
 
   # Submit jobs
   conf = wm.get_config("crosscheck_vcfs")
   conf['inputs']['crosscheck.run_crosscheck.vcf_second_input_file'] = '"'+vcf_list_dir+sampleset+'"'
   wm.update_config(conf)
   submission_id = wm.create_submission("crosscheck_vcfs", allsampleset, 
-  'sample_set',expression='this.samples')
+  'sample_group_set', expression='this.sample_groups')
   await terra.waitForSubmission(workspace, submission_id)
 
-  #1.3  Update LOD matrix
-  #Here we update the fingerprint LOD matrix on taiga with the new fingerprints
-  # Generate matrix with LOD score for new fingerprint vcfs
-  new_lod_list = []
-  samples_df = wm.get_entities("sample_group")['cross_checks_out'].tolist()
-  for batch in samples_df:
-    # could be pd concat
-    df = pd.read_csv(batch, sep='\t', comment='#')
-    lod_mat = df.pivot(index="LEFT_SAMPLE",
-                      columns="RIGHT_SAMPLE", values="LOD_SCORE")
-    new_lod_list.append(lod_mat)
-  new_lod_mat = pd.concat(new_lod_list)
-  new_lod_mat.index.name = None
-  new_lod_mat = new_lod_mat.T
-
-  # Update LOD matrix ( have to update (A+a)*(B+b) = (AB)+(aB)+(Ab)+(ab))
-  prev_lod_mat =  tc.get(name=taiga_dataset,file=taiga_filename)
-  new_ids = set(new_lod_mat.index)
-  old_ids = set(prev_lod_mat.index) - set(new_ids)
-  updated_lod_mat = pd.concat((prev_lod_mat.loc[old_ids,old_ids],
-                               new_lod_mat.loc[new_ids,old_ids]), axis=0)
-  updated_lod_mat = pd.concat((updated_lod_mat.loc[new_ids.union(old_ids), old_ids], 
-                              new_lod_mat.transpose().loc[new_ids.union(old_ids, new_ids)]), axis=1)
-  updated_lod_mat.to_csv(working_dir+taiga_filename+'.csv')
-  
-  # Upload updated LOD matrix to Tiaga
-  tc.update_dataset(dataset_permaname=taiga_dataset,
-                    changes_description="New bam fingerprints added for "+sampleset,
-                    upload_files=[
-                        {
-                            "path": working_dir+taiga_filename+'.csv',
-                            "name": taiga_filename,
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        }
-                    ],
-                    add_all_existing_files=True)
+  # Update LOD matrix
+  new_ids, updated_lod_mat = updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir)
 
   # finding issues with the dataset
   v = updated_lod_mat.loc[new_ids]
@@ -157,8 +175,8 @@ async def addToFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLS
   ref = ref.append(samples)
   should = {}
   print("\n\nsamples that should match but don't:")
-  for u in set(fbams.arxspan_id):
-    res = v.loc[fbams[fbams.arxspan_id == u].index,
+  for u in set(samples.arxspan_id):
+    res = v.loc[samples[samples.arxspan_id == u].index,
                 ref[ref.arxspan_id == u].index.tolist()]
     for i, j in [(res.index[x], res.columns[y]) for x, y in np.argwhere(res.values < 100)]:
       print('__________________________')
