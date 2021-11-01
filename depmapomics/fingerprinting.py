@@ -28,7 +28,7 @@ def recreateBatch(vcf_list, vcf_list_dir, working_dir, wm, crosscheck_batch_size
   return batches
 
 
-def updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir):
+def updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir, upload_to_taiga=True):
   #Here we update the fingerprint LOD matrix on taiga with the new fingerprints
   # Generate matrix with LOD score for new fingerprint vcfs
   new_lod_list = []
@@ -54,21 +54,57 @@ def updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir):
                               new_lod_mat.transpose().loc[new_ids.union(old_ids, new_ids)]), axis=1)
   updated_lod_mat.to_csv(working_dir+taiga_filename+'.csv')
   
-  # Upload updated LOD matrix to Tiaga
-  tc.update_dataset(dataset_permaname=taiga_dataset,
-                    changes_description="New bam fingerprints added for "+sampleset,
-                    upload_files=[
-                        {
-                            "path": working_dir+taiga_filename+'.csv',
-                            "name": taiga_filename,
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        }
-                    ],
-                    add_all_existing_files=True)
+  # Upload updated LOD matrix to Taiga
+  if upload_to_taiga:
+    tc.update_dataset(dataset_permaname=taiga_dataset,
+                      changes_description="New bam fingerprints added for "+sampleset,
+                      upload_files=[
+                          {
+                              "path": working_dir+taiga_filename+'.csv',
+                              "name": taiga_filename,
+                              "format": "NumericMatrixCSV",
+                              "encoding": "utf-8"
+                          }
+                      ],
+                      add_all_existing_files=True)
   return new_ids, updated_lod_mat
 
+def checkMismatches(v, ref, samples, thr=100):
+  should = {}
+  print("\n\nsamples that should match but don't:")
+  for u in set(samples.arxspan_id):
+    res = v.loc[samples[samples.arxspan_id == u].index,
+                ref[ref.arxspan_id == u].index.tolist()]
+    for i, j in [(res.index[x], res.columns[y]) for x, y in np.argwhere(res.values < thr)]:
+      print('__________________________')
+      print(res.loc[i, j])
+      print(i, ':', tuple(ref.loc[i, ['arxspan_id', 'version', 'datatype', 'participant_id']].values), j, ':', tuple(
+          ref.loc[j, ['arxspan_id', 'version', 'datatype', 'participant_id', 'blacklist']]))
+      should.update({str(i) + ': ' + str(tuple(ref.loc[i, ['arxspan_id', 'version', 'datatype', 'participant_id']].values)):
+                      str(j)} + ': ' + str(tuple(ref.loc[j, ['arxspan_id', 'version', 'datatype', 'participant_id', 'blacklist']])))
+  return should
 
+def checkMatches(v, ref, thr=500):
+  print("\n\nsamples that shouldn't match but do")
+  previ = ''
+  shouldnt = {}
+  for i, j in [(v.index[x], v.columns[y]) for x, y in np.argwhere(v.values > thr)]:
+      if i == j:
+          continue
+      if ref.loc[i]['participant_id'] == ref.loc[j]['participant_id']:
+          continue
+      if i != previ:
+          if previ != '':
+              shouldnt.update({'_'.join(ref.loc[previ, ['arxspan_id', 'version', 'datatype',
+                                                'participant_id', 
+                                                'stripped_cell_line_name']].astype(str).values.tolist()): n})
+          n = [tuple(ref.loc[j, ['arxspan_id', 'version', 'datatype',
+                                'participant_id', 'stripped_cell_line_name']].values)]
+      else:
+          n.append(tuple(ref.loc[j, ['arxspan_id', 'version', 'datatype',
+                                    'participant_id', 'stripped_cell_line_name']].values))
+      previ = i
+  return shouldnt
 
 async def _CCLEFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLSAMPLESET, workspace=FPWORKSPACE, vcf_list=None, 
   vcf_list_dir=VCF_LIST_DIR, working_dir=WORKING_DIR, crosscheck_batch_size=CROSSCHECK_BATCH_SIZE, recreate_batch=RECREATE_BATCH, bamcolname=LEGACY_BAM_COLNAMES,
@@ -167,40 +203,17 @@ async def _CCLEFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLS
   await terra.waitForSubmission(workspace, submission_id)
 
   # Update LOD matrix
-  new_ids, updated_lod_mat = updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir)
+  new_ids, updated_lod_mat = updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir, upload_to_taiga=False)
 
   # finding issues with the dataset
   v = updated_lod_mat.loc[new_ids]
   ref = tracker.getTracker()
   ref = ref.append(samples)
-  should = {}
-  print("\n\nsamples that should match but don't:")
-  for u in set(samples.arxspan_id):
-    res = v.loc[samples[samples.arxspan_id == u].index,
-                ref[ref.arxspan_id == u].index.tolist()]
-    for i, j in [(res.index[x], res.columns[y]) for x, y in np.argwhere(res.values < 100)]:
-      print('__________________________')
-      print(res.loc[i, j])
-      print(i, ':', tuple(ref.loc[i, ['arxspan_id', 'version', 'datatype', 'participant_id']].values), j, ':', tuple(
-          ref.loc[j, ['arxspan_id', 'version', 'datatype', 'participant_id', 'blacklist']]))
-  
-  print("\n\nsamples that shouldn't match but do")
-  previ = ''
-  shouldnt = {}
-  for i, j in [(v.index[x], v.columns[y]) for x, y in np.argwhere(v.values > 500)]:
-      if i == j:
-          continue
-      if ref.loc[i]['participant_id'] == ref.loc[j]['participant_id']:
-          continue
-      if i != previ:
-          if previ != '':
-              shouldnt.update({'_'.join(ref.loc[previ, ['arxspan_id', 'version', 'datatype',
-                                                'participant_id', 
-                                                'stripped_cell_line_name']].astype(str).values.tolist()): n})
-          n = [tuple(ref.loc[j, ['arxspan_id', 'version', 'datatype',
-                                'participant_id', 'stripped_cell_line_name']].values)]
-      else:
-          n.append(tuple(ref.loc[j, ['arxspan_id', 'version', 'datatype',
-                                    'participant_id', 'stripped_cell_line_name']].values))
-      previ = i
+
+  # find samples that should match but don't
+  should = checkMismatches(v, ref, samples)
+
+  # find samples that shouldn't match but do
+  shouldnt = checkMatches(v, ref)
+
   return updated_lod_mat, should, shouldnt
