@@ -53,8 +53,6 @@ workflow RNAseq_mutect2 {
     String? realignment_extra_args
     String? m2_extra_args
     String? m2_extra_filtering_args
-    Boolean? genotype_all_germlines
-    Boolean? genotype_all_pon_sites
     String? getpileupsummaries_extra_args
     String? split_intervals_extra_args
     Boolean? make_bamout
@@ -234,8 +232,6 @@ workflow RNAseq_mutect2 {
           variants_for_contamination_idx = variants_for_contamination_idx,
           make_bamout = make_bamout_or_default,
           compress = compress,
-          genotype_all_germlines=genotype_all_germlines,
-          genotype_all_pon_sites=genotype_all_pon_sites,
           gga_vcf = gga_vcf,
           gga_vcf_idx = gga_vcf_idx,
           gatk_override = gatk_override,
@@ -624,9 +620,6 @@ task M2 {
 
     String? gcs_project_for_requester_pays
 
-    Boolean? genotype_all_germlines
-    Boolean? genotype_all_pon_sites
-
     # runtime
     String gatk_docker
     Int? mem
@@ -641,9 +634,6 @@ task M2 {
   String output_vcf_idx = output_vcf + if compress then ".tbi" else ".idx"
 
   String output_stats = output_vcf + ".stats"
-
-  Boolean genotype_all_germlines = genotype_all_germlines if defined(genotype_all_germlines) else false
-  Boolean genotype_all_pon_sites = genotype_all_pon_sites if defined(genotype_all_pon_sites) else false
 
   # Mem is in units of GB but our command and memory runtime values are in MB
   Int machine_mem = if defined(mem) then mem * 1000 else 3500
@@ -697,8 +687,6 @@ task M2 {
           ~{"-L " + intervals} \
           ~{"--alleles " + gga_vcf} \
           -O "~{output_vcf}" \
-          ~{"--genotype-germline-sites " + genotype_all_germlines} \
-          ~{"--genotype-pon-sites " + genotype_all_pon_sites} \
           ~{true='--bam-output bamout.bam' false='' make_bamout} \
           ~{m2_extra_args} \
           ~{"--gcs-project-for-requester-pays " + gcs_project_for_requester_pays}
