@@ -106,7 +106,9 @@ def checkMatches(v, ref, thr=500):
       previ = i
   return shouldnt
 
-async def _CCLEFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLSAMPLESET, workspace=FPWORKSPACE, vcf_list=None, 
+
+
+async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allsampleset=FPALLSAMPLESET, workspace=FPWORKSPACE, vcf_list=None, 
   vcf_list_dir=VCF_LIST_DIR, working_dir=WORKING_DIR, crosscheck_batch_size=CROSSCHECK_BATCH_SIZE, recreate_batch=RECREATE_BATCH, bamcolname=LEGACY_BAM_COLNAMES,
   taiga_dataset=TAIGA_FP, taiga_filename=TAIGA_FP_FILENAME):
   """1.1  Generate Fingerprint VCFs
@@ -133,6 +135,7 @@ async def _CCLEFingerPrint(samples, sampleset=SAMPLESETNAME, allsampleset=FPALLS
   """
 
   sid = 'id'
+  samples = pd.concat([rnasamples, wgssamples])
   bams = samples[bamcolname]
   bams[sid] = bams.index
   print('adding '+str(len(bams))+' new samples to the fingerprint')
