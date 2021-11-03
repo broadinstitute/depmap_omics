@@ -110,7 +110,7 @@ TORAISE=["ACH-001195"],
 
 TO_UPDATE = {'primary_disease': ['Primary Disease'],
             'sex': ['CCLF Gender'],
-            'primary_site': ['Sample Collection Site'],
+            'collection_site': ['Sample Collection Site'],
             'subtype': ['lineage_subtype'],
             'subsubtype': ['lineage_sub_subtype'],
             'origin': ['lineage'],

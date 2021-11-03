@@ -51,7 +51,7 @@ def merge(tracker, new, old, arxspid, cols):
   return False
 
 
-def findIssue(tracker, dup=['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
+def findIssue(tracker, dup=['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'collection_site', 'primary_disease',
                             'subtype', 'origin', 'stripped_cell_line_name']):
   """
 
@@ -91,7 +91,7 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
                 "primary_disease": [],
                 "cellosaurus_id": [],
                 "age": [],
-                "primary_site": [],
+                "collection_site": [],
                 "subtype": [],
                 "subsubtype": [],
                 "origin": [],
@@ -219,7 +219,7 @@ def changeCellLineNameInNew(ref, new, datatype, dupdict, toupdate=['stripped_cel
                                                                       'arxspan_id', "patient_id",
                                                                       "sex", "primary_disease",
                                                                       "cellosaurus_id", "age",
-                                                                      "primary_site", "subtype",
+                                                                      "collection_site", "subtype",
                                                                       "subsubtype"]):
   """
   Rename a/some line in a DF and takes care of corresponding metadata and versions from the sample tracker
@@ -248,7 +248,7 @@ def changeCellLineName(tracker, datatype, dupdict, toupdate=["stripped_cell_line
                                                          "parent_cell_line",
                                                          "matched_normal",
                                                          "age",
-                                                         "primary_site",
+                                                         "collection_site",
                                                          "primary_disease",
                                                          "subtype",
                                                          "subsubtype",

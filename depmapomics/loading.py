@@ -691,7 +691,7 @@ def load(samplesetname, workspaces,
 
   ## Adding new data
 
-  # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "primary_site", "primary_disease", "subtype", "subsubtype", "origin", "comments"
+  # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "collection_site", "primary_disease", "subtype", "subsubtype", "origin", "comments"
   #when SMid: match== 
   samples, _, noarxspan = GetNewCellLinesFromWorkspaces(stype=stype, 
                                                         maxage=maxage, refurl=refsheet_url, 
