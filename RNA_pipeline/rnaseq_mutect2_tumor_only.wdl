@@ -487,7 +487,7 @@ task MergeVCFs {
 
     gatk --java-options "-Xms4096m"  \
       MergeVcfs \
-      --INPUT ~{sep=' --INPUT=' input_vcfs} \
+      --INPUT ~{sep=' --INPUT ' input_vcfs} \
       --OUTPUT ~{output_vcf_name}
   >>>
 
