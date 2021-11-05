@@ -172,7 +172,7 @@ workflow RNAseq_mutect2 {
       ref_dict = ref_dict,
       ref_fasta_index = ref_fai,
       SO = SO,
-      RGID = output_basename,
+      base_name = output_basename,
       RGLB = RGLB,
       RGPL = RGPL,
       RGPU = RGPU,
