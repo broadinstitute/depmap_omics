@@ -1043,7 +1043,7 @@ task VariantFiltration {
 task picard_CleanAfterStar {
   input {
     File input_bam
-    File input_bam_index
+    File input_bai
     String base_name
 
     File ref_dict
