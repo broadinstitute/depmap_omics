@@ -1081,7 +1081,7 @@ task picard_CleanAfterStar {
       --CREATE_INDEX true
 
     gatk \
-      Markduplicates \
+      MarkDuplicates \
       -I ~{base_name}_rg.bam \
       -O ~{base_name}_rg_md.bam \
       --VALIDATION_STRINGENCY ~{VALIDATION_STRINGENCY} \
