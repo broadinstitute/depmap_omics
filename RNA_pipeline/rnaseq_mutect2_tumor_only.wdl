@@ -1073,18 +1073,19 @@ task picard_CleanAfterStar {
       -I ~{input_bam} \
       -O ~{base_name}_rg.bam \
       -SO ~{SO} \
-      -RGID ~{RGID} \
-      -RGLB ~{RGLB} \
-      -RGPL ~{RGPL} \
-      -RGPU ~{RGPU} \
-      -RGSM ~{RGSM} \
+      --RGID ~{RGID} \
+      --RGLB ~{RGLB} \
+      --RGPL ~{RGPL} \
+      --RGPU ~{RGPU} \
+      --RGSM ~{RGSM} \
+      --CREATE_INDEX true
 
     gatk \
       Markduplicates \
       -I ~{base_name}_rg.bam \
       -O ~{base_name}_rg_md.bam \
-      -VALIDATION_STRINGENCY ~{VALIDATION_STRINGENCY} \
-      -CREATE_INDEX true
+      --VALIDATION_STRINGENCY ~{VALIDATION_STRINGENCY} \
+      --CREATE_INDEX true
       -M ~{base_name}_rg_md.metrics
   >>>
 
