@@ -113,6 +113,13 @@ workflow RNAseq_mutect2 {
     File dbSnpVcf
     File dbSnpVcfIndex
 
+    String? SO
+    String? RGLB
+    String? RGPL
+    String? RGPU
+    String? RGSM
+    String? VALIDATION_STRINGENCY
+
     String? gatk_path_override
   }
 
@@ -156,6 +163,26 @@ workflow RNAseq_mutect2 {
     "max_retries": max_retries_or_default, "preemptible": preemptible_or_default, "cpu": small_task_cpu,
     "machine_mem": small_task_mem * 1000, "command_mem": small_task_mem * 1000 - 500,
     "disk": small_task_disk + disk_pad, "boot_disk_size": boot_disk_size}
+
+  call picard_CleanAfterStar {
+    input:
+      input_bam = tumor_bam,
+      input_bai = tumor_bai,
+      ref_fasta = ref_fasta,
+      ref_dict = ref_dict,
+      ref_fai = ref_fai,
+      SO = SO,
+      RGID = output_basename,
+      RGLB = RGLB,
+      RGPL = RGPL,
+      RGPU = RGPU,
+      RGSM = RGSM,
+      VALIDATION_STRINGENCY = VALIDATION_STRINGENCY,
+      preemptible_count = preemptible_or_default,
+      docker = gatk_docker,
+  }
+
+  #call ReorderSam_GATK #optional
 
   call SplitNCigarReads_GATK4 {
     input:
@@ -1013,3 +1040,65 @@ task VariantFiltration {
   }
 }
 
+task picard_CleanAfterStar {
+  input {
+    File input_bam
+    File input_bam_index
+    String base_name
+
+    File ref_dict
+    File ref_fasta
+    File ref_fasta_index
+
+    String? SO="coordinate"
+    String? RGID=base_name
+    String? RGLB="TruSeq_DNA_prep"
+    String? RGPL="illumina"
+    String? RGPU="hiseq2000"
+    String? RGSM=base_name
+    String? VALIDATION_STRINGENCY="SILENT"
+
+    String? gatk_override
+    String docker
+    Int preemptible_count
+    Int? memory
+    Int? disk
+  }
+
+  command <<<
+    export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
+
+    gatk \
+      AddOrReplaceReadGroups
+      -I ~{input_bam} \
+      -O ~{base_name}_rg.bam \
+      -SO ~{SO} \
+      -RGID ~{RGID} \
+      -RGLB ~{RGLB} \
+      -RGPL ~{RGPL} \
+      -RGPU ~{RGPU} \
+      -RGSM ~{RGSM} \
+
+    gatk \
+      Markduplicates \
+      -I ~{base_name}_rg.bam \
+      -O ~{base_name}_rg_md.bam \
+      -VALIDATION_STRINGENCY ~{VALIDATION_STRINGENCY} \
+      -CREATE_INDEX true
+      -M ~{base_name}_rg_md.metrics
+  >>>
+
+  output {
+    File output_bam = "~{base_name}_rg_md.bam"
+    File output_bam_index = "~{base_name}_rg_md.bam.bai"
+    File output_metrics = "~{base_name}_rg_md.metrics"
+  }
+
+  runtime {
+    docker: docker
+    bootDiskSizeGb: "32"
+    memory: select_first([memory,6])+" GB"
+    disks: "local-disk "+select_first([disk, 250])+" HDD"
+    preemptible: preemptible_count
+  }
+}
