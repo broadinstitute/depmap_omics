@@ -1069,7 +1069,7 @@ task picard_CleanAfterStar {
     export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk_override}
 
     gatk \
-      AddOrReplaceReadGroups
+      AddOrReplaceReadGroups \
       -I ~{input_bam} \
       -O ~{base_name}_rg.bam \
       -SO ~{SO} \
@@ -1085,7 +1085,7 @@ task picard_CleanAfterStar {
       -I ~{base_name}_rg.bam \
       -O ~{base_name}_rg_md.bam \
       --VALIDATION_STRINGENCY ~{VALIDATION_STRINGENCY} \
-      --CREATE_INDEX true
+      --CREATE_INDEX true \
       -M ~{base_name}_rg_md.metrics
   >>>
 
