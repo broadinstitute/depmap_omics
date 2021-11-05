@@ -186,8 +186,8 @@ workflow RNAseq_mutect2 {
 
   call SplitNCigarReads_GATK4 {
     input:
-      input_bam = tumor_bam,
-      input_bam_index = tumor_bai,
+      input_bam = picard_CleanAfterStar.output_bam,
+      input_bam_index = picard_CleanAfterStar.output_bam_index,
       base_name = output_basename + ".split",
       ref_fasta = ref_fasta,
       ref_fasta_index = ref_fai,
