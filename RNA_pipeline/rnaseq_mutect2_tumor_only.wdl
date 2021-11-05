@@ -170,7 +170,7 @@ workflow RNAseq_mutect2 {
       input_bai = tumor_bai,
       ref_fasta = ref_fasta,
       ref_dict = ref_dict,
-      ref_fai = ref_fai,
+      ref_fasta_index = ref_fai,
       SO = SO,
       RGID = output_basename,
       RGLB = RGLB,
