@@ -1091,7 +1091,7 @@ task picard_CleanAfterStar {
 
   output {
     File output_bam = "~{base_name}_rg_md.bam"
-    File output_bam_index = "~{base_name}_rg_md.bam.bai"
+    File output_bam_index = "~{base_name}_rg_md.bai"
     File output_metrics = "~{base_name}_rg_md.metrics"
   }
 
