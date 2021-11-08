@@ -3,6 +3,9 @@ from gsheets import Sheets
 import pandas as pd
 import dalmatian as dm
 from genepy import terra
+import numpy as np
+import traceback
+import firecloud.api
 
 def compareToCuratedGS(url, sample, samplesetname, sample_id='DepMap ID', 
                        clientsecret='~/.client_secret.json',
@@ -187,3 +190,60 @@ def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id",
     track.index.name = "sample_id"
     wm.upload_samples(track)
   
+def update_sample_batch_references(wm, etype, attrs):
+  """written for FP, where we need to update the sample_batch_pair data table
+  where entries are references to sample_sets instead of strings"""
+
+  reserved_attrs = {}
+  if etype=='sample':
+      reserved_attrs = {'participant': 'participant'}
+  elif etype=='pair':
+      reserved_attrs = {'participant': 'participant','case_sample': 'sample','control_sample': 'sample'}
+  elif etype == 'sample_batch_pair':
+      reserved_attrs = {'sample_batch_a': 'sample_set', 'sample_batch_b': 'sample_set'}
+
+  attr_list = []
+  for entity, row in attrs.iterrows():
+      attr_list.extend([{
+          'name':entity,
+          'entityType':etype,
+          'operations': [
+              {
+                  "op": "AddUpdateAttribute",
+                  "attributeName": i,
+                  "addUpdateAttribute": wm._process_attribute_value(i, j, reserved_attrs)
+              } for i,j in row.iteritems() if not np.any(pd.isnull(j))
+          ]
+      }])
+
+  # try rawls batch call if available
+  r = dm.wmanager._batch_update_entities(wm.namespace, wm.workspace, attr_list)
+  try:
+      if r.status_code == 204:
+          if isinstance(attrs, pd.DataFrame):
+              print("Successfully updated attributes '{}' for {} {}s.".format(attrs.columns.tolist(), attrs.shape[0], etype))
+          elif isinstance(attrs, pd.Series):
+              print("Successfully updated attribute '{}' for {} {}s.".format(attrs.name, len(attrs), etype))
+          else:
+              print("Successfully updated attribute '{}' for {} {}s.".format(attrs.name, len(attrs), etype))
+      elif r.status_code >= 400:
+          raise print("Unable to update entity attributes")
+      else:
+          print(r.text)
+  except:  # revert to public API
+      traceback.print_exc()
+      print("Failed to use batch update endpoint; switching to slower fallback")
+      for update in attr_list:
+          r = firecloud.api.update_entity(
+              wm.namespace,
+              wm.workspace,
+              update['entityType'],
+              update['name'],
+              update['operations']
+          )
+          if r.status_code==200:
+              print('Successfully updated {}.'.format(update['name']))
+          elif r.status_code >= 400:
+              print("Unable to update entity attributes")
+          else:
+              print(r.text)
