@@ -388,7 +388,7 @@ task SplitNCigarReads_GATK4 {
   }
 
   runtime {
-    disks: "local-disk "+select_first([disk,32])+" HDD"
+    disks: "local-disk "+select_first([disk,64])+" HDD"
     docker: docker
     memory: select_first([memory,16])+" GB"
     preemptible: preemptible_count
