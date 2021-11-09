@@ -190,7 +190,7 @@ def copyToWorkspace(workspaceID, tracker, columns=["arxspan_id",
     track.index.name = "sample_id"
     wm.upload_samples(track)
   
-def update_sample_batch_references(wm, etype, attrs):
+def updateReferences(wm, etype, attrs):
   """written for FP, where we need to update the sample_batch_pair data table
   where entries are references to sample_sets instead of strings"""
 

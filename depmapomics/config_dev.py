@@ -204,7 +204,7 @@ FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
 
 LEGACY_BAM_COLNAMES = ["legacy_bam_filepath","legacy_bai_filepath"]
 
-FPALLSAMPLESET = "all_samples"
+FPALLBATCHPAIRSETS = "all"
 
 TAIGA_FP = "ccle-bam-fingerprints-6f30"
 TAIGA_FP_FILENAME = 'fingerprint_lod_matrix'
