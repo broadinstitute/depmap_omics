@@ -9,6 +9,7 @@ import asyncio
 from genepy import terra
 from genepy.utils import helper as h
 from depmapomics import tracker
+from depmapomics.config import *
 import os 
 
 
@@ -106,9 +107,53 @@ def checkMatches(v, ref, thr=500):
       previ = i
   return shouldnt
 
+def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
+  # add and update sample_batch_pairs and sample_batch_pair_set
+  all_sample_sets = wm.get_entities("sample_set").index
+  sample_set_a_list = []
+  sample_set_b_list = []
+  pair_ids = []
+  for s in all_sample_sets:
+      for t in all_sample_sets:
+          sample_set_a_list.append(s)
+          sample_set_b_list.append(t)
+          pair_ids.append(s + '-' + t)
+              
+  pair_df = pd.DataFrame(
+      np.array([sample_set_a_list, sample_set_b_list]).T,
+      columns=['sample_batch_a', 'sample_batch_b'],
+      index=pair_ids
+  )
+  pair_df.index.name = 'entity:sample_batch_pair_id'
+  
+  # update sample_batch_pair
+  try:
+    wm.upload_entities("sample_batch_pair", pair_df)
+  except:
+    print("still can't update sample_batch_pair")
+    #in case it does not work
+    pair_df.to_csv(working_dir + "sample_batch_pairs.tsv", sep='\t')
+    if h.askif("Please upload the file ../sample_batch_pairs.tsv to the terra workspace as a new data table, and type yes once \
+      finished, else write no to quit and they will not be added"):
+      print('sample_batch_pair manually updated')
+  
+  unique_pairs = wm.get_entities('sample_batch_pair').index.tolist()
+  sample_batch_pair_set_df = pd.DataFrame(np.transpose(unique_pairs), index=['all'] * len(unique_pairs), columns=['sample_batch_pair'])
+  sample_batch_pair_set_df.index.name = 'membership:sample_batch_pair_set_id'
+  
+  # update sample_batch_pair_set
+  try:
+    wm.upload_entities("sample_batch_pair_set", sample_batch_pair_set_df)
+  except:
+    print("still can't update sample_batch_pair_set")
+    #in case it does not work
+    sample_batch_pair_set_df.to_csv(working_dir + "sample_batch_pair_set.tsv", sep='\t')
+    if h.askif("Please upload the file ../sample_batch_pair_set.tsv to the terra workspace as a new data table, and type yes once \
+      finished, else write no to quit and they will not be added"):
+      print('sample_batch_pair_set manually updated')
+  
 
-
-async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allsampleset=FPALLSAMPLESET, workspace=FPWORKSPACE, vcf_list=None, 
+async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allbatchpairset=FPALLBATCHPAIRSETS, workspace=FPWORKSPACE, vcf_list=None, 
   vcf_list_dir=VCF_LIST_DIR, working_dir=WORKING_DIR, crosscheck_batch_size=CROSSCHECK_BATCH_SIZE, recreate_batch=RECREATE_BATCH, bamcolname=LEGACY_BAM_COLNAMES,
   taiga_dataset=TAIGA_FP, taiga_filename=TAIGA_FP_FILENAME):
   """1.1  Generate Fingerprint VCFs
@@ -152,6 +197,7 @@ async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, alls
   samples_df = samples_df.set_index('sample_id')
   wm.upload_samples(samples_df, add_participant_samples=True)
   wm.update_sample_set(sampleset, samples_df.index)
+  add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
   # Submit jobs 
   submission_id = wm.create_submission("fingerprint_bam_with_liftover", sampleset, 
@@ -159,51 +205,18 @@ async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, alls
   await terra.waitForSubmission(workspace, submission_id)
 
   #1.2  Crosscheck Fingerprint VCFs
-  #Here we use Dalmation to run the crosscheck_vcfs workflow on Terra. 
-  # This workflow calls Picard CrosscheckFingerprints to compare the new 
-  # fingerprint vcfs to batches of existing fingerprint vcfs in fingerprints_dir
-  # Create list with new vcfs and upload to bucket
-  f = open(working_dir + sampleset, 'w')
-  f.write(('\n').join(wm.get_samples().loc[samples_df.index, 'fingerprints'].tolist()))
-  f.close()
-  gcp.cpFiles(working_dir + sampleset, vcf_list_dir)
-  os.system('rm '+working_dir + sampleset)
-
-  # Upload sample sheet
-  if recreate_batch:
-    sample_group_df = pd.DataFrame(data={"entity:sample_group_id" : batches, "vcf_group" : [vcf_list_dir + x for x in batches]}).set_index('entity:sample_group_id')
-  else:
-    sample_group_df = pd.DataFrame(data={"entity:sample_group_id" : [sampleset], "vcf_group" : [vcf_list_dir+sampleset]}).set_index('entity:sample_group_id')
-  
-  print(wm.get_entities('sample_group').index.tolist())
-
-  try:
-    wm.upload_entities("sample_group", sample_group_df)
-  except:
-    print("still can't update entities")
-    #in case it does not work
-    sample_group_df.to_csv("../temp.tsv", sep='\t')
-    if h.askif("Please upload the file ../temp.tsv to the terra workspace as a new sample_group, and type yes once \
-      finished, else write no to quit and they will not be added"):
-      print('sample_group ' + sampleset + ' manually added as a sample_group')
-  
-  try:
-    wm.update_entity_set("sample_group_set", set_id=allsampleset,
-                         entity_ids=wm.get_entities('sample_group').index)
-  except:
-    print("still can't update entities")
-    #in case it does not work
-    if h.askif("Please go to the sample_group_set tab on terra and add the sample_group name to the all_samples set, and type yes once \
-      finished, else write no to quit and they will not be added"):
-      print(allsampleset + ' manually updated')
+  # Here we use Dalmation to run the crosscheck_vcfs workflow on Terra. 
+  # This workflow calls Picard CrosscheckFingerprints to compare vcfs between every 
+  # sample_batch_pair in the sample_batch_pair_set
 
   # Submit jobs
   conf = wm.get_config("crosscheck_vcfs")
-  conf['inputs']['crosscheck.run_crosscheck.vcf_second_input_file'] = '"'+vcf_list_dir+sampleset+'"'
   wm.update_config(conf)
-  submission_id = wm.create_submission("crosscheck_vcfs", allsampleset, 
-  'sample_group_set', expression='this.sample_groups')
+  submission_id = wm.create_submission("crosscheck_vcfs", allbatchpairset, 'sample_batch_pair_set', expression='this.sample_batch_pairs')
   await terra.waitForSubmission(workspace, submission_id)
+
+  # save config after jobs finish running
+  terra.saveWorkspace(workspace,'data/'+sampleset+'/FPconfig/')
 
   # Update LOD matrix
   new_ids, updated_lod_mat = updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir, upload_to_taiga=False)
