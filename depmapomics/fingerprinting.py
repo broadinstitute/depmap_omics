@@ -33,7 +33,8 @@ def updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir, upload_
   #Here we update the fingerprint LOD matrix on taiga with the new fingerprints
   # Generate matrix with LOD score for new fingerprint vcfs
   new_lod_list = []
-  samples_df = wm.get_entities("sample_group")['cross_checks_out'].tolist()
+  sample_batch_pair_df = wm.get_entities("sample_batch_pair")
+  samples_df = sample_batch_pair_df[sample_batch_pair_df.sample_batch_b.apply(lambda x: x['entityName'] == sampleset)]['cross_checks_out'].tolist()
   for batch in samples_df:
     # could be pd concat
     df = pd.read_csv(batch, sep='\t', comment='#')
