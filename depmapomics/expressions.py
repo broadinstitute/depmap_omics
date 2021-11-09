@@ -305,15 +305,15 @@ def saveFiles(files, folder=TMP_PATH, rep=('rsem', 'expression')):
 
 
 async def postProcess(refworkspace, samplesetname,
-                save_output="", doCleanup=False,
-                colstoclean=[], ensemblserver=ENSEMBL_SERVER_V,
-                todrop=[], samplesetToLoad="all", priority=[],
-                geneLevelCols=RSEMFILENAME_GENE,
-                trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
-                ssGSEAcol="genes_tpm", renamingFunc=None, useCache=False,
-                dropNonMatching=False, recompute_ssgsea=True,
-                compute_enrichment=True,
-                ):
+                      save_output="", doCleanup=False,
+                      colstoclean=[], ensemblserver=ENSEMBL_SERVER_V,
+                      todrop=[], samplesetToLoad="all", priority=[],
+                      geneLevelCols=RSEMFILENAME_GENE,
+                      trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
+                      ssGSEAcol="genes_tpm", renamingFunc=None, useCache=False,
+                      dropNonMatching=False, recompute_ssgsea=True,
+                      compute_enrichment=True,
+                      ):
   """postprocess a set of aggregated Expression table from RSEM in the CCLE way
 
   (usually using the aggregate_RSEM terra worklow)
@@ -419,17 +419,17 @@ async def postProcess(refworkspace, samplesetname,
 
 
 async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESETNAME, refsheet_url=REFSHEET_URL,
-                       colstoclean=['fastq1', 'fastq2',
-                                    'recalibrated_bam', 'recalibrated_bam_index'],
-                       ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
-                       my_id=MY_ID, mystorage_id=MYSTORAGE_ID, samplesetToLoad="all",
-                       tocompare={"genes_expected_count": "CCLE_RNAseq_reads",
-                                  "genes_tpm": "CCLE_expression_full",
-                                  "proteincoding_genes_tpm": "CCLE_expression"},
-                       sheetname=SHEETNAME, sheetcreds=SHEETCREDS, todrop=KNOWN_DROP,
-                       prevcounts='ccle',
-                       taiga_dataset=TAIGA_EXPRESSION, minsimi=0.95, dropNonMatching=True,
-                       dataset_description=RNAseqreadme, **kwargs):
+                              colstoclean=['fastq1', 'fastq2',
+                                            'recalibrated_bam', 'recalibrated_bam_index'],
+                              ensemblserver=ENSEMBL_SERVER_V, doCleanup=True,
+                              my_id=MY_ID, mystorage_id=MYSTORAGE_ID, samplesetToLoad="all",
+                              tocompare={"genes_expected_count": "CCLE_RNAseq_reads",
+                                          "genes_tpm": "CCLE_expression_full",
+                                          "proteincoding_genes_tpm": "CCLE_expression"},
+                              sheetname=SHEETNAME, sheetcreds=SHEETCREDS, todrop=KNOWN_DROP,
+                              prevcounts='ccle',
+                              taiga_dataset=TAIGA_EXPRESSION, minsimi=0.95, dropNonMatching=True,
+                              dataset_description=RNAseqreadme, **kwargs):
   """the full CCLE Expression post processing pipeline (used only by CCLE)
 
   @see postprocessing() to reproduce our analysis and for parameters
@@ -553,57 +553,57 @@ async def _CCLEPostProcessing(refworkspace=RNAWORKSPACE, samplesetname=SAMPLESET
   tc.update_dataset(changes_description="new "+samplesetname+" release!",
                     dataset_permaname=taiga_dataset,
                     upload_files=[
-                        {
-                            "path": folder+"proteincoding_genes_tpm_logp1.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"transcripts_tpm_logp1.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"genes_tpm_logp1.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"genes_tpm.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"transcripts_tpm.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"proteincoding_genes_tpm.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"transcripts_expected_count.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"proteincoding_genes_expected_count.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        },
-                        {
-                            "path": folder+"genes_expected_count.csv",
-                            "format": "NumericMatrixCSV",
-                            "encoding": "utf-8"
-                        }
-                        # {
-                        #     "path": folder+'gene_sets_all.csv',
-                        #     "format": "NumericMatrixCSV",
-                        #     "encoding": "utf-8"
-                        # },
-                    ],
-                    upload_async=False,
-                    dataset_description=dataset_description)
+                      {
+                        "path": folder+"proteincoding_genes_tpm_logp1.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"transcripts_tpm_logp1.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"genes_tpm_logp1.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"genes_tpm.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"transcripts_tpm.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"proteincoding_genes_tpm.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"transcripts_expected_count.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"proteincoding_genes_expected_count.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      },
+                      {
+                        "path": folder+"genes_expected_count.csv",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8"
+                      }
+                      # {
+                      #     "path": folder+'gene_sets_all.csv',
+                      #     "format": "NumericMatrixCSV",
+                      #     "encoding": "utf-8"
+                      # },
+                  ],
+                  upload_async=False,
+                  dataset_description=dataset_description)
   print("done")
