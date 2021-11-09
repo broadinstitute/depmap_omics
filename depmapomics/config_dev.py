@@ -190,19 +190,9 @@ WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 # Local directory to save intermediate files to
 WORKING_DIR = "temp/"
 
-# GC storage bucket containing fingerprints
-FINGERPRINTS_DIR = "gs://fc-secure-6b6a3e1a-6fb8-4d30-b0df-a359e6c5d6e6/fingerprints/"
-
-# GC storage bucket containing lists for vcf files
-VCF_LIST_DIR = "gs://fc-secure-6b6a3e1a-6fb8-4d30-b0df-a359e6c5d6e6/vcf_lists/"
-
-# Batch sise for crosscheck_vcf. If more than 200 bams are being run this should be decreased
-CROSSCHECK_BATCH_SIZE = 500
-RECREATE_BATCH = False
-
 FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
 
-LEGACY_BAM_COLNAMES = ["legacy_bam_filepath","legacy_bai_filepath"]
+LEGACY_BAM_COLNAMES = ["legacy_bam_filepath", "legacy_bai_filepath"]
 
 FPALLBATCHPAIRSETS = "all"
 

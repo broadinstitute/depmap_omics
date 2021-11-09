@@ -10,23 +10,8 @@ from genepy import terra
 from genepy.utils import helper as h
 from depmapomics import tracker
 from depmapomics.config import *
+from depmapomics import terra as myterra
 import os 
-
-
-def recreateBatch(vcf_list, vcf_list_dir, working_dir, wm, crosscheck_batch_size):
-  # Create batch files listing all vcfs in fingerprints dir and upload to bucket
-  # (NEW VERSION ONLY) will only needed if need to recreate batches
-  if not vcf_list:
-    vcf_list = gcp.lsFiles([vcf_list_dir])
-  vcf_list = wm.get_samples()["fingerprint_vcf"].tolist()
-  batches = []
-  for i, l in enumerate(range(0, len(vcf_list), crosscheck_batch_size)):
-    f = open(working_dir + "vcf_batch_"+str(i), 'w')
-    f.write("\n".join(vcf_list[l:l + crosscheck_batch_size]))
-    f.close()
-    batches.append(working_dir+"vcf_batch_"+str(i))
-  gcp.cpFiles(batches, vcf_list_dir)
-  return batches
 
 
 def updateLOD(wm, sampleset, taiga_dataset, taiga_filename, working_dir, upload_to_taiga=True):
@@ -119,7 +104,8 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
           sample_set_a_list.append(s)
           sample_set_b_list.append(t)
           pair_ids.append(s + '-' + t)
-              
+
+  # pair_df contains all possible pairs between sample_sets         
   pair_df = pd.DataFrame(
       np.array([sample_set_a_list, sample_set_b_list]).T,
       columns=['sample_batch_a', 'sample_batch_b'],
@@ -138,6 +124,9 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
       finished, else write no to quit and they will not be added"):
       print('sample_batch_pair manually updated')
   
+  # replace string entries in sample_batch_pairs with references to sample_sets
+  myterra.updateReferences(wm, 'sample_batch_pair', pair_df)
+  
   unique_pairs = wm.get_entities('sample_batch_pair').index.tolist()
   sample_batch_pair_set_df = pd.DataFrame(np.transpose(unique_pairs), index=['all'] * len(unique_pairs), columns=['sample_batch_pair'])
   sample_batch_pair_set_df.index.name = 'membership:sample_batch_pair_set_id'
@@ -154,9 +143,8 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
       print('sample_batch_pair_set manually updated')
   
 
-async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allbatchpairset=FPALLBATCHPAIRSETS, workspace=FPWORKSPACE, vcf_list=None, 
-  vcf_list_dir=VCF_LIST_DIR, working_dir=WORKING_DIR, crosscheck_batch_size=CROSSCHECK_BATCH_SIZE, recreate_batch=RECREATE_BATCH, bamcolname=LEGACY_BAM_COLNAMES,
-  taiga_dataset=TAIGA_FP, taiga_filename=TAIGA_FP_FILENAME):
+async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allbatchpairset=FPALLBATCHPAIRSETS, workspace=FPWORKSPACE, 
+working_dir=WORKING_DIR, bamcolname=LEGACY_BAM_COLNAMES, taiga_dataset=TAIGA_FP, taiga_filename=TAIGA_FP_FILENAME):
   """1.1  Generate Fingerprint VCFs
 
   Here we use Dalmatian to run the fingerprint_bam_with_liftover workflow on Terra.
@@ -187,11 +175,6 @@ async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allb
   print('adding '+str(len(bams))+' new samples to the fingerprint')
   wm = dm.WorkspaceManager(workspace).disable_hound()
 
-  batches = []
-  if recreate_batch:
-    print('recreating batch')
-    batches = recreateBatch(vcf_list, vcf_list_dir, working_dir, wm, crosscheck_batch_size)
-
   # Upload sample sheet
   samples_df = pd.DataFrame()
   samples_df = pd.DataFrame(bams[bamcolname + [sid, sid]].values, columns = ["bam_filepath", "bai_filepath", "sample_id", "participant_id"])
@@ -200,7 +183,7 @@ async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allb
   wm.update_sample_set(sampleset, samples_df.index)
   add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
-  # Submit jobs 
+  # Submit fingerprinting jobs, generate vcf files for all lines
   submission_id = wm.create_submission("fingerprint_bam_with_liftover", sampleset, 
                                        'sample_set', expression='this.samples')
   await terra.waitForSubmission(workspace, submission_id)
@@ -210,7 +193,7 @@ async def _CCLEFingerPrint(rnasamples, wgssamples, sampleset=SAMPLESETNAME, allb
   # This workflow calls Picard CrosscheckFingerprints to compare vcfs between every 
   # sample_batch_pair in the sample_batch_pair_set
 
-  # Submit jobs
+  # Submit crosscheck jobs
   conf = wm.get_config("crosscheck_vcfs")
   wm.update_config(conf)
   submission_id = wm.create_submission("crosscheck_vcfs", allbatchpairset, 'sample_batch_pair_set', expression='this.sample_batch_pairs')
