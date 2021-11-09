@@ -31,7 +31,7 @@ def renameColumns(df):
   """
   return df.rename(columns=COLRENAMING)
 
-def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Start", "End"],
+def loadFromGATKAggregation(refworkspace, setEntity='sample_set', sortby=[SAMPLEID, 'Chromosome', "Start", "End"],
                             save_output='', doCleanup=True,
                             todrop=[], showPlots=False, colname="combined_seg_file",
                             plotColname="modeled_segments_plot_tumor", tempFolder="temp/",
@@ -69,7 +69,7 @@ def loadFromGATKAggregation(refworkspace,  sortby=[SAMPLEID, 'Chromosome', "Star
             'sample', res[val], delete_files=True)
 
   segments = pd.read_csv(wm.get_entities(
-        'sample_set').loc[sampleset, colname], sep='\t').rename(columns=colRenaming)
+        setEntity).loc[sampleset, colname], sep='\t').rename(columns=colRenaming)
 
   # removing the duplicates
   segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -179,7 +179,7 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
   return renaming
 
 
-def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  sortby=[
+def postProcess(refworkspace, setEntity='sample_set', sampleset='all', save_output="", doCleanup=True,  sortby=[
         SAMPLEID, 'Chromosome', "Start", "End"], todrop=[], priority=[],
         genechangethresh=0.025, segmentsthresh=2000, ensemblserver=ENSEMBL_SERVER_V,
         source_rename={}, useCache=False):
@@ -210,7 +210,7 @@ def postProcess(refworkspace, sampleset='all', save_output="", doCleanup=True,  
   h.createFoldersFor(save_output)
   print('loading CN from Terra')
   segments = loadFromGATKAggregation(
-      refworkspace, sampleset=sampleset, sortby=sortby, todrop=todrop, doCleanup=doCleanup)
+      refworkspace, setEntity=setEntity, sampleset=sampleset, sortby=sortby, todrop=todrop, doCleanup=doCleanup)
   print('making gene level copy number')
 
   mybiomart = h.generateGeneNames(
@@ -311,7 +311,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
     print('doing wes')
     priority=tracker[(tracker.datatype=='wes')&(tracker.prioritized == 1)].index.tolist()
     todropwes=todrop+tracker[(tracker.datatype=='wes')&(tracker.blacklist == 1)].index.tolist()
-    wessegments, genecn, wesfailed = postProcess(wesrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
+    wessegments, genecn, wesfailed = postProcess(wesrefworkspace, setEntity='pair_set', sampleset = AllSamplesetName if AllSamplesetName else samplesetname,
                 todrop=todropwes,
                 save_output=folder,
                 priority=priority, **kwargs)
@@ -347,7 +347,7 @@ def _CCLEPostProcessing(wesrefworkspace=WESCNWORKSPACE, wgsrefworkspace=WGSWORKS
   folder=os.path.join("temp", samplesetname, "wgs_")
   priority=tracker[(tracker.datatype=='wgs')&(tracker.prioritized == 1)].index.tolist()
   todropwgs=todrop+tracker[(tracker.datatype=='wgs')&(tracker.blacklist == 1)].index.tolist()
-  wgssegments, genecn, wgsfailed = postProcess(wgsrefworkspace, AllSamplesetName if AllSamplesetName else samplesetname,
+  wgssegments, genecn, wgsfailed = postProcess(wgsrefworkspace, setEntity='sample_set', sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
               todrop=todropwgs,
               save_output=folder,
               priority=priority, **kwargs)
