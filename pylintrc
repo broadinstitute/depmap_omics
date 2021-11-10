@@ -108,7 +108,7 @@ disable=raw-checker-failed,
         # syntax-error,
         anomalous-backslash-in-string,
         use-maxsplit-arg,
-        expression-not-assigned,
+        #expression-not-assigned,
         import-outside-toplevel,
         line-too-long,
         no-else-continue,
@@ -350,7 +350,7 @@ indent-string='    '
 max-line-length=100
 
 # Maximum number of lines in a module.
-max-module-lines=1000
+max-module-lines=10000
 
 # Allow the body of a class to be on the same line as the declaration if body
 # contains single statement.
