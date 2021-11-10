@@ -175,9 +175,10 @@ def updateFromTracker(
     # doing so..
     for k, v in toupdate.items():
         samples.loc[index, k] = v
-    len(samples.loc[notfound][participant_id]), samples.loc[notfound][
-        participant_id
-    ].tolist()
+    # Commented out the following because it has no effect
+    #len(samples.loc[notfound][participant_id]), samples.loc[notfound][
+    #    participant_id
+    #].tolist()
     return samples, notfound
 
 
