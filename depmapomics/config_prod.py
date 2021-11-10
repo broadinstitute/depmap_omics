@@ -170,6 +170,21 @@ WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
 WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 
+############## Fingerprinting
+
+# Local directory to save intermediate files to
+WORKING_DIR = "temp/"
+
+FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
+
+LEGACY_BAM_COLNAMES = ["legacy_bam_filepath", "legacy_bai_filepath"]
+
+FPALLBATCHPAIRSETS = "all"
+
+TAIGA_FP = "ccle-bam-fingerprints-6f30"
+TAIGA_FP_FILENAME = 'fingerprint_lod_matrix'
+
+
 
 LINES_TO_RELEASE = [
   "ACH-000023",

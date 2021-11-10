@@ -105,7 +105,7 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
           sample_set_b_list.append(t)
           pair_ids.append(s + '-' + t)
 
-  # pair_df contains all possible pairs between sample_sets         
+  # pair_df contains all possible pairs between all sample_sets         
   pair_df = pd.DataFrame(
       np.array([sample_set_a_list, sample_set_b_list]).T,
       columns=['sample_batch_a', 'sample_batch_b'],
@@ -131,7 +131,7 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
   sample_batch_pair_set_df = pd.DataFrame(np.transpose(unique_pairs), index=['all'] * len(unique_pairs), columns=['sample_batch_pair'])
   sample_batch_pair_set_df.index.name = 'membership:sample_batch_pair_set_id'
   
-  # update sample_batch_pair_set
+  # update sample_batch_pair_set to include all sample_batch_pairs
   try:
     wm.upload_entities("sample_batch_pair_set", sample_batch_pair_set_df)
   except:
@@ -156,13 +156,9 @@ working_dir=WORKING_DIR, bamcolname=LEGACY_BAM_COLNAMES, taiga_dataset=TAIGA_FP,
       samples ([type]): [description]
       sampleset ([type]): [description]
       sid ([type]): [description]
-      vcf_list_dir ([type]): [description]
       working_dir ([type]): [description]
-      crosscheck_batch_size ([type]): [description]
-      recreate_batch ([type]): [description]
       bamcolname ([type]): [description]
       workspace ([type], optional): [description]. Defaults to WORKSPACE.
-      vcf_list ([type], optional): [description]. Defaults to None.
 
   Author:
       William Colgan (wcolgan@broadinstitute.org)
