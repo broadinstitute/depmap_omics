@@ -1,5 +1,15 @@
 {
-  "editor.tabSize": 2,
+  "python.linting.flake8Enabled": true,
+  "python.linting.enabled": true,
+  "python.formatting.provider": "black",
+  "editor.tabSize": 4,
   "editor.detectIndentation": false,
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  "editor.autoClosingBrackets": true,
+  "editor.autoClosingQuotes": true,
+  "editor.autoSurround": true,
+  "editor.autoIndent": true,
+  "editor.insertSpaces": true
 }
