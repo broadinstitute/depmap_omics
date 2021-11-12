@@ -1171,6 +1171,7 @@ def update(
         creds ([type], optional): [description]. Defaults to SHEETCREDS.
         sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
         refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+        add_to_samplesets (list, optional): add new samples to additional sample_sets on terra. Defaults to []
     """
     # uploading to our bucket (now a new function)
     terra.changeToBucket(

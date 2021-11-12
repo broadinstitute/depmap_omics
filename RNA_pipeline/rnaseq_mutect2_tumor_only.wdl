@@ -164,6 +164,10 @@ workflow RNAseq_mutect2 {
     "machine_mem": small_task_mem * 1000, "command_mem": small_task_mem * 1000 - 500,
     "disk": small_task_disk + disk_pad, "boot_disk_size": boot_disk_size}
 
+  #call ReorderSam_GATK #optional
+  Int tumor_bam_size = ceil(size(tumor_bam, "GB") + size(tumor_bai, "GB"))
+  Int disksize = tumor_bam_size + ref_size + disk_pad
+
   call picard_CleanAfterStar {
     input:
       input_bam = tumor_bam,
@@ -180,9 +184,8 @@ workflow RNAseq_mutect2 {
       VALIDATION_STRINGENCY = VALIDATION_STRINGENCY,
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
+      disk = disksize,
   }
-
-  #call ReorderSam_GATK #optional
 
   call SplitNCigarReads_GATK4 {
     input:
@@ -195,6 +198,7 @@ workflow RNAseq_mutect2 {
       interval_list = intervals,
       preemptible_count = preemptible_or_default,
       docker = gatk_docker,
+      disk = disksize,
   }
 
   call BaseRecalibrator {
@@ -234,7 +238,6 @@ workflow RNAseq_mutect2 {
       docker = gatk_docker,
   }
 
-  Int tumor_bam_size = ceil(size(tumor_bam, "GB") + size(tumor_bai, "GB"))
   Int m2_output_size = tumor_bam_size / scatter_count
   Int m2_per_scatter_size = tumor_bam_size + ref_size + gnomad_vcf_size + m2_output_size + disk_pad
 
@@ -388,7 +391,7 @@ task SplitNCigarReads_GATK4 {
   }
 
   runtime {
-    disks: "local-disk "+select_first([disk,64])+" HDD"
+    disks: "local-disk "+select_first([disk,200])+" HDD"
     docker: docker
     memory: select_first([memory,16])+" GB"
     preemptible: preemptible_count
@@ -439,7 +442,7 @@ task BaseRecalibrator {
 
   runtime {
     memory: select_first([memory,16])+" GB"
-    disks: "local-disk "+ select_first([disk,120])+" HDD"
+    disks: "local-disk "+ select_first([disk,200])+" HDD"
     docker: docker
     preemptible: preemptible_count
   }
@@ -614,7 +617,7 @@ task RevertSam {
 
   runtime {
     docker: docker
-    disks: "local-disk "+select_first([disk,80])+" HDD"
+    disks: "local-disk "+select_first([disk,200])+" HDD"
     memory: "8 GB"
     preemptible: preemptible_count
   }

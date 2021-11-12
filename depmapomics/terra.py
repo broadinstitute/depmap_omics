@@ -57,7 +57,7 @@ def compareToCuratedGS(
             "We have not found "
             + str(len(in_sheet_not_found))
             + " of the samples we're supposed to \
-      have this release:\n"
+            have this release:\n"
             + str(sorted(list(in_sheet_not_found)))
         )
     else:
@@ -111,18 +111,18 @@ def updatePairs(
 
 def setupPairsFromSamples(sampless, refsamples, extract):
     """
-  Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)
+    Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)
 
-  Args:
-  -----
-    sampless: pd.df samples to compute pairs for
-    refsamples: pd.df samples to match to
-    extract: str the name of the column to extract from the samples
+    Args:
+    -----
+        sampless: pd.df samples to compute pairs for
+        refsamples: pd.df samples to match to
+        extract: str the name of the column to extract from the samples
 
-  Returns:
-  -------
-    pairs that can be uploaded to the portal team
-  """
+    Returns:
+    -------
+        pairs that can be uploaded to the portal team
+    """
     pairs = pd.DataFrame()
     normals = refsamples[refsamples[extract["primary_disease"]] == "normal"]
     pairs["control_sample"] = [
@@ -144,15 +144,15 @@ def setupPairsFromSamples(sampless, refsamples, extract):
 
 def updateAllSampleSet(workspace, Allsample_setname="all"):
     """
-  update the previous All Sample sample_set with the new samples that have been added.
+    update the previous All Sample sample_set with the new samples that have been added.
 
-  It is especially useful for the aggregate task. Can more generally merge two samplesets together
+    It is especially useful for the aggregate task. Can more generally merge two samplesets together
 
-  Args:
-  ----
-    workspace: str namespace/workspace from url typically
-    newsample_setname: str name of sampleset to add to All_samples
-  """
+    Args:
+    ----
+        workspace: str namespace/workspace from url typically
+        newsample_setname: str name of sampleset to add to All_samples
+    """
     dm.WorkspaceManager(workspace).update_sample_set(
         Allsample_setname, dm.WorkspaceManager(workspace).get_samples().index.tolist()
     )
@@ -197,18 +197,18 @@ def copyToWorkspace(
     group=50,
 ):
     """
-  will use the current sample tracker to update samples in the workspace
+    will use the current sample tracker to update samples in the workspace
 
-  it can remove samples that are not in the tracker.
+    it can remove samples that are not in the tracker.
 
-  Args:
-  ----
-    workspaceID: str the workspace id
-    tracker: dataframe the sample tracker
-    columns: list[str] the columns to sync
-    rename: dict(str:str) columns to rename from sample tracker to workspace
-    deleteUnmatched: bool whether or not to delete samples in the workspace and not in the sample tracker
-  """
+    Args:
+    ----
+        workspaceID: str the workspace id
+        tracker: dataframe the sample tracker
+        columns: list[str] the columns to sync
+        rename: dict(str:str) columns to rename from sample tracker to workspace
+        deleteUnmatched: bool whether or not to delete samples in the workspace and not in the sample tracker
+    """
     wm = dm.WorkspaceManager(workspaceID).disable_hound()
     sam = wm.get_samples()
     track = tracker[tracker.index.isin(sam.index)][columns].rename(columns=rename)
