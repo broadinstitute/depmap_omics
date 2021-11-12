@@ -299,7 +299,6 @@ async def _CCLEFingerPrint(
     wm = dm.WorkspaceManager(workspace).disable_hound()
 
     # Upload sample sheet
-    samples_df = pd.DataFrame()
     samples_df = pd.DataFrame(
         bams[bamcolname + [sid, sid]].values,
         columns=["bam_filepath", "bai_filepath", "sample_id", "participant_id"],
