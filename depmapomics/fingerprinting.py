@@ -240,6 +240,8 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
       finished, else write no to quit and they will not be added"
         ):
             print("sample_batch_pair manually updated")
+        else:
+            raise ValueError('sample_batch_pair not manually updated')
 
     # replace string entries in sample_batch_pairs with references to sample_sets
     myterra.updateReferences(wm, "sample_batch_pair", pair_df)
@@ -266,6 +268,8 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
       finished, else write no to quit and they will not be added"
         ):
             print("sample_batch_pair_set manually updated")
+        else:
+            raise ValueError('sample_batch_pair_set not manually updated')
 
 
 async def fingerPrint(
