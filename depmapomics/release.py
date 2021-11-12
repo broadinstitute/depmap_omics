@@ -45,192 +45,152 @@ def findLatestVersion(dataset, approved_only=True):
 
 
 def save(release=RELEASE, notebooks=RUN_NOTEBOOKS):
-    for val in notebooks:
-        rn = val.replace("ipynb", "html")
-        os.system(
-            "jupyter nbconvert --to html "
-            + val
-            + " && mv "
-            + rn
-            + " release_notebooks/"
-            + release
-            + "/"
-        )
+  for val in notebooks:
+    rn = val.replace('ipynb', 'html')
+    os.system('jupyter nbconvert --to html '+val+ ' && mv '+rn+' release_notebooks/'+release+"/")
 
-    os.system(
-        "cd ../ccle_processing && git add . && git commit -m "
-        + '"depmap omics '
-        + release
-        + ' final" && git push'
-    )
+  os.system('cd ../ccle_processing && git add . && git commit -m '+
+  '"depmap omics '+release+' final" && git push')
 
+def make(release=RELEASE, my_id=MY_ID,
+        mystorage_id=MYSTORAGE_ID,
+        potential_list_url=POTENTIAL_LIST,
+        prev_virtual=PREV_VIRTUAL,
+        eternal_dataset=TAIGA_ETERNAL,
+        onlyRelease=['internal', 'ibm', 'dmc', 'public'],
+        eternal_include = [
+          #CN
+          "CCLE_gene_cn", "CCLE_segment_cn", 
+          #Mutations
+          "CCLE_mutations", "CCLE_mutations_bool_damaging", "CCLE_mutations_bool_nonconserving", "CCLE_mutations_bool_otherconserving", "CCLE_mutations_bool_hotspot", 
+          #Expression
+          "CCLE_expression_full", "CCLE_RNAseq_transcripts", "CCLE_RNAseq_reads", "CCLE_expression", "CCLE_expression_proteincoding_genes_expected_count", "CCLE_expression_transcripts_expected_count",
+            #Fusions
+          "CCLE_fusions_unfiltered", "CCLE_fusions"],
+        updateReadmes=True,
+        doCN=True,
+        doMut=True,
+        doRNA=True,
+        doFusions=True,
+        changes=None,
+          ):
+  assert changes is not None
+  
+  new = {}
+  
+  save_output = "temp/"+ release
+  
+  sheets = Sheets.from_files(my_id, mystorage_id)
+  gsheets = sheets.get(potential_list_url).sheets[0].to_frame()
+  #making the virtual dataset
+  print('loading new samples')
+  new['internal'] = set(
+      [i for i in gsheets['Internal'].values.tolist() if str(i) != "nan"])
+  new['dmc'] = set(
+      [i for i in gsheets['DMC'].values.tolist() if str(i) != "nan"])
+  new['ibm'] = set(
+      [i for i in gsheets['IBM'].values.tolist() if str(i) != "nan"])
+  new['public'] = set(
+      [i for i in gsheets['Public'].values.tolist() if str(i) != "nan"])
 
-def make(
-    release=RELEASE,
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
-    potential_list_url=POTENTIAL_LIST,
-    prev_virtual=PREV_VIRTUAL,
-    eternal_dataset=TAIGA_ETERNAL,
-    onlyRelease=["internal", "ibm", "dmc", "public"],
-    eternal_include=[
-        # CN
-        "CCLE_gene_cn",
-        "CCLE_segment_cn",
-        # Mutations
-        "CCLE_mutations",
-        "CCLE_mutations_bool_damaging",
-        "CCLE_mutations_bool_nonconserving",
-        "CCLE_mutations_bool_otherconserving",
-        "CCLE_mutations_bool_hotspot",
-        # Expression
-        "CCLE_expression_full",
-        "CCLE_RNAseq_transcripts",
-        "CCLE_RNAseq_reads",
-        "CCLE_expression",
-        "CCLE_expression_proteincoding_genes_expected_count",
-        "CCLE_expression_transcripts_expected_count",
-        # Fusions
-        "CCLE_fusions_unfiltered",
-        "CCLE_fusions",
-    ],
-    updateReadmes=True,
-    doCN=True,
-    doMut=True,
-    doRNA=True,
-    doFusions=True,
-    changes=CHANGES,
-):
+  new["dmc"] = new["dmc"] | new["public"]
 
-    new = {}
-    global virtual
-    global INFO
+  new["ibm"] = new["ibm"] | new["dmc"]
 
-    save_output = "temp/" + release
+  new["internal"] = new["internal"] | new["ibm"]
 
-    sheets = Sheets.from_files(my_id, mystorage_id)
-    gsheets = sheets.get(potential_list_url).sheets[0].to_frame()
-    # making the virtual dataset
-    print("loading new samples")
-    new["internal"] = set(
-        [i for i in gsheets["Internal"].values.tolist() if str(i) != "nan"]
-    )
-    new["dmc"] = set([i for i in gsheets["DMC"].values.tolist() if str(i) != "nan"])
-    new["ibm"] = set([i for i in gsheets["IBM"].values.tolist() if str(i) != "nan"])
-    new["public"] = set(
-        [i for i in gsheets["Public"].values.tolist() if str(i) != "nan"]
-    )
+  #getting what was released before
+  print('loading prev samples')
+  prevmut = {}
+  prevrna = {}
+  prevcn = {}
+  prevwes = {}
+  prev = {}
+  for val in ['internal', 'dmc', 'ibm', 'public']:
+    print(val)
+    prevmut[val] = set(tc.get(name=prev_virtual[val],
+                              file='CCLE_mutations').DepMap_ID)
+    prevrna[val] = set(tc.get(name=prev_virtual[val],
+                              file='CCLE_expression').index)
+    prevcn[val] = set(tc.get(name=prev_virtual[val],
+                            file='CCLE_segment_cn').DepMap_ID)
+    prev[val] = prevmut[val] | prevrna[val] | prevcn[val]
+    prevwes[val] = prevmut[val] | prevcn[val]
+  prevmut["dmc"] = prevmut["dmc"] | prevmut["public"]
 
-    new["dmc"] = new["dmc"] | new["public"]
+  prevrna["dmc"] = prevrna["dmc"] | prevrna["public"]
+  prevcn["dmc"] = prevcn["dmc"] | prevcn["public"]
+  prev["dmc"] = prev["dmc"] | prev["public"]
+  prevwes["dmc"] = prevwes["dmc"] | prevwes["public"]
 
-    new["ibm"] = new["ibm"] | new["dmc"]
+  prevmut["ibm"] = prevmut["ibm"] | prevmut["dmc"]
+  prevrna["ibm"] = prevrna["ibm"] | prevrna["dmc"]
+  prevcn["ibm"] = prevcn["ibm"] | prevcn["dmc"]
+  prev["ibm"] = prev["ibm"] | prev["dmc"]
+  prevwes["ibm"] = prevwes["ibm"] | prevwes["dmc"]
 
-    new["internal"] = new["internal"] | new["ibm"]
+  prevmut["internal"] = prevmut["internal"] | prevmut["ibm"]
+  prevrna["internal"] = prevrna["internal"] | prevrna["ibm"]
+  prevcn["internal"] = prevcn["internal"] | prevcn["ibm"]
+  prev["internal"] = prev["internal"] | prev["ibm"]
+  prevwes["internal"] = prevwes["internal"] | prevwes["ibm"]
 
-    # getting what was released before
-    print("loading prev samples")
-    prevmut = {}
-    prevrna = {}
-    prevcn = {}
-    prevwes = {}
-    prev = {}
-    for val in ["internal", "dmc", "ibm", "public"]:
-        print(val)
-        prevmut[val] = set(
-            tc.get(name=prev_virtual[val], file="CCLE_mutations").DepMap_ID
-        )
-        prevrna[val] = set(tc.get(name=prev_virtual[val], file="CCLE_expression").index)
-        prevcn[val] = set(
-            tc.get(name=prev_virtual[val], file="CCLE_segment_cn").DepMap_ID
-        )
-        prev[val] = prevmut[val] | prevrna[val] | prevcn[val]
-        prevwes[val] = prevmut[val] | prevcn[val]
-    prevmut["dmc"] = prevmut["dmc"] | prevmut["public"]
+  print('in cn but not mut')
+  print(prevwes["internal"] - prevmut["internal"])
+  print('in mut but not cn')
+  print(prevwes["internal"] - prevcn["internal"])
+  print('in rna but no wes/wgs')
+  print(prev["internal"] - prevwes["internal"])
+  print('in wes/wgs but not rna')
+  print(prev["internal"] - prevrna["internal"])
 
-    prevrna["dmc"] = prevrna["dmc"] | prevrna["public"]
-    prevcn["dmc"] = prevcn["dmc"] | prevcn["public"]
-    prev["dmc"] = prev["dmc"] | prev["public"]
-    prevwes["dmc"] = prevwes["dmc"] | prevwes["public"]
+  if updateReadmes:
+    print('updating the readmes')
+    #managing the readmes
+    os.system('cd ../depmap-release-readmes && git pull - -no-commit')
+    os.system("cd ../depmap-release-readmes/ && python3 make_new_release.py "+release+
+      " && git add . && git commit -m "+release+" && git push ")
 
-    prevmut["ibm"] = prevmut["ibm"] | prevmut["dmc"]
-    prevrna["ibm"] = prevrna["ibm"] | prevrna["dmc"]
-    prevcn["ibm"] = prevcn["ibm"] | prevcn["dmc"]
-    prev["ibm"] = prev["ibm"] | prev["dmc"]
-    prevwes["ibm"] = prevwes["ibm"] | prevwes["dmc"]
+    #update the reamdes
+    folder = "../depmap-release-readmes/"+release
+    a = os.listdir(folder)
+    print(a)
+    for val in a:
+      with open(folder+val, 'r+') as file:
+        # The FullLoader parameter handles the conversion from YAML
+        # scalar values to Python the dictionary format
+        dict_file = yaml.load(file, Loader=yaml.FullLoader)
 
-    prevmut["internal"] = prevmut["internal"] | prevmut["ibm"]
-    prevrna["internal"] = prevrna["internal"] | prevrna["ibm"]
-    prevcn["internal"] = prevcn["internal"] | prevcn["ibm"]
-    prev["internal"] = prev["internal"] | prev["ibm"]
-    prevwes["internal"] = prevwes["internal"] | prevwes["ibm"]
-
-    print("in cn but not mut")
-    print(prevwes["internal"] - prevmut["internal"])
-    print("in mut but not cn")
-    print(prevwes["internal"] - prevcn["internal"])
-    print("in rna but no wes/wgs")
-    print(prev["internal"] - prevwes["internal"])
-    print("in wes/wgs but not rna")
-    print(prev["internal"] - prevrna["internal"])
-
-    if updateReadmes:
-        print("updating the readmes")
-        # managing the readmes
-        os.system("cd ../depmap-release-readmes && git pull - -no-commit")
-        os.system(
-            "cd ../depmap-release-readmes/ && python3 make_new_release.py "
-            + release
-            + " && git add . && git commit -m "
-            + release
-            + " && git push "
-        )
-
-        # update the reamdes
-        folder = "../depmap-release-readmes/" + release
-        a = os.listdir(folder)
-        print(a)
-        for val in a:
-            with open(folder + val, "r+") as file:
-                # The FullLoader parameter handles the conversion from YAML
-                # scalar values to Python the dictionary format
-                dict_file = yaml.load(file, Loader=yaml.FullLoader)
-
-                dict_file["extra_sections"][0]["description"] = changes
-                yaml.dump(dict_file, file)
-        # save the readmes
-        # and save them
-        os.system(
-            "cd ../depmap-release-readmes && cp release-"
-            + release
-            + "/* ../ccle_processing/readmes/ && git add . && git commit -m "
-            + '"Omics: updating readmes to new release" && git push'
-        )
-
-    # doing CN
-    segmentcn = pd.read_csv("temp/all_" + release + "_segment.csv")
-    if doCN:
-        genecn = pd.read_csv("temp/all_" + release + "_gene_cn.csv", index_col=0)
-        # virtual= {}
-
-    print("looking at dnaseq changes")
-    for val in onlyRelease:
-        print("_________________________________________________")
-        print(val)
-        print("removed")
-        removed = set(prevcn[val]) - set(segmentcn.DepMap_ID)
-        print(removed)
-        missing = set(new[val]) - set(segmentcn.DepMap_ID)
-        blacklist = set(segmentcn.DepMap_ID) - (prevcn[val] | set(new[val]))
-        print("missing")
-        print(missing)
-        newlines = set(new[val])
-        print("blacklist")
-        print(len(blacklist), blacklist)
-
-        INFO[val] = (
-            "# "
-            + val
-            + """ dataset:
+        dict_file['extra_sections'][0]['description'] = changes
+        yaml.dump(dict_file, file)
+    #save the readmes
+    # and save them
+    os.system('cd ../depmap-release-readmes && cp release-'+release+
+      '/* ../ccle_processing/readmes/ && git add . && git commit -m '+
+      '"Omics: updating readmes to new release" && git push')
+  
+  # doing CN 
+  segmentcn = pd.read_csv('temp/all_'+release+'_segment.csv')
+  if doCN:
+    genecn= pd.read_csv('temp/all_'+release+'_gene_cn.csv',index_col=0)
+    #virtual= {}
+  
+  print('looking at dnaseq changes')
+  for val in onlyRelease:
+    print('_________________________________________________')
+    print(val)
+    print('removed')
+    removed = set(prevcn[val]) - set(segmentcn.DepMap_ID)
+    print(removed)
+    missing = set(new[val]) - set(segmentcn.DepMap_ID)
+    blacklist = (set(segmentcn.DepMap_ID) - (prevcn[val] | set(new[val])))
+    print('missing')
+    print(missing)
+    newlines = set(new[val]) 
+    print('blacklist')
+    print(len(blacklist), blacklist)
+    
+    INFO[val] = "# " + val + """ dataset:
 
 ## DNAseq Omics:
 

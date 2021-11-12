@@ -111,12 +111,18 @@ def updatePairs(
 
 def setupPairsFromSamples(sampless, refsamples, extract):
     """
-    Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)
+  Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)
 
-    Returns:
-    -------
-        pairs that can be uploaded to the portal team
-    """
+  Args:
+  -----
+    sampless: pd.df samples to compute pairs for
+    refsamples: pd.df samples to match to
+    extract: str the name of the column to extract from the samples
+
+  Returns:
+  -------
+    pairs that can be uploaded to the portal team
+  """
     pairs = pd.DataFrame()
     normals = refsamples[refsamples[extract["primary_disease"]] == "normal"]
     pairs["control_sample"] = [
@@ -138,15 +144,15 @@ def setupPairsFromSamples(sampless, refsamples, extract):
 
 def updateAllSampleSet(workspace, Allsample_setname="all"):
     """
-    update the previous All Sample sample_set with the new samples that have been added.
+  update the previous All Sample sample_set with the new samples that have been added.
 
-    It is especially useful for the aggregate task. Can more generally merge two samplesets together
+  It is especially useful for the aggregate task. Can more generally merge two samplesets together
 
-    Args:
-    ----
-        workspace: str namespace/workspace from url typically
-        newsample_setname: str name of sampleset to add to All_samples
-    """
+  Args:
+  ----
+    workspace: str namespace/workspace from url typically
+    newsample_setname: str name of sampleset to add to All_samples
+  """
     dm.WorkspaceManager(workspace).update_sample_set(
         Allsample_setname, dm.WorkspaceManager(workspace).get_samples().index.tolist()
     )
@@ -191,18 +197,18 @@ def copyToWorkspace(
     group=50,
 ):
     """
-    will use the current sample tracker to update samples in the workspace
+  will use the current sample tracker to update samples in the workspace
 
-    it can remove samples that are not in the tracker.
+  it can remove samples that are not in the tracker.
 
-    Args:
-    ----
-        workspaceID: str the workspace id
-        tracker: dataframe the sample tracker
-        columns: list[str] the columns to sync
-        rename: dict(str:str) columns to rename from sample tracker to workspace
-        deleteUnmatched: bool whether or not to delete samples in the workspace and not in the sample tracker
-    """
+  Args:
+  ----
+    workspaceID: str the workspace id
+    tracker: dataframe the sample tracker
+    columns: list[str] the columns to sync
+    rename: dict(str:str) columns to rename from sample tracker to workspace
+    deleteUnmatched: bool whether or not to delete samples in the workspace and not in the sample tracker
+  """
     wm = dm.WorkspaceManager(workspaceID).disable_hound()
     sam = wm.get_samples()
     track = tracker[tracker.index.isin(sam.index)][columns].rename(columns=rename)
@@ -223,7 +229,25 @@ def copyToWorkspace(
         print("found these columns to be missing in workspace: " + str(unmatched))
         track = tracker[tracker.index.isin(unmatched)][columns].rename(columns=rename)
         track.index.name = "sample_id"
-        wm.upload_samples(track)
+        miss = set(columns) - set(sam.columns)
+        if len(track) == 0 and not addMissing:
+            raise ValueError("wrong tracker or index non matching")
+        unmatched = set(sam.index) - (set(tracker.index) | set(["nan"]))
+        if not addMissing:
+            print("found these to be unmatched in the tracker: " + str(unmatched))
+            if deleteUnmatched and len(unmatched) > 0:
+                terra.removeSamples(workspaceID, unmatched)
+        unmatched = set(tracker.index) - set(sam.index)
+        if len(track) != 0:
+            for i in range(0, len(track), group):
+                wm.update_sample_attributes(track.iloc[i : i + group])
+        if addMissing and len(unmatched) > 0:
+            print("found these columns to be missing in workspace: " + str(unmatched))
+            track = tracker[tracker.index.isin(unmatched)][columns].rename(
+                columns=rename
+            )
+            track.index.name = "sample_id"
+            wm.upload_samples(track)
 
 
 def updateReferences(wm, etype, attrs):

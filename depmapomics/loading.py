@@ -3,7 +3,6 @@
 # for BroadInsitute
 # in 2019
 
-
 ####
 #
 # HELPER FUNC  ######################################
@@ -23,93 +22,6 @@ from genepy.utils import helper as h
 from genepy.google import gcp
 
 #####################
-# Const Variables
-#####################
-
-# chromosome list
-CHROMLIST = [
-    "chr1",
-    "chr2",
-    "chr3",
-    "chr4",
-    "chr5",
-    "chr6",
-    "chr7",
-    "chr8",
-    "chr9",
-    "chr10",
-    "chr11",
-    "chr12",
-    "chr13",
-    "chr14",
-    "chr15",
-    "chr16",
-    "chr17",
-    "chr18",
-    "chr19",
-    "chr20",
-    "chr21",
-    "chr22",
-    "chrX",
-]
-
-# default values in the GP workspaces and our sample tracker (to change if you use another workspace/
-# sample tracker)
-extract_defaults = {
-    "name": "sample_alias",
-    "bai": "crai_or_bai_path",
-    "bam": "cram_or_bam_path",
-    "ref_bam": "legacy_bam_filepath",
-    "ref_type": "datatype",
-    "ref_bai": "legacy_bai_filepath",
-    "version": "version",
-    "primary_disease": "primary_disease",
-    "ref_arxspan_id": "arxspan_id",
-    "ref_name": "stripped_cell_line_name",
-    "source": "source",
-    "size": "size",
-    "legacy_size": "legacy_size",
-    "from_arxspan_id": "individual_alias",
-    "ref_id": "sample_id",
-    "PDO_id": "PDO",
-    "update_time": "update_time",
-    "from_patient_id": "individual_alias",
-    "patient_id": "participant_id",
-    "ref_date": "date_sequenced",
-    "hs_hs_library_size": "hs_hs_library_size",
-    "hs_het_snp_sensitivity": "hs_het_snp_sensitivity",
-    "hs_mean_bait_coverage": "hs_mean_bait_coverage",
-    "hs_mean_target_coverage": "hs_mean_target_coverage",
-    "hs_on_target_bases": "hs_on_target_bases",
-    "total_reads": "total_reads",
-    "release_date": "sequencing_date",
-    "hash": "crc32c_hash",
-    "legacy_hash": "legacy_crc32c_hash",
-    "mean_depth": "mean_depth",
-}
-
-# minimum bam file size in bytes for each sequencing type
-MINSIZES = {
-    "rna": 2000000000,
-    "wes": 3000000000,
-    "wgs": 50000000000,
-}
-
-# known cell lines that are from the same patient
-samepatient = [
-    ["ACH-000635", "ACH-000717", "ACH-000864", "ACH-001042", "ACH-001547"],
-    ["ACH-002291", "ACH-001672"],
-    ["ACH-001706", "ACH-001707"],
-]
-
-# known duplicate arxspan-ids
-dup = {"ACH-001620": "ACH-001605", "ACH-001621": "ACH-001606"}
-
-# rename ccle_name TODO: ask becky what to do
-rename = {"PEDS117": "CCLFPEDS0009T"}
-
-
-#####################
 # Loading Functions
 #####################
 
@@ -123,7 +35,7 @@ def GetNewCellLinesFromWorkspaces(
     addonly=[],
     match="ACH",
     extract={},
-    extract_defaults=extract_defaults,
+    extract_defaults=EXTRACT_DEFAULTS,
     wto=None,
     refsamples=None,
     participantslicepos=10,
@@ -311,7 +223,7 @@ def GetNewCellLinesFromWorkspaces(
 
     if len(sampless) == 0:
         print("no new data available")
-        return sampless, pd.DataFrame()
+        return sampless, None, pd.DataFrame()
 
     sampless = assessAllSamples(sampless, refsamples, stype, rename, extract)
     # creating pairs
@@ -561,6 +473,7 @@ def mapSamples(samples, source, extract={}):
             extract["legacy_size"],
             extract["PDO_id"],
             extract["update_time"],
+            extract["source"],
         ]
     ]
     return samples
@@ -910,6 +823,7 @@ def load(
     refsheet_url=REFSHEET_URL,
     depmappvlink=DEPMAP_PV,
     extract_to_change=EXTRACT_TO_CHANGE,
+    extract_defaults=EXTRACT_DEFAULTS,
     # version 102
     match=MATCH,
     pv_tokeep=["Culture Type", "Culture Medium"],
@@ -999,6 +913,9 @@ def load(
         h.inttodate(i) for i in samples[extract_defaults["release_date"]]
     ]
 
+    if os.path.isdir("temp/") == False:
+        os.makedirs("temp/")
+
     if len(noarxspan) > 0:
         print("we found " + str(len(noarxspan)) + " samples without arxspan_ids!!")
         noarxspan = noarxspan.sort_values(by="stripped_cell_line_name")
@@ -1085,6 +1002,7 @@ def updateWES(
     stype="wes",
     baits="ICE",
     extract={},
+    extract_defaults=EXTRACT_DEFAULTS,
     creds=SHEETCREDS,
     sampletrackername=SHEETNAME,
     refsheet_url=REFSHEET_URL,
@@ -1280,14 +1198,25 @@ def update(
     ccle_refsamples = ccle_refsamples.append(samples, sort=False)
     dfToSheet(ccle_refsamples, sampletrackername, secret=creds)
 
-    # uploading new samples to mut
+    # uploading new samples
+    samples.index.name = "sample_id"
     refwm = dm.WorkspaceManager(refworkspace).disable_hound()
     refwm.upload_samples(samples)
-    sam = refwm.get_samples()
 
     # creating a sample set
     refwm.update_sample_set(sample_set_id=samplesetname, sample_ids=samples.index)
+
     refwm.update_sample_set(
-        sample_set_id="all", sample_ids=[i for i in sam.index.tolist() if i != "nan"]
+        sample_set_id="all",
+        sample_ids=[i for i in refwm.get_samples().index.tolist() if i != "nan"],
     )
+
+    # add new samples to additional sample_sets
+    for sname in add_to_samplesets:
+        samples_in_sname = refwm.get_sample_sets().loc[sname, "samples"]
+        new_samples = refwm.get_sample_sets().loc[samplesetname, "samples"]
+
+        refwm.update_sample_set(
+            sample_set_id=sname, sample_ids=list(set(samples_in_sname + new_samples))
+        )
 

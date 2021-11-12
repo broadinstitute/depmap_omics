@@ -5,9 +5,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import zscore
 
-from genepy.google import gcp
 from genepy.utils import helper as h
-from genepy.google.google_sheet import dfToSheet
 from genepy import rna, terra
 
 from depmapomics import terra as myterra
@@ -24,8 +22,8 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
 
     Args:
     ----
-    input_filenames: a list of dict like file path in Terra gs://, outputs from the rsem pipeline
-    main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
+        input_filenames: a list of dict like file path in Terra gs://, outputs from the rsem pipeline
+        main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
     """
     genes_count = pd.read_csv(
         "temp/" + main_filename["rsem_genes_expected_count"].split("/")[-1],
@@ -117,19 +115,20 @@ def solveQC(tracker, failed, save="", newname="arxspan_id"):
 
 
 def updateTracker(
-    refworkspace,
     selected,
     failed,
     lowqual,
     tracker,
     samplesetname,
+    refworkspace=RNAWORKSPACE,
     sheetname=SHEETNAME,
     sheetcreds=SHEETCREDS,
     onlycol=STARBAMCOLTERRA,
-    newgs=RNAGSPATH38,
+    newgs=RNA_GCS_PATH_HG38,
     dry_run=False,
     qcname="star_logs",
     match=".Log.final.out",
+    todrop=[],
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -142,10 +141,10 @@ def updateTracker(
         newgs (str, optional): google storage path where to move the files. Defaults to ''.
         sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
         sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
-        procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
-        bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
+        qcname (str, optional): Terra column containing QC files. Defaults to "star_logs".
         refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-        onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+        onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
+        todrop (list, optional): list of samples to be dropped. Defaults to []
     """
     refwm = dm.WorkspaceManager(refworkspace)
     samplesinset = [
@@ -171,11 +170,12 @@ def updateTracker(
         failed,
         lowqual,
         newgs,
-        sheetname,
         sheetcreds,
+        sheetname,
         refworkspace,
         onlycol,
         dry_run,
+        todrop=todrop,
     )
 
 
@@ -190,7 +190,7 @@ def loadFromRSEMaggregate(
         filenames (list[str], optional): the filenames to load. Defaults to RSEMFILENAME.
         sampleset (str, optional): the sample set to load. Defaults to 'all'.
         renamingFunc (function, optional): the function to rename the samples 
-            (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
+        (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
     
     Returns:
         dict(str: pd.df): the loaded dataframes
@@ -284,9 +284,9 @@ def extractProtCod(
     Args:
         files (dict(str: pd.dfs)): the rsem transcripts dfs to subset samples x genes
         mybiomart (pd.df): the biomart dataframe should contain the following columns: 
-            'ensembl_gene_id', 'entrezgene_id', 'gene_biotype'
+        'ensembl_gene_id', 'entrezgene_id', 'gene_biotype'
         protcod_rename (dict(str, str)): the protein coding gene renaming dict 
-            (here we expect a dict of ensembl transcript ids: gene names)
+        (here we expect a dict of ensembl transcript ids: gene names)
         filenames (list[str], optional): the dict dfs to look at. Defaults to RSEMFILENAME_GENE.
         rep (tuple, optional): how to rename the protein gene subseted df copies in the dict. Defaults to ('genes', 'proteincoding_genes').
 
@@ -320,20 +320,21 @@ def extractProtCod(
                 a = files[name].loc[dup].sum()
                 files[name].drop(index=dup)
                 files[name].loc[dup] = a
+        files[name] = files[name].T
 
     return files
 
 
-def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
+async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     """the way we run ssGSEA on the CCLE dataset
 
-    Args:
-        tpm_genes (pd.df): the tpm genes dataframe
-        geneset_file (str, optional): the path to the geneset file. Defaults to SSGSEAFILEPATH.
+  Args:
+    tpm_genes (pd.df): the tpm genes dataframe
+    geneset_file (str, optional): the path to the geneset file. Defaults to SSGSEAFILEPATH.
 
-    Returns:
-        pd.df: the ssGSEA results
-    """
+  Returns:
+    pd.df: the ssGSEA results
+  """
     tpm_genes = tpm_genes.copy()
     tpm_genes.columns = [i.split(" (")[0] for i in tpm_genes.columns]
 
@@ -357,7 +358,7 @@ def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     # counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
     enrichments = (
-        rna.gsva(
+        await rna.gsva(
             tpm_genes.T, geneset_file=geneset_file, method="ssgsea", recompute=recompute
         )
     ).T
@@ -418,15 +419,15 @@ async def postProcess(
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
         geneLevelCols (list, optional): the columns that contain the gene level 
-            expression data in the workspace. Defaults to RSEMFILENAME_GENE.
+        expression data in the workspace. Defaults to RSEMFILENAME_GENE.
         trancriptLevelCols (list, optional): the columns that contain the transcript 
-            level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
+        level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         renamingFunc (function, optional): the function to use to rename the sample columns
-            (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
+        (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
         dropNonMatching (bool, optional): whether to drop the non matching genes 
-            between entrez and ensembl. Defaults to False.
+        between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
     """
     if not samplesetToLoad:
@@ -521,11 +522,6 @@ async def postProcess(
         )
         # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
     if len(trancriptLevelCols) > 0:
-        import pickle
-
-        pickle.dump(
-            [files, gene_rename, trancriptLevelCols], open("transcript.pkl", "wb")
-        )
         files = subsetGenes(
             files,
             gene_rename,
@@ -542,7 +538,14 @@ async def postProcess(
     saveFiles(files, save_output)
     print("done")
 
-    return files, enrichments, failed, samplesinset, renaming, lowqual
+    return (
+        files,
+        failed,
+        samplesinset,
+        renaming,
+        lowqual,
+        enrichments if compute_enrichment else None,
+    )
 
 
 async def _CCLEPostProcessing(
@@ -586,22 +589,22 @@ async def _CCLEPostProcessing(
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
         geneLevelCols (list, optional): the columns that contain the gene level 
-            expression data in the workspace. Defaults to RSEMFILENAME_GENE.
+        expression data in the workspace. Defaults to RSEMFILENAME_GENE.
         trancriptLevelCols (list, optional): the columns that contain the transcript 
-            level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
+        level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         renamingFunc (function, optional): the function to use to rename the sample columns
-            (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
+        (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
         dropNonMatching (bool, optional): whether to drop the non matching genes 
-            between entrez and ensembl. Defaults to False.
+        between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
         prevcounts (str, optional): the previous counts to use to QC the data for the release. Defaults to 'ccle'.
         taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
         minsimi (float, optional): the minimum similarity to use for comparison to previous dataset. Defaults to 0.95.
         dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
         sheetname (str, optional): the sheet name to use for updating the sample tracker 
-            (should be an actual google spreadsheet). Defaults to SHEETNAME.
+        (should be an actual google spreadsheet). Defaults to SHEETNAME.
         sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
         refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
         tocompare (dict, optional): the columns to compare. Defaults to {"genes_expected_count": "CCLE_RNAseq_reads", "genes_tpm": "CCLE_expression_full", "proteincoding_genes_tpm": "CCLE_expression"}.
@@ -612,7 +615,7 @@ async def _CCLEPostProcessing(
 
     tc = TaigaClient()
 
-    if prevcounts is "ccle":
+    if prevcounts == "ccle":
         prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
 
     sheets = Sheets.from_files(my_id, mystorage_id)
@@ -636,7 +639,7 @@ async def _CCLEPostProcessing(
 
     folder = os.path.join("temp", samplesetname, "")
     h.createFoldersFor(folder)
-    files, _, failed, _, renaming, lowqual = await postProcess(
+    files, failed, _, renaming, lowqual, _ = await postProcess(
         refworkspace,
         samplesetname,
         save_output=folder,
@@ -647,7 +650,7 @@ async def _CCLEPostProcessing(
         todrop=todrop,
         samplesetToLoad=samplesetToLoad,
         geneLevelCols=RSEMFILENAME_GENE,
-        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
+        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,  # compute_enrichment=False,
         ssGSEAcol="genes_tpm",
         renamingFunc=rn,
         dropNonMatching=dropNonMatching,
@@ -691,21 +694,23 @@ async def _CCLEPostProcessing(
             files[key], tc.get(name=TAIGA_ETERNAL, file=val)
         )
         print(key)
-        assert omissmatchCols == 0
-        assert omissmatchInds == 0
+        assert len(omissmatchCols) == 0
+        assert len(omissmatchInds) == 0
         assert newNAs == 0
-        assert new0s == 0
+        print("New 0s: ", new0s)
 
     print("updating the tracker")
+
     updateTracker(
-        refworkspace,
         set(renaming.keys()) - set(["transcript_id(s)"]),
         failed,
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
         samplesetname,
+        refworkspace,
         sheetname=sheetname,
         sheetcreds=sheetcreds,
+        todrop=todrop,
     )
 
     print("uploading to taiga")

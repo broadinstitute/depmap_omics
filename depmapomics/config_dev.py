@@ -27,36 +27,71 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID = "DepMap_ID"
 
-SAMPLESETNAME = "21Q3"
+SAMPLESETNAME = "21Q4"
 
 isCCLE = True
 
 doCleanup = True
 
 LINES_TO_RELEASE = [
-    "ACH-000023",
     "ACH-000145",
-    "ACH-000205",
-    "ACH-000345",
     "ACH-000359",
-    "ACH-000399",
-    "ACH-000409",
-    "ACH-000515",
-    "ACH-000664",
-    "ACH-000744",
-    "ACH-000992",
-    "ACH-001032",
-    "ACH-001373",
+    "ACH-000532",
+    "ACH-000871",
+    "ACH-001350",
     "ACH-001393",
-    "ACH-001410",
     "ACH-001558",
-    "ACH-001679",
-    "ACH-001696",
-    "ACH-002022",
-    "ACH-002060",
-    "ACH-002659",
-    "ACH-002687",
-    "ACH-002707",
+    "ACH-001662",
+    "ACH-001683",
+    "ACH-001695",
+    "ACH-001986",
+    "ACH-001990",
+    "ACH-002020",
+    "ACH-002035",
+    "ACH-002040",
+    "ACH-002043",
+    "ACH-002050",
+    "ACH-002051",
+    "ACH-002052",
+    "ACH-002077",
+    "ACH-002214",
+    "ACH-002215",
+    "ACH-002291",
+    "ACH-002345",
+    "ACH-002478",
+    "ACH-002486",
+    "ACH-002490",
+    "ACH-002516",
+    "ACH-002523",
+    "ACH-002529",
+    "ACH-002530",
+    "ACH-002531",
+    "ACH-002533",
+    "ACH-002535",
+    "ACH-002538",
+    "ACH-002544",
+    "ACH-002647",
+    "ACH-002650",
+    "ACH-002660",
+    "ACH-002662",
+    "ACH-002664",
+    "ACH-002669",
+    "ACH-002672",
+    "ACH-002677",
+    "ACH-002680",
+    "ACH-002681",
+    "ACH-002693",
+    "ACH-002695",
+    "ACH-002705",
+    "ACH-002706",
+    "ACH-002708",
+    "ACH-002710",
+    "ACH-002782",
+    "ACH-002785",
+    "ACH-002799",
+    "ACH-002834",
+    "ACH-002847",
+    "ACH-002926",
 ]
 
 VIRTUAL = {
@@ -98,7 +133,7 @@ TAIGA_CN = "cn-latest-8bea"
 TAIGA_EXPRESSION = "expression-869e"
 TAIGA_FUSION = "fusions-64c4"
 TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
-TAIGA_LEGACY_CN = "depmap-wes-cn-data--08f3"
+TAIGA_LEGACY_CN = "copy-number-5f61"
 
 
 datasets = ["internal", "ibm", "dmc", "public"]
@@ -149,6 +184,90 @@ filetypes = ["bam", "bai"]
 
 MATCH = ["ACH-", "CDS-"]
 
+# chromosome list
+CHROMLIST = [
+    "chr1",
+    "chr2",
+    "chr3",
+    "chr4",
+    "chr5",
+    "chr6",
+    "chr7",
+    "chr8",
+    "chr9",
+    "chr10",
+    "chr11",
+    "chr12",
+    "chr13",
+    "chr14",
+    "chr15",
+    "chr16",
+    "chr17",
+    "chr18",
+    "chr19",
+    "chr20",
+    "chr21",
+    "chr22",
+    "chrX",
+]
+
+# default values in the GP workspaces and our sample tracker (to change if you use another workspace/
+# sample tracker)
+EXTRACT_DEFAULTS = {
+    "name": "sample_alias",
+    "bai": "crai_or_bai_path",
+    "bam": "cram_or_bam_path",
+    "ref_bam": "legacy_bam_filepath",
+    "ref_type": "datatype",
+    "ref_bai": "legacy_bai_filepath",
+    "version": "version",
+    "primary_disease": "primary_disease",
+    "ref_arxspan_id": "arxspan_id",
+    "ref_name": "stripped_cell_line_name",
+    "source": "source",
+    "size": "size",
+    "legacy_size": "legacy_size",
+    "from_arxspan_id": "individual_alias",
+    "ref_id": "sample_id",
+    "PDO_id": "PDO",
+    "update_time": "update_time",
+    "from_patient_id": "individual_alias",
+    "patient_id": "participant_id",
+    "ref_date": "date_sequenced",
+    "hs_hs_library_size": "hs_hs_library_size",
+    "hs_het_snp_sensitivity": "hs_het_snp_sensitivity",
+    "hs_mean_bait_coverage": "hs_mean_bait_coverage",
+    "hs_mean_target_coverage": "hs_mean_target_coverage",
+    "hs_on_target_bases": "hs_on_target_bases",
+    "total_reads": "total_reads",
+    "release_date": "sequencing_date",
+    "hash": "crc32c_hash",
+    "legacy_hash": "legacy_crc32c_hash",
+    "mean_depth": "mean_depth",
+}
+
+# minimum bam file size in bytes for each sequencing type
+MINSIZES = {
+    "rna": 2000000000,
+    "wes": 3000000000,
+    "wgs": 50000000000,
+}
+
+# known cell lines that are from the same patient (not called?)
+# samepatient = [
+#     ["ACH-000635", "ACH-000717", "ACH-000864", "ACH-001042", "ACH-001547"],
+#     ["ACH-002291", "ACH-001672"],
+#     ["ACH-001706", "ACH-001707"],
+# ]
+
+# known duplicate arxspan-ids
+DUP_ARXSPANS = {"ACH-001620": "ACH-001605", "ACH-001621": "ACH-001606"}
+
+# rename ccle_name TODO: ask becky what to do
+# (not called?)
+# rename = {"PEDS117": "CCLFPEDS0009T"}
+
+
 ## old GP storage buckets
 # rnaworkspace2 = "broad-firecloud-ccle/CCLE_DepMap_RNAseq"
 # rnaworkspace4 = "broad-genomics-delivery/Cancer_Cell_Line_Factory_CCLF_RNAseq"
@@ -167,8 +286,8 @@ rnaworkspace7 = "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData"
 # rnasource4 = "cclf"
 # rnasource5 = "cclf"
 
-rnasource6 = "ccle"
-rnasource7 = "ibm"
+rnasource6 = "DEPMAP"
+rnasource7 = "IBM"
 
 ## our working workspace (reference)
 RNAWORKSPACE = "broad-firecloud-ccle/DEV_DepMap_hg38_RNAseq"
@@ -178,8 +297,8 @@ wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
 wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
 
 ## and their corresponding sample source
-wgssource1 = "ccle"
-wgssource2 = "ibm"
+wgssource1 = "DEPMAP"
+wgssource2 = "IBM"
 
 WGSWORKSPACE = "broad-firecloud-ccle/DEV_DepMap_WGS_CN"
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
@@ -395,10 +514,12 @@ FUSION_RED_HERRING = [
 
 BAM_GCS_BUCKET = "gs://cclebams-sandbox"
 
-RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
+RNA_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
 RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
 WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
 WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
+WGS_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/wgs_hg38/"
+
 
 STARBAMCOLTERRA = ["internal_bam_filepath", "internal_bai_filepath"]
 

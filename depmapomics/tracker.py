@@ -6,6 +6,8 @@ from gsheets import Sheets
 from depmapomics.config import *
 from genepy import terra
 from genepy.google import gcp
+from genepy.google.google_sheet import dfToSheet
+import dalmatian as dm
 
 
 def getTracker():
@@ -74,7 +76,18 @@ def findIssue(
     ],
 ):
     """
+    findIssue looks at a couple metrics:
 
+    'things that are from the same patient but don\'t have the same value'
+    'things that have duplicate versions'
+    'things that don\'t have their legacy bam file'
+    'things that don\'t have their bam file path'
+
+    Args:
+        tracker (pandas.DataFrame): the tracker
+        dup (list, optional): the list of columns to check for duplicates. 
+        Defaults to ['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
+        'subtype', 'origin', 'stripped_cell_line_name']
     """
     print("things that are from the same patient but don't have the same value")
     dup = tracker[dup].set_index("arxspan_id").drop_duplicates()
@@ -163,9 +176,10 @@ def updateFromTracker(
     # doing so..
     for k, v in toupdate.items():
         samples.loc[index, k] = v
-    len(samples.loc[notfound][participant_id]), samples.loc[notfound][
-        participant_id
-    ].tolist()
+    # Commented out the following because it has no effect
+    # len(samples.loc[notfound][participant_id]), samples.loc[notfound][
+    #    participant_id
+    # ].tolist()
     return samples, notfound
 
 
@@ -697,14 +711,16 @@ def update(
     tracker,
     selected,
     samplesetname,
-    samplesinset,
+    failed,
     lowqual,
     newgs="",
     sheetcreds=SHEETCREDS,
     sheetname=SHEETNAME,
     refworkspace=None,
-    onlycol=["internal_bam_filepath", "internal_bai_filepath"],
+    bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=True,
+    samplesinset=[],
+    todrop=[],
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -718,44 +734,54 @@ def update(
         sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
         sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
         refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-        onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+        bamfilepaths (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
     """
     # updating locations of bam files and extracting infos
     if newgs and refworkspace is not None:
+        if not samplesinset:
+            samplesinset = [
+                i["entityName"]
+                for i in dm.WorkspaceManager(refworkspace)
+                .get_entities("sample_set")
+                .loc[samplesetname]
+                .samples
+            ]
         res, _ = terra.changeGSlocation(
             refworkspace,
             newgs=newgs,
-            onlycol=onlycol,
+            onlycol=bamfilepaths,
             entity="sample",
             keeppath=False,
             dry_run=dry_run,
             onlysamples=samplesinset,
+            workspaceto=refworkspace,
         )
         tracker.loc[res.index.tolist()][
             ["legacy_size", "legacy_crc32c_hash"]
         ] = tracker.loc[res.index.tolist()][["size", "crc32c_hash"]].values
-        tracker.loc[res.index.tolist()][HG38BAMCOL] = res[onlycol[:2]].values
+        tracker.loc[res.index.tolist(), HG38BAMCOL] = res[bamfilepaths[:2]].values
         tracker.loc[res.index.tolist(), "size"] = [
-            gcp.extractSize(i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), "-l")
+            gcp.extractSize(i)[1]
+            for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-l")
         ]
         tracker.loc[res.index.tolist(), "crc32c_hash"] = [
-            gcp.extractHash(i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), "-L")
+            gcp.extractHash(i) for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
         ]
-        tracker.loc[res.index.tolist(), "md5_hash"] = gcp.catFiles(
-            dm.WorkspaceManager(refworkspace)
-            .get_samples()
-            .loc[samplesinset, "analysis_ready_bam_md5"]
-            .tolist(),
-            cut=32,
-        )
+        tracker.loc[res.index.tolist(), "md5_hash"] = [
+            gcp.extractHash(i, typ="md5")
+            for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
+        ]
 
-    len(selected)
     tracker.loc[selected, samplesetname] = 1
     tracker.loc[samplesinset, ["low_quality", "blacklist", "prioritized"]] = 0
     tracker.loc[lowqual, "low_quality"] = 1
-    tracker.loc[lowqual, "blacklist"] = 1
+    failed_not_dropped = list(set(failed) - set(todrop))
+    # print(todrop)
+    tracker.loc[failed_not_dropped, "blacklist"] = 1
     if dry_run:
         return tracker
     else:
         dfToSheet(tracker, sheetname, secret=sheetcreds)
     print("updated the sheet, please reactivate protections")
+    return None
+
