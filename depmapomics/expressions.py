@@ -328,13 +328,14 @@ def extractProtCod(
 async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     """the way we run ssGSEA on the CCLE dataset
 
-  Args:
-    tpm_genes (pd.df): the tpm genes dataframe
-    geneset_file (str, optional): the path to the geneset file. Defaults to SSGSEAFILEPATH.
+    Args:
+        tpm_genes (pd.df): the tpm genes dataframe
+        geneset_file (str, optional): the path to the geneset file. Defaults to SSGSEAFILEPATH.
 
-  Returns:
-    pd.df: the ssGSEA results
-  """
+    Returns:
+        pd.df: the ssGSEA results
+    """
+
     tpm_genes = tpm_genes.copy()
     tpm_genes.columns = [i.split(" (")[0] for i in tpm_genes.columns]
 

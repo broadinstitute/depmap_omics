@@ -235,14 +235,17 @@ NEW LINES:
 """
             + str(newlines)
             + """
+
 BLACKLIST:
 """
             + str(blacklist)
             + """
+
 MISSING:
 """
             + str(missing)
             + """
+
 REMOVED:
 """
             + str(removed)
@@ -450,23 +453,28 @@ REMOVED:
 
         INFO[val] += (
             """
+
 ## RNAseq Omics:
 NEW LINES:
 """
             + str(newlines)
             + """
+
 BLACKLIST:
 """
             + str(blacklist)
             + """
+
 MISSING:
 """
             + str(missing)
             + """
+
 REMOVED:
 """
             + str(removed)
             + """
+
 REMOVED FOR QC REASONS:
 """
             + str(rnafailed)
@@ -633,3 +641,4 @@ REMOVED FOR QC REASONS:
     )
 
     print("think of cleanning your temp/ folder once the release is fully validated...")
+

@@ -29,7 +29,7 @@ def _getDEPMAPPV(pv_index="arxspan_id", pv_tokeep=[], index="DepMap_ID"):
         pv_index (str, optional): [description]. Defaults to "arxspan_id".
         pv_tokeep (list, optional): [description]. Defaults to [].
         index (str, optional): [description]. Defaults to "DepMap_ID".
-
+ 
     Returns:
         (pandas.DataFrame): the DEPMAP master spreadsheet
     """
@@ -316,10 +316,11 @@ def changeCellLineNameInNew(
     """
     Rename a/some line in a DF and takes care of corresponding metadata and versions from the sample tracker
 
+    !!!! DOES NOT YET WORK !!!! version compute is wrong
     Args:
     -----
-        new: change the cell line name in this dataframe
-        dupdict: dict(tochange,newname)
+        new: change the cell line name in this dataframe 
+        dupdict: dict(tochange,newname) (arxspan_id:arxspan_id)
         datatype: str for a ref with many datatype (to get the right version number)
 
     Returns:
@@ -361,7 +362,7 @@ def changeCellLineName(
 
     Args:
     -----
-        dupdict: dict(tochange,newname)
+        dupdict: dict(tochange,newname): the dict of the new name for the cell line: cds-id: arxspan_id
         datatype: str for a tracker with many datatype (to get the right version number)
 
     Returns:
