@@ -3,8 +3,8 @@ import os
 
 def fileToList(filename):
     """
-  loads an input file with a\\n b\\n.. into a list [a,b,..]
-  """
+    loads an input file with a\\n b\\n.. into a list [a,b,..]
+    """
     with open(filename) as f:
         return [val[:-1] for val in f.readlines()]
 
