@@ -1153,6 +1153,7 @@ def update(
     creds=SHEETCREDS,
     sampletrackername=SHEETNAME,
     refsheet_url=REFSHEET_URL,
+    add_to_samplesets=[],
 ):
     """update the samples on a depmapomics terra processing workspace
 
