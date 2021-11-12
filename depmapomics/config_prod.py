@@ -9,7 +9,7 @@ ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
 SAMPLEID = "DepMap_ID"
 
-SAMPLESETNAME = "21Q3"
+SAMPLESETNAME = "21Q4"
 
 isCCLE = True
 
@@ -21,9 +21,10 @@ GCS_PAYER_PROJECT = "broad-firecloud-ccle"
 
 BAM_GCS_BUCKET = "gs://cclebams"
 
-RNAGSPATH38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
+RNA_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
 RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
 WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
+WGS_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/wgs_hg38/"
 WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
 
 ### google sheet specific
@@ -44,12 +45,12 @@ TAIGA_ETERNAL = "depmap-a0ab"
 
 DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
-VIRTUAL = {
-    "internal": "internal-21q3-fe4c",
-    "ibm": "ibm-21q3-179f",
-    "dmc": "dmc-21q3-482c",
-    "public": "public-21q3-bf1e",
-}
+# VIRTUAL = {
+#   'internal': 'internal-21q3-fe4c',
+#   'ibm': 'ibm-21q3-179f',
+#   'dmc': 'dmc-21q3-482c',
+#   'public': 'public-21q3-bf1e',
+#   }
 
 PREV_VIRTUAL = {}
 
@@ -73,21 +74,28 @@ PREV_VIRTUAL = {}
 # PREV_VIRTUAL['internal'] = 'internal-21q1-4fc4'
 
 # 21Q2
-PREV_VIRTUAL["public"] = "public-21q2-110d"
-PREV_VIRTUAL["ibm"] = "ibm-21q2-9ed1"
-PREV_VIRTUAL["dmc"] = "dmc-21q2-27e1"
-PREV_VIRTUAL["internal"] = "internal-21q2-9d16"
+# PREV_VIRTUAL['public'] = 'public-21q2-110d'
+# PREV_VIRTUAL['ibm'] = 'ibm-21q2-9ed1'
+# PREV_VIRTUAL['dmc'] = 'dmc-21q2-27e1'
+# PREV_VIRTUAL['internal'] = 'internal-21q2-9d16'
+
+# 21Q3
+PREV_VIRTUAL["public"] = "public-21q3-bf1e"
+PREV_VIRTUAL["ibm"] = "ibm-21q3-179f"
+PREV_VIRTUAL["dmc"] = "dmc-21q3-482c"
+PREV_VIRTUAL["internal"] = "internal-21q3-fe4c"
 
 TAIGA_MUTATION = "mutations-latest-ed72"
 
 TAIGA_CN = "cn-latest-d8d4"
-
+TAIGA_CN_ACHILLES = "cn-achilles-version-06ca"
 TAIGA_EXPRESSION = "expression-d035"
 TAIGA_FUSION = "fusions-95c9"
+TAIGA_LEGACY_CN = "copy-number-5f61"
 
 datasets = ["internal", "ibm", "dmc", "public"]
 
-VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
+FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
 ## RUN SPECIFIC
 
@@ -135,6 +143,89 @@ filetypes = ["bam", "bai"]
 
 MATCH = ["ACH-", "CDS-"]
 
+# chromosome list
+CHROMLIST = [
+    "chr1",
+    "chr2",
+    "chr3",
+    "chr4",
+    "chr5",
+    "chr6",
+    "chr7",
+    "chr8",
+    "chr9",
+    "chr10",
+    "chr11",
+    "chr12",
+    "chr13",
+    "chr14",
+    "chr15",
+    "chr16",
+    "chr17",
+    "chr18",
+    "chr19",
+    "chr20",
+    "chr21",
+    "chr22",
+    "chrX",
+]
+
+# default values in the GP workspaces and our sample tracker (to change if you use another workspace/
+# sample tracker)
+EXTRACT_DEFAULTS = {
+    "name": "sample_alias",
+    "bai": "crai_or_bai_path",
+    "bam": "cram_or_bam_path",
+    "ref_bam": "legacy_bam_filepath",
+    "ref_type": "datatype",
+    "ref_bai": "legacy_bai_filepath",
+    "version": "version",
+    "primary_disease": "primary_disease",
+    "ref_arxspan_id": "arxspan_id",
+    "ref_name": "stripped_cell_line_name",
+    "source": "source",
+    "size": "size",
+    "legacy_size": "legacy_size",
+    "from_arxspan_id": "individual_alias",
+    "ref_id": "sample_id",
+    "PDO_id": "PDO",
+    "update_time": "update_time",
+    "from_patient_id": "individual_alias",
+    "patient_id": "participant_id",
+    "ref_date": "date_sequenced",
+    "hs_hs_library_size": "hs_hs_library_size",
+    "hs_het_snp_sensitivity": "hs_het_snp_sensitivity",
+    "hs_mean_bait_coverage": "hs_mean_bait_coverage",
+    "hs_mean_target_coverage": "hs_mean_target_coverage",
+    "hs_on_target_bases": "hs_on_target_bases",
+    "total_reads": "total_reads",
+    "release_date": "sequencing_date",
+    "hash": "crc32c_hash",
+    "legacy_hash": "legacy_crc32c_hash",
+    "mean_depth": "mean_depth",
+}
+
+# minimum bam file size in bytes for each sequencing type
+MINSIZES = {
+    "rna": 2000000000,
+    "wes": 3000000000,
+    "wgs": 50000000000,
+}
+
+# known cell lines that are from the same patient (not called?)
+# samepatient = [
+#     ["ACH-000635", "ACH-000717", "ACH-000864", "ACH-001042", "ACH-001547"],
+#     ["ACH-002291", "ACH-001672"],
+#     ["ACH-001706", "ACH-001707"],
+# ]
+
+# known duplicate arxspan-ids
+DUP_ARXSPANS = {"ACH-001620": "ACH-001605", "ACH-001621": "ACH-001606"}
+
+# rename ccle_name TODO: ask becky what to do
+# (not called?)
+# rename = {"PEDS117": "CCLFPEDS0009T"}
+
 ## old GP storage buckets
 # rnaworkspace2 = "broad-firecloud-ccle/CCLE_DepMap_RNAseq"
 # rnaworkspace4 = "broad-genomics-delivery/Cancer_Cell_Line_Factory_CCLF_RNAseq"
@@ -153,8 +244,8 @@ rnaworkspace7 = "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData"
 # rnasource4 = "cclf"
 # rnasource5 = "cclf"
 
-rnasource6 = "ccle"
-rnasource7 = "ibm"
+rnasource6 = "DEPMAP"
+rnasource7 = "IBM"
 
 ## our working workspace (reference)
 RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
@@ -164,8 +255,8 @@ wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
 wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
 
 ## and their corresponding sample source
-wgssource1 = "ccle"
-wgssource2 = "ibm"
+wgssource1 = "DEPMAP"
+wgssource2 = "IBM"
 
 WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
@@ -187,29 +278,64 @@ TAIGA_FP_FILENAME = "fingerprint_lod_matrix"
 
 
 LINES_TO_RELEASE = [
-    "ACH-000023",
     "ACH-000145",
-    "ACH-000205",
-    "ACH-000345",
     "ACH-000359",
-    "ACH-000399",
-    "ACH-000409",
-    "ACH-000515",
-    "ACH-000664",
-    "ACH-000744",
-    "ACH-000992",
-    "ACH-001032",
-    "ACH-001373",
+    "ACH-000532",
+    "ACH-000871",
+    "ACH-001350",
     "ACH-001393",
-    "ACH-001410",
     "ACH-001558",
-    "ACH-001679",
-    "ACH-001696",
-    "ACH-002022",
-    "ACH-002060",
-    "ACH-002659",
-    "ACH-002687",
-    "ACH-002707",
+    "ACH-001662",
+    "ACH-001683",
+    "ACH-001695",
+    "ACH-001986",
+    "ACH-001990",
+    "ACH-002020",
+    "ACH-002035",
+    "ACH-002040",
+    "ACH-002043",
+    "ACH-002050",
+    "ACH-002051",
+    "ACH-002052",
+    "ACH-002077",
+    "ACH-002214",
+    "ACH-002215",
+    "ACH-002291",
+    "ACH-002345",
+    "ACH-002478",
+    "ACH-002486",
+    "ACH-002490",
+    "ACH-002516",
+    "ACH-002523",
+    "ACH-002529",
+    "ACH-002530",
+    "ACH-002531",
+    "ACH-002533",
+    "ACH-002535",
+    "ACH-002538",
+    "ACH-002544",
+    "ACH-002647",
+    "ACH-002650",
+    "ACH-002660",
+    "ACH-002662",
+    "ACH-002664",
+    "ACH-002669",
+    "ACH-002672",
+    "ACH-002677",
+    "ACH-002680",
+    "ACH-002681",
+    "ACH-002693",
+    "ACH-002695",
+    "ACH-002705",
+    "ACH-002706",
+    "ACH-002708",
+    "ACH-002710",
+    "ACH-002782",
+    "ACH-002785",
+    "ACH-002799",
+    "ACH-002834",
+    "ACH-002847",
+    "ACH-002926",
 ]
 
 ############## DNAseq
@@ -266,6 +392,19 @@ BAMQC = [
 ]
 
 KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN"]
+
+# rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
+RESCUE_FOR_MUTATION_WES = {
+    "CDS-Rl87Z1": "ACH-001956",
+    "CDS-mys9Dm": "ACH-001955",
+    "CDS-TzQAjG": "ACH-001957",
+    "CDS-TuKZau": "ACH-001709",
+    "CDS-4lWqEA": "ACH-000859",
+    "CDS-Fyjj8I": "ACH-000116",
+}
+
+RESCUE_FOR_MUTATION_WGS = {"CDS-AqZLna": "ACH-002512"}
+
 
 ############## CN
 
@@ -555,7 +694,7 @@ allWES: all data comes from the WExomeS samples we posses
 
 allWGS: all data comes from the WGenomeS samples we posses
 
-withreplicates: if we have two different sequencing from a sample, we kept both, see the depmap sample tracker for annotations [https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE](https://docs.google.com/spreadsheets/d/1XkZypRuOEXzNLxVk9EOHeWRE98Z8_DBvL4PovyM01FE). this dataset is more geared toward QC or in-depth analysis of a particular cell line.
+withreplicates: if we have two different sequencing from a sample, we kept both, see the depmap sample tracker for annotations [https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY](https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY). this dataset is more geared toward QC or in-depth analysis of a particular cell line.
 
 merged: everything from both WGS and WES
 
