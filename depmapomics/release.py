@@ -230,7 +230,9 @@ def make(
             "# "
             + val
             + """ dataset:
+
 ## DNAseq Omics:
+
 NEW LINES:
 """
             + str(newlines)
@@ -455,6 +457,7 @@ REMOVED:
             """
 
 ## RNAseq Omics:
+
 NEW LINES:
 """
             + str(newlines)
