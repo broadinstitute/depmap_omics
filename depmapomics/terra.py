@@ -314,7 +314,7 @@ def updateReferences(wm, etype, attrs):
                     )
                 )
         elif r.status_code >= 400:
-            raise print("Unable to update entity attributes")
+            raise BlockingIOError("Unable to update entity attributes")
         else:
             print(r.text)
     except:  # revert to public API
@@ -331,7 +331,7 @@ def updateReferences(wm, etype, attrs):
             if r.status_code == 200:
                 print("Successfully updated {}.".format(update["name"]))
             elif r.status_code >= 400:
-                print("Unable to update entity attributes")
+                raise BlockingIOError("Unable to update entity attributes")
             else:
                 print(r.text)
 
