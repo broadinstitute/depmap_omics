@@ -7,6 +7,10 @@
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
     "editor.formatOnType": false,
+    "python.linting.flake8Args": [
+        "--max-line-length=120",
+        "--ignore=F403, E501, E226",
+    ],
     "editor.autoClosingBrackets": true,
     "editor.autoClosingQuotes": true,
     "editor.autoSurround": true,
