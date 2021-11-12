@@ -387,7 +387,7 @@ def extractFromWorkspace(
     --------
         samples: pd dataframe the filtered sample list
     """
-    extract.update(extract_defaults)
+    extract.update(EXTRACT_DEFAULTS)
     if extract["legacy_hash"] not in samples.columns or recompute_hash:
         samples[extract["hash"]] = [
             gcp.extractHash(val)
@@ -511,7 +511,7 @@ def resolveFromWorkspace(
     --------
         samples: pd dataframe the filtered sample list
     """
-    extract.update(extract_defaults)
+    extract.update(EXTRACT_DEFAULTS)
     prevlen = len(samples)
     for match_substring in match:
         samples[extract["ref_arxspan_id"]] = [
@@ -592,8 +592,8 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
     --------
         samples: pd daataframe the filtered sample list
     """
-    extract.update(extract_defaults)
-    rename.update(dup)
+    extract.update(EXTRACT_DEFAULTS)
+    rename.update(DUP_ARXSPANS)
     prevlen = len(sampless)
     sampless[extract["ref_type"]] = stype
 
