@@ -274,22 +274,22 @@ async def _CCLEFingerPrint(
 ):
     """1.1  Generate Fingerprint VCFs
 
-  Here we use Dalmatian to run the fingerprint_bam_with_liftover workflow on Terra.
-  This workflow calls Picard ExtractFingerprint to generate a fingerprint VCF and 
-  then calls Picard LiftoverVcf to covert this vcf to hg38. To fingerprint hg38 bam files 
-  just run fingerprint_bam instead.
+    Here we use Dalmatian to run the fingerprint_bam_with_liftover workflow on Terra.
+    This workflow calls Picard ExtractFingerprint to generate a fingerprint VCF and 
+    then calls Picard LiftoverVcf to covert this vcf to hg38. To fingerprint hg38 bam files 
+    just run fingerprint_bam instead.
 
-  Args:
-      samples ([type]): [description]
-      sampleset ([type]): [description]
-      sid ([type]): [description]
-      working_dir ([type]): [description]
-      bamcolname ([type]): [description]
-      workspace ([type], optional): [description]. Defaults to WORKSPACE.
+    Args:
+        samples ([type]): [description]
+        sampleset ([type]): [description]
+        sid ([type]): [description]
+        working_dir ([type]): [description]
+        bamcolname ([type]): [description]
+        workspace ([type], optional): [description]. Defaults to WORKSPACE.
 
-  Author:
-      William Colgan (wcolgan@broadinstitute.org)
-  """
+    Author:
+        William Colgan (wcolgan@broadinstitute.org)
+    """
 
     sid = "id"
     samples = pd.concat([rnasamples, wgssamples])

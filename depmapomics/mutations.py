@@ -31,8 +31,8 @@ def download_maf_from_workspace(
     output_maf="/tmp/mutation_filtered_terra_merged.txt",
 ):
     """
-  TODO: javad to document
-  """
+    TODO: javad to document
+    """
     sample_sets = refwm.get_sample_sets()
     dfs = []
     for sample_set_id in sample_sets.index.intersection(sample_set_ids):
@@ -76,8 +76,8 @@ def annotateLikelyImmortalized(
 
 def addAnnotation(maf, NCBI_Build="37", Strand="+"):
     """
-  adds NCBI_Build and Strand annotation on the whole maf file
-  """
+    adds NCBI_Build and Strand annotation on the whole maf file
+    """
     maf["NCBI_Build"] = NCBI_Build
     maf["Strand"] = Strand
     return maf
@@ -132,19 +132,19 @@ def postProcess(
 ):
     """post process an aggregated MAF file the CCLE way
 
-  (usually a MAF file from the Aggregate_MAF Terra worklflow)
+    (usually a MAF file from the Aggregate_MAF Terra worklflow)
 
-  Args:
-      refworkspace ([type]): [description]
-      sampleset (str, optional): [description]. Defaults to 'all'.
-      mutCol (str, optional): [description]. Defaults to "mut_AC".
-      save_output (str, optional): [description]. Defaults to "".
-      doCleanup (bool, optional): [description]. Defaults to False.
-      rename_cols (dict, optional): [description]. Defaults to {"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID, "Tumor_Seq_Allele2": "Tumor_Allele"}.
+    Args:
+        refworkspace ([type]): [description]
+        sampleset (str, optional): [description]. Defaults to 'all'.
+        mutCol (str, optional): [description]. Defaults to "mut_AC".
+        save_output (str, optional): [description]. Defaults to "".
+        doCleanup (bool, optional): [description]. Defaults to False.
+        rename_cols (dict, optional): [description]. Defaults to {"i_ExAC_AF": "ExAC_AF", "Tumor_Sample_Barcode": SAMPLEID, "Tumor_Seq_Allele2": "Tumor_Allele"}.
 
-  Returns:
-      [type]: [description]
-  """
+    Returns:
+        [type]: [description]
+    """
     h.createFoldersFor(save_output)
     print("loading from Terra")
     # if save_output:
@@ -197,23 +197,23 @@ async def _CCLEPostProcessing(
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
 
-  see postprocess() to reproduce our analysis
+    see postprocess() to reproduce our analysis
 
-  Args:
-      wesrefworkspace ([type]): [description]
-      wgsrefworkspace ([type]): [description]
-      samplesetname ([type]): [description]
-      AllSamplesetName (str, optional): [description]. Defaults to 'all'.
-      doCleanup (bool, optional): [description]. Defaults to False.
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-      taiga_description ([type], optional): [description]. Defaults to Mutationsreadme.
-      taiga_dataset (str, optional): [description]. Defaults to TAIGA_MUTATION.
-      mutation_groups ([type], optional): [description]. Defaults to MUTATION_GROUPS.
-      prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
-      minfreqtocall (float, optional): [description]. Defaults to 0.05.
-  """
+    Args:
+        wesrefworkspace ([type]): [description]
+        wgsrefworkspace ([type]): [description]
+        samplesetname ([type]): [description]
+        AllSamplesetName (str, optional): [description]. Defaults to 'all'.
+        doCleanup (bool, optional): [description]. Defaults to False.
+        my_id ([type], optional): [description]. Defaults to MY_ID.
+        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+        refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+        taiga_description ([type], optional): [description]. Defaults to Mutationsreadme.
+        taiga_dataset (str, optional): [description]. Defaults to TAIGA_MUTATION.
+        mutation_groups ([type], optional): [description]. Defaults to MUTATION_GROUPS.
+        prev ([type], optional): [description]. Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations').
+        minfreqtocall (float, optional): [description]. Defaults to 0.05.
+    """
     from taigapy import TaigaClient
 
     tc = TaigaClient()

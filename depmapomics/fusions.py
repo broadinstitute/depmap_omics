@@ -10,13 +10,13 @@ from genepy import terra
 
 def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
     """
-  Given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
+    Given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
 
-  Args:
-  ----
-    input_filenames: a set of filepath to input the files should be c|tsv from Terra fusion pipeline
-    main_filename: a filepath to input the files should be c|tsv from Terra aggregation pipeline
-  """
+    Args:
+    ----
+        input_filenames: a set of filepath to input the files should be c|tsv from Terra fusion pipeline
+        main_filename: a filepath to input the files should be c|tsv from Terra aggregation pipeline
+    """
     maindata = pd.read_csv(main_filename, sep="\t")
     if "." in maindata[sample_id][0]:
         maindata[sample_id] = [
@@ -48,26 +48,26 @@ def filterFusions(
     red_herring=FUSION_RED_HERRING,
 ):
     """
-  Given a fusion file from star fusion, filters it (will also filter Mitochrondria and HLA genes)
+    Given a fusion file from star fusion, filters it (will also filter Mitochrondria and HLA genes)
 
-  We want to apply filters to the fusion table to reduce the number of artifacts in the dataset. Specifically, we filter the following:
-  * Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes
-  * Remove red herring fusions (from STAR-Fusion annotations column)
-  * Remove recurrent in CCLE (>= 25 samples)
-  * Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
-  * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
+    We want to apply filters to the fusion table to reduce the number of artifacts in the dataset. Specifically, we filter the following:
+    * Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes
+    * Remove red herring fusions (from STAR-Fusion annotations column)
+    * Remove recurrent in CCLE (>= 25 samples)
+    * Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
+    * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
 
-  Args:
-    fusions (pd.df): the fusion data. Should contain: LeftBreakpoint, RightBreakpoint, FusionName, annots, SpliceType, LargeAnchorSupport, FFPM columns
-    maxfreq (int): the max allowed frequency of that fusion across our samples. default is 0.1
-    samplecol (str): colname for the sample ids. Should be in the fusions dataframe.
-    countCol (str): colname where are stored counts of that fusion name across our samples. Default is "CCLE_count"
-    minffpm (int): minimum ffpm freq to filter on. Default is 0.05
-    red_herring (list[str]): flags to filter on. default is FUSION_RED_HERRING
+    Args:
+        fusions (pd.df): the fusion data. Should contain: LeftBreakpoint, RightBreakpoint, FusionName, annots, SpliceType, LargeAnchorSupport, FFPM columns
+        maxfreq (int): the max allowed frequency of that fusion across our samples. default is 0.1
+        samplecol (str): colname for the sample ids. Should be in the fusions dataframe.
+        countCol (str): colname where are stored counts of that fusion name across our samples. Default is "CCLE_count"
+        minffpm (int): minimum ffpm freq to filter on. Default is 0.05
+        red_herring (list[str]): flags to filter on. default is FUSION_RED_HERRING
 
-  Returns:
-    (pd.df): the filtered fusion dataframe
-  """
+    Returns:
+        (pd.df): the filtered fusion dataframe
+    """
     fusions = fusions.copy()
     # remove recurrent
     fusions = fusions[fusions[countCol] < len(set(fusions[sampleCol])) * maxfreq]
@@ -100,14 +100,14 @@ def filterFusions(
 
 def renameFusionGene(a):
     """
-  Given a list of fusion names from star-fusion, renames and returns them
+    Given a list of fusion names from star-fusion, renames and returns them
 
-  Args:
-    a (list[str]): list of fusion names from star-fusion
+    Args:
+        a (list[str]): list of fusion names from star-fusion
 
-  Returns:
-    (list[str]): list of renamed fusion names
-  """
+    Returns:
+        (list[str]): list of renamed fusion names
+    """
     return [
         str(i.split("^")).replace(", ", " (").replace("'", "")[1:-1] + ")" for i in a
     ]
@@ -115,16 +115,16 @@ def renameFusionGene(a):
 
 def standardizeGeneNames(fusions):
     """
-  converts [GENE_NAME]^[ENSG] --> [GENE_NAME] ([ENSG])
+    converts [GENE_NAME]^[ENSG] --> [GENE_NAME] ([ENSG])
 
-  Example: "SMAD4^ENSG00000141646.14" --> "SMAD4 (ENSG00000141646.14)"
+    Example: "SMAD4^ENSG00000141646.14" --> "SMAD4 (ENSG00000141646.14)"
 
-  Args:
-    fusions (pd.df): fusion dataframe
+    Args:
+        fusions (pd.df): fusion dataframe
 
-  Returns:
-    (pd.df): fusion dataframe with standardized gene names
-  """
+    Returns:
+        (pd.df): fusion dataframe with standardized gene names
+    """
     fusions[["LeftGene", "RightGene"]] = fusions[["LeftGene", "RightGene"]].applymap(
         lambda x: "{} ({})".format(*x.split(r"^"))
     )
@@ -146,27 +146,27 @@ def postProcess(
 ):
     """post process an aggregated fusion files in the CCLE way
 
-  (usually from the aggregate_Fusion terra workflow)
+    (usually from the aggregate_Fusion terra workflow)
 
-  Args:
-      refworkspace (str): terra workspace where the ref data is stored
-      sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
-      save_output (str, optional): whether and where to save our data. Defaults to "".
-      todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
-      samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-      sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
-      colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.  
-      doplot (bool, optional): whether to plot the data. Defaults to True.
-      countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
-      save_output (str, optional): whether and where to save our data. Defaults to "".
-      rnFunc (function, optional): function to rename the sample names
-        (takes a list of sample names and returns a list of sample names). Defaults to None.
-      renaming (dict(str:str), optional): dictionary to rename the sample names otherwise. Defaults to None.
+    Args:
+        refworkspace (str): terra workspace where the ref data is stored
+        sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+        save_output (str, optional): whether and where to save our data. Defaults to "".
+        todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
+        samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
+        sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
+        colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.  
+        doplot (bool, optional): whether to plot the data. Defaults to True.
+        countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
+        save_output (str, optional): whether and where to save our data. Defaults to "".
+        rnFunc (function, optional): function to rename the sample names
+            (takes a list of sample names and returns a list of sample names). Defaults to None.
+        renaming (dict(str:str), optional): dictionary to rename the sample names otherwise. Defaults to None.
 
-  Returns:
-    (pd.df): fusion dataframe
-    (pd.df): filtered fusion dataframe
-  """
+    Returns:
+        (pd.df): fusion dataframe
+        (pd.df): filtered fusion dataframe
+    """
     refwm = dm.WorkspaceManager(refworkspace)
     if save_output:
         terra.saveWorkspace(refworkspace, save_output + "config/")
@@ -232,27 +232,27 @@ async def _CCLEPostProcessing(
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
 
-  see postprocessing() to reproduce our analysis
+    see postprocessing() to reproduce our analysis
 
-  Args:
-      refworkspace (str): terra workspace where the ref data is stored
-      sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
-      save_output (str, optional): whether and where to save our data. Defaults to "".
-      todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
-      samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-      fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
-      taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
-      dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
-      sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
-      refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
-      my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
-      mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
-      prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
-  
-  Returns:
-      (pd.df): fusion dataframe
-      (pd.df): filtered fusion dataframe
-  """
+    Args:
+        refworkspace (str): terra workspace where the ref data is stored
+        sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+        save_output (str, optional): whether and where to save our data. Defaults to "".
+        todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
+        samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
+        fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
+        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
+        dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
+        sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
+        refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
+        my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
+        mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
+        prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
+    
+    Returns:
+        (pd.df): fusion dataframe
+        (pd.df): filtered fusion dataframe
+    """
     from taigapy import TaigaClient
 
     tc = TaigaClient()

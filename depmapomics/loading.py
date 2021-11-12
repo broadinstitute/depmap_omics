@@ -134,48 +134,48 @@ def GetNewCellLinesFromWorkspaces(
     mystorage_id=MYSTORAGE_ID,
 ):
     """
-  As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
+    As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
 
-  Will merge samples from a set of data workspaces to a processing workspace on Terra. Will only
-  get a subset of the metadata and rename it.
-  Will find out the duplicates based on the file size.
-  Can also upload the bam files to a google storage bucket
+    Will merge samples from a set of data workspaces to a processing workspace on Terra. Will only
+    get a subset of the metadata and rename it.
+    Will find out the duplicates based on the file size.
+    Can also upload the bam files to a google storage bucket
 
-  Args:
-  -----
-    wto: str the workspace where you want to create the tsvs
-    wfroms: list[str] the workspaces where the Samples to add are stored
-    sources: list[str] the corresponding source names
-    stype: str sequencing type
-    maxage: str earliest date of the bam file upload to be considered new
-    refurl: str(url) the reference url for the cell line tracker spreadsheet (only if no refsamples)
-    match: list[str]|str the possible values that a sample id need to contain to be considered valid
-    refsamples: pdDataFrame with columns matching values is in "extract" for the right keys (see "extract_default")
-    participantslicepos: int the length of the sample id string
-    accept_unknowntypes: bool whether or not the sample type column for that sample can be different from "Tumor"
-    rename: dict(str:str) mapping a wrong arxpand_id to a good arxspan id for known cases of misslabelling
-    recomputehash: bool whether or not to recompute the hash of the bam file when loading it
-    addonly: list of sample id that you only want to add
-    extract: if you want to specify what values should refer to which column names
-      dict{
-      'name':
-      'bai':
-      'bam':
-      'source':
-      'from_arxspan_id':
-      ...} (see extract_defaults)
-    extract_defaults: the full default dict to specificy what values should refer to which column names
+    Args:
+    -----
+        wto: str the workspace where you want to create the tsvs
+        wfroms: list[str] the workspaces where the Samples to add are stored
+        sources: list[str] the corresponding source names
+        stype: str sequencing type
+        maxage: str earliest date of the bam file upload to be considered new
+        refurl: str(url) the reference url for the cell line tracker spreadsheet (only if no refsamples)
+        match: list[str]|str the possible values that a sample id need to contain to be considered valid
+        refsamples: pdDataFrame with columns matching values is in "extract" for the right keys (see "extract_default")
+        participantslicepos: int the length of the sample id string
+        accept_unknowntypes: bool whether or not the sample type column for that sample can be different from "Tumor"
+        rename: dict(str:str) mapping a wrong arxpand_id to a good arxspan id for known cases of misslabelling
+        recomputehash: bool whether or not to recompute the hash of the bam file when loading it
+        addonly: list of sample id that you only want to add
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+        'bai':
+        'bam':
+        'source':
+        'from_arxspan_id':
+        ...} (see extract_defaults)
+        extract_defaults: the full default dict to specificy what values should refer to which column names
 
-  Returns:
-  -------
-    samples: a dataframe with the samples that were resolved by the tool (we still need to add some more annotations)
-    pairs: the corresponding pair from matching known normals with known tumors
-    wrongssamples: a dataframe containing samples that passed most QCs but couldn't be resolved
+    Returns:
+    -------
+        samples: a dataframe with the samples that were resolved by the tool (we still need to add some more annotations)
+        pairs: the corresponding pair from matching known normals with known tumors
+        wrongssamples: a dataframe containing samples that passed most QCs but couldn't be resolved
 
-  Raise:
-  -----
-    Exception: when no new samples in this matrix
-  """
+    Raise:
+    -----
+        Exception: when no new samples in this matrix
+    """
     extract.update(extract_defaults)
     if type(match) is str and match:
         match = [match]
@@ -408,30 +408,30 @@ def deleteClosest(
     arxspid="arxspan_id",
 ):
     """
-  for a list of samples and a tracker, will find the index of the sample with the closest size
+    for a list of samples and a tracker, will find the index of the sample with the closest size
 
-  if this sample is the same cell line, it will judge it to be a duplicate and remove it
+    if this sample is the same cell line, it will judge it to be a duplicate and remove it
 
-  Args:
-  -----
-    sampless: pd dataframes of samples with at least arxspan ids and sizes
-    refsamples: pd dataframe representing a sample tracker
-    size: str colname of size in the sample list
-    ref_size: str colname of size in the sample tracker
-    arxspid: str colnme of sample ids
-    extract: if you want to specify what values should refer to which column names
-      dict{
-      'name':
-      'bai':
-      'bam':
-      'source':
-      'from_arxspan_id':
-      ...} (see extract_defaults)
+    Args:
+    -----
+        sampless: pd dataframes of samples with at least arxspan ids and sizes
+        refsamples: pd dataframe representing a sample tracker
+        size: str colname of size in the sample list
+        ref_size: str colname of size in the sample tracker
+        arxspid: str colnme of sample ids
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+        'bai':
+        'bam':
+        'source':
+        'from_arxspan_id':
+        ...} (see extract_defaults)
 
-  Returns:
-  --------
-    samples: pd dataframe the filtered sample list
-  """
+    Returns:
+    --------
+        samples: pd dataframe the filtered sample list
+    """
     sizes = refsamples[ref_size].tolist()
     print("deleting closest samples:")
     for k, v in sampless.iterrows():
@@ -453,28 +453,28 @@ def extractFromWorkspace(
     extract={},
 ):
     """
-  Extract more information from a list of samples found on GP workspaces
+    Extract more information from a list of samples found on GP workspaces
 
-  Args:
-  -----
-    samples: pd dataframes of samples with at least arxspan ids and sizes
-    stype: str sequencing type
-    recomputeTime: bool whether to recompute the date of upload of the bam file
-    recomputesize: bool whether to recompute the of the bam file
-    recomputehash: bool whether to recompute the of the bam file
-    extract: if you want to specify what values should refer to which column names
-      dict{
-      'name':
-      'bai':
-      'bam':
-      'source':
-      'from_arxspan_id':
-      ...} (see extract_defaults)
+    Args:
+    -----
+        samples: pd dataframes of samples with at least arxspan ids and sizes
+        stype: str sequencing type
+        recomputeTime: bool whether to recompute the date of upload of the bam file
+        recomputesize: bool whether to recompute the of the bam file
+        recomputehash: bool whether to recompute the of the bam file
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+        'bai':
+        'bam':
+        'source':
+        'from_arxspan_id':
+        ...} (see extract_defaults)
 
-  Returns:
-  --------
-    samples: pd dataframe the filtered sample list
-  """
+    Returns:
+    --------
+        samples: pd dataframe the filtered sample list
+    """
     extract.update(extract_defaults)
     if extract["legacy_hash"] not in samples.columns or recompute_hash:
         samples[extract["hash"]] = [
@@ -508,25 +508,25 @@ def extractFromWorkspace(
 
 def mapSamples(samples, source, extract={}):
     """
-  Convert samples from a list of GP workspaces to something being able to be merged with the sample tracker
+    Convert samples from a list of GP workspaces to something being able to be merged with the sample tracker
 
-  Args:
-  -----
-    samples: pd dataframes of samples with at least arxspan ids and sizes
-    extract: if you want to specify what values should refer to which column names
-      dict{
-      'name':
-      'bai':
-      'bam':
-      'source':
-      'from_arxspan_id':
-      ...} (see extract_defaults)
-    source:
+    Args:
+    -----
+        samples: pd dataframes of samples with at least arxspan ids and sizes
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+        'bai':
+        'bam':
+        'source':
+        'from_arxspan_id':
+        ...} (see extract_defaults)
+        source:
 
-  Returns:
-  --------
-    samples: pd dataframe the filtered sample list
-  """
+    Returns:
+    --------
+        samples: pd dataframe the filtered sample list
+    """
     # creating unique ids
     samples[extract["ref_id"]] = [
         "CDS-" + h.randomString(stringLength=6, stype="all", withdigits=True)
@@ -576,28 +576,28 @@ def resolveFromWorkspace(
     extract={},
 ):
     """
-  Filters our list by trying to find duplicate in our dataset and remove any sample that isn't tumor
+    Filters our list by trying to find duplicate in our dataset and remove any sample that isn't tumor
 
-  Args:
-  -----
-    match: list[str]|str the possible values that a sample id need to contain to be considered valid
-    participantslicepos: int the length of the sample id string
-    accept_unknowntypes: bool whether or not the sample type column for that sample can be different from "Tumor"
-    refsamples: pd dataframe representing a sample tracker
-    samples: pd dataframes of samples with at least arxspan ids and sizes
-    extract: if you want to specify what values should refer to which column names
-      dict{
-      'name':
-      'bai':
-      'bam':
-      'source':
-      'from_arxspan_id':
-      ...} (see extract_defaults)
+    Args:
+    -----
+        match: list[str]|str the possible values that a sample id need to contain to be considered valid
+        participantslicepos: int the length of the sample id string
+        accept_unknowntypes: bool whether or not the sample type column for that sample can be different from "Tumor"
+        refsamples: pd dataframe representing a sample tracker
+        samples: pd dataframes of samples with at least arxspan ids and sizes
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+        'bai':
+        'bam':
+        'source':
+        'from_arxspan_id':
+        ...} (see extract_defaults)
 
-  Returns:
-  --------
-    samples: pd dataframe the filtered sample list
-  """
+    Returns:
+    --------
+        samples: pd dataframe the filtered sample list
+    """
     extract.update(extract_defaults)
     prevlen = len(samples)
     for match_substring in match:
@@ -659,26 +659,26 @@ def resolveFromWorkspace(
 
 def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
     """
-  Will look for matching lines and duplicates in our sample tracker and compute version and patient information
+    Will look for matching lines and duplicates in our sample tracker and compute version and patient information
 
-  Args:
-  -----
-    refsamples: pd dataframe representing a sample tracker
-    stype: str sequencing type
-    rename: dict(str:str) mapping a wrong arxpand_id to a good arxspan id for known cases of misslabelling
-    samples: pd dataframes of samples with at least arxspan ids and sizes
-    extract: if you want to specify what values should refer to which column names
-      dict{
-      'name':
-      'bai':
-      'bam':
-      'source':
-      'from_arxspan_id':
-      ...} (see extract_defaults)
-  Returns:
-  --------
-    samples: pd daataframe the filtered sample list
-  """
+    Args:
+    -----
+        refsamples: pd dataframe representing a sample tracker
+        stype: str sequencing type
+        rename: dict(str:str) mapping a wrong arxpand_id to a good arxspan id for known cases of misslabelling
+        samples: pd dataframes of samples with at least arxspan ids and sizes
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+        'bai':
+        'bam':
+        'source':
+        'from_arxspan_id':
+        ...} (see extract_defaults)
+    Returns:
+    --------
+        samples: pd daataframe the filtered sample list
+    """
     extract.update(extract_defaults)
     rename.update(dup)
     prevlen = len(sampless)
@@ -756,23 +756,23 @@ def completeFromMasterSheet(
 ):
     """complete the missing sample information from a given DepMap Ops MasterSheet
 
-  Args:
-      samples ([type]): [description]
-      notfound ([type]): [description]
-      toupdate ([type], optional): [description]. Defaults to TO_UPDATE.
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      pv_index ([type], optional): [description]. Defaults to SAMPLEID.
-      master_index (str, optional): [description]. Defaults to "arxspan_id".
-      pv_tokeep (list, optional): [description]. Defaults to ['Culture Type', 'Culture Medium'].
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      masterfilename (str, optional): [description]. Defaults to "ACH".
-      nanslist (list, optional): [description]. Defaults to ['None', 'nan', 'Unknown', None].
-      depmap_pv ([type], optional): [description]. Defaults to DEPMAP_PV.
-      depmap_taiga ([type], optional): [description]. Defaults to DEPMAP_TAIGA.
+    Args:
+        samples ([type]): [description]
+        notfound ([type]): [description]
+        toupdate ([type], optional): [description]. Defaults to TO_UPDATE.
+        my_id ([type], optional): [description]. Defaults to MY_ID.
+        pv_index ([type], optional): [description]. Defaults to SAMPLEID.
+        master_index (str, optional): [description]. Defaults to "arxspan_id".
+        pv_tokeep (list, optional): [description]. Defaults to ['Culture Type', 'Culture Medium'].
+        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+        masterfilename (str, optional): [description]. Defaults to "ACH".
+        nanslist (list, optional): [description]. Defaults to ['None', 'nan', 'Unknown', None].
+        depmap_pv ([type], optional): [description]. Defaults to DEPMAP_PV.
+        depmap_taiga ([type], optional): [description]. Defaults to DEPMAP_TAIGA.
 
-  Returns:
-      [type]: [description]
-  """
+    Returns:
+        [type]: [description]
+    """
     di = {k: [] for k, _ in toupdate.items()}
     from taigapy import TaigaClient
 
@@ -828,10 +828,10 @@ def loadWES(
     **kwargs
 ):
     """
-  function to load WES data from GP workspaces
+    function to load WES data from GP workspaces
 
-  @see load()
-  """
+    @see load()
+    """
     return load(
         samplesetname=samplesetname,
         workspaces=workspaces,
@@ -853,10 +853,10 @@ def loadWGS(
     **kwargs
 ):
     """
-  function to load WGS data from GP workspaces
+    function to load WGS data from GP workspaces
 
-  @see load()
-  """
+    @see load()
+    """
     # print(MAXAGE)
     return load(
         samplesetname=samplesetname,
@@ -879,10 +879,10 @@ def loadRNA(
     **kwargs
 ):
     """
-  function to load RNA data from GP workspaces 
+    function to load RNA data from GP workspaces 
 
-  @see load()
-  """
+    @see load()
+    """
     return load(
         samplesetname=samplesetname,
         workspaces=workspaces,
@@ -923,38 +923,38 @@ def load(
 ):
     """function to load and extract data from the GP workspaces
 
-  Args:
-      samplesetname ([type]): [description]
-      workspaces ([type]): [description]
-      sources ([type]): [description]
-      maxage ([type]): [description]
-      baits ([type]): [description]
-      stype ([type]): [description]
-      toupdate ([type], optional): [description]. Defaults to TO_UPDATE.
-      pv_index ([type], optional): [description]. Defaults to SAMPLEID.
-      master_index (str, optional): [description]. Defaults to "arxspan_id".
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      creds ([type], optional): [description]. Defaults to SHEETCREDS.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-      depmappvlink ([type], optional): [description]. Defaults to DEPMAP_PV.
-      extract_to_change ([type], optional): [description]. Defaults to EXTRACT_TO_CHANGE.
-      match ([type], optional): [description]. Defaults to MATCH.
-      pv_tokeep (list, optional): [description]. Defaults to ['Culture Type', 'Culture Medium'].
-      masterfilename (str, optional): [description]. Defaults to "ACH".
-      nanslist (list, optional): [description]. Defaults to ['None', 'nan', 'Unknown'].
-      depmap_taiga ([type], optional): [description]. Defaults to DEPMAP_TAIGA.
-      toraise ([type], optional): [description]. Defaults to TORAISE.
-      participantslicepos (int, optional): [description]. Defaults to 10.
-      accept_unknowntypes (bool, optional): [description]. Defaults to True.
-      recomputehash (bool, optional): [description]. Defaults to True.
+    Args:
+        samplesetname ([type]): [description]
+        workspaces ([type]): [description]
+        sources ([type]): [description]
+        maxage ([type]): [description]
+        baits ([type]): [description]
+        stype ([type]): [description]
+        toupdate ([type], optional): [description]. Defaults to TO_UPDATE.
+        pv_index ([type], optional): [description]. Defaults to SAMPLEID.
+        master_index (str, optional): [description]. Defaults to "arxspan_id".
+        my_id ([type], optional): [description]. Defaults to MY_ID.
+        creds ([type], optional): [description]. Defaults to SHEETCREDS.
+        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+        refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+        depmappvlink ([type], optional): [description]. Defaults to DEPMAP_PV.
+        extract_to_change ([type], optional): [description]. Defaults to EXTRACT_TO_CHANGE.
+        match ([type], optional): [description]. Defaults to MATCH.
+        pv_tokeep (list, optional): [description]. Defaults to ['Culture Type', 'Culture Medium'].
+        masterfilename (str, optional): [description]. Defaults to "ACH".
+        nanslist (list, optional): [description]. Defaults to ['None', 'nan', 'Unknown'].
+        depmap_taiga ([type], optional): [description]. Defaults to DEPMAP_TAIGA.
+        toraise ([type], optional): [description]. Defaults to TORAISE.
+        participantslicepos (int, optional): [description]. Defaults to 10.
+        accept_unknowntypes (bool, optional): [description]. Defaults to True.
+        recomputehash (bool, optional): [description]. Defaults to True.
 
-  Raises:
-      ValueError: [description]
+    Raises:
+        ValueError: [description]
 
-  Returns:
-      [type]: [description]
-  """
+    Returns:
+        [type]: [description]
+    """
     release = samplesetname
     sheets = Sheets.from_files(my_id, mystorage_id)
     ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
@@ -1091,24 +1091,24 @@ def updateWES(
 ):
     """[summary]
 
-  Args:
-      samples ([type]): [description]
-      samplesetname ([type]): [description]
-      bucket (str, optional): [description]. Defaults to "gs://cclebams/wes/".
-      name_col (str, optional): [description]. Defaults to "index".
-      values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
-      filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      refworkspace ([type], optional): [description]. Defaults to WESMUTWORKSPACE.
-      cnworkspace ([type], optional): [description]. Defaults to WESCNWORKSPACE.
-      stype (str, optional): [description]. Defaults to "wes".
-      baits (str, optional): [description]. Defaults to 'ICE'.
-      extract (dict, optional): [description]. Defaults to {}.
-      creds ([type], optional): [description]. Defaults to SHEETCREDS.
-      sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-  """
+    Args:
+        samples ([type]): [description]
+        samplesetname ([type]): [description]
+        bucket (str, optional): [description]. Defaults to "gs://cclebams/wes/".
+        name_col (str, optional): [description]. Defaults to "index".
+        values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
+        filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
+        my_id ([type], optional): [description]. Defaults to MY_ID.
+        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+        refworkspace ([type], optional): [description]. Defaults to WESMUTWORKSPACE.
+        cnworkspace ([type], optional): [description]. Defaults to WESCNWORKSPACE.
+        stype (str, optional): [description]. Defaults to "wes".
+        baits (str, optional): [description]. Defaults to 'ICE'.
+        extract (dict, optional): [description]. Defaults to {}.
+        creds ([type], optional): [description]. Defaults to SHEETCREDS.
+        sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
+        refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+    """
 
     # uploading to our bucket (now a new function)
     terra.changeToBucket(
@@ -1238,21 +1238,21 @@ def update(
 ):
     """update the samples on a depmapomics terra processing workspace
 
-  Args:
-      samples ([type]): [description]
-      samplesetname ([type]): [description]
-      stype ([type]): [description]
-      bucket ([type]): [description]
-      refworkspace ([type]): [description]
-      name_col (str, optional): [description]. Defaults to "index".
-      values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
-      filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
-      my_id ([type], optional): [description]. Defaults to MY_ID.
-      mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-      creds ([type], optional): [description]. Defaults to SHEETCREDS.
-      sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
-      refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-  """
+    Args:
+        samples ([type]): [description]
+        samplesetname ([type]): [description]
+        stype ([type]): [description]
+        bucket ([type]): [description]
+        refworkspace ([type]): [description]
+        name_col (str, optional): [description]. Defaults to "index".
+        values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
+        filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
+        my_id ([type], optional): [description]. Defaults to MY_ID.
+        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
+        creds ([type], optional): [description]. Defaults to SHEETCREDS.
+        sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
+        refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
+    """
     # uploading to our bucket (now a new function)
     terra.changeToBucket(
         samples,

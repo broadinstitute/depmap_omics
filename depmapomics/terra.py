@@ -19,22 +19,22 @@ def compareToCuratedGS(
     value="no data yet",
 ):
     """
-  from a google spreadsheet, will check that we have all of the samples we should have in our sample
-  set name (will parse NAME_additional for sample_id)
+    from a google spreadsheet, will check that we have all of the samples we should have in our sample
+    set name (will parse NAME_additional for sample_id)
 
-  Args:
-  -----
-    url: str the url of the gsheet
-    sample: list(str) the samples to check
-    samplesetname: str the name of the sampleset in the googlesheet
-    sample_id: str the name of the sample_id column in the google sheet
-    clientsecret: str path to your secret google api account file
-    storagepath: str path to your secret google api storage file
-    colname: str if we need not to include some rows from the spreadsheet that have the value value
-    value: str the value for which not to include the rows
+    Args:
+    -----
+        url: str the url of the gsheet
+        sample: list(str) the samples to check
+        samplesetname: str the name of the sampleset in the googlesheet
+        sample_id: str the name of the sample_id column in the google sheet
+        clientsecret: str path to your secret google api account file
+        storagepath: str path to your secret google api storage file
+        colname: str if we need not to include some rows from the spreadsheet that have the value value
+        value: str the value for which not to include the rows
 
-  @gmiller
-  """
+    @gmiller
+    """
     sheets = Sheets.from_files(clientsecret, storagepath)
     # Cell Line Profiling Status google sheet
     gsheet = sheets.get(url).sheets[0].to_frame()
@@ -66,19 +66,19 @@ def compareToCuratedGS(
 
 def getQC(workspace, only=[], qcname=[], match=""):
     """
-  Will get from a workspace, the QC data for each samples
+    Will get from a workspace, the QC data for each samples
 
-  Args:
-  -----
-    workspace: the workspace name
-    only: do it only for this set of samples
-    qcname: col name where the QC is in the workspace samples
-    match: for example'.Log.final.out' get only that QC if you have a list of QCs in you qcname col
+    Args:
+    -----
+        workspace: the workspace name
+        only: do it only for this set of samples
+        qcname: col name where the QC is in the workspace samples
+        match: for example'.Log.final.out' get only that QC if you have a list of QCs in you qcname col
 
-  Returns:
-  --------
-    a dict(sample_id:list[QC_filepaths])
-  """
+    Returns:
+    --------
+        a dict(sample_id:list[QC_filepaths])
+    """
     if type(qcname) is str:
         qcname = [qcname]
     res = {}
@@ -103,20 +103,20 @@ def updatePairs(
     workspaceID, tracker, removeDataFiles=True,
 ):
     """
-  looks at the current sample tracker and updates the pairs in Terra
+    looks at the current sample tracker and updates the pairs in Terra
 
-  It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
-  """
+    It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
+    """
 
 
 def setupPairsFromSamples(sampless, refsamples, extract):
     """
-  Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)
+    Given a list of samples, will compute the corresponding pairs (with nan if no matched normals)
 
-  Returns:
-  -------
-    pairs that can be uploaded to the portal team
-  """
+    Returns:
+    -------
+        pairs that can be uploaded to the portal team
+    """
     pairs = pd.DataFrame()
     normals = refsamples[refsamples[extract["primary_disease"]] == "normal"]
     pairs["control_sample"] = [
@@ -138,15 +138,15 @@ def setupPairsFromSamples(sampless, refsamples, extract):
 
 def updateAllSampleSet(workspace, Allsample_setname="all"):
     """
-  update the previous All Sample sample_set with the new samples that have been added.
+    update the previous All Sample sample_set with the new samples that have been added.
 
-  It is especially useful for the aggregate task. Can more generally merge two samplesets together
+    It is especially useful for the aggregate task. Can more generally merge two samplesets together
 
-  Args:
-  ----
-    workspace: str namespace/workspace from url typically
-    newsample_setname: str name of sampleset to add to All_samples
-  """
+    Args:
+    ----
+        workspace: str namespace/workspace from url typically
+        newsample_setname: str name of sampleset to add to All_samples
+    """
     dm.WorkspaceManager(workspace).update_sample_set(
         Allsample_setname, dm.WorkspaceManager(workspace).get_samples().index.tolist()
     )
@@ -191,18 +191,18 @@ def copyToWorkspace(
     group=50,
 ):
     """
-  will use the current sample tracker to update samples in the workspace
+    will use the current sample tracker to update samples in the workspace
 
-  it can remove samples that are not in the tracker.
+    it can remove samples that are not in the tracker.
 
-  Args:
-  ----
-    workspaceID: str the workspace id
-    tracker: dataframe the sample tracker
-    columns: list[str] the columns to sync
-    rename: dict(str:str) columns to rename from sample tracker to workspace
-    deleteUnmatched: bool whether or not to delete samples in the workspace and not in the sample tracker
-  """
+    Args:
+    ----
+        workspaceID: str the workspace id
+        tracker: dataframe the sample tracker
+        columns: list[str] the columns to sync
+        rename: dict(str:str) columns to rename from sample tracker to workspace
+        deleteUnmatched: bool whether or not to delete samples in the workspace and not in the sample tracker
+    """
     wm = dm.WorkspaceManager(workspaceID).disable_hound()
     sam = wm.get_samples()
     track = tracker[tracker.index.isin(sam.index)][columns].rename(columns=rename)
@@ -228,7 +228,7 @@ def copyToWorkspace(
 
 def updateReferences(wm, etype, attrs):
     """written for FP, where we need to update the sample_batch_pair data table
-  where entries are references to sample_sets instead of strings"""
+    where entries are references to sample_sets instead of strings"""
 
     reserved_attrs = {}
     if etype == "sample":
