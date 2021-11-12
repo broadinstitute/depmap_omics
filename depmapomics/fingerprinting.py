@@ -3,9 +3,7 @@
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from taigapy import TaigaClient
 from genepy.google import gcp
-import asyncio
 from genepy import terra
 from genepy.utils import helper as h
 from depmapomics import tracker
@@ -14,12 +12,31 @@ from depmapomics import terra as myterra
 
 
 def updateLOD(
-    wm, sampleset, taiga_dataset, taiga_filename, working_dir, upload_to_taiga=True
+    wm,
+    sampleset,
+    working_dir,
+    batch_pair_entity="sample_batch_pair",
+    save_new_mat=True,
+    new_mat_filename="new_fingerprint_lod_matrix.csv",
+    prev_mat_df=None,
+    updated_mat_filename="updated_lod_matrix.csv"
 ):
-    # Here we update the fingerprint LOD matrix on taiga with the new fingerprints
-    # Generate matrix with LOD score for new fingerprint vcfs
+    """Here we update the fingerprint LOD matrix on taiga with the new fingerprints
+    and enerate matrix with LOD score for new fingerprint vcfs
+
+    Args:
+        wm (wmanager): workspace manager of current FP terra workspace
+        sampleset (str): name of current sample set
+        working_dir (str): directory where the lod matrix file will be saved
+        batch_pair_entity (str): name of entity on terra workspace that represents sample batch pairs
+        save_new_mat (bool): if new lod matrix (not combined with a previous matrix) is saved
+        new_mat_filename (str): name of the new lod matrix file if save_new_mat
+        prev_mat_df (pd.DatatFrame): a previous lod matrix file that will be merged with the new lod matrix
+        updated_mat_filename (str): name of the updated (new merged with prev) lod matrix file
+    """
+
     new_lod_list = []
-    sample_batch_pair_df = wm.get_entities("sample_batch_pair")
+    sample_batch_pair_df = wm.get_entities(batch_pair_entity)
     samples_df = sample_batch_pair_df[
         sample_batch_pair_df.sample_batch_b.apply(
             lambda x: x["entityName"] == sampleset
@@ -36,38 +53,28 @@ def updateLOD(
     new_lod_mat.index.name = None
     new_lod_mat = new_lod_mat.T
 
-    # Update LOD matrix ( have to update (A+a)*(B+b) = (AB)+(aB)+(Ab)+(ab))
-    tc = TaigaClient()
-    prev_lod_mat = tc.get(name=taiga_dataset, file=taiga_filename)
-    new_ids = set(new_lod_mat.index)
-    old_ids = set(prev_lod_mat.index) - set(new_ids)
-    updated_lod_mat = pd.concat(
-        (prev_lod_mat.loc[old_ids, old_ids], new_lod_mat.loc[new_ids, old_ids]), axis=0
-    )
-    updated_lod_mat = pd.concat(
-        (
-            updated_lod_mat.loc[new_ids.union(old_ids), old_ids],
-            new_lod_mat.transpose().loc[new_ids.union(old_ids, new_ids)],
-        ),
-        axis=1,
-    )
-    updated_lod_mat.to_csv(working_dir + taiga_filename + ".csv")
+    if save_new_mat:
+        new_lod_mat.to_csv(working_dir + new_mat_filename + ".csv")
 
-    # Upload updated LOD matrix to Taiga
-    if upload_to_taiga:
-        tc.update_dataset(
-            dataset_permaname=taiga_dataset,
-            changes_description="New bam fingerprints added for " + sampleset,
-            upload_files=[
-                {
-                    "path": working_dir + taiga_filename + ".csv",
-                    "name": taiga_filename,
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                }
-            ],
-            add_all_existing_files=True,
+    new_ids = set(new_lod_mat.index)
+    updated_lod_mat = new_lod_mat
+
+    # Update LOD matrix ( have to update (A+a)*(B+b) = (AB)+(aB)+(Ab)+(ab))
+    if prev_mat_df is not None:
+        prev_lod_mat = prev_mat_df  
+        old_ids = set(prev_lod_mat.index) - set(new_ids)
+        updated_lod_mat = pd.concat(
+            (prev_lod_mat.loc[old_ids, old_ids], new_lod_mat.loc[new_ids, old_ids]), axis=0
         )
+        updated_lod_mat = pd.concat(
+            (
+                updated_lod_mat.loc[new_ids.union(old_ids), old_ids],
+                new_lod_mat.transpose().loc[new_ids.union(old_ids, new_ids)],
+            ),
+            axis=1,
+        )
+        updated_lod_mat.to_csv(working_dir + updated_mat_filename + ".csv")
+
     return new_ids, updated_lod_mat
 
 
@@ -261,16 +268,17 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
             print("sample_batch_pair_set manually updated")
 
 
-async def _CCLEFingerPrint(
+async def fingerPrint(
     rnasamples,
     wgssamples,
+    sid='id'
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
     bamcolname=LEGACY_BAM_COLNAMES,
-    taiga_dataset=TAIGA_FP,
-    taiga_filename=TAIGA_FP_FILENAME,
+    prev_mat_df=None,
+    updated_mat_filename=""
 ):
     """1.1  Generate Fingerprint VCFs
 
@@ -291,7 +299,6 @@ async def _CCLEFingerPrint(
         William Colgan (wcolgan@broadinstitute.org)
     """
 
-    sid = "id"
     samples = pd.concat([rnasamples, wgssamples])
     bams = samples[bamcolname]
     bams[sid] = bams.index
@@ -337,9 +344,7 @@ async def _CCLEFingerPrint(
     terra.saveWorkspace(workspace, "data/" + sampleset + "/FPconfig/")
 
     # Update LOD matrix
-    new_ids, updated_lod_mat = updateLOD(
-        wm, sampleset, taiga_dataset, taiga_filename, working_dir, upload_to_taiga=False
-    )
+    new_ids, updated_lod_mat = updateLOD(wm, sampleset, working_dir, save_new_mat=False, prev_mat_df=None, updated_mat_filename=updated_mat_filename)
 
     # finding issues with the dataset
     v = updated_lod_mat.loc[new_ids]
@@ -354,3 +359,61 @@ async def _CCLEFingerPrint(
 
     return updated_lod_mat, should, shouldnt
 
+
+
+async def _CCLEFingerPrint(
+    rnasamples,
+    wgssamples,
+    sid='id'
+    sampleset=SAMPLESETNAME,
+    allbatchpairset=FPALLBATCHPAIRSETS,
+    workspace=FPWORKSPACE,
+    working_dir=WORKING_DIR,
+    bamcolname=LEGACY_BAM_COLNAMES,
+    taiga_dataset=TAIGA_FP,
+    updated_mat_filename=TAIGA_FP_FILENAME
+):
+    """ CCLE fingerprinting function
+    Args:
+        samples ([type]): [description]
+        sampleset ([type]): [description]
+        sid ([type]): [description]
+        working_dir ([type]): [description]
+        bamcolname ([type]): [description]
+        workspace ([type], optional): [description]. Defaults to WORKSPACE.
+    """
+    from taigapy import TaigaClient
+
+    tc = TaigaClient()
+    prev_lod_mat = tc.get(name=taiga_dataset, file=updated_mat_filename)
+    
+    # call generic function
+    updated_lod_mat, should, shouldnt = fingerPrint(
+        rnasamples,
+        wgssamples,
+        sid=sid,
+        sampleset=sampleset,
+        allbatchpairset=allbatchpairset,
+        workspace=workspace,
+        working_dir=working_dir,
+        bamcolname=bamcolname,
+        prev_mat_df=prev_lod_mat,
+        updated_mat_filename=updated_mat_filename
+    )
+
+    # Upload updated LOD matrix to Taiga
+    tc.update_dataset(
+        dataset_permaname=taiga_dataset,
+        changes_description="New bam fingerprints added for " + sampleset,
+        upload_files=[
+            {
+                "path": working_dir + taiga_filename,
+                "name": taiga_filename,
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            }
+        ],
+        add_all_existing_files=True,
+    )
+
+    return updated_lod_mat, should, shouldnt

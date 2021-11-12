@@ -310,14 +310,14 @@ WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 # Local directory to save intermediate files to
 WORKING_DIR = "temp/"
 
-FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
+FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC-copy"
 
 LEGACY_BAM_COLNAMES = ["legacy_bam_filepath", "legacy_bai_filepath"]
 
 FPALLBATCHPAIRSETS = "all"
 
 TAIGA_FP = "ccle-bam-fingerprints-6f30"
-TAIGA_FP_FILENAME = "fingerprint_lod_matrix"
+TAIGA_FP_FILENAME = "fingerprint_lod_matrix.csv"
 
 
 ############## DNAseq
