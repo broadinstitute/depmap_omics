@@ -1174,7 +1174,7 @@ def update(
         add_to_samplesets (list, optional): add new samples to additional sample_sets on terra. Defaults to []
     """
     # uploading to our bucket (now a new function)
-    terra.changeToBucket(
+    samples =  terra.changeToBucket(
         samples,
         bucket,
         name_col=name_col,
