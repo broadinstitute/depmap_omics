@@ -13,6 +13,8 @@ task rsem {
     String? estimate_rspd
     String? is_stranded
     String? paired_end
+    String? calc_ci
+    Int? ci_memory
 
     command {
         set -euo pipefail
@@ -24,6 +26,8 @@ task rsem {
             ${"--estimate_rspd " + estimate_rspd} \
             ${"--is_stranded " + is_stranded} \
             ${"--paired_end " + paired_end} \
+            ${"--calc_ci " + calc_ci} \
+            ${"--ci_memory " + ci_memory} \
             --threads ${num_threads} \
             rsem_reference ${transcriptome_bam} ${prefix}
         gzip *.results
@@ -35,7 +39,7 @@ task rsem {
     }
 
     runtime {
-        docker: "us-docker.pkg.dev/depmap-omics/public/gtex-rnaseq:V10"
+        docker: "gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"
