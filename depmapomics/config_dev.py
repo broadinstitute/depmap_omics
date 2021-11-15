@@ -301,8 +301,8 @@ wgssource1 = "DEPMAP"
 wgssource2 = "IBM"
 
 WGSWORKSPACE = "broad-firecloud-ccle/DEV_DepMap_WGS_CN"
-WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
-WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
+WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38-sandbox"
+WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline-sandbox"
 
 WGSSETENTITY = "sample_set"
 WESSETENTITY = "pair_set"
@@ -318,7 +318,7 @@ LEGACY_BAM_COLNAMES = ["legacy_bam_filepath", "legacy_bai_filepath"]
 
 FPALLBATCHPAIRSETS = "all"
 
-TAIGA_FP = "ccle-bam-fingerprints-6f30"
+TAIGA_FP = "ccle-bam-fingerprints-4f4a"
 TAIGA_FP_FILENAME = "fingerprint_lod_matrix.csv"
 
 
