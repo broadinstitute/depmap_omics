@@ -159,11 +159,11 @@ TORAISE = (["ACH-001195"],)
 TO_UPDATE = {
     "primary_disease": ["Primary Disease"],
     "sex": ["CCLF Gender"],
-    "primary_site": ["Sample Collection Site"],
+    "collection_site": ["Sample Collection Site"],
     "subtype": ["lineage_subtype"],
     "subsubtype": ["lineage_sub_subtype"],
     "origin": ["lineage"],
-    #'source': ['Flagship'],
+    # 'source': ['Flagship'],
     "parent_cell_line": ["Parental ID"],
     "comments": ["Comments"],
     "mediatype": ["Culture Medium", "Culture Type"],
@@ -301,8 +301,26 @@ wgssource1 = "DEPMAP"
 wgssource2 = "IBM"
 
 WGSWORKSPACE = "broad-firecloud-ccle/DEV_DepMap_WGS_CN"
-WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
-WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
+WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38-sandbox"
+WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline-sandbox"
+
+WGSSETENTITY = "sample_set"
+WESSETENTITY = "pair_set"
+
+############## Fingerprinting
+
+# Local directory to save intermediate files to
+WORKING_DIR = "temp/"
+
+FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC-copy"
+
+LEGACY_BAM_COLNAMES = ["legacy_bam_filepath", "legacy_bai_filepath"]
+
+FPALLBATCHPAIRSETS = "all"
+
+TAIGA_FP = "ccle-bam-fingerprints-4f4a"
+TAIGA_FP_FILENAME = "fingerprint_lod_matrix.csv"
+
 
 ############## DNAseq
 
