@@ -78,19 +78,19 @@ def updateLOD(
     return new_ids, updated_lod_mat
 
 
-def checkMismatches(v, ref, samples, thr=100):
-    should = {}
+def checkMismatches(lod_mat, ref, samples, thr=100):
+    mismatches = {}
     print("\n\nsamples that should match but don't:")
     for u in set(samples.arxspan_id):
-        res = v.loc[
+        scores = lod_mat.loc[
             samples[samples.arxspan_id == u].index,
             ref[ref.arxspan_id == u].index.tolist(),
         ]
         for i, j in [
-            (res.index[x], res.columns[y]) for x, y in np.argwhere(res.values < thr)
+            (scores.index[x], scores.columns[y]) for x, y in np.argwhere(scores.values < thr)
         ]:
             print("__________________________")
-            print(res.loc[i, j])
+            print(scores.loc[i, j])
             print(
                 i,
                 ":",
@@ -114,7 +114,7 @@ def checkMismatches(v, ref, samples, thr=100):
                     ]
                 ),
             )
-            should.update(
+            mismatches.update(
                 {
                     str(i)
                     + ": "
@@ -143,21 +143,21 @@ def checkMismatches(v, ref, samples, thr=100):
                     )
                 )
             )
-    return should
+    return mismatches
 
 
-def checkMatches(v, ref, thr=500):
+def checkMatches(lod_mat, ref, thr=500):
     print("\n\nsamples that shouldn't match but do")
     previ = ""
-    shouldnt = {}
-    for i, j in [(v.index[x], v.columns[y]) for x, y in np.argwhere(v.values > thr)]:
+    matches = {}
+    for i, j in [(lod_mat.index[x], lod_mat.columns[y]) for x, y in np.argwhere(lod_mat.values > thr)]:
         if i == j:
             continue
         if ref.loc[i]["participant_id"] == ref.loc[j]["participant_id"]:
             continue
         if i != previ:
             if previ != "":
-                shouldnt.update(
+                matches.update(
                     {
                         "_".join(
                             ref.loc[
@@ -205,7 +205,7 @@ def checkMatches(v, ref, thr=500):
                 )
             )
         previ = i
-    return shouldnt
+    return matches
 
 
 def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
@@ -356,12 +356,12 @@ async def fingerPrint(
     ref = ref.append(samples)
 
     # find samples that should match but don't
-    should = checkMismatches(v, ref, samples)
+    mismatches = checkMismatches(v, ref, samples)
 
     # find samples that shouldn't match but do
-    shouldnt = checkMatches(v, ref)
+    matches = checkMatches(v, ref)
 
-    return updated_lod_mat, should, shouldnt
+    return updated_lod_mat, mismatches, matches
 
 
 
