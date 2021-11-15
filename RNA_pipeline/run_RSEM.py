@@ -22,6 +22,7 @@ parser.add_argument('-o', '--output_dir', default='.', help='Output directory')
 parser.add_argument('--max_frag_len', default='1000', help='Maximum fragment length')
 parser.add_argument('--estimate_rspd', type=str.lower, choices=['true', 'false'], default='true', help='Set to estimate the read start position distribution from data (recommended)')
 parser.add_argument('--calc_ci', type=str.lower, choices=['true', 'false'], default='false', help='Calculate 95% credibility intervals and posterior mean estimates')
+parser.add_argument('--ci_memory', default='1024', help='Maximum size (in memory, MB) of the auxiliary buffer used for computing credibility intervals (CI)')
 parser.add_argument('--is_stranded', type=str.lower, choices=['true', 'false'], default='false', help='Stranded protocol')
 parser.add_argument('--paired_end', type=str.lower, choices=['true', 'false'], default='true', help='Paired-end protocol')
 parser.add_argument('-t', '--threads', default='4', help='Number of threads')
@@ -40,6 +41,8 @@ with cd(args.output_dir):
 
     if args.calc_ci=='true':
         cmd += ' --calc-ci'
+        cmd += ' --ci-memory '
+        cmd += args.ci_memory
 
     if args.is_stranded=='true':
         cmd += ' --forward-prob 0.0'
