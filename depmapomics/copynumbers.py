@@ -335,6 +335,8 @@ def postProcess(
 def _CCLEPostProcessing(
     wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
+    wessetentity=WESSETENTITY,
+    wgssetentity=WGSSETENTITY,
     samplesetname=SAMPLESETNAME,
     AllSamplesetName="all",
     my_id=MY_ID,
@@ -410,7 +412,7 @@ def _CCLEPostProcessing(
         )
         wessegments, genecn, wesfailed = postProcess(
             wesrefworkspace,
-            setEntity="pair_set",
+            setEntity=wessetentity,
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
             todrop=todropwes,
             save_output=folder,
@@ -469,10 +471,11 @@ def _CCLEPostProcessing(
     )
     wgssegments, genecn, wgsfailed = postProcess(
         wgsrefworkspace,
-        setEntity="sample_set",
+        setEntity=wgssetentity,
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         todrop=todropwgs,
         save_output=folder,
+        segmentsthresh=2000,
         priority=priority,
         **kwargs
     )
