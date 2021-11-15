@@ -166,7 +166,7 @@ workflow RNAseq_mutect2 {
 
   #call ReorderSam_GATK #optional
   Int tumor_bam_size = ceil(size(tumor_bam, "GB") + size(tumor_bai, "GB"))
-  Int disksize = tumor_bam_size + ref_size + disk_pad
+  Int disksize = (tumor_bam_size*2) + ref_size + disk_pad
 
   call picard_CleanAfterStar {
     input:
