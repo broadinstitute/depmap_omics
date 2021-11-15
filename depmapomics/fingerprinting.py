@@ -19,7 +19,7 @@ def updateLOD(
     save_new_mat=True,
     new_mat_filename="new_fingerprint_lod_matrix.csv",
     prev_mat_df=None,
-    updated_mat_filename="updated_lod_matrix.csv"
+    updated_mat_filename="updated_lod_matrix.csv",
 ):
     """Here we update the fingerprint LOD matrix on taiga with the new fingerprints
     and enerate matrix with LOD score for new fingerprint vcfs
@@ -33,6 +33,10 @@ def updateLOD(
         new_mat_filename (str): name of the new lod matrix file if save_new_mat
         prev_mat_df (pd.DatatFrame): a previous lod matrix file that will be merged with the new lod matrix
         updated_mat_filename (str): name of the updated (new merged with prev) lod matrix file
+    
+    Returns:
+        new_ids (set): set of ids of new samples
+        updated_lod_mat (pd.DataFrame): dataframe for the updated lod score matrix
     """
     new_lod_list = []
     sample_batch_pair_df = wm.get_entities(batch_pair_entity)
@@ -60,10 +64,11 @@ def updateLOD(
 
     # Update LOD matrix ( have to update (A+a)*(B+b) = (AB)+(aB)+(Ab)+(ab))
     if prev_mat_df is not None:
-        prev_lod_mat = prev_mat_df  
+        prev_lod_mat = prev_mat_df
         old_ids = set(prev_lod_mat.index) - set(new_ids)
         updated_lod_mat = pd.concat(
-            (prev_lod_mat.loc[old_ids, old_ids], new_lod_mat.loc[new_ids, old_ids]), axis=0
+            (prev_lod_mat.loc[old_ids, old_ids], new_lod_mat.loc[new_ids, old_ids]),
+            axis=0,
         )
         updated_lod_mat = pd.concat(
             (
@@ -77,6 +82,19 @@ def updateLOD(
 
 
 def checkMismatches(lod_mat, ref, samples, thr=100):
+    """ find samples that should match but don't, by comparing the lod scores
+
+    with thr
+
+    Args:
+        lod_mat (pd.DataFrame): dataframe containing lod scores
+        ref (pd.DataFrame): dataframe representing the sample tracker
+        samples (pd.DataFrame): dataframe representing info for new samples
+        thr (int): lod score under which we consider two samples mismatched. optional, defaults to 100
+    
+    Returns:
+        mismatches (dict): dict representing the mismatches
+    """
     mismatches = {}
     print("\n\nsamples that should match but don't:")
     for u in set(samples.arxspan_id):
@@ -85,7 +103,8 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
             ref[ref.arxspan_id == u].index.tolist(),
         ]
         for i, j in [
-            (scores.index[x], scores.columns[y]) for x, y in np.argwhere(scores.values < thr)
+            (scores.index[x], scores.columns[y])
+            for x, y in np.argwhere(scores.values < thr)
         ]:
             print("__________________________")
             print(scores.loc[i, j])
@@ -123,10 +142,76 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                                 ["arxspan_id", "version", "datatype", "participant_id"],
                             ].values
                         )
-                    ): str(j)
+                    )
+                    + ": "
+                    + str(j): str(
+                        tuple(
+                            ref.loc[
+                                j,
+                                [
+                                    "arxspan_id",
+                                    "version",
+                                    "datatype",
+                                    "participant_id",
+                                    "blacklist",
+                                ],
+                            ]
+                        )
+                    )
                 }
-                + ": "
-                + str(
+            )
+    return mismatches
+
+
+def checkMatches(lod_mat, ref, thr=500):
+    """ find samples that shouldn't match but do, by comparing the lod scores
+
+    with thr
+
+    Args:
+        lod_mat (pd.DataFrame): dataframe containing lod scores
+        ref (pd.DataFrame): dataframe representing the sample tracker
+        samples (pd.DataFrame): dataframe representing info for new samples. optional, defaults to 500
+        thr (int): lod score above which we consider two samples matching
+    
+    Returns:
+        matches (dict): dict representing the matches
+    """
+
+    print("\n\nsamples that shouldn't match but do")
+    previ = ""
+    matches = {}
+    for i, j in [
+        (lod_mat.index[x], lod_mat.columns[y])
+        for x, y in np.argwhere(lod_mat.values > thr)
+    ]:
+        if i in ref.index and j in ref.index:
+            matched_samples = []
+            if i == j:
+                continue
+            if ref.loc[i]["participant_id"] == ref.loc[j]["participant_id"]:
+                continue
+            if i != previ:
+                if previ != "":
+                    matches.update(
+                        {
+                            "_".join(
+                                ref.loc[
+                                    previ,
+                                    [
+                                        "arxspan_id",
+                                        "version",
+                                        "datatype",
+                                        "participant_id",
+                                        "stripped_cell_line_name",
+                                    ],
+                                ]
+                                .astype(str)
+                                .values.tolist()
+                            ): matched_samples
+                        }
+                    )
+                matched_samples = [
                     tuple(
                         ref.loc[
                             j,
@@ -135,79 +220,38 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                                 "version",
                                 "datatype",
                                 "participant_id",
-                                "blacklist",
+                                "stripped_cell_line_name",
                             ],
-                        ]
+                        ].values
+                    )
+                ]
+            else:
+                matched_samples.append(
+                    tuple(
+                        ref.loc[
+                            j,
+                            [
+                                "arxspan_id",
+                                "version",
+                                "datatype",
+                                "participant_id",
+                                "stripped_cell_line_name",
+                            ],
+                        ].values
                     )
                 )
-            )
-    return mismatches
-
-
-def checkMatches(lod_mat, ref, thr=500):
-    print("\n\nsamples that shouldn't match but do")
-    previ = ""
-    matches = {}
-    for i, j in [(lod_mat.index[x], lod_mat.columns[y]) for x, y in np.argwhere(lod_mat.values > thr)]:
-        if i == j:
-            continue
-        if ref.loc[i]["participant_id"] == ref.loc[j]["participant_id"]:
-            continue
-        if i != previ:
-            if previ != "":
-                matches.update(
-                    {
-                        "_".join(
-                            ref.loc[
-                                previ,
-                                [
-                                    "arxspan_id",
-                                    "version",
-                                    "datatype",
-                                    "participant_id",
-                                    "stripped_cell_line_name",
-                                ],
-                            ]
-                            .astype(str)
-                            .values.tolist()
-                        ): n
-                    }
-                )
-            n = [
-                tuple(
-                    ref.loc[
-                        j,
-                        [
-                            "arxspan_id",
-                            "version",
-                            "datatype",
-                            "participant_id",
-                            "stripped_cell_line_name",
-                        ],
-                    ].values
-                )
-            ]
-        else:
-            n.append(
-                tuple(
-                    ref.loc[
-                        j,
-                        [
-                            "arxspan_id",
-                            "version",
-                            "datatype",
-                            "participant_id",
-                            "stripped_cell_line_name",
-                        ],
-                    ].values
-                )
-            )
-        previ = i
+            previ = i
     return matches
 
 
 def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
-    # add and update sample_batch_pairs and sample_batch_pair_set
+    """add and update sample_batch_pairs and sample_batch_pair_set in workspace
+    
+    Args:
+        wm (dm.workspaceManager): dalmatian workspace manager for the terra workspace
+        working_dir (str): working directory where we store temp files. optional, defaults to WORKING_DIR
+
+    """
     all_sample_sets = wm.get_entities("sample_set").index
     sample_set_a_list = []
     sample_set_b_list = []
@@ -239,7 +283,7 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
         ):
             print("sample_batch_pair manually updated")
         else:
-            raise ValueError('sample_batch_pair not manually updated')
+            raise ValueError("sample_batch_pair not manually updated")
 
     # replace string entries in sample_batch_pairs with references to sample_sets
     myterra.updateReferences(wm, "sample_batch_pair", pair_df)
@@ -267,20 +311,19 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
         ):
             print("sample_batch_pair_set manually updated")
         else:
-            raise ValueError('sample_batch_pair_set not manually updated')
+            raise ValueError("sample_batch_pair_set not manually updated")
 
 
 async def fingerPrint(
-    rnasamples,
-    wgssamples,
-    sid='id',
+    samples,
+    sid="id",
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
     bamcolname=LEGACY_BAM_COLNAMES,
     prev_mat_df=None,
-    updated_mat_filename=""
+    updated_mat_filename="",
 ):
     """1.1  Generate Fingerprint VCFs
 
@@ -290,18 +333,22 @@ async def fingerPrint(
     just run fingerprint_bam instead.
 
     Args:
-        samples ([type]): [description]
-        sampleset ([type]): [description]
-        sid ([type]): [description]
-        working_dir ([type]): [description]
-        bamcolname ([type]): [description]
-        workspace ([type], optional): [description]. Defaults to WORKSPACE.
+        samples (pd.DataFrame): dataframe for samples
+        sampleset (str): name for the sample set to be processed
+        sid (str): column name for sample id
+        working_dir (str): location for temp files to be saved in
+        bamcolname (list[str], optional): column names for bam and bai files on terra
+        workspace (str, optional): terra workspace for fingerprinting. Defaults to FPWORKSPACE.
+
+    Returns:
+        updated_lod_mat (pd.DataFrame): updated lod matrix
+        mismatches (dict): dict representing the mismatches
+        matches (dict): dict representing the matches
 
     Author:
         William Colgan (wcolgan@broadinstitute.org)
     """
 
-    samples = pd.concat([rnasamples, wgssamples])
     bams = samples[bamcolname]
     bams[sid] = bams.index
     print("adding " + str(len(bams)) + " new samples to the fingerprint")
@@ -346,33 +393,40 @@ async def fingerPrint(
     terra.saveWorkspace(workspace, "data/" + sampleset + "/FPconfig/")
 
     # Update LOD matrix
-    new_ids, updated_lod_mat = updateLOD(wm, sampleset, working_dir, save_new_mat=False, prev_mat_df=None, updated_mat_filename=updated_mat_filename)
+    new_ids, updated_lod_mat = updateLOD(
+        wm,
+        sampleset,
+        working_dir,
+        save_new_mat=False,
+        prev_mat_df=None,
+        updated_mat_filename=updated_mat_filename,
+    )
 
     # finding issues with the dataset
-    v = updated_lod_mat.loc[new_ids]
+    latest_lod_mat = updated_lod_mat.loc[new_ids]
     ref = tracker.getTracker()
     ref = ref.append(samples)
 
     # find samples that should match but don't
-    mismatches = checkMismatches(v, ref, samples)
+    mismatches = checkMismatches(latest_lod_mat, ref, samples)
 
     # find samples that shouldn't match but do
-    matches = checkMatches(v, ref)
-    return updated_lod_mat, mismatches, matches
+    matches = checkMatches(latest_lod_mat, ref)
 
+    return updated_lod_mat, mismatches, matches
 
 
 async def _CCLEFingerPrint(
     rnasamples,
     wgssamples,
-    sid='id'
+    sid="id",
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
     bamcolname=LEGACY_BAM_COLNAMES,
     taiga_dataset=TAIGA_FP,
-    updated_mat_filename=TAIGA_FP_FILENAME
+    updated_mat_filename=TAIGA_FP_FILENAME,
 ):
     """ CCLE fingerprinting function
     
@@ -383,16 +437,23 @@ async def _CCLEFingerPrint(
         working_dir ([type]): [description]
         bamcolname ([type]): [description]
         workspace ([type], optional): [description]. Defaults to WORKSPACE.
+
+    Returns:
+        updated_lod_mat (pd.DataFrame): updated lod matrix
+        mismatches (dict): dict representing the mismatches
+        matches (dict): dict representing the matches
     """
+
+    samples = pd.concat([rnasamples, wgssamples])
+
     from taigapy import TaigaClient
 
     tc = TaigaClient()
     prev_lod_mat = tc.get(name=taiga_dataset, file=updated_mat_filename)
-    
+
     # call generic function
     updated_lod_mat, should, shouldnt = fingerPrint(
-        rnasamples,
-        wgssamples,
+        samples,
         sid=sid,
         sampleset=sampleset,
         allbatchpairset=allbatchpairset,
@@ -400,7 +461,7 @@ async def _CCLEFingerPrint(
         working_dir=working_dir,
         bamcolname=bamcolname,
         prev_mat_df=prev_lod_mat,
-        updated_mat_filename=updated_mat_filename
+        updated_mat_filename=updated_mat_filename,
     )
 
     # Upload updated LOD matrix to Taiga
