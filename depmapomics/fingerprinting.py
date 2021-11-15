@@ -28,13 +28,12 @@ def updateLOD(
         wm (wmanager): workspace manager of current FP terra workspace
         sampleset (str): name of current sample set
         working_dir (str): directory where the lod matrix file will be saved
-        batch_pair_entity (str): name of entity on terra workspace that represents sample batch pairs
+        batch_pair_entity (str): optional. name of entity on terra workspace that represents sample batch pairs. Defaults to "sample_batch_pair".
         save_new_mat (bool): if new lod matrix (not combined with a previous matrix) is saved
         new_mat_filename (str): name of the new lod matrix file if save_new_mat
         prev_mat_df (pd.DatatFrame): a previous lod matrix file that will be merged with the new lod matrix
         updated_mat_filename (str): name of the updated (new merged with prev) lod matrix file
     """
-
     new_lod_list = []
     sample_batch_pair_df = wm.get_entities(batch_pair_entity)
     samples_df = sample_batch_pair_df[
@@ -74,7 +73,6 @@ def updateLOD(
             axis=1,
         )
         updated_lod_mat.to_csv(working_dir + updated_mat_filename + ".csv")
-
     return new_ids, updated_lod_mat
 
 
@@ -360,7 +358,6 @@ async def fingerPrint(
 
     # find samples that shouldn't match but do
     matches = checkMatches(v, ref)
-
     return updated_lod_mat, mismatches, matches
 
 
@@ -378,6 +375,7 @@ async def _CCLEFingerPrint(
     updated_mat_filename=TAIGA_FP_FILENAME
 ):
     """ CCLE fingerprinting function
+    
     Args:
         samples ([type]): [description]
         sampleset ([type]): [description]
