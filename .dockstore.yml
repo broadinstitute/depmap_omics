@@ -1,6 +1,6 @@
 version: 1.2
 workflows:
-  - name:  cnn-variant-filter
+  - name: cnn-variant-filter
     subclass: WDL
     publish: True
     primaryDescriptorPath: /WGS_pipeline/cnn-variant-filter.wdl
@@ -10,7 +10,7 @@ workflows:
       branches:
         - develop
         - master
-  - name:  RNA_aggregate
+  - name: RNA_aggregate
     subclass: WDL
     publish: True
     primaryDescriptorPath: /RNA_pipeline/RNA_aggregate.wdl
@@ -20,7 +20,7 @@ workflows:
       branches:
         - develop
         - master
-  - name:  RNA_pipeline
+  - name: RNA_pipeline
     subclass: WDL
     publish: True
     primaryDescriptorPath: /RNA_pipeline/RNA_pipeline.wdl
@@ -30,7 +30,7 @@ workflows:
       branches:
         - develop
         - master
-  - name:  WGS_pipeline
+  - name: WGS_pipeline
     subclass: WDL
     publish: True
     primaryDescriptorPath: /WGS_pipeline/WGS_pipeline.wdl
@@ -40,7 +40,7 @@ workflows:
       branches:
         - develop
         - master
-  - name:  WGS_aggregate
+  - name: WGS_aggregate
     subclass: WDL
     publish: True
     primaryDescriptorPath: /WGS_pipeline/WGS_aggregate.wdl
@@ -50,7 +50,7 @@ workflows:
       branches:
         - develop
         - master
-  - name:  rnaseq_mutect2_tumor_only
+  - name: rnaseq_mutect2_tumor_only
     subclass: WDL
     publish: True
     primaryDescriptorPath: /RNA_pipeline/rnaseq_mutect2_tumor_only.wdl
@@ -60,7 +60,7 @@ workflows:
       branches:
         - develop
         - master
-  - name:  rsem_depmap
+  - name: rsem_depmap
     subclass: WDL
     publish: True
     primaryDescriptorPath: /RNA_pipeline/rsem_depmap.wdl
