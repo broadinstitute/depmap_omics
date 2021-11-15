@@ -262,6 +262,9 @@ WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
 WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 
+WGSSETENTITY = "sample_set"
+WESSETENTITY = "pair_set"
+
 ############## Fingerprinting
 
 # Local directory to save intermediate files to
