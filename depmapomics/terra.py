@@ -213,7 +213,6 @@ def copyToWorkspace(
     sam = wm.get_samples()
     track = tracker[tracker.index.isin(sam.index)][columns].rename(columns=rename)
     track.index.name = "sample_id"
-    miss = set(columns) - set(sam.columns)
     if len(track) == 0 and not addMissing:
         raise ValueError("wrong tracker or index non matching")
     unmatched = set(sam.index) - (set(tracker.index) | set(["nan"]))
@@ -228,31 +227,19 @@ def copyToWorkspace(
     if addMissing and len(unmatched) > 0:
         print("found these columns to be missing in workspace: " + str(unmatched))
         track = tracker[tracker.index.isin(unmatched)][columns].rename(columns=rename)
-        track.index.name = "sample_id"
-        miss = set(columns) - set(sam.columns)
-        if len(track) == 0 and not addMissing:
-            raise ValueError("wrong tracker or index non matching")
-        unmatched = set(sam.index) - (set(tracker.index) | set(["nan"]))
-        if not addMissing:
-            print("found these to be unmatched in the tracker: " + str(unmatched))
-            if deleteUnmatched and len(unmatched) > 0:
-                terra.removeSamples(workspaceID, unmatched)
-        unmatched = set(tracker.index) - set(sam.index)
-        if len(track) != 0:
-            for i in range(0, len(track), group):
-                wm.update_sample_attributes(track.iloc[i : i + group])
-        if addMissing and len(unmatched) > 0:
-            print("found these columns to be missing in workspace: " + str(unmatched))
-            track = tracker[tracker.index.isin(unmatched)][columns].rename(
-                columns=rename
-            )
-            track.index.name = "sample_id"
-            wm.upload_samples(track)
+        wm.upload_samples(track)
 
 
 def updateReferences(wm, etype, attrs):
     """written for FP, where we need to update the sample_batch_pair data table
-    where entries are references to sample_sets instead of strings"""
+
+    where entries are references to sample_sets instead of strings
+    
+    Args:
+    ----
+        wm (dm.WorkspaceManager): for the workspace to be updated
+        etype (str): entity type to be updated
+        attrs (df.DataFrame): updated dataframe for this entity type"""
 
     reserved_attrs = {}
     if etype == "sample":

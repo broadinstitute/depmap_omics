@@ -275,7 +275,7 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
 async def fingerPrint(
     rnasamples,
     wgssamples,
-    sid='id'
+    sid='id',
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
