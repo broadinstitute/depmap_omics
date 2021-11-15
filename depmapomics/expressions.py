@@ -19,7 +19,7 @@ from gsheets import Sheets
 def addSamplesRSEMToMain(input_filenames, main_filename):
     """
     given a tsv RNA files from RSEM algorithm, merge it to a tsv set of RNA data
-    
+
     Args:
     ----
         input_filenames: a list of dict like file path in Terra gs://, outputs from the rsem pipeline
@@ -335,6 +335,7 @@ async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     Returns:
         pd.df: the ssGSEA results
     """
+
     tpm_genes = tpm_genes.copy()
     tpm_genes.columns = [i.split(" (")[0] for i in tpm_genes.columns]
 
