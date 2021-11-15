@@ -470,8 +470,8 @@ async def _CCLEFingerPrint(
         changes_description="New bam fingerprints added for " + sampleset,
         upload_files=[
             {
-                "path": working_dir + taiga_filename,
-                "name": taiga_filename,
+                "path": working_dir + updated_mat_filename,
+                "name": updated_mat_filename,
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             }
