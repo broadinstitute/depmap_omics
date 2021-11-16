@@ -269,7 +269,7 @@ def updateReferences(wm, etype, attrs):
                             "attributeName": i,
                             "addUpdateAttribute": wm._process_attribute_value(
                                 i, j, reserved_attrs
-                            ),
+                            ),  # pylint: disable=protected-access
                         }
                         for i, j in row.iteritems()
                         if not np.any(pd.isnull(j))
@@ -279,7 +279,9 @@ def updateReferences(wm, etype, attrs):
         )
 
     # try rawls batch call if available
-    r = dm.wmanager._batch_update_entities(wm.namespace, wm.workspace, attr_list)
+    r = dm.wmanager._batch_update_entities(
+        wm.namespace, wm.workspace, attr_list
+    )  # pylint: disable=protected-access
     try:
         if r.status_code == 204:
             if isinstance(attrs, pd.DataFrame):
