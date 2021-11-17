@@ -3,6 +3,9 @@ from gsheets import Sheets
 import pandas as pd
 import dalmatian as dm
 from genepy import terra
+import numpy as np
+import traceback
+import firecloud.api
 
 
 def compareToCuratedGS(
@@ -18,7 +21,7 @@ def compareToCuratedGS(
     """
     from a google spreadsheet, will check that we have all of the samples we should have in our sample
     set name (will parse NAME_additional for sample_id)
- 
+
     Args:
     -----
         url: str the url of the gsheet
@@ -175,7 +178,7 @@ def copyToWorkspace(
         "sex",
         "matched_normal",
         "age",
-        "primary_site",
+        "collection_site",
         "primary_disease",
         "subtype",
         "subsubtype",
@@ -210,7 +213,6 @@ def copyToWorkspace(
     sam = wm.get_samples()
     track = tracker[tracker.index.isin(sam.index)][columns].rename(columns=rename)
     track.index.name = "sample_id"
-    miss = set(columns) - set(sam.columns)
     if len(track) == 0 and not addMissing:
         raise ValueError("wrong tracker or index non matching")
     unmatched = set(sam.index) - (set(tracker.index) | set(["nan"]))
@@ -225,6 +227,100 @@ def copyToWorkspace(
     if addMissing and len(unmatched) > 0:
         print("found these columns to be missing in workspace: " + str(unmatched))
         track = tracker[tracker.index.isin(unmatched)][columns].rename(columns=rename)
-        track.index.name = "sample_id"
         wm.upload_samples(track)
+
+
+def updateReferences(wm, etype, attrs):
+    """written for FP, where we need to update the sample_batch_pair data table
+
+    where entries are references to sample_sets instead of strings
+    
+    Args:
+    ----
+        wm (dm.WorkspaceManager): for the workspace to be updated
+        etype (str): entity type to be updated
+        attrs (df.DataFrame): updated dataframe for this entity type"""
+
+    reserved_attrs = {}
+    if etype == "sample":
+        reserved_attrs = {"participant": "participant"}
+    elif etype == "pair":
+        reserved_attrs = {
+            "participant": "participant",
+            "case_sample": "sample",
+            "control_sample": "sample",
+        }
+    elif etype == "sample_batch_pair":
+        reserved_attrs = {
+            "sample_batch_a": "sample_set",
+            "sample_batch_b": "sample_set",
+        }
+
+    attr_list = []
+    for entity, row in attrs.iterrows():
+        attr_list.extend(
+            [
+                {
+                    "name": entity,
+                    "entityType": etype,
+                    "operations": [
+                        {
+                            "op": "AddUpdateAttribute",
+                            "attributeName": i,
+                            "addUpdateAttribute": wm._process_attribute_value(  # pylint: disable=protected-access
+                                i, j, reserved_attrs
+                            ),
+                        }
+                        for i, j in row.iteritems()
+                        if not np.any(pd.isnull(j))
+                    ],
+                }
+            ]
+        )
+
+    # try rawls batch call if available
+    r = dm.wmanager._batch_update_entities(  # pylint: disable=protected-access
+        wm.namespace, wm.workspace, attr_list
+    )
+    try:
+        if r.status_code == 204:
+            if isinstance(attrs, pd.DataFrame):
+                print(
+                    "Successfully updated attributes '{}' for {} {}s.".format(
+                        attrs.columns.tolist(), attrs.shape[0], etype
+                    )
+                )
+            elif isinstance(attrs, pd.Series):
+                print(
+                    "Successfully updated attribute '{}' for {} {}s.".format(
+                        attrs.name, len(attrs), etype
+                    )
+                )
+            else:
+                print(
+                    "Successfully updated attribute '{}' for {} {}s.".format(
+                        attrs.name, len(attrs), etype
+                    )
+                )
+        elif r.status_code >= 400:
+            raise BlockingIOError("Unable to update entity attributes")
+        else:
+            print(r.text)
+    except:  # revert to public API
+        traceback.print_exc()
+        print("Failed to use batch update endpoint; switching to slower fallback")
+        for update in attr_list:
+            r = firecloud.api.update_entity(
+                wm.namespace,
+                wm.workspace,
+                update["entityType"],
+                update["name"],
+                update["operations"],
+            )
+            if r.status_code == 200:
+                print("Successfully updated {}.".format(update["name"]))
+            elif r.status_code >= 400:
+                raise BlockingIOError("Unable to update entity attributes")
+            else:
+                print(r.text)
 
