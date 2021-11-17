@@ -22,13 +22,14 @@ def getTracker():
     )
 
 
-def _getDEPMAPPV(pv_tokeep=[], index="DepMap_ID"):
+def _getDEPMAPPV(pv_index="arxspan_id", pv_tokeep=[], index="DepMap_ID"):
     """get the DEPMAP master spreadsheet from google sheet
 
     Args:
-        pv_tokeep (list, optional): the list of columns to filter on. Defaults to [].
-        index (str, optional): the column to index on. Defaults to "DepMap_ID".
-
+        pv_index (str, optional): [description]. Defaults to "arxspan_id".
+        pv_tokeep (list, optional): [description]. Defaults to [].
+        index (str, optional): [description]. Defaults to "DepMap_ID".
+ 
     Returns:
         (pandas.DataFrame): the DEPMAP master spreadsheet
     """
@@ -67,7 +68,7 @@ def findIssue(
         "sex",
         "arxspan_id",
         "cellosaurus_id",
-        "primary_site",
+        "collection_site",
         "primary_disease",
         "subtype",
         "origin",
@@ -151,7 +152,7 @@ def updateFromTracker(
             "primary_disease": [],
             "cellosaurus_id": [],
             "age": [],
-            "primary_site": [],
+            "collection_site": [],
             "subtype": [],
             "subsubtype": [],
             "origin": [],
@@ -176,9 +177,9 @@ def updateFromTracker(
     for k, v in toupdate.items():
         samples.loc[index, k] = v
     # Commented out the following because it has no effect
-    #len(samples.loc[notfound][participant_id]), samples.loc[notfound][
+    # len(samples.loc[notfound][participant_id]), samples.loc[notfound][
     #    participant_id
-    #].tolist()
+    # ].tolist()
     return samples, notfound
 
 
@@ -186,24 +187,24 @@ def removeOlderVersions(
     names, refsamples, arxspan_id="arxspan_id", version="version", priority=None
 ):
     """
-  will set it to your sample_ids using the latest version available for each sample
+    will set it to your sample_ids using the latest version available for each sample
 
-  Given a dataframe containing ids, versions, sample_ids and you dataset df indexed
-  by the same ids, will set it to your sample_ids using the latest version
-  available for each sample
+    Given a dataframe containing ids, versions, sample_ids and you dataset df indexed
+    by the same ids, will set it to your sample_ids using the latest version
+    available for each sample
 
-  Args:
-  -----
-    refsamples (pd.df): the reference metadata. should contain [id, version, arxspan_id,...]
-    names (list[str]): only do it on this set of samples.
-    arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
-    version (str, optional): the name of the version column. Defaults to 'version'.
+    Args:
+    -----
+        refsamples (pd.df): the reference metadata. should contain [id, version, arxspan_id,...]
+        names (list[str]): only do it on this set of samples.
+        arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
+        version (str, optional): the name of the version column. Defaults to 'version'.
 
-  Returns:
-  --------
-    (dict): the subseted samples
+    Returns:
+    --------
+        (dict): the subseted samples
 
-  """
+    """
     # pandas throws an error if index is unavailable
     names = [x for x in names if x in refsamples.index.tolist()]
 
@@ -244,19 +245,19 @@ def updateIsogenecity(
     unset=False,
     toupdate=["participant_id", "age", "sex", "matched_normal"],
 ):
-    """updateIsogenecity will update participant_id relationship for a set of samples
+    """
 
-  Args:
-    di (dict): the renaming dict (arxspan_id:arxspand_id) those two are now isogenic
-    tracker (pandas.DataFrame): the sample tracker
-    unset (bool, optional): if True, will remove the isogenecity. Defaults to False.
+    Args:
+        di ([type]): [description]
+        tracker ([type]): [description]
+        unset (bool, optional): [description]. Defaults to False.
 
-  Raises:
-    ValueError: not same participant for all cell lines (bug to solve in the sample tracker)
+    Raises:
+        ValueError: [description]
 
-  Returns:
-    (pandas.DataFrame): the updated sample tracker
-  """
+    Returns:
+        [type]: [description]
+    """
     tracker = tracker.copy()
     for k, v in di.items():
         print("________________________________")
@@ -307,7 +308,7 @@ def changeCellLineNameInNew(
         "primary_disease",
         "cellosaurus_id",
         "age",
-        "primary_site",
+        "collection_site",
         "subtype",
         "subsubtype",
     ],
@@ -349,7 +350,7 @@ def changeCellLineName(
         "parent_cell_line",
         "matched_normal",
         "age",
-        "primary_site",
+        "collection_site",
         "primary_disease",
         "subtype",
         "subsubtype",
@@ -385,10 +386,10 @@ def updatePairs(
     workspaceID, tracker, removeDataFiles=True,
 ):
     """
-  looks at the current sample tracker and updates the pairs in Terra
+    looks at the current sample tracker and updates the pairs in Terra
 
-  It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
-  """
+    It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
+    """
     return False
 
 
@@ -468,22 +469,22 @@ def findLikelyDup(
     looksub=True,
 ):
     """
-  find cell lines that are likely to be duplicates
+    find cell lines that are likely to be duplicates
 
-  will return ,  as well,
-  and
+    will return ,  as well,
+    and
 
-  Args:
-  -----
-    tracker: dataframe of the sample tracker
-    looksub: bool, look if a name if within another name (can flag many derivatives)
+    Args:
+    -----
+        tracker: dataframe of the sample tracker
+        looksub: bool, look if a name if within another name (can flag many derivatives)
 
-  Returns:
-  --------
-    a list[tuples(str,str)] of likly duplicate names as tuples (rh13, RH-13)
-    a list[tuples(str,str)] of associated arxspan ids
-    a dict[str:set(str)] of arxspan ids that have multiple cell line names associated
-  """
+    Returns:
+    --------
+        a list[tuples(str,str)] of likly duplicate names as tuples (rh13, RH-13)
+        a list[tuples(str,str)] of associated arxspan ids
+        a dict[str:set(str)] of arxspan ids that have multiple cell line names associated
+    """
     names = set(tracker[name])
     simi = []
     arxsp = []

@@ -34,6 +34,7 @@ def renameColumns(df):
 
 def loadFromGATKAggregation(
     refworkspace,
+    setEntity="sample_set",
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     save_output="",
     doCleanup=True,
@@ -79,7 +80,7 @@ def loadFromGATKAggregation(
                 )
 
     segments = pd.read_csv(
-        wm.get_entities("sample_set").loc[sampleset, colname], sep="\t"
+        wm.get_entities(setEntity).loc[sampleset, colname], sep="\t"
     ).rename(columns=colRenaming)
 
     # removing the duplicates
@@ -233,6 +234,7 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
 
 def postProcess(
     refworkspace,
+    setEntity="sample_set",
     sampleset="all",
     save_output="",
     doCleanup=True,
@@ -273,6 +275,7 @@ def postProcess(
     print("loading CN from Terra")
     segments = loadFromGATKAggregation(
         refworkspace,
+        setEntity=setEntity,
         sampleset=sampleset,
         sortby=sortby,
         todrop=todrop,
@@ -300,7 +303,6 @@ def postProcess(
         i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
         for _, i in mybiomart.iterrows()
     ]
-
     genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
     # validation step
     print("summary of the gene cn data:")
@@ -333,6 +335,8 @@ def postProcess(
 def _CCLEPostProcessing(
     wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
+    wessetentity=WESSETENTITY,
+    wgssetentity=WGSSETENTITY,
     samplesetname=SAMPLESETNAME,
     AllSamplesetName="all",
     my_id=MY_ID,
@@ -408,10 +412,10 @@ def _CCLEPostProcessing(
         )
         wessegments, genecn, wesfailed = postProcess(
             wesrefworkspace,
-            AllSamplesetName if AllSamplesetName else samplesetname,
+            setEntity=wessetentity,
+            sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
             todrop=todropwes,
             save_output=folder,
-            segmentsthresh=850,
             priority=priority,
             **kwargs
         )
@@ -467,7 +471,8 @@ def _CCLEPostProcessing(
     )
     wgssegments, genecn, wgsfailed = postProcess(
         wgsrefworkspace,
-        AllSamplesetName if AllSamplesetName else samplesetname,
+        setEntity=wgssetentity,
+        sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         todrop=todropwgs,
         save_output=folder,
         segmentsthresh=2000,
