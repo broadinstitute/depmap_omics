@@ -35,23 +35,23 @@ VIRTUAL_RELEASES = {
 }  # release ids on taiga
 
 # PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PORTAL = "dmc"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "21Q3"
-NEW_QUARTER = "21Q4"
+PORTAL = "ibm"  # used for 'not bookkeeping' markers
+PREV_QUARTER = "21Q4"
+NEW_QUARTER = "21Q4v2"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
-NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
-# NEW_RELEASE = TENTATIVE_VIRTUAL
+# NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
+NEW_RELEASE = TENTATIVE_VIRTUAL
 PORTALS = [PORTAL]
 
 
-LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011"}
+LINES_TO_DROP_COMMON = set()
 LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
 
 
-LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=1929030925"
+LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit?usp=sharing"
 sheets_obj = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
 sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET)
 # LINES_TO_RELEASE = sheets.sheets[0]
@@ -61,11 +61,15 @@ LINES_TO_RELEASE_DF.columns = LINES_TO_RELEASE_DF.columns.str.lower()
 
 
 LINES_TO_RELEASE = {}
-LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"])
-LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(LINES_TO_RELEASE_DF["dmc"])
-LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(LINES_TO_RELEASE_DF["ibm"])
+LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"].dropna())
+LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(
+    LINES_TO_RELEASE_DF["dmc"].dropna()
+)
+LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(
+    LINES_TO_RELEASE_DF["ibm"].dropna()
+)
 LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
-    LINES_TO_RELEASE_DF["internal"]
+    LINES_TO_RELEASE_DF["internal"].dropna()
 )
 IGNORE_FAILED_TO_RELEASE = True
 
@@ -229,7 +233,7 @@ FILE_ATTRIBUTES = [
 # FILE_ATTRIBUTES = [
 #     x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
 # ]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
