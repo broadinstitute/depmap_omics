@@ -81,6 +81,7 @@ FUSIONS_MERGE_COLS = [
     "RightGene",
     "LeftBreakpoint",
     "RightBreakpoint",
+    "SpliceType",
 ]
 SEGMENT_CN_MERGE_COLS = ["DepMap_ID", "Chromosome", "Start", "End"]
 MUTATIONS_MERGE_COLS = [
