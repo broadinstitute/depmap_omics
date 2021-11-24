@@ -71,7 +71,7 @@ LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(
 LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
     LINES_TO_RELEASE_DF["internal"].dropna()
 )
-IGNORE_FAILED_TO_RELEASE = True
+IGNORE_FAILED_TO_RELEASE = False
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
