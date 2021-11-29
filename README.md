@@ -71,13 +71,12 @@ Use the instructions in the genepy page to install the package.
 
 The current owners of these workspaces should give you access.
 
-2. For the mutation pipeline you will also need to request dbGaP access (required for TCGA workflows). See CCLE/new hiree section on Asana for details.
-3. Aquire access to required billing projects (e.g. broad-firecloud-ccle). See CCLE/new hiree section on Asana for details.
+2. For the mutation pipeline you will also need to request dbGaP access (required for TCGA workflows). *See CCLE/new hiree section on Asana for details*.
+3. Acquire access to required billing projects (e.g. broad-firecloud-ccle). *See CCLE/new hiree section on Asana for details*.
 4. Get access to the following Terra groups:
-  - DEPMAP_CCLE_DATA
-  - DEPMAP-PIPELINES
-  - CCLE2-DATA
-  - CCLE-PIPELINE
+  - depmap_ccle_data
+  - depmap-pipelines
+  - ccle-pipeline
 5. If you need to get access to the data delivered by GP, use the following links:
   - __WES__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
   - __WES__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
@@ -98,10 +97,6 @@ The current owners of these workspaces should give you access.
 
 *Remember to share relevant gsheets with the service account (`client_email` in `../.credentials.json`).
 
-### Boot up
-
-- You first need to go to [taiga](https://cds.team/taiga/dataset) and create some new datasets for the virtual release
-
 We are instantiating all the parameters needed for this pipeline to run
 
 #### Adding new data
@@ -110,12 +105,12 @@ We are looking for new samples in a range of workspaces.
 
 They are quite messy and might contain duplicates and/or broken file paths...
 
-- We are thus looking at the bam files one by one and comparing them with our own bams. 
+- We are thus looking at the bam files one by one and comparing them with bams we have onboarded. 
 - We remove broken files, duplicates and add new version of a cell line's bam if we find some.
 
 #### Check that we have all the cell lines we expect for this release
 
-This involves comparing to the list in the Google sheet "Cell Line Profiling Status."
+This involves comparing to the list in the Google sheet "Lines to Release"
 
 _As the list cannot be parsed, we are not comparing it for now_
 
@@ -127,32 +122,31 @@ _As the list cannot be parsed, we are not comparing it for now_
 ### Creating your Terra Workspaces:
 
 1. You first need a [Terra](https://app.terra.bio/#) account with correct billing setup. See [here](https://support.terra.bio/hc/en-us/articles/360034677651-Account-setup-and-exploring-Terra) for a tutorial on getting started.
-2. use the different *_pipeline folders, they contain everything to setup the workspace correctly
+2. Use the different *_pipeline folders, they contain everything to setup the workspace correctly
   1. use the WDL scripts available in:
     - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline
     - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate
     - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline
     - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/RNA_aggregate
   2. export them to your workspace
-  3. add he required workspace data listed in all_configs.json (under GENERAL.workspace.attributes)
+  3. add the required workspace data listed in all_configs.json (under GENERAL.workspace.attributes)
   4. setup the right inputs and outpus for your workflows using the inputs_[WORKFLOW_NAME].json and outputs_[WORKFLOW_NAME].json files
 3. load your samples so that their bam and bam index google storage filepath get listed in the right data column to WGS_pipeline and RNA pipeline.
 4. create a sample set with the set of samples you want to analyse.
 
-Once this is done, you can run your jupyter notebook server and open the `CCLE_\*` jupyter files corresponding to our RNA pipeline and WGS pipeline (older versions for WES (CN and mutations are available in a previous commit labelled 20Q4)).
+Once this is done, you can launch your jupyter notebook server and run the `*_CCLE` jupyter notebooks corresponding to our RNA pipeline and WGS pipeline (older versions for WES (CN and mutations are available in a previous commit labelled 20Q4)).
 
 Remark:
   1. you cannot run the `_...()` functions listed in the notebooks.
   2. you will need to use the `postProcesssing()` functions for post processing instead of the CCLE ones.
-  3. you will need to change some of the variables in the prod config file.
-  4. you wont be able to run the function conditional on the CCLE boolean. You can however reimplement them to create your own pipeline.
+  3. you will need to change some of the variables in the `config_prod.py`.
+  4. you won't be able to run the function conditional on the CCLE boolean. You can however reimplement them to create your own pipeline.
 
 The notebook architectures are as follows:
 
-1. UpLoading and preprocessing
+1. Uploading and preprocessing
 2. Running the Terra Pipelines
-3. DownLoading and postProcessing the samples
-4. QC, grouping and uploading to the DepMap portal
+3. Downloading and postprocessing the samples
 
 ## Pipeline Walkthrough <a name="running-pipeline"></a>
 
