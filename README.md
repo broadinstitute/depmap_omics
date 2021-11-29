@@ -122,17 +122,16 @@ _As the list cannot be parsed, we are not comparing it for now_
 ### Creating your Terra Workspaces:
 
 1. You first need a [Terra](https://app.terra.bio/#) account with correct billing setup. See [here](https://support.terra.bio/hc/en-us/articles/360034677651-Account-setup-and-exploring-Terra) for a tutorial on getting started.
-2. Use the different *_pipeline folders, they contain everything to setup the workspace correctly
-  1. use the WDL scripts available in:
-    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline
-    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate
-    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline
-    - https://dockstore.org/my-workflows/github.com/broadinstitute/depmap_omics/RNA_aggregate
-  2. export them to your workspace
-  3. add the required workspace data listed in all_configs.json (under GENERAL.workspace.attributes)
-  4. setup the right inputs and outpus for your workflows using the inputs_[WORKFLOW_NAME].json and outputs_[WORKFLOW_NAME].json files
-3. load your samples so that their bam and bam index google storage filepath get listed in the right data column to WGS_pipeline and RNA pipeline.
-4. create a sample set with the set of samples you want to analyse.
+2. If you haven't already, create a workspace under the billing project of your choice. If you need to process both RNA and WGS data, we recommend creating one workspace for each. 
+3. Import the WDL scripts by following the links to dockstore and clicking on *launch with terra* (note: you'll need both pipeline and aggregate for each data type):
+    - __WGS__ [Pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline)
+    - __WGS__ [Aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate)
+    - __RNA__ [Pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline)
+    - __RNA__ [Aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_aggregate)
+4. DepMap's workspace configurations are saved after each data release under `data/`. We recommend using the those from the latest quarter. For example, if the latest release is `21Q4`, you should be able to find the configurations in `data/21Q4/RNAconfig/all_configs.json` and `data/21Q4/RNAconfig/all_configs.json` for RNA and WGS, respectively.
+5. Set up the right inputs and outpus for your workflows according to inputs_[WORKFLOW_NAME].json and outputs_[WORKFLOW_NAME].json files, which are under the same directory as `all_configs.json`.
+6. load your samples so that their bam and bam index google storage filepath get listed in the right data column to WGS_pipeline and RNA pipeline.
+7. Create a sample set with the set of samples you want to analyse. Make sure the name of this sample set on terra is the same as `SAMPLESETNAME` in `config_prod.py`.
 
 Once this is done, you can launch your jupyter notebook server and run the `*_CCLE` jupyter notebooks corresponding to our RNA pipeline and WGS pipeline (older versions for WES (CN and mutations are available in a previous commit labelled 20Q4)).
 
@@ -186,7 +185,7 @@ _What is explained below comes from the notebook's documentations and might be b
 
 ### 1. Uploading and Preprocessing <a name="upload-preprocess"></a>
 
-The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __This is not something that you would need to run. you can skip directly to part2__.
+The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __For external users, this is not something you would need to run. Please skip directly to part2__.
 
 **Remarks:** 
 - in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
@@ -194,7 +193,7 @@ The first phase really is about getting samples generated at the broad and locat
 
 ### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
 
-We are using Dalmatian to send requests to Terra, so before running this part, you need to make sure that your dalmatian `WorkspaceManager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string with its name.
+We are using Dalmatian to send requests to Terra, so before running this part, you need to make sure that your dalmatian `WorkspaceManager` object is initialized with the right workspace you created and that the functions take as input you workflow names. You also need to make sure that you created your sample set with all your samples and that you initialized the `sampleset` string in `config_prod.py` with its name.
 You can then run the following two pipelines on your samples. The whole process may take 3-7 days.
 
 #### Copy Numbers and Somatic Mutations
