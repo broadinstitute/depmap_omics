@@ -130,7 +130,7 @@ _As the list cannot be parsed, we are not comparing it for now_
     - __RNA__ [Aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_aggregate)
 4. DepMap's workspace configurations are saved after each data release under `data/`. We recommend using configurations from the latest quarter. For example, if the latest release is `21Q4`, you should be able to find the configurations in `data/21Q4/RNAconfig/all_configs.json` and `data/21Q4/RNAconfig/all_configs.json` for RNA and WGS, respectively.
 5. Set up the right inputs and outpus for your workflows according to `inputs_[WORKFLOW_NAME].json` and `outputs_[WORKFLOW_NAME].json` files, which are under the same directory as `all_configs.json`.
-6. load your samples so that their bam and bam index google storage filepath get listed in the right data column to WGS_pipeline and RNA pipeline.
+6. Load your samples so that their bam and bam index google storage filepath get listed in the right data column to WGS_pipeline and RNA pipeline. 
 7. Create a sample set with the set of samples you want to analyse. Make sure the name of this sample set on terra is the same as `SAMPLESETNAME` in `config_prod.py`.
 
 Once this is done, you can launch your jupyter notebook server and run the `*_CCLE` jupyter notebooks corresponding to our RNA pipeline and WGS pipeline (older versions for WES (CN and mutations are available in a previous commit labelled 20Q4)).
@@ -188,7 +188,7 @@ _What is explained below comes from the notebook's documentations and might be b
 The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __For external users, this is not something you would need to run. Please skip directly to part2__.
 
 **Remarks:** 
-- in the initialization you might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
+- in the initialization step, external users might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
 - feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs.
 
 ### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
@@ -227,13 +227,7 @@ The outputs to be downloaded will be saved under the sample set that you ran. Th
 *   rsem_transcripts_tpm
 *   fusions_star
 
-### On local
-
-__We then save the workflow configurations used__
-__,delete unmapped bams generated during the process__
-__and move the hg38 aligned bams to our own datastorage bucket__
-__We download and reprocess removing the appended version and keeping only the newest versions__
-
+__Finally, we save the workflow configurations used in the pipeline runs__
 
 **Remarks:**
 - for the copy number pipeline we have parametrized both an XX version and an XY version, we recommend using the XY version as it covers the entire genome
@@ -243,12 +237,11 @@ __We download and reprocess removing the appended version and keeping only the n
 ### 3. Downloading and Postprocessing (often called **on local** in the notebooks) <a name="downloading-postprocessing"></a>
 
 This step will do a set of tasks:
-- clean some of the workspace for large useless files.
+- clean the workspaces by deleting large useless files, including unmapped bams.
 - retrieve from the workspace interesting QC results.
-- copy realigned bam files to some bucket.
+- copy realigned bam files to our own data storage bucket.
 - download the results.
-- remove all duplicate samples from our downloaded file (keeping only thee latest version of each samples).
-- saving the current pipeline configuration.
+- remove all duplicate samples from our downloaded file (keeping only the latest version of each sample).
 
 _You would only be interested here at minima in the result downloading_
  
@@ -260,7 +253,7 @@ _You would only be interested here at minima in the result downloading_
 
 #### Mutation
 
-`postProcess()` in `mutations.py` is responsible for postprocessing aggregated MAF files. Here, rather than rerunning the entire analysis, because we know we are adding only WES samples, we can download the previous release's MAF, add the samples, update any annotations, and perform any global filters at the end.
+`mutations.py` contains `postProcess()` (and its wrappers for internal use, including one for filtered and one for unfiltered mutation data), which is responsible for postprocessing aggregated MAF files and generating various types of mutation datasets.
 
 #### RNA
 
@@ -285,7 +278,7 @@ Functions responsible for postprocessing aggregated fusion data can be found in 
 
 ### 4. QC, Grouping and Uploading to the Portal (internal use only) <a name="qc-grouping-uploading"></a>
 
-We then perform the following QC tasks for each dataset. These tasks should not be very interesting for any outside user as they revolve around manual checks of the data, comparison to previous releases, etc.
+We then perform the following QC tasks for each dataset. These tasks should not be very interesting for external user as they revolve around manual checks of the data, comparison to previous releases, etc.
 
 #### CN
 
@@ -310,12 +303,12 @@ We compare the results to the previous releases MAF. Namely:
 #### RNA
 
 Once the expression files are saved, we do the following validations:
-- mean,max,var...
+- mean, max, var...
 - to previous version: same mean, max, var...
 - we QC on the amount of genes with 0 counts for each samples
 
 
-> Besides QC, we are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
+> After QC, we are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
 
 We are then uploading the data to a server called taiga where it will be used in the depmap portal
 ## Repository File Structure <a name="file-structure"></a>
@@ -325,20 +318,20 @@ For our 2 computation pipelines for depmap omics:
 - Copy number and Mutations (WGS)
 
 Each:
-- is contained in a jupyter notebook file,
+- can be run in a jupyter notebook file,
 - gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
-- updates the sample TSVs on Terra with path to the files, 
+- updates the sample TSVs on Terra with paths to the files, 
 - computes the results for each samples by running workflows, 
 - downloads the results and postprocesses them with additional local functions,
 - performs QC and uploads them to taiga (internal only).
 
-__data/__ Contains important information used for processing
+__data/__ Contains important information used for processing, including terra workspace configurations from past quarters
 
 __src__ Contains the location of function files
 
 __\*\_pipeline__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
 
-__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform
+__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform as well as one-off tasks run by the omics team
 
 __legacy__ Contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
 
