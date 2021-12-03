@@ -363,6 +363,7 @@ def _CCLEPostProcessing(
     source_rename=SOURCE_RENAME,
     redoWES=False,
     wesfolder="",
+    cytobandloc=CYTOBANDLOC,
     **kwargs
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -630,8 +631,8 @@ def _CCLEPostProcessing(
 def _ProcessForAchilles(
     wespriosegs,
     wgspriosegs,
-    gene_mapping,  # =pd.read_csv('data/genemapping_19Q1.csv'),
-    cytobandloc="data/hg38_cytoband.gz",
+    gene_mapping,
+    cytobandloc=CYTOBANDLOC,
     samplesetname=SAMPLESETNAME,
     bad=[],
     taiga_legacy_loc=TAIGA_LEGACY_CN,
@@ -808,7 +809,7 @@ def _ProcessForAchilles(
         mergedgenecn.fillna(0), gene_expected_count.fillna(0), ax, name="current"
     )
     rna.rnaseqcorrelation(
-        prevgenecn[prevgenecn.index.isin(mergedgenecn.index.tolist())],
+        prevgenecn[prevgenecn.index.isin(mergedgenecn.index.tolist())].fillna(0),
         gene_expected_count.fillna(0),
         ax,
         name="prev",
