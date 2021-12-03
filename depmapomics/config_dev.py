@@ -162,7 +162,7 @@ TO_UPDATE = {
     "collection_site": ["Sample Collection Site"],
     "subtype": ["lineage_subtype"],
     "subsubtype": ["lineage_sub_subtype"],
-    "origin": ["lineage"],
+    "lineage": ["lineage"],
     # 'source': ['Flagship'],
     "parent_cell_line": ["Parental ID"],
     "comments": ["Comments"],
@@ -375,7 +375,7 @@ BAMQC = [
     "tumor_bam_quality_yield_metrics",
 ]
 
-KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN"]
+KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 
 ############## CN
 

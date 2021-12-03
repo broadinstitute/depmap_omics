@@ -71,7 +71,7 @@ def findIssue(
         "collection_site",
         "primary_disease",
         "subtype",
-        "origin",
+        "lineage",
         "stripped_cell_line_name",
     ],
 ):
@@ -87,7 +87,7 @@ def findIssue(
         tracker (pandas.DataFrame): the tracker
         dup (list, optional): the list of columns to check for duplicates. 
         Defaults to ['age', 'sex', 'arxspan_id', 'cellosaurus_id', 'primary_site', 'primary_disease',
-        'subtype', 'origin', 'stripped_cell_line_name']
+        'subtype', 'lineage', 'stripped_cell_line_name']
     """
     print("things that are from the same patient but don't have the same value")
     dup = tracker[dup].set_index("arxspan_id").drop_duplicates()
@@ -155,7 +155,7 @@ def updateFromTracker(
             "collection_site": [],
             "subtype": [],
             "subsubtype": [],
-            "origin": [],
+            "lineage": [],
             "parent_cell_line": [],
             "matched_normal": [],
             "comments": [],
@@ -354,7 +354,7 @@ def changeCellLineName(
         "primary_disease",
         "subtype",
         "subsubtype",
-        "origin",
+        "lineage",
     ],
 ):
     """
