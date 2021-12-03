@@ -220,7 +220,7 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
     ref = pd.DataFrame(tracker[tracker.datatype == datatype][newname])
     replace = 0
     for val in failed:
-        if val in list(renaming.keys()):
+        if val in renaming:
             a = ref[ref[newname] == ref.loc[val][newname]].index
             for v in a:
                 if v not in failed:
