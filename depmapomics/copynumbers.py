@@ -363,7 +363,6 @@ def _CCLEPostProcessing(
     source_rename=SOURCE_RENAME,
     redoWES=False,
     wesfolder="",
-    cytobandloc=CYTOBANDLOC,
     **kwargs
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
