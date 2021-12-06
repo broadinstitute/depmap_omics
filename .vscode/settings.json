@@ -1,19 +1,19 @@
 {
-  "python.linting.flake8Enabled": true,
-  "python.linting.enabled": true,
-  "python.formatting.provider": "black",
-  "editor.tabSize": 4,
-  "editor.detectIndentation": false,
-  "editor.formatOnSave": true,
-  "editor.formatOnPaste": true,
-  "editor.formatOnType": false,
-  "python.linting.flake8Args": [
-    "--max-line-length=120",
-    "--ignore=F403, E501, E226",
-  ],
-  "editor.autoClosingBrackets": true,
-  "editor.autoClosingQuotes": true,
-  "editor.autoSurround": true,
-  "editor.autoIndent": true,
-  "editor.insertSpaces": true
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "python.formatting.provider": "black",
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": false,
+    "python.linting.flake8Args": [
+        "--max-line-length=120",
+        "--ignore=F403, E501, E226",
+    ],
+    "editor.autoClosingBrackets": true,
+    "editor.autoClosingQuotes": true,
+    "editor.autoSurround": true,
+    "editor.autoIndent": true,
+    "editor.insertSpaces": true
 }

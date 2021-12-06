@@ -20,6 +20,12 @@ taiga_latest_path = lambda dataset_name: {
 TENTATIVE_VIRTUAL = taiga_latest_path("tentative-virtual-d84e")
 
 VIRTUAL_RELEASES = {
+    "21Q4v2": {
+        "internal": taiga_latest_path("internal-21q4v2-403b"),
+        "ibm": taiga_latest_path("ibm-21q4v2-2d92"),
+        "public": taiga_latest_path("public-21q4v2-103d"),
+        "dmc": taiga_latest_path("dmc-21q4v2-0e7c"),
+    },
     "21Q3": {
         "internal": {"name": "internal-21q3-fe4c", "version": 12},
         "ibm": {"name": "ibm-21q3-179f", "version": 8},
@@ -40,14 +46,14 @@ PREV_QUARTER = "21Q4"
 NEW_QUARTER = "21Q4v2"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
-# NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
-NEW_RELEASE = TENTATIVE_VIRTUAL
+NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
+# NEW_RELEASE = TENTATIVE_VIRTUAL
 PORTALS = [PORTAL]
 
 
 LINES_TO_DROP_COMMON = set()
 LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
-LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON
+LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {'ACH-002778'}
 LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
 
 
@@ -228,13 +234,13 @@ FILE_ATTRIBUTES = [
 
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [
-#     x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
+# x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
 # ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [
-#     x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
+# x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
 # ]
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"])]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
