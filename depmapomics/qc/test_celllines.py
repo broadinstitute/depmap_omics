@@ -61,7 +61,7 @@ def test_unexpected_arxspans(arxspans, omicssource, portal, file):
     if IGNORE_FAILED_TO_RELEASE:
         failed_to_release = set()
     else:
-        failed_to_release = lines_to_release - arxspans2
+        failed_to_release = lines_to_release - arxspans2 - lines_to_drop
 
     assert (
         (not unexpected_added_lines)

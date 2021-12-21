@@ -21,6 +21,18 @@ DEFAULT_PORTAL = "internal"
 TENTATIVE_VIRTUAL = {DEFAULT_PORTAL: taiga_latest_path("tentative-virtual-d84e")}
 
 VIRTUAL_RELEASES = {
+    "22Q1": {
+        "internal": taiga_latest_path("internal-22q1-1778"),
+        "ibm": taiga_latest_path("ibm-22q1-cce1"),
+        "public": taiga_latest_path("public-22q1-305b"),
+        "dmc": taiga_latest_path("dmc-22q1-d00a"),
+    },
+    "21Q4v2": {
+        "internal": taiga_latest_path("internal-21q4v2-403b"),
+        "ibm": taiga_latest_path("ibm-21q4v2-2d92"),
+        "public": taiga_latest_path("public-21q4v2-103d"),
+        "dmc": taiga_latest_path("dmc-21q4v2-0e7c"),
+    },
     "21Q3": {
         "internal": {"name": "internal-21q3-fe4c", "version": 12},
         "ibm": {"name": "ibm-21q3-179f", "version": 8},
@@ -36,8 +48,9 @@ VIRTUAL_RELEASES = {
 }  # release ids on taiga
 
 PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PREV_QUARTER = "21Q3"
-NEW_QUARTER = "21Q4"
+PORTAL = "internal"  # used for 'not bookkeeping' markers
+PREV_QUARTER = "21Q4v2"
+NEW_QUARTER = "22Q1"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER]
@@ -45,9 +58,9 @@ NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER]
 # PORTALS = [PORTAL]
 
 
-LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011"}
+LINES_TO_DROP_COMMON = set()
 LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
-LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON
+LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {"ACH-002778"}
 LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
 LINES_TO_DROP_CNV = {"ACH-002335", "ACH-002512"}
 LINES_TO_DROP_PER_FILE = {
@@ -56,7 +69,7 @@ LINES_TO_DROP_PER_FILE = {
 }
 
 
-LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit#gid=1929030925"
+LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit?usp=sharing"
 sheets_obj = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
 sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET)
 # LINES_TO_RELEASE = sheets.sheets[0]
@@ -66,13 +79,17 @@ LINES_TO_RELEASE_DF.columns = LINES_TO_RELEASE_DF.columns.str.lower()
 
 
 LINES_TO_RELEASE = {}
-LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"])
-LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(LINES_TO_RELEASE_DF["dmc"])
-LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(LINES_TO_RELEASE_DF["ibm"])
-LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
-    LINES_TO_RELEASE_DF["internal"]
+LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"].dropna())
+LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(
+    LINES_TO_RELEASE_DF["dmc"].dropna()
 )
-IGNORE_FAILED_TO_RELEASE = True
+LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(
+    LINES_TO_RELEASE_DF["ibm"].dropna()
+)
+LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
+    LINES_TO_RELEASE_DF["internal"].dropna()
+)
+IGNORE_FAILED_TO_RELEASE = False
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
@@ -82,6 +99,7 @@ FUSIONS_MERGE_COLS = [
     "RightGene",
     "LeftBreakpoint",
     "RightBreakpoint",
+    "SpliceType",
 ]
 SEGMENT_CN_MERGE_COLS = ["DepMap_ID", "Chromosome", "Start", "End"]
 MUTATIONS_MERGE_COLS = [
@@ -228,13 +246,13 @@ FILE_ATTRIBUTES = [
 
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [
-#     x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
+# x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
 # ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [
-#     x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
+# x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
 # ]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
