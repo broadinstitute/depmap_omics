@@ -50,7 +50,6 @@ def save(release=RELEASE, notebooks=RUN_NOTEBOOKS):
   os.system('cd ../ccle_processing && git add . && git commit -m '+
   '"depmap omics '+release+' final" && git push')
 
-
 def make(release=RELEASE, my_id=MY_ID,
         mystorage_id=MYSTORAGE_ID,
         potential_list_url=POTENTIAL_LIST,
@@ -71,12 +70,11 @@ def make(release=RELEASE, my_id=MY_ID,
         doMut=True,
         doRNA=True,
         doFusions=True,
-        changes=CHANGES,
+        changes=None,
           ):
+  assert changes is not None
   
   new = {}
-  global virtual
-  global INFO
   
   save_output = "temp/"+ release
   

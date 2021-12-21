@@ -22,11 +22,11 @@ def _getDEPMAPPV(pv_tokeep=[],
   """get the DEPMAP master spreadsheet from google sheet
 
   Args:
-      pv_tokeep (list, optional): the list of columns to filter on. Defaults to [].
-      index (str, optional): the column to index on. Defaults to "DepMap_ID".
+    pv_tokeep (list, optional): the list of columns to filter on. Defaults to [].
+    index (str, optional): the column to index on. Defaults to "DepMap_ID".
 
   Returns:
-      (pandas.DataFrame): the DEPMAP master spreadsheet
+    (pandas.DataFrame): the DEPMAP master spreadsheet
   """
   depmap_pv = Sheets.from_files(MY_ID, MYSTORAGE_ID).get(
     DEPMAP_PV).sheets[0].to_frame(header=2)
@@ -40,11 +40,11 @@ def merge(tracker, new, old, arxspid, cols):
   given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
 
   Args:
-      tracker (pandas.DataFrame): the tracker
-      new (str): the new arxspan id
-      old (str): the old arxspan id
-      arxspid (str): the column name of the arxspan id
-      cols (list): the columns to merge on
+    tracker (pandas.DataFrame): the tracker
+    new (str): the new arxspan id
+    old (str): the old arxspan id
+    arxspid (str): the column name of the arxspan id
+    cols (list): the columns to merge on
 
   Returns:
   """
@@ -85,15 +85,15 @@ def updateFromTracker(samples, ccle_refsamples, arxspan_id='arxspan_id',
   """update a list of samples' missing information from what is known in the ccle sample tracker
 
   Args:
-      samples (pandas.DataFrame): the samples to update
-      ccle_refsamples (pandas.DataFrame): the ccle sample tracker
-      arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
-      participant_id (str, optional): the name of the participant id column. Defaults to 'participant_id'.
-      toupdate (dict(str, []), optional): the columns to update. Defaults to {}.
+    samples (pandas.DataFrame): the samples to update
+    ccle_refsamples (pandas.DataFrame): the ccle sample tracker
+    arxspan_id (str, optional): the name of the arxspan id column. Defaults to 'arxspan_id'.
+    participant_id (str, optional): the name of the participant id column. Defaults to 'participant_id'.
+    toupdate (dict(str, []), optional): the columns to update. Defaults to {}.
 
   Returns:
-      (pandas.DataFrame): the updated samples
-      (list(str)): the list of samples that were not found in the ccle sample tracker
+    (pandas.DataFrame): the updated samples
+    (list(str)): the list of samples that were not found in the ccle sample tracker
   """
   # If I have a previous samples I can update unknown data directly
   index = []
@@ -186,15 +186,15 @@ def updateIsogenecity(di, tracker, unset=False,
   """updateIsogenecity will update participant_id relationship for a set of samples
 
   Args:
-      di (dict): the renaming dict (arxspan_id:arxspand_id) those two are now isogenic
-      tracker (pandas.DataFrame): the sample tracker
-      unset (bool, optional): if True, will remove the isogenecity. Defaults to False.
+    di (dict): the renaming dict (arxspan_id:arxspand_id) those two are now isogenic
+    tracker (pandas.DataFrame): the sample tracker
+    unset (bool, optional): if True, will remove the isogenecity. Defaults to False.
 
   Raises:
-      ValueError: not same participant for all cell lines (bug to solve in the sample tracker)
+    ValueError: not same participant for all cell lines (bug to solve in the sample tracker)
 
   Returns:
-      (pandas.DataFrame): the updated sample tracker
+    (pandas.DataFrame): the updated sample tracker
   """
   tracker = tracker.copy()
   for k,v in di.items():
@@ -491,11 +491,11 @@ def makeCCLE2(tracker, source='CCLE2'):
   this means it will return a table with arxspan ids, cell line name, ...[bam file type]
 
   Args:
-      tracker (dataframe): the sample tracker
-      source (str, optional): the source column to use. Defaults to 'CCLE2'.
+    tracker (dataframe): the sample tracker
+    source (str, optional): the source column to use. Defaults to 'CCLE2'.
 
   Returns:
-      pd.df: a table with arxspan ids, cell line name, ...[bam file type]
+    pd.df: a table with arxspan ids, cell line name, ...[bam file type]
   """
   tracker = tracker[tracker.source == source]
   ccle = pd.DataFrame(index=set(tracker.arxspan_id),
@@ -564,21 +564,21 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
 def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
                   sheetcreds=SHEETCREDS, sheetname=SHEETNAME, refworkspace=None,
                   onlycol=['internal_bam_filepath', 'internal_bai_filepath'],
-                  dry_run=True, samplesinset=[],
+                  dry_run=True, samplesinset=[], todrop=[],
                   ):
   """updates the sample tracker with the new samples and the QC metrics
 
   Args:
-      tracker (df): [description]
-      selected (list[str]): which samples were selected in the release of the analysis
-      samplesetname (str): the name of the sample set or of the current analysis
-      samplesinset (list[str]): list of samples in the analysis.
-      lowqual (list[str]): list of samples that failed QC
-      newgs (str, optional): google storage path where to move the files. Defaults to ''.
-      sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
-      sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
-      refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-      onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+    tracker (df): [description]
+    selected (list[str]): which samples were selected in the release of the analysis
+    samplesetname (str): the name of the sample set or of the current analysis
+    samplesinset (list[str]): list of samples in the analysis.
+    lowqual (list[str]): list of samples that failed QC
+    newgs (str, optional): google storage path where to move the files. Defaults to ''.
+    sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
+    sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
+    refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
+    onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
   """
   # updating locations of bam files and extracting infos
   if newgs and refworkspace is not None:
@@ -597,16 +597,19 @@ def update(tracker, selected, samplesetname, failed, lowqual, newgs='',
       i)[1] for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-l')]
     tracker.loc[res.index.tolist(), 'crc32c_hash']=[gcp.extractHash(
       i) for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
-    tracker.loc[res.index.tolist(), 'md5_hash']=gcp.catFiles(
-      dm.WorkspaceManager(refworkspace).get_samples().loc[
-        samplesinset, 'analysis_ready_bam_md5'].tolist(), cut=32)
+    tracker.loc[res.index.tolist(), 'md5_hash']=[gcp.extractHash(
+      i, typ="md5") for i in gcp.lsFiles(res[onlycol[0]].tolist(), '-L')]
 
   tracker.loc[selected, samplesetname]=1
   tracker.loc[samplesinset, ['low_quality', 'blacklist', 'prioritized']]=0
   tracker.loc[lowqual,'low_quality']=1
-  tracker.loc[failed,'blacklist']=1
+  failed_not_dropped = list(set(failed) - set(todrop))
+  #print(todrop)
+  tracker.loc[failed_not_dropped,'blacklist']=1
   if dry_run:
     return tracker
   else:
     dfToSheet(tracker, sheetname, secret=sheetcreds)
   print("updated the sheet, please reactivate protections")
+  return None
+

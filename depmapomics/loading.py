@@ -218,7 +218,7 @@ def GetNewCellLinesFromWorkspaces(wmfroms, sources, stype, maxage, refurl="",
 
   if len(sampless) == 0:
     print("no new data available")
-    return sampless, pd.DataFrame()
+    return sampless, None, pd.DataFrame()
 
   sampless = assessAllSamples(sampless, refsamples, stype, rename, extract)
   # creating pairs
@@ -875,7 +875,8 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
           mystorage_id=MYSTORAGE_ID,
           creds=SHEETCREDS,
           sampletrackername=SHEETNAME,
-          refsheet_url=REFSHEET_URL,):
+          refsheet_url=REFSHEET_URL,
+          add_to_samplesets=[]):
   """update the samples on a depmapomics terra processing workspace
 
   Args:
@@ -894,7 +895,7 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
       refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
   """
   # uploading to our bucket (now a new function)
-  terra.changeToBucket(samples, bucket, name_col=name_col,
+  samples = terra.changeToBucket(samples, bucket, name_col=name_col,
                        values=values, filetypes=filetypes, catchdup=True, dryrun=False)
 
   sheets = Sheets.from_files(my_id, mystorage_id)
@@ -912,13 +913,25 @@ def update(samples, stype, bucket, refworkspace, samplesetname=SAMPLESETNAME,
   ccle_refsamples = ccle_refsamples.append(samples, sort=False)
   dfToSheet(ccle_refsamples, sampletrackername, secret=creds)
 
-  #uploading new samples to mut
+  #uploading new samples
+  samples.index.name = 'sample_id'
   refwm = dm.WorkspaceManager(refworkspace).disable_hound()
   refwm.upload_samples(samples)
-  sam = refwm.get_samples()
 
   #creating a sample set
   refwm.update_sample_set(sample_set_id=samplesetname,
                           sample_ids=samples.index)
+
   refwm.update_sample_set(sample_set_id='all', sample_ids=[
-                          i for i in sam.index.tolist() if i != 'nan'])
+                          i for i in refwm.get_samples().index.tolist() if i != 'nan'])
+  
+  # add new samples to additional sample_sets
+  for sname in add_to_samplesets:
+    samples_in_sname = refwm.get_sample_sets().loc[sname, 'samples']
+    new_samples = refwm.get_sample_sets().loc[samplesetname, 'samples']
+  
+    refwm.update_sample_set(sample_set_id=sname,
+                      sample_ids=list(set(samples_in_sname + new_samples)))
+  
+
+
