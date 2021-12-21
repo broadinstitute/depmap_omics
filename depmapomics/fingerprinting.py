@@ -38,6 +38,7 @@ def updateLOD(
         new_ids (set): set of ids of new samples
         updated_lod_mat (pd.DataFrame): dataframe for the updated lod score matrix
     """
+    print("generating lod matrix with new samples")
     new_lod_list = []
     sample_batch_pair_df = wm.get_entities(batch_pair_entity)
     samples_df = sample_batch_pair_df[
@@ -57,6 +58,7 @@ def updateLOD(
     new_lod_mat = new_lod_mat.T
 
     if save_new_mat:
+        print("saving lod matrix with new samples")
         new_lod_mat.to_csv(working_dir + new_mat_filename + ".csv")
 
     new_ids = set(new_lod_mat.index)
@@ -64,6 +66,7 @@ def updateLOD(
 
     # Update LOD matrix ( have to update (A+a)*(B+b) = (AB)+(aB)+(Ab)+(ab))
     if prev_mat_df is not None:
+        print("merging new lod matrix with the previous one")
         prev_lod_mat = prev_mat_df
         old_ids = set(prev_lod_mat.index) - set(new_ids)
         updated_lod_mat = pd.concat(
@@ -77,6 +80,7 @@ def updateLOD(
             ),
             axis=1,
         )
+        print("saving merged (updated) lod matrix")
         updated_lod_mat.to_csv(working_dir + updated_mat_filename + ".csv")
     return new_ids, updated_lod_mat
 
@@ -100,7 +104,11 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
     for u in set(samples.arxspan_id):
         scores = lod_mat.loc[
             samples[samples.arxspan_id == u].index,
-            ref[ref.arxspan_id == u].index.tolist(),
+            ref[
+                (ref.arxspan_id == u)
+                & (ref.index.isin(lod_mat.columns))
+                & (ref.blacklist != 1)
+            ].index.tolist(),
         ]
         for i, j in [
             (scores.index[x], scores.columns[y])
@@ -181,12 +189,17 @@ def checkMatches(lod_mat, ref, thr=500):
     print("\n\nsamples that shouldn't match but do")
     previ = ""
     matches = {}
+    matched_samples = []
     for i, j in [
         (lod_mat.index[x], lod_mat.columns[y])
         for x, y in np.argwhere(lod_mat.values > thr)
     ]:
-        if i in ref.index and j in ref.index:
-            matched_samples = []
+        if (
+            i in ref.index
+            and j in ref.index
+            and ref.loc[i, "blacklist"] != 1
+            and ref.loc[j, "blacklist"] != 1
+        ):
             if i == j:
                 continue
             if ref.loc[i]["participant_id"] == ref.loc[j]["participant_id"]:
@@ -289,9 +302,13 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
     myterra.updateReferences(wm, "sample_batch_pair", pair_df)
 
     unique_pairs = wm.get_entities("sample_batch_pair").index.tolist()
+    existing_pairs = wm.get_entities("sample_batch_pair_set").loc["all", :][0]
+    existing_pairs = [x["entityName"] for x in existing_pairs]
+    pairs_to_add = list(set(unique_pairs) - set(existing_pairs))
+
     sample_batch_pair_set_df = pd.DataFrame(
-        np.transpose(unique_pairs),
-        index=["all"] * len(unique_pairs),
+        np.transpose(pairs_to_add),
+        index=["all"] * len(pairs_to_add),
         columns=["sample_batch_pair"],
     )
     sample_batch_pair_set_df.index.name = "membership:sample_batch_pair_set_id"
@@ -351,7 +368,7 @@ async def fingerPrint(
 
     bams = samples[bamcolname]
     bams[sid] = bams.index
-    print("adding " + str(len(bams)) + " new samples to the fingerprint")
+    print("adding " + str(len(bams)) + " new samples to the fingerprinting workspace")
     wm = dm.WorkspaceManager(workspace).disable_hound()
 
     # Upload sample sheet
@@ -398,7 +415,7 @@ async def fingerPrint(
         sampleset,
         working_dir,
         save_new_mat=False,
-        prev_mat_df=None,
+        prev_mat_df=prev_mat_df,
         updated_mat_filename=updated_mat_filename,
     )
 
@@ -427,6 +444,7 @@ async def _CCLEFingerPrint(
     bamcolname=LEGACY_BAM_COLNAMES,
     taiga_dataset=TAIGA_FP,
     updated_mat_filename=TAIGA_FP_FILENAME,
+    upload_to_taiga=True,
 ):
     """ CCLE fingerprinting function
     
@@ -452,7 +470,7 @@ async def _CCLEFingerPrint(
     prev_lod_mat = tc.get(name=taiga_dataset, file=updated_mat_filename)
 
     # call generic function
-    updated_lod_mat, should, shouldnt = fingerPrint(
+    updated_lod_mat, mismatches, matches = await fingerPrint(
         samples,
         sid=sid,
         sampleset=sampleset,
@@ -464,19 +482,21 @@ async def _CCLEFingerPrint(
         updated_mat_filename=updated_mat_filename,
     )
 
-    # Upload updated LOD matrix to Taiga
-    tc.update_dataset(
-        dataset_permaname=taiga_dataset,
-        changes_description="New bam fingerprints added for " + sampleset,
-        upload_files=[
-            {
-                "path": working_dir + updated_mat_filename,
-                "name": updated_mat_filename,
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            }
-        ],
-        add_all_existing_files=True,
-    )
+    if upload_to_taiga:
+        # Upload updated LOD matrix to Taiga
+        print("uploading updated lod matrix to taiga")
+        tc.update_dataset(
+            dataset_permaname=taiga_dataset,
+            changes_description="New bam fingerprints added for " + sampleset,
+            upload_files=[
+                {
+                    "path": working_dir + updated_mat_filename + ".csv",
+                    "name": updated_mat_filename,
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                }
+            ],
+            add_all_existing_files=True,
+        )
 
-    return updated_lod_mat, should, shouldnt
+    return updated_lod_mat, mismatches, matches

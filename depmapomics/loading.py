@@ -132,7 +132,7 @@ def GetNewCellLinesFromWorkspaces(
                 refsamples[extract["ref_bams"]]
             )
     refsamples[extract["release_date"]] = list(
-        h.datetoint(refsamples[extract["release_date"]].values, "/")
+        h.datetoint(refsamples[extract["release_date"]].values, split="-")
     )
     if stype not in set(refsamples[extract["ref_type"]]):
         h.ask(
@@ -875,7 +875,7 @@ def load(
 
     ## Adding new data
 
-    # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "collection_site", "primary_disease", "subtype", "subsubtype", "origin", "comments"
+    # we will be missing "primary disease","sm_id", "cellosaurus_id", "gender, "age", "collection_site", "primary_disease", "subtype", "subsubtype", "lineage", "comments"
     # when SMid: match==
     samples, _, noarxspan = GetNewCellLinesFromWorkspaces(
         stype=stype,

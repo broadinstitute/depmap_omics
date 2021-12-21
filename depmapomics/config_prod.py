@@ -9,7 +9,7 @@ ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
 SAMPLEID = "DepMap_ID"
 
-SAMPLESETNAME = "21Q4"
+SAMPLESETNAME = "21Q4v2"
 
 isCCLE = True
 
@@ -80,10 +80,16 @@ PREV_VIRTUAL = {}
 # PREV_VIRTUAL['internal'] = 'internal-21q2-9d16'
 
 # 21Q3
-PREV_VIRTUAL["public"] = "public-21q3-bf1e"
-PREV_VIRTUAL["ibm"] = "ibm-21q3-179f"
-PREV_VIRTUAL["dmc"] = "dmc-21q3-482c"
-PREV_VIRTUAL["internal"] = "internal-21q3-fe4c"
+# PREV_VIRTUAL["public"] = "public-21q3-bf1e"
+# PREV_VIRTUAL["ibm"] = "ibm-21q3-179f"
+# PREV_VIRTUAL["dmc"] = "dmc-21q3-482c"
+# PREV_VIRTUAL["internal"] = "internal-21q3-fe4c"
+
+# 21Q4
+PREV_VIRTUAL["public"] = "public-21q4-a0d6"
+PREV_VIRTUAL["ibm"] = "ibm-21q4-4e18"
+PREV_VIRTUAL["dmc"] = "dmc-21q4-5725"
+PREV_VIRTUAL["internal"] = "internal-21q4-ac0a"
 
 TAIGA_MUTATION = "mutations-latest-ed72"
 
@@ -95,7 +101,7 @@ TAIGA_LEGACY_CN = "copy-number-5f61"
 
 datasets = ["internal", "ibm", "dmc", "public"]
 
-FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
+VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
 ## RUN SPECIFIC
 
@@ -121,7 +127,7 @@ TO_UPDATE = {
     "collection_site": ["Sample Collection Site"],
     "subtype": ["lineage_subtype"],
     "subsubtype": ["lineage_sub_subtype"],
-    "origin": ["lineage"],
+    "lineage": ["lineage"],
     # 'source': ['Flagship'],
     "parent_cell_line": ["Parental ID"],
     "comments": ["Comments"],
@@ -281,64 +287,21 @@ TAIGA_FP_FILENAME = "fingerprint_lod_matrix"
 
 
 LINES_TO_RELEASE = [
-    "ACH-000145",
-    "ACH-000359",
-    "ACH-000532",
-    "ACH-000871",
-    "ACH-001350",
-    "ACH-001393",
-    "ACH-001558",
-    "ACH-001662",
-    "ACH-001683",
-    "ACH-001695",
-    "ACH-001986",
-    "ACH-001990",
-    "ACH-002020",
-    "ACH-002035",
-    "ACH-002040",
-    "ACH-002043",
-    "ACH-002050",
-    "ACH-002051",
-    "ACH-002052",
     "ACH-002077",
-    "ACH-002214",
-    "ACH-002215",
-    "ACH-002291",
-    "ACH-002345",
-    "ACH-002478",
-    "ACH-002486",
-    "ACH-002490",
-    "ACH-002516",
     "ACH-002523",
-    "ACH-002529",
-    "ACH-002530",
     "ACH-002531",
-    "ACH-002533",
-    "ACH-002535",
-    "ACH-002538",
-    "ACH-002544",
-    "ACH-002647",
-    "ACH-002650",
-    "ACH-002660",
-    "ACH-002662",
-    "ACH-002664",
-    "ACH-002669",
-    "ACH-002672",
-    "ACH-002677",
-    "ACH-002680",
-    "ACH-002681",
-    "ACH-002693",
-    "ACH-002695",
-    "ACH-002705",
-    "ACH-002706",
-    "ACH-002708",
-    "ACH-002710",
-    "ACH-002782",
-    "ACH-002785",
-    "ACH-002799",
-    "ACH-002834",
-    "ACH-002847",
-    "ACH-002926",
+    "ACH-000860",
+    "ACH-002778",
+    "ACH-002781",
+    "ACH-002703",
+    "ACH-002784",
+    "ACH-002806",
+    "ACH-002922",
+    "ACH-001481",
+    "ACH-002070",
+    "ACH-002500",
+    "ACH-002485",
+    "ACH-002526",
 ]
 
 ############## DNAseq
@@ -394,7 +357,7 @@ BAMQC = [
     "tumor_bam_quality_yield_metrics",
 ]
 
-KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN"]
+KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 
 # rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
 RESCUE_FOR_MUTATION_WES = {
@@ -450,6 +413,8 @@ wrongwes_arxspan = {
     "ACH-001956",
     "ACH-001957",
 }
+
+CYTOBANDLOC = "data/hg38_cytoband.gz"
 
 toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 

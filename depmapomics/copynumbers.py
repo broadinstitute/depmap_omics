@@ -220,7 +220,7 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
     ref = pd.DataFrame(tracker[tracker.datatype == datatype][newname])
     replace = 0
     for val in failed:
-        if val in list(renaming.keys()):
+        if val in renaming:
             a = ref[ref[newname] == ref.loc[val][newname]].index
             for v in a:
                 if v not in failed:
@@ -630,8 +630,8 @@ def _CCLEPostProcessing(
 def _ProcessForAchilles(
     wespriosegs,
     wgspriosegs,
-    gene_mapping,  # =pd.read_csv('data/genemapping_19Q1.csv'),
-    cytobandloc="data/hg38_cytoband.gz",
+    gene_mapping,
+    cytobandloc=CYTOBANDLOC,
     samplesetname=SAMPLESETNAME,
     bad=[],
     taiga_legacy_loc=TAIGA_LEGACY_CN,
@@ -808,7 +808,7 @@ def _ProcessForAchilles(
         mergedgenecn.fillna(0), gene_expected_count.fillna(0), ax, name="current"
     )
     rna.rnaseqcorrelation(
-        prevgenecn[prevgenecn.index.isin(mergedgenecn.index.tolist())],
+        prevgenecn[prevgenecn.index.isin(mergedgenecn.index.tolist())].fillna(0),
         gene_expected_count.fillna(0),
         ax,
         name="prev",
