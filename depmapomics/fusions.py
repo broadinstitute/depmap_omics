@@ -46,6 +46,7 @@ def filterFusions(
     maxffpm=0.1,
     countCol="CCLE_count",
     red_herring=FUSION_RED_HERRING,
+    **kwargs
 ):
     """
     Given a fusion file from star fusion, filters it (will also filter Mitochrondria and HLA genes)
