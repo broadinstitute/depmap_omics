@@ -167,7 +167,6 @@ def copyToWorkspace(
         "sm_id",
         "datatype",
         "size",
-        "ccle_name",
         "stripped_cell_line_name",
         "participant_id",
         "cellosaurus_id",
@@ -182,7 +181,7 @@ def copyToWorkspace(
         "primary_disease",
         "subtype",
         "subsubtype",
-        "origin",
+        "lineage",
         "mediatype",
         "condition",
         "sequencing_type",
@@ -267,7 +266,7 @@ def updateReferences(wm, etype, attrs):
                         {
                             "op": "AddUpdateAttribute",
                             "attributeName": i,
-                            "addUpdateAttribute": wm._process_attribute_value(
+                            "addUpdateAttribute": wm._process_attribute_value(  # pylint: disable=protected-access
                                 i, j, reserved_attrs
                             ),
                         }
@@ -279,7 +278,9 @@ def updateReferences(wm, etype, attrs):
         )
 
     # try rawls batch call if available
-    r = dm.wmanager._batch_update_entities(wm.namespace, wm.workspace, attr_list)
+    r = dm.wmanager._batch_update_entities(  # pylint: disable=protected-access
+        wm.namespace, wm.workspace, attr_list
+    )
     try:
         if r.status_code == 204:
             if isinstance(attrs, pd.DataFrame):

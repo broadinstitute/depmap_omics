@@ -97,14 +97,20 @@ def solveQC(tracker, failed, save="", newname="arxspan_id"):
     rename = {}
     # finding other replicates to solve failed ones
     for val in failed:
-        if val not in tracker:
+        if val not in tracker.index:
             continue
         a = tracker.loc[val][newname]
-        res = tracker[(tracker.datatype == "rna") & (tracker[newname] == a)]
-        if len(res) > 1:
+        res = tracker[
+            (tracker.datatype == "rna")
+            & (tracker[newname] == a)
+            & (tracker.blacklist != 1)
+        ]
+        if len(res) >= 1:
             for k in res.index:
                 if k not in failed:
                     rename[val] = k
+                else:
+                    newfail.append(val)
         else:
             newfail.append(val)
     print("samples that failed:")
@@ -501,7 +507,7 @@ async def postProcess(
     if save_output:
         h.dictToFile(renaming, save_output + "rna_sample_renaming.json")
         lowqual.to_csv(save_output + "rna_lowqual_samples.csv")
-        h.listToFile(failed, save_output + "rna_failed_samples.txt")
+        h.listToFile(list(set(failed)), save_output + "rna_failed_samples.txt")
     print("renaming files")
     # gene level
     if len(geneLevelCols) > 0:
@@ -622,8 +628,12 @@ async def _CCLEPostProcessing(
     sheets = Sheets.from_files(my_id, mystorage_id)
     ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
 
-    todrop += ccle_refsamples[ccle_refsamples.blacklist == 1].index.tolist()
-    priority = ccle_refsamples[ccle_refsamples.prioritized == 1].index.tolist()
+    todrop += ccle_refsamples[
+        (ccle_refsamples.blacklist == 1) & (ccle_refsamples.datatype == "rna")
+    ].index.tolist()
+    priority = ccle_refsamples[
+        (ccle_refsamples.prioritized == 1) & (ccle_refsamples.datatype == "rna")
+    ].index.tolist()
 
     def rn(r, todrop):
         renaming = track.removeOlderVersions(
@@ -633,9 +643,11 @@ async def _CCLEPostProcessing(
         )
         # if we have a replaceable failed version in our dataset
         rename = solveQC(ccle_refsamples, todrop)
-        for k, _ in renaming.items():
+        for k, _ in renaming.copy().items():
             if k in rename:
                 renaming[rename[k]] = renaming.pop(k)
+            elif (k in todrop) and (k not in rename):
+                renaming.pop(k)
         return renaming
 
     folder = os.path.join("temp", samplesetname, "")
@@ -695,10 +707,10 @@ async def _CCLEPostProcessing(
             files[key], tc.get(name=TAIGA_ETERNAL, file=val)
         )
         print(key)
-        assert len(omissmatchCols) == 0
-        assert len(omissmatchInds) == 0
-        assert newNAs == 0
-        print("New 0s: ", new0s)
+        print(len(omissmatchCols), "columns NOT IN df1")
+        print(len(omissmatchInds), "indices NOT IN df1")
+        print(newNAs, "new NAs")
+        print(new0s, "New 0s")
 
     print("updating the tracker")
 

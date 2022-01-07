@@ -123,7 +123,7 @@ workflow RNAseq_mutect2 {
     String? gatk_path_override
   }
 
-  Int preemptible_or_default = select_first([preemptible, 2])
+  Int preemptible_or_default = select_first([preemptible, 4])
   Int max_retries_or_default = select_first([max_retries, 2])
 
   Boolean compress = select_first([compress_vcfs, false])
@@ -166,7 +166,7 @@ workflow RNAseq_mutect2 {
 
   #call ReorderSam_GATK #optional
   Int tumor_bam_size = ceil(size(tumor_bam, "GB") + size(tumor_bai, "GB"))
-  Int disksize = tumor_bam_size + ref_size + disk_pad
+  Int disksize = (tumor_bam_size*12) + ref_size + disk_pad
 
   call picard_CleanAfterStar {
     input:
@@ -369,7 +369,7 @@ task SplitNCigarReads_GATK4 {
 
     String? gatk_override
     String docker
-    Int preemptible_count
+    Int? preemptible_count
     Int? memory
     Int? disk
   }
@@ -394,7 +394,7 @@ task SplitNCigarReads_GATK4 {
     disks: "local-disk "+select_first([disk,200])+" HDD"
     docker: docker
     memory: select_first([memory,16])+" GB"
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
   }
 }
 
@@ -416,7 +416,7 @@ task BaseRecalibrator {
     String? gatk_override
 
     String docker
-    Int preemptible_count
+    Int? preemptible_count
     Int? memory
     Int? disk
   }
@@ -444,7 +444,7 @@ task BaseRecalibrator {
     memory: select_first([memory,16])+" GB"
     disks: "local-disk "+ select_first([disk,200])+" HDD"
     docker: docker
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
   }
 }
 
@@ -463,7 +463,7 @@ task ApplyBQSR {
     String? gatk_override
 
     String docker
-    Int preemptible_count
+    Int? preemptible_count
     Int? memory
   }
 
@@ -489,7 +489,7 @@ task ApplyBQSR {
   runtime {
     memory: select_first([memory,16])+" GB"
     disks: "local-disk 300 HDD"
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
     docker: docker
   }
 }
@@ -507,7 +507,7 @@ task MergeVCFs {
     String? gatk_override
 
     String docker
-    Int preemptible_count
+    Int? preemptible_count
   }
 
   # Using MergeVcfs instead of GatherVcfs so we can create indices
@@ -530,7 +530,7 @@ task MergeVCFs {
     memory: select_first([memory,6])+" GB"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
   }
 }
 
@@ -540,7 +540,7 @@ task ScatterIntervalList_GATK4 {
     Int scatter_count
     String? gatk_override
     String docker
-    Int preemptible_count
+    Int? preemptible_count
     Int? memory
   }
 
@@ -580,7 +580,7 @@ task ScatterIntervalList_GATK4 {
     disks: "local-disk 1 HDD"
     memory: select_first([memory,4])+" GB"
     docker: docker
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
   }
 }
 
@@ -593,7 +593,7 @@ task RevertSam {
     String? gatk_override
 
     String docker
-    Int preemptible_count
+    Int? preemptible_count
 
     Int? disk
   }
@@ -619,7 +619,7 @@ task RevertSam {
     docker: docker
     disks: "local-disk "+select_first([disk,200])+" HDD"
     memory: "8 GB"
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
   }
 }
 
@@ -1008,7 +1008,7 @@ task VariantFiltration {
 
     String? gatk_override
     String docker
-    Int preemptible_count
+    Int? preemptible_count
     Int? memory
     Int? disk
   }
@@ -1039,7 +1039,7 @@ task VariantFiltration {
     bootDiskSizeGb: "32"
     memory: select_first([memory,6])+" GB"
     disks: "local-disk "+select_first([disk, 250])+" HDD"
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
   }
 }
 
@@ -1063,7 +1063,7 @@ task picard_CleanAfterStar {
 
     String? gatk_override
     String docker
-    Int preemptible_count
+    Int? preemptible_count
     Int? memory
     Int? disk
   }
@@ -1103,6 +1103,6 @@ task picard_CleanAfterStar {
     bootDiskSizeGb: "32"
     memory: select_first([memory,6])+" GB"
     disks: "local-disk "+select_first([disk, 250])+" HDD"
-    preemptible: preemptible_count
+    preemptible: select_first([preemptible_count, 10])
   }
 }

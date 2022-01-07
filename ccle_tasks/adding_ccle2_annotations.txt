@@ -1,0 +1,595 @@
+In [1]: import pandas as pd
+/Users/jeremie/anaconda3/lib/python3.7/site-packages/pandas/compat/_optional.py:138: UserWarning: Pandas requires version '2.7.0' or newer of 'numexpr' (version '2.6.9' currently installed).
+  warnings.warn(msg, UserWarning)
+
+In [2]: from taigapy import TaigaClient
+   ...: tc = TaigaClient()
+
+In [3]: tc.get(name='other-ccle2-c93e', version=2, file='Cell_lines_annotations_20181226')
+
+In [14]: from genepy.utils import helper as h
+
+In [15]: val.iloc[0]
+Out[15]:
+CCLE_ID                                   DMS53_LUNG
+DepMap_ID                                 ACH-000698
+Name                                          DMS 53
+Pathology                                    primary
+Site_Primary                                    lung
+Site_Subtype1                                     NS
+Site_Subtype2                                     NS
+Site_Subtype3                                     NS
+Histology                                  carcinoma
+Hist_Subtype1                   small_cell_carcinoma
+Hist_Subtype2                                     NS
+Hist_Subtype3                                     NS
+Gender                                          male
+Life_Stage                                       NaN
+Age                                             54.0
+Race                                       caucasian
+Geo_Loc                                          NaN
+inferred_ethnicity                         Caucasian
+Site_Of_Finding                                  NaN
+Disease                                  lung_cancer
+Annotation_Source                               CCLE
+Original.Source.of.Cell.Line                    ATCC
+Characteristics                             Adherent
+Growth.Medium                     Waymouth's +10%FBS
+Supplements                                      NaN
+Freezing.Medium                               5%DMSO
+Doubling.Time.from.Vendor                        NaN
+Doubling.Time.Calculated.hrs                   450.0
+type                                 lung_small_cell
+type_refined                         lung_small_cell
+PATHOLOGIST_ANNOTATION                     Lung:SCLC
+mutRate                                   157.241638
+tcga_code                                       SCLC
+Name: 0, dtype: object
+
+In [16]: h.dups(val.Geo_Loc)
+Out[16]: [nan, 'chinese', 'europe', 'korea', 'canada', 'japan']
+
+In [17]: h.dups(val.DepMap_ID)
+Out[17]: [nan]
+
+In [18]: val[va.DepMap_ID.isna()]
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+<ipython-input-18-605ec242fe2e> in <module>
+----> 1 val[va.DepMap_ID.isna()]
+
+NameError: name 'va' is not defined
+
+In [19]: val[val.DepMap_ID.isna()]
+Out[19]:
+              CCLE_ID DepMap_ID Name Pathology  ... type_refined PATHOLOGIST_ANNOTATION mutRate tcga_code
+1439        OMM25_EYE       NaN  NaN       NaN  ...          NaN                    NaN     NaN       NaN
+1445         WS1_SKIN       NaN  NaN       NaN  ...          NaN                    NaN     NaN       NaN
+1457    NCIH2330_LUNG       NaN  NaN       NaN  ...          NaN                    NaN     NaN       NaN
+1459  HS578BST_BREAST       NaN  NaN       NaN  ...          NaN                    NaN     NaN       NaN
+
+[4 rows x 33 columns]
+
+In [20]: val[val.DepMap_ID=="ACH-000148"]
+Out[20]:
+           CCLE_ID   DepMap_ID     Name Pathology  ... type_refined PATHOLOGIST_ANNOTATION    mutRate tcga_code
+302  HS578T_BREAST  ACH-000148  Hs 578T   primary  ...       breast       Breast:Carcinoma  93.302638      BRCA
+
+[1 rows x 33 columns]
+
+In [21]: val.loc[val.CCLE_ID=="OMM25_EYE", 'DepMap_ID']="ACH-002018"
+
+In [22]: h.dups(val.DepMap_ID)
+Out[22]: [nan]
+
+In [23]: set(val.Site_Of_Finding)
+Out[23]:
+{'NS',
+ 'abdomen',
+ 'abdominal_wall',
+ 'acetabulum',
+ 'adrenal',
+ 'ascites',
+ 'axillary_node',
+ 'bone',
+ 'bone_marrow',
+ 'brain',
+ 'breast',
+ 'central_nervous_system',
+ 'cerebrospinal_fluid',
+ 'cervix',
+ 'connective_tissue_trunk',
+ 'liver',
+ 'lung',
+ 'lymph_node',
+ 'muscle',
+ nan,
+ 'omentum',
+ 'ovary',
+ 'pelvic_wall',
+ 'pericardial_effusion',
+ 'peritoneum',
+ 'pleura',
+ 'skin',
+ 'soft_tissue',
+ 'spleen',
+ 'sternum',
+ 'subcutaneous_tissue',
+ 'supra_orbital_area',
+ 'vertebra'}
+
+In [24]: set(va.Supplements)
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+<ipython-input-24-5acd88193ac2> in <module>
+----> 1 set(va.Supplements)
+
+NameError: name 'va' is not defined
+
+In [25]: set(val.Supplements)
+Out[25]:
+{'.005 mg/ml insulin, .01 mg/ml transferrin, 25nM sodium selenite, 50nM hydrocortisone, 1 ng/mL epidermal growth factor, 0.01mM ethanolamine, 0.01mM phosphorylethanolamine, 100pM triiodothyronine, 0.5%(w/v) bovine serum albumin, 0.5 mM sodium pyruvate, 2mM L-glutamine',
+ '.005 mg/ml insulin, .01 mg/ml transferrin, 30nM sodium selenite, 10 nM hydrocortisone, 10 nM beta estradiol,  2 mM L-glutamine',
+ '.005 mg/ml insulin, .01 mg/ml transferrin, 30nM sodium selenite, 10 nM hydrocortisone, 10 nM beta estradiol, 10 mM HEPES, 2 mM L-glutamine',
+ '.005 mg/ml insulin, .01 mg/ml transferrin, 30nM sodium selenite, 10 nM hydrocortisone, 2 mM L-glutamine',
+ '.02 mg/ml insulin, .01 mg/ml transferrin, 25nM sodium selenite, 1ng/mL EGF,  50 nM hydrocortisone, 2 mM L-glutamine, 0.5 sodium pyruvate',
+ '.02 mg/ml insulin, .01 mg/ml transferrin, 25nM sodium selenite, 50 nM hydrocortisone, 2 mM L-glutamine, 0.5 sodium pyruvate, 1ng/mL EGF',
+ '0.005 mg/mL insulin, 0.01 mg/mL transferrin, 30nM sodium selenite, 2mM L-glutamine',
+ '0.005 mg/ml Insulin, 0.01 mg/ml transferrin, 30 nM sodium selenite, 10 nM hydrocortisone, 10 nM beta estradiol, 10 mM HEPES, 1 mM L-glutamine',
+ '0.005mg/ml insulin, 0.005mg/ml transferrin and 5ng/ml GM-CSF',
+ '0.01 mg/ml bovine insulin',
+ '0.01 mg/ml insulin; 0.01 mg/ml glutathione',
+ "0.02 mg/ml insulin, 0.01 mg/ml transferrin, 25 nM sodium selenite, 50 nM Hydrocortisone, 1 ng/ml EGF(don't filter), 0.01 mM ethanolamine, 0.01 mM phosphorylethanolamine, 100 pM triiodothyronine, 0.5% bovine serum albumin, 0.5 mM sodium pyruvate,  2mM L-glutamine, 10nM HEPES",
+ '0.05 mM 2-mercaptoethanol',
+ '0.1 mM NEAA',
+ '0.1mM NEAA',
+ '0.1mMNEAA',
+ '0.2 Units/ml bovine insulin',
+ '0.5 ug/ml hydrocortisone + 10ug/ml insulin',
+ '0.5%human serum(+0.005',
+ '1% NEAA + 1% sodium pyruvate',
+ '10 UNITS/ML INSULIN',
+ '10 ng/ml GM-CSF',
+ '10% vol conditioned medium of cell line 5637 (DSM ACC 35) (or 10ng/ml GM-CSF',
+ '10mM L-GLUTAMINE',
+ '10mg/L INSULIN',
+ '10mg/L insulin',
+ '10ng/ml GM-CSF',
+ '10ng/ml SCF',
+ '10ug/ml bovine insulin; 16ug/ml glutathione',
+ '1L-3 ( 10ng/ml) or GM-CSF(10ng/ml) or 10-20% vol conditioned medium of cell line 5637(DSM-ACC 35)',
+ '1mM sodium pyruvate + insulin-transferrin-selentite medium supplement',
+ '2 mM L-Glutamine ; 1.5 g/L sodium bicarbonate; 0.1 mM NEAA; 1.0 mM sodium pyruvate',
+ '2 mM L-glutamine',
+ '20 Units/ml human recombinant insuline',
+ '25mM Hepes and 25mM NaHCo3',
+ '2Mm L-Glutamine',
+ '2mM GLUTAMINE',
+ '2mM GLUTAMINE + 1% NEAA',
+ '2mM GLUTAMINE+0.4UG/ML HYDROCORTISONE',
+ '2mM Glutamine',
+ '2mM L -glutamine +MEM non-essential amino acids',
+ '2mM L- glutamine+1x non-essential amino acids+1mM sodium pyruvate',
+ '2mM L-GLUTAMINE',
+ '2mM L-GLUTAMINE + 0.4UG/ML HYDROCORTISONE',
+ '2mM L-GLUTAMINE, 1X NEAA',
+ '2mM L-GLUTAMINE, 4X MEM NON-ESSENTIAL AMINO ACIDS',
+ '2mM L-Glutamine',
+ '2mM L-Glutamine ; 0.4 ug/ml Hydrocortisone',
+ '2mM L-Glutamine, 20 IU/L Bovine Insuline',
+ '2mM L-glutamine',
+ '2mM L-glutamine + non-essential amino acids +1 mM sodium pyruvate + 10ug/ml human insulin',
+ '2mM L-glutamine, 0.4ug/ml hydrocortisone',
+ '2mM L-glutamine, 0.5ug/ml hydrocortisone, 10ug/ml insulin',
+ '2mM L-glutamine, Insulin, Transferrin, Selenite',
+ '2mM glutamine; 1ug/ml cisplatin',
+ '2mM l-GLUTAMINE',
+ '2ng/ml human GM-CSF',
+ '4 mM L-glutamine, 1 mM sodium puruvate, 0.4 ug/ml hydrocortisone, 10 ng/ml EGF',
+ '4.5 g/L glucose, 1.5 g/L sodium bicarbonate',
+ '4.5g/L glucose +1.5 g/Lsodium bicarbonate',
+ '5ug/ml insulin, 10ug/ml transferrin, 3.0x10^-8 M Na Selenite (added 5ml Insulin-Transferrin-Selenium); 1.0x10^-8 M Hydrocortisone, 1.0x10^-8 beta estradiol, 2mM L-glutamine, 10mM HEPES',
+ '5ug/ml insulin, 10ug/ml transferrin, 30nM Na Selenite, 10nM Hydrocortisone, 10nM Beta-estradiol, 10mM HEPES, 2mM L-glutamine',
+ 'HEPES, ADENOSINE TRIPHOSPHATE, AMINO ACIDS',
+ 'Insulin + EGF',
+ 'L-glutamine',
+ 'N/a',
+ 'NEAA',
+ 'NEAA, 10mM Hepes, 10mM Sodium Pyruvate',
+ 'na',
+ nan,
+ 'plethora; see sheet'}
+
+In [26]: set(val.Annotation_Source)
+Out[26]: {'ACHILLES', 'CCLE', 'COSMIC', 'COSMIC_MINT', 'collaborator', nan}
+
+In [27]: set(val.Site_Subtype1)
+Out[27]:
+{'NS',
+ 'bile_duct',
+ 'bladder',
+ 'brain',
+ 'bronchus',
+ 'caecum',
+ 'cerebellum',
+ 'colon',
+ 'duodenum',
+ 'femur',
+ 'fibrous_tissue_and_uncertain_origin',
+ 'foreskin',
+ 'frontal_lobe',
+ 'head_neck',
+ 'humerus',
+ 'larynx',
+ 'left_upper_lobe',
+ 'lower_third',
+ 'lymph_node',
+ 'meninges',
+ 'middle_third',
+ 'mouth',
+ nan,
+ 'parietal_lobe',
+ 'pelvis',
+ 'pharynx',
+ 'rectum',
+ 'skin',
+ 'smooth_muscle',
+ 'spleen',
+ 'striated_muscle',
+ 'submaxillary',
+ 'temporal_lobe',
+ 'thigh',
+ 'tongue',
+ 'upper_leg',
+ 'upper_third',
+ 'ureter'}
+
+In [28]: set(val.Site_Subtype2)
+Out[28]:
+{'NS',
+ 'abdomen',
+ 'gingiva',
+ 'glottis',
+ 'hypopharynx',
+ 'kidney',
+ 'mouth_roof',
+ nan,
+ 'ovary',
+ 'right',
+ 'sigmoid',
+ 'subglottis',
+ 'supraglottis',
+ 'thyroid',
+ 'tongue',
+ 'uterus',
+ 'vulva'}
+
+In [29]: val[val.Site_Subtype2.isna()]
+Out[29]:
+                                       CCLE_ID   DepMap_ID  ...     mutRate           tcga_code
+606                              TT_OESOPHAGUS  ACH-000561  ...  170.095133                ESCA
+1042              M059J_CENTRAL_NERVOUS_SYSTEM  ACH-001118  ...         NaN                 GBM
+1050  HNT34_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE  ACH-000299  ...         NaN                LAML
+1058                               TK10_KIDNEY  ACH-001208  ...         NaN                KIRC
+1065                                 A427_LUNG  ACH-000757  ...         NaN  UNABLE TO CLASSIFY
+...                                        ...         ...  ...         ...                 ...
+1456                       GEO_LARGE_INTESTINE  ACH-002394  ...         NaN           COAD/READ
+1457                             NCIH2330_LUNG         NaN  ...         NaN                 NaN
+1458                           LP6_SOFT_TISSUE  ACH-001116  ...         NaN                 NaN
+1459                           HS578BST_BREAST         NaN  ...         NaN                 NaN
+1460                                LC1SQ_LUNG  ACH-002156  ...         NaN                LUSC
+
+[400 rows x 33 columns]
+
+In [30]: val[~val.Site_Subtype2.isna()]
+Out[30]:
+                                       CCLE_ID   DepMap_ID  ...     mutRate  tcga_code
+0                                   DMS53_LUNG  ACH-000698  ...  157.241638       SCLC
+1                       SW1116_LARGE_INTESTINE  ACH-000489  ...   94.373192  COAD/READ
+2                                NCIH1694_LUNG  ACH-000431  ...  109.534987       SCLC
+3     P3HR1_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE  ACH-000707  ...  166.456406       DLBC
+4     HUT78_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE  ACH-000509  ...  118.217569        NaN
+...                                        ...         ...  ...         ...        ...
+1060              SF539_CENTRAL_NERVOUS_SYSTEM  ACH-000273  ...  107.540583        LGG
+1061              SNB75_CENTRAL_NERVOUS_SYSTEM  ACH-000504  ...  106.364784        GBM
+1062                                HOP92_LUNG  ACH-000825  ...  198.739234        NaN
+1063                        ACCS_URINARY_TRACT  ACH-001011  ...         NaN       BLCA
+1064  MUTZ3_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE  ACH-000084  ...   83.534726       LAML
+
+[1061 rows x 33 columns]
+
+In [31]: val[~val.Site_Subtype2.isna()].iloc[0]
+Out[31]:
+CCLE_ID                                   DMS53_LUNG
+DepMap_ID                                 ACH-000698
+Name                                          DMS 53
+Pathology                                    primary
+Site_Primary                                    lung
+Site_Subtype1                                     NS
+Site_Subtype2                                     NS
+Site_Subtype3                                     NS
+Histology                                  carcinoma
+Hist_Subtype1                   small_cell_carcinoma
+Hist_Subtype2                                     NS
+Hist_Subtype3                                     NS
+Gender                                          male
+Life_Stage                                       NaN
+Age                                             54.0
+Race                                       caucasian
+Geo_Loc                                          NaN
+inferred_ethnicity                         Caucasian
+Site_Of_Finding                                  NaN
+Disease                                  lung_cancer
+Annotation_Source                               CCLE
+Original.Source.of.Cell.Line                    ATCC
+Characteristics                             Adherent
+Growth.Medium                     Waymouth's +10%FBS
+Supplements                                      NaN
+Freezing.Medium                               5%DMSO
+Doubling.Time.from.Vendor                        NaN
+Doubling.Time.Calculated.hrs                   450.0
+type                                 lung_small_cell
+type_refined                         lung_small_cell
+PATHOLOGIST_ANNOTATION                     Lung:SCLC
+mutRate                                   157.241638
+tcga_code                                       SCLC
+Name: 0, dtype: object
+
+In [32]: val[~val.Site_Subtype2.isna()].iloc[10]
+Out[32]:
+CCLE_ID                                NCIH1184_LUNG
+DepMap_ID                                 ACH-000523
+Name                                       NCI-H1184
+Pathology                                 metastasis
+Site_Primary                                    lung
+Site_Subtype1                                     NS
+Site_Subtype2                                     NS
+Site_Subtype3                                     NS
+Histology                                  carcinoma
+Hist_Subtype1                   small_cell_carcinoma
+Hist_Subtype2                                     NS
+Hist_Subtype3                                     NS
+Gender                                          male
+Life_Stage                                       NaN
+Age                                             42.0
+Race                                       caucasian
+Geo_Loc                                          NaN
+inferred_ethnicity                         Caucasian
+Site_Of_Finding                           lymph_node
+Disease                                          NaN
+Annotation_Source                               CCLE
+Original.Source.of.Cell.Line                    ATCC
+Characteristics                 Mixed (lymphoblasts)
+Growth.Medium                    RPMI-1640 + 10% FBS
+Supplements                                      NaN
+Freezing.Medium                               5%DMSO
+Doubling.Time.from.Vendor                        NaN
+Doubling.Time.Calculated.hrs                   151.7
+type                                 lung_small_cell
+type_refined                         lung_small_cell
+PATHOLOGIST_ANNOTATION                     Lung:SCLC
+mutRate                                   134.156332
+tcga_code                                       SCLC
+Name: 10, dtype: object
+
+In [33]: val[~val.Site_Subtype2.isna()].iloc[100]
+Out[33]:
+CCLE_ID                                                               KPL1_BREAST
+DepMap_ID                                                              ACH-000028
+Name                                                                        KPL-1
+Pathology                                                              metastasis
+Site_Primary                                                               breast
+Site_Subtype1                                                                  NS
+Site_Subtype2                                                                  NS
+Site_Subtype3                                                                  NS
+Histology                                                               carcinoma
+Hist_Subtype1                                                    ductal_carcinoma
+Hist_Subtype2                                                                  NS
+Hist_Subtype3                                                                  NS
+Gender                                                                     female
+Life_Stage                                                                    NaN
+Age                                                                          50.0
+Race                                                                        asian
+Geo_Loc                                                                     japan
+inferred_ethnicity                                                      Caucasian
+Site_Of_Finding                                                            pleura
+Disease                                                             breast_cancer
+Annotation_Source                                                            CCLE
+Original.Source.of.Cell.Line                                                 DSMZ
+Characteristics                 adherent growing in monolayers(very dense colo...
+Growth.Medium                                   90% Dulbecco's MEM + 10% h.i. FBS
+Supplements                                                                   NaN
+Freezing.Medium                                                               NaN
+Doubling.Time.from.Vendor                                               ~  50 hrs
+Doubling.Time.Calculated.hrs                                                  NaN
+type                                                                       breast
+type_refined                                                               breast
+PATHOLOGIST_ANNOTATION                                           Breast:Carcinoma
+mutRate                                                                117.755152
+tcga_code                                                                    BRCA
+Name: 100, dtype: object
+
+In [34]: val[~val.Site_Subtype2.isna()].iloc[120]
+Out[34]:
+CCLE_ID                                   HUH6_LIVER
+DepMap_ID                                 ACH-000671
+Name                                           HuH-6
+Pathology                                    primary
+Site_Primary                                   liver
+Site_Subtype1                                     NS
+Site_Subtype2                                     NS
+Site_Subtype3                                     NS
+Histology                                      other
+Hist_Subtype1                         hepatoblastoma
+Hist_Subtype2                                     NS
+Hist_Subtype3                                     NS
+Gender                                          male
+Life_Stage                                 pediatric
+Age                                              NaN
+Race                                           asian
+Geo_Loc                                        japan
+inferred_ethnicity                             Asian
+Site_Of_Finding                                  NaN
+Disease                                          NaN
+Annotation_Source                               CCLE
+Original.Source.of.Cell.Line                   RIKEN
+Characteristics                      epithelial-like
+Growth.Medium                          DMEM + 10%FBS
+Supplements                                      NaN
+Freezing.Medium                                  NaN
+Doubling.Time.from.Vendor                        NaN
+Doubling.Time.Calculated.hrs                     NaN
+type                                           liver
+type_refined                                   liver
+PATHOLOGIST_ANNOTATION          Liver:Hepatoblastoma
+mutRate                                   174.018968
+tcga_code                                       LIHC
+Name: 120, dtype: object
+
+In [35]: val[~val.Site_Subtype2.isna()].iloc[123]
+Out[35]:
+CCLE_ID                                 BICR22_UPPER_AERODIGESTIVE_TRACT
+DepMap_ID                                                     ACH-000794
+Name                                                             BICR 22
+Pathology                                                     metastasis
+Site_Primary                                   upper_aerodigestive_tract
+Site_Subtype1                                                      mouth
+Site_Subtype2                                                     tongue
+Site_Subtype3                                                         NS
+Histology                                                      carcinoma
+Hist_Subtype1                                    squamous_cell_carcinoma
+Hist_Subtype2                                                         NS
+Hist_Subtype3                                                         NS
+Gender                                                              male
+Life_Stage                                                           NaN
+Age                                                                  NaN
+Race                                                           caucasian
+Geo_Loc                                                              NaN
+inferred_ethnicity                                             Caucasian
+Site_Of_Finding                                                      NaN
+Disease                                                              NaN
+Annotation_Source                                                   CCLE
+Original.Source.of.Cell.Line                                       ECACC
+Characteristics                       adherent; epithelial, keratinocyte
+Growth.Medium                                               DMEM+20% FBS
+Supplements                     2mM L-glutamine, 0.4ug/ml hydrocortisone
+Freezing.Medium                                                   5%DMSO
+Doubling.Time.from.Vendor                                            NaN
+Doubling.Time.Calculated.hrs                                        66.0
+type                                                 upper_aerodigestive
+type_refined                                         upper_aerodigestive
+PATHOLOGIST_ANNOTATION               Upper_Aerodigestive_Tract:Carcinoma
+mutRate                                                       178.584679
+tcga_code                                                           HNSC
+Name: 123, dtype: object
+
+In [36]: set(val.type)
+Out[36]:
+{'AML',
+ 'B-cell_ALL',
+ 'CML',
+ 'Ewings_Sarcoma',
+ 'T-cell_ALL',
+ 'bile_duct',
+ 'breast',
+ 'chondrosarcoma',
+ 'colorectal',
+ 'endometrium',
+ 'esophagus',
+ 'giant_cell_tumour',
+ 'glioma',
+ 'kidney',
+ 'leukemia_other',
+ 'liver',
+ 'lung_NSC',
+ 'lung_small_cell',
+ 'lymphoma_Burkitt',
+ 'lymphoma_DLBCL',
+ 'lymphoma_Hodgkin',
+ 'lymphoma_other',
+ 'medulloblastoma',
+ 'melanoma',
+ 'meningioma',
+ 'mesothelioma',
+ 'multiple_myeloma',
+ nan,
+ 'neuroblastoma',
+ 'osteosarcoma',
+ 'other',
+ 'ovary',
+ 'pancreas',
+ 'prostate',
+ 'soft_tissue',
+ 'stomach',
+ 'thyroid',
+ 'upper_aerodigestive',
+ 'urinary_tract'}
+
+In [37]: set(val.type_refined)
+Out[37]:
+{'AML',
+ 'B-cell_ALL',
+ 'B-cell_lymphoma_other',
+ 'CML',
+ 'Ewings_sarcoma',
+ 'T-cell_ALL',
+ 'T-cell_lymphoma_other',
+ 'bile_duct',
+ 'breast',
+ 'cervix',
+ 'chondrosarcoma',
+ 'colorectal',
+ 'endometrium',
+ 'esophagus',
+ 'fibroblast_like',
+ 'giant_cell_tumour',
+ 'glioma',
+ 'kidney',
+ 'leukemia_other',
+ 'liver',
+ 'lung_NSC',
+ 'lung_small_cell',
+ 'lymphoma_Burkitt',
+ 'lymphoma_DLBCL',
+ 'lymphoma_Hodgkin',
+ 'medulloblastoma',
+ 'melanoma',
+ 'meningioma',
+ 'mesothelioma',
+ 'multiple_myeloma',
+ nan,
+ 'neuroblastoma',
+ 'osteosarcoma',
+ 'other',
+ 'ovary',
+ 'pancreas',
+ 'prostate',
+ 'soft_tissue',
+ 'stomach',
+ 'thyroid',
+ 'upper_aerodigestive',
+ 'urinary_tract'}
+
+In [38]: val = val[~val.DepMap_ID.isna()][["Pathology",
+    ...: "Site_Subtype1",
+    ...: "Site_Subtype2",
+    ...: "Site_Subtype3",
+    ...: "Histology",
+    ...: "Hist_Subtype1",
+    ...: "Hist_Subtype2",
+    ...: "Hist_Subtype3",
+    ...: "Race",
+    ...: "Geo_Loc",
+    ...: "inferred_ethnicity",
+    ...: "Site_Of_Finding",
+    ...: "Annotation_Source",
+    ...: "Original.Source.of.Cell.Line",
+    ...: "Characteristics",
+    ...: "Growth.Medium",
+    ...: "Supplements",
+    ...: "Freezing.Medium",
+    ...: "Doubling.Time.from.Vendor",
+    ...: "Doubling.Time.Calculated.hrs",
+    ...: "PATHOLOGIST_ANNOTATION",
+    ...: "mutRate",
+    ...: "tcga_code",]].rename(columns=)
