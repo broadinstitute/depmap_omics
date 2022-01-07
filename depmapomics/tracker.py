@@ -12,20 +12,40 @@ import dalmatian as dm
 
 # condense all interactions with tracker (for emeril integration)
 class SampleTracker:
-    def __init__(self, my_id, mystorage_id, sheetcreds, refsheet_url):
+    """
+    interacts with (read + write) the sample tracker gsheet
+    """
+
+    def __init__(self, my_id, mystorage_id, sheetcreds, refsheet_url, sheetname):
         self.my_id = my_id
         self.mystorage_id = mystorage_id
         self.sheetcreds = sheetcreds
         self.refsheet_url = refsheet_url
+        self.sheetname = sheetname
 
     def read_tracker(self):
-        return (Sheets.from_files(self.my_id, self.mystorage_id).get(self.refsheet_url).sheets[0].to_frame(index_col=0))
+        return (
+            Sheets.from_files(self.my_id, self.mystorage_id)
+            .get(self.refsheet_url)
+            .sheets[0]
+            .to_frame(index_col=0)
+        )
 
     def write_tracker(self, df):
-        dfToSheet(df, self.refsheet_url, secret=self.sheetcreds)
+        dfToSheet(df, self.sheetname, secret=self.sheetcreds)
+
 
 def initTracker():
-    return SampleTracker(my_id=MY_ID, mystorage_id=MYSTORAGE_ID, sheetcreds=SHEETCREDS, refsheet_url=REFSHEET_URL)
+    """
+    initialize a sample tracker object
+    """
+    return SampleTracker(
+        my_id=MY_ID,
+        mystorage_id=MYSTORAGE_ID,
+        sheetcreds=SHEETCREDS,
+        refsheet_url=REFSHEET_URL,
+        sheetname=SHEETNAME,
+    )
 
 
 def _getDEPMAPPV(pv_index="arxspan_id", pv_tokeep=[], index="DepMap_ID"):
