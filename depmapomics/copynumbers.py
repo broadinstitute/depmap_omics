@@ -1,7 +1,6 @@
 # cn.py
 
 import numpy as np
-from gsheets import Sheets
 from depmapomics import tracker as track
 from depmapomics.qc import cn
 from depmapomics.config import *
