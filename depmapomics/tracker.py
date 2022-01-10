@@ -741,13 +741,12 @@ def update(
     failed,
     lowqual,
     newgs="",
-    sheetcreds=SHEETCREDS,
-    sheetname=SHEETNAME,
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=True,
     samplesinset=[],
     todrop=[],
+    trackerobj=None,
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -808,7 +807,7 @@ def update(
     if dry_run:
         return tracker
     else:
-        dfToSheet(tracker, sheetname, secret=sheetcreds)
+        trackerobj.write_tracker(tracker)
     print("updated the sheet, please reactivate protections")
     return None
 
