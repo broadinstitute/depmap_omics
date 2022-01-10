@@ -755,6 +755,7 @@ def loadWES(
 
 def loadWGS(
     samplesetname,
+    trackerobj=None,
     workspaces=[wgsworkspace1, wgsworkspace2],
     sources=[wgssource1, wgssource2],
     maxage=MAXAGE,
@@ -775,12 +776,14 @@ def loadWGS(
         maxage=maxage,
         baits=baits,
         stype=stype,
+        trackerobj=trackerobj,
         **kwargs
     )
 
 
 def loadRNA(
     samplesetname=SAMPLESETNAME,
+    trackerobj=None,
     workspaces=[rnaworkspace6, rnaworkspace7],
     sources=[rnasource6, rnasource7],
     maxage=MAXAGE,
@@ -800,6 +803,7 @@ def loadRNA(
         maxage=maxage,
         baits=baits,
         stype=stype,
+        trackerobj=trackerobj,
         **kwargs
     )
 
@@ -828,7 +832,6 @@ def load(
     participantslicepos=10,
     accept_unknowntypes=True,
     recomputehash=True,
-    creds=SHEETCREDS,
     my_id=MY_ID,
     creds=SHEETCREDS,
     mystorage_id=MYSTORAGE_ID,
