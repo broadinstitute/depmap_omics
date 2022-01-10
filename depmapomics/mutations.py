@@ -13,7 +13,6 @@ from depmapomics import tracker as track
 
 import dalmatian as dm
 import pandas as pd
-from gsheets import Sheets
 
 
 def download_maf_from_workspace(
@@ -225,9 +224,6 @@ async def _CCLEPostProcessing(
     todrop=KNOWN_DROP,
     AllSamplesetName="all",
     doCleanup=False,
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
-    refsheet_url=REFSHEET_URL,
     taiga_description=Mutationsreadme,
     taiga_dataset=TAIGA_MUTATION,
     mutation_groups=MUTATION_GROUPS,
