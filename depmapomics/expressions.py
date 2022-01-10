@@ -13,7 +13,6 @@ from depmapomics.qc import rna as myQC
 from depmapomics import tracker as track
 
 from depmapomics.config import *
-from gsheets import Sheets
 
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
@@ -127,8 +126,7 @@ def updateTracker(
     tracker,
     samplesetname,
     refworkspace=RNAWORKSPACE,
-    sheetname=SHEETNAME,
-    sheetcreds=SHEETCREDS,
+    trackerobj=None,
     onlycol=STARBAMCOLTERRA,
     newgs=RNA_GCS_PATH_HG38,
     dry_run=False,
@@ -176,12 +174,11 @@ def updateTracker(
         failed,
         lowqual,
         newgs,
-        sheetcreds,
-        sheetname,
         refworkspace,
         onlycol,
         dry_run,
         todrop=todrop,
+        trackerobj=trackerobj,
     )
 
 
@@ -558,20 +555,16 @@ async def postProcess(
 async def _CCLEPostProcessing(
     refworkspace=RNAWORKSPACE,
     samplesetname=SAMPLESETNAME,
-    refsheet_url=REFSHEET_URL,
     colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
     ensemblserver=ENSEMBL_SERVER_V,
     doCleanup=True,
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
     samplesetToLoad="all",
     tocompare={
         "genes_expected_count": "CCLE_RNAseq_reads",
         "genes_tpm": "CCLE_expression_full",
         "proteincoding_genes_tpm": "CCLE_expression",
     },
-    sheetname=SHEETNAME,
-    sheetcreds=SHEETCREDS,
+    trackerobj=None,
     todrop=KNOWN_DROP,
     prevcounts="ccle",
     taiga_dataset=TAIGA_EXPRESSION,
@@ -625,8 +618,7 @@ async def _CCLEPostProcessing(
     if prevcounts == "ccle":
         prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
 
-    sheets = Sheets.from_files(my_id, mystorage_id)
-    ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+    ccle_refsamples = trackerobj.read_tracker()
 
     todrop += ccle_refsamples[
         (ccle_refsamples.blacklist == 1) & (ccle_refsamples.datatype == "rna")
@@ -721,8 +713,7 @@ async def _CCLEPostProcessing(
         ccle_refsamples,
         samplesetname,
         refworkspace,
-        sheetname=sheetname,
-        sheetcreds=sheetcreds,
+        trackerobj=trackerobj,
         todrop=todrop,
     )
 
