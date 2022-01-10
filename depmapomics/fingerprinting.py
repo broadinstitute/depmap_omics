@@ -334,6 +334,7 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
 async def fingerPrint(
     samples,
     sid="id",
+    trackerobj=None,
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
@@ -421,7 +422,12 @@ async def fingerPrint(
 
     # finding issues with the dataset
     latest_lod_mat = updated_lod_mat.loc[new_ids]
-    ref = tracker.getTracker()
+
+    ref = pd.DataFrame()
+
+    if trackerobj is not None:
+        ref = trackerobj.read_tracker()
+
     ref = ref.append(samples)
 
     # find samples that should match but don't
@@ -436,6 +442,7 @@ async def fingerPrint(
 async def _CCLEFingerPrint(
     rnasamples,
     wgssamples,
+    trackerobj=None,
     sid="id",
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
@@ -472,6 +479,7 @@ async def _CCLEFingerPrint(
     # call generic function
     updated_lod_mat, mismatches, matches = await fingerPrint(
         samples,
+        trackerobj=trackerobj,
         sid=sid,
         sampleset=sampleset,
         allbatchpairset=allbatchpairset,
