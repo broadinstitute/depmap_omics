@@ -1,4 +1,3 @@
-from gsheets import Sheets
 import dalmatian as dm
 import pandas as pd
 import os.path
@@ -222,13 +221,11 @@ async def _CCLEPostProcessing(
     refworkspace=RNAWORKSPACE,
     sampleset=SAMPLESETNAME,
     fusionSamplecol=SAMPLEID,
-    refsheet_url=REFSHEET_URL,
     todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_FUSION,
     dataset_description=FUSIONreadme,
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
     prevdataset="ccle",
+    trackerobj=None,
     **kwargs
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
@@ -260,8 +257,8 @@ async def _CCLEPostProcessing(
 
     if prevdataset is "ccle":
         prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
-    sheets = Sheets.from_files(my_id, mystorage_id)
-    ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+
+    ccle_refsamples = trackerobj.read_tracker()
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
