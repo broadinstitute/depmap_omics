@@ -119,9 +119,8 @@ def updateTracker(
     lowqual,
     datatype,
     newgs=WGS_GCS_PATH_HG38,
-    sheetcreds=SHEETCREDS,
     samplesinset=[],
-    sheetname=SHEETNAME,
+    trackerobj=None,
     procqc=[],
     bamqc=[],
     refworkspace=None,
@@ -187,12 +186,11 @@ def updateTracker(
         lowqual,
         lowqual,
         newgs,
-        sheetcreds,
-        sheetname,
         refworkspace,
         bamfilepaths,
         dry_run,
         samplesinset,
+        trackerobj=trackerobj,
     )
 
 
@@ -338,12 +336,8 @@ def _CCLEPostProcessing(
     wessetentity=WESSETENTITY,
     wgssetentity=WGSSETENTITY,
     samplesetname=SAMPLESETNAME,
+    trackerobj=None,
     AllSamplesetName="all",
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
-    sheetcreds=SHEETCREDS,
-    sheetname=SHEETNAME,
-    refsheet_url=REFSHEET_URL,
     todrop=KNOWN_DROP,
     prevgenecn="ccle",
     taiga_dataset=TAIGA_CN,
@@ -394,8 +388,11 @@ def _CCLEPostProcessing(
     if prevgenecn is "ccle":
         prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
 
-    sheets = Sheets.from_files(my_id, mystorage_id)
-    tracker = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+    tracker = pd.DataFrame()
+    if trackerobj is not None:
+        tracker = trackerobj.read_tracker()
+
+    assert len(tracker) != 0, "broken source for sample tracker"
 
     # doing wes
     folder = os.path.join("temp", samplesetname, "wes_")
@@ -525,8 +522,7 @@ def _CCLEPostProcessing(
             samplesetname,
             wgsfailed,
             datatype=["wgs", "wes"],
-            sheetcreds=sheetcreds,
-            sheetname=sheetname,
+            trackerobj=trackerobj,
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wgsrefworkspace,
@@ -541,8 +537,7 @@ def _CCLEPostProcessing(
             samplesetname,
             list(wesfailed),
             datatype=["wes", "wgs"],
-            sheetcreds=sheetcreds,
-            sheetname=sheetname,
+            trackerobj=trackerobj,
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wesrefworkspace,
