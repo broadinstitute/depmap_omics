@@ -1,5 +1,6 @@
 # tracker.py
 from genepy.utils import helper as h
+from numpy import true_divide
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
@@ -34,6 +35,20 @@ class SampleTracker:
     def write_tracker(self, df):
         dfToSheet(df, self.sheetname, secret=self.sheetcreds)
 
+    def read_pv(self):
+        return (
+            Sheets.from_files(self.my_id, self.mystorage_id)
+            .get(DEPMAP_PV)
+            .sheets[0]
+            .to_frame(header=2)
+        )
+
+    def write_all_samples_found(self, df):
+        return True
+
+    def write_all_samples_not_found(self, df):
+        return True
+
 
 def initTracker():
     """
@@ -48,11 +63,10 @@ def initTracker():
     )
 
 
-def _getDEPMAPPV(pv_index="arxspan_id", pv_tokeep=[], index="DepMap_ID"):
+def _getDEPMAPPV(pv_tokeep=[], index="DepMap_ID"):
     """get the DEPMAP master spreadsheet from google sheet
 
     Args:
-        pv_index (str, optional): [description]. Defaults to "arxspan_id".
         pv_tokeep (list, optional): [description]. Defaults to [].
         index (str, optional): [description]. Defaults to "DepMap_ID".
  
@@ -567,11 +581,9 @@ def retrieveFromCellLineName(
     ccle_refsamples,
     datatype,
     extract={},
-    my_id="~/.client_secret.json",
     stripped_cell_line_name="stripped_cell_line_name",
     arxspan_id="arxspan_id",
-    mystorage_id="~/.storage.json",
-    depmappvlink=DEPMAP_PV,
+    trackerobj=None,
 ):
     """
     Given a List of samples with no arxspan ids, will try to retrieve an arxspan id and associated data from trackers
@@ -586,13 +598,11 @@ def retrieveFromCellLineName(
         extract: dict(str:str) see the extract in the "resolveFromWorkspace" function
         stripped_cell_line_name: str colname where the cell line name is stored
         arxspan_id: str colname wherre the sample id is stored in both noarxspan and ccle_refsamples
-        depmappvlink: str the url to the depmap_pv google sheet
 
     Returns:
     --------
         a new dataframe with filled annotations when possible
     """
-    sheets = Sheets.from_files(my_id, mystorage_id)
 
     # find back from cell line name in ccle ref samples
     noarxspan.arxspan_id = [
@@ -612,7 +622,7 @@ def retrieveFromCellLineName(
     ]
 
     # get depmap pv
-    depmap_pv = sheets.get(depmappvlink).sheets[0].to_frame(header=2)
+    depmap_pv = trackerobj.read_pv()
     depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
 
     # find back from depmapPV
