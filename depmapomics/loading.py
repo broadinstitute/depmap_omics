@@ -654,15 +654,13 @@ def completeFromMasterSheet(
     samples,
     notfound,
     toupdate=TO_UPDATE,
-    my_id=MY_ID,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
     pv_tokeep=["Culture Type", "Culture Medium"],
-    mystorage_id=MYSTORAGE_ID,
     masterfilename="ACH",
     nanslist=["None", "nan", "Unknown", None, np.nan],
-    depmap_pv=DEPMAP_PV,
     depmap_taiga=DEPMAP_TAIGA,
+    trackerobj=None,
 ):
     """complete the missing sample information from a given DepMap Ops MasterSheet
 
@@ -687,13 +685,13 @@ def completeFromMasterSheet(
     from taigapy import TaigaClient
 
     tc = TaigaClient()
-    sheets = Sheets.from_files(my_id, mystorage_id)
 
-    depmap_pv = sheets.get(depmap_pv).sheets[0].to_frame(header=2)
+    depmap_pv = trackerobj.read_pv(pv_tokeep=pv_tokeep, index=pv_index)
     depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
     depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index).set_index(pv_index, drop=True)[
         pv_tokeep
     ]
+
     depmap_master = tc.get(name=depmap_taiga, file=masterfilename).set_index(
         master_index, drop=True
     )
@@ -819,7 +817,6 @@ def load(
     toupdate=TO_UPDATE,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
-    depmappvlink=DEPMAP_PV,
     extract_to_change=EXTRACT_TO_CHANGE,
     extract_defaults=EXTRACT_DEFAULTS,
     # version 102
@@ -891,8 +888,8 @@ def load(
         noarxspan,
         ccle_refsamples,
         datatype=stype,
-        depmappvlink=depmappvlink,
         extract=extract_to_change,
+        trackerobj=trackerobj,
     )
 
     # assess any potential issues
@@ -948,15 +945,13 @@ def load(
             samples,
             notfound,
             toupdate=toupdate,
-            my_id=my_id,
             pv_index=pv_index,
             master_index=master_index,
-            mystorage_id=mystorage_id,
             pv_tokeep=pv_tokeep,
             masterfilename=masterfilename,
             nanslist=nanslist,
-            depmap_pv=depmappvlink,
             depmap_taiga=depmap_taiga,
+            trackerobj=trackerobj,
         )
         if len(unk) > 0:
             print("some samples could still not be inferred")
