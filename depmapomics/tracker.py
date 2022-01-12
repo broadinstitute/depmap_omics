@@ -91,7 +91,6 @@ def initTracker():
         mystorage_id=MYSTORAGE_ID,
         sheetcreds=SHEETCREDS,
         refsheet_url=REFSHEET_URL,
-        sheetname=SHEETNAME,
         depmap_pv=DEPMAP_PV,
         samples_not_found_url=SAMPLES_NOT_FOUND_URL,
         samples_missing_arxspan_url=SAMPLES_MISSING_ARXSPAN_URL,
