@@ -8,7 +8,7 @@
 # HELPER FUNC  ######################################
 #
 #
-from gsheets import Sheets
+
 from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
@@ -829,9 +829,6 @@ def load(
     participantslicepos=10,
     accept_unknowntypes=True,
     recomputehash=True,
-    my_id=MY_ID,
-    creds=SHEETCREDS,
-    mystorage_id=MYSTORAGE_ID,
 ):
     """function to load and extract data from the GP workspaces
 
@@ -912,21 +909,13 @@ def load(
     if len(noarxspan) > 0:
         print("we found " + str(len(noarxspan)) + " samples without arxspan_ids!!")
         noarxspan = noarxspan.sort_values(by="stripped_cell_line_name")
-        dfToSheet(samples, "depmap ALL samples not found", creds)
+        trackerobj.write_samples_missing_arxspan(noarxspan)
         noarxspan.to_csv("temp/noarxspan_" + stype + "_" + release + ".csv")
         if h.askif(
-            "Please review the samples (on 'depmap samples not found') and write yes once \
+            "Please review the samples (on 'depmap samples missing arxspan') and write yes once \
       finished, else write no to quit and they will not be added"
         ):
-            sheets = Sheets.from_files(my_id, mystorage_id)
-            updated_samples = (
-                sheets.get(
-                    "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
-                )
-                .sheets[0]
-                .to_frame()
-                .set_index("sample_id")
-            )
+            updated_samples = trackerobj.read_samples_missing_arxspan()
             samples = pd.concat([samples, updated_samples], sort=False)
 
     samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
@@ -955,7 +944,7 @@ def load(
         )
         if len(unk) > 0:
             print("some samples could still not be inferred")
-            dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
+            trackerobj.write_samples_not_found(samples.loc[notfound])
             samples.loc[notfound].to_csv(
                 "temp/notfound_" + stype + "_" + release + ".csv"
             )
@@ -963,19 +952,12 @@ def load(
                 "Please review the samples (on 'depmap samples not found') and write yes once \
         finished, else write no to quit and they will not be added"
             ):
-                updated_samples = (
-                    sheets.get(
-                        "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
-                    )
-                    .sheets[0]
-                    .to_frame()
-                    .set_index("sample_id")
-                )
+                updated_samples = trackerobj.read_samples_not_found()
                 samples.loc[
                     updated_samples.index, updated_samples.columns
                 ] = updated_samples.values
 
-    dfToSheet(samples, "depmap ALL samples found", secret=creds)
+    trackerobj.write_all_samples_found(samples)
     samples.to_csv("temp/new_" + stype + "_" + release + ".csv")
     return samples
 
