@@ -23,7 +23,6 @@ class SampleTracker:
         mystorage_id,
         sheetcreds,
         refsheet_url,
-        sheetname,
         depmap_pv,
         samples_not_found_url,
         samples_missing_arxspan_url,
@@ -32,7 +31,6 @@ class SampleTracker:
         self.mystorage_id = mystorage_id
         self.sheetcreds = sheetcreds
         self.refsheet_url = refsheet_url
-        self.sheetname = sheetname
         self.depmap_pv = depmap_pv
         self.samples_not_found_url = samples_not_found_url
         self.samples_missing_arxspan_url = samples_missing_arxspan_url
@@ -46,7 +44,7 @@ class SampleTracker:
         )
 
     def write_tracker(self, df):
-        dfToSheet(df, self.sheetname, secret=self.sheetcreds)
+        dfToSheet(df, SHEETNAME, secret=self.sheetcreds)
 
     def read_pv(self):
         return (
@@ -57,13 +55,13 @@ class SampleTracker:
         )
 
     def write_all_samples_found(self, df):
-        dfToSheet(df, "depmap ALL samples found", self.sheetcredscreds)
+        dfToSheet(df, SAMPLES_FOUND_NAME, self.sheetcredscreds)
 
     def write_samples_not_found(self, df):
-        dfToSheet(df, "depmap samples not found", self.sheetcredscreds)
+        dfToSheet(df, SAMPLES_NOT_FOUND_NAME, self.sheetcredscreds)
 
     def write_samples_missing_arxspan(self, df):
-        dfToSheet(df, "depmap samples missing arxspan", self.sheetcredscreds)
+        dfToSheet(df, SAMPLES_MISSING_ARXSPAN_NAME, self.sheetcredscreds)
 
     def read_samples_not_found(self):
         return (
