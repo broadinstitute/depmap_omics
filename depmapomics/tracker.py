@@ -17,12 +17,25 @@ class SampleTracker:
     interacts with (read + write) the sample tracker gsheet
     """
 
-    def __init__(self, my_id, mystorage_id, sheetcreds, refsheet_url, sheetname):
+    def __init__(
+        self,
+        my_id,
+        mystorage_id,
+        sheetcreds,
+        refsheet_url,
+        sheetname,
+        depmap_pv,
+        samples_not_found_url,
+        samples_missing_arxspan_url,
+    ):
         self.my_id = my_id
         self.mystorage_id = mystorage_id
         self.sheetcreds = sheetcreds
         self.refsheet_url = refsheet_url
         self.sheetname = sheetname
+        self.depmap_pv = depmap_pv
+        self.samples_not_found_url = samples_not_found_url
+        self.samples_missing_arxspan_url = samples_missing_arxspan_url
 
     def read_tracker(self):
         return (
@@ -38,7 +51,7 @@ class SampleTracker:
     def read_pv(self):
         return (
             Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(DEPMAP_PV)
+            .get(self.depmap_pv)
             .sheets[0]
             .to_frame(header=2)
         )
@@ -55,9 +68,7 @@ class SampleTracker:
     def read_samples_not_found(self):
         return (
             Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(
-                "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
-            )
+            .get(self.samples_not_found_url)
             .sheets[0]
             .to_frame()
             .set_index("sample_id")
@@ -66,9 +77,7 @@ class SampleTracker:
     def read_samples_missing_arxspan(self):
         return (
             Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(
-                "https://docs.google.com/spreadsheets/d/1htfgpXrMvXDlqbcZltpq6vOE_Vo2YZ3-3mdaXV-Irzk"
-            )
+            .get(self.samples_missing_arxspan_url)
             .sheets[0]
             .to_frame()
             .set_index("sample_id")
@@ -85,6 +94,9 @@ def initTracker():
         sheetcreds=SHEETCREDS,
         refsheet_url=REFSHEET_URL,
         sheetname=SHEETNAME,
+        depmap_pv=DEPMAP_PV,
+        samples_not_found_url=SAMPLES_NOT_FOUND_URL,
+        samples_missing_arxspan_url=SAMPLES_MISSING_ARXSPAN_URL,
     )
 
 
