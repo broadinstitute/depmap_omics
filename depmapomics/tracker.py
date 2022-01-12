@@ -97,27 +97,6 @@ def initTracker():
     )
 
 
-def _getDEPMAPPV(pv_tokeep=[], index="DepMap_ID"):
-    """get the DEPMAP master spreadsheet from google sheet
-
-    Args:
-        pv_tokeep (list, optional): [description]. Defaults to [].
-        index (str, optional): [description]. Defaults to "DepMap_ID".
- 
-    Returns:
-        (pandas.DataFrame): the DEPMAP master spreadsheet
-    """
-    depmap_pv = (
-        Sheets.from_files(MY_ID, MYSTORAGE_ID)
-        .get(DEPMAP_PV)
-        .sheets[0]
-        .to_frame(header=2)
-    )
-    depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
-    depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index).set_index(index, drop=True)
-    return depmap_pv[pv_tokeep] if pv_tokeep else depmap_pv
-
-
 def merge(tracker, new, old, arxspid, cols):
     """
     given a tracker a a new and old arxspan id, will merge the two cells lines in the tracker
