@@ -44,10 +44,35 @@ class SampleTracker:
         )
 
     def write_all_samples_found(self, df):
-        return True
+        dfToSheet(df, "depmap ALL samples found", self.sheetcredscreds)
 
-    def write_all_samples_not_found(self, df):
-        return True
+    def write_samples_not_found(self, df):
+        dfToSheet(df, "depmap samples not found", self.sheetcredscreds)
+
+    def write_samples_missing_arxspan(self, df):
+        dfToSheet(df, "depmap samples missing arxspan", self.sheetcredscreds)
+
+    def read_samples_not_found(self):
+        return (
+            Sheets.from_files(self.my_id, self.mystorage_id)
+            .get(
+                "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
+            )
+            .sheets[0]
+            .to_frame()
+            .set_index("sample_id")
+        )
+
+    def read_samples_missing_arxspan(self):
+        return (
+            Sheets.from_files(self.my_id, self.mystorage_id)
+            .get(
+                "https://docs.google.com/spreadsheets/d/1htfgpXrMvXDlqbcZltpq6vOE_Vo2YZ3-3mdaXV-Irzk"
+            )
+            .sheets[0]
+            .to_frame()
+            .set_index("sample_id")
+        )
 
 
 def initTracker():
