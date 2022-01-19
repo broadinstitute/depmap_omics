@@ -47,8 +47,8 @@ VIRTUAL_RELEASES = {
 }  # release ids on taiga
 
 PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PORTAL = "internal"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "21Q4v2"
+PORTAL = "public"  # used for 'not bookkeeping' markers
+PREV_QUARTER = "21Q4"
 NEW_QUARTER = "22Q1"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
@@ -63,7 +63,12 @@ LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {"ACH-002778"}
 LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
 
 
-LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit?usp=sharing"
+# original
+# LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit?usp=sharing"
+
+# copy of original with 21Q4v2 and 22Q1 combined into 22Q1
+LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1IO9GqeU8m3S_PJb4U2VCKbePVrxBA-k-7jp4A3bhxd8/edit?usp=sharing"
+
 sheets_obj = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
 sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET)
 # LINES_TO_RELEASE = sheets.sheets[0]
