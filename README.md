@@ -74,7 +74,7 @@ Some important data and code from the [JKBio Library](https://www.github.com/jko
   - https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38
 The current owners of these workspaces should give you access.
 2. For the mutation pipeline you will also need to request DBGap access (required for TCGA workflows): https://docs.google.com/document/d/1hwsjUypqUpse7IeMyBLKEXmdlXUzfBa4e4p9teCVtaw/edit?usp=sharing
-3. Ask Sarah Young for access to required billing projects (e.g. broad-firecloud-ccle)
+3. Ask Daniel Venooker for access to required billing projects (e.g. broad-firecloud-ccle)
 4. Get access to the following Terra groups:
   - DEPMAP_CCLE_DATA
   - DEPMAP-PIPELINES
