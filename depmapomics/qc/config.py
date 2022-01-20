@@ -47,19 +47,19 @@ VIRTUAL_RELEASES = {
 }  # release ids on taiga
 
 PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PORTAL = "public"  # used for 'not bookkeeping' markers
+PORTAL = "internal"  # used for 'not bookkeeping' markers
 PREV_QUARTER = "21Q4"
 NEW_QUARTER = "22Q1"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
-NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
-# NEW_RELEASE = TENTATIVE_VIRTUAL
+# NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
+NEW_RELEASE = TENTATIVE_VIRTUAL
 PORTALS = [PORTAL]
 
 
 LINES_TO_DROP_COMMON = set()
 LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
-LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {"ACH-002778"}
+LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {"ACH-002778", "ACH-002745"}
 LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
 
 
@@ -251,7 +251,7 @@ FILE_ATTRIBUTES = [
 # FILE_ATTRIBUTES = [
 # x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
 # ]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"])]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["DNA"])]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
 
 # the following information is used to create a tentative virtual
