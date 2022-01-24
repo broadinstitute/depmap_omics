@@ -1,9 +1,9 @@
 # Given a set of samples, combine segment files into a single file
 workflow opencravat {
-    call opencravat
+    call run_opencravat
 }
 
-task opencravat {
+task run_opencravat {
     String sample_id
     File vcf
     String annotators_to_use
