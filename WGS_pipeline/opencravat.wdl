@@ -1,12 +1,12 @@
 # Given a set of samples, combine segment files into a single file
-workflow run_spliceai_workflow {
-    call run_spliceai
+workflow opencravat {
+    call opencravat
 }
 
-task run_spliceai {
-	String sample_id
+task opencravat {
+    String sample_id
     File vcf
-    File annotators_to_use
+    String annotators_to_use
     
     Int memory
     Int disk_space
@@ -14,9 +14,9 @@ task run_spliceai {
     Int num_preempt
 
     command {
-    	set -euo pipefail
+      set -euo pipefail
         
-    	oc module install-base
+      oc module install-base
       oc module install -y ${annotators_to_use}
       oc run ${vcf} -l hg38 -a ${annotators_to_use} -t text 
 
@@ -29,10 +29,10 @@ task run_spliceai {
     }
 
     output {
-        File oc_spliceai_error_file="${sample_id}.variant_annotations.err.gz"
-        File oc_spliceai_log_file="${sample_id}.variant_annotations.log.gz"
-        File oc_spliceai_sqlite_file="${sample_id}.variant_annotations.sqlite.gz"
-        File oc_spliceai_tsv_file="${sample_id}.variant_annotations.tsv.gz"
+        File oc_error_file="${sample_id}.variant_annotations.err.gz"
+        File oc_log_file="${sample_id}.variant_annotations.log.gz"
+        File oc_sqlite_file="${sample_id}.variant_annotations.sqlite.gz"
+        File oc_tsv_file="${sample_id}.variant_annotations.tsv.gz"
     }
 
     runtime {
