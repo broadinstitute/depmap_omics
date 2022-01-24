@@ -71,3 +71,13 @@ workflows:
         - develop
         - master
         - rsem_confidence_interval_calculation
+  - name: opencravat
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/opencravat.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - develop
+        - master
