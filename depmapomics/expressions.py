@@ -167,7 +167,7 @@ def updateTracker(
         if tracker.loc[k, "bam_qc"] != v[0]:
             tracker.loc[k, "bam_qc"] = v[0]
     tracker.loc[tracker[tracker.datatype.isin(["rna"])].index, samplesetname] = 0
-    track.update(
+    return track.update(
         tracker,
         selected,
         samplesetname,
@@ -406,6 +406,7 @@ async def postProcess(
     dropNonMatching=False,
     recompute_ssgsea=True,
     compute_enrichment=True,
+    dry_run=False,
 ):
     """postprocess a set of aggregated Expression table from RSEM in the CCLE way
 
@@ -571,6 +572,7 @@ async def _CCLEPostProcessing(
     minsimi=0.95,
     dropNonMatching=True,
     dataset_description=RNAseqreadme,
+    dry_run=False,
     **kwargs
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -643,6 +645,10 @@ async def _CCLEPostProcessing(
         return renaming
 
     folder = os.path.join("temp", samplesetname, "")
+
+    if dry_run:
+        folder = os.path.join("temp", "dryrun", "")
+
     h.createFoldersFor(folder)
     files, failed, _, renaming, lowqual, _ = await postProcess(
         refworkspace,
@@ -659,6 +665,7 @@ async def _CCLEPostProcessing(
         ssGSEAcol="genes_tpm",
         renamingFunc=rn,
         dropNonMatching=dropNonMatching,
+        dry_run=dry_run,
         **kwargs
     )
 
@@ -706,7 +713,7 @@ async def _CCLEPostProcessing(
 
     print("updating the tracker")
 
-    updateTracker(
+    updated_tracker = updateTracker(
         set(renaming.keys()) - set(["transcript_id(s)"]),
         failed,
         lowqual[lowqual.sum(1) > 3].index.tolist(),
@@ -715,66 +722,70 @@ async def _CCLEPostProcessing(
         refworkspace,
         trackerobj=trackerobj,
         todrop=todrop,
+        dry_run=dry_run,
     )
 
-    print("uploading to taiga")
-    tc.update_dataset(
-        changes_description="new " + samplesetname + " release!",
-        dataset_permaname=taiga_dataset,
-        upload_files=[
-            {
-                "path": folder + "proteincoding_genes_tpm_logp1.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "transcripts_tpm_logp1.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "genes_tpm_logp1.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "genes_tpm.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "transcripts_tpm.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "proteincoding_genes_tpm.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "transcripts_expected_count.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "proteincoding_genes_expected_count.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "genes_expected_count.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            }
-            # {
-            #     "path": folder+'gene_sets_all.csv',
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8"
-            # },
-        ],
-        upload_async=False,
-        dataset_description=dataset_description,
-    )
-    print("done")
+    if not dry_run:
+        print("uploading to taiga")
+        tc.update_dataset(
+            changes_description="new " + samplesetname + " release!",
+            dataset_permaname=taiga_dataset,
+            upload_files=[
+                {
+                    "path": folder + "proteincoding_genes_tpm_logp1.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_tpm_logp1.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_tpm_logp1.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_tpm.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_tpm.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_tpm.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_expected_count.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_expected_count.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_expected_count.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                }
+                # {
+                #     "path": folder+'gene_sets_all.csv',
+                #     "format": "NumericMatrixCSV",
+                #     "encoding": "utf-8"
+                # },
+            ],
+            upload_async=False,
+            dataset_description=dataset_description,
+        )
+        print("done")
+
+    return updated_tracker
 
