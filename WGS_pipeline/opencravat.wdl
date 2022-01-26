@@ -9,6 +9,7 @@ task run_opencravat {
     String annotators_to_use
     
     Int memory
+    Int boot_disk_size
     Int disk_space
     Int num_threads
     Int num_preempt
@@ -37,6 +38,7 @@ task run_opencravat {
 
     runtime {
         docker: "karchinlab/opencravat"
+        bootDiskSizeGb: ${boot_disk_size}
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"
