@@ -7,14 +7,15 @@ workflow opencravat {
 task run_opencravat {
     String sample_id
     File vcf
-    String format
-    String annotators_to_use
+    String format = "vcf"
+    String annotators_to_use = ""
     
-    Int memory
-    Int boot_disk_size
+    Int memory = 16
+    Int boot_disk_size = 20
     Int disk_space
-    Int num_threads
-    Int num_preempt
+    Int num_threads = 1
+    Int num_preempt = 5
+    String docker = "karchinlab/opencravat"
 
     command {
       set -euo pipefail
@@ -47,7 +48,7 @@ task run_opencravat {
     }
 
     runtime {
-        docker: "karchinlab/opencravat"
+        docker: docker
         bootDiskSizeGb: "${boot_disk_size}"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
