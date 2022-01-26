@@ -37,14 +37,13 @@ task run_opencravat {
       mv ${vcf}.sqlite ${sample_id}.variant_annotations.sqlite
       mv ${vcf}.tsv ${sample_id}.variant_annotations.tsv
 
-      gzip ${sample_id}.*
+      gzip ${sample_id}.variant_annotations.${format}
     }
 
     output {
-        File oc_error_file="${sample_id}.variant_annotations.err.gz"
-        File oc_log_file="${sample_id}.variant_annotations.log.gz"
-        File oc_sqlite_file="${sample_id}.variant_annotations.sqlite.gz"
-        File oc_tsv_file="${sample_id}.variant_annotations.tsv.gz"
+        File oc_error_file="${sample_id}.variant_annotations.err"
+        File oc_log_file="${sample_id}.variant_annotations.log"
+        File oc_tsv_file="${sample_id}.variant_annotations.${format}.gz"
     }
 
     runtime {
