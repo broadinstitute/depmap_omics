@@ -21,7 +21,15 @@ task run_opencravat {
         
       oc module install-base
       oc module install -y ${annotators_to_use}
-      oc run ${vcf} -l hg38 -t ${format} 
+      
+      # to make it faster we should use a copy from a bucket using gsutil cp
+      # we install everything on a machine, then get path to data using `oc config md`
+      # we then cp it on a bucket.
+      # now we can add two additional commands here:
+      # 1. to copy the content of the bucket here: gsutil -m cp -r gs://pathtomd/../* LOCATION
+      # 2. to use this location as the md location: oc config md LOCATION
+      
+      oc run ${vcf} -l hg38 -t ${format} –mp ${num_threads} –version
 
       mv ${vcf}.err ${sample_id}.variant_annotations.err
       mv ${vcf}.log ${sample_id}.variant_annotations.log
