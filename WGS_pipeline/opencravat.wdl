@@ -6,6 +6,7 @@ workflow opencravat {
 task run_opencravat {
     String sample_id
     File vcf
+    String format
     String annotators_to_use
     
     Int memory
@@ -19,7 +20,7 @@ task run_opencravat {
         
       oc module install-base
       oc module install -y ${annotators_to_use}
-      oc run ${vcf} -l hg38 -t text 
+      oc run ${vcf} -l hg38 -t ${format} 
 
       mv ${vcf}.err ${sample_id}.variant_annotations.err
       mv ${vcf}.log ${sample_id}.variant_annotations.log
