@@ -18,7 +18,7 @@ task run_opencravat {
         
       oc module install-base
       oc module install -y ${annotators_to_use}
-      oc run ${vcf} -l hg38 -a ${annotators_to_use} -t text 
+      oc run ${vcf} -l hg38 -t text 
 
       mv ${vcf}.err ${sample_id}.variant_annotations.err
       mv ${vcf}.log ${sample_id}.variant_annotations.log
