@@ -38,7 +38,7 @@ task run_opencravat {
 
     runtime {
         docker: "karchinlab/opencravat"
-        bootDiskSizeGb: ${boot_disk_size}
+        bootDiskSizeGb: "${boot_disk_size}"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"
