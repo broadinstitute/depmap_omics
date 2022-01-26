@@ -1,4 +1,5 @@
 # Given a set of samples, combine segment files into a single file
+# more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
 workflow opencravat {
     call run_opencravat
 }
