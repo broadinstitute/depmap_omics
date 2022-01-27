@@ -86,16 +86,16 @@ PREV_VIRTUAL = {}
 # PREV_VIRTUAL["internal"] = "internal-21q3-fe4c"
 
 # 21Q4
-PREV_VIRTUAL["public"] = "public-21q4-a0d6"
-PREV_VIRTUAL["ibm"] = "ibm-21q4-4e18"
-PREV_VIRTUAL["dmc"] = "dmc-21q4-5725"
-PREV_VIRTUAL["internal"] = "internal-21q4-ac0a"
+# PREV_VIRTUAL["public"] = "public-21q4-a0d6"
+# PREV_VIRTUAL["ibm"] = "ibm-21q4-4e18"
+# PREV_VIRTUAL["dmc"] = "dmc-21q4-5725"
+# PREV_VIRTUAL["internal"] = "internal-21q4-ac0a"
 
 # 21Q4v2
-# PREV_VIRTUAL["public"] = "public-21q4v2-103d"
-# PREV_VIRTUAL["ibm"] = "ibm-21q4v2-2d92"
-# PREV_VIRTUAL["dmc"] = "dmc-21q4v2-0e7c"
-# PREV_VIRTUAL["internal"] = "internal-21q4v2-403b"
+PREV_VIRTUAL["public"] = "public-21q4v2-103d"
+PREV_VIRTUAL["ibm"] = "ibm-21q4v2-2d92"
+PREV_VIRTUAL["dmc"] = "dmc-21q4v2-0e7c"
+PREV_VIRTUAL["internal"] = "internal-21q4v2-403b"
 
 TAIGA_MUTATION = "mutations-latest-ed72"
 
