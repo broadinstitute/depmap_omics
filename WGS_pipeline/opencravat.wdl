@@ -9,7 +9,7 @@ task run_opencravat {
     File vcf
     String format = "vcf"
     String annotators_to_use = ""
-    File modules = "gs://ccle_default_params/opencravat/modules.tar.gz"
+    # File modules = "gs://ccle_default_params/opencravat/modules.tar.gz"
     Int stripfolder = 0 
     
     Int memory = 16
@@ -24,8 +24,8 @@ task run_opencravat {
         
       # regular version
       # ---------------
-      # oc module install-base
-      # oc module install -y ${annotators_to_use}
+      oc module install-base
+      oc module install -y ${annotators_to_use} vcfreporter
       
       # fast version
       # ------------
@@ -35,9 +35,9 @@ task run_opencravat {
       # now we can add two additional commands here:
       # 1. to copy the content of the bucket here: gsutil cp gs://path/to/modules.gz .
       # 2. to use this location as the md location: oc config md LOCATION
-      gsutil cp ${modules} modules.tar
-      tar -tvf modules.tar --strip-components=${stripfolder}
-      oc config md ./modules
+      # gsutil cp ${modules} modules.tar
+      # tar -tvf modules.tar --strip-components=${stripfolder}
+      # oc config md ./modules
       
       oc run ${vcf} -l hg38 -t ${format} –-mp ${num_threads}
 
