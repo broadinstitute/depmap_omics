@@ -39,7 +39,7 @@ task run_opencravat {
       tar -tvf modules.tar --strip-components=${stripfolder}
       oc config md ./modules
       
-      oc run ${vcf} -l hg38 -t ${format} –mp ${num_threads} –version
+      oc run ${vcf} -l hg38 -t ${format} –-mp ${num_threads}
 
       mv ${vcf}.err ${sample_id}.variant_annotations.err
       mv ${vcf}.log ${sample_id}.variant_annotations.log
