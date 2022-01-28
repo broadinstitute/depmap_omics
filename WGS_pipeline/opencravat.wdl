@@ -41,18 +41,13 @@ task run_opencravat {
       
       oc run ${vcf} -l hg38 -t ${format} –-mp ${num_threads}
 
-      mv ${vcf}.err ${sample_id}.variant_annotations.err
-      mv ${vcf}.log ${sample_id}.variant_annotations.log
-      mv ${vcf}.sqlite ${sample_id}.variant_annotations.sqlite
-      mv ${vcf}.tsv ${sample_id}.variant_annotations.tsv
-
-      gzip ${sample_id}.variant_annotations.${format}
+      gzip ${vcf}.${format}
     }
 
     output {
-        File oc_error_file="${sample_id}.variant_annotations.err"
-        File oc_log_file="${sample_id}.variant_annotations.log"
-        File oc_tsv_file="${sample_id}.variant_annotations.${format}.gz"
+        File oc_error_file="${vcf}.err"
+        File oc_log_file="${vcf}.log"
+        File oc_tsv_file="${vcf}.${format}.gz"
     }
 
     runtime {
