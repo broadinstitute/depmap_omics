@@ -9,7 +9,7 @@ task run_opencravat {
     File vcf
     String format = "vcf"
     String annotators_to_use = ""
-    # File modules = "gs://ccle_default_params/opencravat/modules.tar.gz"
+    File modules = "gs://ccle_default_params/opencravat/modules.tar.gz"
     Int stripfolder = 0 
     
     Int memory = 16
