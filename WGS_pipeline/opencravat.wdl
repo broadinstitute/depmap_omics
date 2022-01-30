@@ -38,7 +38,7 @@ task run_opencravat {
       # gsutil cp {modules} modules.tar
       # tar -tvf modules.tar --strip-components=${stripfolder}
       # oc config md ./modules
-      
+
       oc run ${vcf} -l hg38 -t ${format} --mp ${num_threads}
 
       gzip ${vcf}.${format}
