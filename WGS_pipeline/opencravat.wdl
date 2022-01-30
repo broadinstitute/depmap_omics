@@ -1,8 +1,40 @@
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
 workflow opencravat {
-    call run_opencravat
+    
+    call divide
+    
+    scatter(group in divide.scattering) {
+        call run_opencravat {
+            input:
+                vcfs=readlines(group)
+        }
+    }
 }
+
+task divide {
+    String Files
+    Int per_scatter = 20
+    
+    commands <<<
+    
+    files = ${"[" Files "]"}
+    num = len(files)
+    for i in range(int((len(files)/per_scatter)+1)):
+        if len(files) == i*per_scatter:
+            break
+        textfile = open("scatter_"+str(i)+".txt", "w")
+        if len(files) > (i+1)*perscatter:
+            textfile.write('\n'.join(files[i*per_scatter:(i+1)*perscatter]))
+        else:
+            textfile.write('\n'.join(files[i*per_scatter:]))
+        textfile.close()
+    >>>
+    
+    output {
+        Array[Files] scattering="scatter_*.txt"
+    }
+        
 
 task run_opencravat {
     String sample_id
