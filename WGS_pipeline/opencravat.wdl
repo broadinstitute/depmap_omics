@@ -11,6 +11,7 @@ task run_opencravat {
     String annotators_to_use = ""
     Int stripfolder = 0 
     String genome = "hg38"
+    String module_option = "vcfreporter.type=separate"
     
     Int memory = 16
     Int boot_disk_size = 20
@@ -38,7 +39,12 @@ task run_opencravat {
       # gsutil cp [modules] modules.tar
       # tar -tvf modules.tar --strip-components=[stripfolder]
       # oc config md ./modules
-      oc run ${sep=" " vcfs} -l ${genome} -t ${format} --mp ${num_threads}
+      oc run ${sep=" " vcfs} \
+        -l ${genome} \
+        -t ${format} \
+        --mp ${num_threads} \
+        --separatesample \
+        ${"--module-option " + module_options}
 
       gzip ${sep(" ", suffix(${format}, vcfs))}
     }
