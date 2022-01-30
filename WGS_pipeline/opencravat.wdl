@@ -6,7 +6,7 @@ workflow opencravat {
 
 task run_opencravat {
     String sample_id
-    File vcf
+    Array[File] vcfs
     String format = "vcf"
     String annotators_to_use = ""
     Int stripfolder = 0 
@@ -38,15 +38,16 @@ task run_opencravat {
       # gsutil cp [modules] modules.tar
       # tar -tvf modules.tar --strip-components=[stripfolder]
       # oc config md ./modules
-      oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads}
+      oc run ${sep=" " vcfs} -l ${genome} -t ${format} --mp ${num_threads}
 
-      gzip ${vcf}.${format}
+      gzip ${sep(" ", suffix(${format}, vcfs))}
     }
 
     output {
-        File oc_error_file="${vcf}.err"
-        File oc_log_file="${vcf}.log"
-        File oc_tsv_file="${vcf}.${format}.gz"
+        Array[File] oc_error_files="*.err"
+        Array[File] oc_log_files="*.log"
+        Array[File] oc_sql_files="*.sqlite"
+        Array[File] oc_main_files="*.${format}.gz"
     }
 
     runtime {
