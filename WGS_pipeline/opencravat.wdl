@@ -9,8 +9,8 @@ task run_opencravat {
     File vcf
     String format = "vcf"
     String annotators_to_use = ""
-    # File modules = "gs://ccle_default_params/opencravat/modules.tar.gz"
     Int stripfolder = 0 
+    String genome = "hg38"
     
     Int memory = 16
     Int boot_disk_size = 20
@@ -38,8 +38,7 @@ task run_opencravat {
       # gsutil cp {modules} modules.tar
       # tar -tvf modules.tar --strip-components=${stripfolder}
       # oc config md ./modules
-
-      oc run ${vcf} -l hg38 -t ${format} --mp ${num_threads}
+      oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads}
 
       gzip ${vcf}.${format}
     }
