@@ -41,7 +41,7 @@ task run_opencravat {
       # oc config md ./modules
       oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads} --module-option ${modules_options}
 
-      gzip ${suffix(${format}, ${vcf})}
+      gzip ${suffix(format, vcf)}
     }
 
     output {
