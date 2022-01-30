@@ -35,8 +35,8 @@ task run_opencravat {
       # now we can add two additional commands here:
       # 1. to copy the content of the bucket here: gsutil cp gs://path/to/modules.gz .
       # 2. to use this location as the md location: oc config md LOCATION
-      # gsutil cp {modules} modules.tar
-      # tar -tvf modules.tar --strip-components=${stripfolder}
+      # gsutil cp [modules] modules.tar
+      # tar -tvf modules.tar --strip-components=[stripfolder]
       # oc config md ./modules
       oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads}
 
