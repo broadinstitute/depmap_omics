@@ -59,6 +59,6 @@ task run_opencravat {
     }
 
     meta {
-        author: "David Wu"
+        author: "Jeremie Kalfon"
     }
 }
