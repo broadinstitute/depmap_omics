@@ -17,12 +17,11 @@ task run_fix_ploidy {
     command {
       set -euo pipefail
 
-      bcftools +setGT ${vcf} -t q -i'INFO/DP>10 & AF>0.9' -n c:'m|m' > \
-      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2"' -n c:'1/2'${basename(vcf)} > \
-      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3"' -n c:'1/2/3'${basename(vcf)} > \
-      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3/4"' -n c:'1/2/3/4'${basename(vcf)} > \
-      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3/4/5"' -n c:'1/2/3/4/5'${basename(vcf)} > \
-      ${basename(vcf)}
+      bcftools +setGT ${vcf} -- -t q -i'INFO/DP>10 & AF>0.9' -n c:'m|m' > ${basename(vcf)}
+      bcftools +setGT ${basename(vcf)} -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2"' -n c:'1/2' > ${basename(vcf)}.1
+      bcftools +setGT ${basename(vcf)}.1 -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3"' -n c:'1/2/3' > ${basename(vcf)}
+      bcftools +setGT ${basename(vcf)} -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3/4"' -n c:'1/2/3/4' > ${basename(vcf)}.1
+      bcftools +setGT ${basename(vcf)}.1 -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3/4/5"' -n c:'1/2/3/4/5' > ${basename(vcf)}
       
       gzip ${basename(vcf)}
     }
