@@ -6,8 +6,6 @@ workflow bcftools_fix_ploidy {
 
 task run_fix_ploidy {
     File vcf
-    String on = "INFO/DP>10 & AF>0.9"
-    String replace = "m/m"
  
     Int memory = 2
     Int boot_disk_size = 10
@@ -19,7 +17,13 @@ task run_fix_ploidy {
     command {
       set -euo pipefail
 
-      bcftools +setGT ${vcf} -t q -i'${on}' -n c:'${replace}' > ${basename(vcf)}
+      bcftools +setGT ${vcf} -t q -i'INFO/DP>10 & AF>0.9' -n c:'m|m' > \
+      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2"' -n c:'1/2'${basename(vcf)} > \
+      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3"' -n c:'1/2/3'${basename(vcf)} > \
+      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3/4"' -n c:'1/2/3/4'${basename(vcf)} > \
+      bcftools +setGT . -- -t q -i'AD[*:0]=0 & INFO/DP>10 & GT="0/1/2/3/4/5"' -n c:'1/2/3/4/5'${basename(vcf)} > \
+      ${basename(vcf)}
+      
       gzip ${basename(vcf)}
     }
 
