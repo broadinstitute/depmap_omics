@@ -22,7 +22,8 @@ task run_fix_ploidy {
       bcftools +setGT ${sample_id}.vcf -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2"' -n c:'1/2' > ${sample_id}.vcf.1
       bcftools +setGT ${sample_id}.vcf.1 -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3"' -n c:'1/2/3' > ${sample_id}.vcf
       bcftools +setGT ${sample_id}.vcf -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4"' -n c:'1/2/3/4' > ${sample_id}.vcf.1
-      bcftools +setGT ${sample_id}.vcf.1 -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4/5"' -n c:'1/2/3/4/5' > ${sample_id}_fixedploidy.vcf
+      bcftools +setGT ${sample_id}.vcf.1 -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4/5"' -n c:'1/2/3/4/5' > ${sample_id}.vcf
+      bcftools +setGT ${sample_id}.vcf -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4/5/6"' -n c:'1/2/3/4/5/6' > ${sample_id}_fixedploidy.vcf
       
       gzip ${sample_id}_fixedploidy.vcf
     }
