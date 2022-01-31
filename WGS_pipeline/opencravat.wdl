@@ -39,7 +39,7 @@ task run_opencravat {
       # gsutil cp [modules] modules.tar
       # tar -tvf modules.tar --strip-components=[stripfolder]
       # oc config md ./modules
-      oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads} --module-option ${modules_options} -d out
+      oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads} --module-option ${modules_options} -d out -a ${annotators_to_use}
 
       gzip out/${basename(vcf)}.${format}
     }
