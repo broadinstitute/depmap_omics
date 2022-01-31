@@ -6,6 +6,7 @@ workflow bcftools_fix_ploidy {
 
 task run_fix_ploidy {
     File vcf
+    String sample_id
  
     Int memory = 2
     Int boot_disk_size = 10
@@ -17,17 +18,17 @@ task run_fix_ploidy {
     command {
       set -euo pipefail
 
-      bcftools +setGT ${vcf} -- -t q -i'INFO/DP>8 & AF>0.9' -n c:'m|m' > ${basename(vcf)}
-      bcftools +setGT ${basename(vcf)} -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2"' -n c:'1/2' > ${basename(vcf)}.1
-      bcftools +setGT ${basename(vcf)}.1 -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3"' -n c:'1/2/3' > ${basename(vcf)}
-      bcftools +setGT ${basename(vcf)} -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4"' -n c:'1/2/3/4' > ${basename(vcf)}.1
-      bcftools +setGT ${basename(vcf)}.1 -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4/5"' -n c:'1/2/3/4/5' > ${basename(vcf)}
+      bcftools +setGT ${vcf} -- -t q -i'INFO/DP>8 & AF>0.9' -n c:'m|m' > ${sample_id}.vcf
+      bcftools +setGT ${sample_id}.vcf -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2"' -n c:'1/2' > ${sample_id}.vcf.1
+      bcftools +setGT ${sample_id}.vcf.1 -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3"' -n c:'1/2/3' > ${sample_id}.vcf
+      bcftools +setGT ${sample_id}.vcf -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4"' -n c:'1/2/3/4' > ${sample_id}.vcf.1
+      bcftools +setGT ${sample_id}.vcf.1 -- -t q -i'AD[*:0]=0 & INFO/DP>8 & GT="0/1/2/3/4/5"' -n c:'1/2/3/4/5' > ${sample_id}_fixedploidy.vcf
       
-      gzip ${basename(vcf)}
+      gzip ${sample_id}_fixedploidy.vcf
     }
 
     output {
-        File vcf_fixedploid="${basename(vcf)}.gz"
+        File vcf_fixedploid="${sample_id}_fixedploidy.vcf.gz"
     }
 
     runtime {
