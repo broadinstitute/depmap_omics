@@ -13,7 +13,7 @@ task run_fix_ploidy {
     Int boot_disk_size = 10
     Int num_threads = 1
     Int num_preempt = 5
-    String docker = ""
+    String docker = "dceoy/bcftools"
 
     command {
       set -euo pipefail
