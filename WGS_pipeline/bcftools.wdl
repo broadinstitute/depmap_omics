@@ -19,7 +19,7 @@ task run_fix_ploidy {
     command {
       set -euo pipefail
 
-      bcftools +setGT ${vcf} -t q -i'${on} -n c:'${replace}' > ${basename(vcf)}
+      bcftools +setGT ${vcf} -t q -i'${on}' -n c:'${replace}' > ${basename(vcf)}
       gzip ${basename(vcf)}
     }
 
