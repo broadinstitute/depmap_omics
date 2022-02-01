@@ -1,8 +1,10 @@
 import pandas as pd
-import numpy as np
+
+from depmapomics.ccle import expressionRenaming
 from depmapomics.config import *
 from depmapomics import tracker as track
 from depmapomics import expressions
+from depmapomics import ccle
 
 
 def test_expression_outputs():
@@ -11,21 +13,6 @@ def test_expression_outputs():
     folder = "temp/dryrun"
 
     ccle_refsamples = trackerobj.read_tracker()
-
-    def rn(r, todrop):
-        renaming = track.removeOlderVersions(
-            names=r,
-            refsamples=ccle_refsamples[ccle_refsamples.datatype == "rna"],
-            priority="prioritized",
-        )
-        # if we have a replaceable failed version in our dataset
-        rename = expressions.solveQC(ccle_refsamples, todrop)
-        for k, _ in renaming.copy().items():
-            if k in rename:
-                renaming[rename[k]] = renaming.pop(k)
-            elif (k in todrop) and (k not in rename):
-                renaming.pop(k)
-        return renaming
 
     import asyncio
 
@@ -39,7 +26,7 @@ def test_expression_outputs():
             trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
             compute_enrichment=False,
             ssGSEAcol="genes_tpm",
-            renamingFunc=rn,
+            renamingFunc=ccle.expressionRenaming,
             dry_run=True,
         )
     )
