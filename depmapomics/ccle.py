@@ -824,6 +824,10 @@ def cnProcessForAchilles(
     mergedgenecn = mut.toGeneMatrix(mergedsegments, gene_mapping_df,).apply(
         lambda x: np.log2(1 + x)
     )
+    wesgenecn = mut.toGeneMatrix(
+        mut.manageGapsInSegments(wespriosegs), gene_mapping_df
+    ).apply(lambda x: np.log2(1 + x))
+    wesgenecn.to_csv("temp/" + samplesetname + "/wes_genecn_latest.csv")
 
     # some QC
     print("copy number change with previous release")
