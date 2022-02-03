@@ -89,7 +89,7 @@ def GetNewCellLinesFromWorkspaces(
     extract.update(extract_defaults)
     if type(match) is str and match:
         match = [match]
-    if tracker is not None:
+    if trackerobj is not None:
         print("refsamples is overrided by a tracker object")
         refsamples = trackerobj.read_tracker()
     if refsamples is None:
@@ -455,6 +455,7 @@ def mapSamples(samples, source, extract={}):
             extract["bai"]: extract["ref_bai"],
             extract["name"]: extract["ref_name"],
             extract["from_arxspan_id"]: extract["ref_arxspan_id"],
+            extract["root_sample_id"]: extract["sm_id"],
         }
     ).set_index(extract["ref_id"], drop=True)
     # subsetting
@@ -469,6 +470,7 @@ def mapSamples(samples, source, extract={}):
             extract["patient_id"],
             extract["legacy_size"],
             extract["PDO_id"],
+            extract["sm_id"],
             extract["update_time"],
             extract["source"],
         ]
