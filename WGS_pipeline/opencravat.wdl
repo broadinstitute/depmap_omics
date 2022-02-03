@@ -26,7 +26,7 @@ task run_opencravat {
       # regular version
       # ---------------
       oc module install-base
-      oc module install -y ${annotators_to_use} vcfreporter
+      oc module install -y ${annotators_to_use} vcfreporter hg19
       
       # fast version
       # ------------
