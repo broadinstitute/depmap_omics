@@ -454,6 +454,23 @@ I would run some checks here comparing the results to the previous releases MAF.
 
 __check if important mutations are present or not__
 
+##### REMARK:
+
+Overall the filters applied after the CGA pipeline are the following:
+
+We remove everything that:
+- has AF<.1 
+- OR coverage <4
+- OR alt cov=1 
+- OR is not in coding regions 
+- OR is in Exac with a frequency of >0.005% 
+  - except if it is either 
+    - in TCGA > 3 times 
+    - OR in Cosmic > 10 times 
+  - AND in a set of known cancer regions.
+- OR exist in >5% of the CCLE samples
+  - except if they are in TCGA >5 times
+
 #### RNA
 
 Here we get all data and remove the duplicates directly with the function `removeDuplicates`
