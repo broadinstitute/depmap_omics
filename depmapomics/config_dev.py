@@ -240,6 +240,8 @@ EXTRACT_DEFAULTS = {
     "from_arxspan_id": "individual_alias",
     "ref_id": "sample_id",
     "PDO_id": "PDO",
+    "root_sample_id": "root_sample_id",
+    "sm_id": "sm_id",
     "update_time": "update_time",
     "from_patient_id": "individual_alias",
     "patient_id": "participant_id",
