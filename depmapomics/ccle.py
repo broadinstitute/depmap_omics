@@ -136,7 +136,6 @@ async def expressionPostProcessing(
         samplesinset=samplesinset,
         rsemfilelocs=rsemfilelocs,
         rnaqclocs=rnaqclocs,
-        starlogs=starlogs,
         **kwargs,
     )
 
