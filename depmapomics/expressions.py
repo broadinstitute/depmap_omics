@@ -183,7 +183,12 @@ def updateTracker(
 
 
 def loadFromRSEMaggregate(
-    refworkspace, todrop=[], filenames=RSEMFILENAME, sampleset="all", renamingFunc=None
+    refworkspace,
+    todrop=[],
+    filenames=RSEMFILENAME,
+    sampleset="all",
+    renamingFunc=None,
+    rsemfilelocs=[],
 ):
     """Load the rsem aggregated files from Terra
 
@@ -194,6 +199,7 @@ def loadFromRSEMaggregate(
         sampleset (str, optional): the sample set to load. Defaults to 'all'.
         renamingFunc (function, optional): the function to rename the samples 
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
+        rsemfilelocs (list[str], optional): locations of RSEM output files if refworkspace is not provided (no interaction with terra)
     
     Returns:
         dict(str: pd.df): the loaded dataframes
@@ -202,11 +208,12 @@ def loadFromRSEMaggregate(
     """
     files = {}
     renaming = {}
-    refwm = dm.WorkspaceManager(refworkspace)
-    res = refwm.get_sample_sets().loc[sampleset]
+    if refworkspace is not None:
+        refwm = dm.WorkspaceManager(refworkspace)
+        rsemfilelocs = refwm.get_sample_sets().loc[sampleset]
     for val in filenames:
         file = pd.read_csv(
-            res[val],
+            rsemfilelocs[val],
             compression="gzip",
             header=0,
             sep="\t",
@@ -402,6 +409,7 @@ async def postProcess(
     trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
     ssGSEAcol="genes_tpm",
     renamingFunc=None,
+    rsemfilelocs=[],
     useCache=False,
     dropNonMatching=False,
     recompute_ssgsea=True,
@@ -501,6 +509,7 @@ async def postProcess(
         filenames=trancriptLevelCols + geneLevelCols,
         sampleset=samplesetToLoad,
         renamingFunc=renamingFunc,
+        rsemfilelocs=rsemfilelocs,
     )
     if save_output:
         h.dictToFile(renaming, save_output + "rna_sample_renaming.json")
