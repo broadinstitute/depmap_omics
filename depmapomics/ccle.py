@@ -55,9 +55,10 @@ async def expressionPostProcessing(
     dataset_description=RNAseqreadme,
     dry_run=False,
     samplesinset=[],
-    rsemfilelocs=[],
+    rsemfilelocs=None,
     rnaqclocs={},
-    starlogs={} ** kwargs,
+    starlogs={},
+    **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
 
@@ -90,7 +91,7 @@ async def expressionPostProcessing(
         minsimi (float, optional): the minimum similarity to use for comparison to previous dataset. Defaults to 0.95.
         dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
         tocompare (dict, optional): the columns to compare. Defaults to {"genes_expected_count": "CCLE_RNAseq_reads", "genes_tpm": "CCLE_expression_full", "proteincoding_genes_tpm": "CCLE_expression"}.
-        rsemfilelocs (list[str], optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
+        rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
         samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
         rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
     """
@@ -136,7 +137,7 @@ async def expressionPostProcessing(
         rsemfilelocs=rsemfilelocs,
         rnaqclocs=rnaqclocs,
         starlogs=starlogs,
-        **kwargs
+        **kwargs,
     )
 
     print("doing validation")
@@ -271,7 +272,7 @@ async def fusionPostProcessing(
     dataset_description=FUSIONreadme,
     prevdataset="ccle",
     trackerobj=None,
-    **kwargs
+    **kwargs,
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
 
@@ -317,7 +318,7 @@ async def fusionPostProcessing(
         todrop=previousQCfail,
         renaming=renaming,
         save_output=folder,
-        **kwargs
+        **kwargs,
     )
 
     print("comparing to previous version")
@@ -406,7 +407,7 @@ def cnPostProcessing(
     source_rename=SOURCE_RENAME,
     redoWES=False,
     wesfolder="",
-    **kwargs
+    **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
 
@@ -463,7 +464,7 @@ def cnPostProcessing(
             todrop=todropwes,
             save_output=folder,
             priority=priority,
-            **kwargs
+            **kwargs,
         )
 
         wesrenaming = cn.managingDuplicates(
@@ -523,7 +524,7 @@ def cnPostProcessing(
         save_output=folder,
         segmentsthresh=2000,
         priority=priority,
-        **kwargs
+        **kwargs,
     )
 
     wgsrenaming = cn.managingDuplicates(
@@ -912,7 +913,7 @@ async def mutationPostProcessing(
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
     prev="ccle",
     minfreqtocall=0.25,
-    **kwargs
+    **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
 
@@ -957,7 +958,7 @@ async def mutationPostProcessing(
         save_output=folder,
         doCleanup=True,
         mutCol="CGA_WES_AC",
-        **kwargs
+        **kwargs,
     )
 
     # renaming
@@ -988,7 +989,7 @@ async def mutationPostProcessing(
         save_output=folder,
         doCleanup=True,
         mutCol="CGA_WES_AC",
-        **kwargs
+        **kwargs,
     )
 
     # renaming

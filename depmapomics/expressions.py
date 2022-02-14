@@ -193,7 +193,7 @@ def loadFromRSEMaggregate(
     filenames=RSEMFILENAME,
     sampleset="all",
     renamingFunc=None,
-    rsemfilelocs=[],
+    rsemfilelocs=None,
 ):
     """Load the rsem aggregated files from Terra
 
@@ -204,7 +204,7 @@ def loadFromRSEMaggregate(
         sampleset (str, optional): the sample set to load. Defaults to 'all'.
         renamingFunc (function, optional): the function to rename the samples 
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
-        rsemfilelocs (list[str], optional): locations of RSEM output files if refworkspace is not provided (no interaction with terra)
+        rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (no interaction with terra)
     
     Returns:
         dict(str: pd.df): the loaded dataframes
@@ -415,9 +415,8 @@ async def postProcess(
     ssGSEAcol="genes_tpm",
     renamingFunc=None,
     samplesinset=[],
-    rsemfilelocs=[],
+    rsemfilelocs=None,
     rnaqclocs={},
-    starlogs={},
     useCache=False,
     dropNonMatching=False,
     recompute_ssgsea=True,
@@ -444,7 +443,7 @@ async def postProcess(
         trancriptLevelCols (list, optional): the columns that contain the transcript 
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
-        rsemfilelocs (list[str], optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
+        rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
         samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
         rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
         renamingFunc (function, optional): the function to use to rename the sample columns
