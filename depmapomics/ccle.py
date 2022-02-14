@@ -54,7 +54,10 @@ async def expressionPostProcessing(
     dropNonMatching=True,
     dataset_description=RNAseqreadme,
     dry_run=False,
-    **kwargs
+    samplesinset=[],
+    rsemfilelocs=[],
+    rnaqclocs={},
+    starlogs={} ** kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
 
@@ -86,13 +89,10 @@ async def expressionPostProcessing(
         taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
         minsimi (float, optional): the minimum similarity to use for comparison to previous dataset. Defaults to 0.95.
         dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
-        sheetname (str, optional): the sheet name to use for updating the sample tracker 
-        (should be an actual google spreadsheet). Defaults to SHEETNAME.
-        sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
-        refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
         tocompare (dict, optional): the columns to compare. Defaults to {"genes_expected_count": "CCLE_RNAseq_reads", "genes_tpm": "CCLE_expression_full", "proteincoding_genes_tpm": "CCLE_expression"}.
-        my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
-        mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
+        rsemfilelocs (list[str], optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
+        samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
+        rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
     """
     from taigapy import TaigaClient
 
@@ -132,6 +132,10 @@ async def expressionPostProcessing(
         renamingFunc=expressionRenaming,
         dropNonMatching=dropNonMatching,
         dry_run=dry_run,
+        samplesinset=samplesinset,
+        rsemfilelocs=rsemfilelocs,
+        rnaqclocs=rnaqclocs,
+        starlogs=starlogs,
         **kwargs
     )
 
@@ -186,6 +190,8 @@ async def expressionPostProcessing(
         ccle_refsamples,
         samplesetname,
         refworkspace,
+        samplesinset=samplesinset,
+        starlogs=starlogs,
         trackerobj=trackerobj,
         todrop=todrop,
         dry_run=dry_run,
