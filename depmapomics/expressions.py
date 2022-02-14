@@ -132,6 +132,8 @@ def updateTracker(
     dry_run=False,
     qcname="star_logs",
     match=".Log.final.out",
+    samplesinset=[],
+    starlogs={},
     todrop=[],
 ):
     """updates the sample tracker with the new samples and the QC metrics
@@ -149,15 +151,18 @@ def updateTracker(
         refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
         onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
         todrop (list, optional): list of samples to be dropped. Defaults to []
+        samplesinset (list[str], optional): list of samples in set when refworkspace is None (bypass interacting with terra)
+        starlogs (dict(str:list[str]), optional): dict of samples' star qc log locations when refworkspace is None (bypass interacting with terra)
     """
-    refwm = dm.WorkspaceManager(refworkspace)
-    samplesinset = [
-        i["entityName"]
-        for i in refwm.get_entities("sample_set").loc[samplesetname].samples
-    ]
-    starlogs = myterra.getQC(
-        workspace=refworkspace, only=samplesinset, qcname=qcname, match=match
-    )
+    if refworkspace is not None:
+        refwm = dm.WorkspaceManager(refworkspace)
+        samplesinset = [
+            i["entityName"]
+            for i in refwm.get_entities("sample_set").loc[samplesetname].samples
+        ]
+        starlogs = myterra.getQC(
+            workspace=refworkspace, only=samplesinset, qcname=qcname, match=match
+        )
     for k, v in starlogs.items():
         if k == "nan":
             continue
@@ -409,7 +414,10 @@ async def postProcess(
     trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
     ssGSEAcol="genes_tpm",
     renamingFunc=None,
+    samplesinset=[],
     rsemfilelocs=[],
+    rnaqclocs={},
+    starlogs={},
     useCache=False,
     dropNonMatching=False,
     recompute_ssgsea=True,
@@ -436,6 +444,9 @@ async def postProcess(
         trancriptLevelCols (list, optional): the columns that contain the transcript 
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
+        rsemfilelocs (list[str], optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
+        samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
+        rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
@@ -445,18 +456,30 @@ async def postProcess(
     """
     if not samplesetToLoad:
         samplesetToLoad = samplesetname
-    refwm = dm.WorkspaceManager(refworkspace)
-    if save_output:
-        terra.saveWorkspace(refworkspace, save_output + "terra/")
-    print("load QC and generate QC report")
-    samplesinset = [
-        i["entityName"]
-        for i in refwm.get_entities("sample_set").loc[samplesetname].samples
-    ]
+    if refworkspace is not None:
+        refwm = dm.WorkspaceManager(refworkspace)
+        if save_output:
+            terra.saveWorkspace(refworkspace, save_output + "terra/")
+        print("load QC and generate QC report")
+        samplesinset = [
+            i["entityName"]
+            for i in refwm.get_entities("sample_set").loc[samplesetname].samples
+        ]
+        if doCleanup:
+            print("cleaninp up data")
+            res = refwm.get_samples()
+            for val in colstoclean:
+                if val in res.columns.tolist():
+                    refwm.disable_hound().delete_entity_attributes(
+                        "sample", res[val], delete_files=True
+                    )
+                else:
+                    print(val + " not in the workspace's data")
 
     _, lowqual, failed = myQC.plot_rnaseqc_results(
         refworkspace,
         samplesinset,
+        rnaqc=rnaqclocs,
         save=bool(save_output),
         output_path=save_output + "rna_qcs/",
     )
@@ -466,17 +489,6 @@ async def postProcess(
     print("rescuing from whitelist list: ", set(failed) & set(priority))
     failed = list(set(failed) - set(priority))
     failed.extend(todrop)
-
-    if doCleanup:
-        print("cleaninp up data")
-        res = refwm.get_samples()
-        for val in colstoclean:
-            if val in res.columns.tolist():
-                refwm.disable_hound().delete_entity_attributes(
-                    "sample", res[val], delete_files=True
-                )
-            else:
-                print(val + " not in the workspace's data")
 
     print("generating gene names")
 

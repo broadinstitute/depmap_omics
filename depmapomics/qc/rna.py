@@ -12,12 +12,14 @@ def plot_rnaseqc_results(
     samplelist,
     output_path="data/rna_qcs/",
     qcname="rnaseqc2_metrics",
+    rnaqc={},
     save=True,
 ):
     """
   TODO: to document
   """
-    rnaqc = terra.getQC(workspace=workspace, only=samplelist, qcname=qcname)
+    if workspace is not None:
+        rnaqc = terra.getQC(workspace=workspace, only=samplelist, qcname=qcname)
     assert (
         pd.Series(rnaqc).map(lambda x: x[0]).notnull().all()
     ), "Some samples have no QC data"
