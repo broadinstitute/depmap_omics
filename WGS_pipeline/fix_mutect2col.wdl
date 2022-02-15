@@ -15,25 +15,25 @@ task fix_column {
   Int disk_space = 10
   String docker = "python"
 
-  command {
+  command <<<
     python <<CODE
-import re
-import gzip
+    import re
+    import gzip
 
-with gzip.open("${vcf}","r+") as f:
-  with gzip.open("${sample_id}_fixedcolumn.vcf.gz","wb") as fout:
-    for i, line in enumerate(f):
-      original_string = line.decode('utf-8')
-      if original_string[0] == "#":
-        fout.write(original_string.encode())
-      else:
-        new_string = re.sub(
-          r'AS_FilterStatus=(.*?);', 
-          lambda x:"AS_FilterStatus=" + x.group(1).replace("|", "~").replace(",", "|").replace("~", ",") + ";", 
-          original_string)
-        fout.write(new_string.encode())
+    with gzip.open("${vcf}","r+") as f:
+      with gzip.open("${sample_id}_fixedcolumn.vcf.gz","wb") as fout:
+        for i, line in enumerate(f):
+          original_string = line.decode('utf-8')
+          if original_string[0] == "#":
+            fout.write(original_string.encode())
+          else:
+            new_string = re.sub(
+              r'AS_FilterStatus=(.*?);', 
+              lambda x:"AS_FilterStatus=" + x.group(1).replace("|", "~").replace(",", "|").replace("~", ",") + ";", 
+              original_string)
+            fout.write(new_string.encode())
     CODE
-  }
+  >>>
 
   output {
     File vcf_fixedcol="${sample_id}_fixedcolumn.vcf.gz"
