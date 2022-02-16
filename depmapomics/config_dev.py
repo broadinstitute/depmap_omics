@@ -23,6 +23,16 @@ DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU
 
 POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
 
+SAMPLES_FOUND_NAME = "depmap ALL samples found"
+
+SAMPLES_NOT_FOUND_NAME = "depmap samples not found"
+
+SAMPLES_NOT_FOUND_URL = "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
+
+SAMPLES_MISSING_ARXSPAN_NAME = "depmap samples missing arxspan"
+
+SAMPLES_MISSING_ARXSPAN_URL = "https://docs.google.com/spreadsheets/d/1htfgpXrMvXDlqbcZltpq6vOE_Vo2YZ3-3mdaXV-Irzk"
+
 DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID = "DepMap_ID"
@@ -162,7 +172,7 @@ TO_UPDATE = {
     "collection_site": ["Sample Collection Site"],
     "subtype": ["lineage_subtype"],
     "subsubtype": ["lineage_sub_subtype"],
-    "origin": ["lineage"],
+    "lineage": ["lineage"],
     # 'source': ['Flagship'],
     "parent_cell_line": ["Parental ID"],
     "comments": ["Comments"],
@@ -230,6 +240,8 @@ EXTRACT_DEFAULTS = {
     "from_arxspan_id": "individual_alias",
     "ref_id": "sample_id",
     "PDO_id": "PDO",
+    "root_sample_id": "root_sample_id",
+    "sm_id": "sm_id",
     "update_time": "update_time",
     "from_patient_id": "individual_alias",
     "patient_id": "participant_id",
@@ -375,7 +387,19 @@ BAMQC = [
     "tumor_bam_quality_yield_metrics",
 ]
 
-KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN"]
+KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
+
+# rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
+RESCUE_FOR_MUTATION_WES = {
+    "CDS-Rl87Z1": "ACH-001956",
+    "CDS-mys9Dm": "ACH-001955",
+    "CDS-TzQAjG": "ACH-001957",
+    "CDS-TuKZau": "ACH-001709",
+    "CDS-4lWqEA": "ACH-000859",
+    "CDS-Fyjj8I": "ACH-000116",
+}
+
+RESCUE_FOR_MUTATION_WGS = {"CDS-AqZLna": "ACH-002512"}
 
 ############## CN
 
@@ -418,6 +442,8 @@ wrongwes_arxspan = {
     "ACH-001956",
     "ACH-001957",
 }
+
+CYTOBANDLOC = "data/hg38_cytoband.gz"
 
 toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 
