@@ -7,6 +7,7 @@ workflow run_fix_column {
     File vcf
     String sample_id 
   }
+  
   call fix_column {
     input:
       vcf=vcf,
@@ -26,7 +27,7 @@ task fix_column {
     Int disk_space = 10
     String docker = "python"
   }
-  
+
   command <<<
     python <<CODE
     import re

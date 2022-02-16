@@ -61,14 +61,14 @@ workflow omics_mutect2 {
       run_orientation_bias_mixture_model_filter=true
   }
 
-  call setGT.run_fix_ploidy as setGT {
+  call setGT.bcftools_fix_ploidy as setGT {
     input:
       sample_id=sample_id,
       vcf=mutect2.funcotated_file,
       disk_space=20
   }
 
-  call fixCol.run_fix_column as fixCol {
+  call fixCol.fix_column as fixCol {
     input:
       sample_id=sample_id,
       vcf=setGT.vcf_fixedploid,
