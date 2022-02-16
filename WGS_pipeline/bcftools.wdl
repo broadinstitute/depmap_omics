@@ -2,20 +2,20 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-workflow bcftools_fix_ploidy {
+workflow run_fix_ploidy {
     input {
         File vcf
         String sample_id
     }
 
-    call run_fix_ploidy {
+    call bcftools_fix_ploidy {
         input:
             vcf=vcf,
             sample_id=sample_id
     }
 }
 
-task run_fix_ploidy {
+task bcftools_fix_ploidy {
     input {
         File vcf
         String sample_id
@@ -27,7 +27,7 @@ task run_fix_ploidy {
         Int disk_space = 10
         String docker = "dceoy/bcftools"
     }
-    
+
     command {
         set -euo pipefail
 
