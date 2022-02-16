@@ -81,3 +81,33 @@ workflows:
       branches:
         - develop
         - master
+  - name: bcftools_setGT
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/bcftools.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - develop
+        - master
+  - name: fix_mutect2col
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/fix_mutect2col.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - develop
+        - master
+  - name: omics_mutect2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/omics_mutect2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - develop
+        - master

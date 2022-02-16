@@ -9,6 +9,9 @@ task run_opencravat {
     File vcf
     String format = "vcf"
     String annotators_to_use = ""
+    Int stripfolder = 0 
+    String genome = "hg38"
+    String modules_options = "vcfreporter.type=separate"
     
     Int memory = 16
     Int boot_disk_size = 20
@@ -20,30 +23,32 @@ task run_opencravat {
     command {
       set -euo pipefail
         
+      # regular version
+      # ---------------
       oc module install-base
-      oc module install -y ${annotators_to_use}
+      oc module install -y ${annotators_to_use} vcfreporter hg19
       
+      # fast version
+      # ------------
       # to make it faster we should use a copy from a bucket using gsutil cp
       # we install everything on a machine, then get path to data using `oc config md`
       # we then cp it on a bucket.
       # now we can add two additional commands here:
-      # 1. to copy the content of the bucket here: gsutil -m cp -r gs://pathtomd/../* LOCATION
+      # 1. to copy the content of the bucket here: gsutil cp gs://path/to/modules.gz .
       # 2. to use this location as the md location: oc config md LOCATION
-      
-      oc run ${vcf} -l hg38 -t ${format} –mp ${num_threads} –version
+      # gsutil cp [modules] modules.tar
+      # tar -tvf modules.tar --strip-components=[stripfolder]
+      # oc config md ./modules
+      oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads} --module-option ${modules_options} -d out -a ${annotators_to_use}
 
-      mv ${vcf}.err ${sample_id}.variant_annotations.err
-      mv ${vcf}.log ${sample_id}.variant_annotations.log
-      mv ${vcf}.sqlite ${sample_id}.variant_annotations.sqlite
-      mv ${vcf}.tsv ${sample_id}.variant_annotations.tsv
-
-      gzip ${sample_id}.variant_annotations.${format}
+      gzip out/${basename(vcf)}.${format}
     }
 
     output {
-        File oc_error_file="${sample_id}.variant_annotations.err"
-        File oc_log_file="${sample_id}.variant_annotations.log"
-        File oc_tsv_file="${sample_id}.variant_annotations.${format}.gz"
+        File oc_error_files="out/${basename(vcf)}.err"
+        File oc_log_files="out/${basename(vcf)}.log"
+        File oc_sql_files="out/${basename(vcf)}.sqlite"
+        File oc_main_files="out/${basename(vcf)}.${format}.gz"
     }
 
     runtime {
@@ -56,6 +61,6 @@ task run_opencravat {
     }
 
     meta {
-        author: "David Wu"
+        author: "Jeremie Kalfon"
     }
 }
