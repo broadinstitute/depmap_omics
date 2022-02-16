@@ -1,7 +1,17 @@
+version 1.0
+
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
 workflow run_fix_column {
-  call fix_column
+  input {
+    File vcf
+    String sample_id 
+  }
+  call fix_column {
+    input:
+      vcf=vcf,
+      sample_id=sample_id
+  }
 }
 
 task fix_column {
