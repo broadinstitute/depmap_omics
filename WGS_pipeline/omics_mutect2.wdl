@@ -21,8 +21,6 @@ workflow omics_mutect2 {
     File bait_intervals
 
     String gcs_project_for_requester_pays
-    Int M2cpu=4
-    Int M2mem=32
     Int M2scatter=10
 
     File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
@@ -43,8 +41,6 @@ workflow omics_mutect2 {
       tumor_reads=tumor_reads,
       tumor_reads_index=tumor_reads_index,
       intervals=bait_intervals,
-      cpu=M2cpu,
-      mem=M2mem,
       compress_vcfs=true,
       filter_funcotations=false,
       funco_compress=true,
