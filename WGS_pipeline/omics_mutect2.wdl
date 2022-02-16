@@ -60,7 +60,7 @@ workflow omics_mutect2 {
   call setGT.bcftools_fix_ploidy as setGT {
     input:
       sample_id=sample_id,
-      vcf=mutect2.funcotated_file,
+      vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
       disk_space=20
   }
 
@@ -73,6 +73,6 @@ workflow omics_mutect2 {
 
   output {
     File out_vcf=fixCol.vcf_fixedcol
-    File out_vcf_index=mutect2.funcotated_file_index
+    File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.cnn_filtered_vcf_index])
   }
 }
