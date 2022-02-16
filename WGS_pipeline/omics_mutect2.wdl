@@ -1,6 +1,6 @@
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.1.8.0/scripts/mutect2_wdl/mutect2.wdl" as mutect2
+import "https://raw.githubusercontent.com/broadinstitute/gatk/4.1.8.1/scripts/mutect2_wdl/mutect2.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2col.wdl" as fixCol
 
