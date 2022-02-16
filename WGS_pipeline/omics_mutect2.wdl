@@ -2,7 +2,7 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.1.8.1/scripts/mutect2_wdl/mutect2.wdl" as mutect2
+import "https://raw.githubusercontent.com/broadinstitute/gatk/master/scripts/mutect2_wdl/mutect2.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2col.wdl" as fixCol
 
@@ -10,7 +10,7 @@ workflow omics_mutect2 {
   input {
     String sample_id
     String gatk_docker="broadinstitute/gatk:4.2.4.0"
-
+    String gcs_project_for_requester_pays
     File ref_dict
     File ref_fai
     File ref_fasta
@@ -40,6 +40,7 @@ workflow omics_mutect2 {
       tumor_reads=tumor_reads,
       tumor_reads_index=tumor_reads_index,
       intervals=bait_intervals,
+      gcs_project_for_requester_pays=gcs_project_for_requester_pays,
       compress_vcfs=true,
       filter_funcotations=false,
       funco_compress=true,
