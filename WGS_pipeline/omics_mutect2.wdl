@@ -32,8 +32,8 @@ workflow omics_mutect2 {
     File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
     File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
   }
-  
-  call mutect2 {
+
+  call mutect2.Mutect2 as mutect2 {
     input:
       gatk_docker=gatk_docker,
       ref_dict=ref_dict,
@@ -61,14 +61,14 @@ workflow omics_mutect2 {
       run_orientation_bias_mixture_model_filter=true
   }
 
-  call setGT {
+  call setGT.run_fix_ploidy as setGT {
     input:
       sample_id=sample_id,
       vcf=mutect2.funcotated_file,
       disk_space=20
   }
 
-  call fixCol {
+  call fixCol.run_fix_column as fixCol {
     input:
       sample_id=sample_id,
       vcf=setGT.vcf_fixedploid,
