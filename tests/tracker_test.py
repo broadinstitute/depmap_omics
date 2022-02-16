@@ -1,6 +1,5 @@
 import pandas as pd
 
-from depmapomics.ccle import expressionRenaming
 from depmapomics.config import *
 from depmapomics import tracker as track
 from depmapomics import expressions
