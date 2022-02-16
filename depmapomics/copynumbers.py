@@ -19,16 +19,16 @@ from depmapomics import terra as myterra
 
 def renameColumns(df):
     """
-  rename some of the main columns names from RSEM, GATK.. to more readable column names
+    rename some of the main columns names from RSEM, GATK.. to more readable column names
 
-  Args:
-  -----
-    df: the df to rename
+    Args:
+    -----
+      df: the df to rename
 
-  Returns:
-  ------
-    df the renamed df
-  """
+    Returns:
+    ------
+      df the renamed df
+    """
     return df.rename(columns=COLRENAMING)
 
 
@@ -43,7 +43,9 @@ def loadFromGATKAggregation(
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
     tempFolder="temp/",
-    toremove=["readgroup_ubams",],
+    toremove=[
+        "readgroup_ubams",
+    ],
     sampleset="all",
     colRenaming=COLRENAMING,
 ):
@@ -220,7 +222,7 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
     ref = pd.DataFrame(tracker[tracker.datatype == datatype][newname])
     replace = 0
     for val in failed:
-        if val in list(renaming.keys()):
+        if val in renaming:
             a = ref[ref[newname] == ref.loc[val][newname]].index
             for v in a:
                 if v not in failed:
@@ -783,9 +785,10 @@ def _ProcessForAchilles(
         gene_mapping_df = gene_mapping.rename(columns={"ensembl_id": "entrezgene_id"})
 
     mergedsegments = mut.manageGapsInSegments(mergedsegments, cyto=cyto)
-    mergedgenecn = mut.toGeneMatrix(mergedsegments, gene_mapping_df,).apply(
-        lambda x: np.log2(1 + x)
-    )
+    mergedgenecn = mut.toGeneMatrix(
+        mergedsegments,
+        gene_mapping_df,
+    ).apply(lambda x: np.log2(1 + x))
 
     # some QC
     print("copy number change with previous release")
@@ -848,4 +851,3 @@ def _ProcessForAchilles(
         dataset_description=dataset_description,
     )
     print("done")
-
