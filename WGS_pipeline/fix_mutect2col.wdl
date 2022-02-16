@@ -15,16 +15,18 @@ workflow run_fix_column {
 }
 
 task fix_column {
-  File vcf
-  String sample_id
+  input {
+    File vcf
+    String sample_id
 
-  Int memory = 2
-  Int boot_disk_size = 10
-  Int num_threads = 1
-  Int num_preempt = 5
-  Int disk_space = 10
-  String docker = "python"
-
+    Int memory = 2
+    Int boot_disk_size = 10
+    Int num_threads = 1
+    Int num_preempt = 5
+    Int disk_space = 10
+    String docker = "python"
+  }
+  
   command <<<
     python <<CODE
     import re
