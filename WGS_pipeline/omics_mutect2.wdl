@@ -73,6 +73,6 @@ workflow omics_mutect2 {
 
   output {
     File out_vcf=fixCol.vcf_fixedcol
-    File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_index])
+    File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
   }
 }
