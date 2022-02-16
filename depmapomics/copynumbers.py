@@ -18,16 +18,16 @@ from depmapomics import terra as myterra
 
 def renameColumns(df):
     """
-  rename some of the main columns names from RSEM, GATK.. to more readable column names
+    rename some of the main columns names from RSEM, GATK.. to more readable column names
 
-  Args:
-  -----
-    df: the df to rename
+    Args:
+    -----
+      df: the df to rename
 
-  Returns:
-  ------
-    df the renamed df
-  """
+    Returns:
+    ------
+      df the renamed df
+    """
     return df.rename(columns=COLRENAMING)
 
 
@@ -42,7 +42,9 @@ def loadFromGATKAggregation(
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
     tempFolder="temp/",
-    toremove=["readgroup_ubams",],
+    toremove=[
+        "readgroup_ubams",
+    ],
     sampleset="all",
     colRenaming=COLRENAMING,
 ):
@@ -327,4 +329,3 @@ def postProcess(
     print("done")
 
     return segments, genecn, failed
-
