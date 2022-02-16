@@ -1,6 +1,7 @@
 import re
 
 import numpy as np
+import pandas as pd
 import pytest
 from depmapomics.qc.config import FILE_ATTRIBUTES, NEW_RELEASE
 from taigapy import TaigaClient
@@ -41,6 +42,36 @@ def test_symbol_and_entrezid_in_column(data):
     ), "some columns do not follow the symbol (entrez id) format. The first few are: \n{}".format(
         data.columns[matches.isnull()][:20]
     )
+
+
+PARAMS_test_duplicate_symbol_in_column = [
+    x["file"]
+    for x in FILE_ATTRIBUTES
+    if x["ismatrix"] and x["gene_id"] in ["enst", "entrez"]
+]
+
+
+@pytest.mark.parametrize("data", PARAMS_test_duplicate_symbol_in_column, indirect=True)
+@pytest.mark.format
+def test_duplicate_symbol_in_column(data):
+    cols_df = pd.DataFrame(data.columns, columns=["colname"]).set_index(
+        "colname", drop=False
+    )
+    cols_df = cols_df.apply(
+        lambda x: re.match(r"([a-zA-Z0-9-_/.]+)\s\((\d+)\)$", x["colname"]).groups(),
+        axis=1,
+        result_type="expand",
+    ).rename(columns={0: "symbol", 1: "id"})
+    for col in ["symbol", "id"]:
+        cols_df_dups = cols_df[cols_df[col].duplicated(keep=False)]
+        dups = (
+            cols_df_dups.reset_index()
+            .groupby(col)
+            .apply(lambda x: ", ".join(x["colname"]))
+        )
+        assert len(dups) == 0, "some {}s are repeated in columns: \n{}".format(
+            col, dups[:20]
+        )
 
 
 PARAMS_test_symbol_and_entrezid_in_column = [x["file"] for x in FILE_ATTRIBUTES]
