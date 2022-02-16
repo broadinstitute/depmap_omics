@@ -5,31 +5,29 @@ import "https://dockstore.org/api/ga4gh/trs/v2/tools/%23workflow%2Fgithub.com%2F
 import "https://dockstore.org/api/ga4gh/trs/v2/tools/%23workflow%2Fgithub.com%2Fbroadinstitute%2Fdepmap_omics%2Ffix_mutect2col/versions/master/plain-WDL/descriptor//WGS_pipeline/fix_mutect2col.wdl" as fixCol
 
 workflow omics_mutect2 {
-  input {
-    String sample_id
-    String gatk_docker="broadinstitute/gatk:4.2.4.0"
+  String sample_id
+  String gatk_docker="broadinstitute/gatk:4.2.4.0"
 
-    File ref_dict
-    File ref_fai
-    File ref_fasta
+  File ref_dict
+  File ref_fai
+  File ref_fasta
 
-    File tumor_reads
-    File tumor_reads_index
+  File tumor_reads
+  File tumor_reads_index
 
-    File bait_intervals
+  File bait_intervals
 
-    String gcs_project_for_requester_pays
-    Int M2cpu=4
-    Int M2mem=32
-    Int M2scatter=10
+  String gcs_project_for_requester_pays
+  Int M2cpu=4
+  Int M2mem=32
+  Int M2scatter=10
 
-    File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
-    File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
-    String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
+  File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
+  File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
+  String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
 
-    File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
-    File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
-  }
+  File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
+  File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
 
   call mutect2 {
     input:
