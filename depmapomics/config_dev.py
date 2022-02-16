@@ -389,6 +389,18 @@ BAMQC = [
 
 KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 
+# rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
+RESCUE_FOR_MUTATION_WES = {
+    "CDS-Rl87Z1": "ACH-001956",
+    "CDS-mys9Dm": "ACH-001955",
+    "CDS-TzQAjG": "ACH-001957",
+    "CDS-TuKZau": "ACH-001709",
+    "CDS-4lWqEA": "ACH-000859",
+    "CDS-Fyjj8I": "ACH-000116",
+}
+
+RESCUE_FOR_MUTATION_WGS = {"CDS-AqZLna": "ACH-002512"}
+
 ############## CN
 
 COLRENAMING = {
@@ -430,6 +442,8 @@ wrongwes_arxspan = {
     "ACH-001956",
     "ACH-001957",
 }
+
+CYTOBANDLOC = "data/hg38_cytoband.gz"
 
 toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 

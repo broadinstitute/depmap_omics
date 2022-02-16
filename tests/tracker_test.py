@@ -18,13 +18,21 @@ def test_expression_outputs():
         "CDS-AVK2Vf",
         "CDS-NVVPN2",
     ]
-    rsemfilelocs = pd.DataFrame(columns=RSEMFILENAME)
-    rsemfilelocs.loc[0] = [
-        "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_genes_tpm.txt.gz",
-        "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_genes_expected_count.txt.gz",
-        "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_transcripts_tpm.txt.gz",
-        "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_transcripts_expected_count.txt.gz",
-    ]
+    d = {
+        "genes_tpm": "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_genes_tpm.txt.gz",
+        "genes_expected_count": "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_genes_expected_count.txt.gz",
+        "transcripts_tpm": "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_transcripts_tpm.txt.gz",
+        "transcripts_expected_count": "gs://fc-secure-8759d74a-3dc5-43df-9753-561478fd087d/06641010-77c3-430b-b706-8a626e035cce/RNA_aggregate/fabfecc3-b7e2-4448-b64f-2ef6d5fa63b2/call-rsem_aggregate_results/test_postprocessing.rsem_transcripts_expected_count.txt.gz",
+    }
+    rsemfilelocs = pd.Series(
+        data=d,
+        index=[
+            "genes_tpm",
+            "genes_expected_count",
+            "transcripts_tpm",
+            "transcripts_expected_count",
+        ],
+    )
     rnaqclocs = {
         "CDS-27EI5P": [
             "gs://fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/ed62eed5-989b-405c-ad3c-4b84a014527e/RNA_pipeline/c55cb752-5e51-4b9d-a005-ced21a135db5/call-rnaseqc2/CDS-27EI5P.metrics.tsv"
@@ -61,6 +69,7 @@ def test_expression_outputs():
             dry_run=True,
             samplesinset=samplesintestset,
             rsemfilelocs=rsemfilelocs,
+            rnaqclocs=rnaqclocs,
         )
     )
 
