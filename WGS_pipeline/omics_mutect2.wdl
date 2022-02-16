@@ -1,8 +1,8 @@
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "https://dockstore.org/api/ga4gh/trs/v2/tools/%23workflow%2Fgithub.com%2Fbroadinstitute%2Fgatk%2Fmutect2/versions/4.1.8.1/plain-WDL/descriptor//scripts/mutect2_wdl/mutect2.wdl" as mutect2
-import "https://dockstore.org/api/ga4gh/trs/v2/tools/%23workflow%2Fgithub.com%2Fbroadinstitute%2Fdepmap_omics%2Fbcftools_setGT/versions/master/plain-WDL/descriptor//WGS_pipeline/bcftools.wdl" as setGT
-import "https://dockstore.org/api/ga4gh/trs/v2/tools/%23workflow%2Fgithub.com%2Fbroadinstitute%2Fdepmap_omics%2Ffix_mutect2col/versions/master/plain-WDL/descriptor//WGS_pipeline/fix_mutect2col.wdl" as fixCol
+import "https://raw.githubusercontent.com/broadinstitute/gatk/master/scripts/mutect2_wdl/mutect2.wdl" as mutect2
+import "bcftools.wdl" as setGT
+import "fix_mutect2col.wdl" as fixCol
 
 workflow omics_mutect2 {
   String sample_id
