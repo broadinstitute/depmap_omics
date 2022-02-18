@@ -1,7 +1,33 @@
+version 1.0
+
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
 workflow opencravat {
-    call run_opencravat
+    input {
+        String sample_id
+        File vcf
+        String? format
+        String? annotators_to_use
+        String? genome
+        String? modules_options
+        String? docker
+    }
+    call run_opencravat {
+        input:
+            sample_id=sample_id,
+            vcf=vcf,
+            format=format,
+            annotators_to_use=annotators_to_use,
+            genome=genome,
+            modules_options=modules_options,
+            docker=docker
+    }
+    output {
+        File oc_error_files=run_opencravat.oc_error_files
+        File oc_log_files=run_opencravat.oc_log_files
+        File oc_sql_files=run_opencravat.oc_sql_files
+        File oc_main_files=run_opencravat.oc_main_files
+    }
 }
 
 task run_opencravat {

@@ -13,6 +13,9 @@ workflow run_fix_column {
         vcf_file=vcf,
         sample_id=sample_id
     }
+    output {
+        File vcf_fixedcol=fix_column.vcf_fixedcol
+    }
 }
 
 task fix_column {
@@ -30,7 +33,7 @@ task fix_column {
 
     command<<<
     mv ${vcf_file} torun.vcf.gz
-    
+
     python <<CODE
     import re
     import gzip

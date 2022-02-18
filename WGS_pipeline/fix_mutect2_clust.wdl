@@ -13,6 +13,9 @@ workflow run_fix_mutect_clut {
             vcf_file=vcf,
             sample_id=sample_id
     }
+    output {
+        File vcf_fixed=fix_mutect_clut.vcf_fixed
+    }
 }
 
 task fix_mutect_clut {
@@ -32,7 +35,6 @@ task fix_mutect_clut {
         git clone https://github.com/broadinstitute/depmap_omics.git
 
         Rscript WGS_pipeline/correct_mutect2_clusteredevent.R ${vcf_file} ${sample_id}
-
     }
     output {
         File vcf_fixed="${sample_id}_clustercorrected.vcf.gz"
