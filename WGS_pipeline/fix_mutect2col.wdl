@@ -10,7 +10,7 @@ workflow run_fix_column {
     
     call fix_column {
         input:
-        vcf=vcf,
+        vcf_file=vcf,
         sample_id=sample_id
     }
 }
@@ -29,11 +29,13 @@ task fix_column {
     }
 
     command<<<
+    mv ${vcf_file} torun.vcf.gz
+    
     python <<CODE
     import re
     import gzip
 
-    with gzip.open('${vcf_file}',"r+") as f:
+    with gzip.open('torun.vcf.gz',"r+") as f:
         with gzip.open("${sample_id}_fixedcolumn.vcf.gz","wb") as fout:
         for i, line in enumerate(f):
             original_string = line.decode('utf-8')
