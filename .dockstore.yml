@@ -111,3 +111,23 @@ workflows:
       branches:
         - develop
         - master
+  - name: manta_annot
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/manta_annot.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - develop
+        - master
+  - name: fix_mutect2_clust.wdl
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/fix_mutect2_clust.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - develop
+        - master
