@@ -29,6 +29,7 @@ task merge_and_upload {
     }
 
     command{
+        # merge all files: one row per allele, keep only one info field.
         bcftools merge
 
         # upload to google bigquery
