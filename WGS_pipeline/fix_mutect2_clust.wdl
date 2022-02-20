@@ -2,23 +2,23 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-workflow run_fix_mutect_clut {
+workflow run_fix_mutect_clust {
     input {
         File vcf
         String sample_id 
     }
     
-    call fix_mutect_clut {
+    call fix_mutect_clust {
         input:
             vcf_file=vcf,
             sample_id=sample_id
     }
     output {
-        File vcf_fixed=fix_mutect_clut.vcf_fixed
+        File vcf_fixed=fix_mutect_clust.vcf_fixed
     }
 }
 
-task fix_mutect_clut {
+task fix_mutect_clust {
     input {
         File vcf_file
         String sample_id
