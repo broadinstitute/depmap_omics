@@ -39,7 +39,7 @@ task fix_column {
     import gzip
 
     with gzip.open('torun.vcf.gz',"r+") as f:
-        with gzip.open("${sample_id}_fixedcolumn.vcf.gz","wb") as fout:
+        with open("${sample_id}_fixedcolumn.vcf","w") as fout:
             for i, line in enumerate(f):
                 original_string = line.decode('utf-8')
                 if original_string[0] == "#":
@@ -49,8 +49,16 @@ task fix_column {
                         r'AS_FilterStatus=(.*?);', 
                         lambda x:"AS_FilterStatus=" + x.group(1).replace("|", "~").replace(",", "|").replace("~", ",") + ";", 
                         original_string)
-                    fout.write(new_string.encode())
+                    to_print = new_string.split("\t")
+                    to_print[7] = to_print[7].replace(" ","")
+                    
+                    #write the fixed string tab-separated to output file 
+                    for k in range(len(to_print)-1):
+                        fout.write(to_print[k] + "\t")
+                    fout.write(to_print[-1])
     CODE
+
+    bgzip ${sample_id}_fixedcolumn.vcf
     >>>
 
     output {

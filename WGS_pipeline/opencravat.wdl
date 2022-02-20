@@ -2,7 +2,7 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-workflow opencravat {
+workflow run_opencravat {
     input {
         String sample_id
         File vcf
@@ -12,7 +12,7 @@ workflow opencravat {
         String? modules_options
         String? docker
     }
-    call run_opencravat {
+    call opencravat {
         input:
             sample_id=sample_id,
             vcf=vcf,
@@ -23,14 +23,14 @@ workflow opencravat {
             docker=docker
     }
     output {
-        File oc_error_files=run_opencravat.oc_error_files
-        File oc_log_files=run_opencravat.oc_log_files
-        File oc_sql_files=run_opencravat.oc_sql_files
-        File oc_main_files=run_opencravat.oc_main_files
+        File oc_error_files=opencravat.oc_error_files
+        File oc_log_files=opencravat.oc_log_files
+        File oc_sql_files=opencravat.oc_sql_files
+        File oc_main_files=opencravat.oc_main_files
     }
 }
 
-task run_opencravat {
+task opencravat {
     String sample_id
     File vcf
     String format = "vcf"

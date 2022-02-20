@@ -5,6 +5,8 @@ version 1.0
 import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.5.0/scripts/mutect2_wdl/mutect2.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2col.wdl" as fixCol
+import "opencravat.wdl" as openCravat
+import "fix_mutect2_clust.wdl" as fixClust
 
 workflow omics_mutect2 {
   input {
@@ -64,10 +66,21 @@ workflow omics_mutect2 {
       disk_space=20
   }
 
+  # to test
+  call fixClust.fix_mutect_clust as fixClust {
+      input:
+
+  }
+
+  call openCravat.opencravat as openCravat {
+      input:
+
+  }
+   # to test
   call fixCol.fix_column as fixCol {
     input:
       sample_id=sample_id,
-      vcf=setGT.vcf_fixedploid,
+      vcf=openCravat.vcf_fixedploid,
       disk_space=20
   }
 
