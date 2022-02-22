@@ -137,10 +137,10 @@ workflows:
         - develop
         - master
         - finishing_mutation_pipeline
-  - name: merged_replicates.wdl
+  - name: merge_mutect2_replicates.wdl
     subclass: WDL
     publish: True
-    primaryDescriptorPath: /WGS_pipeline/merged_replicates.wdl
+    primaryDescriptorPath: /WGS_pipeline/merge_mutect2_replicates.wdl
     testParameterFiles:
       - /test.json
     filters: # All tags, no branches
@@ -159,10 +159,10 @@ workflows:
         - develop
         - master
         - finishing_mutation_pipeline
-  - name: merged_and_upload.wdl
+  - name: merge_and_upload.wdl
     subclass: WDL
     publish: True
-    primaryDescriptorPath: /WGS_pipeline/merged_and_upload.wdl
+    primaryDescriptorPath: /WGS_pipeline/merge_and_upload.wdl
     testParameterFiles:
       - /test.json
     filters: # All tags, no branches
