@@ -5,13 +5,15 @@ version 1.0
 workflow run_filter_to_maf {
     input {
         File vcf
-        String sample_id 
+        String sample_id
+        Array[String] column_filt = ['','','']
     }
     
     call filter_to_maf {
         input:
-        vcf_file=vcf,
-        sample_id=sample_id
+            vcf_file=vcf,
+            sample_id=sample_id,
+            column_filt=column_filt
     }
     output {
         File somatic_maf=filter_to_maf.somatic_maf

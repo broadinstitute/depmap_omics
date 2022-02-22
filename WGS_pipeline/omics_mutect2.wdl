@@ -7,7 +7,7 @@ import "bcftools.wdl" as setGT
 import "fix_mutect2col.wdl" as fixCol
 import "opencravat.wdl" as openCravat
 import "fix_mutect2_clust.wdl" as fixClust
-import "filter_to_maf.wdl" as filtmaf
+# import "filter_to_maf.wdl" as filtmaf
 
 workflow omics_mutect2 {
   input {
@@ -60,7 +60,7 @@ workflow omics_mutect2 {
       run_orientation_bias_mixture_model_filter=true
   }
 
-  call setGT.bcftools_fix_ploidy as setGT {
+  call setGT.bcftools_fix_ploidy as set_GT {
     input:
       sample_id=sample_id,
       vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
@@ -68,33 +68,40 @@ workflow omics_mutect2 {
   }
 
   # to test
-  call fixClust.fix_mutect_clust as fixClust {
+  call fixClust.fix_mutect_clust as fix_clust {
       input:
-
+        sample_id=sample_id,
+        vcf_file=set_GT.cf_fixedploid
   }
 
-  call openCravat.opencravat as openCravat {
+  call openCravat.opencravat as open_cravat {
       input:
+        sample_id=sample_id,
+        vcf=fix_clust.vcf_fixed
 
   }
    # to test
-  call fixCol.fix_column as fixCol {
+  call fixCol.fix_column as fix_col {
     input:
       sample_id=sample_id,
-      vcf=openCravat.vcf_fixedploid,
+      vcf=open_cravat.oc_main_files,
       disk_space=20
   }
 
   # to test
-  call filtmaf.filter_to_maf as filter_to_maf {
-    input:
-      sample_id=sample_id,
-      vcf=fixCol.,
-      disk_space=20
-  }
+  # call filtmaf.filter_to_maf as filter_to_maf {
+  #   input:
+  #     sample_id=sample_id,
+  #     vcf=fix_col.vcf_fixedcol,
+  #     disk_space=20
+  # }
 
   output {
-    File out_vcf=fixCol.vcf_fixedcol
+    File out_vcf=fix_col.vcf_fixedcol
     File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
+    File oc_error_files=open_cravat.oc_error_files
+    File oc_log_files=open_cravat.oc_log_files
+    File oc_sql_files=open_cravat.oc_sql_files
+    #File somatic_maf=filter_to_maf.out_maf
   }
 }
