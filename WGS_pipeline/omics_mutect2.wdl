@@ -7,6 +7,7 @@ import "bcftools.wdl" as setGT
 import "fix_mutect2col.wdl" as fixCol
 import "opencravat.wdl" as openCravat
 import "fix_mutect2_clust.wdl" as fixClust
+import "filter_to_maf.wdl" as filtmaf
 
 workflow omics_mutect2 {
   input {
@@ -81,6 +82,14 @@ workflow omics_mutect2 {
     input:
       sample_id=sample_id,
       vcf=openCravat.vcf_fixedploid,
+      disk_space=20
+  }
+
+  # to test
+  call filtmaf.filter_to_maf as filter_to_maf {
+    input:
+      sample_id=sample_id,
+      vcf=fixCol.,
       disk_space=20
   }
 
