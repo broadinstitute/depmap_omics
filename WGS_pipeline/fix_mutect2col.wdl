@@ -31,35 +31,34 @@ task fix_column {
         String docker = "python"
     }
 
-    command<<<
-    mv ${vcf_file} torun.vcf.gz
+    command {
+    echo """
+import re
+import gzip
+import sys
 
-    python <<CODE
-    import re
-    import gzip
-
-    with gzip.open('torun.vcf.gz',"r+") as f:
-        with open("${sample_id}_fixedcolumn.vcf","w") as fout:
-            for i, line in enumerate(f):
-                original_string = line.decode('utf-8')
-                if original_string[0] == "#":
-                    fout.write(original_string.encode())
-                else:
-                    new_string = re.sub(
-                        r'AS_FilterStatus=(.*?);', 
-                        lambda x:"AS_FilterStatus=" + x.group(1).replace("|", "~").replace(",", "|").replace("~", ",") + ";", 
-                        original_string)
-                    to_print = new_string.split("\t")
-                    to_print[7] = to_print[7].replace(" ","")
-                    
-                    #write the fixed string tab-separated to output file 
-                    for k in range(len(to_print)-1):
-                        fout.write(to_print[k] + "\t")
-                    fout.write(to_print[-1])
-    CODE
-
+with gzip.open(sys.argv[0],'r+') as f:
+    with open(sys.argv[1]+'_fixedcolumn.vcf','w') as fout:
+        for i, line in enumerate(f):
+            original_string = line.decode('utf-8')
+            if original_string[0] == '#':
+                fout.write(original_string.encode())
+            else:
+                new_string = re.sub(
+                    r'AS_FilterStatus=(.*?);', 
+                    lambda x:'AS_FilterStatus=' + x.group(1).replace('|', '~').replace(',', '|').replace('~', ',') + ';', 
+                    original_string)
+                to_print = new_string.split('\t')
+                to_print[7] = to_print[7].replace(' ','')
+                
+                #write the fixed string tab-separated to output file 
+                for k in range(len(to_print)-1):
+                    fout.write(to_print[k] + '\t')
+                fout.write(to_print[-1])
+    """ > script.py
+    script.py ${vcf_file} ${sample_id}
     bgzip ${sample_id}_fixedcolumn.vcf
-    >>>
+    }
 
     output {
         File vcf_fixedcol="${sample_id}_fixedcolumn.vcf.gz"
