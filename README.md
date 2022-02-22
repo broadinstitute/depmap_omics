@@ -136,10 +136,9 @@ _As the list cannot be parsed, we are not comparing it for now_
 Once this is done, you can launch your jupyter notebook server and run the `*_CCLE` jupyter notebooks corresponding to our RNA pipeline and WGS pipeline (older versions for WES (CN and mutations are available in a previous commit labelled 20Q4)).
 
 Remark:
-  1. you cannot run the `_...()` functions listed in the notebooks.
-  2. you will need to use the `postProcesssing()` functions for post processing instead of the CCLE ones.
-  3. you will need to change some of the variables in the `config_prod.py`.
-  4. you won't be able to run the function conditional on the CCLE boolean. You can however reimplement them to create your own pipeline.
+  1. you will need to use the `postProcesssing()` functions for post processing instead of the CCLE ones in the `ccle.py` module.
+  2. you will need to change some of the variables in the `config_prod.py`.
+  3. you won't be able to run the function conditional on the CCLE boolean. You can however reimplement them to create your own pipeline.
 
 The notebook architectures are as follows:
 
