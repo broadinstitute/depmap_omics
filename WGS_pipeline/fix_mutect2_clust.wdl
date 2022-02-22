@@ -34,7 +34,7 @@ task fix_mutect_clust {
     command{
         git clone https://github.com/broadinstitute/depmap_omics.git
 
-        Rscript WGS_pipeline/correct_mutect2_clusteredevent.R ${vcf_file} ${sample_id}
+        Rscript depmap_omics/WGS_pipeline/correct_mutect2_clusteredevent.R ${vcf_file} ${sample_id}
     }
     output {
         File vcf_fixed="${sample_id}_clustercorrected.vcf.gz"
