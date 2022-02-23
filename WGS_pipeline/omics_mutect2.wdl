@@ -2,7 +2,7 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.5.0/scripts/mutect2_wdl/mutect2.wdl" as mutect2
+import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2col.wdl" as fixCol
 import "opencravat.wdl" as openCravat
@@ -12,7 +12,7 @@ import "fix_mutect2_clust.wdl" as fixClust
 workflow omics_mutect2 {
   input {
     String sample_id
-    String gatk_docker="broadinstitute/gatk:4.2.5.0"
+    String gatk_docker="broadinstitute/gatk:4.2.4.0"
     String gcs_project_for_requester_pays
     File ref_dict
     File ref_fai
