@@ -2,7 +2,7 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-workflow opencravat {
+workflow run_opencravat {
     input {
         String sample_id
         File vcf
@@ -12,7 +12,7 @@ workflow opencravat {
         String? modules_options
         String? docker
     }
-    call run_opencravat {
+    call opencravat {
         input:
             sample_id=sample_id,
             vcf=vcf,
@@ -23,29 +23,31 @@ workflow opencravat {
             docker=docker
     }
     output {
-        File oc_error_files=run_opencravat.oc_error_files
-        File oc_log_files=run_opencravat.oc_log_files
-        File oc_sql_files=run_opencravat.oc_sql_files
-        File oc_main_files=run_opencravat.oc_main_files
+        File oc_error_files=opencravat.oc_error_files
+        File oc_log_files=opencravat.oc_log_files
+        File oc_sql_files=opencravat.oc_sql_files
+        File oc_main_files=opencravat.oc_main_files
     }
 }
 
-task run_opencravat {
-    String sample_id
-    File vcf
-    String format = "vcf"
-    String annotators_to_use = ""
-    Int stripfolder = 0 
-    String genome = "hg38"
-    String modules_options = "vcfreporter.type=separate"
+task opencravat {
+    input {
+        String sample_id
+        File vcf
+        String format = "vcf"
+        String annotators_to_use = ""
+        Int stripfolder = 0 
+        String genome = "hg38"
+        String modules_options = "vcfreporter.type=separate"
+        
+        Int memory = 16
+        Int boot_disk_size = 20
+        Int disk_space
+        Int num_threads = 1
+        Int num_preempt = 5
+        String docker = "karchinlab/opencravat"
+    }
     
-    Int memory = 16
-    Int boot_disk_size = 20
-    Int disk_space
-    Int num_threads = 1
-    Int num_preempt = 5
-    String docker = "karchinlab/opencravat"
-
     command {
       set -euo pipefail
         

@@ -2,23 +2,25 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-workflow run_fix_mutect_clust {
+workflow run_filter_to_maf {
     input {
         File vcf
-        String sample_id 
+        String sample_id
+        Array[String] column_filt = ['','','']
     }
     
-    call fix_mutect_clust {
+    call filter_to_maf {
         input:
             vcf_file=vcf,
-            sample_id=sample_id
+            sample_id=sample_id,
+            column_filt=column_filt
     }
     output {
-        File vcf_fixed=fix_mutect_clust.vcf_fixed
+        File somatic_maf=filter_to_maf.somatic_maf
     }
 }
 
-task fix_mutect_clust {
+task filter_to_maf {
     input {
         File vcf_file
         String sample_id
@@ -28,16 +30,25 @@ task fix_mutect_clust {
         Int num_threads = 1
         Int num_preempt = 5
         Int disk_space = 10
-        String docker = "jkobject/simple_r"
+        String docker = "python"
     }
 
     command{
         git clone https://github.com/broadinstitute/depmap_omics.git
+       
+        ## filter on gnomad mutations
 
-        Rscript depmap_omics/WGS_pipeline/correct_mutect2_clusteredevent.R ${vcf_file} ${sample_id}
+        ## remove if ... and  .. and ...
+
+        ## merge columns into ... and subset columns
+
+
+        ## transform to maf file
+
     }
+
     output {
-        File vcf_fixed="${sample_id}_clustercorrected.vcf.gz"
+        File somatic_maf="${sample_id}_somatic.maf"
     }
 
     runtime {
