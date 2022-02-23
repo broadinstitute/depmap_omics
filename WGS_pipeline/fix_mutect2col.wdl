@@ -31,27 +31,38 @@ task fix_column {
         String docker = "python"
     }
 
-    command<<<
-    mv ${vcf_file} torun.vcf.gz
+    command {
+    pip install bgzip
 
-    python <<CODE
-    import re
-    import gzip
-
-    with gzip.open('torun.vcf.gz',"r+") as f:
-        with gzip.open("${sample_id}_fixedcolumn.vcf.gz","wb") as fout:
+    echo """
+import re
+import sys
+import bgzip
+import gzip
+print(sys.argv)
+with gzip.open(sys.argv[1],'r+') as f:
+    with open(sys.argv[2]+'_fixedcolumn.vcf.gz','wb') as raw2:
+        with bgzip.BGZipWriter(raw2) as fout:
             for i, line in enumerate(f):
                 original_string = line.decode('utf-8')
-                if original_string[0] == "#":
+                if original_string[0] == '#':
                     fout.write(original_string.encode())
                 else:
                     new_string = re.sub(
                         r'AS_FilterStatus=(.*?);', 
-                        lambda x:"AS_FilterStatus=" + x.group(1).replace("|", "~").replace(",", "|").replace("~", ",") + ";", 
+                        lambda x:'AS_FilterStatus=' + x.group(1).replace('|', '~').replace(',', '|').replace('~', ',') + ';', 
                         original_string)
-                    fout.write(new_string.encode())
-    CODE
-    >>>
+                    to_print = new_string.split('\t')
+                    to_print[7] = to_print[7].replace(' ','')
+                    
+                    #write the fixed string tab-separated to output file 
+                    for k in range(len(to_print)-1):
+                        fout.write((to_print[k] + '\t').encode())
+                    fout.write(to_print[-1].encode())
+    """ > script.py
+
+    python script.py ${vcf_file} ${sample_id}
+    }
 
     output {
         File vcf_fixedcol="${sample_id}_fixedcolumn.vcf.gz"

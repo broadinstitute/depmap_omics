@@ -6,6 +6,7 @@ library(tidyverse)
 args = commandArgs(trailingOnly=TRUE)
 
 filepath <- args[1]
+name <- args[2]
 vcf <- vcfR::read.vcfR(filepath)
 df <- vcf@fix %>% as_tibble() %>% transmute(chromosome = CHROM, start = POS,ref = REF,alt = ALT,
                                                  filter = FILTER) %>% type_convert()
@@ -19,4 +20,4 @@ count_df <- count_df %>% mutate(filter = ifelse(filter %in% c("clustered_events"
                                       n_somatic_neighbor <= 2,"PASS",filter))
 vcf@fix[,"FILTER"] <- count_df$filter
 
-write.vcf(vcf,str_c(file_path_sans_ext(filepath),".cluster-corrected.vcf.gz"))
+write.vcf(vcf,str_c(name,"_clustercorrected.vcf.gz"))
