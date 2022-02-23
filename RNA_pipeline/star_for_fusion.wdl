@@ -75,7 +75,7 @@ task star {
         touch star_out/${prefix}.Chimeric.out.sorted.bam.bai
         touch star_out/${prefix}.ReadsPerGene.out.tab  # run_STAR.py will gzip
 
-        /src/run_STAR.py \
+        /src/run_STAR_for_fusion.py \
             star_index $fastq1_abs $fastq2_abs ${prefix} \
             --output_dir star_out \
             ${"--outFilterMultimapNmax " + outFilterMultimapNmax} \
@@ -97,8 +97,6 @@ task star {
             ${"--chimMainSegmentMultNmax " + chimMainSegmentMultNmax} \
             ${"--sjdbFileChrStartEnd " + sjdbFileChrStartEnd} \
             --outReadsUnmapped None \
-            --twopassMode Basic \
-            --readFilesCommand "gunzip -c" \
             --outSAMstrandField intronMotif \  # include for potential use with StringTie for assembly
             --outSAMunmapped Within 
             --chimSegmentMin 12 \  # ** essential to invoke chimeric read detection & reporting **
