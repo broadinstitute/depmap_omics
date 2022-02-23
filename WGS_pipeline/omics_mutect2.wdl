@@ -83,7 +83,7 @@ workflow omics_mutect2 {
   call fixCol.fix_column as fix_col {
     input:
       sample_id=sample_id,
-      vcf=open_cravat.oc_main_files,
+      vcf_file=open_cravat.oc_main_files,
       disk_space=20
   }
 
