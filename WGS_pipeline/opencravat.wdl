@@ -42,7 +42,7 @@ task opencravat {
         
         Int memory = 16
         Int boot_disk_size = 20
-        Int disk_space
+        Int disk_space=20
         Int num_threads = 1
         Int num_preempt = 5
         String docker = "karchinlab/opencravat"
