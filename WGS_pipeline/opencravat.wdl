@@ -31,21 +31,23 @@ workflow run_opencravat {
 }
 
 task opencravat {
-    String sample_id
-    File vcf
-    String format = "vcf"
-    String annotators_to_use = ""
-    Int stripfolder = 0 
-    String genome = "hg38"
-    String modules_options = "vcfreporter.type=separate"
+    input {
+        String sample_id
+        File vcf
+        String format = "vcf"
+        String annotators_to_use = ""
+        Int stripfolder = 0 
+        String genome = "hg38"
+        String modules_options = "vcfreporter.type=separate"
+        
+        Int memory = 16
+        Int boot_disk_size = 20
+        Int disk_space
+        Int num_threads = 1
+        Int num_preempt = 5
+        String docker = "karchinlab/opencravat"
+    }
     
-    Int memory = 16
-    Int boot_disk_size = 20
-    Int disk_space
-    Int num_threads = 1
-    Int num_preempt = 5
-    String docker = "karchinlab/opencravat"
-
     command {
       set -euo pipefail
         
