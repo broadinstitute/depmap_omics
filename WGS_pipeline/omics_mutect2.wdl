@@ -2,9 +2,12 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.5.0/scripts/mutect2_wdl/mutect2.wdl" as mutect2
+import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2col.wdl" as fixCol
+import "opencravat.wdl" as openCravat
+import "fix_mutect2_clust.wdl" as fixClust
+# import "filter_to_maf.wdl" as filtmaf
 
 workflow omics_mutect2 {
   input {
@@ -57,22 +60,47 @@ workflow omics_mutect2 {
       run_orientation_bias_mixture_model_filter=true
   }
 
-  call setGT.bcftools_fix_ploidy as setGT {
+  call setGT.bcftools_fix_ploidy as set_GT {
     input:
       sample_id=sample_id,
       vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
       disk_space=20
   }
 
-  call fixCol.fix_column as fixCol {
+  call fixClust.fix_mutect_clust as fix_clust {
+      input:
+        sample_id=sample_id,
+        vcf_file=set_GT.vcf_fixedploid
+  }
+
+  call openCravat.opencravat as open_cravat {
+      input:
+        sample_id=sample_id,
+        vcf=fix_clust.vcf_fixed
+
+  }
+
+  call fixCol.fix_column as fix_col {
     input:
       sample_id=sample_id,
-      vcf=setGT.vcf_fixedploid,
+      vcf_file=open_cravat.oc_main_files,
       disk_space=20
   }
 
+  # to test
+  # call filtmaf.filter_to_maf as filter_to_maf {
+  #   input:
+  #     sample_id=sample_id,
+  #     vcf=fix_col.vcf_fixedcol,
+  #     disk_space=20
+  # }
+
   output {
-    File out_vcf=fixCol.vcf_fixedcol
+    File out_vcf=fix_col.vcf_fixedcol
     File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
+    File oc_error_files=open_cravat.oc_error_files
+    File oc_log_files=open_cravat.oc_log_files
+    File oc_sql_files=open_cravat.oc_sql_files
+    #File somatic_maf=filter_to_maf.out_maf
   }
 }
