@@ -67,7 +67,6 @@ workflow omics_mutect2 {
       disk_space=20
   }
 
-  # to test
   call fixClust.fix_mutect_clust as fix_clust {
       input:
         sample_id=sample_id,
@@ -80,7 +79,7 @@ workflow omics_mutect2 {
         vcf=fix_clust.vcf_fixed
 
   }
-   # to test
+  
   call fixCol.fix_column as fix_col {
     input:
       sample_id=sample_id,
