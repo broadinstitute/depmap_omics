@@ -70,7 +70,7 @@ workflow omics_mutect2 {
   call fixClust.fix_mutect_clust as fix_clust {
       input:
         sample_id=sample_id,
-        vcf_file=set_GT.cf_fixedploid
+        vcf_file=set_GT.vcf_fixedploid
   }
 
   call openCravat.opencravat as open_cravat {
@@ -79,7 +79,7 @@ workflow omics_mutect2 {
         vcf=fix_clust.vcf_fixed
 
   }
-  
+
   call fixCol.fix_column as fix_col {
     input:
       sample_id=sample_id,
