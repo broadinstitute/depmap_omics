@@ -109,6 +109,8 @@ parser.add_argument(
     "--STARlong", action="store_true", help="Use STARlong instead of STAR"
 )
 parser.add_argument("--outReadsUnmapped", default=None)
+parser.add_argument("--twopassMode", default="Basic")
+parser.add_argument("--readFilesCommand", default="gunzip -c")
 parser.add_argument("-t", "--threads", default="4", help="Number of threads")
 args = parser.parse_args()
 
