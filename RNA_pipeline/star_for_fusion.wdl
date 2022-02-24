@@ -117,7 +117,7 @@ task star {
             --peOverlapMMp 0.1 \
             --alignInsertionFlush Right \
             --alignSplicedMateMapLminOverLmate 0 \
-            --alignSplicedMateMapLmin 30
+            --alignSplicedMateMapLmin 30 \
             --threads ${num_threads}
     }
 
