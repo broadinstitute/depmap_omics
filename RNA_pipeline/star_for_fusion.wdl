@@ -31,23 +31,23 @@ task star {
     String outReadsUnmapped="None"
     String outSAMstrandField="IntronMotif"
     String outSAMunmapped="Within"
-    Int chimSegmentMin=12 # ** essential to invoke chimeric read detection & reporting **
+    Int chimSegmentMin=12
     Int chimJunctionOverhangMin=8
-    Int chimOutJunctionFormat=1  # **essential** includes required metadata in Chimeric.junction.out file.
-    Int alignSJDBoverhangMin=10 
-    Int alignMatesGapMax=100000    # avoid readthru fusions within 100k
-    Int alignIntronMax=100000 
-    String lignSJstitchMismatchNmax="5 -1 5 5"    # settings improved certain chimera detections
-    String outSAMattrRGline="ID:GRPundef" 
-    Int chimMultimapScoreRange=3 
-    Int chimScoreJunctionNonGTAG=-4 
+    Int chimOutJunctionFormat=1
+    Int alignSJDBoverhangMin=10
+    Int alignMatesGapMax=100000
+    Int alignIntronMax=100000
+    String lignSJstitchMismatchNmax="5 -1 5 5"
+    String outSAMattrRGline="ID:GRPundef"
+    Int chimMultimapScoreRange=3
+    Int chimScoreJunctionNonGTAG=-4
     Int chimMultimapNmax=20
-    Int chimNonchimScoreDropMin=10 
-    Int peOverlapNbasesMin=12 
-    Float peOverlapMMp=0.1 
-    String alignInsertionFlush="Right" 
-    Int alignSplicedMateMapLminOverLmate=0 
-    Int alignSplicedMateMapLmin=30 
+    Int chimNonchimScoreDropMin=10
+    Int peOverlapNbasesMin=12
+    Float peOverlapMMp=0.1
+    String alignInsertionFlush="Right"
+    Int alignSplicedMateMapLminOverLmate=0
+    Int alignSplicedMateMapLmin=30
 
 
 
