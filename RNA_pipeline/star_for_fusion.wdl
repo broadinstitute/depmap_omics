@@ -11,7 +11,6 @@ task star {
     Int? outFilterMismatchNmax
     Float? outFilterMismatchNoverLmax
     Int? alignIntronMin
-    Int? alignMatesGapMax
     String? outFilterType
     Float? outFilterScoreMinOverLread
     Float? outFilterMatchNminOverLread
