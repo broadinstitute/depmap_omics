@@ -11,25 +11,19 @@ task star {
     Int? outFilterMismatchNmax
     Float? outFilterMismatchNoverLmax
     Int? alignIntronMin
-    Int? alignIntronMax
     Int? alignMatesGapMax
     String? outFilterType
     Float? outFilterScoreMinOverLread
     Float? outFilterMatchNminOverLread
     Int? limitSjdbInsertNsj
-    String? outSAMstrandField
     String? outFilterIntronMotifs
     String? alignSoftClipAtReferenceEnds
     String? quantMode
-    String? outSAMattrRGline
     String? outSAMattributes
     File? varVCFfile
     String? waspOutputMode
-    Int? chimSegmentMin
-    Int? chimJunctionOverhangMin
     String? chimOutType
     Int? chimMainSegmentMultNmax
-    Int? chimOutJunctionFormat
     File? sjdbFileChrStartEnd
 
 
