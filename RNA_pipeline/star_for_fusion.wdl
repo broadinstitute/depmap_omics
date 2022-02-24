@@ -36,7 +36,7 @@ task star {
     Int alignSJDBoverhangMin=10
     Int alignMatesGapMax=100000
     Int alignIntronMax=100000
-    String lignSJstitchMismatchNmax="5 -1 5 5"
+    String alignSJstitchMismatchNmax="5 -1 5 5"
     String outSAMattrRGline="ID:GRPundef"
     Int chimMultimapScoreRange=3
     Int chimScoreJunctionNonGTAG=-4
