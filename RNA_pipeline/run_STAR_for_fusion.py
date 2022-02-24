@@ -35,6 +35,7 @@ parser.add_argument("--outFilterMismatchNmax", default="999")
 parser.add_argument("--outFilterMismatchNoverLmax", default="0.1")
 parser.add_argument("--alignIntronMin", default="20")
 parser.add_argument("--alignIntronMax", default="1000000")
+parser.add_argument("--alignSJstitchMismatchNmax", default="5 -1 5 5")
 parser.add_argument("--alignMatesGapMax", default="1000000")
 parser.add_argument("--outFilterType", default="BySJout")
 parser.add_argument("--outFilterScoreMinOverLread", default="0.33")
@@ -66,6 +67,15 @@ parser.add_argument(
 parser.add_argument(
     "--outSAMattributes", default=["NH", "HI", "AS", "nM", "NM", "ch"], nargs="+"
 )
+parser.add_argument("--chimMultimapScoreRange", default="3")
+parser.add_argument("--chimScoreJunctionNonGTAG", default="-4")
+parser.add_argument("--chimMultimapNmax", default="20")
+parser.add_argument("--chimNonchimScoreDropMin", default="10")
+parser.add_argument("--peOverlapNbasesMin", default="12")
+parser.add_argument("--peOverlapMMp", default="0.1")
+parser.add_argument("--alignInsertionFlush", default="Right")
+parser.add_argument("--alignSplicedMateMapLminOverLmate", default="0")
+parser.add_argument("--alignSplicedMateMapLmin", default="30")
 parser.add_argument(
     "--varVCFfile",
     default=None,

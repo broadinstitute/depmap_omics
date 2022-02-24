@@ -8,7 +8,6 @@ task star {
     # STAR options
     Int? outFilterMultimapNmax
     Int? alignSJoverhangMin
-    Int? alignSJDBoverhangMin
     Int? outFilterMismatchNmax
     Float? outFilterMismatchNoverLmax
     Int? alignIntronMin
@@ -32,6 +31,31 @@ task star {
     Int? chimMainSegmentMultNmax
     Int? chimOutJunctionFormat
     File? sjdbFileChrStartEnd
+
+
+    # parameters for STAR as part of STAR-fusion
+    String outReadsUnmapped="None"
+    String outSAMstrandField="IntronMotif"
+    String outSAMunmapped="Within"
+    Int chimSegmentMin=12 \  # ** essential to invoke chimeric read detection & reporting **
+    Int chimJunctionOverhangMin=8 \
+    Int chimOutJunctionFormat=1 \   # **essential** includes required metadata in Chimeric.junction.out file.
+    Int alignSJDBoverhangMin=10 \
+    Int alignMatesGapMax=100000 \   # avoid readthru fusions within 100k
+    Int alignIntronMax=100000 \
+    String lignSJstitchMismatchNmax="5 -1 5 5" \   # settings improved certain chimera detections
+    String outSAMattrRGline="ID:GRPundef" \
+    Int chimMultimapScoreRange=3 \
+    Int chimScoreJunctionNonGTAG=-4 \
+    Int chimMultimapNmax=20 \
+    Int chimNonchimScoreDropMin=10 \
+    Int peOverlapNbasesMin=12 \
+    Float peOverlapMMp=0.1 \
+    String alignInsertionFlush="Right" \
+    Int alignSplicedMateMapLminOverLmate=0 \
+    Int alignSplicedMateMapLmin=30 \
+
+
 
     Int memory
     Int disk_space
@@ -98,26 +122,26 @@ task star {
             ${"--chimOutType " + chimOutType} \
             ${"--chimMainSegmentMultNmax " + chimMainSegmentMultNmax} \
             ${"--sjdbFileChrStartEnd " + sjdbFileChrStartEnd} \
-            --outReadsUnmapped None \
-            --outSAMstrandField intronMotif \  # include for potential use with StringTie for assembly
-            --outSAMunmapped Within 
-            --chimSegmentMin 12 \  # ** essential to invoke chimeric read detection & reporting **
-            --chimJunctionOverhangMin 8 \
-            --chimOutJunctionFormat 1 \   # **essential** includes required metadata in Chimeric.junction.out file.
-            --alignSJDBoverhangMin 10 \
-            --alignMatesGapMax 100000 \   # avoid readthru fusions within 100k
-            --alignIntronMax 100000 \
-            --alignSJstitchMismatchNmax 5 -1 5 5 \   # settings improved certain chimera detections
-            --outSAMattrRGline ID:GRPundef \
-            --chimMultimapScoreRange 3 \
-            --chimScoreJunctionNonGTAG -4 \
-            --chimMultimapNmax 20 \
-            --chimNonchimScoreDropMin 10 \
-            --peOverlapNbasesMin 12 \
-            --peOverlapMMp 0.1 \
-            --alignInsertionFlush Right \
-            --alignSplicedMateMapLminOverLmate 0 \
-            --alignSplicedMateMapLmin 30 \
+            ${"--outReadsUnmapped " + outReadsUnmapped} \
+            ${"--outSAMstrandField " + outSAMstrandField} \  # include for potential use with StringTie for assembly
+            ${"--outSAMunmapped " + outSAMunmapped} \
+            ${"--chimSegmentMin " + chimSegmentMin} \  # ** essential to invoke chimeric read detection & reporting **
+            ${"--chimJunctionOverhangMin " + chimJunctionOverhangMin} \
+            ${"--chimOutJunctionFormat " + chimOutJunctionFormat} \   # **essential** includes required metadata in Chimeric.junction.out file.
+            ${"--alignSJDBoverhangMin " + alignSJDBoverhangMin} \
+            ${"--alignMatesGapMax " + alignMatesGapMax} \   # avoid readthru fusions within 100k
+            ${"--alignIntronMax " + alignIntronMax} \
+            ${"--alignSJstitchMismatchNmax " + alignSJstitchMismatchNmax} \   # settings improved certain chimera detections
+            ${"--outSAMattrRGline " + outSAMattrRGline} \
+            ${"--chimMultimapScoreRange " + chimMultimapScoreRange} \
+            ${"--chimScoreJunctionNonGTAG " + chimScoreJunctionNonGTAG} \
+            ${"--chimMultimapNmax " + chimMultimapNmax} \
+            ${"--chimNonchimScoreDropMin " + chimNonchimScoreDropMin} \
+            ${"--peOverlapNbasesMin " + peOverlapNbasesMin} \
+            ${"--peOverlapMMp " + peOverlapMMp} \
+            ${"--alignInsertionFlush " + alignInsertionFlush} \
+            ${"--alignSplicedMateMapLminOverLmate " + alignSplicedMateMapLminOverLmate} \
+            ${"--alignSplicedMateMapLmin " + alignSplicedMateMapLmin} \
             --threads ${num_threads}
     }
 
