@@ -75,7 +75,9 @@ task star {
         touch star_out/${prefix}.Chimeric.out.sorted.bam.bai
         touch star_out/${prefix}.ReadsPerGene.out.tab  # run_STAR.py will gzip
 
-        /src/run_STAR_for_fusion.py \
+        git clone -b test_star --single-branch https://github.com/broadinstitute/depmap_omics.git
+
+        depmap_omics/RNA_pipeline/run_STAR_for_fusion.py \
             star_index $fastq1_abs $fastq2_abs ${prefix} \
             --output_dir star_out \
             ${"--outFilterMultimapNmax " + outFilterMultimapNmax} \
