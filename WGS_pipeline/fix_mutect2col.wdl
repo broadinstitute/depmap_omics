@@ -46,6 +46,8 @@ with gzip.open(sys.argv[1],'r+') as f:
             for i, line in enumerate(f):
                 original_string = line.decode('utf-8')
                 if original_string[0] == '#':
+                    if original_string.startswith("##INFO=<ID=OC_provean__prediction"):
+                        original_string = original_string.replace('"D(amaging)"', 'D(amaging)').replace('"N(eutral)"', 'N(eutral)')
                     fout.write(original_string.encode())
                 else:
                     new_string = re.sub(
