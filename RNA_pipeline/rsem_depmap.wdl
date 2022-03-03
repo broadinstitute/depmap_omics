@@ -21,11 +21,11 @@ task rsem {
         mkdir rsem_reference
         tar -xvvf ${rsem_reference} -C rsem_reference --strip-components=1
 
-        gsutil cp gs://david_public_bucket/ccle_rnaseq_pipeline/run_RSEM_david.py .
+        git clone https://github.com/broadinstitute/ccle_processing.git
 
-        chmod +x run_RSEM_david.py
+        chmod +x ccle_processing/RNA_pipeline/run_RSEM_david.py
 
-        ./run_RSEM_david.py \
+        ccle_processing/RNA_pipeline/run_RSEM_david.py \
             ${"--max_frag_len " + max_frag_len} \
             ${"--estimate_rspd " + estimate_rspd} \
             ${"--is_stranded " + is_stranded} \
@@ -51,7 +51,7 @@ task rsem {
     }
 
     meta {
-        author: "Francois Aguet"
+        author: "David Wu"
     }
 }
 
