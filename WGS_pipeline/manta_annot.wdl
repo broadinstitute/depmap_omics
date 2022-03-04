@@ -40,15 +40,15 @@ task manta_annotator {
         ~{"-e " + gene_annot} \
         -g MantaSVAnnotator/gnomad_germline_hg38all.txt \
         -o ./out/ \
-        -c {cores}
+        -c ${cores}
     }
     # drops germline, <1kb, indels, IMPRECISE, alt/mito/Y chromosomes, failed QC
     runtime {
-        preemptible: preemptible_tries
+        preemptible: "${preemptible_tries}"
         docker: docker_image
-        memory: mem_size
-        cpu: cores
-        disks: "local-disk " + disk_size + " HDD"
+        memory: "{mem_size}GB"
+        cpu: "${cores}"
+        disks: "local-disk ${disk_size} HDD"
     }
 
     output {
