@@ -41,7 +41,7 @@ task manta_annotator {
 
         Rscript MantaSVAnnotator/Manta_SV_Annotator_2.R \
         -i out/${sv}.bedpe \
-        -r MantaSVAnnotator/gencode_hg38_annotations_table.txt
+        -r MantaSVAnnotator/hg38_ensembl_genelocatins_formatted.txt
         ~{"-e " + gene_annot} \
         -g MantaSVAnnotator/gnomad_germline_hg38all.txt \
         -o ./out/ \
