@@ -51,7 +51,7 @@ task manta_annotator {
     runtime {
         preemptible: "${preemptible_tries}"
         docker: docker_image
-        memory: "{mem_size} GB"
+        memory: "${mem_size} GB"
         cpu: "${cores}"
         disks: "local-disk ${disk_size} HDD"
     }
