@@ -12,6 +12,11 @@ workflow run_manta_annotator {
             sv=sv,
             gene_annot=gene_annot
     }
+    output {
+        File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
+        File filtered_annotated_sv = manta_annotator.filtered_annotated_sv 
+        File dropped = manta_annotator.dropped 
+    }
 }
 
 task manta_annotator {
