@@ -4,13 +4,13 @@ workflow run_manta_annotator {
     # more info at https://github.com/acranej/MantaSVAnnotator
     input {
         File sv
-        File gene_annot="gs://ccle_default_params/ensembl_102_gene_exons.filt.tsv"
+        File exon_annot="gs://ccle_default_params/hg38_ensembl_exonlocations_formatted.txt"
     }
 
     call manta_annotator {
         input:
             sv=sv,
-            gene_annot=gene_annot
+            exon_annot=exon_annot
     }
     output {
         File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
@@ -22,7 +22,7 @@ workflow run_manta_annotator {
 task manta_annotator {
     input {
         File sv
-        File gene_annot
+        File exon_annot
 
         Int mem_size = 2
         Int disk_size = 20
@@ -42,7 +42,7 @@ task manta_annotator {
         Rscript MantaSVAnnotator/Manta_SV_Annotator_2.R \
         -i out/${sv}.bedpe \
         -r MantaSVAnnotator/hg38_ensembl_genelocatins_formatted.txt
-        ~{"-e " + gene_annot} \
+        ~{"-e " + exon_annot} \
         -g MantaSVAnnotator/gnomad_germline_hg38all.txt \
         -o ./out/ \
         -c ${cores}
