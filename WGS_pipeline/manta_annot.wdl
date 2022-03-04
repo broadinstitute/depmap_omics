@@ -31,16 +31,20 @@ task manta_annotator {
         Int preemptible_tries = 3
     }
 
+    String newname = sub(sv, "\\.gz$", "")
+
     command {
         git clone https://github.com/acranej/MantaSVAnnotator.git
         mkdir out
+
+        gunzip ${sv}
         
         Rscript MantaSVAnnotator/MANTA_vcf2bedpe.R \
-        -i ${sv} \
+        -i ${newname} \
         -o ./out/
 
         Rscript MantaSVAnnotator/Manta_SV_Annotator_2.R \
-        -i out/${sv}.bedpe \
+        -i out/${newname}.bedpe \
         -r MantaSVAnnotator/hg38_ensembl_genelocatins_formatted.txt
         ~{"-e " + exon_annot} \
         -g MantaSVAnnotator/gnomad_germline_hg38all.txt \
@@ -57,8 +61,8 @@ task manta_annotator {
     }
 
     output {
-        File somatic_annotated_sv = "out/${sv}_somatic_only_sv_annotated.bedpe"
-        File filtered_annotated_sv = "out/${sv}_sv_annotated.bedpe"
-        File dropped= "out/${sv}_removed_calls"
+        File somatic_annotated_sv = "out/${newname}.bedpe_somatic_only_sv_annotated.bedpe"
+        File filtered_annotated_sv = "out/${newname}.bedpe_sv_annotated.bedpe"
+        File dropped= "out/${newname}.bedpe_removed_calls"
     }
 }
