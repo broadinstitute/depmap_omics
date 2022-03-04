@@ -82,7 +82,7 @@ task opencravat {
     runtime {
         docker: docker
         bootDiskSizeGb: "${boot_disk_size}"
-        memory: "${memory}GB"
+        memory: "${memory} GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"
         preemptible: "${num_preempt}"
