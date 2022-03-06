@@ -61,8 +61,8 @@ task manta_annotator {
     }
 
     output {
-        File somatic_annotated_sv = "out/${newname}.bedpe_somatic_only_sv_annotated.bedpe"
-        File filtered_annotated_sv = "out/${newname}.bedpe_sv_annotated.bedpe"
-        File dropped= "out/${newname}.bedpe_removed_calls"
+        File somatic_annotated_sv = "out/${basename(newname)}.bedpe_somatic_only_sv_annotated.bedpe"
+        File filtered_annotated_sv = "out/${basename(newname)}.bedpe_sv_annotated.bedpe"
+        File dropped= "out/${basename(newname)}.bedpe_removed_calls"
     }
 }
