@@ -31,7 +31,7 @@ task manta_annotator {
         Int preemptible_tries = 3
     }
 
-    String newname = sub(sv, "\\.gz$", "")
+    String newname = sub(sub(sv, "\\.gz$", ""), "gs://","/cromwell_root/")
 
     command {
         git clone https://github.com/acranej/MantaSVAnnotator.git
