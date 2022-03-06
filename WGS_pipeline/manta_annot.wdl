@@ -45,7 +45,7 @@ task manta_annotator {
 
         Rscript MantaSVAnnotator/Manta_SV_Annotator_2.R \
         -i out/${newname}.bedpe \
-        -r MantaSVAnnotator/hg38_ensembl_genelocatins_formatted.txt
+        -r MantaSVAnnotator/hg38_ensembl_genelocatins_formatted.txt \
         ~{"-e " + exon_annot} \
         -g MantaSVAnnotator/gnomad_germline_hg38all.txt \
         -o ./out/ \
