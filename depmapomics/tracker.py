@@ -750,7 +750,7 @@ def update(
         res, _ = terra.changeGSlocation(
             refworkspace,
             newgs=newgs,
-            onlycol=bamfilepaths,
+            bamfilepaths=bamfilepaths,
             entity="sample",
             keeppath=False,
             dry_run=dry_run,
