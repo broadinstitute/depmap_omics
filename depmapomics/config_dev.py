@@ -422,6 +422,7 @@ PURECN_COLRENAMING = {
     "chr": "Chromosome",
     "Sampleid": SAMPLEID,
     "seg.mean": "Segment_Mean",
+    "type": "LOH_status",
 }
 
 SOURCE_RENAME = {
