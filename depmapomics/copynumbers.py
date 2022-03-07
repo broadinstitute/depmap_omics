@@ -42,9 +42,7 @@ def loadFromGATKAggregation(
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
     tempFolder="temp/",
-    toremove=[
-        "readgroup_ubams",
-    ],
+    toremove=["readgroup_ubams",],
     sampleset="all",
     colRenaming=COLRENAMING,
 ):
@@ -231,6 +229,78 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
     return renaming
 
 
+def pureCNpostprocess(
+    refworkspace,
+    setEntity="sample_set",
+    sortby=[SAMPLEID, "Chromosome", "Start", "End"],
+    todrop=[],
+    colname="PureCN_loh_merged",
+    sampleset="all",
+    colRenaming=PURECN_COLRENAMING,
+    save_output="",
+    mappingdf=None,
+    genechangethresh=0.025,
+    segmentsthresh=2000,
+):
+    """fetching PureCN data from Terra, generate one matrix for absolute copy number and one matrix for LOH
+
+    Args:
+        refworkspace (str): workspace path
+        sortby (list, optional): columns to sort df. Defaults to [SAMPLEID, 'Chromosome', "Start", "End"].
+        save_output (str, optional): location to save output. Defaults to ''.
+        todrop (list, optional): [description]. Defaults to [].
+        colname (str, optional): the column in Terra where the file is saved in sampleset. Defaults to "combined_seg_file".
+        sampleset (str, optional): sample set to load in terra. Defaults to "all".
+        colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
+        genechangethresh (float, optional): above this threshold of variance of gene CN, the sample is considered failed. Defaults to 0.025.
+        segmentsthresh (int, optional): above this threshold of number of segments the WGS sample is considered failed. Defaults to 2000.
+
+    Returns:
+        pd.dataframe: dataframe containing the segments concatenated in a bed like format
+    """
+
+    print("loading PureCN merged LOH file")
+    wm = dm.WorkspaceManager(refworkspace)
+    segments = pd.read_csv(
+        wm.get_entities(setEntity).loc[sampleset, colname], sep="\t"
+    ).rename(columns=colRenaming)
+
+    # removing the duplicates
+    segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
+    if "chr" in segments["Chromosome"][0]:
+        segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
+    # tranforming the df
+    segments.Segment_Mean = 2 ** segments.Segment_Mean
+    segments.Start = segments.Start.astype(int)
+    segments.End = segments.End.astype(int)
+    segments.loc[
+        segments[segments.Chromosome.isin(["X", "Y"])].index, "Segment_Mean"
+    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["Segment_Mean"] / 2)
+    segments = segments.sort_values(by=sortby)
+
+    print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
+
+    absolute_genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mappingdf)
+    print("summary of PureCN absolute cn data:")
+    print(
+        absolute_genecn.values.min(),
+        absolute_genecn.values.mean(),
+        absolute_genecn.values.max(),
+    )
+    mut.checkGeneChangeAccrossAll(absolute_genecn, thresh=genechangethresh)
+    failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
+
+    print("PureCN: failed our QC")
+    print(failed)
+
+    print("PureCN: saving files")
+    segments.to_csv(save_output + "PureCN_segments_all.csv", index=False)
+    absolute_genecn.to_csv(save_output + "PureCN_genecn_all.csv")
+    print("done")
+
+    return segments, absolute_genecn
+
+
 def postProcess(
     refworkspace,
     setEntity="sample_set",
@@ -328,4 +398,12 @@ def postProcess(
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
 
-    return segments, genecn, failed
+    purecn_segments, purecn_genecn = pureCNpostprocess(
+        refworkspace,
+        setEntity=setEntity,
+        sampleset=sampleset,
+        sortby=sortby,
+        todrop=todrop,
+    )
+
+    return segments, genecn, purecn_segments, purecn_genecn, failed

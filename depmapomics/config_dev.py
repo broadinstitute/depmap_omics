@@ -416,6 +416,14 @@ COLRENAMING = {
     "CALL": "Status",
 }
 
+PURECN_COLRENAMING = {
+    "start": "Start",
+    "end": "End",
+    "chr": "Chromosome",
+    "Sampleid": SAMPLEID,
+    "seg.mean": "Segment_Mean",
+}
+
 SOURCE_RENAME = {
     "CCLF": "Broad",
     "CHORDOMA": "Chordoma",
