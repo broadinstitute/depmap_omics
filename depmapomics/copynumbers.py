@@ -234,6 +234,7 @@ def pureCNpostprocess(
     setEntity="sample_set",
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
+    priority=[],
     colname="PureCN_loh_merged",
     sampleset="all",
     colRenaming=PURECN_COLRENAMING,
@@ -261,9 +262,9 @@ def pureCNpostprocess(
 
     print("loading PureCN merged LOH file")
     wm = dm.WorkspaceManager(refworkspace)
-    segments = pd.read_csv(
-        wm.get_entities(setEntity).loc[sampleset, colname], sep="\t"
-    ).rename(columns=colRenaming)
+    segments = pd.read_csv(wm.get_entities(setEntity).loc[sampleset, colname]).rename(
+        columns=colRenaming
+    )
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -280,7 +281,10 @@ def pureCNpostprocess(
 
     print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
 
-    absolute_genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mappingdf)
+    # Generate gene-level absolute cn matrix
+    absolute_genecn = mut.toGeneMatrix(
+        mut.manageGapsInSegments(segments), mappingdf, value_colname="Segment_Mean"
+    )
     print("summary of PureCN absolute cn data:")
     print(
         absolute_genecn.values.min(),
@@ -290,15 +294,34 @@ def pureCNpostprocess(
     mut.checkGeneChangeAccrossAll(absolute_genecn, thresh=genechangethresh)
     failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
+    # Generate gene-level LOH status matrix
+    segments["type"] = segments["type"].replace(["LOH", "COPY-NEUTRAL LOH"], 1)
+    segments["type"] = segments["type"].replace("", 0)
+
+    loh_status = mut.toGeneMatrix(
+        mut.manageGapsInSegments(segments), mappingdf, value_colname="LOH_status"
+    )
+
     print("PureCN: failed our QC")
     print(failed)
+
+    segments = segments[
+        ~segments[SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
+    ].reset_index(drop=True)
+    absolute_genecn = absolute_genecn[
+        ~absolute_genecn.index.isin((set(failed) | set(todrop)) - set(priority))
+    ]
+    loh_status = loh_status[
+        ~loh_status.index.isin((set(failed) | set(todrop)) - set(priority))
+    ]
 
     print("PureCN: saving files")
     segments.to_csv(save_output + "PureCN_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "PureCN_genecn_all.csv")
+    loh_status.to_csv(save_output + "PureCN_loh_status.csv")
     print("done")
 
-    return segments, absolute_genecn
+    return segments, absolute_genecn, loh_status
 
 
 def postProcess(
@@ -398,12 +421,13 @@ def postProcess(
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
 
-    purecn_segments, purecn_genecn = pureCNpostprocess(
+    purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
         refworkspace,
         setEntity=setEntity,
         sampleset=sampleset,
         sortby=sortby,
         todrop=todrop,
+        priority=priority,
     )
 
     return segments, genecn, purecn_segments, purecn_genecn, failed
