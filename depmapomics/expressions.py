@@ -129,7 +129,7 @@ def updateTracker(
     refworkspace=RNAWORKSPACE,
     sheetname=SHEETNAME,
     sheetcreds=SHEETCREDS,
-    onlycol=STARBAMCOLTERRA,
+    bamfilepaths=STARBAMCOLTERRA,
     newgs=RNA_GCS_PATH_HG38,
     dry_run=False,
     qcname="star_logs",
@@ -149,7 +149,7 @@ def updateTracker(
         sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
         qcname (str, optional): Terra column containing QC files. Defaults to "star_logs".
         refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-        onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
+        bamfilepaths (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
         todrop (list, optional): list of samples to be dropped. Defaults to []
     """
     refwm = dm.WorkspaceManager(refworkspace)
@@ -179,7 +179,7 @@ def updateTracker(
         sheetcreds,
         sheetname,
         refworkspace,
-        onlycol,
+        bamfilepaths,
         dry_run,
         todrop=todrop,
     )
