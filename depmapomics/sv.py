@@ -2,8 +2,12 @@ import pandas as pd
 
 
 
-def load_and_aggregate(names):
+def load_and_aggregate(files):
     """
+
+    Args:
+    -----
+        files (list): list of gs://paths/names.bedpe
     """
     agg = []
     for file in files:
