@@ -425,6 +425,8 @@ PURECN_COLRENAMING = {
     "type": "LOH_status",
 }
 
+PURECN_TERRACOLS = {"PureCN_failed", "PureCN_ploidy"}
+
 SOURCE_RENAME = {
     "CCLF": "Broad",
     "CHORDOMA": "Chordoma",
