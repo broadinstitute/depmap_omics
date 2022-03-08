@@ -456,7 +456,15 @@ def cnPostProcessing(
                 (tracker.datatype == "wes") & (tracker.blacklist == 1)
             ].index.tolist()
         )
-        wessegments, genecn, wesfailed = cn.postProcess(
+        (
+            wessegments,
+            genecn,
+            wes_purecn_segments,
+            wes_purecn_genecn,
+            wes_loh,
+            wes_purecn_table,
+            wesfailed,
+        ) = cn.postProcess(
             wesrefworkspace,
             setEntity=wessetentity,
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
@@ -492,10 +500,32 @@ def cnPostProcessing(
         wespriogenecn = genecn[genecn.index.isin(set(wesrenaming.keys()))].rename(
             index=wesrenaming
         )
+        wespriosegments_purecn = (
+            wes_purecn_segments[
+                wes_purecn_segments[SAMPLEID].isin(set(wesrenaming.keys()))
+            ]
+            .replace({SAMPLEID: wesrenaming})
+            .reset_index(drop=True)
+        )
+        wespriogenecn_purecn = wes_purecn_genecn[
+            wes_purecn_genecn.index.isin(set(wesrenaming.keys()))
+        ].rename(index=wesrenaming)
+        wesprio_loh = wes_loh[wes_loh.index.isin(set(wesrenaming.keys()))].rename(
+            index=wesrenaming
+        )
+        wesprio_table_purecn = wes_purecn_table[
+            wes_purecn_table.index.isin(set(wesrenaming.keys()))
+        ].rename(index=wesrenaming)
 
         # saving prio
         wespriosegments.to_csv(folder + "segments_latest.csv", index=False)
         wespriogenecn.to_csv(folder + "genecn_latest.csv")
+        wespriosegments_purecn.to_csv(
+            folder + "purecn_segments_latest.csv", index=False
+        )
+        wespriogenecn_purecn.to_csv(folder + "purecn_genecn_latest.csv")
+        wesprio_loh.to_csv(folder + "purecn_loh_latest.csv")
+        wesprio_table_purecn.to_csv(folder + "purecn_table_latest.csv")
     else:
         print("bypassing WES using folder: " + wesfolder if wesfolder else folder)
         wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
@@ -515,7 +545,15 @@ def cnPostProcessing(
         todrop
         + tracker[(tracker.datatype == "wgs") & (tracker.blacklist == 1)].index.tolist()
     )
-    wgssegments, genecn, wgsfailed = cn.postProcess(
+    (
+        wgssegments,
+        genecn,
+        wgs_purecn_segments,
+        wgs_purecn_genecn,
+        wgs_loh,
+        wgs_purecn_table,
+        wgsfailed,
+    ) = cn.postProcess(
         wgsrefworkspace,
         setEntity=wgssetentity,
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
@@ -553,9 +591,28 @@ def cnPostProcessing(
     wgspriogenecn = genecn[genecn.index.isin(set(wgsrenaming.keys()))].rename(
         index=wgsrenaming
     )
+    wgspriosegments_purecn = (
+        wgs_purecn_segments[wgs_purecn_segments[SAMPLEID].isin(set(wgsrenaming.keys()))]
+        .replace({SAMPLEID: wgsrenaming})
+        .reset_index(drop=True)
+    )
+    wgspriogenecn_purecn = wgs_purecn_genecn[
+        wgs_purecn_genecn.index.isin(set(wgsrenaming.keys()))
+    ].rename(index=wgsrenaming)
+    wgsprio_loh = wgs_loh[wgs_loh.index.isin(set(wgsrenaming.keys()))].rename(
+        index=wgsrenaming
+    )
+    wgsprio_table_purecn = wgs_purecn_table[
+        wgs_purecn_table.index.isin(set(wgsrenaming.keys()))
+    ].rename(index=wgsrenaming)
+
     # saving prio
     wgspriosegments.to_csv(folder + "segments_latest.csv", index=False)
     wgspriogenecn.to_csv(folder + "genecn_latest.csv")
+    wgspriosegments_purecn.to_csv(folder + "purecn_segments_latest.csv", index=False)
+    wgspriogenecn_purecn.to_csv(folder + "purecn_genecn_latest.csv")
+    wgsprio_loh.to_csv(folder + "purecn_loh_latest.csv")
+    wgsprio_table_purecn.to_csv(folder + "purecn_table_latest.csv")
 
     print("comparing to previous version")
     h.compareDfs(wespriogenecn, prevgenecn)

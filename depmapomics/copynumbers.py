@@ -238,6 +238,7 @@ def pureCNpostprocess(
     colname="PureCN_loh_merged",
     sampleset="all",
     colRenaming=PURECN_COLRENAMING,
+    terracols=PURECN_TERRACOLS,
     save_output="",
     mappingdf=None,
     genechangethresh=0.025,
@@ -305,6 +306,10 @@ def pureCNpostprocess(
     print("PureCN: failed our QC")
     print(failed)
 
+    # Pull additional info directly from terra sample table
+    samples = wm.get_samples()
+    purecn_table = samples[terracols]
+
     segments = segments[
         ~segments[SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
     ].reset_index(drop=True)
@@ -314,14 +319,18 @@ def pureCNpostprocess(
     loh_status = loh_status[
         ~loh_status.index.isin((set(failed) | set(todrop)) - set(priority))
     ]
+    purecn_table = purecn_table[
+        ~purecn_table.index.isin((set(failed) | set(todrop)) - set(priority))
+    ]
 
     print("PureCN: saving files")
-    segments.to_csv(save_output + "PureCN_segments_all.csv", index=False)
-    absolute_genecn.to_csv(save_output + "PureCN_genecn_all.csv")
-    loh_status.to_csv(save_output + "PureCN_loh_status.csv")
+    segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
+    absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
+    loh_status.to_csv(save_output + "purecn_loh_status.csv")
+    purecn_table.to_csv(save_output + "purecn_table.csv")
     print("done")
 
-    return segments, absolute_genecn, loh_status
+    return segments, absolute_genecn, loh_status, purecn_table
 
 
 def postProcess(
@@ -421,7 +430,7 @@ def postProcess(
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
 
-    purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
+    purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
         refworkspace,
         setEntity=setEntity,
         sampleset=sampleset,
@@ -430,4 +439,13 @@ def postProcess(
         priority=priority,
     )
 
-    return segments, genecn, purecn_segments, purecn_genecn, failed
+    return (
+        segments,
+        genecn,
+        purecn_segments,
+        purecn_genecn,
+        loh_status,
+        purecn_table,
+        failed,
+    )
+
