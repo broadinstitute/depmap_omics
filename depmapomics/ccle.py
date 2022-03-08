@@ -721,6 +721,87 @@ def cnPostProcessing(
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
+            # Pure CN outputs
+            {
+                "path": folder + "wes_purecn_segments_latest.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_purecn_genecn_latest.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_purecn_segments_all.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_purecn_genecn_all.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_purecn_loh_latest.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_purecn_loh_all.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_purecn_table_latest.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_purecn_table_all.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_segments_latest.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_genecn_latest.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_segments_all.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_genecn_all.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_loh_latest.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_loh_all.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_table_latest.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_purecn_table_all.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
         ],
         dataset_description=dataset_description,
     )
