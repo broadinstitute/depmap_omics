@@ -326,8 +326,8 @@ def pureCNpostprocess(
     print("PureCN: saving files")
     segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
-    loh_status.to_csv(save_output + "purecn_loh_status.csv")
-    purecn_table.to_csv(save_output + "purecn_table.csv")
+    loh_status.to_csv(save_output + "purecn_loh_all.csv")
+    purecn_table.to_csv(save_output + "purecn_table_all.csv")
     print("done")
 
     return segments, absolute_genecn, loh_status, purecn_table
