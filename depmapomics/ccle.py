@@ -129,9 +129,11 @@ async def expressionPostProcessing(
         colstoclean=colstoclean,
         ensemblserver=ensemblserver,
         todrop=todrop,
+        rsemfilename=rsemfilename,
+        ssgseafilepath=ssgseafilepath,
         samplesetToLoad=samplesetToLoad,
-        geneLevelCols=RSEMFILENAME_GENE,
-        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,  # compute_enrichment=False,
+        geneLevelCols=geneLevelCols,
+        trancriptLevelCols=trancriptLevelCols,  # compute_enrichment=False,
         ssGSEAcol="genes_tpm",
         renamingFunc=expressionRenaming,
         dropNonMatching=dropNonMatching,
@@ -304,7 +306,7 @@ async def fusionPostProcessing(
 
     tc = TaigaClient()
 
-    if prevdataset is "ccle":
+    if prevdataset == "ccle":
         prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
 
     ccle_refsamples = trackerobj.read_tracker()
@@ -438,7 +440,7 @@ def cnPostProcessing(
 
     tc = TaigaClient()
 
-    if prevgenecn is "ccle":
+    if prevgenecn == "ccle":
         prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
 
     tracker = pd.DataFrame()
