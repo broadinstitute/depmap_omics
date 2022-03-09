@@ -37,8 +37,12 @@ def expressionRenaming(r, todrop):
 async def expressionPostProcessing(
     refworkspace=RNAWORKSPACE,
     samplesetname=SAMPLESETNAME,
-    colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
     ensemblserver=ENSEMBL_SERVER_V,
+    geneLevelCols=RSEMFILENAME_GENE,
+    trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
+    rsemfilename=RSEMFILENAME,
+    ssgseafilepath=SSGSEAFILEPATH,
+    colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
     doCleanup=True,
     samplesetToLoad="all",
     tocompare={
@@ -58,7 +62,6 @@ async def expressionPostProcessing(
     rsemfilelocs=None,
     rnaqclocs={},
     starlogs={},
-    **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
 
@@ -75,15 +78,15 @@ async def expressionPostProcessing(
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level 
+        geneLevelCols (list, optional): the columns that contain the gene level
         expression data in the workspace. Defaults to RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript 
+        trancriptLevelCols (list, optional): the columns that contain the transcript
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes 
+        dropNonMatching (bool, optional): whether to drop the non matching genes
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
         prevcounts (str, optional): the previous counts to use to QC the data for the release. Defaults to 'ccle'.
@@ -136,7 +139,6 @@ async def expressionPostProcessing(
         samplesinset=samplesinset,
         rsemfilelocs=rsemfilelocs,
         rnaqclocs=rnaqclocs,
-        **kwargs,
     )
 
     print("doing validation")
@@ -189,7 +191,9 @@ async def expressionPostProcessing(
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
         samplesetname,
-        refworkspace,
+        refworkspace=refworkspace,
+        onlycol=STARBAMCOLTERRA,
+        newgs=RNA_GCS_PATH_HG38,
         samplesinset=samplesinset,
         starlogs=starlogs,
         trackerobj=trackerobj,
@@ -291,7 +295,7 @@ async def fusionPostProcessing(
         my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
         mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
         prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
-    
+
     Returns:
         (pd.df): fusion dataframe
         (pd.df): filtered fusion dataframe
@@ -965,9 +969,10 @@ def cnProcessForAchilles(
         gene_mapping_df = gene_mapping.rename(columns={"ensembl_id": "entrezgene_id"})
 
     mergedsegments = mut.manageGapsInSegments(mergedsegments, cyto=cyto)
-    mergedgenecn = mut.toGeneMatrix(mergedsegments, gene_mapping_df,).apply(
-        lambda x: np.log2(1 + x)
-    )
+    mergedgenecn = mut.toGeneMatrix(
+        mergedsegments,
+        gene_mapping_df,
+    ).apply(lambda x: np.log2(1 + x))
     wesgenecn = mut.toGeneMatrix(
         mut.manageGapsInSegments(wespriosegs), gene_mapping_df
     ).apply(lambda x: np.log2(1 + x))
@@ -1070,7 +1075,7 @@ async def mutationPostProcessing(
         mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
         tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
         tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
-        prev (pd.df, optional): the previous release dataset (to do QC). 
+        prev (pd.df, optional): the previous release dataset (to do QC).
             Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
         minfreqtocall (float, optional): the minimum frequency to call a mutation. Defaults to 0.25.
     """
@@ -1183,7 +1188,8 @@ async def mutationPostProcessing(
 
     # genotyped mutations matrices
     mut.mafToMat(
-        priomutations[(priomutations.isDeleterious)], mode="genotype",
+        priomutations[(priomutations.isDeleterious)],
+        mode="genotype",
     ).T.to_csv(folder + "somatic_mutations_matrix_deleterious.csv")
     mut.mafToMat(
         priomutations[
@@ -1433,19 +1439,19 @@ async def mutationAnalyzeUnfiltered(
         workspace (str): workspace name. Default is WGSWORKSPACE.
         allsampleset (str, optional): sampleset name. Default is 'all'.
         folder (str, optional): folder name. Default is 'temp/'.
-        subsetcol (list, optional): list of columns to subset the maf file on. 
+        subsetcol (list, optional): list of columns to subset the maf file on.
             will also output the unfiltered version of themaf file.
-            Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id', 
-                        'Chromosome', 'Start_position', 'End_position', 
-                        'Variant_Classification', 'Variant_Type', 'Reference_Allele', 
-                        'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change', 
-                        'Annotation_Transcript', 'cDNA_Change', 'Codon_Change', 
-                        'HGVS_protein_change',  'Protein_Change', 't_alt_count', 
+            Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id',
+                        'Chromosome', 'Start_position', 'End_position',
+                        'Variant_Classification', 'Variant_Type', 'Reference_Allele',
+                        'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change',
+                        'Annotation_Transcript', 'cDNA_Change', 'Codon_Change',
+                        'HGVS_protein_change',  'Protein_Change', 't_alt_count',
                         't_ref_count', 'tumor_f', 'CGA_WES_AC'].
         taiga_dataset (str, optional): taiga dataset path. Default is TAIGA_MUTATION.
     """
     print("retrieving unfiltered")
-    ####### WES
+    # WES
     from taigapy import TaigaClient
 
     tc = TaigaClient()
@@ -1514,4 +1520,3 @@ async def mutationAnalyzeUnfiltered(
         add_all_existing_files=True,
         upload_async=False,
     )
-
