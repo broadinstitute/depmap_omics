@@ -12,7 +12,7 @@ import "fix_mutect2_clust.wdl" as fixClust
 workflow omics_mutect2 {
   input {
     String sample_id
-    String gatk_docker="broadinstitute/gatk:4.2.4.0"
+    String gatk_docker="broadinstitute/gatk-nightly:2022-03-10-4.2.5.0-13-g1c749b37f-NIGHTLY-SNAPSHOT"
     String gcs_project_for_requester_pays
     File ref_dict
     File ref_fai
