@@ -296,7 +296,9 @@ def pureCNpostprocess(
     failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
     # Generate gene-level LOH status matrix
-    segments["type"] = segments["type"].replace(["LOH", "COPY-NEUTRAL LOH"], 1)
+    segments["type"] = segments["type"].replace(
+        ["LOH", "COPY-NEUTRAL LOH", "WHOLE ARM COPY-NEUTRAL LOH"], 1
+    )
     segments["type"] = segments["type"].replace("", 0)
 
     loh_status = mut.toGeneMatrix(
