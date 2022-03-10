@@ -12,6 +12,7 @@ workflow omics_post_mutect2 {
   input {
     String sample_id
     File vcf
+    String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb"
   }
 
   call setGT.bcftools_fix_ploidy as set_GT {
@@ -30,7 +31,8 @@ workflow omics_post_mutect2 {
   call openCravat.opencravat as open_cravat {
       input:
         sample_id=sample_id,
-        vcf=fix_clust.vcf_fixed
+        vcf=fix_clust.vcf_fixed,
+        annotators_to_use=annotators
 
   }
 
