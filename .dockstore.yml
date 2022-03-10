@@ -181,3 +181,14 @@ workflows:
         - develop
         - master
         - finishing_mutation_pipeline
+  - name: omics_post_mutect2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/omics_post_mutect2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - develop
+        - master
+        - finishing_mutation_pipeline
