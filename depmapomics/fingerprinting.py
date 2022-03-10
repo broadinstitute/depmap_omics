@@ -302,9 +302,13 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
     myterra.updateReferences(wm, "sample_batch_pair", pair_df)
 
     unique_pairs = wm.get_entities("sample_batch_pair").index.tolist()
+    existing_pairs = wm.get_entities("sample_batch_pair_set").loc["all", :][0]
+    existing_pairs = [x["entityName"] for x in existing_pairs]
+    pairs_to_add = list(set(unique_pairs) - set(existing_pairs))
+
     sample_batch_pair_set_df = pd.DataFrame(
-        np.transpose(unique_pairs),
-        index=["all"] * len(unique_pairs),
+        np.transpose(pairs_to_add),
+        index=["all"] * len(pairs_to_add),
         columns=["sample_batch_pair"],
     )
     sample_batch_pair_set_df.index.name = "membership:sample_batch_pair_set_id"

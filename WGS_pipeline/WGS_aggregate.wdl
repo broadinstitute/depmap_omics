@@ -19,7 +19,7 @@ workflow WGS_aggregate {
   call aggregateMAFs_selectFields_copy.aggregateMAFs_selectFields as aggregateMAFs_selectFields {
     input:
       outputFN_prfx=name,
-      SelectFields="Hugo_Symbol,Entrez_Gene_Id,Center,NCBI_Build,Chromosome,Start_position,End_position,Strand,Variant_Classification,Variant_Type,Reference_Allele,Tumor_Seq_Allele1,Tumor_Seq_Allele2,dbSNP_RS,dbSNP_Val_Status,Genome_Change,Annotation_Transcript,Tumor_Sample_Barcode,cDNA_Change,Codon_Change,Protein_Change,t_alt_count,t_ref_count,tumor_f,isDeleterious,isTCGAhotspot,TCGAhsCnt,isCOSMIChotspot,COSMIChsCnt,i_ExAC_AF,PASS"
+      SelectFields="Hugo_Symbol,Entrez_Gene_Id,Center,NCBI_Build,Chromosome,Start_position,End_position,Strand,Variant_Classification,Variant_Type,Reference_Allele,Tumor_Seq_Allele1,Tumor_Seq_Allele2,dbSNP_RS,dbSNP_Val_Status,Genome_Change,Annotation_Transcript,Tumor_Sample_Barcode,cDNA_Change,Codon_Change,Protein_Change,t_alt_count,t_ref_count,tumor_f,isDeleterious,isTCGAhotspot,TCGAhsCnt,isCOSMIChotspot,COSMIChsCnt,i_ExAC_AF,PASS,dbNSFP_aapos_SIFT,dbNSFP_SIFT_converted_rankscore,dbNSFP_SIFT_pred,dbNSFP_SIFT_score,dbNSFP_Polyphen2_HVAR_pred,dbNSFP_Polyphen2_HDIV_score,dbNSFP_Polyphen2_HDIV_pred,dbNSFP_Polyphen2_HVAR_score,dbNSFP_Polyphen2_HVAR_rankscore,dbNSFP_Polyphen2_HDIV_rankscore"
 
   }
 
