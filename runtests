@@ -1,4 +1,8 @@
 #!/bin/bash
 set -ex
 
+# to run tests inside of docker container:
+#
+# docker build . -t depmap_omics ; and docker run -it -v $HOME/.client_secret.json:/root/.client_secret.json -v $HOME/.storage.json:/root/.storage.json -v $PWD:/work -w /work depmap_omics pytest tests/tracker_test.py
+
 pytest tests/tracker_test.py
