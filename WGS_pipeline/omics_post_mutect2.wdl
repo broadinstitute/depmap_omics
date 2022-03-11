@@ -19,13 +19,14 @@ workflow omics_post_mutect2 {
     input:
       sample_id=sample_id,
       vcf=vcf,
-      disk_space=20
+      disk_space=50
   }
 
   call fixClust.fix_mutect_clust as fix_clust {
       input:
         sample_id=sample_id,
-        vcf_file=set_GT.vcf_fixedploid
+        vcf_file=set_GT.vcf_fixedploid,
+        disk_space=50
   }
 
   call openCravat.opencravat as open_cravat {
