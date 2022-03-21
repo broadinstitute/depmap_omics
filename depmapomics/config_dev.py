@@ -425,12 +425,13 @@ PURECN_COLRENAMING = {
     "type": "LOH_status",
 }
 
-PURECN_TERRACOLS = {
+SIGTABLE_TERRACOLS = {
     "PureCN_ploidy",
     "PureCN_wgd",
     "PureCN_loh_fraction",
     "PureCN_curated",
     "PureCN_curated_solution",
+    "msisensor2_score"
 }
 
 SOURCE_RENAME = {

@@ -238,7 +238,7 @@ def pureCNpostprocess(
     colname="PureCN_loh_merged",
     sampleset="all",
     colRenaming=PURECN_COLRENAMING,
-    terracols=PURECN_TERRACOLS,
+    terracols=SIGTABLE_TERRACOLS,
     save_output="",
     mappingdf=None,
     genechangethresh=0.025,
