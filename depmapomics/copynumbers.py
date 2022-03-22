@@ -244,7 +244,8 @@ def pureCNpostprocess(
     genechangethresh=0.025,
     segmentsthresh=2000,
 ):
-    """fetching PureCN data from Terra, generate one matrix for absolute copy number and one matrix for LOH
+    """fetching PureCN data from Terra, generate one matrix for absolute copy number, one matrix for LOH,
+    and one cell line signature table
 
     Args:
         refworkspace (str): workspace path
