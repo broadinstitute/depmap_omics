@@ -5,7 +5,7 @@ task run_PureCN {
   File segFile
   File vcf
   File intervals
-  File call_wgd_script
+  File call_wgd_and_cin_script
 
   # Method configuration inputs
   String genome
@@ -36,7 +36,7 @@ task run_PureCN {
       ${"--max-segments " + maxSegments} \
       ${otherArguments}
     Rscript -e "write.table(read.csv('${sampleID}.csv'),'table.txt',sep='\n',row.names=F,col.names=F,quote=F)"
-    Rscript ${call_wgd_script} "${sampleID}_loh.csv" "${sampleID}.csv"
+    Rscript ${call_wgd_and_cin_script} "${sampleID}_loh.csv" "${sampleID}.csv"
   }
 
   output {
@@ -61,6 +61,10 @@ task run_PureCN {
     Array[String] wgd_table = read_lines("out.txt")
     String wgd = wgd_table[0]
     String loh_fraction = wgd_table[1]
+    String cin = wgd_table[2]
+    String cin_allele_specific = wgd_table[3]
+    String cin_ploidy_robust = wgd_table[4]
+    String cin_allele_specific_ploidy_robust = wgd_table[5]
   }
 
   runtime {
@@ -100,5 +104,9 @@ workflow PureCN {
     String comment = run_PureCN.comment
     String wgd = run_PureCN.wgd
     String loh_fraction = run_PureCN.loh_fraction
+    String cin = run_PureCN.cin
+    String cin_allele_specific = run_PureCN.cin_allele_specific
+    String cin_ploidy_robust = run_PureCN.cin_ploidy_robust
+    String cin_allele_specific_ploidy_robust = run_PureCN.cin_allele_specific_ploidy_robust
     }
 }

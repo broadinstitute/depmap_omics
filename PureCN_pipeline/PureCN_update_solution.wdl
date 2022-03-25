@@ -3,7 +3,7 @@ task run_update_solution {
   # File-related inputs
   File purecn_rds
   File update_solution_script
-  File call_wgd_script
+  File call_wgd_and_cin_script
 
   # Method configuration inputs
   Int solution_num
@@ -17,7 +17,7 @@ task run_update_solution {
   command {
   	Rscript ${update_solution_script} ${purecn_rds} /cromwell_root/"${sampleID}" ${solution_num}
     Rscript -e "write.table(read.csv('${sampleID}.csv'),'table.txt',sep='\n',row.names=F,col.names=F,quote=F)"
-    Rscript ${call_wgd_script} "${sampleID}_loh.csv" "${sampleID}.csv"
+    Rscript ${call_wgd_and_cin_script} "${sampleID}_loh.csv" "${sampleID}.csv"
   }
 
   output {
@@ -35,6 +35,10 @@ task run_update_solution {
     Array[String] wgd_table = read_lines("out.txt")
     String wgd = wgd_table[0]
     String loh_fraction = wgd_table[1]
+    String cin = wgd_table[2]
+    String cin_allele_specific = wgd_table[3]
+    String cin_ploidy_robust = wgd_table[4]
+    String cin_allele_specific_ploidy_robust = wgd_table[5]
   }
 
   runtime {
@@ -67,5 +71,9 @@ workflow update_solution {
     String comment = run_update_solution.comment
     String wgd = run_update_solution.wgd
     String loh_fraction = run_update_solution.loh_fraction
+    String cin = run_update_solution.cin
+    String cin_allele_specific = run_update_solution.cin_allele_specific
+    String cin_ploidy_robust = run_update_solution.cin_ploidy_robust
+    String cin_allele_specific_ploidy_robust = run_update_solution.cin_allele_specific_ploidy_robust
     }
 }
