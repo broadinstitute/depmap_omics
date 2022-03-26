@@ -21,7 +21,7 @@ workflow omics_mutect2 {
     File tumor_reads
     File tumor_reads_index
 
-    File? bait_intervals
+    File? intervals
 
     Int M2scatter=10
 
@@ -42,7 +42,7 @@ workflow omics_mutect2 {
       scatter_count=M2scatter,
       tumor_reads=tumor_reads,
       tumor_reads_index=tumor_reads_index,
-      intervals=bait_intervals,
+      intervals=intervals,
       gcs_project_for_requester_pays=gcs_project_for_requester_pays,
       compress_vcfs=true,
       filter_funcotations=false,
