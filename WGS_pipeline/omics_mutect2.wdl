@@ -64,7 +64,6 @@ workflow omics_mutect2 {
     input:
       sample_id=sample_id,
       vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
-      disk_space=20
   }
 
   call fixClust.fix_mutect_clust as fix_clust {
@@ -84,7 +83,6 @@ workflow omics_mutect2 {
     input:
       sample_id=sample_id,
       vcf_file=open_cravat.oc_main_files,
-      disk_space=20
   }
 
   # to test
