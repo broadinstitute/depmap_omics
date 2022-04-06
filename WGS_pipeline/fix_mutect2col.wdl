@@ -23,7 +23,7 @@ task fix_column {
         File vcf_file
         String sample_id
 
-        Int memory = 4
+        Int memory = 6
         Int boot_disk_size = 10
         Int num_threads = 1
         Int num_preempt = 5

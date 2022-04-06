@@ -20,11 +20,11 @@ task bcftools_fix_ploidy {
         File vcf
         String sample_id
     
-        Int memory = 2
+        Int memory = 4
         Int boot_disk_size = 10
         Int num_threads = 1
         Int num_preempt = 5
-        Int disk_space = 10
+        Int disk_space = 40
         String docker = "dceoy/bcftools"
     }
 
