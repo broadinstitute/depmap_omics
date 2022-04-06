@@ -34,7 +34,6 @@ workflow omics_post_mutect2 {
         sample_id=sample_id,
         vcf=fix_clust.vcf_fixed,
         annotators_to_use=annotators
-
   }
 
   call fixCol.fix_column as fix_col {
