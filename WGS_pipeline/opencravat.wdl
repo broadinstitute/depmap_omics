@@ -34,18 +34,18 @@ task opencravat {
     input {
         String sample_id
         File vcf
-        String format = "vcf"
-        String annotators_to_use = ""
-        Int stripfolder = 0 
-        String genome = "hg38"
-        String modules_options = "vcfreporter.type=separate"
+        String? format = "vcf"
+        String? annotators_to_use = ""
+        Int? stripfolder = 0 
+        String? genome = "hg38"
+        String? modules_options = "vcfreporter.type=separate"
         
-        Int memory = 16
-        Int boot_disk_size = 20
-        Int disk_space=20
-        Int num_threads = 1
-        Int num_preempt = 5
-        String docker = "karchinlab/opencravat"
+        Int? memory = 16
+        Int? boot_disk_size = 20
+        Int? disk_space=20
+        Int? num_threads = 1
+        Int? num_preempt = 5
+        String? docker = "karchinlab/opencravat"
     }
     
     command {
@@ -53,6 +53,7 @@ task opencravat {
         
       # regular version
       # ---------------
+      pip install open-cravat --upgrade
       oc module install-base
       oc module install -y ${annotators_to_use} vcfreporter hg19
       
@@ -68,15 +69,32 @@ task opencravat {
       # tar -tvf modules.tar --strip-components=[stripfolder]
       # oc config md ./modules
       oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads} --module-option ${modules_options} -d out -a ${annotators_to_use}
-
-      gzip out/${basename(vcf)}.${format}
+      
+      pip install bgzip
+      
+      echo """
+import re
+import sys
+import bgzip
+print(sys.argv)
+with open(sys.argv[1],'r+') as f:
+    with open(sys.argv[2]+'_fixedcolumn.vcf.gz','wb') as raw2:
+        with bgzip.BGZipWriter(raw2) as fout:
+            for i, line in enumerate(f):
+                original_string = line.decode('utf-8')
+                if original_string[0] == '#':
+                    if original_string.startswith('##INFO=<ID=OC_provean__prediction'):
+                        original_string = original_string.replace('\"D(amaging)\"', 'D(amaging)').replace('\"N(eutral)\"', 'N(eutral)')
+                    fout.write(original_string.encode())
+""" > fix_columns.py
+      python fix_columns.py out/${basename(vcf)}.${format} out/${basename(vcf)}.${format}.gz
     }
 
     output {
         File oc_error_files="out/${basename(vcf)}.err"
         File oc_log_files="out/${basename(vcf)}.log"
         File oc_sql_files="out/${basename(vcf)}.sqlite"
-        File oc_main_files="out/${basename(vcf)}.${format}.gz"
+        File oc_main_files="${basename(vcf)}.${format}.gz"
     }
 
     runtime {
