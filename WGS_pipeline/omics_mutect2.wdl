@@ -74,29 +74,28 @@ workflow omics_mutect2 {
         vcf_file=set_GT.vcf_fixedploid
   }
 
-  call openCravat.opencravat as open_cravat {
-      input:
-        sample_id=sample_id,
-        vcf=fix_clust.vcf_fixed
-
-  }
-
   call fixCol.fix_column as fix_col {
     input:
       sample_id=sample_id,
-      vcf_file=open_cravat.oc_main_files,
+      vcf_file=fix_clust.vcf_fixed,
+  }
+
+  call openCravat.opencravat as open_cravat {
+      input:
+        sample_id=sample_id,
+        vcf=fix_col.vcf_fixedcol
   }
 
   # to test
   # call filtmaf.filter_to_maf as filter_to_maf {
   #   input:
   #     sample_id=sample_id,
-  #     vcf=fix_col.vcf_fixedcol,
+  #     vcf=open_cravat.oc_main_files,
   #     disk_space=20
   # }
 
   output {
-    File out_vcf=fix_col.vcf_fixedcol
+    File out_vcf=open_cravat.oc_main_files
     File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
     File oc_error_files=open_cravat.oc_error_files
     File oc_log_files=open_cravat.oc_log_files
