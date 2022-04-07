@@ -4,9 +4,8 @@ version 1.0
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
 import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
-import "fix_mutect2col.wdl" as fixCol
+import "fix_mutect2.wdl" as fixmutect2
 import "opencravat.wdl" as openCravat
-import "fix_mutect2_clust.wdl" as fixClust
 # import "filter_to_maf.wdl" as filtmaf
 
 workflow omics_mutect2 {
@@ -68,22 +67,16 @@ workflow omics_mutect2 {
       vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
   }
 
-  call fixClust.fix_mutect_clust as fix_clust {
+  call fixmutect2.fix_mutect2 as fix_mutect2 {
       input:
         sample_id=sample_id,
         vcf_file=set_GT.vcf_fixedploid
   }
 
-  call fixCol.fix_column as fix_col {
-    input:
-      sample_id=sample_id,
-      vcf_file=fix_clust.vcf_fixed,
-  }
-
   call openCravat.opencravat as open_cravat {
       input:
         sample_id=sample_id,
-        vcf=fix_col.vcf_fixedcol
+        vcf=fix_mutect2.vcf_fixedcol
   }
 
   # to test
