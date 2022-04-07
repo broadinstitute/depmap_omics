@@ -28,34 +28,14 @@ task fix_mutect2 {
         Int num_threads = 1
         Int num_preempt = 5
         Int disk_space = 50
+        Int size_tocheck = 100
         String docker = "python"
     }
 
     command {
-    echo """
-import re
-import sys
-import gzip
-print(sys.argv)
-with gzip.open(sys.argv[1],'r+') as f:
-    with gzip.open(sys.argv[2]+'_fixed.vcf.gz','wb') as fout:
-        for i, line in enumerate(f):
-            original_string = line.decode('utf-8')
-            if original_string[0] == '#':
-                fout.write(original_string.encode())
-            else:
-                new_string = re.sub(r'AS_FilterStatus=(.*?);', 
-                    lambda x:'AS_FilterStatus=' + x.group(1).replace('|', '~').replace(',', '|').replace('~', ',') + ';', 
-                    original_string)
-                to_print = new_string.split('\t')
-                to_print[7] = to_print[7].replace(' ','')
-                
-                #write the fixed string tab-separated to output file 
-                to_print = '\t'.join(to_print)
-                fout.write(to_print.encode())
-    """ > script.py
+        git clone https://github.com/broadinstitute/depmap_omics.git
 
-    python script.py ${vcf_file} ${sample_id}
+        python depmap_omics/WGS_pipeline/fix_mutect2.py ${vcf_file} ${sample_id} ${size_tocheck}
     }
 
     output {
