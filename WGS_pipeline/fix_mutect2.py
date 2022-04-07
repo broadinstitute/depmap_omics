@@ -8,13 +8,13 @@ print(sys.argv)
 line_buff = collections.deque([])
 line_pos = collections.deque([])
 check_index = 0
-size_tocheck = sys.argv[3]
+size_tocheck = int(sys.argv[3])
 
 with gzip.open(sys.argv[1], "r+") as f:
-    with gzip.open(sys.argv[2] + "_fixed.vcf.gz", "wb") as fout:
+    with gzip.open(sys.argv[2], "wb") as fout:
         for i, line in enumerate(f):
             # print progress
-            if i % 10000 == 0:
+            if i % 100_000 == 0:
                 print("Processed " + str(i) + " variants")
             original_string = line.decode("utf-8")
             # process header
@@ -44,10 +44,9 @@ with gzip.open(sys.argv[1], "r+") as f:
                     ]:
                         n_somatic = 0
                         for neighbor in line_buff:
-                            if (
-                                "germline" not in neighbor[6]
-                                and abs(int(neighbor[1]) - line_pos[check_index]) <= 50
-                            ):
+                            if "germline" not in neighbor[6] and abs(
+                                int(neighbor[1]) - line_pos[check_index]
+                            ) <= int(size_tocheck / 2):
                                 n_somatic += 1
                         if n_somatic <= 2:
                             line_buff[check_index][6] = "PASS"
@@ -59,6 +58,8 @@ with gzip.open(sys.argv[1], "r+") as f:
                     to_print = "\t".join(line_to_write)
                     fout.write(to_print.encode())
 
+                    # roll back the queue
+                    check_index -= 1
                     line_pos.popleft()
         # Write the final lines
         for line_to_write in line_buff:
