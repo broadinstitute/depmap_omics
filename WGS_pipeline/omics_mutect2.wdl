@@ -76,7 +76,7 @@ workflow omics_mutect2 {
   call openCravat.opencravat as open_cravat {
       input:
         sample_id=sample_id,
-        vcf=fix_mutect2.vcf_fixedcol
+        vcf=fix_mutect2.vcf_fixed
   }
 
   # to test

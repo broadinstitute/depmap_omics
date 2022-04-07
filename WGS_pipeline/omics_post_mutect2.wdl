@@ -41,7 +41,7 @@ workflow omics_post_mutect2 {
   # }
 
   output {
-    File out_vcf=fix_col.vcf_fixedcol
+    File out_vcf=open_cravat.oc_main_files
     File oc_error_files=open_cravat.oc_error_files
     File oc_log_files=open_cravat.oc_log_files
     File oc_sql_files=open_cravat.oc_sql_files
