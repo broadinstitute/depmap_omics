@@ -102,7 +102,7 @@ with open(sys.argv[1],'rb') as f:
         File oc_error_files="out/${basename(vcf)}.err"
         File oc_log_files="out/${basename(vcf)}.log"
         File oc_sql_files="out/${basename(vcf)}.sqlite"
-        File oc_main_files="${basename(vcf)}.${format}.gz"
+        File oc_main_files="out/${basename(vcf)}.${format}.gz"
     }
 
     runtime {
