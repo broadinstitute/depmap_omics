@@ -11,7 +11,7 @@ import "opencravat.wdl" as openCravat
 workflow omics_mutect2 {
   input {
     String sample_id
-    String gatk_docker="broadinstitute/gatk-nightly:2022-03-10-4.2.5.0-13-g1c749b37f-NIGHTLY-SNAPSHOT"
+    String gatk_docker="broadinstitute/gatk:4.2.6.0"
     String gcs_project_for_requester_pays
     File ref_dict
     File ref_fai
@@ -27,8 +27,7 @@ workflow omics_mutect2 {
     File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
     File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
     String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
-    String m2_filter_args="--unique-alt-read-count 2"
-
+    String? m2_filter_args
     File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
     File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
   }
