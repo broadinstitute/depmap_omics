@@ -341,6 +341,7 @@ async def _CCLEPostProcessing(
     ).reset_index(drop=True)
     # normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
     # mutations = mutations[~mutations[SAMPLEID].isin(normals)]
+    priomutations = priomutations.drop_duplicates()
     priomutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
     # making binary mutation matrices

@@ -22,6 +22,10 @@ def getTracker():
     )
 
 
+def updateTracker(tracker):
+    return dfToSheet(tracker, SHEETNAME, secret=SHEETCREDS)
+
+
 def _getDEPMAPPV(pv_index="arxspan_id", pv_tokeep=[], index="DepMap_ID"):
     """get the DEPMAP master spreadsheet from google sheet
 
@@ -750,7 +754,7 @@ def update(
         res, _ = terra.changeGSlocation(
             refworkspace,
             newgs=newgs,
-            onlycol=bamfilepaths,
+            bamfilepaths=bamfilepaths,
             entity="sample",
             keeppath=False,
             dry_run=dry_run,
