@@ -4,15 +4,14 @@ version 1.0
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
 import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
-import "fix_mutect2col.wdl" as fixCol
+import "fix_mutect2.wdl" as fixmutect2
 import "opencravat.wdl" as openCravat
-import "fix_mutect2_clust.wdl" as fixClust
 # import "filter_to_maf.wdl" as filtmaf
 
 workflow omics_mutect2 {
   input {
     String sample_id
-    String gatk_docker="broadinstitute/gatk-nightly:2022-03-10-4.2.5.0-13-g1c749b37f-NIGHTLY-SNAPSHOT"
+    String gatk_docker="broadinstitute/gatk:4.2.6.0"
     String gcs_project_for_requester_pays
     File ref_dict
     File ref_fai
@@ -28,8 +27,7 @@ workflow omics_mutect2 {
     File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
     File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
     String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
-    String m2_filter_args="--unique-alt-read-count 2"
-
+    String? m2_filter_args
     File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
     File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
   }
@@ -68,23 +66,17 @@ workflow omics_mutect2 {
       vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
   }
 
-  call fixClust.fix_mutect_clust as fix_clust {
+  call fixmutect2.fix_mutect2 as fix_mutect2 {
       input:
         sample_id=sample_id,
         vcf_file=set_GT.vcf_fixedploid
   }
 
-  call fixCol.fix_column as fix_col {
-    input:
-      sample_id=sample_id,
-      vcf_file=fix_clust.vcf_fixed,
-  }
-
-  call openCravat.opencravat as open_cravat {
-      input:
-        sample_id=sample_id,
-        vcf=fix_col.vcf_fixedcol
-  }
+  #call openCravat.opencravat as open_cravat {
+  #    input:
+  #      sample_id=sample_id,
+  #      vcf=fix_mutect2.vcf_fixed
+  #}
 
   # to test
   # call filtmaf.filter_to_maf as filter_to_maf {
@@ -95,11 +87,11 @@ workflow omics_mutect2 {
   # }
 
   output {
-    File out_vcf=open_cravat.oc_main_files
-    File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
-    File oc_error_files=open_cravat.oc_error_files
-    File oc_log_files=open_cravat.oc_log_files
-    File oc_sql_files=open_cravat.oc_sql_files
+    File out_vcf=fix_mutect2.vcf_fixed
+    #File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
+    #File oc_error_files=open_cravat.oc_error_files
+    #File oc_log_files=open_cravat.oc_log_files
+    #File oc_sql_files=open_cravat.oc_sql_files
     #File somatic_maf=filter_to_maf.out_maf
   }
 }
