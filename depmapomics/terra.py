@@ -164,7 +164,6 @@ def copyToWorkspace(
     columns=[
         "arxspan_id",
         "version",
-        "sm_id",
         "datatype",
         "size",
         "stripped_cell_line_name",
@@ -182,9 +181,7 @@ def copyToWorkspace(
         "subtype",
         "subsubtype",
         "lineage",
-        "mediatype",
         "condition",
-        "sequencing_type",
         "baits",
         "source",
         "legacy_bam_filepath",

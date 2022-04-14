@@ -32,12 +32,24 @@ VIRTUAL_RELEASES = {
         "dmc": taiga_latest_path("dmc-21q4-5725"),
         "public": taiga_latest_path("public-21q4-a0d6"),
     },
+    "22Q1": {
+        "internal": taiga_latest_path("internal-22q1-1778"),
+        "ibm": taiga_latest_path("ibm-22q1-cce1"),
+        "dmc": taiga_latest_path("dmc-22q1-d00a"),
+        "public": taiga_latest_path("public-22q1-305b"),
+    },
+    "22Q2": {
+        "internal": taiga_latest_path("internal-22q2-097a"),
+        "ibm": taiga_latest_path("ibm-22q2-a71e"),
+        "dmc": taiga_latest_path("dmc-22q2-5e51"),
+        "public": taiga_latest_path("public-22q2-de04"),
+    },
 }  # release ids on taiga
 
-# PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
+PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
 PORTAL = "dmc"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "21Q3"
-NEW_QUARTER = "21Q4"
+PREV_QUARTER = "22Q1"
+NEW_QUARTER = "22Q2"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
@@ -45,7 +57,7 @@ NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
 PORTALS = [PORTAL]
 
 
-LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011"}
+LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011", "ACH-001092"}
 LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON
 LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
@@ -103,7 +115,7 @@ FILES_RELEASED_BEFORE = [
 ]
 
 # correlation thresholds above which we consider two releases as 'similar'
-CORRELATION_THRESHOLDS = {"CCLE_gene_cn": 0.99, "all_expressions": 0.99999}
+CORRELATION_THRESHOLDS = {"CCLE_gene_cn": 0.99, "all_expressions": 0.98}
 
 SKIP_ARXSPAN_COMPARISON = (
     True  # set to False if you want to test whether some arxspans were added/removed
@@ -229,8 +241,14 @@ FILE_ATTRIBUTES = [
 # FILE_ATTRIBUTES = [
 #     x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
 # ]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['omicssource'] in ['RNA']) and x['ismatrix']]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_fusions', 'CCLE_fusions_unfiltered'])]
+# FILE_ATTRIBUTES = [
+#     x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
+# ]
+# FILE_ATTRIBUTES = [
+#     x
+#     for x in FILE_ATTRIBUTES
+#     if (x["file"] in ["CCLE_fusions", "CCLE_fusions_unfiltered"])
+# ]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = "mutations-latest-ed72"

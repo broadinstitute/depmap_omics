@@ -293,8 +293,8 @@ async def _CCLEPostProcessing(
         version="version",
     )
 
-    wesrenaming = h.fileToDict(folder + "sample_renaming.json")
     wesrenaming.update(tokeep_wes)
+    wesrenaming = h.fileToDict(folder + "sample_renaming.json")
 
     wesmutations = wesmutations[
         wesmutations[SAMPLEID].isin(wesrenaming.keys())
@@ -324,8 +324,8 @@ async def _CCLEPostProcessing(
         version="version",
     )
 
-    wgsrenaming = h.fileToDict(folder + "sample_renaming.json")
     wgsrenaming.update(tokeep_wgs)
+    wgsrenaming = h.fileToDict(folder + "sample_renaming.json")
 
     wgsmutations = wgsmutations[
         wgsmutations[SAMPLEID].isin(wgsrenaming.keys())

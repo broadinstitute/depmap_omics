@@ -209,7 +209,8 @@ def postProcess(
         fusions, sampleCol=sampleCol, countCol=countCol, **kwargs
     )
     if doplot:
-        sns.kdeplot(fusions[countCol])
+        print("Plotting filtered fusions:")
+        sns.kdeplot(fusions_filtered[countCol])
     fusions_filtered.to_csv(
         os.path.join(save_output, "filteredfusions_latest.csv"), index=False
     )

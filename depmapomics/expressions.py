@@ -231,7 +231,7 @@ def loadFromRSEMaggregate(
 
 
 def subsetGenes(
-    files, gene_rename, filenames=RSEM_TRANSCRIPTS, drop=[], index="transcript_id"
+    files, gene_rename, filenames=RSEM_TRANSCRIPTS, drop=[], index_id="transcript_id"
 ):
     """
     Subset the rsem transcripts file to keep only the genes of interest
@@ -246,11 +246,11 @@ def subsetGenes(
     Returns:
         dict(str: pd.df): the subsetted dfs
     """
-    print("subsetting " + index + " columns")
+    print("subsetting " + index_id + " columns")
     rename_transcript = {}
     missing = []
     for val in filenames:
-        if len(rename_transcript) == 0 and index == "transcript_id":
+        if len(rename_transcript) == 0 and index_id == "transcript_id":
             for _, v in files[val].iterrows():
                 if v["gene_id"].split(".")[0] in gene_rename:
                     rename_transcript[v["transcript_id"].split(".")[0]] = (
@@ -262,13 +262,26 @@ def subsetGenes(
                 else:
                     missing.append(v.gene_id.split(".")[0])
             print("missing: " + str(len(missing)) + " genes")
-        file = files[val].drop(columns=drop).set_index(index)
+        file = files[val].drop(columns=drop).set_index(index_id)
         file = file[(file.sum(1) != 0) & (file.var(1) != 0)]
+        r = [i.split(".")[0] for i in file.index]
+        dup = h.dups(r)
+        par_y_drop = []
+        for d in dup:
+            idx = file[
+                (file.index.str.startswith(d)) & (~file.index.str.endswith("_PAR_Y"))
+            ].index[0]
+            idx_par_y = file[
+                (file.index.str.startswith(d)) & (file.index.str.endswith("_PAR_Y"))
+            ].index[0]
+            file.loc[idx] = file.loc[[idx, idx_par_y], :].sum(numeric_only=True)
+            par_y_drop.append(idx_par_y)
+        file = file.drop(index=par_y_drop)
         r = [i.split(".")[0] for i in file.index]
         dup = h.dups(r)
         if len(dup) > 0:
             print(dup)
-            raise ValueError("duplicate " + index)
+            raise ValueError("duplicate " + index_id)
         file.index = r
         file = file.rename(
             index=rename_transcript if len(rename_transcript) != 0 else gene_rename
@@ -306,6 +319,26 @@ def extractProtCod(
         name = val.replace(rep[0], rep[1])
         files[name] = files[val].drop(columns="transcript_id").set_index("gene_id")
         files[name] = files[name][(files[name].sum(1) != 0) & (files[name].var(1) != 0)]
+        r = [i.split(".")[0] for i in files[name].index]
+        dup = h.dups(r)
+        # STAR, RSEM and GENCODE were updated in 22Q2, indroducing dup gene ids ending with "_PAR_Y"
+        # here we sum these entries with their corresponding _PAR_Y entries
+        par_y_drop = []
+        for d in dup:
+            idx = files[name][
+                (files[name].index.str.startswith(d))
+                & (~files[name].index.str.endswith("_PAR_Y"))
+            ].index[0]
+            idx_par_y = files[name][
+                (files[name].index.str.startswith(d))
+                & (files[name].index.str.endswith("_PAR_Y"))
+            ].index[0]
+            files[name].loc[idx] = (
+                files[name].loc[[idx, idx_par_y], :].sum(numeric_only=True)
+            )
+            par_y_drop.append(idx_par_y)
+        files[name] = files[name].drop(index=par_y_drop)
+
         r = [i.split(".")[0] for i in files[name].index]
         dup = h.dups(r)
         if len(dup) > 0:
@@ -524,7 +557,7 @@ async def postProcess(
             files,
             gene_rename,
             filenames=geneLevelCols,
-            index="gene_id",
+            index_id="gene_id",
             drop="transcript_id",
         )
         # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
@@ -534,7 +567,7 @@ async def postProcess(
             gene_rename,
             filenames=trancriptLevelCols,
             drop="gene_id",
-            index="transcript_id",
+            index_id="transcript_id",
         )
 
     if compute_enrichment:
