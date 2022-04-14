@@ -790,3 +790,73 @@ def update(
     print("updated the sheet, please reactivate protections")
     return None
 
+
+
+async def _shareCCLEbams(samples, users=[], groups=[], raise_error=True, arg_max_length=100000, bamcols=["internal_bam_filepath", "internal_bai_filepath"],
+                        refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
+                  privacy_sheeturl="https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4", unshare=False):
+  """
+  same as shareTerraBams but is completed to work with CCLE bams from the CCLE sample tracker
+
+  You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up
+
+  Args:
+  ----
+    users: list[str] of users' google accounts
+    groups: list[str] of groups' google accounts
+    samples list[str] of samples cds_ids for which you want to share data
+    bamcols: list[str] list of column names where bams/bais are
+    raise_error: whether or not to raise an error if we find blacklisted lines
+    refsheet_url: the google spreadsheet where the samples are stored
+    privacy_sheeturl: the google spreadsheet where the samples are stored
+
+  Returns:
+  --------
+    a list of the gs path we have been giving access to
+  """
+  sheets = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
+  print("You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up")
+  privacy = sheets.get(privacy_sheeturl).sheets[6].to_frame()
+  refdata = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+  blacklist = [i for i in privacy['blacklist'].values.tolist() if i is not np.nan]
+  blacklisted = set(blacklist) & set(samples)
+  print("we have " + str(len(blacklist)) + ' blacklisted files')
+  if len(blacklisted):
+    print("these lines are blacklisted " + str(blacklisted))
+    if raise_error:
+      raise ValueError("blacklistedlines")
+  if type(users) is str:
+    users = [users]
+
+  togiveaccess = np.ravel(refdata[bamcols].loc[samples].values)
+  usrs = ""
+  for group in groups:
+    usrs += (" -d " if unshare else ' -g') + group + (":R" if not unshare else "")
+  for user in users:
+    usrs += (" -d " if unshare else " -u ") + user + (":R" if not unshare else "")
+  cmd_prefix = "gsutil -m acl ch" + usrs
+  cmd = cmd_prefix
+  for n, filename in enumerate(togiveaccess):
+    if type(filename) is str and filename:
+      oldcmd = cmd
+      cmd += ' ' + filename
+      if (len(cmd) > arg_max_length) | (n==len(togiveaccess)-1):
+        if n < len(togiveaccess)-1:
+          cmd = oldcmd
+        if unshare:
+          print('preventing access to {:d} files'.format(n+1))
+        else:
+          print('granting access to {:d} files'.format(n+1))
+        with open('/tmp/grantaccess{:d}.sh'.format(n), 'w') as f:
+          f.write(cmd)
+        code = os.system(cmd)
+        cmd = cmd_prefix + ' ' + filename
+        if code == signal.SIGINT:
+          print('Awakened')
+          return
+
+  print('the files are stored here:\n\n' + refsheet_url)
+  print('\n\njust install and use gsutil to copy them')
+  print('https://cloud.google.com/storage/docs/gsutil_install')
+  print('https://cloud.google.com/storage/docs/gsutil/commands/cp')
+  return togiveaccess

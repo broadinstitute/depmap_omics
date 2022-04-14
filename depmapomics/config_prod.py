@@ -219,9 +219,9 @@ EXTRACT_DEFAULTS = {
 
 # minimum bam file size in bytes for each sequencing type
 MINSIZES = {
-    "rna": 2000000000,
-    "wes": 3000000000,
-    "wgs": 50000000000,
+    "rna": 2_000_000_000,
+    "wes": 3_000_000_000,
+    "wgs": 50_000_000_000,
 }
 
 # known cell lines that are from the same patient (not called?)
