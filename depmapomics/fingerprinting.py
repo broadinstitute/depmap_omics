@@ -302,9 +302,13 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
     myterra.updateReferences(wm, "sample_batch_pair", pair_df)
 
     unique_pairs = wm.get_entities("sample_batch_pair").index.tolist()
+    existing_pairs = wm.get_entities("sample_batch_pair_set").loc["all", :][0]
+    existing_pairs = [x["entityName"] for x in existing_pairs]
+    pairs_to_add = list(set(unique_pairs) - set(existing_pairs))
+
     sample_batch_pair_set_df = pd.DataFrame(
-        np.transpose(unique_pairs),
-        index=["all"] * len(unique_pairs),
+        np.transpose(pairs_to_add),
+        index=["all"] * len(pairs_to_add),
         columns=["sample_batch_pair"],
     )
     sample_batch_pair_set_df.index.name = "membership:sample_batch_pair_set_id"
@@ -367,43 +371,43 @@ async def fingerPrint(
     print("adding " + str(len(bams)) + " new samples to the fingerprinting workspace")
     wm = dm.WorkspaceManager(workspace).disable_hound()
 
-    # # Upload sample sheet
-    # samples_df = pd.DataFrame(
-    #     bams[bamcolname + [sid, sid]].values,
-    #     columns=["bam_filepath", "bai_filepath", "sample_id", "participant_id"],
-    # )
-    # samples_df = samples_df.set_index("sample_id")
-    # wm.upload_samples(samples_df, add_participant_samples=True)
-    # wm.update_sample_set(sampleset, samples_df.index)
-    # add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
+    # Upload sample sheet
+    samples_df = pd.DataFrame(
+        bams[bamcolname + [sid, sid]].values,
+        columns=["bam_filepath", "bai_filepath", "sample_id", "participant_id"],
+    )
+    samples_df = samples_df.set_index("sample_id")
+    wm.upload_samples(samples_df, add_participant_samples=True)
+    wm.update_sample_set(sampleset, samples_df.index)
+    add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
-    # # Submit fingerprinting jobs, generate vcf files for all lines
-    # submission_id = wm.create_submission(
-    #     "fingerprint_bam_with_liftover",
-    #     sampleset,
-    #     "sample_set",
-    #     expression="this.samples",
-    # )
-    # await terra.waitForSubmission(workspace, submission_id)
+    # Submit fingerprinting jobs, generate vcf files for all lines
+    submission_id = wm.create_submission(
+        "fingerprint_bam_with_liftover",
+        sampleset,
+        "sample_set",
+        expression="this.samples",
+    )
+    await terra.waitForSubmission(workspace, submission_id)
 
-    # # 1.2  Crosscheck Fingerprint VCFs
-    # # Here we use Dalmation to run the crosscheck_vcfs workflow on Terra.
-    # # This workflow calls Picard CrosscheckFingerprints to compare vcfs between every
-    # # sample_batch_pair in the sample_batch_pair_set
+    # 1.2  Crosscheck Fingerprint VCFs
+    # Here we use Dalmation to run the crosscheck_vcfs workflow on Terra.
+    # This workflow calls Picard CrosscheckFingerprints to compare vcfs between every
+    # sample_batch_pair in the sample_batch_pair_set
 
-    # # Submit crosscheck jobs
-    # conf = wm.get_config("crosscheck_vcfs")
-    # wm.update_config(conf)
-    # submission_id = wm.create_submission(
-    #     "crosscheck_vcfs",
-    #     allbatchpairset,
-    #     "sample_batch_pair_set",
-    #     expression="this.sample_batch_pairs",
-    # )
-    # await terra.waitForSubmission(workspace, submission_id)
+    # Submit crosscheck jobs
+    conf = wm.get_config("crosscheck_vcfs")
+    wm.update_config(conf)
+    submission_id = wm.create_submission(
+        "crosscheck_vcfs",
+        allbatchpairset,
+        "sample_batch_pair_set",
+        expression="this.sample_batch_pairs",
+    )
+    await terra.waitForSubmission(workspace, submission_id)
 
-    # # save config after jobs finish running
-    # terra.saveWorkspace(workspace, "data/" + sampleset + "/FPconfig/")
+    # save config after jobs finish running
+    terra.saveWorkspace(workspace, "data/" + sampleset + "/FPconfig/")
 
     # Update LOD matrix
     new_ids, updated_lod_mat = updateLOD(
