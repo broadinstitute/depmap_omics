@@ -8,6 +8,7 @@ from genepy import terra
 from genepy.google import gcp
 from genepy.google.google_sheet import dfToSheet
 import dalmatian as dm
+import signal
 
 
 def getTracker():
@@ -801,6 +802,7 @@ async def _shareCCLEbams(
     refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
     privacy_sheeturl="https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4",
     unshare=False,
+    requesterpays_project="",
 ):
     """
   same as shareTerraBams but is completed to work with CCLE bams from the CCLE sample tracker
@@ -816,6 +818,7 @@ async def _shareCCLEbams(
     raise_error: whether or not to raise an error if we find blacklisted lines
     refsheet_url: the google spreadsheet where the samples are stored
     privacy_sheeturl: the google spreadsheet where the samples are stored
+    requesterpays_project: the google project where the requester pays bucket is located
 
   Returns:
   --------
@@ -843,7 +846,10 @@ async def _shareCCLEbams(
         usrs += (" -d " if unshare else " -g") + group + (":R" if not unshare else "")
     for user in users:
         usrs += (" -d " if unshare else " -u ") + user + (":R" if not unshare else "")
-    cmd_prefix = "gsutil -m acl ch" + usrs
+    requesterpays_cmd = (
+        "" if requesterpays_project == "" else "-u " + requesterpays_project
+    )
+    cmd_prefix = "gsutil {} -m acl ch ".format(requesterpays_cmd) + usrs
     cmd = cmd_prefix
     for n, filename in enumerate(togiveaccess):
         if type(filename) is str and filename:
