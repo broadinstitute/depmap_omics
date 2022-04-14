@@ -163,7 +163,7 @@ def updateFromTracker(
             "parent_cell_line": [],
             "matched_normal": [],
             "comments": [],
-            "mediatype": [],
+            # "mediatype": [],
             "condition": [],
             "stripped_cell_line_name": [],
             "participant_id": [],
