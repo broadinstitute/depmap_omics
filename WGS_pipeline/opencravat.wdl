@@ -34,18 +34,18 @@ task opencravat {
     input {
         String sample_id
         File vcf
-        String? format = "vcf"
-        String? annotators_to_use = ""
-        Int? stripfolder = 0 
-        String? genome = "hg38"
-        String? modules_options = "vcfreporter.type=separate"
+        String format = "vcf"
+        String annotators_to_use = ""
+        #Int stripfolder = 0 
+        String genome = "hg38"
+        String modules_options = "vcfreporter.type=separate"
         
-        Int? memory = 16
-        Int? boot_disk_size = 20
-        Int? disk_space=20
-        Int? num_threads = 1
-        Int? num_preempt = 5
-        String? docker = "karchinlab/opencravat"
+        Int memory = 16
+        Int boot_disk_size = 20
+        Int disk_space=20
+        Int num_threads = 1
+        Int num_preempt = 5
+        String docker = "karchinlab/opencravat"
     }
     
     command {
@@ -75,26 +75,34 @@ task opencravat {
       echo """
 import re
 import sys
-import bgzip
+import gzip
+import shutil
 print(sys.argv)
-with open(sys.argv[1],'r+') as f:
-    with open(sys.argv[2]+'_fixedcolumn.vcf.gz','wb') as raw2:
-        with bgzip.BGZipWriter(raw2) as fout:
-            for i, line in enumerate(f):
-                original_string = line.decode('utf-8')
-                if original_string[0] == '#':
-                    if original_string.startswith('##INFO=<ID=OC_provean__prediction'):
-                        original_string = original_string.replace('\"D(amaging)\"', 'D(amaging)').replace('\"N(eutral)\"', 'N(eutral)')
-                    fout.write(original_string.encode())
-""" > fix_columns.py
-      python fix_columns.py out/${basename(vcf)}.${format} out/${basename(vcf)}.${format}.gz
+
+done=False
+with open(sys.argv[1],'rb') as f:
+    with gzip.open(sys.argv[2],'wb') as fout:
+        for i, line in enumerate(f):
+            original_string = line.decode('utf-8')
+            if original_string[0] == '#':
+                if original_string.startswith('##INFO=<ID=OC_provean__prediction'):
+                    original_string = original_string.replace('\"D(amaging)\"', 'D(amaging)').replace('\"N(eutral)\"', 'N(eutral)')
+                    done = True
+                fout.write(original_string.encode())
+            else:
+                done = True
+            if done:
+                break
+        shutil.copyfileobj(f, fout)
+""" > fix_name.py
+      python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf)}.${format}.gz
     }
 
     output {
         File oc_error_files="out/${basename(vcf)}.err"
         File oc_log_files="out/${basename(vcf)}.log"
         File oc_sql_files="out/${basename(vcf)}.sqlite"
-        File oc_main_files="${basename(vcf)}.${format}.gz"
+        File oc_main_files="out/${basename(vcf)}.${format}.gz"
     }
 
     runtime {
