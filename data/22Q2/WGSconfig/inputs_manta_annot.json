@@ -1,0 +1,1 @@
+{"run_manta_annotator.manta_annotator.cores": "6", "run_manta_annotator.manta_annotator.disk_size": "", "run_manta_annotator.manta_annotator.docker_image": "", "run_manta_annotator.sv": "this.somatic_sv_vcf"}

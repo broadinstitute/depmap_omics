@@ -1,0 +1,3 @@
+[submodule "WGS_pipeline/MantaSVAnnotator"]
+	path = WGS_pipeline/MantaSVAnnotator
+	url = https://github.com/acranej/MantaSVAnnotator.git
