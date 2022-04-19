@@ -20,12 +20,6 @@ taiga_latest_path = lambda dataset_name: {
 TENTATIVE_VIRTUAL = taiga_latest_path("tentative-virtual-d84e")
 
 VIRTUAL_RELEASES = {
-    "22Q1": {
-        "internal": taiga_latest_path("internal-22q1-1778"),
-        "ibm": taiga_latest_path("ibm-22q1-cce1"),
-        "public": taiga_latest_path("public-22q1-305b"),
-        "dmc": taiga_latest_path("dmc-22q1-d00a"),
-    },
     "21Q4v2": {
         "internal": taiga_latest_path("internal-21q4v2-403b"),
         "ibm": taiga_latest_path("ibm-21q4v2-2d92"),
