@@ -4,6 +4,7 @@ from numpy import true_divide
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
+import pygsheets
 from depmapomics.config import *
 from genepy import terra
 from genepy.google import gcp
@@ -27,6 +28,8 @@ class SampleTracker:
         depmap_pv,
         samples_not_found_url,
         samples_missing_arxspan_url,
+        gumbo_url,
+        gumbo_sheetname,
     ):
         self.my_id = my_id
         self.mystorage_id = mystorage_id
@@ -35,6 +38,8 @@ class SampleTracker:
         self.depmap_pv = depmap_pv
         self.samples_not_found_url = samples_not_found_url
         self.samples_missing_arxspan_url = samples_missing_arxspan_url
+        self.gumbo_url = gumbo_url
+        self.gumbo_sheetname = gumbo_sheetname
 
     def read_tracker(self):
         return (
@@ -82,6 +87,34 @@ class SampleTracker:
             .set_index("sample_id")
         )
 
+    def read_mc_table(self):
+        return (
+            Sheets.from_files(self.my_id, self.mystorage_id)
+            .get(self.gumbo_url)
+            .sheets[1]
+            .to_frame(index_col=0)
+        )
+
+    def write_mc_table(self, df):
+        gc = pygsheets.authorize(service_file=self.sheetcreds)
+        sheet = gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "ModelCondition")
+        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+
+    def read_pr_table(self):
+        return (
+            Sheets.from_files(self.my_id, self.mystorage_id)
+            .get(self.gumbo_url)
+            .sheets[0]
+            .to_frame(index_col=0, header=1)
+        )
+
+    def write_pr_table(self, df):
+        gc = pygsheets.authorize(service_file=self.sheetcreds)
+        sheet = gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "OmicsProfile")
+        wksht.set_dataframe(df, "A2", copy_index=True, nan="")
+
 
 def initTracker():
     """
@@ -95,6 +128,8 @@ def initTracker():
         depmap_pv=DEPMAP_PV,
         samples_not_found_url=SAMPLES_NOT_FOUND_URL,
         samples_missing_arxspan_url=SAMPLES_MISSING_ARXSPAN_URL,
+        gumbo_url=GUMBO_SHEET,
+        gumbo_sheetname=GUMBO_SHEETNAME,
     )
 
 

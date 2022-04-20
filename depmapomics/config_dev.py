@@ -23,6 +23,9 @@ DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU
 
 POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
 
+GUMBO_SHEET = "https://docs.google.com/spreadsheets/d/10Lg0xkT5OHLYgJ9VKpkh8VR64TXfxPVJXRVAckU8uBg"
+GUMBO_SHEETNAME = "Backfilled profile IDs"
+
 SAMPLES_FOUND_NAME = "depmap ALL samples found"
 
 SAMPLES_NOT_FOUND_NAME = "depmap samples not found"
@@ -432,7 +435,7 @@ SIGTABLE_TERRACOLS = {
     "PureCN_loh_fraction",
     "PureCN_curated",
     "PureCN_curated_solution",
-    "msisensor2_score"
+    "msisensor2_score",
 }
 
 SOURCE_RENAME = {
