@@ -19,6 +19,8 @@ class SampleTracker:
     interacts with (read + write) the sample tracker gsheet
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(
         self,
         my_id,
