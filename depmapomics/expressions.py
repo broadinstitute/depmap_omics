@@ -115,7 +115,7 @@ def solveQC(tracker, failed, save="", newname="arxspan_id"):
     print("samples that failed:")
     print(newfail)
     if save:
-        h.listToFile(newfail, save + "_rnafailed.txt")
+        h.listToFile(newfail, save + "rna_newfailed.txt")
     return rename
 
 
@@ -194,6 +194,7 @@ def loadFromRSEMaggregate(
     sampleset="all",
     renamingFunc=None,
     rsemfilelocs=None,
+    folder="",
 ):
     """Load the rsem aggregated files from Terra
 
@@ -227,7 +228,7 @@ def loadFromRSEMaggregate(
         )
         if renamingFunc is not None:
             # removing failed version
-            renaming = renamingFunc(file.columns[2:], todrop)
+            renaming = renamingFunc(file.columns[2:], todrop, folder=folder)
         else:
             renaming.update({i: i for i in file.columns[2:] if i not in todrop})
         renaming.update({"transcript_id(s)": "transcript_id"})
@@ -554,6 +555,7 @@ async def postProcess(
         sampleset=samplesetToLoad,
         renamingFunc=renamingFunc,
         rsemfilelocs=rsemfilelocs,
+        folder=save_output,
     )
     if save_output:
         h.dictToFile(renaming, save_output + "rna_sample_renaming.json")

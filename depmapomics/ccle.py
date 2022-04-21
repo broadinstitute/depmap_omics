@@ -15,7 +15,7 @@ from depmapomics import copynumbers as cn
 from depmapomics.config import *
 
 
-def expressionRenaming(r, todrop):
+def expressionRenaming(r, todrop, folder=""):
     trackerobj = track.initTracker()
     ccle_refsamples = trackerobj.read_tracker()
 
@@ -25,7 +25,7 @@ def expressionRenaming(r, todrop):
         priority="prioritized",
     )
     # if we have a replaceable failed version in our dataset
-    rename = expressions.solveQC(ccle_refsamples, todrop)
+    rename = expressions.solveQC(ccle_refsamples, todrop, save=folder)
     for k, _ in renaming.copy().items():
         if k in rename:
             renaming[rename[k]] = renaming.pop(k)
