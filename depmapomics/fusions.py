@@ -156,7 +156,7 @@ def postProcess(
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
         sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
-        colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.  
+        colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.
         doplot (bool, optional): whether to plot the data. Defaults to True.
         countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
         save_output (str, optional): whether and where to save our data. Defaults to "".
@@ -250,7 +250,7 @@ async def _CCLEPostProcessing(
         my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
         mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
         prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
-    
+
     Returns:
         (pd.df): fusion dataframe
         (pd.df): filtered fusion dataframe
@@ -259,7 +259,7 @@ async def _CCLEPostProcessing(
 
     tc = TaigaClient()
 
-    if prevdataset is "ccle":
+    if prevdataset == "ccle":
         prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
     sheets = Sheets.from_files(my_id, mystorage_id)
     ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
@@ -336,4 +336,3 @@ async def _CCLEPostProcessing(
     )
     print("done")
     return fusions
-
