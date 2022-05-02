@@ -8,6 +8,7 @@ from genepy import terra
 from genepy.google import gcp
 from genepy.google.google_sheet import dfToSheet
 import dalmatian as dm
+import signal
 
 
 def getTracker():
