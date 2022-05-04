@@ -42,6 +42,7 @@ class SampleTracker:
         self.samples_missing_arxspan_url = samples_missing_arxspan_url
         self.gumbo_url = gumbo_url
         self.gumbo_sheetname = gumbo_sheetname
+        self.gc = pygsheets.authorize(service_file=sheetcreds)
 
     def read_tracker(self):
         return (
@@ -90,32 +91,44 @@ class SampleTracker:
         )
 
     def read_mc_table(self):
-        return (
-            Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(self.gumbo_url)
-            .sheets[1]
-            .to_frame(index_col=0)
-        )
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "ModelCondition")
+        return wksht.get_as_df(index_column=1)
 
     def write_mc_table(self, df):
-        gc = pygsheets.authorize(service_file=self.sheetcreds)
-        sheet = gc.open(self.gumbo_sheetname)
+        sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", "ModelCondition")
         wksht.set_dataframe(df, "A1", copy_index=True, nan="")
 
     def read_pr_table(self):
-        return (
-            Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(self.gumbo_url)
-            .sheets[0]
-            .to_frame(index_col=0, header=1)
-        )
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "OmicsProfile")
+        return wksht.get_as_df(index_column=1, start="A2")
 
     def write_pr_table(self, df):
-        gc = pygsheets.authorize(service_file=self.sheetcreds)
-        sheet = gc.open(self.gumbo_sheetname)
+        sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", "OmicsProfile")
         wksht.set_dataframe(df, "A2", copy_index=True, nan="")
+
+    def read_seq_table(self):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "OmicsSequencing")
+        return wksht.get_as_df(index_column=1)
+
+    def write_seq_table(self, df):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "OmicsSequencing")
+        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+
+    def read_sample_table(self):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "Sample")
+        return wksht.get_as_df(index_column=1)
+
+    def write_sample_table(self, df):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", "Sample")
+        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
 
 
 def initTracker():
