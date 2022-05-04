@@ -435,7 +435,8 @@ SIGTABLE_TERRACOLS = {
     "PureCN_loh_fraction",
     "PureCN_curated",
     "PureCN_curated_solution",
-    "PureCN_failed" "msisensor2_score",
+    "PureCN_failed",
+    "msisensor2_score",
 }
 
 SOURCE_RENAME = {
