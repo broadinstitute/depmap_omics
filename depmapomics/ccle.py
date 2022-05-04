@@ -559,7 +559,7 @@ def cnPostProcessing(
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         todrop=todropwgs,
         save_output=folder,
-        segmentsthresh=2000,
+        segmentsthresh=1500,
         priority=priority,
         **kwargs,
     )
