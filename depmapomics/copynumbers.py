@@ -241,8 +241,6 @@ def pureCNpostprocess(
     terracols=SIGTABLE_TERRACOLS,
     save_output="",
     mappingdf=None,
-    genechangethresh=0.025,
-    segmentsthresh=2000,
 ):
     """fetching PureCN data from Terra, generate one matrix for absolute copy number, one matrix for LOH,
     and one cell line signature table
@@ -293,8 +291,6 @@ def pureCNpostprocess(
         absolute_genecn.values.mean(),
         absolute_genecn.values.max(),
     )
-    mut.checkGeneChangeAccrossAll(absolute_genecn, thresh=genechangethresh)
-    failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
     # Generate gene-level LOH status matrix
     segments["type"] = segments["type"].replace(
@@ -306,13 +302,14 @@ def pureCNpostprocess(
         mut.manageGapsInSegments(segments), mappingdf, value_colname="LOH_status"
     )
 
-    print("PureCN: failed our QC")
-    print(failed)
-
     # Pull additional info directly from terra sample table
     samples = wm.get_samples()
     purecn_table = samples[terracols]
 
+    failed = purecn_table[purecn_table["PureCN_failed"] == "TRUE"].index
+
+    # TO DO: generate the signature table in a separate function
+    # see ccle_tasks/signature_table.ipynb
     segments = segments[
         ~segments[SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
     ].reset_index(drop=True)
