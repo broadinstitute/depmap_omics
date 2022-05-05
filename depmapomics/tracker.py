@@ -924,10 +924,9 @@ def update_pr_from_seq(
                         break
     for k, v in cds2pr_dict.items():
         pr_table.loc[v, "CDSID"] = k
-    if dryrun:
-        return pr_table
-    else:
+    if not dryrun:
         trackerobj.write_pr_table(pr_table)
+    return pr_table
 
 
 async def shareCCLEbams(
