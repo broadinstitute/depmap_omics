@@ -135,6 +135,7 @@ def updateTracker(
     samplesinset=[],
     starlogs={},
     todrop=[],
+    gumbo=True,
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -184,6 +185,7 @@ def updateTracker(
         dry_run,
         todrop=todrop,
         trackerobj=trackerobj,
+        gumbo=gumbo,
     )
 
 

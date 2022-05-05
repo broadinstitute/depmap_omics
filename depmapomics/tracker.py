@@ -809,7 +809,7 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
 
 
 def update(
-    tracker,
+    table,
     selected,
     samplesetname,
     failed,
@@ -821,11 +821,12 @@ def update(
     samplesinset=[],
     todrop=[],
     trackerobj=None,
+    gumbo=True,
 ):
-    """updates the sample tracker with the new samples and the QC metrics
+    """updates the sample tracker (or Gumbo omicSequencing table) with the new samples and the QC metrics
 
     Args:
-        tracker (df): [description]
+        table (df): [description]
         selected (list[str]): which samples were selected in the release of the analysis
         samplesetname (str): the name of the sample set or of the current analysis
         samplesinset (list[str]): list of samples in the analysis.
@@ -856,37 +857,40 @@ def update(
             onlysamples=samplesinset,
             workspaceto=refworkspace,
         )
-        tracker.loc[res.index.tolist()][
+        table.loc[res.index.tolist()][
             ["legacy_size", "legacy_crc32c_hash"]
-        ] = tracker.loc[res.index.tolist()][["size", "crc32c_hash"]].values
-        tracker.loc[res.index.tolist(), HG38BAMCOL] = res[bamfilepaths[:2]].values
-        tracker.loc[res.index.tolist(), "size"] = [
+        ] = table.loc[res.index.tolist()][["size", "crc32c_hash"]].values
+        table.loc[res.index.tolist(), HG38BAMCOL] = res[bamfilepaths[:2]].values
+        table.loc[res.index.tolist(), "size"] = [
             gcp.extractSize(i)[1]
             for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-l")
         ]
-        tracker.loc[res.index.tolist(), "crc32c_hash"] = [
+        table.loc[res.index.tolist(), "crc32c_hash"] = [
             gcp.extractHash(i) for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
         ]
-        tracker.loc[res.index.tolist(), "md5_hash"] = [
+        table.loc[res.index.tolist(), "md5_hash"] = [
             gcp.extractHash(i, typ="md5")
             for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
         ]
 
-    tracker.loc[selected, samplesetname] = 1
-    tracker.loc[samplesinset, ["low_quality", "blacklist", "prioritized"]] = 0
-    tracker.loc[lowqual, "low_quality"] = 1
+    table.loc[selected, samplesetname] = 1
+    table.loc[samplesinset, ["low_quality", "blacklist", "prioritized"]] = 0
+    table.loc[lowqual, "low_quality"] = 1
     failed_not_dropped = list(set(failed) - set(todrop))
     # print(todrop)
-    tracker.loc[failed_not_dropped, "blacklist"] = 1
+    table.loc[failed_not_dropped, "blacklist"] = 1
     if dry_run:
-        return tracker
+        return table
     else:
-        trackerobj.write_tracker(tracker)
+        if gumbo:
+            trackerobj.write_seq_table(table)
+        else:
+            trackerobj.write_tracker(table)
     print("updated the sheet, please reactivate protections")
     return None
 
 
-async def _shareCCLEbams(
+async def shareCCLEbams(
     samples,
     users=[],
     groups=[],
