@@ -890,6 +890,46 @@ def update(
     return None
 
 
+def update_pr_from_seq(
+    trackerobj,
+    cols={
+        "bam_public_sra_path": "BamPublicSRAPath",
+        "blacklist": "BlacklistOmics",
+        "issue": "Issue",
+        "prioritized": "Prioritized",
+    },
+    priority=None,
+    dryrun=True,
+):
+    seq_table = trackerobj.read_seq_table()
+    pr_table = trackerobj.read_pr_table()
+    prs_in_seq_table = seq_table.ProfileID.unique()
+
+    cds2pr_dict = {}
+    for pr in prs_in_seq_table:
+        if len(seq_table[seq_table.ProfileID == pr]) == 1:
+            pr_table.loc[pr, "CDSID"] = seq_table[seq_table.ProfileID == pr].index
+        else:
+            allv = seq_table[seq_table["ProfileID"] == pr]
+            for k, val in allv.iterrows():
+                if priority is None:
+                    if val["version"] == max(allv.version.values):
+                        cds2pr_dict[k] = pr
+                        break
+                else:
+                    if val["version"] == max(allv.version.values):
+                        cds2pr_dict[k] = pr
+                    if val["priority"] == 1:
+                        cds2pr_dict[k] = pr
+                        break
+    for k, v in cds2pr_dict.items():
+        pr_table.loc[v, "CDSID"] = k
+    if dryrun:
+        return pr_table
+    else:
+        trackerobj.write_pr_table(pr_table)
+
+
 async def shareCCLEbams(
     samples,
     users=[],
