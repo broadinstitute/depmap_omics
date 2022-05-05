@@ -47,6 +47,7 @@ async def expressionPostProcessing(
         "proteincoding_genes_tpm": "CCLE_expression",
     },
     trackerobj=None,
+    gumbo=True,
     todrop=KNOWN_DROP,
     prevcounts="ccle",
     taiga_dataset=TAIGA_EXPRESSION,
@@ -103,6 +104,8 @@ async def expressionPostProcessing(
         prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
 
     ccle_refsamples = trackerobj.read_tracker()
+    if gumbo:
+        ccle_refsamples = trackerobj.read_seq_table()
 
     todrop += ccle_refsamples[
         (ccle_refsamples.blacklist == 1) & (ccle_refsamples.datatype == "rna")
@@ -193,6 +196,7 @@ async def expressionPostProcessing(
         samplesinset=samplesinset,
         starlogs=starlogs,
         trackerobj=trackerobj,
+        gumbo=gumbo,
         todrop=todrop,
         dry_run=dry_run,
     )
