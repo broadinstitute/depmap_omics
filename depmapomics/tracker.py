@@ -103,22 +103,22 @@ class SampleTracker:
     def read_pr_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", "OmicsProfile")
-        return wksht.get_as_df(index_column=1, start="A2")
+        return wksht.get_as_df(index_column=1, start="A3")
 
     def write_pr_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", "OmicsProfile")
-        wksht.set_dataframe(df, "A2", copy_index=True, nan="")
+        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_seq_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", "OmicsSequencing")
-        return wksht.get_as_df(index_column=1)
+        return wksht.get_as_df(index_column=1, start="A3")
 
     def write_seq_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", "OmicsSequencing")
-        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_sample_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
