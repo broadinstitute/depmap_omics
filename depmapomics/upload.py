@@ -27,8 +27,8 @@ def getPRToRelease(trackerobj):
     today = int(str(date.today()).replace("-", ""))
     pr_table = trackerobj.read_pr_table()
     prs = dict()
-    for p in date_col_dict:
-        prs[p] = pr_table[pr_table[date_col_dict[p]] <= today].index.tolist()
+    for k, v in date_col_dict.items():
+        prs[k] = pr_table[pr_table[v] <= today].index.tolist()
     return prs
 
 
