@@ -28,7 +28,8 @@ def getPRToRelease(trackerobj):
     pr_table = trackerobj.read_pr_table()
     prs = dict()
     for k, v in date_col_dict.items():
-        prs[k] = pr_table[pr_table[v] <= today].index.tolist()
+        prs_with_date = pr_table[~(pr_table[v] == "")]
+        prs[k] = prs_with_date[prs_with_date[v].astype(int) <= today].index.tolist()
     return prs
 
 
@@ -49,7 +50,7 @@ def makeAchillesChoiceTable(
     pr_table = trackerobj.read_pr_table()
     seq_table = trackerobj.read_seq_table()
     ach_tables = dict()
-    for k, v in avail_prs:
+    for k, v in avail_prs.items():
         rows = []
         subset_pr_table = pr_table.loc[v]
         mcs = set(subset_pr_table["ModelCondition"])
@@ -59,12 +60,14 @@ def makeAchillesChoiceTable(
                 prs_in_mc = subset_pr_table[(subset_pr_table.ModelCondition == mc)]
                 # rna
                 if len(prs_in_mc[prs_in_mc.Datatype == "rna"]) == 1:
-                    pr = prs_in_mc[prs_in_mc.Datatype == "rna"].ProfileID
+                    pr = prs_in_mc[prs_in_mc.Datatype == "rna"].index[0]
                     rows.append((mc, pr, "rna"))
                 elif len(prs_in_mc[prs_in_mc.Datatype == "rna"]) > 1:
                     cds_ids = prs_in_mc[prs_in_mc.Datatype == "rna"].CDSID.tolist()
                     latest_cds_id = seq_table.loc[cds_ids, "version"].idxmax()
-                    pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id]
+                    pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[
+                        0
+                    ]
                     rows.append((mc, pr, "rna"))
                 # dna
                 if (
@@ -78,7 +81,7 @@ def makeAchillesChoiceTable(
                 ):
                     pr = prs_in_mc[
                         (prs_in_mc.Datatype == "wgs") | (prs_in_mc.Datatype == "wes")
-                    ].ProfileID
+                    ].index[0]
                     rows.append((mc, pr, "dna"))
                 elif (
                     len(
@@ -96,16 +99,21 @@ def makeAchillesChoiceTable(
                         latest_cds_id_wes = seq_table.loc[
                             cds_ids_wes, "version"
                         ].idxmax()
-                        pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id_wes]
+                        pr = subset_pr_table[
+                            subset_pr_table.CDSID == latest_cds_id_wes
+                        ].index[0]
                     else:
                         latest_cds_id_wgs = seq_table.loc[
                             cds_ids_wgs, "version"
                         ].idxmax()
-                        pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id_wgs]
+                        pr = subset_pr_table[
+                            subset_pr_table.CDSID == latest_cds_id_wgs
+                        ].index[0]
                     rows.append((mc, pr, "dna"))
         ach_tables[k] = pd.DataFrame(
             rows, columns=["ModelConditionID", "ProfileID", "ProfileType"]
         )
+        ach_tables[k].to_csv(folder + "/" + k + "_achilles_choice_table.csv")
 
     return ach_tables
 
