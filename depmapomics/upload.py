@@ -54,9 +54,7 @@ def makeAchillesChoiceTable(
     pr_table = trackerobj.read_pr_table()
     seq_table = trackerobj.read_seq_table()
     ach_tables = dict()
-    source_priority = dict(
-        [(source_priority[i], i) for i in range(len(source_priority))]
-    )
+    source_priority = {source_priority[i]: i for i in range(len(source_priority))}
     for k, v in avail_prs.items():
         rows = []
         subset_pr_table = pr_table.loc[v]
@@ -161,9 +159,7 @@ def makeDefaultModelTable(
     mc_table = trackerobj.read_mc_table()
     seq_table = trackerobj.read_seq_table()
     default_tables = dict()
-    source_priority = dict(
-        [(source_priority[i], i) for i in range(len(source_priority))]
-    )
+    source_priority = {source_priority[i]: i for i in range(len(source_priority))}
     for k, v in avail_prs.items():
         rows = []
         subset_pr_table = pr_table.loc[v]
@@ -238,7 +234,7 @@ def makeDefaultModelTable(
                         pr = subset_pr_table[
                             subset_pr_table.CDSID == latest_cds_id_wgs
                         ].index[0]
-                    rows.append((mc, pr, "dna"))
+                    rows.append((m, pr, "dna"))
         default_tables[k] = pd.DataFrame(
             rows, columns=["ModelID", "ProfileID", "ProfileType"]
         )
