@@ -46,6 +46,9 @@ isCCLE = True
 
 doCleanup = True
 
+# from most prioritized to least prioritized:
+SOURCE_PRIORITY = ["DEPMAP", "IBM", "CCLE2", "SANGER", "CHORDOMA"]
+
 LINES_TO_RELEASE = [
     "ACH-000145",
     "ACH-000359",
