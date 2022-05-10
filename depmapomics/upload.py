@@ -112,9 +112,6 @@ def makeAchillesChoiceTable(
                         latest_cds_id_wes = renamed_source.loc[
                             cds_ids_wes, "source"
                         ].idxmin()
-                        latest_cds_id_wes = seq_table.loc[
-                            cds_ids_wes, "version"
-                        ].idxmax()
                         pr = subset_pr_table[
                             subset_pr_table.CDSID == latest_cds_id_wes
                         ].index[0]
@@ -181,7 +178,9 @@ def makeDefaultModelTable(
                     cds_ids = prs_in_model[
                         prs_in_model.Datatype == "rna"
                     ].CDSID.tolist()
-                    latest_cds_id = seq_table.loc[cds_ids, "version"].idxmax()
+                    subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
+                    renamed_source = subset_seq_table.source.replace(source_priority)
+                    latest_cds_id = renamed_source.loc[cds_ids, "source"].idxmin()
                     pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[
                         0
                     ]
@@ -220,17 +219,25 @@ def makeDefaultModelTable(
                     pr = ""
                     # if no wgs, select broad wes over sanger wes
                     if len(cds_ids_wgs) == 0:
-                        latest_cds_id_wes = seq_table.loc[
-                            cds_ids_wes, "version"
-                        ].idxmax()
+                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
+                        renamed_source = subset_seq_table.source.replace(
+                            source_priority
+                        )
+                        latest_cds_id_wes = renamed_source.loc[
+                            cds_ids_wes, "source"
+                        ].idxmin()
                         pr = subset_pr_table[
                             subset_pr_table.CDSID == latest_cds_id_wes
                         ].index[0]
                     # if there is wgs, always select wgs
                     else:
-                        latest_cds_id_wgs = seq_table.loc[
-                            cds_ids_wgs, "version"
-                        ].idxmax()
+                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
+                        renamed_source = subset_seq_table.source.replace(
+                            source_priority
+                        )
+                        latest_cds_id_wgs = renamed_source.loc[
+                            cds_ids_wgs, "source"
+                        ].idxmin()
                         pr = subset_pr_table[
                             subset_pr_table.CDSID == latest_cds_id_wgs
                         ].index[0]
