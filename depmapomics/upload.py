@@ -72,8 +72,10 @@ def makeAchillesChoiceTable(
                     cds_ids = prs_in_mc[prs_in_mc.Datatype == "rna"].CDSID.tolist()
                     # at this point it is guaranteed that all cds_ids have different sources
                     subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
-                    renamed_source = subset_seq_table.source.replace(source_priority)
-                    latest_cds_id = renamed_source.loc[cds_ids, "source"].idxmin()
+                    subset_seq_table.source = subset_seq_table.source.replace(
+                        source_priority
+                    )
+                    latest_cds_id = subset_seq_table.loc[cds_ids, "source"].idxmin()
                     pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[
                         0
                     ]
@@ -105,22 +107,27 @@ def makeAchillesChoiceTable(
                     cds_ids_wes = prs_in_mc[prs_in_mc.Datatype == "wes"].CDSID.tolist()
                     pr = ""
                     if len(cds_ids_wgs) == 0:
-                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
-                        renamed_source = subset_seq_table.source.replace(
-                            source_priority
-                        )
-                        latest_cds_id_wes = renamed_source.loc[
-                            cds_ids_wes, "source"
-                        ].idxmin()
-                        pr = subset_pr_table[
-                            subset_pr_table.CDSID == latest_cds_id_wes
-                        ].index[0]
+                        if len(prs_in_mc[prs_in_mc.Datatype == "wes"]) == 1:
+                            pr = prs_in_mc[prs_in_mc.Datatype == "wes"].index[0]
+                        else:
+                            subset_seq_table = seq_table[
+                                seq_table.index.isin(cds_ids_wes)
+                            ]
+                            subset_seq_table.source = subset_seq_table.source.replace(
+                                source_priority
+                            )
+                            latest_cds_id_wes = subset_seq_table.loc[
+                                cds_ids_wes, "source"
+                            ].idxmin()
+                            pr = subset_pr_table[
+                                subset_pr_table.CDSID == latest_cds_id_wes
+                            ].index[0]
                     else:
                         subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
-                        renamed_source = subset_seq_table.source.replace(
+                        subset_seq_table.source = subset_seq_table.source.replace(
                             source_priority
                         )
-                        latest_cds_id_wgs = renamed_source.loc[
+                        latest_cds_id_wgs = subset_seq_table.loc[
                             cds_ids_wgs, "source"
                         ].idxmin()
                         pr = subset_pr_table[
@@ -166,7 +173,8 @@ def makeDefaultModelTable(
         # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each MC
         if one_pr_per_type:
             for m in models:
-                mcs_in_model = mc_table[mc_table.ModelID == m]
+                subset_mc_table = mc_table[mc_table.ModelID == m]
+                mcs_in_model = subset_mc_table.index.tolist()
                 prs_in_model = subset_pr_table[
                     (subset_pr_table.ModelCondition.isin(mcs_in_model))
                 ]
@@ -179,8 +187,10 @@ def makeDefaultModelTable(
                         prs_in_model.Datatype == "rna"
                     ].CDSID.tolist()
                     subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
-                    renamed_source = subset_seq_table.source.replace(source_priority)
-                    latest_cds_id = renamed_source.loc[cds_ids, "source"].idxmin()
+                    subset_seq_table.source = subset_seq_table.source.replace(
+                        source_priority
+                    )
+                    latest_cds_id = subset_seq_table.loc[cds_ids, "source"].idxmin()
                     pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[
                         0
                     ]
@@ -214,28 +224,33 @@ def makeDefaultModelTable(
                         prs_in_model.Datatype == "wgs"
                     ].CDSID.tolist()
                     cds_ids_wes = prs_in_model[
-                        prs_in_model.Datatype == "wes"
-                    ].CDSID.tolist()
+                        (prs_in_model.Datatype == "wes") & (prs_in_model.CDSID != "")
+                    ].CDSID.tolist()  # CDSID is '' when the profile is in legacy
                     pr = ""
-                    # if no wgs, select broad wes over sanger wes
+                    # if no wgs, look at MC table and select broad wes over sanger wes
                     if len(cds_ids_wgs) == 0:
-                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
-                        renamed_source = subset_seq_table.source.replace(
-                            source_priority
-                        )
-                        latest_cds_id_wes = renamed_source.loc[
-                            cds_ids_wes, "source"
-                        ].idxmin()
-                        pr = subset_pr_table[
-                            subset_pr_table.CDSID == latest_cds_id_wes
-                        ].index[0]
+                        if len(prs_in_model[prs_in_model.Datatype == "wes"]) == 1:
+                            pr = prs_in_model[prs_in_model.Datatype == "wes"].index[0]
+                        else:
+                            subset_seq_table = seq_table[
+                                seq_table.index.isin(cds_ids_wes)
+                            ]
+                            subset_seq_table.source = subset_seq_table.source.replace(
+                                source_priority
+                            )
+                            latest_cds_id_wes = subset_seq_table.loc[
+                                cds_ids_wes, "source"
+                            ].idxmin()
+                            pr = subset_pr_table[
+                                subset_pr_table.CDSID == latest_cds_id_wes
+                            ].index[0]
                     # if there is wgs, always select wgs
                     else:
                         subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
-                        renamed_source = subset_seq_table.source.replace(
+                        subset_seq_table.source = subset_seq_table.source.replace(
                             source_priority
                         )
-                        latest_cds_id_wgs = renamed_source.loc[
+                        latest_cds_id_wgs = subset_seq_table.loc[
                             cds_ids_wgs, "source"
                         ].idxmin()
                         pr = subset_pr_table[
@@ -246,7 +261,7 @@ def makeDefaultModelTable(
             rows, columns=["ModelID", "ProfileID", "ProfileType"]
         )
         default_tables[k].to_csv(folder + "/" + k + "_default_model_table.csv")
-    return True
+    return default_tables
 
 
 def makeModelLvMatrices():
