@@ -111,7 +111,7 @@ TAIGA_EXPRESSION = "expression-d035"
 TAIGA_FUSION = "fusions-95c9"
 TAIGA_LEGACY_CN = "copy-number-5f61"
 
-datasets = ["internal", "ibm", "dmc", "public"]
+DATASETS = ["internal", "ibm", "dmc", "public"]
 
 VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
