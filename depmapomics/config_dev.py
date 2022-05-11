@@ -40,7 +40,7 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID = "DepMap_ID"
 
-SAMPLESETNAME = "21Q4"
+SAMPLESETNAME = "22Q2"
 
 isCCLE = True
 
@@ -152,7 +152,7 @@ TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
 TAIGA_LEGACY_CN = "copy-number-5f61"
 
 
-datasets = ["internal", "ibm", "dmc", "public"]
+DATASETS = ["internal", "ibm", "dmc", "public"]
 
 RUN_NOTEBOOKS = ["WGS_CCLE.ipynb", "RNA_CCLE.ipynb"]
 
@@ -160,7 +160,7 @@ UPLOAD_NOTEBOOK = ["DepMap_Upload.ipynb"]
 
 NOTEBOOKS = RUN_NOTEBOOKS + UPLOAD_NOTEBOOK
 
-VIRTUAL_FOLDER = ""
+VIRTUAL_FOLDER = "aee7ec053d434091a670bc64a9d7a3c1"
 
 RELEASE = SAMPLESETNAME.lower()
 

@@ -37,7 +37,6 @@ def makeAchillesChoiceTable(
     trackerobj,
     one_pr_per_type=True,
     source_priority=SOURCE_PRIORITY,
-    taiga_ids=VIRTUAL,
     folder="temp/" + SAMPLESETNAME,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which MC
@@ -146,14 +145,12 @@ def makeDefaultModelTable(
     trackerobj,
     one_pr_per_type=True,
     source_priority=SOURCE_PRIORITY,
-    taiga_ids=VIRTUAL,
     folder="temp/" + SAMPLESETNAME,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which modelID
 
     Args:
         trackerobj (SampleTracker): tracker object
-        taiga_ids (dict): dictionary that maps portal name to virtual taiga dataset id
         folder (str): location where tables are saved as .csv files
 
     Returns:
@@ -264,9 +261,87 @@ def makeDefaultModelTable(
     return default_tables
 
 
+def initVirtualDatasets(
+    samplesetname=SAMPLESETNAME, taiga_folder_id=VIRTUAL_FOLDER, portals=DATASETS
+):
+    """initialize taiga virtual datasets for all portals by uploading an empty dummy file
+    """
+
+    with open("temp/dummy.csv", "w") as fp:
+        pass
+    virtual = dict()
+    tc = TaigaClient()
+    for p in portals:
+        virtual[p] = tc.create_dataset(
+            p + "_" + samplesetname,
+            dataset_description=samplesetname
+            + " release of the DepMap dataset for the DepMap Portal. Please look at the README file for additional information about this dataset. ",
+            upload_files=[
+                {
+                    "path": "temp/dummy.csv",
+                    "name": "init",
+                    "format": "Raw",
+                    "encoding": "utf-8",
+                }
+            ],
+            folder_id=taiga_folder_id,
+        )
+    return virtual
+
+
+def uploadCNMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETNAME):
+    """subset, rename, save and upload to taiga CN matrices
+    
+    Args:
+        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
+        taiga_id (str): which dataset the matrices are being uploaded to
+        folder (str): where the files to be subsetted are saved
+    """
+
+    # load cds-id indexed matrices for the current quarter
+    genecn = pd.read_csv(folder + "/achilles_gene_cn.csv", index_col=0)
+    segmentcn = pd.read_csv(folder + "/achilles_segment.csv")
+    wescn = pd.read_csv(folder + "/wes_genecn_latest.csv", index_col=0)
+    wessegment = pd.read_csv(folder + "/wes_segments_latest.csv")
+
+    # subset and rename
+    segmentcn_renamed = segmentcn[
+        segmentcn.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
+    segmentcn_renamed.to_csv("temp/all_merged_segments.csv", index=False)
+    genecn_renamed = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    genecn_renamed.to_csv("temp/all_merged_genes_cn.csv")
+    wescn_renamed = wescn[wescn.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    wescn_renamed.to_csv("temp/wes_genes_cn.csv")
+    wessegment_renamed = wessegment[
+        wessegment.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
+    wessegment_renamed.to_csv("temp/wes_segments.csv", index=False)
+
+
+def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
+    """for each portal, save and upload profile-indexed data matrices
+    
+    Args:
+        trackerobj (SampleTracker): tracker object
+        taiga_ids (dict): dictionary that maps portal name to virtual taiga dataset id
+
+    Returns:
+        prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
+    """
+    prs_allportals = getPRToRelease(trackerobj)
+    pr_table = trackerobj.read_pr_table()
+    for portal, prs_to_release in prs_allportals.items():
+        subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
+        renaming_dict = dict(list(zip(subset_pr_table.CDSID, subset_pr_table.index)))
+        uploadCNMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
+
+
 def makeModelLvMatrices():
+
     return True
 
-
-def makePRLvMatrices():
-    return True
