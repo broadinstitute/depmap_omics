@@ -647,7 +647,7 @@ def retrieveFromCellLineName(
     extract={},
     stripped_cell_line_name="stripped_cell_line_name",
     arxspan_id="arxspan_id",
-    trackerobj=None,
+    tracker=None,
 ):
     """
     Given a List of samples with no arxspan ids, will try to retrieve an arxspan id and associated data from trackers
@@ -686,7 +686,7 @@ def retrieveFromCellLineName(
     ]
 
     # get depmap pv
-    depmap_pv = trackerobj.read_pv()
+    depmap_pv = tracker.read_pv()
     depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
 
     # find back from depmapPV
@@ -820,7 +820,7 @@ def update(
     dry_run=True,
     samplesinset=[],
     todrop=[],
-    trackerobj=None,
+    tracker=None,
     gumbo=True,
 ):
     """updates the sample tracker (or Gumbo omicSequencing table) with the new samples and the QC metrics
@@ -883,15 +883,15 @@ def update(
         return table
     else:
         if gumbo:
-            trackerobj.write_seq_table(table)
+            tracker.write_seq_table(table)
         else:
-            trackerobj.write_tracker(table)
+            tracker.write_tracker(table)
     print("updated the sheet, please reactivate protections")
     return None
 
 
 def update_pr_from_seq(
-    trackerobj,
+    tracker,
     cols={
         "bam_public_sra_path": "BamPublicSRAPath",
         "blacklist": "BlacklistOmics",
@@ -901,8 +901,8 @@ def update_pr_from_seq(
     priority=None,
     dryrun=True,
 ):
-    seq_table = trackerobj.read_seq_table()
-    pr_table = trackerobj.read_pr_table()
+    seq_table = tracker.read_seq_table()
+    pr_table = tracker.read_pr_table()
     prs_in_seq_table = seq_table.ProfileID.unique()
 
     cds2pr_dict = {}
@@ -925,7 +925,7 @@ def update_pr_from_seq(
     for k, v in cds2pr_dict.items():
         pr_table.loc[v, "CDSID"] = k
     if not dryrun:
-        trackerobj.write_pr_table(pr_table)
+        tracker.write_pr_table(pr_table)
     return pr_table
 
 
