@@ -304,7 +304,7 @@ async def fusionPostProcessing(
 
     tc = TaigaClient()
 
-    if prevdataset is "ccle":
+    if prevdataset == "ccle":
         prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
 
     ccle_refsamples = trackerobj.read_tracker()
@@ -324,12 +324,13 @@ async def fusionPostProcessing(
         **kwargs,
     )
 
-    print("comparing to previous version")
-    print("new")
-    print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
+    if prevdataset == "ccle":
+        print("comparing to previous version")
+        print("new")
+        print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
 
-    print("removed")
-    print(set(prevdataset[fusionSamplecol]) - set(fusions[fusionSamplecol]))
+        print("removed")
+        print(set(prevdataset[fusionSamplecol]) - set(fusions[fusionSamplecol]))
 
     print("changes in fusion names")
     pf = prevdataset.copy()
