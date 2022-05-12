@@ -8,7 +8,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: RNA_aggregate
     subclass: WDL
@@ -18,7 +18,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: RNA_pipeline
     subclass: WDL
@@ -28,7 +28,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: WGS_pipeline
     subclass: WDL
@@ -38,7 +38,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: WGS_aggregate
     subclass: WDL
@@ -48,7 +48,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: rnaseq_mutect2_tumor_only
     subclass: WDL
@@ -58,7 +58,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: rsem_depmap
     subclass: WDL
@@ -68,7 +68,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - rsem_confidence_interval_calculation
   - name: opencravat
@@ -79,7 +79,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: bcftools_setGT
@@ -90,7 +90,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: fix_mutect2col
@@ -101,7 +101,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: omics_mutect2
@@ -112,7 +112,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: manta_annot
@@ -123,7 +123,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: Manta_SomaticSV
@@ -134,7 +134,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: fix_mutect2_clust
@@ -145,7 +145,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: merge_mutect2_replicates
@@ -156,7 +156,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: filter_to_maf
@@ -167,7 +167,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: merge_and_upload
@@ -178,7 +178,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
   - name: omics_post_mutect2
@@ -189,6 +189,6 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - finishing_mutation_pipeline
