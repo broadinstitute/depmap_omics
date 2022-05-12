@@ -360,7 +360,7 @@ def uploadCNMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETNAME)
     )
 
 
-def uploadMutMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETNAME):
+def uploadMutationMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETNAME):
     """subset, rename, save and upload to taiga CN matrices
     
     Args:
@@ -660,10 +660,64 @@ def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNA
     for portal, prs_to_release in prs_allportals.items():
         subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
         renaming_dict = dict(list(zip(subset_pr_table.CDSID, subset_pr_table.index)))
+        print("uploading profile-level matrices to ", portal)
         uploadCNMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
+        uploadMutationMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
+        uploadFusionMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
+        if portal == "internal":
+            uploadExpressionMatrices(
+                renaming_dict,
+                include_ssgsea=True,
+                taiga_id=taiga_ids[portal],
+                folder=folder,
+            )
+        else:
+            uploadExpressionMatrices(
+                renaming_dict,
+                include_ssgsea=False,
+                taiga_id=taiga_ids[portal],
+                folder=folder,
+            )
 
 
-def makeModelLvMatrices():
+def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
+    """for each portal, save and upload profile-indexed data matrices
+    
+    Args:
+        trackerobj (SampleTracker): tracker object
+        taiga_ids (dict): dictionary that maps portal name to virtual taiga dataset id
 
-    return True
-
+    Returns:
+        prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
+    """
+    prs_allportals = getPRToRelease(trackerobj)
+    pr_table = trackerobj.read_pr_table()
+    default_tables = makeDefaultModelTable(trackerobj)
+    for portal, prs_to_release in prs_allportals.items():
+        subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
+        pr2cds_dict = dict(list(zip(subset_pr_table.index, subset_pr_table.CDSID)))
+        default_table = default_tables[portal]
+        model2pr_dict = dict(
+            list(zip(default_table.ProfileID, subset_pr_table.ModelID))
+        )
+        cds2model = {
+            pr2cds_dict[pr]: model2pr_dict[pr] for (pr, _) in model2pr_dict.items()
+        }
+        print("uploading model-level matrices to ", portal)
+        uploadCNMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
+        uploadMutationMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
+        uploadFusionMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
+        if portal == "internal":
+            uploadExpressionMatrices(
+                cds2model,
+                include_ssgsea=True,
+                taiga_id=taiga_ids[portal],
+                folder=folder,
+            )
+        else:
+            uploadExpressionMatrices(
+                cds2model,
+                include_ssgsea=False,
+                taiga_id=taiga_ids[portal],
+                folder=folder,
+            )
