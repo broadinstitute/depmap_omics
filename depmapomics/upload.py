@@ -721,3 +721,56 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
                 taiga_id=taiga_ids[portal],
                 folder=folder,
             )
+
+
+def findLatestVersion(dataset, approved_only=True):
+    highest = 0
+    latest_version = 0
+    data = tc.get_dataset_metadata(dataset)
+    for val in data["versions"]:
+        if val["state"] == "approved" or not approved_only:
+            if int(val["name"]) > highest:
+                highest = int(val["name"])
+                latest_version = highest
+    if latest_version == 0:
+        raise ValueError("could not find a version")
+    return data["permanames"][0] + "." + str(latest_version)
+
+
+def updateEternal(
+    eternal_id="depmap-a0ab", virtual=VIRTUAL, samplesetname=SAMPLESETNAME
+):
+    """update taiga eternal dataset by linking to latest virtual internal dataset"""
+    latest_version = findLatestVersion(virtual["internal"])
+
+    files = [
+        "CCLE_gene_cn",
+        "CCLE_segment_cn",
+        "CCLE_mutations",
+        "CCLE_mutations_bool_damaging",
+        "CCLE_mutations_bool_nonconserving",
+        "CCLE_mutations_bool_otherconserving",
+        "CCLE_mutations_bool_hotspot",
+        "CCLE_expression_full",
+        "CCLE_RNAseq_transcripts",
+        "CCLE_RNAseq_reads",
+        "CCLE_expression",
+        "CCLE_expression_proteincoding_genes_expected_count",
+        "CCLE_expression_transcripts_expected_count",
+        "CCLE_fusions_unfiltered",
+        "CCLE_fusions",
+        "CCLE_ssGSEA",
+        "CCLE_wes_gene_cn",
+        "CCLE_wes_segment_cn",
+    ]
+
+    tc = TaigaClient()
+    tc.update_dataset(
+        eternal_id,
+        changes_description="new " + samplesetname + " omics dataset.",
+        add_taiga_ids=[
+            {"taiga_id": latest_version + "/" + file, "name": file} for file in files
+        ],
+        add_all_existing_files=True,
+    )
+
