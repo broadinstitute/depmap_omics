@@ -34,10 +34,7 @@ def getPRToRelease(trackerobj):
 
 
 def makeAchillesChoiceTable(
-    trackerobj,
-    one_pr_per_type=True,
-    source_priority=SOURCE_PRIORITY,
-    folder="temp/" + SAMPLESETNAME,
+    trackerobj, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which MC
 
@@ -49,103 +46,90 @@ def makeAchillesChoiceTable(
     Returns:
         ach_tables (dict{(str: pd.DataFrame)}): for each portal, a df containing MC-PR mapping
     """
-    avail_prs = getPRToRelease(trackerobj)
     pr_table = trackerobj.read_pr_table()
     seq_table = trackerobj.read_seq_table()
-    ach_tables = dict()
     source_priority = {source_priority[i]: i for i in range(len(source_priority))}
-    for k, v in avail_prs.items():
-        rows = []
-        subset_pr_table = pr_table.loc[v]
-        subset_pr_table = subset_pr_table[subset_pr_table.BlacklistOmics != 1]
-        mcs = set(subset_pr_table["ModelCondition"])
-        # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each MC
-        if one_pr_per_type:
-            for mc in mcs:
-                prs_in_mc = subset_pr_table[(subset_pr_table.ModelCondition == mc)]
-                # rna
-                if len(prs_in_mc[prs_in_mc.Datatype == "rna"]) == 1:
-                    pr = prs_in_mc[prs_in_mc.Datatype == "rna"].index[0]
-                    rows.append((mc, pr, "rna"))
-                elif len(prs_in_mc[prs_in_mc.Datatype == "rna"]) > 1:
-                    cds_ids = prs_in_mc[prs_in_mc.Datatype == "rna"].CDSID.tolist()
-                    # at this point it is guaranteed that all cds_ids have different sources
-                    subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
-                    subset_seq_table.source = subset_seq_table.source.replace(
-                        source_priority
-                    )
-                    latest_cds_id = subset_seq_table.loc[cds_ids, "source"].idxmin()
-                    pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[
-                        0
-                    ]
-                    rows.append((mc, pr, "rna"))
-                # dna
-                if (
-                    len(
-                        prs_in_mc[
-                            (prs_in_mc.Datatype == "wgs")
-                            | (prs_in_mc.Datatype == "wes")
-                        ]
-                    )
-                    == 1
-                ):
-                    pr = prs_in_mc[
+    rows = []
+    subset_pr_table = pr_table.loc[prs]
+    subset_pr_table = subset_pr_table[subset_pr_table.BlacklistOmics != 1]
+    mcs = set(subset_pr_table["ModelCondition"])
+    # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each MC
+    if one_pr_per_type:
+        for mc in mcs:
+            prs_in_mc = subset_pr_table[(subset_pr_table.ModelCondition == mc)]
+            # rna
+            if len(prs_in_mc[prs_in_mc.Datatype == "rna"]) == 1:
+                pr = prs_in_mc[prs_in_mc.Datatype == "rna"].index[0]
+                rows.append((mc, pr, "rna"))
+            elif len(prs_in_mc[prs_in_mc.Datatype == "rna"]) > 1:
+                cds_ids = prs_in_mc[prs_in_mc.Datatype == "rna"].CDSID.tolist()
+                # at this point it is guaranteed that all cds_ids have different sources
+                subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
+                subset_seq_table.source = subset_seq_table.source.replace(
+                    source_priority
+                )
+                latest_cds_id = subset_seq_table.loc[cds_ids, "source"].idxmin()
+                pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[0]
+                rows.append((mc, pr, "rna"))
+            # dna
+            if (
+                len(
+                    prs_in_mc[
                         (prs_in_mc.Datatype == "wgs") | (prs_in_mc.Datatype == "wes")
-                    ].index[0]
-                    rows.append((mc, pr, "dna"))
-                elif (
-                    len(
-                        prs_in_mc[
-                            (prs_in_mc.Datatype == "wgs")
-                            | (prs_in_mc.Datatype == "wes")
-                        ]
-                    )
-                    > 1
-                ):
-                    cds_ids_wgs = prs_in_mc[prs_in_mc.Datatype == "wgs"].CDSID.tolist()
-                    cds_ids_wes = prs_in_mc[prs_in_mc.Datatype == "wes"].CDSID.tolist()
-                    pr = ""
-                    if len(cds_ids_wgs) == 0:
-                        if len(prs_in_mc[prs_in_mc.Datatype == "wes"]) == 1:
-                            pr = prs_in_mc[prs_in_mc.Datatype == "wes"].index[0]
-                        else:
-                            subset_seq_table = seq_table[
-                                seq_table.index.isin(cds_ids_wes)
-                            ]
-                            subset_seq_table.source = subset_seq_table.source.replace(
-                                source_priority
-                            )
-                            latest_cds_id_wes = subset_seq_table.loc[
-                                cds_ids_wes, "source"
-                            ].idxmin()
-                            pr = subset_pr_table[
-                                subset_pr_table.CDSID == latest_cds_id_wes
-                            ].index[0]
+                    ]
+                )
+                == 1
+            ):
+                pr = prs_in_mc[
+                    (prs_in_mc.Datatype == "wgs") | (prs_in_mc.Datatype == "wes")
+                ].index[0]
+                rows.append((mc, pr, "dna"))
+            elif (
+                len(
+                    prs_in_mc[
+                        (prs_in_mc.Datatype == "wgs") | (prs_in_mc.Datatype == "wes")
+                    ]
+                )
+                > 1
+            ):
+                cds_ids_wgs = prs_in_mc[prs_in_mc.Datatype == "wgs"].CDSID.tolist()
+                cds_ids_wes = prs_in_mc[prs_in_mc.Datatype == "wes"].CDSID.tolist()
+                pr = ""
+                if len(cds_ids_wgs) == 0:
+                    if len(prs_in_mc[prs_in_mc.Datatype == "wes"]) == 1:
+                        pr = prs_in_mc[prs_in_mc.Datatype == "wes"].index[0]
                     else:
-                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
+                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
                         subset_seq_table.source = subset_seq_table.source.replace(
                             source_priority
                         )
-                        latest_cds_id_wgs = subset_seq_table.loc[
-                            cds_ids_wgs, "source"
+                        latest_cds_id_wes = subset_seq_table.loc[
+                            cds_ids_wes, "source"
                         ].idxmin()
                         pr = subset_pr_table[
-                            subset_pr_table.CDSID == latest_cds_id_wgs
+                            subset_pr_table.CDSID == latest_cds_id_wes
                         ].index[0]
-                    rows.append((mc, pr, "dna"))
-        ach_tables[k] = pd.DataFrame(
-            rows, columns=["ModelConditionID", "ProfileID", "ProfileType"]
-        )
-        ach_tables[k].to_csv(folder + "/" + k + "_achilles_choice_table.csv")
+                else:
+                    subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
+                    subset_seq_table.source = subset_seq_table.source.replace(
+                        source_priority
+                    )
+                    latest_cds_id_wgs = subset_seq_table.loc[
+                        cds_ids_wgs, "source"
+                    ].idxmin()
+                    pr = subset_pr_table[
+                        subset_pr_table.CDSID == latest_cds_id_wgs
+                    ].index[0]
+                rows.append((mc, pr, "dna"))
+    ach_table = pd.DataFrame(
+        rows, columns=["ModelConditionID", "ProfileID", "ProfileType"]
+    )
 
-    return ach_tables
+    return ach_table
 
 
 def makeDefaultModelTable(
-    trackerobj,
-    one_pr_per_type=True,
-    source_priority=SOURCE_PRIORITY,
-    folder="temp/" + SAMPLESETNAME,
+    trackerobj, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which modelID
 
@@ -155,110 +139,97 @@ def makeDefaultModelTable(
 
     Returns:
         ach_tables (dict{(str: pd.DataFrame)}): for each portal, a df containing MC-PR mapping"""
-    avail_prs = getPRToRelease(trackerobj)
     pr_table = trackerobj.read_pr_table()
     mc_table = trackerobj.read_mc_table()
     seq_table = trackerobj.read_seq_table()
-    default_tables = dict()
     source_priority = {source_priority[i]: i for i in range(len(source_priority))}
-    for k, v in avail_prs.items():
-        rows = []
-        subset_pr_table = pr_table.loc[v]
-        subset_pr_table = subset_pr_table[subset_pr_table.BlacklistOmics != 1]
-        mcs = set(subset_pr_table["ModelCondition"])
-        models = set(mc_table.loc[mcs].ModelID)
-        # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each MC
-        if one_pr_per_type:
-            for m in models:
-                subset_mc_table = mc_table[mc_table.ModelID == m]
-                mcs_in_model = subset_mc_table.index.tolist()
-                prs_in_model = subset_pr_table[
-                    (subset_pr_table.ModelCondition.isin(mcs_in_model))
-                ]
-                # rna
-                if len(prs_in_model[prs_in_model.Datatype == "rna"]) == 1:
-                    pr = prs_in_model[prs_in_model.Datatype == "rna"].index[0]
-                    rows.append((m, pr, "rna"))
-                elif len(prs_in_model[prs_in_model.Datatype == "rna"]) > 1:
-                    cds_ids = prs_in_model[
-                        prs_in_model.Datatype == "rna"
-                    ].CDSID.tolist()
-                    subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
-                    subset_seq_table.source = subset_seq_table.source.replace(
-                        source_priority
-                    )
-                    latest_cds_id = subset_seq_table.loc[cds_ids, "source"].idxmin()
-                    pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[
-                        0
-                    ]
-                    rows.append((m, pr, "rna"))
-                # dna
-                if (
-                    len(
-                        prs_in_model[
-                            (prs_in_model.Datatype == "wgs")
-                            | (prs_in_model.Datatype == "wes")
-                        ]
-                    )
-                    == 1
-                ):
-                    pr = prs_in_model[
+    rows = []
+    subset_pr_table = pr_table.loc[prs]
+    subset_pr_table = subset_pr_table[subset_pr_table.BlacklistOmics != 1]
+    mcs = set(subset_pr_table["ModelCondition"])
+    models = set(mc_table.loc[mcs].ModelID)
+    # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each MC
+    if one_pr_per_type:
+        for m in models:
+            subset_mc_table = mc_table[mc_table.ModelID == m]
+            mcs_in_model = subset_mc_table.index.tolist()
+            prs_in_model = subset_pr_table[
+                (subset_pr_table.ModelCondition.isin(mcs_in_model))
+            ]
+            # rna
+            if len(prs_in_model[prs_in_model.Datatype == "rna"]) == 1:
+                pr = prs_in_model[prs_in_model.Datatype == "rna"].index[0]
+                rows.append((m, pr, "rna"))
+            elif len(prs_in_model[prs_in_model.Datatype == "rna"]) > 1:
+                cds_ids = prs_in_model[prs_in_model.Datatype == "rna"].CDSID.tolist()
+                subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
+                subset_seq_table.source = subset_seq_table.source.replace(
+                    source_priority
+                )
+                latest_cds_id = subset_seq_table.loc[cds_ids, "source"].idxmin()
+                pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[0]
+                rows.append((m, pr, "rna"))
+            # dna
+            if (
+                len(
+                    prs_in_model[
                         (prs_in_model.Datatype == "wgs")
                         | (prs_in_model.Datatype == "wes")
-                    ].index[0]
-                    rows.append((m, pr, "dna"))
-                elif (
-                    len(
-                        prs_in_model[
-                            (prs_in_model.Datatype == "wgs")
-                            | (prs_in_model.Datatype == "wes")
-                        ]
-                    )
-                    > 1
-                ):
-                    # assuming SANGER doesn't have wgs
-                    cds_ids_wgs = prs_in_model[
-                        prs_in_model.Datatype == "wgs"
-                    ].CDSID.tolist()
-                    cds_ids_wes = prs_in_model[
-                        (prs_in_model.Datatype == "wes") & (prs_in_model.CDSID != "")
-                    ].CDSID.tolist()  # CDSID is '' when the profile is in legacy
-                    pr = ""
-                    # if no wgs, look at MC table and select broad wes over sanger wes
-                    if len(cds_ids_wgs) == 0:
-                        if len(prs_in_model[prs_in_model.Datatype == "wes"]) == 1:
-                            pr = prs_in_model[prs_in_model.Datatype == "wes"].index[0]
-                        else:
-                            subset_seq_table = seq_table[
-                                seq_table.index.isin(cds_ids_wes)
-                            ]
-                            subset_seq_table.source = subset_seq_table.source.replace(
-                                source_priority
-                            )
-                            latest_cds_id_wes = subset_seq_table.loc[
-                                cds_ids_wes, "source"
-                            ].idxmin()
-                            pr = subset_pr_table[
-                                subset_pr_table.CDSID == latest_cds_id_wes
-                            ].index[0]
-                    # if there is wgs, always select wgs
+                    ]
+                )
+                == 1
+            ):
+                pr = prs_in_model[
+                    (prs_in_model.Datatype == "wgs") | (prs_in_model.Datatype == "wes")
+                ].index[0]
+                rows.append((m, pr, "dna"))
+            elif (
+                len(
+                    prs_in_model[
+                        (prs_in_model.Datatype == "wgs")
+                        | (prs_in_model.Datatype == "wes")
+                    ]
+                )
+                > 1
+            ):
+                # assuming SANGER doesn't have wgs
+                cds_ids_wgs = prs_in_model[
+                    prs_in_model.Datatype == "wgs"
+                ].CDSID.tolist()
+                cds_ids_wes = prs_in_model[
+                    (prs_in_model.Datatype == "wes") & (prs_in_model.CDSID != "")
+                ].CDSID.tolist()  # CDSID is '' when the profile is in legacy
+                pr = ""
+                # if no wgs, look at MC table and select broad wes over sanger wes
+                if len(cds_ids_wgs) == 0:
+                    if len(prs_in_model[prs_in_model.Datatype == "wes"]) == 1:
+                        pr = prs_in_model[prs_in_model.Datatype == "wes"].index[0]
                     else:
-                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
+                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
                         subset_seq_table.source = subset_seq_table.source.replace(
                             source_priority
                         )
-                        latest_cds_id_wgs = subset_seq_table.loc[
-                            cds_ids_wgs, "source"
+                        latest_cds_id_wes = subset_seq_table.loc[
+                            cds_ids_wes, "source"
                         ].idxmin()
                         pr = subset_pr_table[
-                            subset_pr_table.CDSID == latest_cds_id_wgs
+                            subset_pr_table.CDSID == latest_cds_id_wes
                         ].index[0]
-                    rows.append((m, pr, "dna"))
-        default_tables[k] = pd.DataFrame(
-            rows, columns=["ModelID", "ProfileID", "ProfileType"]
-        )
-        default_tables[k].to_csv(folder + "/" + k + "_default_model_table.csv")
-    return default_tables
+                # if there is wgs, always select wgs
+                else:
+                    subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
+                    subset_seq_table.source = subset_seq_table.source.replace(
+                        source_priority
+                    )
+                    latest_cds_id_wgs = subset_seq_table.loc[
+                        cds_ids_wgs, "source"
+                    ].idxmin()
+                    pr = subset_pr_table[
+                        subset_pr_table.CDSID == latest_cds_id_wgs
+                    ].index[0]
+                rows.append((m, pr, "dna"))
+    default_table = pd.DataFrame(rows, columns=["ModelID", "ProfileID", "ProfileType"])
+    return default_table
 
 
 def initVirtualDatasets(
@@ -645,6 +616,37 @@ def uploadFusionMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETN
     )
 
 
+def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
+    prs_allportals = getPRToRelease(trackerobj)
+    for portal, prs in prs_allportals.items():
+        achilles_table = makeAchillesChoiceTable(trackerobj, prs)
+        default_table = makeDefaultModelTable(trackerobj, prs)
+        achilles_table.to_csv(
+            folder + portal + "_achilles_choice_table.csv", index=False
+        )
+        default_table.to_csv(folder + portal + "_default_model_table.csv", index=False)
+        tc = TaigaClient()
+        tc.update_dataset(
+            dataset_id=taiga_ids[portal],
+            changes_description="adding mapping tables",
+            upload_files=[
+                {
+                    "path": folder + "/" + portal + "_achilles_choice_table.csv",
+                    "name": "Achilles_choice_table",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "/" + portal + "_default_model_table.csv",
+                    "name": "default_model_table",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+            ],
+            add_all_existing_files=True,
+        )
+
+
 def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
     """for each portal, save and upload profile-indexed data matrices
     
@@ -692,11 +694,10 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
     """
     prs_allportals = getPRToRelease(trackerobj)
     pr_table = trackerobj.read_pr_table()
-    default_tables = makeDefaultModelTable(trackerobj)
     for portal, prs_to_release in prs_allportals.items():
         subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
         pr2cds_dict = dict(list(zip(subset_pr_table.index, subset_pr_table.CDSID)))
-        default_table = default_tables[portal]
+        default_table = makeDefaultModelTable(trackerobj, prs_to_release)
         model2pr_dict = dict(
             list(zip(default_table.ProfileID, subset_pr_table.ModelID))
         )
@@ -726,6 +727,7 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
 def findLatestVersion(dataset, approved_only=True):
     highest = 0
     latest_version = 0
+    tc = TaigaClient()
     data = tc.get_dataset_metadata(dataset)
     for val in data["versions"]:
         if val["state"] == "approved" or not approved_only:
@@ -774,3 +776,12 @@ def updateEternal(
         add_all_existing_files=True,
     )
 
+
+def CCLEupload(trackerobj, taiga_ids=""):
+    if taiga_ids == "":
+        taiga_ids = initVirtualDatasets()
+
+    makePRLvMatrices(trackerobj, taiga_ids=taiga_ids)
+    makeModelLvMatrices(trackerobj, taiga_ids=taiga_ids)
+    uploadAuxTables(trackerobj, taiga_ids=taiga_ids)
+    updateEternal(virtual=taiga_ids)
