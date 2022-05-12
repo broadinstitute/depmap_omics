@@ -647,13 +647,11 @@ def retrieveFromCellLineName(
     extract={},
     stripped_cell_line_name="stripped_cell_line_name",
     arxspan_id="arxspan_id",
-    tracker=None,
+    trackerobj=None,
 ):
     """
     Given a List of samples with no arxspan ids, will try to retrieve an arxspan id and associated data from trackers
-
     For now the sample tracker and paquita's depmap pv are used.
-
     Args:
     -----
         noarxspan: dataframe of samples with missing arxspan ids
@@ -662,7 +660,6 @@ def retrieveFromCellLineName(
         extract: dict(str:str) see the extract in the "resolveFromWorkspace" function
         stripped_cell_line_name: str colname where the cell line name is stored
         arxspan_id: str colname wherre the sample id is stored in both noarxspan and ccle_refsamples
-
     Returns:
     --------
         a new dataframe with filled annotations when possible
@@ -686,7 +683,7 @@ def retrieveFromCellLineName(
     ]
 
     # get depmap pv
-    depmap_pv = tracker.read_pv()
+    depmap_pv = trackerobj.read_pv()
     depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
 
     # find back from depmapPV
@@ -820,11 +817,10 @@ def update(
     dry_run=True,
     samplesinset=[],
     todrop=[],
-    tracker=None,
+    trackerobj=None,
     gumbo=True,
 ):
     """updates the sample tracker (or Gumbo omicSequencing table) with the new samples and the QC metrics
-
     Args:
         table (df): [description]
         selected (list[str]): which samples were selected in the release of the analysis
@@ -883,9 +879,9 @@ def update(
         return table
     else:
         if gumbo:
-            tracker.write_seq_table(table)
+            trackerobj.write_seq_table(table)
         else:
-            tracker.write_tracker(table)
+            trackerobj.write_tracker(table)
     print("updated the sheet, please reactivate protections")
     return None
 
