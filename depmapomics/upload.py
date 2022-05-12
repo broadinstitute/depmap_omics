@@ -34,7 +34,7 @@ def getPRToRelease(trackerobj):
 
 
 def makeAchillesChoiceTable(
-    trackerobj, portal, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
+    trackerobj, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which MC
 
@@ -129,7 +129,7 @@ def makeAchillesChoiceTable(
 
 
 def makeDefaultModelTable(
-    trackerobj, portal, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
+    trackerobj, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which modelID
 
@@ -616,11 +616,11 @@ def uploadFusionMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETN
     )
 
 
-def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/"):
+def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
     prs_allportals = getPRToRelease(trackerobj)
     for portal, prs in prs_allportals.items():
-        achilles_table = makeAchillesChoiceTable(trackerobj, portal, prs)
-        default_table = makeDefaultModelTable(trackerobj, portal, prs)
+        achilles_table = makeAchillesChoiceTable(trackerobj, prs)
+        default_table = makeDefaultModelTable(trackerobj, prs)
         achilles_table.to_csv(
             folder + portal + "_achilles_choice_table.csv", index=False
         )
@@ -631,13 +631,13 @@ def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/"):
             changes_description="adding mapping tables",
             upload_files=[
                 {
-                    "path": folder + portal + "_achilles_choice_table.csv",
+                    "path": folder + "/" + portal + "_achilles_choice_table.csv",
                     "name": "Achilles_choice_table",
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
                 {
-                    "path": folder + portal + "_default_model_table.csv",
+                    "path": folder + "/" + portal + "_default_model_table.csv",
                     "name": "default_model_table",
                     "format": "TableCSV",
                     "encoding": "utf-8",
@@ -694,11 +694,10 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
     """
     prs_allportals = getPRToRelease(trackerobj)
     pr_table = trackerobj.read_pr_table()
-    default_tables = makeDefaultModelTable(trackerobj)
     for portal, prs_to_release in prs_allportals.items():
         subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
         pr2cds_dict = dict(list(zip(subset_pr_table.index, subset_pr_table.CDSID)))
-        default_table = default_tables[portal]
+        default_table = makeDefaultModelTable(trackerobj, prs_to_release)
         model2pr_dict = dict(
             list(zip(default_table.ProfileID, subset_pr_table.ModelID))
         )
@@ -777,3 +776,12 @@ def updateEternal(
         add_all_existing_files=True,
     )
 
+
+def CCLEupload(trackerobj, taiga_ids=""):
+    if taiga_ids == "":
+        taiga_ids = initVirtualDatasets()
+
+    makePRLvMatrices(trackerobj, taiga_ids=taiga_ids)
+    makeModelLvMatrices(trackerobj, taiga_ids=taiga_ids)
+    uploadAuxTables(trackerobj, taiga_ids=taiga_ids)
+    updateEternal(virtual=taiga_ids)
