@@ -6,12 +6,14 @@ workflow run_merge_vcfs {
     input {
         Array[File] vcfs
         String sample_id
+        String merge_mode
     }
 
     call merge_vcfs {
         input:
             vcfs=vcfs,
-            sample_id=sample_id
+            sample_id=sample_id,
+            merge_mode=merge_mode,
     }
 }
 
@@ -19,6 +21,8 @@ task merge_vcfs {
     input {
         Array[File] vcfs
         String sample_id
+        String merge_mode
+        String output_type="z"
     
         Int memory = 4
         Int boot_disk_size = 10
@@ -35,7 +39,14 @@ task merge_vcfs {
             bcftools index "$vcf"
         done
  
-        bcftools merge_vcfs 
+        bcftools merge \
+            --missing-to-ref \
+            --merge --no-index \
+            --threads ${num_threads} \
+            --output-type ${output_type} \
+            --output ${sample_id}.vcf.gz \
+            --merge ${merge_mode}
+            ${vcfs} 
     }
 
     output {
