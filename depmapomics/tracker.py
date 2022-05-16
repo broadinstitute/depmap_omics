@@ -869,7 +869,8 @@ def update(
             for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
         ]
 
-    table.loc[selected, samplesetname] = 1
+    if not gumbo:
+        table.loc[selected, samplesetname] = 1
     table.loc[samplesinset, ["low_quality", "blacklist", "prioritized"]] = 0
     table.loc[lowqual, "low_quality"] = 1
     failed_not_dropped = list(set(failed) - set(todrop))
