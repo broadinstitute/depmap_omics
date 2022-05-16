@@ -29,7 +29,10 @@ def getPRToRelease(trackerobj):
     prs = dict()
     for k, v in date_col_dict.items():
         prs_with_date = pr_table[~(pr_table[v] == "")]
-        prs[k] = prs_with_date[prs_with_date[v].astype(int) <= today].index.tolist()
+        prs[k] = prs_with_date[
+            (prs_with_date[v].astype(int) <= today)
+            & (prs_with_date.ProfileSource == "bam")
+        ].index.tolist()
     return prs
 
 
