@@ -544,9 +544,8 @@ def cnPostProcessing(
     print("comparing to previous version")
     # h.compareDfs(wespriogenecn, prevgenecn)
 
-    # adding to the sample tracker the sequencing that were selected and the ones that failed QC
-    selected = {i for i, j in wgsrenaming.items()}
-    selected.update({i for i, j in wesrenaming.items()})
+    # with gumbo, no need to mark this selected field
+    selected = []
 
     try:
         cn.updateTracker(
