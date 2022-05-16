@@ -433,7 +433,7 @@ def cnPostProcessing(
 
     tc = TaigaClient()
 
-    if prevgenecn is "ccle":
+    if prevgenecn == "ccle":
         prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
 
     tracker = pd.DataFrame()
@@ -473,14 +473,6 @@ def cnPostProcessing(
             **kwargs,
         )
 
-        wesrenaming = cn.managingDuplicates(
-            set(wessegments[SAMPLEID]),
-            (set(wesfailed) - set(priority)) | set(todropwes),
-            "wes",
-            tracker,
-        )
-        h.dictToFile(wesrenaming, folder + "sample_renaming.json")
-
         # annotating source
         for v in set(wessegments[SAMPLEID]):
             wessegments.loc[
@@ -490,49 +482,18 @@ def cnPostProcessing(
         wessegments.Source = wessegments.Source.replace(source_rename)
         wessegments.Source += " WES"
 
-        print("renaming")
-        wespriosegments = (
-            wessegments[wessegments[SAMPLEID].isin(set(wesrenaming.keys()))]
-            .replace({SAMPLEID: wesrenaming})
-            .reset_index(drop=True)
-        )
-        wespriogenecn = genecn[genecn.index.isin(set(wesrenaming.keys()))].rename(
-            index=wesrenaming
-        )
-        wespriosegments_purecn = (
-            wes_purecn_segments[
-                wes_purecn_segments[SAMPLEID].isin(set(wesrenaming.keys()))
-            ]
-            .replace({SAMPLEID: wesrenaming})
-            .reset_index(drop=True)
-        )
-        wespriogenecn_purecn = wes_purecn_genecn[
-            wes_purecn_genecn.index.isin(set(wesrenaming.keys()))
-        ].rename(index=wesrenaming)
-        wesprio_loh = wes_loh[wes_loh.index.isin(set(wesrenaming.keys()))].rename(
-            index=wesrenaming
-        )
-        wesprio_table_purecn = wes_purecn_table[
-            wes_purecn_table.index.isin(set(wesrenaming.keys()))
-        ].rename(index=wesrenaming)
-
         # saving prio
-        wespriosegments.to_csv(folder + "segments_latest.csv", index=False)
-        wespriogenecn.to_csv(folder + "genecn_latest.csv")
-        wespriosegments_purecn.to_csv(
-            folder + "purecn_segments_latest.csv", index=False
-        )
-        wespriogenecn_purecn.to_csv(folder + "purecn_genecn_latest.csv")
-        wesprio_loh.to_csv(folder + "purecn_loh_latest.csv")
-        wesprio_table_purecn.to_csv(folder + "purecn_table_latest.csv")
+        wessegments.to_csv(folder + "segments_latest.csv", index=False)
+        genecn.to_csv(folder + "genecn_latest.csv")
+        wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
+        wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
+        wes_loh.to_csv(folder + "purecn_loh_latest.csv")
+        wes_purecn_table.to_csv(folder + "purecn_table_latest.csv")
     else:
         print("bypassing WES using folder: " + wesfolder if wesfolder else folder)
         wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
-        wesrenaming = h.fileToDict(
-            (wesfolder if wesfolder else folder) + "sample_renaming.json"
-        )
-        wespriosegments = pd.read_csv(folder + "segments_latest.csv")
-        wespriogenecn = pd.read_csv(folder + "genecn_latest.csv", index_col=0)
+        wessegments = pd.read_csv(folder + "segments_latest.csv")
+        genecn = pd.read_csv(folder + "genecn_latest.csv", index_col=0)
 
     # doing wgs
     print("doing wgs")
@@ -563,15 +524,6 @@ def cnPostProcessing(
         **kwargs,
     )
 
-    wgsrenaming = cn.managingDuplicates(
-        set(wgssegments[SAMPLEID]),
-        (set(wgsfailed) - set(priority)) | set(todropwgs),
-        "wgs",
-        tracker,
-    )
-
-    h.dictToFile(wgsrenaming, folder + "sample_renaming.json")
-
     # annotating source
     for v in set(wgssegments[SAMPLEID]):
         wgssegments.loc[
@@ -581,40 +533,16 @@ def cnPostProcessing(
     wgssegments.Source = wgssegments.Source.replace(source_rename)
     wgssegments.Source += " WGS"
 
-    print("renaming")
-    wgspriosegments = (
-        wgssegments[wgssegments[SAMPLEID].isin(set(wgsrenaming.keys()))]
-        .replace({SAMPLEID: wgsrenaming})
-        .reset_index(drop=True)
-    )
-    wgspriogenecn = genecn[genecn.index.isin(set(wgsrenaming.keys()))].rename(
-        index=wgsrenaming
-    )
-    wgspriosegments_purecn = (
-        wgs_purecn_segments[wgs_purecn_segments[SAMPLEID].isin(set(wgsrenaming.keys()))]
-        .replace({SAMPLEID: wgsrenaming})
-        .reset_index(drop=True)
-    )
-    wgspriogenecn_purecn = wgs_purecn_genecn[
-        wgs_purecn_genecn.index.isin(set(wgsrenaming.keys()))
-    ].rename(index=wgsrenaming)
-    wgsprio_loh = wgs_loh[wgs_loh.index.isin(set(wgsrenaming.keys()))].rename(
-        index=wgsrenaming
-    )
-    wgsprio_table_purecn = wgs_purecn_table[
-        wgs_purecn_table.index.isin(set(wgsrenaming.keys()))
-    ].rename(index=wgsrenaming)
-
     # saving prio
-    wgspriosegments.to_csv(folder + "segments_latest.csv", index=False)
-    wgspriogenecn.to_csv(folder + "genecn_latest.csv")
-    wgspriosegments_purecn.to_csv(folder + "purecn_segments_latest.csv", index=False)
-    wgspriogenecn_purecn.to_csv(folder + "purecn_genecn_latest.csv")
-    wgsprio_loh.to_csv(folder + "purecn_loh_latest.csv")
-    wgsprio_table_purecn.to_csv(folder + "purecn_table_latest.csv")
+    wgssegments.to_csv(folder + "segments_latest.csv", index=False)
+    genecn.to_csv(folder + "genecn_latest.csv")
+    wgs_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
+    wgs_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
+    wgs_loh.to_csv(folder + "purecn_loh_latest.csv")
+    wgs_purecn_table.to_csv(folder + "purecn_table_latest.csv")
 
     print("comparing to previous version")
-    h.compareDfs(wespriogenecn, prevgenecn)
+    # h.compareDfs(wespriogenecn, prevgenecn)
 
     # adding to the sample tracker the sequencing that were selected and the ones that failed QC
     selected = {i for i, j in wgsrenaming.items()}
@@ -783,7 +711,7 @@ def cnPostProcessing(
         dataset_description=dataset_description,
     )
     print("done")
-    return wespriosegments, wgspriosegments
+    return wessegments, wgssegments
 
 
 async def mutationPostProcessing(
