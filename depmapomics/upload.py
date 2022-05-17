@@ -29,7 +29,10 @@ def getPRToRelease(trackerobj):
     prs = dict()
     for k, v in date_col_dict.items():
         prs_with_date = pr_table[~(pr_table[v] == "")]
-        prs[k] = prs_with_date[prs_with_date[v].astype(int) <= today].index.tolist()
+        prs[k] = prs_with_date[
+            (prs_with_date[v].astype(int) <= today)
+            & (prs_with_date.ProfileSource == "bam")
+        ].index.tolist()
     return prs
 
 
@@ -662,6 +665,7 @@ def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNA
     for portal, prs_to_release in prs_allportals.items():
         subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
         renaming_dict = dict(list(zip(subset_pr_table.CDSID, subset_pr_table.index)))
+        h.dictToFile(renaming_dict, folder + "/" + portal + "_seq2pr_renaming.json")
         print("uploading profile-level matrices to ", portal)
         uploadCNMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
         uploadMutationMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
@@ -698,16 +702,15 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
         subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
         pr2cds_dict = dict(list(zip(subset_pr_table.index, subset_pr_table.CDSID)))
         default_table = makeDefaultModelTable(trackerobj, prs_to_release)
-        model2pr_dict = dict(
-            list(zip(default_table.ProfileID, subset_pr_table.ModelID))
-        )
+        pr2model_dict = dict(list(zip(default_table.ProfileID, default_table.ModelID)))
         cds2model = {
-            pr2cds_dict[pr]: model2pr_dict[pr] for (pr, _) in model2pr_dict.items()
+            pr2cds_dict[pr]: pr2model_dict[pr] for (pr, _) in pr2model_dict.items()
         }
-        print("uploading model-level matrices to ", portal)
-        uploadCNMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
-        uploadMutationMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
-        uploadFusionMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
+        h.dictToFile(cds2model, folder + "/" + portal + "_seq2model_renaming.json")
+        print("uploading model-level matrices to", portal)
+        # uploadCNMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
+        # uploadMutationMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
+        # uploadFusionMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
         if portal == "internal":
             uploadExpressionMatrices(
                 cds2model,
