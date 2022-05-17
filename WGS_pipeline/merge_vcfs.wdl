@@ -15,6 +15,11 @@ workflow run_merge_vcfs {
             sample_id=sample_id,
             merge_mode=merge_mode,
     }
+
+    output {
+        File merged_vcf = merge_vcfs.vcf_merged
+        File merged_vcf_index = merge_vcfs.vcf_merged_index
+    }
 }
 
 task merge_vcfs {
@@ -35,22 +40,25 @@ task merge_vcfs {
     command {
         set -euo pipefail
 
-        for vcf in "${vcfs}"; do
+        for vcf in "${sep=' ' vcfs}"; do
             bcftools index "$vcf"
         done
  
         bcftools merge \
             --missing-to-ref \
-            --merge --no-index \
+            --no-index \
             --threads ${num_threads} \
             --output-type ${output_type} \
             --output ${sample_id}.vcf.gz \
             --merge ${merge_mode}
-            ${vcfs} 
+            ${sep=" " vcfs}
+        
+        bcftools index ${sample_id}.vcf.gz
     }
 
     output {
-        File vcf_fixedploid="${sample_id}.vcf.gz"
+        File vcf_merged="${sample_id}.vcf.gz"
+        File vcf_merged_index="${sample_id}.vcf.gz.csi"
     }
 
     runtime {
