@@ -60,8 +60,8 @@ task opencravat {
       pip install open-cravat --upgrade
       oc module install-base
       oc module install -y ${annotators_to_use} vcfreporter hg19
-
-      ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/token.txt" else ""}
+      ${if defined(oncokb_api_key) then "mkdir /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/data/" else ""}
+      ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/data/token.txt" else ""}
       
       # fast version
       # ------------
