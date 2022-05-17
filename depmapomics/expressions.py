@@ -431,13 +431,15 @@ def saveFiles(files, folder=TMP_PATH, rep=("rsem", "expression"), feather=True):
     for k, val in files.items():
         val.to_csv(os.path.join(folder, k.replace(rep[0], rep[1]) + ".csv"))
         if feather:
-            val.to_feather(os.path.join(folder, k.replace(rep[0], rep[1]) + ".feather"))
+            val.reset_index().to_feather(
+                os.path.join(folder, k.replace(rep[0], rep[1]) + ".feather")
+            )
         if "tpm" in k:
             val.apply(lambda x: np.log2(x + 1)).to_csv(
                 os.path.join(folder, k.replace(rep[0], rep[1]) + "_logp1.csv")
             )
             if feather:
-                val.apply(lambda x: np.log2(x + 1)).to_feather(
+                val.apply(lambda x: np.log2(x + 1)).reset_index().to_feather(
                     os.path.join(folder, k.replace(rep[0], rep[1]) + "_logp1.feather")
                 )
 
