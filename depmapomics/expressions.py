@@ -418,7 +418,7 @@ async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     return enrichments
 
 
-def saveFiles(files, folder=TMP_PATH, rep=("rsem", "expression")):
+def saveFiles(files, folder=TMP_PATH, rep=("rsem", "expression"), feather=True):
     """
     saves the files in the dict to the folder
 
@@ -430,10 +430,16 @@ def saveFiles(files, folder=TMP_PATH, rep=("rsem", "expression")):
     print("storing files in {}".format(folder))
     for k, val in files.items():
         val.to_csv(os.path.join(folder, k.replace(rep[0], rep[1]) + ".csv"))
+        if feather:
+            val.to_feather(os.path.join(folder, k.replace(rep[0], rep[1]) + ".feather"))
         if "tpm" in k:
             val.apply(lambda x: np.log2(x + 1)).to_csv(
                 os.path.join(folder, k.replace(rep[0], rep[1]) + "_logp1.csv")
             )
+            if feather:
+                val.apply(lambda x: np.log2(x + 1)).to_feather(
+                    os.path.join(folder, k.replace(rep[0], rep[1]) + "_logp1.feather")
+                )
 
 
 async def postProcess(
@@ -597,7 +603,7 @@ async def postProcess(
         enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
         print("saving files")
         enrichments.to_csv(save_output + "gene_sets_all.csv")
-    saveFiles(files, save_output)
+    saveFiles(files, save_output, feather=True)
     print("done")
 
     return (
