@@ -451,19 +451,19 @@ def uploadExpressionMatrices(
     # load cds-id indexed matrices for the current quarter
     print("Expression: loading")
     transcripts_tpm = pd.read_csv(folder + "/transcripts_tpm_logp1.csv", index_col=0)
-    genes_tpm = pd.read_csv(folder + "/genes_tpm_logp1.csv", index_col=0)
-    genes_expected_count = pd.read_csv(
-        folder + "/genes_expected_count.csv", index_col=0
+    genes_tpm = pd.read_csv(folder + "/genes_tpm_logp1.csv").set_index("index")
+    genes_expected_count = pd.read_csv(folder + "/genes_expected_count.csv").set_index(
+        "index"
     )
     proteincoding_genes_expected_count = pd.read_csv(
-        folder + "/proteincoding_genes_expected_count.csv", index_col=0
-    )
+        folder + "/proteincoding_genes_expected_count.csv"
+    ).set_index("index")
     proteincoding_genes_tpm = pd.read_csv(
-        folder + "/proteincoding_genes_tpm_logp1.csv", index_col=0
-    )
+        folder + "/proteincoding_genes_tpm_logp1.csv"
+    ).set_index("index")
     transcripts_expected_count = pd.read_csv(
-        folder + "/transcripts_expected_count.csv", index_col=0
-    )
+        folder + "/transcripts_expected_count.csv"
+    ).set_index("index")
 
     # subset and rename
     print("Expression: subsetting and renaming")
