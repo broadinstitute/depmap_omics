@@ -1,37 +1,37 @@
 version 1.0
 
-# Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "bcftools.wdl" as setGT
-import "fix_mutect2.wdl" as fix_mutect2
+import "merge_vcfs.wdl" as merge_vcfs
 import "opencravat.wdl" as openCravat
 # import "filter_to_maf.wdl" as filtmaf
 
 workflow omics_post_mutect2 {
-  input {
-    String sample_id
-    File vcf
-    String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb"
-  }
+    input {
+        String sample_id
+        Array[File] vcfs
+        String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb"
+        File oncokb_api_key="gs://jkobject/oncokb_key.txt"
+    }
 
-  call setGT.bcftools_fix_ploidy as set_GT {
-    input:
-      sample_id=sample_id,
-      vcf=vcf,
-  }
+    call merge_vcfs.merge_vcfs as runm_merge_vcfs {
+        input:
+            sample_id=sample_id,
+            vcfs=vcfs,
+            merge_mode='all'
+    }
 
-  call fix_mutect2.fix_mutect2 as fix_mutect2 {
-      input:
-        sample_id=sample_id,
-        vcf_file=set_GT.vcf_fixedploid
-  }
-
-  call openCravat.opencravat as open_cravat {
-      input:
-        sample_id=sample_id,
-        vcf=fix_mutect2.vcf_fixed
-  }
-
+    call openCravat.opencravat as open_cravat {
+        input:
+            sample_id=sample_id,
+            vcf=runm_merge_vcfs.vcf_merged,
+            annotators_to_use=annotators,
+            oncokb_api_key=oncokb_api_key
+    }
+    #call filter_annotate.filter_annotate as filter_annotate {
+    #    input:
+    #        vcf=open_cravat.oc_main_files,
+    #}
+    
   # to test
   # call filtmaf.filter_to_maf as filter_to_maf {
   #   input:
@@ -40,11 +40,10 @@ workflow omics_post_mutect2 {
   #     disk_space=20
   # }
 
-  output {
-    File out_vcf=open_cravat.oc_main_files
-    File oc_error_files=open_cravat.oc_error_files
-    File oc_log_files=open_cravat.oc_log_files
-    File oc_sql_files=open_cravat.oc_sql_files
-    #File somatic_maf=filter_to_maf.out_maf
-  }
+    output {
+        File out_vcf=open_cravat.oc_main_files
+        File out_vcf_index=runm_merge_vcfs.vcf_merged_index
+        File oc_sql_files=open_cravat.oc_sql_files
+        #File somatic_maf=filter_to_maf.out_maf
+    }
 }
