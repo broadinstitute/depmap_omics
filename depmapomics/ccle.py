@@ -197,8 +197,20 @@ async def expressionPostProcessing(
         trackerobj=trackerobj,
         gumbo=gumbo,
         todrop=todrop,
-        dry_run=dry_run,
+        dry_run=True,
+        newgs=None,
     )
+
+    # subset and rename, include all PRs that have associated CDS-ids
+    pr_table = track.update_pr_from_seq(trackerobj)
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
+    pr_files = dict()
+    for k, v in files.items():
+        pr_files[k + "_profile"] = v[v.index.isin(set(renaming_dict.keys()))].rename(
+            index=renaming_dict
+        )
+    expressions.saveFiles(pr_files, folder)
 
     if not dry_run:
         print("uploading to taiga")
@@ -250,7 +262,52 @@ async def expressionPostProcessing(
                     "path": folder + "genes_expected_count.csv",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
-                }
+                },
+                {
+                    "path": folder + "proteincoding_genes_tpm_profile_logp1.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_tpm_profile_logp1.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_tpm_profile_logp1.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_tpm_profile.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_tpm_profile.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_tpm_profile.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_expected_count_profile.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_expected_count_profile.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_expected_count_profile.csv",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
                 # {
                 #     "path": folder+'gene_sets_all.csv',
                 #     "format": "NumericMatrixCSV",
@@ -314,8 +371,23 @@ async def fusionPostProcessing(
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
-    fusions, _ = fusion.postProcess(
+    fusions, fusions_filtered = fusion.postProcess(
         refworkspace, todrop=previousQCfail, save_output=folder, **kwargs,
+    )
+
+    # subset, rename from seqid to prid, and save pr-indexed matrices
+    pr_table = trackerobj.read_pr_table()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    fusions_pr = fusions[
+        fusions[fusionSamplecol].isin(set(renaming_dict.keys()))
+    ].replace({fusionSamplecol: renaming_dict})
+    fusions_filtered_pr = fusions_filtered[
+        fusions_filtered[fusionSamplecol].isin(set(renaming_dict.keys()))
+    ].replace({fusionSamplecol: renaming_dict})
+
+    fusions_pr.to_csv(os.path.join(folder, "fusions_all_profile.csv"), index=False)
+    fusions_filtered_pr.to_csv(
+        os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
     )
 
     if prevdataset == "ccle":
@@ -356,11 +428,11 @@ async def fusionPostProcessing(
         dataset_permaname=taiga_dataset,
         changes_description="new " + sampleset + " release!",
         upload_files=[
-            {
-                "path": "temp/" + sampleset + "/fusions_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
+            # {
+            #     "path": "temp/" + sampleset + "/fusions_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
             {
                 "path": "temp/" + sampleset + "/filteredfusions_latest.csv",
                 "format": "TableCSV",
@@ -368,6 +440,16 @@ async def fusionPostProcessing(
             },
             {
                 "path": "temp/" + sampleset + "/fusions_all.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/" + sampleset + "/filteredfusions_latest_profile.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/" + sampleset + "/fusions_all_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
@@ -482,13 +564,24 @@ def cnPostProcessing(
         wessegments.Source = wessegments.Source.replace(source_rename)
         wessegments.Source += " WES"
 
-        # saving prio
-        wessegments.to_csv(folder + "segments_latest.csv", index=False)
-        genecn.to_csv(folder + "genecn_latest.csv")
-        wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
-        wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
-        wes_loh.to_csv(folder + "purecn_loh_latest.csv")
-        wes_purecn_table.to_csv(folder + "purecn_table_latest.csv")
+        # wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
+        # wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
+        # wes_loh.to_csv(folder + "purecn_loh_latest.csv")
+        # wes_purecn_table.to_csv(folder + "purecn_table_latest.csv")
+        # subset and rename to PR-indexed matrices
+        # assuming no wgs
+        pr_table = trackerobj.read_pr_table()
+        renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+        wessegments_pr = (
+            wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
+            .replace({SAMPLEID: renaming_dict})
+            .reset_index(drop=True)
+        )
+        wescn_pr = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
+            index=renaming_dict
+        )
+        wessegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
+        wescn_pr.to_csv(folder + "genecn_all_profile.csv")
     else:
         print("bypassing WES using folder: " + wesfolder if wesfolder else folder)
         wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
@@ -533,13 +626,10 @@ def cnPostProcessing(
     wgssegments.Source = wgssegments.Source.replace(source_rename)
     wgssegments.Source += " WGS"
 
-    # saving prio
-    wgssegments.to_csv(folder + "segments_latest.csv", index=False)
-    genecn.to_csv(folder + "genecn_latest.csv")
-    wgs_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
-    wgs_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
-    wgs_loh.to_csv(folder + "purecn_loh_latest.csv")
-    wgs_purecn_table.to_csv(folder + "purecn_table_latest.csv")
+    # wgs_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
+    # wgs_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
+    # wgs_loh.to_csv(folder + "purecn_loh_latest.csv")
+    # wgs_purecn_table.to_csv(folder + "purecn_table_latest.csv")
 
     print("comparing to previous version")
     # h.compareDfs(wespriogenecn, prevgenecn)
@@ -577,6 +667,25 @@ def cnPostProcessing(
     except:
         print("no wes for this sampleset")
 
+    pr_table = track.update_pr_from_seq()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    wgssegments_pr = (
+        wgssegments[wgssegments[SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({SAMPLEID: renaming_dict})
+        .reset_index(drop=True)
+    )
+    wgscn_pr = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    wgssegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
+    wgscn_pr.to_csv(folder + "genecn_all_profile.csv")
+
+    mergedsegments_pr = wgssegments_pr.append(wessegments_pr)[subsetsegs]
+    mergedgenecn_pr = wgscn_pr.append(wescn_pr)
+
+    mergedsegments_pr.to_csv(folder + "merged_genecn_all_profile.csv")
+    mergedgenecn_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
+
     # uploading to taiga
     print("uploading to taiga")
     tc.update_dataset(
@@ -585,16 +694,6 @@ def cnPostProcessing(
         + " release! (removed misslabellings, see changelog)",
         dataset_permaname=taiga_dataset,
         upload_files=[
-            {
-                "path": folder + "wes_segments_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_genecn_latest.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
             {
                 "path": folder + "wes_segments_all.csv",
                 "format": "TableCSV",
@@ -616,96 +715,116 @@ def cnPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "wgs_segments_latest.csv",
+                "path": folder + "wes_segments_all_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "wgs_genecn_latest.csv",
+                "path": folder + "wes_genecn_all_profile.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_segments_all_profile.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wgs_genecn_all_profile.csv",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_segments_all_profile.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_genecn_all_profile.csv",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             # Pure CN outputs
-            {
-                "path": folder + "wes_purecn_segments_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_genecn_latest.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_segments_all.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_genecn_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_loh_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_loh_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_table_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_table_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_segments_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_genecn_latest.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_segments_all.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_genecn_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_loh_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_loh_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_table_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_table_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
+            # {
+            #     "path": folder + "wes_purecn_segments_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_genecn_latest.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_segments_all.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_genecn_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_loh_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_loh_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_table_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_table_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_segments_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_genecn_latest.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_segments_all.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_genecn_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_loh_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_loh_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_table_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_table_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
         ],
         dataset_description=dataset_description,
     )
@@ -775,22 +894,6 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    # renaming
-    print("renaming")
-    wesrefwm = dm.WorkspaceManager(wesrefworkspace)
-    wesrenaming = track.removeOlderVersions(
-        names=set(wesmutations[SAMPLEID]),
-        refsamples=wesrefwm.get_samples(),
-        arxspan_id="arxspan_id",
-        version="version",
-    )
-
-    wesrenaming = h.fileToDict(folder + "sample_renaming.json")
-    wesrenaming.update(tokeep_wes)
-
-    wesmutations = wesmutations[
-        wesmutations[SAMPLEID].isin(wesrenaming.keys())
-    ].replace({SAMPLEID: wesrenaming})
     wesmutations.to_csv(folder + "wes_somatic_mutations_all.csv", index=None)
 
     # doing wgs
@@ -806,23 +909,19 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    # renaming
-    print("renaming")
-    wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)
-    wgsrenaming = track.removeOlderVersions(
-        names=set(wesmutations[SAMPLEID]),
-        refsamples=wgsrefwm.get_samples(),
-        arxspan_id="arxspan_id",
-        version="version",
-    )
-
-    wgsrenaming = h.fileToDict(folder + "sample_renaming.json")
-    wgsrenaming.update(tokeep_wgs)
-
-    wgsmutations = wgsmutations[
-        wgsmutations[SAMPLEID].isin(wgsrenaming.keys())
-    ].replace({SAMPLEID: wgsrenaming})
     wgsmutations.to_csv(folder + "wgs_somatic_mutations_all.csv", index=None)
+
+    pr_table = track.update_pr_from_seq()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    wgsmutations_pr = wgsmutations[
+        wgsmutations[SAMPLEID].isin(renaming_dict.keys())
+    ].replace({SAMPLEID: renaming_dict})
+    wesmutations_pr = wesmutations[
+        wesmutations[SAMPLEID].isin(renaming_dict.keys())
+    ].replace({SAMPLEID: renaming_dict})
+
+    wgsmutations_pr.to_csv(folder + "wgs_somatic_mutations_all_profile.csv", index=None)
+    wesmutations_pr.to_csv(folder + "wes_somatic_mutations_all_profile.csv", index=None)
 
     # merge
     print("merging")

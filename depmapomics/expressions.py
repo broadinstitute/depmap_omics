@@ -597,7 +597,7 @@ async def postProcess(
         enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
         print("saving files")
         enrichments.to_csv(save_output + "gene_sets_all.csv")
-    saveFiles(files, save_output)
+    # saveFiles(files, save_output)
     print("done")
 
     return (

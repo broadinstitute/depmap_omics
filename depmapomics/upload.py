@@ -243,11 +243,12 @@ def initVirtualDatasets(
 
     with open("temp/dummy.csv", "w") as fp:
         pass
-    virtual = dict()
+    virutal_pr = dict()
+    virtual_model = dict()
     tc = TaigaClient()
     for p in portals:
-        virtual[p] = tc.create_dataset(
-            p + "_" + samplesetname,
+        virutal_pr[p] = tc.create_dataset(
+            p + "_" + samplesetname + "_profile",
             dataset_description=samplesetname
             + " release of the DepMap dataset for the DepMap Portal. Please look at the README file for additional information about this dataset. ",
             upload_files=[
@@ -260,10 +261,24 @@ def initVirtualDatasets(
             ],
             folder_id=taiga_folder_id,
         )
-    return virtual
+        virtual_model[p] = tc.create_dataset(
+            p + "_" + samplesetname + "_model",
+            dataset_description=samplesetname
+            + " release of the DepMap dataset for the DepMap Portal. Please look at the README file for additional information about this dataset. ",
+            upload_files=[
+                {
+                    "path": "temp/dummy.csv",
+                    "name": "init",
+                    "format": "Raw",
+                    "encoding": "utf-8",
+                }
+            ],
+            folder_id=taiga_folder_id,
+        )
+    return virutal_pr, virtual_model
 
 
-def uploadCNMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETNAME):
+def uploadCNMatricesPR(prs, portal, taiga_latest=TAIGA_CN, taiga_virtual=""):
     """subset, rename, save and upload to taiga CN matrices
     
     Args:
@@ -271,60 +286,126 @@ def uploadCNMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETNAME)
         taiga_id (str): which dataset the matrices are being uploaded to
         folder (str): where the files to be subsetted are saved
     """
-
+    folder = "temp/" + portal + "/profile/"
     # load cds-id indexed matrices for the current quarter
     print("CN: loading")
-    genecn = pd.read_csv(folder + "/achilles_gene_cn.csv", index_col=0)
-    segmentcn = pd.read_csv(folder + "/achilles_segment.csv")
-    wescn = pd.read_csv(folder + "/wes_genecn_latest.csv", index_col=0)
-    wessegment = pd.read_csv(folder + "/wes_segments_latest.csv")
+    tc = TaigaClient()
+    genecn = tc.get(name=taiga_latest, file="merged_genecn_all_profile")
+    segmentcn = tc.get(name=taiga_latest, file="merged_segments_all_profile")
+    wescn = tc.get(name=taiga_latest, file="wes_genecn_all_profile")
+    wessegment = tc.get(name=taiga_latest, file="wes_segments_all_profile")
 
     # subset and rename
     print("CN: subsetting and renaming")
-    segmentcn_renamed = segmentcn[
-        segmentcn.DepMap_ID.isin(set(renaming_dict.keys()))
-    ].replace({"DepMap_ID": renaming_dict})
-    segmentcn_renamed.to_csv("temp/all_merged_segments.csv", index=False)
-    genecn_renamed = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
-    genecn_renamed.to_csv("temp/all_merged_genes_cn.csv")
-    wescn_renamed = wescn[wescn.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
-    wescn_renamed.to_csv("temp/wes_genes_cn.csv")
-    wessegment_renamed = wessegment[
-        wessegment.DepMap_ID.isin(set(renaming_dict.keys()))
-    ].replace({"DepMap_ID": renaming_dict})
-    wessegment_renamed.to_csv("temp/wes_segments.csv", index=False)
+    segmentcn_renamed = segmentcn[segmentcn.DepMap_ID.isin(prs)]
+    segmentcn_renamed.to_csv(folder + "all_merged_segments.csv", index=False)
+    genecn_renamed = genecn[genecn.index.isin(prs)]
+    genecn_renamed.to_csv(folder + "all_merged_genes_cn.csv")
+    wescn_renamed = wescn[wescn.index.isin(prs)]
+    wescn_renamed.to_csv(folder + "wes_genes_cn.csv")
+    wessegment_renamed = wessegment[wessegment.DepMap_ID.isin(prs)]
+    wessegment_renamed.to_csv(folder + "wes_segments.csv", index=False)
 
     # upload to taiga
     print("CN: uploading to taiga")
     tc = TaigaClient()
     tc.update_dataset(
-        dataset_id=taiga_id,
+        dataset_id=taiga_virtual,
         changes_description="adding CN data",
         upload_files=[
             {
-                "path": "temp/all_merged_genes_cn.csv",
+                "path": folder + "all_merged_genes_cn.csv",
                 "name": "CCLE_gene_cn",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/all_merged_segments.csv",
+                "path": folder + "all_merged_segments.csv",
                 "name": "CCLE_segment_cn",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/wes_genes_cn.csv",
+                "path": folder + "wes_genes_cn.csv",
                 "name": "CCLE_wes_gene_cn",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/wes_segments.csv",
+                "path": folder + "wes_segments.csv",
+                "name": "CCLE_wes_segment_cn",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+        ],
+        add_all_existing_files=True,
+    )
+
+
+def uploadCNMatricesModel(
+    pr2model_dict, portal, taiga_latest=TAIGA_CN, taiga_virtual=""
+):
+    """subset, rename, save and upload to taiga CN matrices
+    
+    Args:
+        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
+        taiga_id (str): which dataset the matrices are being uploaded to
+        folder (str): where the files to be subsetted are saved
+    """
+    folder = "temp/" + portal + "/model/"
+    # load cds-id indexed matrices for the current quarter
+    print("CN: loading")
+    tc = TaigaClient()
+    genecn = tc.get(name=taiga_latest, file="merged_genecn_all_profile")
+    segmentcn = tc.get(name=taiga_latest, file="merged_segments_all_profile")
+    wescn = tc.get(name=taiga_latest, file="wes_genecn_all_profile")
+    wessegment = tc.get(name=taiga_latest, file="wes_segments_all_profile")
+
+    # subset and rename
+    print("CN: subsetting and renaming")
+    segmentcn_renamed = segmentcn[
+        segmentcn.DepMap_ID.isin(set(pr2model_dict.keys()))
+    ].replace({"DepMap_ID": pr2model_dict})
+    segmentcn_renamed.to_csv(folder + "all_merged_segments.csv", index=False)
+    genecn_renamed = genecn[genecn.index.isin(set(pr2model_dict.keys()))].rename(
+        index=pr2model_dict
+    )
+    genecn_renamed.to_csv(folder + "all_merged_genes_cn.csv")
+    wescn_renamed = wescn[wescn.index.isin(set(pr2model_dict.keys()))].rename(
+        index=pr2model_dict
+    )
+    wescn_renamed.to_csv(folder + "wes_genes_cn.csv")
+    wessegment_renamed = wessegment[
+        wessegment.DepMap_ID.isin(set(pr2model_dict.keys()))
+    ].replace({"DepMap_ID": pr2model_dict})
+    wessegment_renamed.to_csv(folder + "wes_segments.csv", index=False)
+
+    # upload to taiga
+    print("CN: uploading to taiga")
+    tc.update_dataset(
+        dataset_id=taiga_virtual,
+        changes_description="adding CN data",
+        upload_files=[
+            {
+                "path": folder + "all_merged_genes_cn.csv",
+                "name": "CCLE_gene_cn",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "all_merged_segments.csv",
+                "name": "CCLE_segment_cn",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_genes_cn.csv",
+                "name": "CCLE_wes_gene_cn",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "wes_segments.csv",
                 "name": "CCLE_wes_segment_cn",
                 "format": "TableCSV",
                 "encoding": "utf-8",
@@ -436,8 +517,8 @@ def uploadMutationMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESE
     )
 
 
-def uploadExpressionMatrices(
-    renaming_dict, include_ssgsea=False, taiga_id="", folder="temp/" + SAMPLESETNAME
+def uploadExpressionMatricesPR(
+    prs, portal, include_ssgsea=False, taiga_latest=TAIGA_EXPRESSION, taiga_virtual="",
 ):
     """subset, rename, save and upload to taiga CN matrices
     
@@ -447,96 +528,92 @@ def uploadExpressionMatrices(
         folder (str): where the files to be subsetted are saved
         include_ssgsea (bool): whether or not to upload ssGSEA data to this portal
     """
-
-    # load cds-id indexed matrices for the current quarter
-    print("Expression: loading")
-    transcripts_tpm = pd.read_csv(folder + "/transcripts_tpm_logp1.csv", index_col=0)
-    genes_tpm = pd.read_csv(folder + "/genes_tpm_logp1.csv").set_index("index")
-    genes_expected_count = pd.read_csv(folder + "/genes_expected_count.csv").set_index(
-        "index"
+    folder = "temp/" + portal + "/profile/"
+    # load pr-id indexed matrices for the current quarter from latest
+    print("Expression: loading from taiga latest")
+    tc = TaigaClient()
+    genes_expected_count = tc.get(
+        name=taiga_latest, file="genes_expected_count_profile"
     )
-    proteincoding_genes_expected_count = pd.read_csv(
-        folder + "/proteincoding_genes_expected_count.csv"
-    ).set_index("index")
-    proteincoding_genes_tpm = pd.read_csv(
-        folder + "/proteincoding_genes_tpm_logp1.csv"
-    ).set_index("index")
-    transcripts_expected_count = pd.read_csv(
-        folder + "/transcripts_expected_count.csv"
-    ).set_index("index")
+    genes_tpm = tc.get(name=taiga_latest, file="genes_tpm_profile_logp1")
+    proteincoding_genes_expected_count = tc.get(
+        name=taiga_latest, file="proteincoding_genes_expected_count_profile"
+    )
+    proteincoding_genes_tpm = tc.get(
+        name=taiga_latest, file="proteincoding_genes_tpm_profile_logp1"
+    )
+    transcripts_expected_count = tc.get(
+        name=taiga_latest, file="transcripts_expected_count_profile"
+    )
+    transcripts_tpm = tc.get(name=taiga_latest, file="transcripts_tpm_profile_logp1")
 
-    # subset and rename
+    # subset
     print("Expression: subsetting and renaming")
     genes_expected_count_renamed = genes_expected_count[
-        genes_expected_count.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
-    genes_expected_count_renamed.to_csv("temp/expression_genes_expected_count.csv")
-    genes_tpm_renamed = genes_tpm[
-        genes_tpm.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
-    genes_tpm_renamed.to_csv("temp/expression_genes_tpm.csv")
+        genes_expected_count.index.isin(prs)
+    ]
+    genes_expected_count_renamed.to_csv(folder + "expression_genes_expected_count.csv")
+    genes_tpm_renamed = genes_tpm[genes_tpm.index.isin(prs)]
+    genes_tpm_renamed.to_csv(folder + "expression_genes_tpm.csv")
     proteincoding_genes_tpm_renamed = proteincoding_genes_tpm[
-        proteincoding_genes_tpm.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
+        proteincoding_genes_tpm.index.isin(prs)
+    ]
     proteincoding_genes_tpm_renamed.to_csv(
-        "temp/expression_proteincoding_genes_tpm.csv"
+        folder + "expression_proteincoding_genes_tpm.csv"
     )
-    transcripts_tpm_renamed = transcripts_tpm[
-        transcripts_tpm.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
-    transcripts_tpm_renamed.to_csv("temp/expression_transcripts_tpm.csv")
+    transcripts_tpm_renamed = transcripts_tpm[transcripts_tpm.index.isin(prs)]
+    transcripts_tpm_renamed.to_csv(folder + "expression_transcripts_tpm.csv")
     proteincoding_genes_expected_count_renamed = proteincoding_genes_expected_count[
-        proteincoding_genes_expected_count.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
+        proteincoding_genes_expected_count.index.isin(prs)
+    ]
     proteincoding_genes_expected_count_renamed.to_csv(
-        "temp/expression_proteincoding_genes_expected_count.csv"
+        folder + "expression_proteincoding_genes_expected_count.csv"
     )
     transcripts_expected_count_renamed = transcripts_expected_count[
-        transcripts_expected_count.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
+        transcripts_expected_count.index.isin(prs)
+    ]
     transcripts_expected_count_renamed.to_csv(
-        "temp/expression_transcripts_expected_count.csv"
+        folder + "expression_transcripts_expected_count.csv"
     )
 
     # upload to taiga
     print("Expression: uploading to taiga")
-    tc = TaigaClient()
     tc.update_dataset(
-        dataset_id=taiga_id,
+        dataset_id=taiga_virtual,
         changes_description="adding expression",
         upload_files=[
             {
-                "path": "temp/expression_genes_expected_count.csv",
+                "path": folder + "expression_genes_expected_count.csv",
                 "name": "CCLE_RNAseq_reads",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/expression_transcripts_tpm.csv",
+                "path": folder + "expression_transcripts_tpm.csv",
                 "name": "CCLE_RNAseq_transcripts",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/expression_genes_tpm.csv",
+                "path": folder + "expression_genes_tpm.csv",
                 "name": "CCLE_expression_full",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/expression_proteincoding_genes_tpm.csv",
+                "path": folder + "expression_proteincoding_genes_tpm.csv",
                 "name": "CCLE_expression",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/expression_proteincoding_genes_expected_count.csv",
+                "path": folder + "expression_proteincoding_genes_expected_count.csv",
                 "name": "CCLE_expression_proteincoding_genes_expected_count",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/expression_transcripts_expected_count.csv",
+                "path": folder + "expression_transcripts_expected_count.csv",
                 "name": "CCLE_expression_transcripts_expected_count",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
@@ -549,13 +626,147 @@ def uploadExpressionMatrices(
         print("ssGSEA: loading")
         enrichments = pd.read_csv(folder + "/gene_sets_all.csv", index_col=0)
         print("ssGSEA: subsetting and renaming")
-        enrichments_renamed = enrichments[
-            enrichments.index.isin(set(renaming_dict.keys()))
-        ].rename(index=renaming_dict)
+        enrichments_renamed = enrichments[enrichments.index.isin(prs)]
         enrichments_renamed.to_csv("temp/enrichments_ssGSEA.csv")
         print("ssGSEA: uploading to taiga")
         tc.update_dataset(
-            dataset_id=taiga_id,
+            dataset_id=taiga_virtual,
+            changes_description="adding enrichments",
+            upload_files=[
+                {
+                    "path": "temp/enrichments_ssGSEA.csv",
+                    "name": "CCLE_ssGSEA",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+            ],
+            upload_async=False,
+            add_all_existing_files=True,
+        )
+
+
+def uploadExpressionMatricesModel(
+    pr2model_dict,
+    portal,
+    include_ssgsea=False,
+    taiga_latest=TAIGA_EXPRESSION,
+    taiga_virtual="",
+):
+    """subset, rename, save and upload to taiga CN matrices
+    
+    Args:
+        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
+        taiga_id (str): which dataset the matrices are being uploaded to
+        folder (str): where the files to be subsetted are saved
+        include_ssgsea (bool): whether or not to upload ssGSEA data to this portal
+    """
+    folder = "temp/" + portal + "/model/"
+    # load pr-id indexed matrices for the current quarter from latest
+    print("Expression: loading from taiga latest")
+    tc = TaigaClient()
+    genes_expected_count = tc.get(
+        name=taiga_latest, file="genes_expected_count_profile"
+    )
+    genes_tpm = tc.get(name=taiga_latest, file="genes_tpm_profile_logp1")
+    proteincoding_genes_expected_count = tc.get(
+        name=taiga_latest, file="proteincoding_genes_expected_count_profile"
+    )
+    proteincoding_genes_tpm = tc.get(
+        name=taiga_latest, file="proteincoding_genes_tpm_profile_logp1"
+    )
+    transcripts_expected_count = tc.get(
+        name=taiga_latest, file="transcripts_expected_count_profile"
+    )
+    transcripts_tpm = tc.get(name=taiga_latest, file="transcripts_tpm_profile_logp1")
+
+    # subset and rename
+    print("Expression: subsetting and renaming")
+    genes_expected_count_renamed = genes_expected_count[
+        genes_expected_count.index.isin(pr2model_dict.keys())
+    ].rename(index=pr2model_dict)
+    genes_expected_count_renamed.to_csv(folder + "expression_genes_expected_count.csv")
+    genes_tpm_renamed = genes_tpm[genes_tpm.index.isin(pr2model_dict.keys())].rename(
+        index=pr2model_dict
+    )
+    genes_tpm_renamed.to_csv(folder + "expression_genes_tpm.csv")
+    proteincoding_genes_tpm_renamed = proteincoding_genes_tpm[
+        proteincoding_genes_tpm.index.isin(pr2model_dict.keys())
+    ].rename(index=pr2model_dict)
+    proteincoding_genes_tpm_renamed.to_csv(
+        folder + "expression_proteincoding_genes_tpm.csv"
+    )
+    transcripts_tpm_renamed = transcripts_tpm[
+        transcripts_tpm.index.isin(pr2model_dict.keys())
+    ].rename(index=pr2model_dict)
+    transcripts_tpm_renamed.to_csv(folder + "expression_transcripts_tpm.csv")
+    proteincoding_genes_expected_count_renamed = proteincoding_genes_expected_count[
+        proteincoding_genes_expected_count.index.isin(pr2model_dict.keys())
+    ].rename(index=pr2model_dict)
+    proteincoding_genes_expected_count_renamed.to_csv(
+        folder + "expression_proteincoding_genes_expected_count.csv"
+    )
+    transcripts_expected_count_renamed = transcripts_expected_count[
+        transcripts_expected_count.index.isin(pr2model_dict.keys())
+    ].rename(index=pr2model_dict)
+    transcripts_expected_count_renamed.to_csv(
+        folder + "expression_transcripts_expected_count.csv"
+    )
+
+    # upload to taiga
+    print("Expression: uploading to taiga")
+    tc.update_dataset(
+        dataset_id=taiga_virtual,
+        changes_description="adding expression",
+        upload_files=[
+            {
+                "path": folder + "expression_genes_expected_count.csv",
+                "name": "CCLE_RNAseq_reads",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "expression_transcripts_tpm.csv",
+                "name": "CCLE_RNAseq_transcripts",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "expression_genes_tpm.csv",
+                "name": "CCLE_expression_full",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "expression_proteincoding_genes_tpm.csv",
+                "name": "CCLE_expression",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "expression_proteincoding_genes_expected_count.csv",
+                "name": "CCLE_expression_proteincoding_genes_expected_count",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "expression_transcripts_expected_count.csv",
+                "name": "CCLE_expression_transcripts_expected_count",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+        ],
+        upload_async=False,
+        add_all_existing_files=True,
+    )
+    if include_ssgsea:
+        print("ssGSEA: loading")
+        enrichments = pd.read_csv(folder + "/gene_sets_all.csv", index_col=0)
+        print("ssGSEA: subsetting and renaming")
+        enrichments_renamed = enrichments[enrichments.index.isin(prs)]
+        enrichments_renamed.to_csv("temp/enrichments_ssGSEA.csv")
+        print("ssGSEA: uploading to taiga")
+        tc.update_dataset(
+            dataset_id=taiga_virtual,
             changes_description="adding enrichments",
             upload_files=[
                 {
@@ -661,28 +872,24 @@ def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNA
         prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
     """
     prs_allportals = getPRToRelease(trackerobj)
-    pr_table = trackerobj.read_pr_table()
     for portal, prs_to_release in prs_allportals.items():
-        subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
-        renaming_dict = dict(list(zip(subset_pr_table.CDSID, subset_pr_table.index)))
-        h.dictToFile(renaming_dict, folder + "/" + portal + "_seq2pr_renaming.json")
         print("uploading profile-level matrices to ", portal)
-        uploadCNMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
-        uploadMutationMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
-        uploadFusionMatrices(renaming_dict, taiga_id=taiga_ids[portal], folder=folder)
+        uploadCNMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
+        uploadMutationMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
+        uploadFusionMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
         if portal == "internal":
-            uploadExpressionMatrices(
-                renaming_dict,
+            uploadExpressionMatricesPR(
+                prs_to_release,
+                portal,
                 include_ssgsea=True,
-                taiga_id=taiga_ids[portal],
-                folder=folder,
+                taiga_virtual=taiga_ids[portal],
             )
         else:
-            uploadExpressionMatrices(
-                renaming_dict,
+            uploadExpressionMatricesPR(
+                prs_to_release,
+                portal,
                 include_ssgsea=False,
-                taiga_id=taiga_ids[portal],
-                folder=folder,
+                taiga_virtual=taiga_ids[portal],
             )
 
 
@@ -703,24 +910,21 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
         pr2cds_dict = dict(list(zip(subset_pr_table.index, subset_pr_table.CDSID)))
         default_table = makeDefaultModelTable(trackerobj, prs_to_release)
         pr2model_dict = dict(list(zip(default_table.ProfileID, default_table.ModelID)))
-        cds2model = {
-            pr2cds_dict[pr]: pr2model_dict[pr] for (pr, _) in pr2model_dict.items()
-        }
         h.dictToFile(cds2model, folder + "/" + portal + "_seq2model_renaming.json")
         print("uploading model-level matrices to", portal)
         # uploadCNMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
         # uploadMutationMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
         # uploadFusionMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
         if portal == "internal":
-            uploadExpressionMatrices(
-                cds2model,
+            uploadExpressionMatricesModel(
+                pr2model_dict,
                 include_ssgsea=True,
                 taiga_id=taiga_ids[portal],
                 folder=folder,
             )
         else:
-            uploadExpressionMatrices(
-                cds2model,
+            uploadExpressionMatricesModel(
+                pr2model_dict,
                 include_ssgsea=False,
                 taiga_id=taiga_ids[portal],
                 folder=folder,
