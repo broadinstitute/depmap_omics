@@ -287,6 +287,7 @@ def uploadCNMatricesPR(prs, portal, taiga_latest=TAIGA_CN, taiga_virtual=""):
         folder (str): where the files to be subsetted are saved
     """
     folder = "temp/" + portal + "/profile/"
+    h.createFoldersFor(folder)
     # load cds-id indexed matrices for the current quarter
     print("CN: loading")
     tc = TaigaClient()
@@ -353,6 +354,7 @@ def uploadCNMatricesModel(
         folder (str): where the files to be subsetted are saved
     """
     folder = "temp/" + portal + "/model/"
+    h.createFoldersFor(folder)
     # load cds-id indexed matrices for the current quarter
     print("CN: loading")
     tc = TaigaClient()
@@ -529,6 +531,7 @@ def uploadExpressionMatricesPR(
         include_ssgsea (bool): whether or not to upload ssGSEA data to this portal
     """
     folder = "temp/" + portal + "/profile/"
+    h.createFoldersFor(folder)
     # load pr-id indexed matrices for the current quarter from latest
     print("Expression: loading from taiga latest")
     tc = TaigaClient()
@@ -661,6 +664,7 @@ def uploadExpressionMatricesModel(
         include_ssgsea (bool): whether or not to upload ssGSEA data to this portal
     """
     folder = "temp/" + portal + "/model/"
+    h.createFoldersFor(folder)
     # load pr-id indexed matrices for the current quarter from latest
     print("Expression: loading from taiga latest")
     tc = TaigaClient()
@@ -792,6 +796,7 @@ def uploadFusionMatricesPR(
         folder (str): where the files to be subsetted are saved
     """
     folder = "temp/" + portal + "/profile/"
+    h.createFoldersFor(folder)
     # load cds-id indexed matrices for the current quarter
     print("Fusion: loading from taiga latest")
     tc = TaigaClient()
@@ -839,6 +844,7 @@ def uploadFusionMatricesModel(
         folder (str): where the files to be subsetted are saved
     """
     folder = "temp/" + portal + "/model/"
+    h.createFoldersFor(folder)
     # load cds-id indexed matrices for the current quarter
     print("Fusion: loading from taiga latest")
     tc = TaigaClient()
@@ -925,7 +931,7 @@ def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNA
         print("uploading profile-level matrices to ", portal)
         uploadCNMatricesPR(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
         uploadMutationMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
-        uploadFusionMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
+        uploadFusionMatricesPR(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
         if portal == "internal":
             uploadExpressionMatricesPR(
                 prs_to_release,
@@ -958,22 +964,24 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
         pr2model_dict = dict(list(zip(default_table.ProfileID, default_table.ModelID)))
         h.dictToFile(pr2model_dict, folder + "/" + portal + "_pr2model_renaming.json")
         print("uploading model-level matrices to", portal)
-        # uploadCNMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
-        # uploadMutationMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
-        # uploadFusionMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
+        # uploadCNMatricesModel(pr2model_dict, taiga_virtual=taiga_ids[portal])
+        # uploadMutationMatricesModel(pr2model_dict, taiga_virtual=taiga_ids[portal])
+        uploadFusionMatricesModel(
+            pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
+        )
         if portal == "internal":
             uploadExpressionMatricesModel(
                 pr2model_dict,
+                portal,
                 include_ssgsea=True,
-                taiga_id=taiga_ids[portal],
-                folder=folder,
+                taiga_virtual=taiga_ids[portal],
             )
         else:
             uploadExpressionMatricesModel(
                 pr2model_dict,
+                portal,
                 include_ssgsea=False,
-                taiga_id=taiga_ids[portal],
-                folder=folder,
+                taiga_virtual=taiga_ids[portal],
             )
 
 
