@@ -360,9 +360,6 @@ async def fusionPostProcessing(
 
     tc = TaigaClient()
 
-    if prevdataset == "ccle":
-        prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
-
     ccle_refsamples = trackerobj.read_tracker()
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
@@ -391,6 +388,8 @@ async def fusionPostProcessing(
     )
 
     if prevdataset == "ccle":
+        prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
+
         print("comparing to previous version")
         print("new")
         print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
@@ -667,7 +666,7 @@ def cnPostProcessing(
     except:
         print("no wes for this sampleset")
 
-    pr_table = track.update_pr_from_seq()
+    pr_table = track.update_pr_from_seq(trackerobj)
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     wgssegments_pr = (
         wgssegments[wgssegments[SAMPLEID].isin(set(renaming_dict.keys()))]
@@ -846,6 +845,7 @@ async def mutationPostProcessing(
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
     prev="ccle",
     minfreqtocall=0.25,
+    trackerobj=None,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -911,7 +911,7 @@ async def mutationPostProcessing(
 
     wgsmutations.to_csv(folder + "wgs_somatic_mutations_all.csv", index=None)
 
-    pr_table = track.update_pr_from_seq()
+    pr_table = track.update_pr_from_seq(trackerobj)
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     wgsmutations_pr = wgsmutations[
         wgsmutations[SAMPLEID].isin(renaming_dict.keys())
