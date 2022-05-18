@@ -781,7 +781,9 @@ def uploadExpressionMatricesModel(
         )
 
 
-def uploadFusionMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETNAME):
+def uploadFusionMatricesPR(
+    prs, portal, taiga_latest=TAIGA_FUSION, taiga_virtual="",
+):
     """subset, rename, save and upload to taiga CN matrices
     
     Args:
@@ -789,38 +791,85 @@ def uploadFusionMatrices(renaming_dict, taiga_id="", folder="temp/" + SAMPLESETN
         taiga_id (str): which dataset the matrices are being uploaded to
         folder (str): where the files to be subsetted are saved
     """
-
+    folder = "temp/" + portal + "/profile/"
     # load cds-id indexed matrices for the current quarter
-    print("Fusion: loading")
-    fusions = pd.read_csv(folder + "/fusions_latest.csv")
-    filtered = pd.read_csv(folder + "/filteredfusions_latest.csv")
+    print("Fusion: loading from taiga latest")
+    tc = TaigaClient()
+    fusions = tc.get(name=taiga_latest, file="fusions_all_profile")
+    filtered = tc.get(name=taiga_latest, file="filteredfusions_latest_profile")
 
     # subset and rename
     print("Fusion: subsetting and renaming")
-    fusions_renamed = fusions[
-        fusions.DepMap_ID.isin(set(renaming_dict.keys()))
-    ].replace({"DepMap_ID": renaming_dict})
-    fusions_renamed.to_csv("temp/fusions.csv", index=False)
-    filtered_renamed = filtered[
-        filtered.DepMap_ID.isin(set(renaming_dict.keys()))
-    ].replace({"DepMap_ID": renaming_dict})
-    filtered_renamed.to_csv("temp/filtered_fusions.csv", index=False)
+    fusions_renamed = fusions[fusions.DepMap_ID.isin(prs)]
+    fusions_renamed.to_csv(folder + "fusions.csv", index=False)
+    filtered_renamed = filtered[filtered.DepMap_ID.isin(prs)]
+    filtered_renamed.to_csv(folder + "filtered_fusions.csv", index=False)
 
     # upload to taiga
     print("Fusion: uploading to taiga")
-    tc = TaigaClient()
     tc.update_dataset(
-        dataset_id=taiga_id,
+        dataset_id=taiga_virtual,
         changes_description="adding fusions",
         upload_files=[
             {
-                "path": "temp/fusions.csv",
+                "path": folder + "fusions.csv",
                 "name": "CCLE_fusions_unfiltered",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/filtered_fusions.csv",
+                "path": folder + "filtered_fusions.csv",
+                "name": "CCLE_fusions",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+        ],
+        add_all_existing_files=True,
+    )
+
+
+def uploadFusionMatricesModel(
+    pr2model_dict, portal, taiga_latest=TAIGA_FUSION, taiga_virtual="",
+):
+    """subset, rename, save and upload to taiga CN matrices
+    
+    Args:
+        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
+        taiga_id (str): which dataset the matrices are being uploaded to
+        folder (str): where the files to be subsetted are saved
+    """
+    folder = "temp/" + portal + "/model/"
+    # load cds-id indexed matrices for the current quarter
+    print("Fusion: loading from taiga latest")
+    tc = TaigaClient()
+    fusions = tc.get(name=taiga_latest, file="fusions_all_profile")
+    filtered = tc.get(name=taiga_latest, file="filteredfusions_latest_profile")
+
+    # subset and rename
+    print("Fusion: subsetting and renaming")
+    fusions_renamed = fusions[
+        fusions.DepMap_ID.isin(set(pr2model_dict.keys()))
+    ].replace({"DepMap_ID": pr2model_dict})
+    fusions_renamed.to_csv(folder + "fusions.csv", index=False)
+    filtered_renamed = filtered[
+        filtered.DepMap_ID.isin(set(pr2model_dict.keys()))
+    ].replace({"DepMap_ID": pr2model_dict})
+    filtered_renamed.to_csv(folder + "filtered_fusions.csv", index=False)
+
+    # upload to taiga
+    print("Fusion: uploading to taiga")
+    tc.update_dataset(
+        dataset_id=taiga_virtual,
+        changes_description="adding fusions",
+        upload_files=[
+            {
+                "path": folder + "fusions.csv",
+                "name": "CCLE_fusions_unfiltered",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "filtered_fusions.csv",
                 "name": "CCLE_fusions",
                 "format": "TableCSV",
                 "encoding": "utf-8",
@@ -874,7 +923,7 @@ def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNA
     prs_allportals = getPRToRelease(trackerobj)
     for portal, prs_to_release in prs_allportals.items():
         print("uploading profile-level matrices to ", portal)
-        uploadCNMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
+        uploadCNMatricesPR(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
         uploadMutationMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
         uploadFusionMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
         if portal == "internal":
@@ -904,13 +953,10 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
         prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
     """
     prs_allportals = getPRToRelease(trackerobj)
-    pr_table = trackerobj.read_pr_table()
     for portal, prs_to_release in prs_allportals.items():
-        subset_pr_table = pr_table[pr_table.index.isin(prs_to_release)]
-        pr2cds_dict = dict(list(zip(subset_pr_table.index, subset_pr_table.CDSID)))
         default_table = makeDefaultModelTable(trackerobj, prs_to_release)
         pr2model_dict = dict(list(zip(default_table.ProfileID, default_table.ModelID)))
-        h.dictToFile(cds2model, folder + "/" + portal + "_seq2model_renaming.json")
+        h.dictToFile(pr2model_dict, folder + "/" + portal + "_pr2model_renaming.json")
         print("uploading model-level matrices to", portal)
         # uploadCNMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
         # uploadMutationMatrices(cds2model, taiga_id=taiga_ids[portal], folder=folder)
