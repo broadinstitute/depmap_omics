@@ -486,6 +486,7 @@ def cnPostProcessing(
     source_rename=SOURCE_RENAME,
     redoWES=False,
     wesfolder="",
+    gumbo=True,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -519,7 +520,7 @@ def cnPostProcessing(
 
     tracker = pd.DataFrame()
     if trackerobj is not None:
-        tracker = trackerobj.read_tracker()
+        tracker = trackerobj.read_seq_table()
 
     assert len(tracker) != 0, "broken source for sample tracker"
 
@@ -562,7 +563,6 @@ def cnPostProcessing(
 
         wessegments.Source = wessegments.Source.replace(source_rename)
         wessegments.Source += " WES"
-
         # wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
         # wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
         # wes_loh.to_csv(folder + "purecn_loh_latest.csv")
@@ -584,8 +584,10 @@ def cnPostProcessing(
     else:
         print("bypassing WES using folder: " + wesfolder if wesfolder else folder)
         wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
-        wessegments = pd.read_csv(folder + "segments_latest.csv")
-        genecn = pd.read_csv(folder + "genecn_latest.csv", index_col=0)
+        wessegments = pd.read_csv(folder + "segments_all.csv")
+        genecn = pd.read_csv(folder + "genecn_all.csv", index_col=0)
+        wessegments_pr = pd.read_csv(folder + "segments_all_profile.csv")
+        wescn_pr = pd.read_csv(folder + "genecn_all_profile.csv", index_col=0)
 
     # doing wgs
     print("doing wgs")
@@ -647,6 +649,8 @@ def cnPostProcessing(
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wgsrefworkspace,
+            dryrun=True,
+            gumbo=gumbo,
         )
     except:
         print("no wgs for this sampleset")
@@ -662,6 +666,8 @@ def cnPostProcessing(
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wesrefworkspace,
+            dryrun=True,
+            gumbo=gumbo,
         )
     except:
         print("no wes for this sampleset")
@@ -681,7 +687,8 @@ def cnPostProcessing(
 
     mergedsegments_pr = wgssegments_pr.append(wessegments_pr)[subsetsegs]
     mergedgenecn_pr = wgscn_pr.append(wescn_pr)
-
+    # merging wes and wgs
+    folder = os.path.join("temp", samplesetname, "")
     mergedsegments_pr.to_csv(folder + "merged_genecn_all_profile.csv")
     mergedgenecn_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
 
