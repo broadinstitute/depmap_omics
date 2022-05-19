@@ -649,7 +649,7 @@ def cnPostProcessing(
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wgsrefworkspace,
-            dryrun=True,
+            dry_run=True,
             gumbo=gumbo,
         )
     except:
@@ -666,7 +666,7 @@ def cnPostProcessing(
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wesrefworkspace,
-            dryrun=True,
+            dry_run=True,
             gumbo=gumbo,
         )
     except:
@@ -689,8 +689,8 @@ def cnPostProcessing(
     mergedgenecn_pr = wgscn_pr.append(wescn_pr)
     # merging wes and wgs
     folder = os.path.join("temp", samplesetname, "")
-    mergedsegments_pr.to_csv(folder + "merged_genecn_all_profile.csv")
-    mergedgenecn_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
+    mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv")
+    mergedgenecn_pr.to_csv(folder + "merged_genecn_all_profile.csv", index=False)
 
     # uploading to taiga
     print("uploading to taiga")
