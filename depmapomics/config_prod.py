@@ -570,6 +570,10 @@ FUSION_RED_HERRING = [
     "NEIGHBORS",
 ]
 
+FUSION_MAXFREQ = 0.1
+FUSION_MINFFPM = 0.05
+FUSION_MAXFFPM = 0.1
+
 ############## EXPRESSION
 
 STARBAMCOLTERRA = ["internal_bam_filepath", "internal_bai_filepath"]

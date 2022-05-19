@@ -40,7 +40,7 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID = "DepMap_ID"
 
-SAMPLESETNAME = "22Q2"
+SAMPLESETNAME = "22Q2test"
 
 isCCLE = True
 
@@ -563,6 +563,10 @@ FUSION_RED_HERRING = [
     "ConjoinG",
     "NEIGHBORS",
 ]
+
+FUSION_MAXFREQ = 0.1
+FUSION_MINFFPM = 0.05
+FUSION_MAXFFPM = 0.1
 
 ############## EXPRESSION
 

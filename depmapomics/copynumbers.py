@@ -125,6 +125,7 @@ def updateTracker(
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=False,
+    gumbo=True,
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -190,6 +191,7 @@ def updateTracker(
         dry_run,
         samplesinset,
         trackerobj=trackerobj,
+        gumbo=gumbo,
     )
 
 
@@ -440,14 +442,15 @@ def postProcess(
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-    purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
-        refworkspace,
-        setEntity=setEntity,
-        sampleset=sampleset,
-        sortby=sortby,
-        todrop=todrop,
-        priority=priority,
-    )
+    # purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
+    #     refworkspace,
+    #     setEntity=setEntity,
+    #     sampleset=sampleset,
+    #     sortby=sortby,
+    #     todrop=todrop,
+    #     priority=priority,
+    # )
+    purecn_segments, purecn_genecn, loh_status, purecn_table = None, None, None, None
     return (
         segments,
         genecn,
