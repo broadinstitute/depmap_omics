@@ -1038,7 +1038,7 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
         pr2model_dict = dict(list(zip(default_table.ProfileID, default_table.ModelID)))
         h.dictToFile(pr2model_dict, folder + "/" + portal + "_pr2model_renaming.json")
         print("uploading model-level matrices to", portal)
-        uploadCNMatricesModel(pr2model_dict, taiga_virtual=taiga_ids[portal])
+        uploadCNMatricesModel(pr2model_dict, portal, taiga_virtual=taiga_ids[portal])
         # uploadMutationMatricesModel(pr2model_dict, taiga_virtual=taiga_ids[portal])
         uploadFusionMatricesModel(
             pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
