@@ -540,11 +540,12 @@ def cnPostProcessing(
         (
             wessegments,
             genecn,
+            wesfailed,
             wes_purecn_segments,
             wes_purecn_genecn,
             wes_loh,
             wes_purecn_table,
-            wesfailed,
+            _,
         ) = cn.postProcess(
             wesrefworkspace,
             setEntity=wessetentity,
@@ -580,7 +581,9 @@ def cnPostProcessing(
             index=renaming_dict
         )
         wessegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
-        wescn_pr.to_csv(folder + "genecn_all_profile.csv")
+        wescn_pr.to_csv(folder + "genecn_all_profile.csv").apply(
+            lambda x: np.log2(1 + x)
+        )
     else:
         print("bypassing WES using folder: " + wesfolder if wesfolder else folder)
         wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
@@ -602,11 +605,12 @@ def cnPostProcessing(
     (
         wgssegments,
         genecn,
+        wgsfailed,
         wgs_purecn_segments,
         wgs_purecn_genecn,
         wgs_loh,
         wgs_purecn_table,
-        wgsfailed,
+        mybiomart,
     ) = cn.postProcess(
         wgsrefworkspace,
         setEntity=wgssetentity,
@@ -687,54 +691,32 @@ def cnPostProcessing(
 
     mergedsegments_pr = wgssegments_pr.append(wessegments_pr)[subsetsegs]
     mergedgenecn_pr = wgscn_pr.append(wescn_pr)
+    mergedsegments_pr = (
+        mergedsegments_pr[
+            [
+                SAMPLEID,
+                "Chromosome",
+                "Start",
+                "End",
+                "Segment_Mean",
+                "Num_Probes",
+                "Status",
+                "Source",
+            ]
+        ]
+        .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
+        .reset_index(drop=True)
+    )
+    mergedsegments_pr.loc[
+        mergedsegments_pr[mergedsegments_pr.Chromosome == "X"].index, "Status"
+    ] = "U"
     # merging wes and wgs
     folder = os.path.join("temp", samplesetname, "")
     mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv")
+    mergedgenecn_pr = mut.toGeneMatrix(mergedsegments_pr, mybiomart,).apply(
+        lambda x: np.log2(1 + x)
+    )
     mergedgenecn_pr.to_csv(folder + "merged_genecn_all_profile.csv", index=False)
-
-    # test to see if cytoband reduces cn columns??
-    gene_mapping_df = pd.DataFrame()
-    mybiomart = h.generateGeneNames(
-        ensemble_server=ENSEMBL_SERVER_V,
-        useCache=False,
-        attributes=["start_position", "end_position", "chromosome_name"],
-    )
-    mybiomart = mybiomart.rename(
-        columns={
-            "start_position": "start",
-            "end_position": "end",
-            "chromosome_name": "Chromosome",
-        }
-    )
-    mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
-    mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
-    mybiomart = mybiomart[
-        mybiomart["Chromosome"].isin(set(mergedsegments_pr["Chromosome"]))
-    ]
-    mybiomart = mybiomart[
-        ~mybiomart.entrezgene_id.isna()
-    ]  # dropping all nan entrez id cols
-    gene_mapping_df = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
-    gene_mapping_df["gene_name"] = [
-        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
-        for _, i in gene_mapping_df.iterrows()
-    ]
-    cyto = pd.read_csv(
-        "data/hg38_cytoband.gz",
-        sep="\t",
-        names=["chrom", "start", "end", "loc", "stains"],
-    ).iloc[:-1]
-    cyto["chrom"] = [i[3:] for i in cyto["chrom"]]
-
-    mergedsegments_pr_with_cyto = mut.manageGapsInSegments(mergedsegments_pr, cyto=cyto)
-    mergedgenecn_pr_with_cyto = mut.toGeneMatrix(
-        mergedsegments_pr_with_cyto, gene_mapping_df,
-    ).apply(lambda x: np.log2(1 + x))
-
-    mergedsegments_pr_with_cyto.to_csv(folder + "/merged_segments_all_profile_cyto.csv")
-    mergedgenecn_pr_with_cyto.to_csv(
-        folder + "/merged_genecn_all_profile_cyto.csv", index=False
-    )
 
     # uploading to taiga
     print("uploading to taiga")
@@ -791,16 +773,6 @@ def cnPostProcessing(
             },
             {
                 "path": folder + "merged_genecn_all_profile.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_segments_all_profile_cyto.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_genecn_all_profile_cyto.csv",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
