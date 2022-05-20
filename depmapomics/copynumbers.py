@@ -407,6 +407,9 @@ def postProcess(
         i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
         for _, i in mybiomart.iterrows()
     ]
+    mybiomart = mybiomart[
+        ~mybiomart.entrezgene_id.isna()
+    ]  # dropping all nan entrez id cols
     # drop Ychrom if > maxYchrom
     ychrom = segments[segments.Chromosome.str.contains("Y")]
     countYdrop = [
@@ -459,5 +462,6 @@ def postProcess(
         purecn_genecn,
         loh_status,
         purecn_table,
+        mybiomart,
     )
 
