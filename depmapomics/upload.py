@@ -312,7 +312,7 @@ def uploadCNMatricesPR(prs, portal, taiga_latest=TAIGA_CN, taiga_virtual=""):
     tc = TaigaClient()
     tc.update_dataset(
         dataset_id=taiga_virtual,
-        changes_description="adding CN data",
+        changes_description="adding profile-level CN data",
         upload_files=[
             {
                 "path": folder + "all_merged_genes_cn.csv",
@@ -386,7 +386,7 @@ def uploadCNMatricesModel(
     print("CN: uploading to taiga")
     tc.update_dataset(
         dataset_id=taiga_virtual,
-        changes_description="adding CN data",
+        changes_description="adding model-level CN data",
         upload_files=[
             {
                 "path": folder + "all_merged_genes_cn.csv",
@@ -609,7 +609,7 @@ def uploadExpressionMatricesPR(
     print("Expression: uploading to taiga")
     tc.update_dataset(
         dataset_id=taiga_virtual,
-        changes_description="adding expression",
+        changes_description="adding profile-level expression data",
         upload_files=[
             {
                 "path": folder + "expression_genes_expected_count.csv",
@@ -773,7 +773,7 @@ def uploadExpressionMatricesModel(
     print("Expression: uploading to taiga")
     tc.update_dataset(
         dataset_id=taiga_virtual,
-        changes_description="adding expression",
+        changes_description="adding model-level expression data",
         upload_files=[
             {
                 "path": folder + "expression_genes_expected_count.csv",
@@ -877,7 +877,7 @@ def uploadFusionMatricesPR(
     print("Fusion: uploading to taiga")
     tc.update_dataset(
         dataset_id=taiga_virtual,
-        changes_description="adding fusions",
+        changes_description="adding profile level fusion data",
         upload_files=[
             {
                 "path": folder + "fusions.csv",
@@ -939,7 +939,7 @@ def uploadFusionMatricesModel(
     print("Fusion: uploading to taiga")
     tc.update_dataset(
         dataset_id=taiga_virtual,
-        changes_description="adding fusions",
+        changes_description="adding model-level fusion data",
         upload_files=[
             {
                 "path": folder + "fusions.csv",

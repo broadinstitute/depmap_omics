@@ -577,15 +577,15 @@ def cnPostProcessing(
             .replace({SAMPLEID: renaming_dict})
             .reset_index(drop=True)
         )
-        wescn_pr = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
-            index=renaming_dict
+        wescn_pr = (
+            genecn[genecn.index.isin(set(renaming_dict.keys()))]
+            .rename(index=renaming_dict)
+            .apply(lambda x: np.log2(1 + x))
         )
         wessegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
-        wescn_pr.to_csv(folder + "genecn_all_profile.csv").apply(
-            lambda x: np.log2(1 + x)
-        )
+        wescn_pr.to_csv(folder + "genecn_all_profile.csv")
     else:
-        print("bypassing WES using folder: " + wesfolder if wesfolder else folder)
+        print("bypassing WES using folder: " + (wesfolder if wesfolder else folder))
         wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
         wessegments = pd.read_csv(folder + "segments_all.csv")
         genecn = pd.read_csv(folder + "genecn_all.csv", index_col=0)
@@ -636,7 +636,7 @@ def cnPostProcessing(
     # wgs_loh.to_csv(folder + "purecn_loh_latest.csv")
     # wgs_purecn_table.to_csv(folder + "purecn_table_latest.csv")
 
-    print("comparing to previous version")
+    # print("comparing to previous version")
     # h.compareDfs(wespriogenecn, prevgenecn)
 
     # with gumbo, no need to mark this selected field
@@ -689,8 +689,8 @@ def cnPostProcessing(
     wgssegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
     wgscn_pr.to_csv(folder + "genecn_all_profile.csv")
 
-    mergedsegments_pr = wgssegments_pr.append(wessegments_pr)[subsetsegs]
-    mergedgenecn_pr = wgscn_pr.append(wescn_pr)
+    print("merging PR-level seg file")
+    mergedsegments_pr = wgssegments_pr.append(wessegments_pr).reset_index(drop=True)
     mergedsegments_pr = (
         mergedsegments_pr[
             [
@@ -712,11 +712,13 @@ def cnPostProcessing(
     ] = "U"
     # merging wes and wgs
     folder = os.path.join("temp", samplesetname, "")
-    mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv")
-    mergedgenecn_pr = mut.toGeneMatrix(mergedsegments_pr, mybiomart,).apply(
+    mergedsegments_pr = mut.manageGapsInSegments(mergedsegments_pr)
+    mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
+
+    mergedgenecn_pr = mut.toGeneMatrix(mergedsegments_pr, mybiomart).apply(
         lambda x: np.log2(1 + x)
     )
-    mergedgenecn_pr.to_csv(folder + "merged_genecn_all_profile.csv", index=False)
+    mergedgenecn_pr.to_csv(folder + "merged_genecn_all_profile.csv")
 
     # uploading to taiga
     print("uploading to taiga")
