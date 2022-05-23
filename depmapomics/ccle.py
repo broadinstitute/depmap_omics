@@ -946,7 +946,7 @@ async def mutationPostProcessing(
 
     wgsmutations.to_csv(folder + "wgs_somatic_mutations_all.csv", index=None)
 
-    pr_table = track.update_pr_from_seq(trackerobj)
+    pr_table = trackerobj.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     wgsmutations_pr = wgsmutations[
         wgsmutations[SAMPLEID].isin(renaming_dict.keys())
@@ -961,95 +961,15 @@ async def mutationPostProcessing(
     # merge
     print("merging")
     folder = os.path.join("temp", samplesetname, "merged_")
-    toadd = set(wgsmutations[SAMPLEID]) - set(wesmutations[SAMPLEID])
-    priomutations = wesmutations.append(
-        wgsmutations[wgsmutations[SAMPLEID].isin(toadd)]
-    ).reset_index(drop=True)
+    priomutations = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     # normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
     # mutations = mutations[~mutations[SAMPLEID].isin(normals)]
-    priomutations.to_csv(folder + "somatic_mutations.csv", index=False)
+    priomutations.to_csv(folder + "somatic_mutations_profile.csv", index=False)
 
     # making binary mutation matrices
     print("creating mutation matrices")
-    # binary mutations matrices
-    mut.mafToMat(
-        priomutations[(priomutations.isDeleterious)], minfreqtocall=minfreqtocall
-    ).astype(int).T.to_csv(folder + "somatic_mutations_boolmatrix_deleterious.csv")
-    mut.mafToMat(
-        priomutations[
-            ~(
-                priomutations.isDeleterious
-                | priomutations.isCOSMIChotspot
-                | priomutations.isTCGAhotspot
-                | priomutations["Variant_Classification"]
-                == "Silent"
-            )
-        ],
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(folder + "somatic_mutations_boolmatrix_other.csv")
-    mut.mafToMat(
-        priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)],
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(folder + "somatic_mutations_boolmatrix_hotspot.csv")
 
-    # genotyped mutations matrices
-    mut.mafToMat(
-        priomutations[(priomutations.isDeleterious)], mode="genotype",
-    ).T.to_csv(folder + "somatic_mutations_matrix_deleterious.csv")
-    mut.mafToMat(
-        priomutations[
-            ~(
-                priomutations.isDeleterious
-                | priomutations.isCOSMIChotspot
-                | priomutations.isTCGAhotspot
-                | priomutations["Variant_Classification"]
-                == "Silent"
-            )
-        ],
-        mode="genotype",
-    ).T.to_csv(folder + "somatic_mutations_matrix_other.csv")
-    mut.mafToMat(
-        priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)],
-        mode="genotype",
-    ).T.to_csv(folder + "somatic_mutations_matrix_hotspot.csv")
-
-    # adding lgacy datasetss
-    print("add legacy datasets")
-    legacy_hybridcapture = tc.get(name="mutations-da6a", file="legacy_hybridcapture")
-    legacy_raindance = tc.get(name="mutations-da6a", file="legacy_raindance")
-    legacy_rna = tc.get(name="mutations-da6a", file="legacy_rna")
-    legacy_wes_sanger = tc.get(name="mutations-da6a", file="legacy_wes_sanger")
-    legacy_wgs_exoniconly = tc.get(name="mutations-da6a", file="legacy_wgs_exoniconly")
-
-    merged = mut.mergeAnnotations(
-        priomutations,
-        legacy_hybridcapture,
-        "HC_AC",
-        useSecondForConflict=True,
-        dry_run=False,
-    )
-    merged = mut.mergeAnnotations(
-        merged, legacy_raindance, "RD_AC", useSecondForConflict=True, dry_run=False
-    )
-    merged = mut.mergeAnnotations(
-        merged,
-        legacy_wgs_exoniconly,
-        "WGS_AC",
-        useSecondForConflict=False,
-        dry_run=False,
-    )
-    merged = mut.mergeAnnotations(
-        merged,
-        legacy_wes_sanger,
-        "SangerWES_AC",
-        useSecondForConflict=False,
-        dry_run=False,
-    )
-    merged = mut.mergeAnnotations(
-        merged, legacy_rna, "RNAseq_AC", useSecondForConflict=False, dry_run=False
-    )
-
-    merged = merged[merged["tumor_f"] > 0.05]
+    merged = priomutations[priomutations["tumor_f"] > 0.05]
     merged = mutations.annotateLikelyImmortalized(
         merged,
         TCGAlocs=["TCGAhsCnt", "COSMIChsCnt"],
@@ -1080,7 +1000,7 @@ async def mutationPostProcessing(
     merged_maf = merged[MUTCOL_DEPMAP].rename(
         columns={"Tumor_Allele": "Alternate_Allele"}
     )
-    merged_maf.to_csv(folder + "somatic_mutations_withlegacy.csv", index=False)
+    merged_maf.to_csv(folder + "somatic_mutations_fordepmap_profile.csv", index=False)
 
     # making binary matrices
     merged = merged[merged["Entrez_Gene_Id"] != 0]
@@ -1126,38 +1046,6 @@ async def mutationPostProcessing(
         dataset_permaname=taiga_dataset,
         upload_files=[
             # for depmap
-            # {
-            #     "path": folder+"somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8"
-            # },
-            # {
-            #     "path": folder+"somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8"
-            # },
-            # {
-            #     "path": folder+"somatic_mutations_boolmatrix_fordepmap_damaging.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8"
-            # },
-            # genotyped
-            {
-                "path": folder + "somatic_mutations_matrix_hotspot.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_matrix_other.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_matrix_deleterious.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            # new
             {
                 "path": folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
                 "format": "NumericMatrixCSV",
@@ -1180,12 +1068,12 @@ async def mutationPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "somatic_mutations_withlegacy.csv",
+                "path": folder + "somatic_mutations_fordepmap_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "somatic_mutations.csv",
+                "path": folder + "somatic_mutations_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
@@ -1196,6 +1084,20 @@ async def mutationPostProcessing(
             },
             {
                 "path": "temp/" + samplesetname + "/wgs_somatic_mutations_all.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/"
+                + samplesetname
+                + "/wes_somatic_mutations_all_profile.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/"
+                + samplesetname
+                + "/wgs_somatic_mutations_all_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
