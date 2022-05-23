@@ -526,11 +526,6 @@ MUTCOL_DEPMAP = [
     "ExAC_AF",
     "Variant_annotation",
     "CGA_WES_AC",
-    "HC_AC",
-    "RD_AC",
-    "RNAseq_AC",
-    "SangerWES_AC",
-    "WGS_AC",
 ]
 
 

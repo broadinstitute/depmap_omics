@@ -929,7 +929,12 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    wesmutations.to_csv(folder + "wes_somatic_mutations_all.csv", index=None)
+    pr_table = trackerobj.read_pr_table()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    wesmutations_pr = wesmutations[
+        wesmutations[SAMPLEID].isin(renaming_dict.keys())
+    ].replace({SAMPLEID: renaming_dict})
+    wesmutations_pr.to_csv(folder + "somatic_mutations_all_profile.csv", index=None)
 
     # doing wgs
     print("doing wgs")
@@ -944,19 +949,11 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    wgsmutations.to_csv(folder + "wgs_somatic_mutations_all.csv", index=None)
-
-    pr_table = trackerobj.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     wgsmutations_pr = wgsmutations[
         wgsmutations[SAMPLEID].isin(renaming_dict.keys())
     ].replace({SAMPLEID: renaming_dict})
-    wesmutations_pr = wesmutations[
-        wesmutations[SAMPLEID].isin(renaming_dict.keys())
-    ].replace({SAMPLEID: renaming_dict})
 
-    wgsmutations_pr.to_csv(folder + "wgs_somatic_mutations_all_profile.csv", index=None)
-    wesmutations_pr.to_csv(folder + "wes_somatic_mutations_all_profile.csv", index=None)
+    wgsmutations_pr.to_csv(folder + "somatic_mutations_all_profile.csv", index=None)
 
     # merge
     print("merging")
@@ -1062,11 +1059,11 @@ async def mutationPostProcessing(
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
-            {
-                "path": folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
+            # {
+            #     "path": folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
             {
                 "path": folder + "somatic_mutations_fordepmap_profile.csv",
                 "format": "TableCSV",
