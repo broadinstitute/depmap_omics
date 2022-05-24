@@ -6,7 +6,7 @@ CACHE_PATH = "~/.depmapomics/"
 TMP_PATH = "/tmp/"
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
-SHEETCREDS = "../../.credentials.json"
+SHEETCREDS = "../.credentials.json"
 MY_ID = "~/.client_secret.json"
 MYSTORAGE_ID = "~/.storage.json"
 
@@ -395,6 +395,11 @@ BAMQC = [
 ]
 
 KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
+
+# germline matrix
+WESVCFDIR = "/tmp/vcfs_wes/"
+WGSVCFDIR = "/tmp/vcfs_wgs/"
+GUIDESBED = "data/filtering.bed"
 
 # rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
 RESCUE_FOR_MUTATION_WES = {
