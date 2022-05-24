@@ -1232,6 +1232,10 @@ async def mutationAnalyzeUnfiltered(
 def mapBedWES(file):
     """map mutations in one vcf file to regions in the guide, hardcoded for wes"""
 
+    guides_bed = pd.read_csv(
+        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
+    )
+
     bed = pd.read_csv(
         WESVCFDIR + file,
         sep="\t",
@@ -1242,13 +1246,17 @@ def mapBedWES(file):
     name = file.split("/")[-1].split(".")[0].split("_")[1]
     if len(bed) == 0:
         return (name, None)
-    val = chip.putInBed(GUIDESBED, bed, mergetype="sum")
+    val = chip.putInBed(guides_bed, bed, mergetype="sum")
 
     return (name, val)
 
 
 def mapBedWGS(file):
     """map mutations in one vcf file to regions in the guide, hardcoded for wgs"""
+
+    guides_bed = pd.read_csv(
+        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
+    )
 
     bed = pd.read_csv(
         WGSVCFDIR + file,
@@ -1260,7 +1268,7 @@ def mapBedWGS(file):
     name = file.split("/")[-1].split(".")[0].split("_")[1]
     if len(bed) == 0:
         return (name, None)
-    val = chip.putInBed(GUIDESBED, bed, mergetype="sum")
+    val = chip.putInBed(guides_bed, bed, mergetype="sum")
 
     return (name, val)
 
