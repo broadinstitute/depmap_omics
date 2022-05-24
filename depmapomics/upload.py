@@ -43,6 +43,8 @@ def makeAchillesChoiceTable(
 
     Args:
         trackerobj (SampleTracker): tracker object
+        prs (list): list of profile IDs to be released
+        one_pr_per_type (bool, optional): whether to enforce including only one profile type per model
         taiga_ids (dict): dictionary that maps portal name to virtual taiga dataset id
         folder (str): location where tables are saved as .csv files
 
@@ -417,8 +419,8 @@ def uploadCNMatricesModel(
     )
 
 
-def uploadMutationMatrices(
-    renaming_dict, taiga_virtual="", folder="temp/" + SAMPLESETNAME
+def uploadMutationMatricesPR(
+    prs, portal, taiga_latest=TAIGA_MUTATION, taiga_virtual=""
 ):
     """subset, rename, save and upload to taiga CN matrices
     
@@ -427,56 +429,48 @@ def uploadMutationMatrices(
         taiga_id (str): which dataset the matrices are being uploaded to
         folder (str): where the files to be subsetted are saved
     """
-
+    folder = "temp/" + portal + "/profile/"
+    h.createFoldersFor(folder)
     # load cds-id indexed matrices for the current quarter
-    print("Mutation: loading")
-    mutations = pd.read_csv(folder + "/merged_somatic_mutations_withlegacy.csv")
-    damaging = pd.read_csv(
-        folder + "/merged_somatic_mutations_boolmatrix_fordepmap_damaging.csv",
-        index_col=0,
+    print("Mutation: loading from taiga latest")
+    tc = TaigaClient()
+    mutations = tc.get(
+        name=taiga_latest, file="merged_somatic_mutations_fordepmap_profile"
     )
-    othercons = pd.read_csv(
-        folder + "/merged_somatic_mutations_boolmatrix_fordepmap_othercons.csv",
-        index_col=0,
+    damaging = tc.get(
+        name=taiga_latest, file="merged_somatic_mutations_boolmatrix_fordepmap_damaging"
     )
-    othernoncons = pd.read_csv(
-        folder + "/merged_somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
-        index_col=0,
+    # othercons = tc.get(
+    #     name=taiga_latest,
+    #     file="merged_somatic_mutations_boolmatrix_fordepmap_othercons",
+    # )
+    othernoncons = tc.get(
+        name=taiga_latest,
+        file="merged_somatic_mutations_boolmatrix_fordepmap_othernoncons",
     )
-    hotspot = pd.read_csv(
-        folder + "/merged_somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
-        index_col=0,
+    hotspot = tc.get(
+        name=taiga_latest, file="merged_somatic_mutations_boolmatrix_fordepmap_hotspot"
     )
 
     # subset and rename
     print("Mutation: subsetting and renaming")
-    mutations_renamed = mutations[
-        mutations.DepMap_ID.isin(set(renaming_dict.keys()))
-    ].replace({"DepMap_ID": renaming_dict})
-    mutations_renamed.to_csv("temp/all_somatic_mutations_withlegacy.csv", index=False)
-    damaging_renamed = damaging[damaging.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
+    mutations_renamed = mutations[mutations.DepMap_ID.isin(prs)]
+    mutations_renamed.to_csv(folder + "all_somatic_mutations_profile.csv", index=False)
+    damaging_renamed = damaging[damaging.index.isin(prs)]
     damaging_renamed.to_csv(
-        "temp/all_somatic_mutations_boolmatrix_fordepmap_damaging.csv"
+        folder + "all_somatic_mutations_boolmatrix_fordepmap_damaging.csv"
     )
-    othercons_renamed = othercons[
-        othercons.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
-    othercons_renamed.to_csv(
-        "temp/all_somatic_mutations_boolmatrix_fordepmap_othercons.csv"
-    )
-    othernoncons_renamed = othernoncons[
-        othernoncons.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
+    # othercons_renamed = othercons[othercons.index.isin(prs)]
+    # othercons_renamed.to_csv(
+    #     folder + "all_somatic_mutations_boolmatrix_fordepmap_othercons.csv"
+    # )
+    othernoncons_renamed = othernoncons[othernoncons.index.isin(prs)]
     othernoncons_renamed.to_csv(
-        "temp/all_somatic_mutations_boolmatrix_fordepmap_othernoncons.csv"
+        folder + "all_somatic_mutations_boolmatrix_fordepmap_othernoncons.csv"
     )
-    hotspot_renamed = hotspot[hotspot.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
+    hotspot_renamed = hotspot[hotspot.index.isin(prs)]
     hotspot_renamed.to_csv(
-        "temp/all_somatic_mutations_boolmatrix_fordepmap_hotspot.csv"
+        folder + "all_somatic_mutations_boolmatrix_fordepmap_hotspot.csv"
     )
 
     # upload to taiga
@@ -487,31 +481,145 @@ def uploadMutationMatrices(
         changes_description="adding mutations",
         upload_files=[
             {
-                "path": "temp/all_somatic_mutations_withlegacy.csv",
+                "path": folder + "all_somatic_mutations_profile.csv",
                 "name": "CCLE_mutations",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/all_somatic_mutations_boolmatrix_fordepmap_damaging.csv",
+                "path": folder
+                + "all_somatic_mutations_boolmatrix_fordepmap_damaging.csv",
                 "name": "CCLE_mutations_bool_damaging",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/all_somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
+                "path": folder
+                + "all_somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
                 "name": "CCLE_mutations_bool_nonconserving",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
+            # {
+            #     "path": folder
+            #     + "all_somatic_mutations_boolmatrix_fordepmap_othercons.csv",
+            #     "name": "CCLE_mutations_bool_otherconserving",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
             {
-                "path": "temp/all_somatic_mutations_boolmatrix_fordepmap_othercons.csv",
-                "name": "CCLE_mutations_bool_otherconserving",
+                "path": folder
+                + "all_somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
+                "name": "CCLE_mutations_bool_hotspot",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+        ],
+        add_all_existing_files=True,
+    )
+
+
+def uploadMutationMatricesModel(
+    pr2model_dict, portal, taiga_latest=TAIGA_MUTATION, taiga_virtual=""
+):
+    """subset, rename, save and upload to taiga CN matrices
+    
+    Args:
+        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
+        taiga_id (str): which dataset the matrices are being uploaded to
+        folder (str): where the files to be subsetted are saved
+    """
+    folder = "temp/" + portal + "/model/"
+    h.createFoldersFor(folder)
+    # load cds-id indexed matrices for the current quarter
+    print("Mutation: loading from taiga latest")
+    tc = TaigaClient()
+    mutations = tc.get(
+        name=taiga_latest, file="merged_somatic_mutations_fordepmap_profile"
+    )
+    damaging = tc.get(
+        name=taiga_latest, file="merged_somatic_mutations_boolmatrix_fordepmap_damaging"
+    )
+    # othercons = tc.get(
+    #     name=taiga_latest,
+    #     file="merged_somatic_mutations_boolmatrix_fordepmap_othercons",
+    # )
+    othernoncons = tc.get(
+        name=taiga_latest,
+        file="merged_somatic_mutations_boolmatrix_fordepmap_othernoncons",
+    )
+    hotspot = tc.get(
+        name=taiga_latest, file="merged_somatic_mutations_boolmatrix_fordepmap_hotspot"
+    )
+
+    # subset and rename
+    print("Mutation: subsetting and renaming")
+    mutations_renamed = mutations[
+        mutations.DepMap_ID.isin(set(pr2model_dict.keys()))
+    ].replace({"DepMap_ID": pr2model_dict})
+    mutations_renamed.to_csv(folder + "all_somatic_mutations_model.csv", index=False)
+    damaging_renamed = damaging[damaging.index.isin(set(pr2model_dict.keys()))].rename(
+        index=pr2model_dict
+    )
+    damaging_renamed.to_csv(
+        folder + "all_somatic_mutations_boolmatrix_fordepmap_damaging.csv"
+    )
+    # othercons_renamed = othercons[
+    #     othercons.index.isin(set(pr2model_dict.keys()))
+    # ].rename(index=pr2model_dict)
+    # othercons_renamed.to_csv(
+    #     folder + "all_somatic_mutations_boolmatrix_fordepmap_othercons.csv"
+    # )
+    othernoncons_renamed = othernoncons[
+        othernoncons.index.isin(set(pr2model_dict.keys()))
+    ].rename(index=pr2model_dict)
+    othernoncons_renamed.to_csv(
+        folder + "all_somatic_mutations_boolmatrix_fordepmap_othernoncons.csv"
+    )
+    hotspot_renamed = hotspot[hotspot.index.isin(set(pr2model_dict.keys()))].rename(
+        index=pr2model_dict
+    )
+    hotspot_renamed.to_csv(
+        folder + "all_somatic_mutations_boolmatrix_fordepmap_hotspot.csv"
+    )
+
+    # upload to taiga
+    print("Mutation: uploading to taiga")
+    tc = TaigaClient()
+    tc.update_dataset(
+        dataset_id=taiga_virtual,
+        changes_description="adding mutations",
+        upload_files=[
+            {
+                "path": folder + "all_somatic_mutations_model.csv",
+                "name": "CCLE_mutations",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder
+                + "all_somatic_mutations_boolmatrix_fordepmap_damaging.csv",
+                "name": "CCLE_mutations_bool_damaging",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/all_somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
+                "path": folder
+                + "all_somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
+                "name": "CCLE_mutations_bool_nonconserving",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            # {
+            #     "path": folder
+            #     + "all_somatic_mutations_boolmatrix_fordepmap_othercons.csv",
+            #     "name": "CCLE_mutations_bool_otherconserving",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            {
+                "path": folder
+                + "all_somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
                 "name": "CCLE_mutations_bool_hotspot",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
@@ -905,7 +1013,7 @@ def uploadFusionMatricesModel(
     maxfreq=FUSION_MAXFREQ,
     sampleCol=SAMPLEID,
 ):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga Fusion matrices
     
     Args:
         renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
@@ -958,6 +1066,50 @@ def uploadFusionMatricesModel(
     )
 
 
+def uploadGermlineMatrixModel(
+    pr2model_dict, portal, taiga_latest=TAIGA_CN, taiga_virtual="",
+):
+    """subset, rename, save and upload to taiga germline binary matrix
+    
+    Args:
+        pr2model_dict (dict): renaming scheme mapping from PR-id to Model-ID
+        taiga_id (str): which dataset the matrices are being uploaded to
+        folder (str): where the files to be subsetted are saved
+    """
+    folder = "temp/" + portal + "/model/"
+    h.createFoldersFor(folder)
+    # load cds-id indexed matrices for the current quarter
+    print("Germline matrix: loading from taiga latest")
+    tc = TaigaClient()
+    germline = tc.get(name=taiga_latest, file="merged_binary_germline")
+
+    # subset and rename
+    print("Germline matrix: subsetting and renaming")
+    whitelist = [x for x in germline.columns if x in pr2model_dict]
+    whitelist_germline = germline[whitelist]
+    whitelist_germline = whitelist_germline.rename(columns=pr2model_dict)
+    whitelist_germline = whitelist_germline.astype(bool).astype(int)
+    sorted_mat = germline.iloc[:, :4].join(whitelist_germline)
+    sorted_mat["end"] = sorted_mat["end"].astype(int)
+    sorted_mat.to_csv(folder + "merged_binary_germline.csv", index=False)
+
+    # upload to taiga
+    print("Germline matrix: uploading to taiga")
+    tc.update_dataset(
+        dataset_id=taiga_virtual,
+        changes_description="adding model-level germline matrix",
+        upload_files=[
+            {
+                "path": folder + "merged_binary_germline.csv",
+                "name": "germline_mutation",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },.
+        ],
+        add_all_existing_files=True,
+    )
+
+
 def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
     prs_allportals = getPRToRelease(trackerobj)
     for portal, prs in prs_allportals.items():
@@ -1002,24 +1154,26 @@ def makePRLvMatrices(trackerobj, taiga_ids=VIRTUAL):
     prs_allportals = getPRToRelease(trackerobj)
     for portal, prs_to_release in prs_allportals.items():
         print("uploading profile-level matrices to ", portal)
-        uploadCNMatricesPR(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
-        # uploadMutationMatrices(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
-        uploadFusionMatricesPR(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
-        # TODO: don't have ssgsea data for test run yet
-        if portal == "":
-            uploadExpressionMatricesPR(
-                prs_to_release,
-                portal,
-                include_ssgsea=True,
-                taiga_virtual=taiga_ids[portal],
-            )
-        else:
-            uploadExpressionMatricesPR(
-                prs_to_release,
-                portal,
-                include_ssgsea=False,
-                taiga_virtual=taiga_ids[portal],
-            )
+        # uploadCNMatricesPR(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
+        uploadMutationMatricesPR(
+            prs_to_release, portal, taiga_virtual=taiga_ids[portal]
+        )
+        # uploadFusionMatricesPR(prs_to_release, portal, taiga_virtual=taiga_ids[portal])
+        # # TODO: don't have ssgsea data for test run yet
+        # if portal == "":
+        #     uploadExpressionMatricesPR(
+        #         prs_to_release,
+        #         portal,
+        #         include_ssgsea=True,
+        #         taiga_virtual=taiga_ids[portal],
+        #     )
+        # else:
+        #     uploadExpressionMatricesPR(
+        #         prs_to_release,
+        #         portal,
+        #         include_ssgsea=False,
+        #         taiga_virtual=taiga_ids[portal],
+        #     )
 
 
 def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
@@ -1038,26 +1192,31 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
         pr2model_dict = dict(list(zip(default_table.ProfileID, default_table.ModelID)))
         h.dictToFile(pr2model_dict, folder + "/" + portal + "_pr2model_renaming.json")
         print("uploading model-level matrices to", portal)
-        uploadCNMatricesModel(pr2model_dict, portal, taiga_virtual=taiga_ids[portal])
-        # uploadMutationMatricesModel(pr2model_dict, taiga_virtual=taiga_ids[portal])
-        uploadFusionMatricesModel(
+        # uploadCNMatricesModel(pr2model_dict, portal, taiga_virtual=taiga_ids[portal])
+        uploadMutationMatricesModel(
             pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
         )
-        # TODO: don't have ssgsea data for test run yet
-        if portal == "":
-            uploadExpressionMatricesModel(
-                pr2model_dict,
-                portal,
-                include_ssgsea=True,
-                taiga_virtual=taiga_ids[portal],
-            )
-        else:
-            uploadExpressionMatricesModel(
-                pr2model_dict,
-                portal,
-                include_ssgsea=False,
-                taiga_virtual=taiga_ids[portal],
-            )
+        uploadGermlineMatrixModel(
+            pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
+        )
+        # uploadFusionMatricesModel(
+        #     pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
+        # )
+        # # TODO: don't have ssgsea data for test run yet
+        # if portal == "":
+        #     uploadExpressionMatricesModel(
+        #         pr2model_dict,
+        #         portal,
+        #         include_ssgsea=True,
+        #         taiga_virtual=taiga_ids[portal],
+        #     )
+        # else:
+        #     uploadExpressionMatricesModel(
+        #         pr2model_dict,
+        #         portal,
+        #         include_ssgsea=False,
+        #         taiga_virtual=taiga_ids[portal],
+        #     )
 
 
 def findLatestVersion(dataset, approved_only=True):

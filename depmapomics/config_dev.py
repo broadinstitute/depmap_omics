@@ -6,7 +6,7 @@ CACHE_PATH = "~/.depmapomics/"
 TMP_PATH = "/tmp/"
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
-SHEETCREDS = "../.credentials.json"
+SHEETCREDS = "../../.credentials.json"
 MY_ID = "~/.client_secret.json"
 MYSTORAGE_ID = "~/.storage.json"
 
