@@ -44,12 +44,11 @@ def makeAchillesChoiceTable(
     Args:
         trackerobj (SampleTracker): tracker object
         prs (list): list of profile IDs to be released
-        one_pr_per_type (bool, optional): whether to enforce including only one profile type per model
-        taiga_ids (dict): dictionary that maps portal name to virtual taiga dataset id
-        folder (str): location where tables are saved as .csv files
+        one_pr_per_type (bool, optional): whether to enforce including only one profile type per MC
+        source_priority (list, optional): ordered list of how different data sources should be prioritized
 
     Returns:
-        ach_tables (dict{(str: pd.DataFrame)}): for each portal, a df containing MC-PR mapping
+        ach_table (pd.DataFrame): a df containing MC-PR mapping
     """
     pr_table = trackerobj.read_pr_table()
     seq_table = trackerobj.read_seq_table()
@@ -136,14 +135,17 @@ def makeAchillesChoiceTable(
 def makeDefaultModelTable(
     trackerobj, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
 ):
-    """generate a table for each portal that indicates which profiles are released corresponding to which modelID
+    """generate a table that indicates which profiles are released corresponding to which modelID
 
     Args:
         trackerobj (SampleTracker): tracker object
-        folder (str): location where tables are saved as .csv files
+        prs (list): list of profile IDs to be released
+        one_pr_per_type (bool, optional): whether to enforce including only one profile type per model
+        source_priority (list, optional): ordered list of how different data sources should be prioritized
 
     Returns:
-        ach_tables (dict{(str: pd.DataFrame)}): for each portal, a df containing MC-PR mapping"""
+        default_table (pd.DataFrame): a df containing Model-PR mapping
+    """
     pr_table = trackerobj.read_pr_table()
     mc_table = trackerobj.read_mc_table()
     seq_table = trackerobj.read_seq_table()
@@ -281,12 +283,13 @@ def initVirtualDatasets(
 
 
 def uploadCNMatricesPR(prs, portal, taiga_latest=TAIGA_CN, taiga_virtual=""):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga PR-level CN matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
+        prs (list): list of PR-ids to release
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/profile/"
     h.createFoldersFor(folder)
@@ -348,12 +351,13 @@ def uploadCNMatricesPR(prs, portal, taiga_latest=TAIGA_CN, taiga_virtual=""):
 def uploadCNMatricesModel(
     pr2model_dict, portal, taiga_latest=TAIGA_CN, taiga_virtual=""
 ):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga model-level CN matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
+        pr2model_dict (dict): renaming scheme mapping from PR-id to model id
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/model/"
     h.createFoldersFor(folder)
@@ -422,12 +426,13 @@ def uploadCNMatricesModel(
 def uploadMutationMatricesPR(
     prs, portal, taiga_latest=TAIGA_MUTATION, taiga_virtual=""
 ):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga PR-level mutation matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
+        prs (list): list of PR-ids to release
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/profile/"
     h.createFoldersFor(folder)
@@ -522,12 +527,13 @@ def uploadMutationMatricesPR(
 def uploadMutationMatricesModel(
     pr2model_dict, portal, taiga_latest=TAIGA_MUTATION, taiga_virtual=""
 ):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga model-level mutation matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
+        pr2model_dict (dict): renaming scheme mapping from PR-id to model id
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/model/"
     h.createFoldersFor(folder)
@@ -632,13 +638,13 @@ def uploadMutationMatricesModel(
 def uploadExpressionMatricesPR(
     prs, portal, include_ssgsea=False, taiga_latest=TAIGA_EXPRESSION, taiga_virtual="",
 ):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga PR-level expression matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
-        include_ssgsea (bool): whether or not to upload ssGSEA data to this portal
+        prs (list): list of PR-ids to release
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/profile/"
     h.createFoldersFor(folder)
@@ -789,13 +795,13 @@ def uploadExpressionMatricesModel(
     taiga_latest=TAIGA_EXPRESSION,
     taiga_virtual="",
 ):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga model-level expression matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
-        include_ssgsea (bool): whether or not to upload ssGSEA data to this portal
+        pr2model_dict (dict): renaming scheme mapping from PR-id to model id
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/model/"
     h.createFoldersFor(folder)
@@ -955,12 +961,13 @@ def uploadFusionMatricesPR(
     maxfreq=FUSION_MAXFREQ,
     sampleCol=SAMPLEID,
 ):
-    """subset, rename, save and upload to taiga CN matrices
+    """subset, rename, save and upload to taiga PR-level fusion matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
+        prs (list): list of PR-ids to release
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/profile/"
     h.createFoldersFor(folder)
@@ -1013,12 +1020,13 @@ def uploadFusionMatricesModel(
     maxfreq=FUSION_MAXFREQ,
     sampleCol=SAMPLEID,
 ):
-    """subset, rename, save and upload to taiga Fusion matrices
+    """subset, rename, save and upload to taiga model-level Fusion matrices
     
     Args:
-        renaming_dict (dict): renaming scheme mapping from CDS-id to either model or MC id
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
+        pr2model_dict (dict): renaming scheme mapping from PR-id to model id
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/model/"
     h.createFoldersFor(folder)
@@ -1072,9 +1080,10 @@ def uploadGermlineMatrixModel(
     """subset, rename, save and upload to taiga germline binary matrix
     
     Args:
-        pr2model_dict (dict): renaming scheme mapping from PR-id to Model-ID
-        taiga_id (str): which dataset the matrices are being uploaded to
-        folder (str): where the files to be subsetted are saved
+        pr2model_dict (dict): renaming scheme mapping from PR-id to model id
+        portal (str): which portal the data is being uploaded to
+        taiga_latest (str): which dataset the matrices to be subsetted are being read from
+        taiga_virtual (str): which dataset the matrices are being uploaded to
     """
     folder = "temp/" + portal + "/model/"
     h.createFoldersFor(folder)
@@ -1104,13 +1113,20 @@ def uploadGermlineMatrixModel(
                 "name": "germline_mutation",
                 "format": "TableCSV",
                 "encoding": "utf-8",
-            },.
+            },
         ],
         add_all_existing_files=True,
     )
 
 
 def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
+    """upload achilles choice and default model table to all portals
+
+    Args:
+        trackerobj (SampleTracker): tracker object
+        taiga_ids (dict, optional): dict mapping portal name to taiga virtual dataset id
+        folder (str, optional): where the tables are saved
+    """
     prs_allportals = getPRToRelease(trackerobj)
     for portal, prs in prs_allportals.items():
         achilles_table = makeAchillesChoiceTable(trackerobj, prs)
