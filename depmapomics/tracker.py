@@ -92,42 +92,42 @@ class SampleTracker:
 
     def read_mc_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "ModelCondition")
+        wksht = sheet.worksheet("title", MC_TABLE_NAME)
         return wksht.get_as_df(index_column=1)
 
     def write_mc_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "ModelCondition")
+        wksht = sheet.worksheet("title", MC_TABLE_NAME)
         wksht.set_dataframe(df, "A1", copy_index=True, nan="")
 
     def read_pr_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "OmicsProfile")
+        wksht = sheet.worksheet("title", PR_TABLE_NAME)
         return wksht.get_as_df(index_column=1, start="A3")
 
     def write_pr_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "OmicsProfile")
+        wksht = sheet.worksheet("title", PR_TABLE_NAME)
         wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_seq_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "OmicsSequencing")
+        wksht = sheet.worksheet("title", SEQ_TABLE_NAME)
         return wksht.get_as_df(index_column=1, start="A3")
 
     def write_seq_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "OmicsSequencing")
+        wksht = sheet.worksheet("title", SEQ_TABLE_NAME)
         wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_sample_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "Sample")
+        wksht = sheet.worksheet("title", SAMPLE_TABLE_NAME)
         return wksht.get_as_df(index_column=1)
 
     def write_sample_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", "Sample")
+        wksht = sheet.worksheet("title", SAMPLE_TABLE_NAME)
         wksht.set_dataframe(df, "A1", copy_index=True, nan="")
 
 

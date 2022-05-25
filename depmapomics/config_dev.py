@@ -23,9 +23,6 @@ DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU
 
 POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
 
-GUMBO_SHEET = "https://docs.google.com/spreadsheets/d/10Lg0xkT5OHLYgJ9VKpkh8VR64TXfxPVJXRVAckU8uBg"
-GUMBO_SHEETNAME = "Backfilled profile IDs"
-
 SAMPLES_FOUND_NAME = "depmap ALL samples found"
 
 SAMPLES_NOT_FOUND_NAME = "depmap samples not found"
@@ -804,3 +801,21 @@ __Columns__:
  gene names in the format HGNC\_symbol (Entrez\_ID)
 DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean
  """
+
+
+########### Gumbo configs #############
+GUMBO_SHEET = "https://docs.google.com/spreadsheets/d/10Lg0xkT5OHLYgJ9VKpkh8VR64TXfxPVJXRVAckU8uBg"
+GUMBO_SHEETNAME = "Backfilled profile IDs"
+
+# names of columns that contain release dates
+DATE_COL_DICT = {
+    "internal": "InternalReleaseDate",
+    "ibm": "IBMReleaseDate",
+    "dmc": "ConsortiumReleaseDate",
+    "public": "PublicReleaseDate",
+}
+
+MC_TABLE_NAME = "ModelCondition"
+PR_TABLE_NAME = "OmicsProfile"
+SEQ_TABLE_NAME = "OmicsSequencing"
+SAMPLE_TABLE_NAME = "Sample"
