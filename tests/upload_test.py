@@ -32,7 +32,6 @@ def test_makeAchillesChoiceTable():
 
     print("testing makeAchillesChoiceTable():")
     for k, v in d.items():
-        print("k")
         assert ~d[k].isnull().values.any(), "nans found"
         assert d[k].ProfileID.is_unique(), "duplicated profile IDs found"
 
@@ -43,6 +42,5 @@ def test_makeDefaultModelTable():
 
     print("testing makeDefaultModelTable():")
     for k, v in d.items():
-        print("k")
         assert ~d[k].isnull().values.any(), "nans found"
         assert d[k].ProfileID.is_unique(), "duplicated profile IDs found"
