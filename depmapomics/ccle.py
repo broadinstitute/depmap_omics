@@ -18,25 +18,6 @@ import multiprocessing
 from genepy.epigenetics import chipseq as chip
 
 
-def expressionRenaming(r, todrop, folder=""):
-    trackerobj = track.initTracker()
-    ccle_refsamples = trackerobj.read_tracker()
-
-    renaming = track.removeOlderVersions(
-        names=r,
-        refsamples=ccle_refsamples[ccle_refsamples.datatype == "rna"],
-        priority="prioritized",
-    )
-    # if we have a replaceable failed version in our dataset
-    rename = expressions.solveQC(ccle_refsamples, todrop, save=folder)
-    for k, _ in renaming.copy().items():
-        if k in rename:
-            renaming[rename[k]] = renaming.pop(k)
-        elif (k in todrop) and (k not in rename):
-            renaming.pop(k)
-    return renaming
-
-
 async def expressionPostProcessing(
     refworkspace=RNAWORKSPACE,
     samplesetname=SAMPLESETNAME,
@@ -1400,7 +1381,7 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    res_wgs = pool.map(mapBedWGS, os.listdir(wgsdir))
+    res_wgs = pool.map(mapBedWGS, os.listdir(wgsdir))  # TODO: use starmap
     sorted_guides_bed_wgs = guides_bed.sort_values(
         by=["chrom", "start", "end"]
     ).reset_index(drop=True)
