@@ -368,7 +368,7 @@ def uploadModelMatrix(
     else:
         subset_mat = subset_mat[
             subset_mat[pr_col].isin(set(pr2model_dict.keys()))
-        ].replace({"DepMap_ID": pr2model_dict})
+        ].replace({SAMPLEID: pr2model_dict})
         subset_mat.to_csv(folder + virtual_fn + ".csv", index=False)
 
     print("uploading ", virtual_fn, " to virtual")
@@ -432,7 +432,13 @@ def uploadGermlineMatrixModel(
     )
 
 
-def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME):
+def uploadAuxTables(
+    trackerobj,
+    taiga_ids=VIRTUAL,
+    ach_table_name=ACH_CHOICE_TABLE_NAME,
+    default_table_name=DEFAULT_TABLE_NAME,
+    folder="temp/" + SAMPLESETNAME,
+):
     """upload achilles choice and default model table to all portals
     Args:
         trackerobj (SampleTracker): tracker object
@@ -444,22 +450,24 @@ def uploadAuxTables(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESETNAM
         achilles_table = makeAchillesChoiceTable(trackerobj, prs)
         default_table = makeDefaultModelTable(trackerobj, prs)
         achilles_table.to_csv(
-            folder + portal + "_achilles_choice_table.csv", index=False
+            folder + portal + "_" + ach_table_name + ".csv", index=False
         )
-        default_table.to_csv(folder + portal + "_default_model_table.csv", index=False)
+        default_table.to_csv(
+            folder + portal + "_" + default_table_name + ".csv", index=False
+        )
         tc = TaigaClient()
         tc.update_dataset(
             dataset_id=taiga_ids[portal],
             changes_description="adding mapping tables",
             upload_files=[
                 {
-                    "path": folder + "/" + portal + "_achilles_choice_table.csv",
+                    "path": folder + "/" + portal + "_" + ach_table_name + ".csv",
                     "name": "Achilles_choice_table",
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
                 {
-                    "path": folder + "/" + portal + "_default_model_table.csv",
+                    "path": folder + "/" + portal + "_" + default_table_name + ".csv",
                     "name": "default_model_table",
                     "format": "TableCSV",
                     "encoding": "utf-8",
