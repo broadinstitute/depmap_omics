@@ -411,11 +411,6 @@ async def fusionPostProcessing(
         dataset_permaname=taiga_dataset,
         changes_description="new " + sampleset + " release!",
         upload_files=[
-            # {
-            #     "path": "temp/" + sampleset + "/fusions_latest.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
             {
                 "path": "temp/" + sampleset + "/filteredfusions_latest.csv",
                 "format": "TableCSV",

@@ -9,7 +9,7 @@ from depmapomics.config import *
 from taigapy import TaigaClient
 
 
-def getPRToRelease(trackerobj):
+def getPRToRelease(trackerobj, date_col_dict=DATE_COL_DICT):
     """generate lists of profiles to release based on date for all portals
     
     Args:
@@ -18,12 +18,6 @@ def getPRToRelease(trackerobj):
     Returns:
         prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
     """
-    date_col_dict = {
-        "internal": "InternalReleaseDate",
-        "ibm": "IBMReleaseDate",
-        "dmc": "ConsortiumReleaseDate",
-        "public": "PublicReleaseDate",
-    }
     today = int(str(date.today()).replace("-", ""))
     pr_table = trackerobj.read_pr_table()
     prs = dict()
@@ -37,7 +31,11 @@ def getPRToRelease(trackerobj):
 
 
 def makeAchillesChoiceTable(
-    trackerobj, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
+    trackerobj,
+    prs,
+    one_pr_per_type=True,
+    source_priority=SOURCE_PRIORITY,
+    colnames=ACH_CHOICE_TABLE_COLS,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which MC
 
@@ -125,15 +123,17 @@ def makeAchillesChoiceTable(
                         subset_pr_table.CDSID == latest_cds_id_wgs
                     ].index[0]
                 rows.append((mc, pr, "dna"))
-    ach_table = pd.DataFrame(
-        rows, columns=["ModelConditionID", "ProfileID", "ProfileType"]
-    )
+    ach_table = pd.DataFrame(rows, columns=colnames)
 
     return ach_table
 
 
 def makeDefaultModelTable(
-    trackerobj, prs, one_pr_per_type=True, source_priority=SOURCE_PRIORITY,
+    trackerobj,
+    prs,
+    one_pr_per_type=True,
+    source_priority=SOURCE_PRIORITY,
+    colnames=DEFAULT_TABLE_COLS,
 ):
     """generate a table that indicates which profiles are released corresponding to which modelID
 
@@ -235,7 +235,7 @@ def makeDefaultModelTable(
                         subset_pr_table.CDSID == latest_cds_id_wgs
                     ].index[0]
                 rows.append((m, pr, "dna"))
-    default_table = pd.DataFrame(rows, columns=["ModelID", "ProfileID", "ProfileType"])
+    default_table = pd.DataFrame(rows, columns=colnames)
     return default_table
 
 
@@ -244,9 +244,6 @@ def initVirtualDatasets(
 ):
     """initialize taiga virtual datasets for all 4 portals by uploading an empty dummy file
     """
-
-    with open("temp/dummy.csv", "w") as fp:
-        pass
     virutal_pr = dict()
     virtual_model = dict()
     tc = TaigaClient()
@@ -257,7 +254,7 @@ def initVirtualDatasets(
             + " release of the DepMap dataset for the DepMap Portal. Please look at the README file for additional information about this dataset. ",
             upload_files=[
                 {
-                    "path": "temp/dummy.csv",
+                    "path": "/dev/null",
                     "name": "init",
                     "format": "Raw",
                     "encoding": "utf-8",
@@ -271,7 +268,7 @@ def initVirtualDatasets(
             + " release of the DepMap dataset for the DepMap Portal. Please look at the README file for additional information about this dataset. ",
             upload_files=[
                 {
-                    "path": "temp/dummy.csv",
+                    "path": "/dev/null",
                     "name": "init",
                     "format": "Raw",
                     "encoding": "utf-8",
@@ -1209,9 +1206,9 @@ def makeModelLvMatrices(trackerobj, taiga_ids=VIRTUAL, folder="temp/" + SAMPLESE
         h.dictToFile(pr2model_dict, folder + "/" + portal + "_pr2model_renaming.json")
         print("uploading model-level matrices to", portal)
         # uploadCNMatricesModel(pr2model_dict, portal, taiga_virtual=taiga_ids[portal])
-        uploadMutationMatricesModel(
-            pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
-        )
+        # uploadMutationMatricesModel(
+        #     pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
+        # )
         uploadGermlineMatrixModel(
             pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
         )

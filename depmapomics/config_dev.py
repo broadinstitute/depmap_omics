@@ -819,3 +819,6 @@ MC_TABLE_NAME = "ModelCondition"
 PR_TABLE_NAME = "OmicsProfile"
 SEQ_TABLE_NAME = "OmicsSequencing"
 SAMPLE_TABLE_NAME = "Sample"
+ACH_CHOICE_TABLE_COLS = ["ModelConditionID", "ProfileID", "ProfileType"]
+DEFAULT_TABLE_COLS = ["ModelID", "ProfileID", "ProfileType"]
+
