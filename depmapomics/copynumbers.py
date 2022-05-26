@@ -237,9 +237,11 @@ def pureCNpostprocess(
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     priority=[],
-    colname="PureCN_loh_merged",
+    lohcolname=PURECN_LOH_COLNAME,
+    failedcolname=PURECN_FAILED_COLNAME,
     sampleset="all",
     colRenaming=PURECN_COLRENAMING,
+    lohvals=PURECN_LOHVALUES,
     terracols=SIGTABLE_TERRACOLS,
     save_output="",
     mappingdf=None,
@@ -264,9 +266,9 @@ def pureCNpostprocess(
 
     print("loading PureCN merged LOH file")
     wm = dm.WorkspaceManager(refworkspace)
-    segments = pd.read_csv(wm.get_entities(setEntity).loc[sampleset, colname]).rename(
-        columns=colRenaming
-    )
+    segments = pd.read_csv(
+        wm.get_entities(setEntity).loc[sampleset, lohcolname]
+    ).rename(columns=colRenaming)
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -295,9 +297,7 @@ def pureCNpostprocess(
     )
 
     # Generate gene-level LOH status matrix
-    segments["type"] = segments["type"].replace(
-        ["LOH", "COPY-NEUTRAL LOH", "WHOLE ARM COPY-NEUTRAL LOH"], 1
-    )
+    segments["type"] = segments["type"].replace(lohvals, 1)
     segments["type"] = segments["type"].replace("", 0)
 
     loh_status = mut.toGeneMatrix(
@@ -308,7 +308,7 @@ def pureCNpostprocess(
     samples = wm.get_samples()
     purecn_table = samples[terracols]
 
-    failed = purecn_table[purecn_table["PureCN_failed"] == "TRUE"].index
+    failed = purecn_table[purecn_table[failedcolname] == "TRUE"].index
 
     # TO DO: generate the signature table in a separate function
     # see ccle_tasks/signature_table.ipynb
