@@ -820,5 +820,39 @@ PR_TABLE_NAME = "OmicsProfile"
 SEQ_TABLE_NAME = "OmicsSequencing"
 SAMPLE_TABLE_NAME = "Sample"
 ACH_CHOICE_TABLE_COLS = ["ModelConditionID", "ProfileID", "ProfileType"]
+ACH_CHOICE_TABLE_NAME = "achilles_choice_table"
 DEFAULT_TABLE_COLS = ["ModelID", "ProfileID", "ProfileType"]
+DEFAULT_TABLE_NAME = "default_model_table"
+
+# dictionaries mapping names of pr-level matrices on latest to names on virtual
+# NumericMatrixCSV matrices:
+VIRTUAL_FILENAMES_NUMMAT = {
+    "merged_binary_germline": "germline_mutation",
+    # expression:
+    "genes-expected_count-profile": "CCLE_RNAseq_reads",
+    "genes-tpm_logp1-profile": "CCLE_expression_full",
+    "transcripts-expected_count-profile": "CCLE_expression_transcripts_expected_count",
+    "transcripts-tpm-profile": "CCLE_RNAseq_transcripts",
+    "proteincoding_genes-expected_count-profile": "CCLE_expression_proteincoding_genes_expected_count",
+    "proteincoding_genes-tpm-profile": "CCLE_expression",
+    "gene_sets-profile": "CCLE_ssGSEA",
+    # CN:
+    "merged-genecn-profile": "CCLE_gene_cn",
+    # mutation:
+    "somatic_mutations_boolmatrix-hotspot-profile": "CCLE_mutations_bool_hotspot",
+    "somatic_mutations_boolmatrix-othernoncons-profile": "CCLE_mutations_bool_nonconserving",
+    "somatic_mutations_boolmatrix-damaging-profile": "CCLE_mutations_bool_damaging",
+    "somatic_mutations_boolmatrix-othercons-profile": "CCLE_mutations_bool_otherconserving",
+}
+
+# TableCSV matrices:
+VIRTUAL_FILENAMES_TABLE = {
+    # fusion:
+    "filtered_fusion-profile": "CCLE_fusions",
+    "fusion-profile": "CCLE_fusions_unfiltered",
+    # CN:
+    "merged-segments-profile": "CCLE_segment_cn",
+    # mutation:
+    "somatic_mutations-profile": "CCLE_mutations",
+}
 
