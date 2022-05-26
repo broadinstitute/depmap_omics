@@ -304,6 +304,7 @@ def uploadPRMatrix(
         change_desc (str): change description on taiga virtual
     """
     print("loading ", latest_fn, " from latest")
+    tc = TaigaClient()
     to_subset = tc.get(name=taiga_latest, file=latest_fn)
 
     print("subsetting ", latest_fn)
@@ -315,7 +316,6 @@ def uploadPRMatrix(
         subset_mat.to_csv(folder + virtual_fn + ".csv", index=False)
 
     print("uploading ", virtual_fn, " to virtual")
-    tc = TaigaClient()
     tc.update_dataset(
         dataset_id=taiga_virtual,
         changes_description=change_desc,
@@ -356,6 +356,7 @@ def uploadModelMatrix(
         change_desc (str): change description on taiga virtual
     """
     print("loading ", latest_fn, " from latest")
+    tc = TaigaClient()
     to_subset = tc.get(name=taiga_latest, file=latest_fn)
 
     print("subsetting ", latest_fn)
@@ -371,7 +372,6 @@ def uploadModelMatrix(
         subset_mat.to_csv(folder + virtual_fn + ".csv", index=False)
 
     print("uploading ", virtual_fn, " to virtual")
-    tc = TaigaClient()
     tc.update_dataset(
         dataset_id=taiga_virtual,
         changes_description=change_desc,
@@ -485,7 +485,7 @@ def makePRLvMatrices(
     for portal, prs_to_release in prs_allportals.items():
         print("uploading profile-level matrices to ", portal)
         for latest_id, fn_dict in LATEST2FN_NUMMAT.items():
-            for latest, virtual in fn_dict:
+            for latest, virtual in fn_dict.items():
                 uploadPRMatrix(
                     prs_to_release,
                     latest_id,
@@ -498,7 +498,7 @@ def makePRLvMatrices(
                     change_desc="adding " + virtual,
                 )
         for latest_id, fn_dict in LATEST2FN_TABLE.items():
-            for latest, virtual in fn_dict:
+            for latest, virtual in fn_dict.items():
                 uploadPRMatrix(
                     prs_to_release,
                     latest_id,
@@ -511,7 +511,7 @@ def makePRLvMatrices(
                     change_desc="adding " + virtual,
                 )
         if portal == "internal":
-            for latest, virtual in VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL:
+            for latest, virtual in VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL.items():
                 uploadPRMatrix(
                     prs_to_release,
                     TAIGA_EXPRESSION,
@@ -544,7 +544,7 @@ def makeModelLvMatrices(
         h.dictToFile(pr2model_dict, folder + "/" + portal + "_pr2model_renaming.json")
         print("uploading model-level matrices to", portal)
         for latest_id, fn_dict in LATEST2FN_NUMMAT.items():
-            for latest, virtual in fn_dict:
+            for latest, virtual in fn_dict.items():
                 uploadModelMatrix(
                     pr2model_dict,
                     latest_id,
@@ -557,7 +557,7 @@ def makeModelLvMatrices(
                     change_desc="adding " + virtual,
                 )
         for latest_id, fn_dict in LATEST2FN_TABLE.items():
-            for latest, virtual in fn_dict:
+            for latest, virtual in fn_dict.items():
                 uploadModelMatrix(
                     pr2model_dict,
                     latest_id,
@@ -570,7 +570,7 @@ def makeModelLvMatrices(
                     change_desc="adding " + virtual,
                 )
         if portal == "internal":
-            for latest, virtual in VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL:
+            for latest, virtual in VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL.items():
                 uploadModelMatrix(
                     pr2model_dict,
                     TAIGA_EXPRESSION,
@@ -583,7 +583,7 @@ def makeModelLvMatrices(
                     change_desc="adding " + virtual,
                 )
         uploadGermlineMatrixModel(
-            pr2model_dict, portal, taiga_virtual=taiga_ids[portal]
+            pr2model_dict, portal, taiga_virtual=virtual_ids[portal]
         )
 
 
@@ -634,7 +634,7 @@ def CCLEupload(trackerobj, taiga_ids=""):
     if taiga_ids == "":
         taiga_ids = initVirtualDatasets()
 
-    makePRLvMatrices(trackerobj, taiga_ids=taiga_ids)
-    makeModelLvMatrices(trackerobj, taiga_ids=taiga_ids)
+    makePRLvMatrices(trackerobj, virtual_ids=taiga_ids)
+    makeModelLvMatrices(trackerobj, virtual_ids=taiga_ids)
     uploadAuxTables(trackerobj, taiga_ids=taiga_ids)
     updateEternal(virtual=taiga_ids)
