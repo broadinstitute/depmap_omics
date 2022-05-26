@@ -434,6 +434,12 @@ PURECN_COLRENAMING = {
     "type": "LOH_status",
 }
 
+PURECN_LOH_COLNAME = ("PureCN_loh_merged",)
+PURECN_FAILED_COLNAME = ("PureCN_failed",)
+
+# if the loh function outputs one of these, record as 1 in the loh bool matrix
+PURECN_LOHVALUES = ["LOH", "COPY-NEUTRAL LOH", "WHOLE ARM COPY-NEUTRAL LOH"]
+
 SIGTABLE_TERRACOLS = {
     "PureCN_ploidy",
     "PureCN_wgd",
@@ -826,33 +832,57 @@ DEFAULT_TABLE_NAME = "default_model_table"
 
 # dictionaries mapping names of pr-level matrices on latest to names on virtual
 # NumericMatrixCSV matrices:
-VIRTUAL_FILENAMES_NUMMAT = {
-    "merged_binary_germline": "germline_mutation",
-    # expression:
+VIRTUAL_FILENAMES_NUMMAT_EXP = {
     "genes-expected_count-profile": "CCLE_RNAseq_reads",
     "genes-tpm_logp1-profile": "CCLE_expression_full",
     "transcripts-expected_count-profile": "CCLE_expression_transcripts_expected_count",
     "transcripts-tpm-profile": "CCLE_RNAseq_transcripts",
     "proteincoding_genes-expected_count-profile": "CCLE_expression_proteincoding_genes_expected_count",
     "proteincoding_genes-tpm-profile": "CCLE_expression",
+}
+
+VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL = {
     "gene_sets-profile": "CCLE_ssGSEA",
-    # CN:
+}
+
+VIRTUAL_FILENAMES_NUMMAT_CN = {
     "merged-genecn-profile": "CCLE_gene_cn",
-    # mutation:
+}
+
+VIRTUAL_FILENAMES_NUMMAT_MUT = {
     "somatic_mutations_boolmatrix-hotspot-profile": "CCLE_mutations_bool_hotspot",
     "somatic_mutations_boolmatrix-othernoncons-profile": "CCLE_mutations_bool_nonconserving",
     "somatic_mutations_boolmatrix-damaging-profile": "CCLE_mutations_bool_damaging",
     "somatic_mutations_boolmatrix-othercons-profile": "CCLE_mutations_bool_otherconserving",
 }
 
+VIRTUAL_FILENAMES_GERMLINE = {
+    "merged_binary_germline": "germline_mutation",
+}
+
 # TableCSV matrices:
-VIRTUAL_FILENAMES_TABLE = {
-    # fusion:
+VIRTUAL_FILENAMES_TABLE_FUSION = {
     "filtered_fusion-profile": "CCLE_fusions",
     "fusion-profile": "CCLE_fusions_unfiltered",
-    # CN:
+}
+
+VIRTUAL_FILENAMES_TABLE_CN = {
     "merged-segments-profile": "CCLE_segment_cn",
-    # mutation:
+}
+
+VIRTUAL_FILENAMES_TABLE_MUT = {
     "somatic_mutations-profile": "CCLE_mutations",
 }
 
+# upload mapping, taiga latest to file name dicts
+LATEST2FN_NUMMAT = {
+    TAIGA_CN: VIRTUAL_FILENAMES_NUMMAT_CN,
+    TAIGA_EXPRESSION: VIRTUAL_FILENAMES_NUMMAT_EXP,
+    TAIGA_MUTATION: VIRTUAL_FILENAMES_NUMMAT_MUT,
+}
+
+LATEST2FN_TABLE = {
+    TAIGA_CN: VIRTUAL_FILENAMES_TABLE_CN,
+    TAIGA_FUSION: VIRTUAL_FILENAMES_TABLE_FUSION,
+    TAIGA_MUTATION: VIRTUAL_FILENAMES_TABLE_MUT,
+}
