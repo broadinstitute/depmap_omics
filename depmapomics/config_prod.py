@@ -286,7 +286,7 @@ WESSETENTITY = "pair_set"
 ############## Fingerprinting
 
 # Local directory to save intermediate files to
-WORKING_DIR = "temp/"
+WORKING_DIR = "output/"
 
 FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
 

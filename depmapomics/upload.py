@@ -287,7 +287,7 @@ def uploadPRMatrix(
     virtual_fn,
     matrix_format,
     pr_col="index",
-    folder="temp",
+    folder="output",
     change_desc="",
 ):
     """subset, save and upload to taiga PR-level matrix
@@ -339,7 +339,7 @@ def uploadModelMatrix(
     virtual_fn,
     matrix_format,
     pr_col="index",
-    folder="temp",
+    folder="output",
     change_desc="",
 ):
     """subset, rename, save and upload to taiga model-level matrix
@@ -398,7 +398,7 @@ def uploadGermlineMatrixModel(
         taiga_latest (str): which dataset the matrices to be subsetted are being read from
         taiga_virtual (str): which dataset the matrices are being uploaded to
     """
-    folder = "temp/" + portal + "/model/"
+    folder = "output/" + portal + "/model/"
     h.createFoldersFor(folder)
     # load cds-id indexed matrices for the current quarter
     print("Germline matrix: loading from taiga latest")
@@ -437,7 +437,7 @@ def uploadAuxTables(
     taiga_ids=VIRTUAL,
     ach_table_name=ACH_CHOICE_TABLE_NAME,
     default_table_name=DEFAULT_TABLE_NAME,
-    folder="temp/" + SAMPLESETNAME,
+    folder="output/" + SAMPLESETNAME,
 ):
     """upload achilles choice and default model table to all portals
     Args:
@@ -534,7 +534,7 @@ def makePRLvMatrices(
 
 
 def makeModelLvMatrices(
-    trackerobj, virtual_ids=VIRTUAL, folder="temp/" + SAMPLESETNAME
+    trackerobj, virtual_ids=VIRTUAL, folder="output/" + SAMPLESETNAME
 ):
     """for each portal, save and upload profile-indexed data matrices
     
@@ -561,7 +561,7 @@ def makeModelLvMatrices(
                     virtual,
                     "NumericMatrixCSV",
                     pr_col="index",
-                    folder="temp",
+                    folder="output",
                     change_desc="adding " + virtual,
                 )
         for latest_id, fn_dict in LATEST2FN_TABLE.items():
@@ -574,7 +574,7 @@ def makeModelLvMatrices(
                     virtual,
                     "TableCSV",
                     pr_col=SAMPLEID,
-                    folder="temp",
+                    folder="output",
                     change_desc="adding " + virtual,
                 )
         if portal == "internal":

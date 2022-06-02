@@ -99,10 +99,10 @@ async def expressionPostProcessing(
         (ccle_refsamples.prioritized == 1) & (ccle_refsamples.datatype == "rna")
     ].index.tolist()
 
-    folder = os.path.join("temp", samplesetname, "")
+    folder = os.path.join("output", samplesetname, "")
 
     if dry_run:
-        folder = os.path.join("temp", "dryrun", "")
+        folder = os.path.join("output", "dryrun", "")
 
     h.createFoldersFor(folder)
     files, failed, _, renaming, lowqual, _ = await expressions.postProcess(
@@ -374,7 +374,7 @@ async def fusionPostProcessing(
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
-    folder = os.path.join("temp", sampleset, "")
+    folder = os.path.join("output", sampleset, "")
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
@@ -438,25 +438,25 @@ async def fusionPostProcessing(
         changes_description="new " + sampleset + " release!",
         upload_files=[
             {
-                "path": "temp/" + sampleset + "/filteredfusions_latest.csv",
+                "path": "output/" + sampleset + "/filteredfusions_latest.csv",
                 "name": "filtered_fusions",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + sampleset + "/fusions_all.csv",
+                "path": "output/" + sampleset + "/fusions_all.csv",
                 "name": "fusions-all",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + sampleset + "/filteredfusions_latest_profile.csv",
+                "path": "output/" + sampleset + "/filteredfusions_latest_profile.csv",
                 "name": "filtered_fusion-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + sampleset + "/fusions_all_profile.csv",
+                "path": "output/" + sampleset + "/fusions_all_profile.csv",
                 "name": "fusion-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
@@ -537,7 +537,7 @@ def cnPostProcessing(
     assert len(tracker) != 0, "broken source for sample tracker"
 
     # doing wes
-    folder = os.path.join("temp", samplesetname, "wes_")
+    folder = os.path.join("output", samplesetname, "wes_")
     if redoWES:
         print("doing wes")
         priority = tracker[
@@ -607,7 +607,7 @@ def cnPostProcessing(
 
     # doing wgs
     print("doing wgs")
-    folder = os.path.join("temp", samplesetname, "wgs_")
+    folder = os.path.join("output", samplesetname, "wgs_")
     priority = tracker[
         (tracker.datatype == "wgs") & (tracker.prioritized == 1)
     ].index.tolist()
@@ -726,7 +726,7 @@ def cnPostProcessing(
         mergedsegments_pr[mergedsegments_pr.Chromosome == "X"].index, "Status"
     ] = "U"
     # merging wes and wgs
-    folder = os.path.join("temp", samplesetname, "")
+    folder = os.path.join("output", samplesetname, "")
     mergedsegments_pr = mut.manageGapsInSegments(mergedsegments_pr)
     mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
 
@@ -915,7 +915,7 @@ async def mutationPostProcessing(
 
     # doing wes
     print("doing wes")
-    folder = os.path.join("temp", samplesetname, "wes_")
+    folder = os.path.join("output", samplesetname, "wes_")
 
     wesmutations = mutations.postProcess(
         wesrefworkspace,
@@ -935,7 +935,7 @@ async def mutationPostProcessing(
 
     # doing wgs
     print("doing wgs")
-    folder = os.path.join("temp", samplesetname, "wgs_")
+    folder = os.path.join("output", samplesetname, "wgs_")
 
     wgsmutations = mutations.postProcess(
         wgsrefworkspace,
@@ -954,7 +954,7 @@ async def mutationPostProcessing(
 
     # merge
     print("merging")
-    folder = os.path.join("temp", samplesetname, "merged_")
+    folder = os.path.join("output", samplesetname, "merged_")
     priomutations = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     # normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
     # mutations = mutations[~mutations[SAMPLEID].isin(normals)]
@@ -1072,24 +1072,24 @@ async def mutationPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + samplesetname + "/wes_somatic_mutations_all.csv",
+                "path": "output/" + samplesetname + "/wes_somatic_mutations_all.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + samplesetname + "/wgs_somatic_mutations_all.csv",
+                "path": "output/" + samplesetname + "/wgs_somatic_mutations_all.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/"
+                "path": "output/"
                 + samplesetname
                 + "/wes_somatic_mutations_all_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/"
+                "path": "output/"
                 + samplesetname
                 + "/wgs_somatic_mutations_all_profile.csv",
                 "format": "TableCSV",
@@ -1104,7 +1104,7 @@ async def mutationPostProcessing(
 async def mutationAnalyzeUnfiltered(
     workspace=WGSWORKSPACE,
     allsampleset="all",
-    folder="temp/",
+    folder="output/",
     subsetcol=[
         SAMPLEID,
         "Hugo_Symbol",
@@ -1139,7 +1139,7 @@ async def mutationAnalyzeUnfiltered(
     Args:
         workspace (str): workspace name. Default is WGSWORKSPACE.
         allsampleset (str, optional): sampleset name. Default is 'all'.
-        folder (str, optional): folder name. Default is 'temp/'.
+        folder (str, optional): folder name. Default is 'output/'.
         subsetcol (list, optional): list of columns to subset the maf file on. 
             will also output the unfiltered version of themaf file.
             Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id', 
@@ -1251,7 +1251,7 @@ def generateGermlineMatrix(
     wgsrefworkspace=WGSWORKSPACE,
     wesdir=WESVCFDIR,
     wgsdir=WGSVCFDIR,
-    savedir="temp/" + SAMPLESETNAME + "/",
+    savedir="output/" + SAMPLESETNAME + "/",
     bed_location=GUIDESBED,
     taiga_dataset=TAIGA_CN,
     vcf_colname="cnn_filtered_vcf",
