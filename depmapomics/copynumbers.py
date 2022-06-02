@@ -180,18 +180,18 @@ def updateTracker(
         datatype = [datatype]
     tracker.loc[tracker[tracker.datatype.isin(datatype)].index, samplesetname] = 0
     track.update(
+        trackerobj,
         tracker,
         selected,
         samplesetname,
         lowqual,
         lowqual,
-        newgs,
-        refworkspace,
-        bamfilepaths,
-        dry_run,
-        samplesinset,
-        trackerobj=trackerobj,
-        gumbo=gumbo,
+        gumbo,
+        newgs=newgs,
+        refworkspace=refworkspace,
+        bamfilepaths=bamfilepaths,
+        dry_run=dry_run,
+        samplesinset=samplesinset,
     )
 
 

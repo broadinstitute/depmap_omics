@@ -125,6 +125,7 @@ def updateTracker(
     lowqual,
     tracker,
     samplesetname,
+    gumbo,
     refworkspace=RNAWORKSPACE,
     trackerobj=None,
     bamfilepaths=STARBAMCOLTERRA,
@@ -135,7 +136,6 @@ def updateTracker(
     samplesinset=[],
     starlogs={},
     todrop=[],
-    gumbo=True,
 ):
     """updates the sample tracker with the new samples and the QC metrics
 

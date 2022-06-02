@@ -806,19 +806,19 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
 
 
 def update(
+    trackerobj,
     table,
     selected,
     samplesetname,
     failed,
     lowqual,
+    gumbo,
     newgs="",
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=True,
     samplesinset=[],
     todrop=[],
-    trackerobj=None,
-    gumbo=True,
 ):
     """updates the sample tracker (or Gumbo omicSequencing table) with the new samples and the QC metrics
     Args:
