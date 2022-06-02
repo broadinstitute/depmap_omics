@@ -344,12 +344,12 @@ def postProcess(
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     priority=[],
-    genechangethresh=0.025,
-    segmentsthresh=1500,
+    genechangethresh=GENECHANGETHR,
+    segmentsthresh=SEGMENTSTHR,
     ensemblserver=ENSEMBL_SERVER_V,
     source_rename={},
     useCache=False,
-    maxYchrom=150,
+    maxYchrom=MAXYCHROM,
 ):
     """post process an aggregated CN segment file, the CCLE way
 

@@ -412,6 +412,10 @@ RESCUE_FOR_MUTATION_WGS = {"CDS-AqZLna": "ACH-002512"}
 
 ############## CN
 
+GENECHANGETHR = 0.025
+SEGMENTSTHR = 1500
+MAXYCHROM = 150
+
 COLRENAMING = {
     "CONTIG": "Chromosome",
     "START": "Start",

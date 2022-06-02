@@ -20,6 +20,8 @@ from genepy.epigenetics import chipseq as chip
 
 
 async def expressionPostProcessing(
+    trackerobj,
+    gumbo,
     refworkspace=RNAWORKSPACE,
     samplesetname=SAMPLESETNAME,
     colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
@@ -31,8 +33,6 @@ async def expressionPostProcessing(
         "genes_tpm": "CCLE_expression_full",
         "proteincoding_genes_tpm": "CCLE_expression",
     },
-    trackerobj=None,
-    gumbo=True,
     todrop=KNOWN_DROP,
     prevcounts="ccle",
     taiga_dataset=TAIGA_EXPRESSION,
@@ -176,11 +176,11 @@ async def expressionPostProcessing(
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
         samplesetname,
+        gumbo,
         refworkspace,
         samplesinset=samplesinset,
         starlogs=starlogs,
         trackerobj=trackerobj,
-        gumbo=gumbo,
         todrop=todrop,
         dry_run=True,
         newgs=None,
@@ -333,6 +333,7 @@ async def expressionPostProcessing(
 
 
 async def fusionPostProcessing(
+    trackerobj,
     refworkspace=RNAWORKSPACE,
     sampleset=SAMPLESETNAME,
     fusionSamplecol=SAMPLEID,
@@ -340,7 +341,6 @@ async def fusionPostProcessing(
     taiga_dataset=TAIGA_FUSION,
     dataset_description=FUSIONreadme,
     prevdataset="ccle",
-    trackerobj=None,
     **kwargs,
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
@@ -469,12 +469,13 @@ async def fusionPostProcessing(
 
 
 def cnPostProcessing(
+    trackerobj,
+    gumbo,
     wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     wessetentity=WESSETENTITY,
     wgssetentity=WGSSETENTITY,
     samplesetname=SAMPLESETNAME,
-    trackerobj=None,
     AllSamplesetName="all",
     todrop=KNOWN_DROP,
     prevgenecn="ccle",
@@ -495,7 +496,9 @@ def cnPostProcessing(
     source_rename=SOURCE_RENAME,
     redoWES=False,
     wesfolder="",
-    gumbo=True,
+    genechangethresh=GENECHANGETHR,
+    segmentsthresh=SEGMENTSTHR,
+    maxYchrom=MAXYCHROM,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -562,6 +565,9 @@ def cnPostProcessing(
             todrop=todropwes,
             save_output=folder,
             priority=priority,
+            genechangethresh=genechangethresh,
+            segmentsthresh=segmentsthresh,
+            maxYchrom=maxYchrom,
             **kwargs,
         )
 
@@ -624,8 +630,10 @@ def cnPostProcessing(
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         todrop=todropwgs,
         save_output=folder,
-        segmentsthresh=1500,
         priority=priority,
+        genechangethresh=genechangethresh,
+        segmentsthresh=segmentsthresh,
+        maxYchrom=maxYchrom,
         **kwargs,
     )
 
@@ -856,6 +864,7 @@ def cnPostProcessing(
 
 
 async def mutationPostProcessing(
+    trackerobj,
     wesrefworkspace=WESMUTWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     samplesetname=SAMPLESETNAME,
@@ -869,7 +878,6 @@ async def mutationPostProcessing(
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
     prev="ccle",
     minfreqtocall=0.25,
-    trackerobj=None,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -1238,13 +1246,13 @@ def mapBed(file, vcfdir):
 
 
 def generateGermlineMatrix(
+    trackerobj,
     wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     wesdir=WESVCFDIR,
     wgsdir=WGSVCFDIR,
     savedir="temp/" + SAMPLESETNAME + "/",
     bed_location=GUIDESBED,
-    trackerobj=None,
     taiga_dataset=TAIGA_CN,
     vcf_colname="cnn_filtered_vcf",
     cores=16,
@@ -1318,6 +1326,7 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
+    print("mapping ")
     res_wes = pool.starmap(mapBed, zip(os.listdir(wesdir), repeat(WESVCFDIR)))
     sorted_guides_bed_wes = guides_bed.sort_values(
         by=["chrom", "start", "end"]
@@ -1371,7 +1380,7 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    res_wgs = pool.map(mapBed, zip(os.listdir(wesdir), repeat(WGSVCFDIR)))
+    res_wgs = pool.map(mapBed, zip(os.listdir(wgsdir), repeat(WGSVCFDIR)))
     sorted_guides_bed_wgs = guides_bed.sort_values(
         by=["chrom", "start", "end"]
     ).reset_index(drop=True)
