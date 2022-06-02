@@ -41,7 +41,7 @@ def loadFromGATKAggregation(
     showPlots=False,
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
-    tempFolder="temp/",
+    tempFolder="output/",
     toremove=["readgroup_ubams",],
     sampleset="all",
     colRenaming=COLRENAMING,
@@ -57,7 +57,7 @@ def loadFromGATKAggregation(
         showPlots (bool, optional): whether to show plot output from the GATK pipeline. Defaults to False.
         colname (str, optional): the column in Terra where the file is saved in sampleset. Defaults to "combined_seg_file".
         plotColname (str, optional): the column on terra where the plots exist in sample. Defaults to "modeled_segments_plot_tumor".
-        tempFolder (str, optional): where to put temp files. Defaults to "temp/".
+        tempFolder (str, optional): where to put temp files. Defaults to "working/".
         toremove (list, optional): columns in Terra samples to remove (and delete corresponding data). Defaults to ["readgroup_ubams", ].
         sampleset (str, optional): sample set to load in terra. Defaults to "all".
         colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
