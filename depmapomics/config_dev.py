@@ -396,7 +396,7 @@ KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 # germline matrix
 WESVCFDIR = "/tmp/vcfs_wes/"
 WGSVCFDIR = "/tmp/vcfs_wgs/"
-GUIDESBED = "data/filtering.bed"
+GUIDESBED = "data/avana_guides.bed"
 
 # rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
 RESCUE_FOR_MUTATION_WES = {
@@ -833,45 +833,45 @@ DEFAULT_TABLE_NAME = "default_model_table"
 # dictionaries mapping names of pr-level matrices on latest to names on virtual
 # NumericMatrixCSV matrices:
 VIRTUAL_FILENAMES_NUMMAT_EXP = {
-    "genes-expected_count-profile": "CCLE_RNAseq_reads",
-    "genes-tpm_logp1-profile": "CCLE_expression_full",
-    "transcripts-expected_count-profile": "CCLE_expression_transcripts_expected_count",
-    "transcripts-tpm-profile": "CCLE_RNAseq_transcripts",
-    "proteincoding_genes-expected_count-profile": "CCLE_expression_proteincoding_genes_expected_count",
-    "proteincoding_genes-tpm-profile": "CCLE_expression",
+    "genes-expected_count-profile": "Omics_RNAseq_reads",
+    "genes-tpm_logp1-profile": "Omics_expression_full",
+    "transcripts-expected_count-profile": "Omics_expression_transcripts_expected_count",
+    "transcripts-tpm-profile": "Omics_RNAseq_transcripts",
+    "proteincoding_genes-expected_count-profile": "Omics_expression_proteincoding_genes_expected_count",
+    "proteincoding_genes-tpm-profile": "Omics_expression",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL = {
-    "gene_sets-profile": "CCLE_ssGSEA",
+    "gene_sets-profile": "Omics_ssGSEA",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN = {
-    "merged-genecn-profile": "CCLE_gene_cn",
+    "merged-genecn-profile": "Omics_gene_cn",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_MUT = {
-    "somatic_mutations_boolmatrix-hotspot-profile": "CCLE_mutations_bool_hotspot",
-    "somatic_mutations_boolmatrix-othernoncons-profile": "CCLE_mutations_bool_nonconserving",
-    "somatic_mutations_boolmatrix-damaging-profile": "CCLE_mutations_bool_damaging",
-    "somatic_mutations_boolmatrix-othercons-profile": "CCLE_mutations_bool_otherconserving",
+    "somatic_mutations_boolmatrix-hotspot-profile": "Omics_mutations_bool_hotspot",
+    "somatic_mutations_boolmatrix-othernoncons-profile": "Omics_mutations_bool_nonconserving",
+    "somatic_mutations_boolmatrix-damaging-profile": "Omics_mutations_bool_damaging",
+    "somatic_mutations_boolmatrix-othercons-profile": "Omics_mutations_bool_otherconserving",
 }
 
 VIRTUAL_FILENAMES_GERMLINE = {
-    "merged_binary_germline": "germline_mutation",
+    "merged_binary_germline": "Omics_germline_mutation",
 }
 
 # TableCSV matrices:
 VIRTUAL_FILENAMES_TABLE_FUSION = {
-    "filtered_fusion-profile": "CCLE_fusions",
-    "fusion-profile": "CCLE_fusions_unfiltered",
+    "filtered_fusion-profile": "Omics_fusions",
+    "fusion-profile": "Omics_fusions_unfiltered",
 }
 
 VIRTUAL_FILENAMES_TABLE_CN = {
-    "merged-segments-profile": "CCLE_segment_cn",
+    "merged-segments-profile": "Omics_segment_cn",
 }
 
 VIRTUAL_FILENAMES_TABLE_MUT = {
-    "somatic_mutations-profile": "CCLE_mutations",
+    "somatic_mutations-profile": "Omics_mutations",
 }
 
 # upload mapping, taiga latest to file name dicts
