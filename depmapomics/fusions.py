@@ -40,9 +40,9 @@ def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
 def filterFusions(
     fusions,
     sampleCol,
-    maxfreq=0.1,
-    minffpm=0.05,
-    maxffpm=0.1,
+    maxfreq=FUSION_MAXFREQ,
+    minffpm=FUSION_MINFFPM,
+    maxffpm=FUSION_MAXFFPM,
     countCol="CCLE_count",
     red_herring=FUSION_RED_HERRING,
     **kwargs

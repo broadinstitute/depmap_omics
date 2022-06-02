@@ -4,7 +4,7 @@ workflow run_manta_annotator {
     # more info at https://github.com/acranej/MantaSVAnnotator
     input {
         File sv
-        File exon_annot="gs://ccle_default_params/hg38_ensembl_exonlocations_formatted.txt"
+        File exon_annot="gs://ccleparams/hg38_ensembl_exonlocations_formatted.txt"
     }
 
     call manta_annotator {

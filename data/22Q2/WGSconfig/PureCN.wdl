@@ -1,5 +1,5 @@
 version 1.0
-
+# PureCN repo: https://github.com/lima1/PureCN
 
 task PureCN {
     
@@ -9,6 +9,7 @@ task PureCN {
         File segFile
         File vcf
         File intervals
+        File call_wgd_and_cin_script
 
         # Method configuration inputs
         String genome="hg38"
@@ -17,12 +18,14 @@ task PureCN {
         Float maxPurity=0.99
         String funSegmentation="Hclust"
         Int maxSegments=100
-        String otherArguments=" --post-optimize --model-homozygous --min-total-counts 20"
+        String otherArguments="--post-optimize --model-homozygous --min-total-counts 20"
 
         # Hardware-related inputs
         Int hardware_disk_size_GB = 50
         Int hardware_memory_GB = 4
         Int hardware_preemptible_tries = 2
+        Int num_threads = 1
+        Int max_retries = 0
     }
 
     command {
@@ -43,7 +46,7 @@ task PureCN {
         Rscript ${call_wgd_and_cin_script} "${sampleID}_loh.csv" "${sampleID}.csv"
     }
 
-    Array[String] table = read_lines('${sampleID}.csv')
+    Array[String] table = read_lines('${sampleID}.csv') # maybe wdl has builtin read_csv files?
     Array[String] wgd_table = read_lines("out.txt")
 
     output {
@@ -73,14 +76,14 @@ task PureCN {
     }
 
     runtime {
-        docker: "markusriester/purecn:latest"
+        docker: "markusriester/purecn:2.2.0"
         bootDiskSizeGb: 32
         disks: "local-disk ${hardware_disk_size_GB} HDD"
-        memory: "${hardware_memory_GB}GB"
-        cpu: 1
+        memory: "${hardware_memory_GB} GB"
+        cpu: "${num_threads}"
         continueOnReturnCode: true
-        preemptible: hardware_preemptible_tries
-        maxRetries: 0
+        preemptible: "${hardware_preemptible_tries}"
+        maxRetries: "${max_retries}"
     }
 
 }
@@ -92,6 +95,7 @@ workflow run_PureCN {
         File segFile
         File vcf
         File intervals
+        File call_wgd_and_cin_script
 
         # Method configuration inputs
         String genome

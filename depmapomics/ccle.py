@@ -14,24 +14,8 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 from depmapomics.config import *
 
-
-def expressionRenaming(r, todrop, folder=""):
-    trackerobj = track.initTracker()
-    ccle_refsamples = trackerobj.read_tracker()
-
-    renaming = track.removeOlderVersions(
-        names=r,
-        refsamples=ccle_refsamples[ccle_refsamples.datatype == "rna"],
-        priority="prioritized",
-    )
-    # if we have a replaceable failed version in our dataset
-    rename = expressions.solveQC(ccle_refsamples, todrop, save=folder)
-    for k, _ in renaming.copy().items():
-        if k in rename:
-            renaming[rename[k]] = renaming.pop(k)
-        elif (k in todrop) and (k not in rename):
-            renaming.pop(k)
-    return renaming
+import multiprocessing
+from genepy.epigenetics import chipseq as chip
 
 
 async def expressionPostProcessing(
@@ -197,8 +181,20 @@ async def expressionPostProcessing(
         trackerobj=trackerobj,
         gumbo=gumbo,
         todrop=todrop,
-        dry_run=dry_run,
+        dry_run=True,
+        newgs=None,
     )
+
+    # subset and rename, include all PRs that have associated CDS-ids
+    pr_table = track.update_pr_from_seq(trackerobj)
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
+    pr_files = dict()
+    for k, v in files.items():
+        pr_files[k + "_profile"] = v[v.index.isin(set(renaming_dict.keys()))].rename(
+            index=renaming_dict
+        )
+    expressions.saveFiles(pr_files, folder)
 
     if not dry_run:
         print("uploading to taiga")
@@ -208,51 +204,121 @@ async def expressionPostProcessing(
             upload_files=[
                 {
                     "path": folder + "proteincoding_genes_tpm_logp1.csv",
+                    "name": "proteincoding_genes-tpm_logp1",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "transcripts_tpm_logp1.csv",
+                    "name": "transcripts-tpm_logp1",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "genes_tpm_logp1.csv",
+                    "name": "genes-tpm_logp1",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "genes_tpm.csv",
+                    "name": "genes-tpm_logp1",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "transcripts_tpm.csv",
+                    "name": "transcripts-tpm",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "proteincoding_genes_tpm.csv",
+                    "name": "proteincoding_genes-tpm",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "transcripts_expected_count.csv",
+                    "name": "transcripts-expected_count",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "proteincoding_genes_expected_count.csv",
+                    "name": "proteincoding_genes-expected_count",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "genes_expected_count.csv",
+                    "name": "genes-expected_count",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
-                }
+                },
+                {
+                    "path": folder + "proteincoding_genes_tpm_profile_logp1.csv",
+                    "name": "proteincoding_genes-tpm_logp1-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_tpm_profile_logp1.csv",
+                    "name": "transcripts-tpm_logp1-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_tpm_profile_logp1.csv",
+                    "name": "genes-tpm_logp1-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_tpm_profile.csv",
+                    "name": "genes-tpm-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_tpm_profile.csv",
+                    "name": "transcripts-tpm-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_tpm_profile.csv",
+                    "name": "proteincoding_genes-tpm-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "transcripts_expected_count_profile.csv",
+                    "name": "transcripts-expected_count-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_expected_count_profile.csv",
+                    "name": "proteincoding_genes-expected_count-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_expected_count_profile.csv",
+                    "name": "genes-expected_count-profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
                 # {
                 #     "path": folder+'gene_sets_all.csv',
+                #     "name": "gene_sets",
+                #     "format": "NumericMatrixCSV",
+                #     "encoding": "utf-8"
+                # },
+                # {
+                #     "path": folder+'gene_sets_profile.csv',
+                #     "name": "gene_sets-profile",
                 #     "format": "NumericMatrixCSV",
                 #     "encoding": "utf-8"
                 # },
@@ -303,9 +369,6 @@ async def fusionPostProcessing(
 
     tc = TaigaClient()
 
-    if prevdataset == "ccle":
-        prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
-
     ccle_refsamples = trackerobj.read_tracker()
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
@@ -314,11 +377,28 @@ async def fusionPostProcessing(
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
-    fusions, _ = fusion.postProcess(
+    fusions, fusions_filtered = fusion.postProcess(
         refworkspace, todrop=previousQCfail, save_output=folder, **kwargs,
     )
 
+    # subset, rename from seqid to prid, and save pr-indexed matrices
+    pr_table = trackerobj.read_pr_table()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    fusions_pr = fusions[
+        fusions[fusionSamplecol].isin(set(renaming_dict.keys()))
+    ].replace({fusionSamplecol: renaming_dict})
+    fusions_filtered_pr = fusions_filtered[
+        fusions_filtered[fusionSamplecol].isin(set(renaming_dict.keys()))
+    ].replace({fusionSamplecol: renaming_dict})
+
+    fusions_pr.to_csv(os.path.join(folder, "fusions_all_profile.csv"), index=False)
+    fusions_filtered_pr.to_csv(
+        os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
+    )
+
     if prevdataset == "ccle":
+        prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
+
         print("comparing to previous version")
         print("new")
         print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
@@ -357,17 +437,26 @@ async def fusionPostProcessing(
         changes_description="new " + sampleset + " release!",
         upload_files=[
             {
-                "path": "temp/" + sampleset + "/fusions_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
                 "path": "temp/" + sampleset + "/filteredfusions_latest.csv",
+                "name": "filtered_fusions",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": "temp/" + sampleset + "/fusions_all.csv",
+                "name": "fusions-all",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/" + sampleset + "/filteredfusions_latest_profile.csv",
+                "name": "filtered_fusion-profile",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/" + sampleset + "/fusions_all_profile.csv",
+                "name": "fusion-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
@@ -405,6 +494,7 @@ def cnPostProcessing(
     source_rename=SOURCE_RENAME,
     redoWES=False,
     wesfolder="",
+    gumbo=True,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -438,7 +528,7 @@ def cnPostProcessing(
 
     tracker = pd.DataFrame()
     if trackerobj is not None:
-        tracker = trackerobj.read_tracker()
+        tracker = trackerobj.read_seq_table()
 
     assert len(tracker) != 0, "broken source for sample tracker"
 
@@ -458,11 +548,12 @@ def cnPostProcessing(
         (
             wessegments,
             genecn,
+            wesfailed,
             wes_purecn_segments,
             wes_purecn_genecn,
             wes_loh,
             wes_purecn_table,
-            wesfailed,
+            _,
         ) = cn.postProcess(
             wesrefworkspace,
             setEntity=wessetentity,
@@ -481,19 +572,31 @@ def cnPostProcessing(
 
         wessegments.Source = wessegments.Source.replace(source_rename)
         wessegments.Source += " WES"
-
-        # saving prio
-        wessegments.to_csv(folder + "segments_latest.csv", index=False)
-        genecn.to_csv(folder + "genecn_latest.csv")
-        wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
-        wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
-        wes_loh.to_csv(folder + "purecn_loh_latest.csv")
-        wes_purecn_table.to_csv(folder + "purecn_table_latest.csv")
+        # wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
+        # wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
+        # wes_loh.to_csv(folder + "purecn_loh_latest.csv")
+        # wes_purecn_table.to_csv(folder + "purecn_table_latest.csv")
+        # subset and rename to PR-indexed matrices
+        # assuming no wgs
+        pr_table = trackerobj.read_pr_table()
+        renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+        wessegments_pr = (
+            wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
+            .replace({SAMPLEID: renaming_dict})
+            .reset_index(drop=True)
+        )
+        # wessegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
+        # wescn_pr.to_csv(folder + "genecn_all_profile.csv")
     else:
-        print("bypassing WES using folder: " + wesfolder if wesfolder else folder)
+        print("bypassing WES using folder: " + (wesfolder if wesfolder else folder))
         wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
-        wessegments = pd.read_csv(folder + "segments_latest.csv")
-        genecn = pd.read_csv(folder + "genecn_latest.csv", index_col=0)
+        wessegments = pd.read_csv(folder + "segments_all.csv")
+        genecn = pd.read_csv(folder + "genecn_all.csv", index_col=0)
+        wessegments_pr = (
+            wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
+            .replace({SAMPLEID: renaming_dict})
+            .reset_index(drop=True)
+        )
 
     # doing wgs
     print("doing wgs")
@@ -508,11 +611,12 @@ def cnPostProcessing(
     (
         wgssegments,
         genecn,
+        wgsfailed,
         wgs_purecn_segments,
         wgs_purecn_genecn,
         wgs_loh,
         wgs_purecn_table,
-        wgsfailed,
+        mybiomart,
     ) = cn.postProcess(
         wgsrefworkspace,
         setEntity=wgssetentity,
@@ -533,15 +637,12 @@ def cnPostProcessing(
     wgssegments.Source = wgssegments.Source.replace(source_rename)
     wgssegments.Source += " WGS"
 
-    # saving prio
-    wgssegments.to_csv(folder + "segments_latest.csv", index=False)
-    genecn.to_csv(folder + "genecn_latest.csv")
-    wgs_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
-    wgs_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
-    wgs_loh.to_csv(folder + "purecn_loh_latest.csv")
-    wgs_purecn_table.to_csv(folder + "purecn_table_latest.csv")
+    # wgs_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
+    # wgs_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
+    # wgs_loh.to_csv(folder + "purecn_loh_latest.csv")
+    # wgs_purecn_table.to_csv(folder + "purecn_table_latest.csv")
 
-    print("comparing to previous version")
+    # print("comparing to previous version")
     # h.compareDfs(wespriogenecn, prevgenecn)
 
     # with gumbo, no need to mark this selected field
@@ -558,6 +659,8 @@ def cnPostProcessing(
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wgsrefworkspace,
+            dry_run=True,
+            gumbo=gumbo,
         )
     except:
         print("no wgs for this sampleset")
@@ -573,9 +676,55 @@ def cnPostProcessing(
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wesrefworkspace,
+            dry_run=True,
+            gumbo=gumbo,
         )
     except:
         print("no wes for this sampleset")
+
+    pr_table = track.update_pr_from_seq(trackerobj)
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    wgssegments_pr = (
+        wgssegments[wgssegments[SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({SAMPLEID: renaming_dict})
+        .reset_index(drop=True)
+    )
+    wgscn_pr = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    wgssegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
+    wgscn_pr.to_csv(folder + "genecn_all_profile.csv")
+
+    print("merging PR-level seg file")
+    mergedsegments_pr = wgssegments_pr.append(wessegments_pr).reset_index(drop=True)
+    mergedsegments_pr = (
+        mergedsegments_pr[
+            [
+                SAMPLEID,
+                "Chromosome",
+                "Start",
+                "End",
+                "Segment_Mean",
+                "Num_Probes",
+                "Status",
+                "Source",
+            ]
+        ]
+        .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
+        .reset_index(drop=True)
+    )
+    mergedsegments_pr.loc[
+        mergedsegments_pr[mergedsegments_pr.Chromosome == "X"].index, "Status"
+    ] = "U"
+    # merging wes and wgs
+    folder = os.path.join("temp", samplesetname, "")
+    mergedsegments_pr = mut.manageGapsInSegments(mergedsegments_pr)
+    mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
+
+    mergedgenecn_pr = mut.toGeneMatrix(mergedsegments_pr, mybiomart).apply(
+        lambda x: np.log2(1 + x)
+    )
+    mergedgenecn_pr.to_csv(folder + "merged_genecn_all_profile.csv")
 
     # uploading to taiga
     print("uploading to taiga")
@@ -585,16 +734,6 @@ def cnPostProcessing(
         + " release! (removed misslabellings, see changelog)",
         dataset_permaname=taiga_dataset,
         upload_files=[
-            {
-                "path": folder + "wes_segments_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_genecn_latest.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
             {
                 "path": folder + "wes_segments_all.csv",
                 "format": "TableCSV",
@@ -616,96 +755,98 @@ def cnPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "wgs_segments_latest.csv",
+                "path": folder + "merged_segments_all_profile.csv",
+                "name": "merged-segments-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "wgs_genecn_latest.csv",
+                "path": folder + "merged_genecn_all_profile.csv",
+                "name": "merged-genecn-profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             # Pure CN outputs
-            {
-                "path": folder + "wes_purecn_segments_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_genecn_latest.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_segments_all.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_genecn_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_loh_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_loh_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_table_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wes_purecn_table_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_segments_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_genecn_latest.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_segments_all.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_genecn_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_loh_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_loh_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_table_latest.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_purecn_table_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
+            # {
+            #     "path": folder + "wes_purecn_segments_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_genecn_latest.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_segments_all.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_genecn_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_loh_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_loh_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_table_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wes_purecn_table_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_segments_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_genecn_latest.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_segments_all.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_genecn_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_loh_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_loh_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_table_latest.csv",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "wgs_purecn_table_all.csv",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
         ],
         dataset_description=dataset_description,
     )
@@ -727,6 +868,7 @@ async def mutationPostProcessing(
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
     prev="ccle",
     minfreqtocall=0.25,
+    trackerobj=None,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -775,23 +917,12 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    # renaming
-    print("renaming")
-    wesrefwm = dm.WorkspaceManager(wesrefworkspace)
-    wesrenaming = track.removeOlderVersions(
-        names=set(wesmutations[SAMPLEID]),
-        refsamples=wesrefwm.get_samples(),
-        arxspan_id="arxspan_id",
-        version="version",
-    )
-
-    wesrenaming = h.fileToDict(folder + "sample_renaming.json")
-    wesrenaming.update(tokeep_wes)
-
-    wesmutations = wesmutations[
-        wesmutations[SAMPLEID].isin(wesrenaming.keys())
-    ].replace({SAMPLEID: wesrenaming})
-    wesmutations.to_csv(folder + "wes_somatic_mutations_all.csv", index=None)
+    pr_table = trackerobj.read_pr_table()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    wesmutations_pr = wesmutations[
+        wesmutations[SAMPLEID].isin(renaming_dict.keys())
+    ].replace({SAMPLEID: renaming_dict})
+    wesmutations_pr.to_csv(folder + "somatic_mutations_all_profile.csv", index=None)
 
     # doing wgs
     print("doing wgs")
@@ -806,116 +937,24 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    # renaming
-    print("renaming")
-    wgsrefwm = dm.WorkspaceManager(wgsrefworkspace)
-    wgsrenaming = track.removeOlderVersions(
-        names=set(wesmutations[SAMPLEID]),
-        refsamples=wgsrefwm.get_samples(),
-        arxspan_id="arxspan_id",
-        version="version",
-    )
+    wgsmutations_pr = wgsmutations[
+        wgsmutations[SAMPLEID].isin(renaming_dict.keys())
+    ].replace({SAMPLEID: renaming_dict})
 
-    wgsrenaming = h.fileToDict(folder + "sample_renaming.json")
-    wgsrenaming.update(tokeep_wgs)
-
-    wgsmutations = wgsmutations[
-        wgsmutations[SAMPLEID].isin(wgsrenaming.keys())
-    ].replace({SAMPLEID: wgsrenaming})
-    wgsmutations.to_csv(folder + "wgs_somatic_mutations_all.csv", index=None)
+    wgsmutations_pr.to_csv(folder + "somatic_mutations_all_profile.csv", index=None)
 
     # merge
     print("merging")
     folder = os.path.join("temp", samplesetname, "merged_")
-    toadd = set(wgsmutations[SAMPLEID]) - set(wesmutations[SAMPLEID])
-    priomutations = wesmutations.append(
-        wgsmutations[wgsmutations[SAMPLEID].isin(toadd)]
-    ).reset_index(drop=True)
+    priomutations = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     # normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
     # mutations = mutations[~mutations[SAMPLEID].isin(normals)]
-    priomutations.to_csv(folder + "somatic_mutations.csv", index=False)
+    # priomutations.to_csv(folder + "somatic_mutations_profile.csv", index=False)
 
     # making binary mutation matrices
     print("creating mutation matrices")
-    # binary mutations matrices
-    mut.mafToMat(
-        priomutations[(priomutations.isDeleterious)], minfreqtocall=minfreqtocall
-    ).astype(int).T.to_csv(folder + "somatic_mutations_boolmatrix_deleterious.csv")
-    mut.mafToMat(
-        priomutations[
-            ~(
-                priomutations.isDeleterious
-                | priomutations.isCOSMIChotspot
-                | priomutations.isTCGAhotspot
-                | priomutations["Variant_Classification"]
-                == "Silent"
-            )
-        ],
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(folder + "somatic_mutations_boolmatrix_other.csv")
-    mut.mafToMat(
-        priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)],
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(folder + "somatic_mutations_boolmatrix_hotspot.csv")
 
-    # genotyped mutations matrices
-    mut.mafToMat(
-        priomutations[(priomutations.isDeleterious)], mode="genotype",
-    ).T.to_csv(folder + "somatic_mutations_matrix_deleterious.csv")
-    mut.mafToMat(
-        priomutations[
-            ~(
-                priomutations.isDeleterious
-                | priomutations.isCOSMIChotspot
-                | priomutations.isTCGAhotspot
-                | priomutations["Variant_Classification"]
-                == "Silent"
-            )
-        ],
-        mode="genotype",
-    ).T.to_csv(folder + "somatic_mutations_matrix_other.csv")
-    mut.mafToMat(
-        priomutations[(priomutations.isCOSMIChotspot | priomutations.isTCGAhotspot)],
-        mode="genotype",
-    ).T.to_csv(folder + "somatic_mutations_matrix_hotspot.csv")
-
-    # adding lgacy datasetss
-    print("add legacy datasets")
-    legacy_hybridcapture = tc.get(name="mutations-da6a", file="legacy_hybridcapture")
-    legacy_raindance = tc.get(name="mutations-da6a", file="legacy_raindance")
-    legacy_rna = tc.get(name="mutations-da6a", file="legacy_rna")
-    legacy_wes_sanger = tc.get(name="mutations-da6a", file="legacy_wes_sanger")
-    legacy_wgs_exoniconly = tc.get(name="mutations-da6a", file="legacy_wgs_exoniconly")
-
-    merged = mut.mergeAnnotations(
-        priomutations,
-        legacy_hybridcapture,
-        "HC_AC",
-        useSecondForConflict=True,
-        dry_run=False,
-    )
-    merged = mut.mergeAnnotations(
-        merged, legacy_raindance, "RD_AC", useSecondForConflict=True, dry_run=False
-    )
-    merged = mut.mergeAnnotations(
-        merged,
-        legacy_wgs_exoniconly,
-        "WGS_AC",
-        useSecondForConflict=False,
-        dry_run=False,
-    )
-    merged = mut.mergeAnnotations(
-        merged,
-        legacy_wes_sanger,
-        "SangerWES_AC",
-        useSecondForConflict=False,
-        dry_run=False,
-    )
-    merged = mut.mergeAnnotations(
-        merged, legacy_rna, "RNAseq_AC", useSecondForConflict=False, dry_run=False
-    )
-
-    merged = merged[merged["tumor_f"] > 0.05]
+    merged = priomutations[priomutations["tumor_f"] > 0.05]
     merged = mutations.annotateLikelyImmortalized(
         merged,
         TCGAlocs=["TCGAhsCnt", "COSMIChsCnt"],
@@ -946,7 +985,7 @@ async def mutationPostProcessing(
     merged_maf = merged[MUTCOL_DEPMAP].rename(
         columns={"Tumor_Allele": "Alternate_Allele"}
     )
-    merged_maf.to_csv(folder + "somatic_mutations_withlegacy.csv", index=False)
+    merged_maf.to_csv(folder + "somatic_mutations_fordepmap_profile.csv", index=False)
 
     # making binary matrices
     merged = merged[merged["Entrez_Gene_Id"] != 0]
@@ -992,66 +1031,34 @@ async def mutationPostProcessing(
         dataset_permaname=taiga_dataset,
         upload_files=[
             # for depmap
-            # {
-            #     "path": folder+"somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8"
-            # },
-            # {
-            #     "path": folder+"somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8"
-            # },
-            # {
-            #     "path": folder+"somatic_mutations_boolmatrix_fordepmap_damaging.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8"
-            # },
-            # genotyped
-            {
-                "path": folder + "somatic_mutations_matrix_hotspot.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_matrix_other.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_matrix_deleterious.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            # new
             {
                 "path": folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
+                "name": "somatic_mutations_boolmatrix-hotspot-profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder
                 + "somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
+                "name": "somatic_mutations_boolmatrix-othernoncons-profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv",
+                "name": "somatic_mutations_boolmatrix-damaging-profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
+            # {
+            #     "path": folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv",
+            #     "name": "somatic_mutations_boolmatrix-othercons-profile",
+            #     "format": "NumericMatrixCSV",
+            #     "encoding": "utf-8",
+            # },
             {
-                "path": folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_withlegacy.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations.csv",
+                "path": folder + "somatic_mutations_fordepmap_profile.csv",
+                "name": "somatic_mutations-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
@@ -1062,6 +1069,20 @@ async def mutationPostProcessing(
             },
             {
                 "path": "temp/" + samplesetname + "/wgs_somatic_mutations_all.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/"
+                + samplesetname
+                + "/wes_somatic_mutations_all_profile.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": "temp/"
+                + samplesetname
+                + "/wgs_somatic_mutations_all_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
@@ -1192,3 +1213,225 @@ async def mutationAnalyzeUnfiltered(
         upload_async=False,
     )
 
+
+def mapBedWES(file):
+    """map mutations in one vcf file to regions in the guide, hardcoded for wes"""
+
+    guides_bed = pd.read_csv(
+        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
+    )
+
+    bed = pd.read_csv(
+        WESVCFDIR + file,
+        sep="\t",
+        header=None,
+        names=["chrom", "start", "end", "foldchange"],
+    )
+    bed["foldchange"] = 1
+    name = file.split("/")[-1].split(".")[0].split("_")[1]
+    if len(bed) == 0:
+        return (name, None)
+    val = chip.putInBed(guides_bed, bed, mergetype="sum")
+
+    return (name, val)
+
+
+def mapBedWGS(file):
+    """map mutations in one vcf file to regions in the guide, hardcoded for wgs"""
+
+    guides_bed = pd.read_csv(
+        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
+    )
+
+    bed = pd.read_csv(
+        WGSVCFDIR + file,
+        sep="\t",
+        header=None,
+        names=["chrom", "start", "end", "foldchange"],
+    )
+    bed["foldchange"] = 1
+    name = file.split("/")[-1].split(".")[0].split("_")[1]
+    if len(bed) == 0:
+        return (name, None)
+    val = chip.putInBed(guides_bed, bed, mergetype="sum")
+
+    return (name, val)
+
+
+def generateGermlineMatrix(
+    wesrefworkspace=WESCNWORKSPACE,
+    wgsrefworkspace=WGSWORKSPACE,
+    wesdir=WESVCFDIR,
+    wgsdir=WGSVCFDIR,
+    savedir="temp/" + SAMPLESETNAME + "/",
+    bed_location=GUIDESBED,
+    trackerobj=None,
+    taiga_dataset=TAIGA_CN,
+    vcf_colname="cnn_filtered_vcf",
+    cores=16,
+):
+    """generate profile-level germline mutation matrix for achilles' ancestry correction
+
+    Args:
+        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
+        wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to WGSWORKSPACE.
+        taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_CN.
+        wesdir (str, optional): directory where wes vcf files are saved.
+        wgsdir (str, optional): directory where wgs vcf files are saved.
+        savedir (str, optional): directory where output germline matrices are saved.
+        bed_location (str, optional): location of the guides bed file.
+        vcf_colname (str, optional): vcf column name on terra.
+        cores (int, optional): number of cores in parallel processing.
+    """
+
+    print("generating germline matrix for wes")
+    wm = dm.WorkspaceManager(wesrefworkspace)
+    samp = wm.get_samples()
+    vcfs = samp[vcf_colname]
+    vcfslist = vcfs[~vcfs.isna()].tolist()
+    # load vcfs using dalmatian
+    h.createFoldersFor(wesdir)
+    guides_bed = pd.read_csv(
+        bed_location,
+        sep="\t",
+        header=None,
+        names=["chrom", "start", "end", "foldchange"],
+    )
+    cmd = [
+        "gsutil cp "
+        + sam
+        + " "
+        + wesdir
+        + sam.split("/")[-1]
+        + "&& \
+ bcftools index "
+        + wesdir
+        + sam.split("/")[-1]
+        + " && \
+ bcftools query \
+  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
+  --regions-file "
+        + bed_location
+        + " \
+  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
+        + wesdir
+        + sam.split("/")[-1]
+        + " >\
+ "
+        + wesdir
+        + "loc_"
+        + sam.split("/")[-1].split(".")[0]
+        + ".bed &&\
+ rm "
+        + wesdir
+        + sam.split("/")[-1]
+        + "*"
+        for sam in vcfslist
+    ]
+
+    h.parrun(cmd, cores=cores)
+
+    pool = multiprocessing.Pool(cores)
+    res_wes = pool.map(mapBedWES, os.listdir(wesdir))
+    sorted_guides_bed_wes = guides_bed.sort_values(
+        by=["chrom", "start", "end"]
+    ).reset_index(drop=True)
+    print("wes: done pooling")
+    for name, val in res_wes:
+        if val is not None:
+            sorted_guides_bed_wes[name] = val
+    print("saving wes matrix")
+    sorted_guides_bed_wes.to_csv(savedir + "binary_mutguides_wes.tsv.gz")
+
+    print("generating germline matrix for wgs")
+    wm = dm.WorkspaceManager(wgsrefworkspace)
+    samp = wm.get_samples()
+    vcfs = samp[vcf_colname]
+    vcfslist = vcfs[~vcfs.isna()].tolist()
+    # load vcfs using dalmatian
+    h.createFoldersFor(wgsdir)
+    cmd = [
+        "gsutil cp "
+        + sam
+        + " "
+        + wgsdir
+        + sam.split("/")[-1]
+        + "&& \
+ bcftools index "
+        + wgsdir
+        + sam.split("/")[-1]
+        + " && \
+ bcftools query \
+  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
+  --regions-file "
+        + bed_location
+        + " \
+  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
+        + wgsdir
+        + sam.split("/")[-1]
+        + " >\
+ "
+        + wgsdir
+        + "loc_"
+        + sam.split("/")[-1].split(".")[0]
+        + ".bed &&\
+ rm "
+        + wgsdir
+        + sam.split("/")[-1]
+        + "*"
+        for sam in vcfslist
+    ]
+
+    h.parrun(cmd, cores=cores)
+
+    pool = multiprocessing.Pool(cores)
+    res_wgs = pool.map(mapBedWGS, os.listdir(wgsdir))  # TODO: use starmap
+    sorted_guides_bed_wgs = guides_bed.sort_values(
+        by=["chrom", "start", "end"]
+    ).reset_index(drop=True)
+    print("wgs: done pooling")
+    for name, val in res_wgs:
+        if val is not None:
+            sorted_guides_bed_wgs[name] = val
+    print("saving wgs matrix")
+    sorted_guides_bed_wgs.to_csv(savedir + "binary_mutguides_wgs.tsv.gz")
+
+    # merging wes and wgs
+    print("merging wes and wgs matrices")
+    wgs_mat_noguides = sorted_guides_bed_wgs.iloc[:, 4:]
+    wes_mat_noguides = sorted_guides_bed_wes.iloc[:, 4:]
+
+    pr_table = trackerobj.read_pr_table()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+
+    wgs_whitelist = [x for x in wgs_mat_noguides.columns if x in renaming_dict]
+    wes_whitelist = [x for x in wes_mat_noguides.columns if x in renaming_dict]
+    wgs_whitelist_mat = wgs_mat_noguides[wgs_whitelist]
+    wes_whitelist_mat = wes_mat_noguides[wes_whitelist]
+    wgs_whitelist_mat = wgs_whitelist_mat.rename(columns=renaming_dict)
+    wes_whitelist_mat = wes_whitelist_mat.rename(columns=renaming_dict)
+
+    mergedmat = wgs_whitelist_mat.join(wes_whitelist_mat)
+    mergedmat = mergedmat.astype(bool).astype(int)
+    sorted_mat = sorted_guides_bed_wgs.iloc[:, :4].join(mergedmat)
+    sorted_mat["end"] = sorted_mat["end"].astype(int)
+    sorted_mat.to_csv(savedir + "merged_binary_germline.csv", index=False)
+
+    from taigapy import TaigaClient
+
+    tc = TaigaClient()
+
+    tc.update_dataset(
+        changes_description="add binary germline matrix",
+        dataset_permaname=taiga_dataset,
+        upload_files=[
+            {
+                "path": savedir + "merged_binary_germline.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+        ],
+        add_all_existing_files=True,
+    )
+
+    return sorted_mat
