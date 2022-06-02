@@ -31,6 +31,7 @@ def GetNewCellLinesFromWorkspaces(
     sources,
     stype,
     maxage,
+    trackerobj,
     addonly=[],
     match="ACH",
     extract={},
@@ -41,7 +42,6 @@ def GetNewCellLinesFromWorkspaces(
     accept_unknowntypes=False,
     rename=dict(),
     recomputehash=False,
-    trackerobj=None,
 ):
     """
     As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
@@ -655,6 +655,7 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
 def completeFromMasterSheet(
     samples,
     notfound,
+    trackerobj,
     toupdate=TO_UPDATE,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
@@ -662,7 +663,6 @@ def completeFromMasterSheet(
     masterfilename="ACH",
     nanslist=["None", "nan", "Unknown", None, np.nan],
     depmap_taiga=DEPMAP_TAIGA,
-    trackerobj=None,
 ):
     """complete the missing sample information from a given DepMap Ops MasterSheet
 
@@ -755,7 +755,7 @@ def loadWES(
 
 def loadWGS(
     samplesetname,
-    trackerobj=None,
+    trackerobj,
     workspaces=[wgsworkspace1, wgsworkspace2],
     sources=[wgssource1, wgssource2],
     maxage=MAXAGE,
@@ -782,8 +782,8 @@ def loadWGS(
 
 
 def loadRNA(
-    samplesetname=SAMPLESETNAME,
-    trackerobj=None,
+    samplesetname,
+    trackerobj,
     workspaces=[rnaworkspace6, rnaworkspace7],
     sources=[rnasource6, rnasource7],
     maxage=MAXAGE,
@@ -815,7 +815,7 @@ def load(
     maxage,
     baits,
     stype,
-    trackerobj=None,
+    trackerobj,
     toupdate=TO_UPDATE,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
@@ -935,6 +935,7 @@ def load(
         samples, unk = completeFromMasterSheet(
             samples,
             notfound,
+            trackerobj,
             toupdate=toupdate,
             pv_index=pv_index,
             master_index=master_index,
@@ -942,7 +943,6 @@ def load(
             masterfilename=masterfilename,
             nanslist=nanslist,
             depmap_taiga=depmap_taiga,
-            trackerobj=trackerobj,
         )
         if len(unk) > 0:
             print("some samples could still not be inferred")
@@ -967,7 +967,7 @@ def load(
 def updateWES(
     samples,
     samplesetname,
-    trackerobj=None,
+    trackerobj,
     bucket=WES_GCS_PATH,
     name_col="index",
     values=["legacy_bam_filepath", "legacy_bai_filepath"],
@@ -1115,7 +1115,7 @@ def update(
     stype,
     bucket,
     refworkspace,
-    trackerobj=None,
+    trackerobj,
     samplesetname=SAMPLESETNAME,
     name_col="index",
     values=["legacy_bam_filepath", "legacy_bai_filepath"],
