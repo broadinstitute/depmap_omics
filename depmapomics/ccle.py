@@ -36,7 +36,7 @@ async def expressionPostProcessing(
     todrop=KNOWN_DROP,
     prevcounts="ccle",
     taiga_dataset=TAIGA_EXPRESSION,
-    minsimi=0.95,
+    minsimi=RNAMINSIMI,
     dropNonMatching=True,
     dataset_description=RNAseqreadme,
     dry_run=False,

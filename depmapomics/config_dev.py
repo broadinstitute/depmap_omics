@@ -599,6 +599,8 @@ RSEMFILENAME = RSEMFILENAME_GENE + RSEMFILENAME_TRANSCRIPTS
 
 SSGSEAFILEPATH = "data/genesets/msigdb.v7.2.symbols.gmt"
 
+RNAMINSIMI = 0.95
+
 RNASEQC_THRESHOLDS_LOWQUAL = {
     "minmapping": 0.85,
     "minendmapping": 0.75,
