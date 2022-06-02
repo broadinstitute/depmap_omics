@@ -125,6 +125,7 @@ def updateTracker(
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=False,
+    gumbo=True,
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -190,6 +191,7 @@ def updateTracker(
         dry_run,
         samplesinset,
         trackerobj=trackerobj,
+        gumbo=gumbo,
     )
 
 
@@ -235,9 +237,11 @@ def pureCNpostprocess(
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     priority=[],
-    colname="PureCN_loh_merged",
+    lohcolname=PURECN_LOH_COLNAME,
+    failedcolname=PURECN_FAILED_COLNAME,
     sampleset="all",
     colRenaming=PURECN_COLRENAMING,
+    lohvals=PURECN_LOHVALUES,
     terracols=SIGTABLE_TERRACOLS,
     save_output="",
     mappingdf=None,
@@ -262,9 +266,9 @@ def pureCNpostprocess(
 
     print("loading PureCN merged LOH file")
     wm = dm.WorkspaceManager(refworkspace)
-    segments = pd.read_csv(wm.get_entities(setEntity).loc[sampleset, colname]).rename(
-        columns=colRenaming
-    )
+    segments = pd.read_csv(
+        wm.get_entities(setEntity).loc[sampleset, lohcolname]
+    ).rename(columns=colRenaming)
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -293,9 +297,7 @@ def pureCNpostprocess(
     )
 
     # Generate gene-level LOH status matrix
-    segments["type"] = segments["type"].replace(
-        ["LOH", "COPY-NEUTRAL LOH", "WHOLE ARM COPY-NEUTRAL LOH"], 1
-    )
+    segments["type"] = segments["type"].replace(lohvals, 1)
     segments["type"] = segments["type"].replace("", 0)
 
     loh_status = mut.toGeneMatrix(
@@ -306,7 +308,7 @@ def pureCNpostprocess(
     samples = wm.get_samples()
     purecn_table = samples[terracols]
 
-    failed = purecn_table[purecn_table["PureCN_failed"] == "TRUE"].index
+    failed = purecn_table[purecn_table[failedcolname] == "TRUE"].index
 
     # TO DO: generate the signature table in a separate function
     # see ccle_tasks/signature_table.ipynb
@@ -405,6 +407,9 @@ def postProcess(
         i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
         for _, i in mybiomart.iterrows()
     ]
+    mybiomart = mybiomart[
+        ~mybiomart.entrezgene_id.isna()
+    ]  # dropping all nan entrez id cols
     # drop Ychrom if > maxYchrom
     ychrom = segments[segments.Chromosome.str.contains("Y")]
     countYdrop = [
@@ -440,14 +445,15 @@ def postProcess(
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-    purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
-        refworkspace,
-        setEntity=setEntity,
-        sampleset=sampleset,
-        sortby=sortby,
-        todrop=todrop,
-        priority=priority,
-    )
+    # purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
+    #     refworkspace,
+    #     setEntity=setEntity,
+    #     sampleset=sampleset,
+    #     sortby=sortby,
+    #     todrop=todrop,
+    #     priority=priority,
+    # )
+    purecn_segments, purecn_genecn, loh_status, purecn_table = None, None, None, None
     return (
         segments,
         genecn,
@@ -456,5 +462,6 @@ def postProcess(
         purecn_genecn,
         loh_status,
         purecn_table,
+        mybiomart,
     )
 
