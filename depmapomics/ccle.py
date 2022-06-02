@@ -1216,7 +1216,7 @@ async def mutationAnalyzeUnfiltered(
 
 
 def mapBed(file, vcfdir):
-    """map mutations in one vcf file to regions in the guide"""
+    """map mutations in one vcf file to regions in the guide bed file"""
 
     guides_bed = pd.read_csv(
         GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
@@ -1249,7 +1249,8 @@ def generateGermlineMatrix(
     vcf_colname="cnn_filtered_vcf",
     cores=16,
 ):
-    """generate profile-level germline mutation matrix for achilles' ancestry correction
+    """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
+    using the CCLE pipeline on terra
 
     Args:
         wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
@@ -1261,14 +1262,17 @@ def generateGermlineMatrix(
         bed_location (str, optional): location of the guides bed file.
         vcf_colname (str, optional): vcf column name on terra.
         cores (int, optional): number of cores in parallel processing.
+    
+    Returns:
+        sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
     """
 
     print("generating germline matrix for wes")
+    # load vcfs from WES workspace using dalmatian
     wm = dm.WorkspaceManager(wesrefworkspace)
     samp = wm.get_samples()
     vcfs = samp[vcf_colname]
     vcfslist = vcfs[~vcfs.isna()].tolist()
-    # load vcfs using dalmatian
     h.createFoldersFor(wesdir)
     guides_bed = pd.read_csv(
         bed_location,
@@ -1276,6 +1280,9 @@ def generateGermlineMatrix(
         header=None,
         names=["chrom", "start", "end", "foldchange"],
     )
+    # save vcfs from WES workspace locally,
+    # and run bcftools query to transform vcfs into format needed for subsequent steps
+    # only including regions in the guide bed file
     cmd = [
         "gsutil cp "
         + sam
@@ -1322,12 +1329,12 @@ def generateGermlineMatrix(
     print("saving wes matrix")
     sorted_guides_bed_wes.to_csv(savedir + "binary_mutguides_wes.tsv.gz")
 
+    # now the exact same process for wgs
     print("generating germline matrix for wgs")
     wm = dm.WorkspaceManager(wgsrefworkspace)
     samp = wm.get_samples()
     vcfs = samp[vcf_colname]
     vcfslist = vcfs[~vcfs.isna()].tolist()
-    # load vcfs using dalmatian
     h.createFoldersFor(wgsdir)
     cmd = [
         "gsutil cp "
@@ -1381,6 +1388,7 @@ def generateGermlineMatrix(
     wes_mat_noguides = sorted_guides_bed_wes.iloc[:, 4:]
 
     pr_table = trackerobj.read_pr_table()
+    # transform from CDSID-level to PR-level
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
 
     wgs_whitelist = [x for x in wgs_mat_noguides.columns if x in renaming_dict]
@@ -1399,7 +1407,7 @@ def generateGermlineMatrix(
     from taigapy import TaigaClient
 
     tc = TaigaClient()
-
+    print("uploading merged germline matrix to taiga")
     tc.update_dataset(
         changes_description="add binary germline matrix",
         dataset_permaname=taiga_dataset,
