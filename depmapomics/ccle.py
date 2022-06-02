@@ -3,6 +3,7 @@ import dalmatian as dm
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from itertools import repeat
 
 from genepy.utils import helper as h
 from genepy import rna
@@ -1214,37 +1215,15 @@ async def mutationAnalyzeUnfiltered(
     )
 
 
-def mapBedWES(file):
-    """map mutations in one vcf file to regions in the guide, hardcoded for wes"""
+def mapBed(file, vcfdir):
+    """map mutations in one vcf file to regions in the guide"""
 
     guides_bed = pd.read_csv(
         GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
     )
 
     bed = pd.read_csv(
-        WESVCFDIR + file,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    bed["foldchange"] = 1
-    name = file.split("/")[-1].split(".")[0].split("_")[1]
-    if len(bed) == 0:
-        return (name, None)
-    val = chip.putInBed(guides_bed, bed, mergetype="sum")
-
-    return (name, val)
-
-
-def mapBedWGS(file):
-    """map mutations in one vcf file to regions in the guide, hardcoded for wgs"""
-
-    guides_bed = pd.read_csv(
-        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
-    )
-
-    bed = pd.read_csv(
-        WGSVCFDIR + file,
+        vcfdir + file,
         sep="\t",
         header=None,
         names=["chrom", "start", "end", "foldchange"],
@@ -1332,7 +1311,7 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    res_wes = pool.map(mapBedWES, os.listdir(wesdir))
+    res_wes = pool.starmap(mapBed, zip(os.listdir(wesdir), repeat(WESVCFDIR)))
     sorted_guides_bed_wes = guides_bed.sort_values(
         by=["chrom", "start", "end"]
     ).reset_index(drop=True)
@@ -1385,7 +1364,7 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    res_wgs = pool.map(mapBedWGS, os.listdir(wgsdir))  # TODO: use starmap
+    res_wgs = pool.map(mapBed, zip(os.listdir(wesdir), repeat(WGSVCFDIR)))
     sorted_guides_bed_wgs = guides_bed.sort_values(
         by=["chrom", "start", "end"]
     ).reset_index(drop=True)
