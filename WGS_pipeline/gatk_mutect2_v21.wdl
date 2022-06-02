@@ -110,6 +110,7 @@ workflow Mutect2 {
       File? gga_vcf
       File? gga_vcf_idx
       String? gcs_project_for_requester_pays
+      Boolean? remove_filtered
 
       # Funcotator inputs
       Boolean? run_funcotator
@@ -128,7 +129,7 @@ workflow Mutect2 {
       Boolean? funco_filter_funcotations
       String? funcotator_extra_args
 
-      String funco_default_output_format = "MAF"
+      String funco_default_output_format = "VCF"
 
       # runtime
       String gatk_docker
@@ -164,6 +165,7 @@ workflow Mutect2 {
     Boolean make_bamout_or_default = select_first([make_bamout, false])
     Boolean run_funcotator_or_default = select_first([run_funcotator, false])
     Boolean filter_funcotations_or_default = select_first([filter_funcotations, true])
+    Boolean remove_filtered_or_default = select_first([remove_filtered, true])
 
     # Disk sizes used for dynamic sizing
     Int ref_size = ceil(size(ref_fasta, "GB") + size(ref_dict, "GB") + size(ref_fai, "GB"))
@@ -381,9 +383,20 @@ workflow Mutect2 {
         }
     }
 
+    if (remove_filtered_or_default)  {
+        File remove_input = select_first([FilterAlignmentArtifacts.filtered_vcf, Filter.filtered_vcf])
+        call RemoveFiltered {
+            input:
+                input_vcf = remove_input,
+                bcftools_exclude_string = bcftools_exclude_string,
+                sample_id=output_basename,
+                runtime_params=standard_runtime
+        }
+    }
+
     if (run_funcotator_or_default) {
-        File funcotate_vcf_input = select_first([FilterAlignmentArtifacts.filtered_vcf, Filter.filtered_vcf])
-        File funcotate_vcf_input_index = select_first([FilterAlignmentArtifacts.filtered_vcf_idx, Filter.filtered_vcf_idx])
+        File funcotate_vcf_input = select_first([RemoveFiltered.output_vcf, FilterAlignmentArtifacts.filtered_vcf, Filter.filtered_vcf])
+        File funcotate_vcf_input_index = select_first([RemoveFiltered.output_vcf_idx, FilterAlignmentArtifacts.filtered_vcf_idx, Filter.filtered_vcf_idx])
         call Funcotate {
             input:
                 ref_fasta = ref_fasta,
@@ -391,7 +404,7 @@ workflow Mutect2 {
                 ref_dict = ref_dict,
                 input_vcf = funcotate_vcf_input,
                 input_vcf_idx = funcotate_vcf_input_index,
-                reference_version = select_first([funco_reference_version, "hg19"]),
+                reference_version = select_first([funco_reference_version, "hg38"]),
                 output_file_base_name = basename(funcotate_vcf_input, ".vcf") + ".annotated",
                 output_format = if defined(funco_output_format) then "" + funco_output_format else funco_default_output_format,
                 compress = if defined(funco_compress) then select_first([funco_compress]) else false,
@@ -414,8 +427,8 @@ workflow Mutect2 {
     }
 
     output {
-        File filtered_vcf = select_first([FilterAlignmentArtifacts.filtered_vcf, Filter.filtered_vcf])
-        File filtered_vcf_idx = select_first([FilterAlignmentArtifacts.filtered_vcf_idx, Filter.filtered_vcf_idx])
+        File base_vcf = select_first([FilterAlignmentArtifacts.filtered_vcf, Filter.filtered_vcf])
+        File base_vcf_vcf_idx = select_first([FilterAlignmentArtifacts.filtered_vcf_idx, Filter.filtered_vcf_idx])
         File filtering_stats = Filter.filtering_stats
         File mutect_stats = MergeStats.merged_stats
         File? contamination_table = CalculateContamination.contamination_table
@@ -1006,7 +1019,7 @@ task FilterAlignmentArtifacts {
 }
 
 task Funcotate {
-     input {
+    input {
        File ref_fasta
        File ref_fai
        File ref_dict
@@ -1137,4 +1150,38 @@ task Funcotate {
          File funcotated_output_file = "~{output_file}"
          File funcotated_output_file_index = "~{output_file_index}"
      }
+}
+
+
+task RemoveFiltered {
+    input {
+        File input_vcf
+        String sample_id
+        String bcftools_exclude_string = 'FILTER="weak_evidence" || FILTER="map_qual" || FILTER="strand_bias" || FILTER="slippage" || FILTER="clustered_events" || FILTER="base_qual"'
+
+        String docker_image
+        Runtime runtime_params
+        Int cpu = 2
+    }
+
+    command {
+        bcftools filter --exclude ~{bcftools_exclude_string} --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} && \
+        bcftools index ~{sample_id}.filtered.vcf.gz --threads ~{cpu}
+    }
+
+    runtime {
+        disks: "local-disk 10 HDD"
+        machine_mem: "2GB"
+        cpu: cpu
+        maxRetries: runtime_params.max_retries
+        preemptible: runtime_params.preemptible
+        bootDiskSizeGb: runtime_params.boot_disk_size
+        docker: docker_image
+    }
+
+    output {
+        File output_vcf = "~{sample_id}.filtered.vcf.gz"
+        File output_vcf_idx = "~{sample_id}.filtered.vcf.gz.tbi"
+        
+    }
 }

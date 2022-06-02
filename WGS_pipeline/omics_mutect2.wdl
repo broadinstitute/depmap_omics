@@ -58,7 +58,8 @@ workflow omics_mutect2 {
             pon=pon,
             pon_idx=pon_idx,
             run_funcotator=true,
-            run_orientation_bias_mixture_model_filter=true
+            run_orientation_bias_mixture_model_filter=true,
+            remove_filtered=false,
     }
 
     call setGT.bcftools_fix_ploidy as set_GT {
