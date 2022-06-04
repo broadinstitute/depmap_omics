@@ -1165,13 +1165,13 @@ task RemoveFiltered {
     }
 
     command {
-        bcftools filter --exclude ~{bcftools_exclude_string} --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} && \
+        bcftools view --exclude ~{bcftools_exclude_string} --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} ~{input_vcf} && \
         bcftools index ~{sample_id}.filtered.vcf.gz --threads ~{cpu}
     }
 
     runtime {
         disks: "local-disk 10 HDD"
-        machine_mem: "2GB"
+        memory: "2 GB"
         cpu: cpu
         maxRetries: runtime_params.max_retries
         preemptible: runtime_params.preemptible
