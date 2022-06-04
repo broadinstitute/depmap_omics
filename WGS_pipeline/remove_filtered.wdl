@@ -37,7 +37,7 @@ task RemoveFiltered {
     }
 
     runtime {
-        disks: "local-disk 40 HDD"
+        disks: "local-disk 20 HDD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
@@ -47,7 +47,7 @@ task RemoveFiltered {
 
     output {
         File output_vcf = "~{sample_id}.filtered.vcf.gz"
-        File output_vcf_idx = "~{sample_id}.filtered.vcf.gz.tbi"
+        File output_vcf_idx = "~{sample_id}.filtered.vcf.gz.csi"
         
     }
 }
