@@ -6,7 +6,8 @@ import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
 import "merge_vcfs.wdl" as mergevcfs
 import "opencravat.wdl" as openCravat
-# import "filter_to_maf.wdl" as filtmaf
+import "remove_filtered.wdl" as removeFiltered
+import "vcf_to_depmap.wdl" as vcf_to_depmap
 
 workflow omics_mutect2 {
     input {
@@ -19,6 +20,8 @@ workflow omics_mutect2 {
 
         File tumor_reads
         File tumor_reads_index
+
+        Boolean run_open_cravat=false
 
         File? intervals
 
@@ -74,26 +77,33 @@ workflow omics_mutect2 {
             vcf_file=set_GT.vcf_fixedploid
     }
 
-  #call openCravat.opencravat as open_cravat {
-  #    input:
-  #      sample_id=sample_id,
-  #      vcf=fix_mutect2.vcf_fixed
-  #}
+    call removeFiltered.RemoveFiltered as RemoveFiltered {
+        input:
+            sample_id=sample_id,
+            input_vcf=fix_mutect2.vcf_fixed
+    }
 
-  # to test
-  # call filtmaf.filter_to_maf as filter_to_maf {
-  #   input:
-  #     sample_id=sample_id,
-  #     vcf=open_cravat.oc_main_files,
-  #     disk_space=20
-  # }
+    if (run_open_cravat){
+        call openCravat.opencravat as open_cravat {
+            input:
+                sample_id=sample_id,
+                vcf=RemoveFiltered.output_vcf
+        }
+    }
+
+    call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
+        input:
+            input_vcf=select_first([open_cravat.oc_main_files,RemoveFiltered.output_vcf]),
+            sample_id=sample_id,
+    }
 
     output {
-        File out_vcf=fix_mutect2.vcf_fixed
-        #File out_vcf_index=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
-        #File oc_error_files=open_cravat.oc_error_files
-        #File oc_log_files=open_cravat.oc_log_files
-        #File oc_sql_files=open_cravat.oc_sql_files
-        #File somatic_maf=filter_to_maf.out_maf
+        Array[File] main_output=my_vcf_to_depmap.output_vcf
+        File full_vcf=fix_mutect2.vcf_fixed
+        File full_vcf_idx=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
+        File oc_error_files=open_cravat.oc_error_files
+        File oc_log_files=open_cravat.oc_log_files
+        File oc_sql_files=open_cravat.oc_sql_files
+        File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
