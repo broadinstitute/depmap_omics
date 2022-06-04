@@ -28,6 +28,7 @@ task RemoveFiltered {
         Int preemptible=3
         Int boot_disk_size=10
         Int cpu = 2
+        Int mem = 2
     }
 
     command {
@@ -36,8 +37,8 @@ task RemoveFiltered {
     }
 
     runtime {
-        disks: "local-disk 10 HDD"
-        memory: "8 GB"
+        disks: "local-disk 40 HDD"
+        memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
         bootDiskSizeGb: boot_disk_size
