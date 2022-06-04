@@ -43,10 +43,10 @@ workflow omics_post_mutect2 {
     }
 
     output {
-        Array[File] main_output=my_vcf_to_depmap.output_vcf
-        File oc_error_files=open_cravat.oc_error_files
-        File oc_log_files=open_cravat.oc_log_files
-        File oc_sql_files=open_cravat.oc_sql_files
+        Array[File] main_output=my_vcf_to_depmap.full_file
+        File? oc_error_files=open_cravat.oc_error_files
+        File? oc_log_files=open_cravat.oc_log_files
+        File? oc_sql_files=open_cravat.oc_sql_files
         File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
