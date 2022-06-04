@@ -47,7 +47,7 @@ for i in range(10_000):
     # improve
     vcf_file = vcf.improve(
         vcf_file,
-        cols_to_drop=["clinvar_vcf_mc", "oreganno_build"],
+        cols_to_drop=["clinvar_vcf_mc", "oreganno_build", "pid"],
         force_list=["oc_genehancer__feature_name"],
         with_onco_kb=onco_kb,
         split_multiallelic=use_multi,
