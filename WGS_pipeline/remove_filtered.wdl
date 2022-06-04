@@ -32,7 +32,7 @@ task RemoveFiltered {
     }
 
     command {
-        bcftools view --exclude ~{bcftools_exclude_string} --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} ~{input_vcf} && \
+        bcftools view --exclude '~{bcftools_exclude_string}' --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} ~{input_vcf} && \
         bcftools index ~{sample_id}.filtered.vcf.gz --threads ~{cpu}
     }
 
