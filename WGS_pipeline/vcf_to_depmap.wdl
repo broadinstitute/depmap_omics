@@ -28,7 +28,6 @@ task vcf_to_depmap {
         Int n_rows=500000
 
         String docker_image="python"
-        Int max_retries=4
         Int preemptible=3
         Int boot_disk_size=10
         Int cpu = 1
@@ -37,8 +36,8 @@ task vcf_to_depmap {
 
     command {
         pip install genepy
-        git clone https://github.com/broadinstitute/depmap_omics.git .
-        cd depmap_omics && pip install -e . && cd ..
+        git clone https://github.com/broadinstitute/depmap_omics.git
+        cd depmap_omics && git checkout dev && pip install -e . && cd ..
         python depmap_omics/WGS_pipeline/vcf_to_depmap.py \
               ~{input_vcf} \
               ~{sample_id} \
@@ -52,7 +51,6 @@ task vcf_to_depmap {
         disks: "local-disk 10 HDD"
         memory: mem
         cpu: cpu
-        maxRetries: max_retries
         preemptible: preemptible
         bootDiskSizeGb: boot_disk_size
         docker: docker_image
