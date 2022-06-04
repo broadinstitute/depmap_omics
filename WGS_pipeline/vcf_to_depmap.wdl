@@ -27,7 +27,7 @@ task vcf_to_depmap {
         Array[String] force_keep = ['clinvar_vcf_ssr', 'clinvar_vcf_clndisdbincl', 'clinvar_vcf_clnsigincl', 'clinvar_vcf_clndnincl', 'oc_oncokb__all', 'oc_oncokb__highestdiagnosticimplicationlevel', 'pid']
         Int n_rows=500000
 
-        String docker_image=""
+        String docker_image="python"
         Int max_retries=4
         Int preemptible=3
         Int boot_disk_size=10
