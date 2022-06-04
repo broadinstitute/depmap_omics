@@ -98,7 +98,7 @@ workflow omics_mutect2 {
     }
 
     output {
-        Array[File] main_output=my_vcf_to_depmap.output_vcf
+        Array[File] main_output=my_vcf_to_depmap.full_file
         File full_vcf=fix_mutect2.vcf_fixed
         File full_vcf_idx=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
         File oc_error_files=open_cravat.oc_error_files
