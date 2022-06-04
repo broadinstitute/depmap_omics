@@ -1,7 +1,6 @@
 version 1.0
 
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "merge_vcfs.wdl" as merge_vcfs
 import "opencravat.wdl" as openCravat
 import "remove_filtered.wdl" as removeFiltered
 import "vcf_to_depmap.wdl" as vcf_to_depmap
@@ -10,8 +9,8 @@ workflow omics_post_mutect2 {
     input {
         String sample_id
         File vcf
-        String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb"
-        File oncokb_api_key="gs://jkobject/oncokb_key.txt"
+        #String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb"
+        #File oncokb_api_key="gs://jkobject/oncokb_key.txt"
         Boolean run_open_cravat=false
     }
 
