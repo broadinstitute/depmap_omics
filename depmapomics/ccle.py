@@ -3,6 +3,7 @@ import dalmatian as dm
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from itertools import repeat
 
 from genepy.utils import helper as h
 from genepy import rna
@@ -19,6 +20,8 @@ from genepy.epigenetics import chipseq as chip
 
 
 async def expressionPostProcessing(
+    trackerobj,
+    gumbo,
     refworkspace=RNAWORKSPACE,
     samplesetname=SAMPLESETNAME,
     colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
@@ -30,12 +33,10 @@ async def expressionPostProcessing(
         "genes_tpm": "CCLE_expression_full",
         "proteincoding_genes_tpm": "CCLE_expression",
     },
-    trackerobj=None,
-    gumbo=True,
     todrop=KNOWN_DROP,
     prevcounts="ccle",
     taiga_dataset=TAIGA_EXPRESSION,
-    minsimi=0.95,
+    minsimi=RNAMINSIMI,
     dropNonMatching=True,
     dataset_description=RNAseqreadme,
     dry_run=False,
@@ -98,10 +99,10 @@ async def expressionPostProcessing(
         (ccle_refsamples.prioritized == 1) & (ccle_refsamples.datatype == "rna")
     ].index.tolist()
 
-    folder = os.path.join("temp", samplesetname, "")
+    folder = os.path.join("output", samplesetname, "")
 
     if dry_run:
-        folder = os.path.join("temp", "dryrun", "")
+        folder = os.path.join("output", "dryrun", "")
 
     h.createFoldersFor(folder)
     files, failed, _, renaming, lowqual, _ = await expressions.postProcess(
@@ -175,11 +176,11 @@ async def expressionPostProcessing(
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
         samplesetname,
+        gumbo,
         refworkspace,
         samplesinset=samplesinset,
         starlogs=starlogs,
         trackerobj=trackerobj,
-        gumbo=gumbo,
         todrop=todrop,
         dry_run=True,
         newgs=None,
@@ -332,6 +333,7 @@ async def expressionPostProcessing(
 
 
 async def fusionPostProcessing(
+    trackerobj,
     refworkspace=RNAWORKSPACE,
     sampleset=SAMPLESETNAME,
     fusionSamplecol=SAMPLEID,
@@ -339,7 +341,6 @@ async def fusionPostProcessing(
     taiga_dataset=TAIGA_FUSION,
     dataset_description=FUSIONreadme,
     prevdataset="ccle",
-    trackerobj=None,
     **kwargs,
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
@@ -373,7 +374,7 @@ async def fusionPostProcessing(
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
-    folder = os.path.join("temp", sampleset, "")
+    folder = os.path.join("output", sampleset, "")
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
@@ -437,25 +438,25 @@ async def fusionPostProcessing(
         changes_description="new " + sampleset + " release!",
         upload_files=[
             {
-                "path": "temp/" + sampleset + "/filteredfusions_latest.csv",
+                "path": "output/" + sampleset + "/filteredfusions_latest.csv",
                 "name": "filtered_fusions",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + sampleset + "/fusions_all.csv",
+                "path": "output/" + sampleset + "/fusions_all.csv",
                 "name": "fusions-all",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + sampleset + "/filteredfusions_latest_profile.csv",
+                "path": "output/" + sampleset + "/filteredfusions_latest_profile.csv",
                 "name": "filtered_fusion-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + sampleset + "/fusions_all_profile.csv",
+                "path": "output/" + sampleset + "/fusions_all_profile.csv",
                 "name": "fusion-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
@@ -468,12 +469,13 @@ async def fusionPostProcessing(
 
 
 def cnPostProcessing(
+    trackerobj,
+    gumbo,
     wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     wessetentity=WESSETENTITY,
     wgssetentity=WGSSETENTITY,
     samplesetname=SAMPLESETNAME,
-    trackerobj=None,
     AllSamplesetName="all",
     todrop=KNOWN_DROP,
     prevgenecn="ccle",
@@ -494,7 +496,9 @@ def cnPostProcessing(
     source_rename=SOURCE_RENAME,
     redoWES=False,
     wesfolder="",
-    gumbo=True,
+    genechangethresh=GENECHANGETHR,
+    segmentsthresh=SEGMENTSTHR,
+    maxYchrom=MAXYCHROM,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -533,7 +537,7 @@ def cnPostProcessing(
     assert len(tracker) != 0, "broken source for sample tracker"
 
     # doing wes
-    folder = os.path.join("temp", samplesetname, "wes_")
+    folder = os.path.join("output", samplesetname, "wes_")
     if redoWES:
         print("doing wes")
         priority = tracker[
@@ -561,6 +565,9 @@ def cnPostProcessing(
             todrop=todropwes,
             save_output=folder,
             priority=priority,
+            genechangethresh=genechangethresh,
+            segmentsthresh=segmentsthresh,
+            maxYchrom=maxYchrom,
             **kwargs,
         )
 
@@ -600,7 +607,7 @@ def cnPostProcessing(
 
     # doing wgs
     print("doing wgs")
-    folder = os.path.join("temp", samplesetname, "wgs_")
+    folder = os.path.join("output", samplesetname, "wgs_")
     priority = tracker[
         (tracker.datatype == "wgs") & (tracker.prioritized == 1)
     ].index.tolist()
@@ -623,8 +630,10 @@ def cnPostProcessing(
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         todrop=todropwgs,
         save_output=folder,
-        segmentsthresh=1500,
         priority=priority,
+        genechangethresh=genechangethresh,
+        segmentsthresh=segmentsthresh,
+        maxYchrom=maxYchrom,
         **kwargs,
     )
 
@@ -717,7 +726,7 @@ def cnPostProcessing(
         mergedsegments_pr[mergedsegments_pr.Chromosome == "X"].index, "Status"
     ] = "U"
     # merging wes and wgs
-    folder = os.path.join("temp", samplesetname, "")
+    folder = os.path.join("output", samplesetname, "")
     mergedsegments_pr = mut.manageGapsInSegments(mergedsegments_pr)
     mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
 
@@ -855,6 +864,7 @@ def cnPostProcessing(
 
 
 async def mutationPostProcessing(
+    trackerobj,
     wesrefworkspace=WESMUTWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     samplesetname=SAMPLESETNAME,
@@ -868,7 +878,6 @@ async def mutationPostProcessing(
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
     prev="ccle",
     minfreqtocall=0.25,
-    trackerobj=None,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -906,7 +915,7 @@ async def mutationPostProcessing(
 
     # doing wes
     print("doing wes")
-    folder = os.path.join("temp", samplesetname, "wes_")
+    folder = os.path.join("output", samplesetname, "wes_")
 
     wesmutations = mutations.postProcess(
         wesrefworkspace,
@@ -926,7 +935,7 @@ async def mutationPostProcessing(
 
     # doing wgs
     print("doing wgs")
-    folder = os.path.join("temp", samplesetname, "wgs_")
+    folder = os.path.join("output", samplesetname, "wgs_")
 
     wgsmutations = mutations.postProcess(
         wgsrefworkspace,
@@ -945,7 +954,7 @@ async def mutationPostProcessing(
 
     # merge
     print("merging")
-    folder = os.path.join("temp", samplesetname, "merged_")
+    folder = os.path.join("output", samplesetname, "merged_")
     priomutations = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     # normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
     # mutations = mutations[~mutations[SAMPLEID].isin(normals)]
@@ -1063,24 +1072,24 @@ async def mutationPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + samplesetname + "/wes_somatic_mutations_all.csv",
+                "path": "output/" + samplesetname + "/wes_somatic_mutations_all.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/" + samplesetname + "/wgs_somatic_mutations_all.csv",
+                "path": "output/" + samplesetname + "/wgs_somatic_mutations_all.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/"
+                "path": "output/"
                 + samplesetname
                 + "/wes_somatic_mutations_all_profile.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "temp/"
+                "path": "output/"
                 + samplesetname
                 + "/wgs_somatic_mutations_all_profile.csv",
                 "format": "TableCSV",
@@ -1095,7 +1104,7 @@ async def mutationPostProcessing(
 async def mutationAnalyzeUnfiltered(
     workspace=WGSWORKSPACE,
     allsampleset="all",
-    folder="temp/",
+    folder="output/",
     subsetcol=[
         SAMPLEID,
         "Hugo_Symbol",
@@ -1130,7 +1139,7 @@ async def mutationAnalyzeUnfiltered(
     Args:
         workspace (str): workspace name. Default is WGSWORKSPACE.
         allsampleset (str, optional): sampleset name. Default is 'all'.
-        folder (str, optional): folder name. Default is 'temp/'.
+        folder (str, optional): folder name. Default is 'output/'.
         subsetcol (list, optional): list of columns to subset the maf file on. 
             will also output the unfiltered version of themaf file.
             Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id', 
@@ -1214,37 +1223,15 @@ async def mutationAnalyzeUnfiltered(
     )
 
 
-def mapBedWES(file):
-    """map mutations in one vcf file to regions in the guide, hardcoded for wes"""
+def mapBed(file, vcfdir):
+    """map mutations in one vcf file to regions in the guide bed file"""
 
     guides_bed = pd.read_csv(
         GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
     )
 
     bed = pd.read_csv(
-        WESVCFDIR + file,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    bed["foldchange"] = 1
-    name = file.split("/")[-1].split(".")[0].split("_")[1]
-    if len(bed) == 0:
-        return (name, None)
-    val = chip.putInBed(guides_bed, bed, mergetype="sum")
-
-    return (name, val)
-
-
-def mapBedWGS(file):
-    """map mutations in one vcf file to regions in the guide, hardcoded for wgs"""
-
-    guides_bed = pd.read_csv(
-        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
-    )
-
-    bed = pd.read_csv(
-        WGSVCFDIR + file,
+        vcfdir + file,
         sep="\t",
         header=None,
         names=["chrom", "start", "end", "foldchange"],
@@ -1259,18 +1246,19 @@ def mapBedWGS(file):
 
 
 def generateGermlineMatrix(
+    trackerobj,
     wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     wesdir=WESVCFDIR,
     wgsdir=WGSVCFDIR,
-    savedir="temp/" + SAMPLESETNAME + "/",
+    savedir="output/" + SAMPLESETNAME + "/",
     bed_location=GUIDESBED,
-    trackerobj=None,
     taiga_dataset=TAIGA_CN,
     vcf_colname="cnn_filtered_vcf",
     cores=16,
 ):
-    """generate profile-level germline mutation matrix for achilles' ancestry correction
+    """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
+    using the CCLE pipeline on terra
 
     Args:
         wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
@@ -1282,14 +1270,17 @@ def generateGermlineMatrix(
         bed_location (str, optional): location of the guides bed file.
         vcf_colname (str, optional): vcf column name on terra.
         cores (int, optional): number of cores in parallel processing.
+    
+    Returns:
+        sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
     """
 
     print("generating germline matrix for wes")
+    # load vcfs from WES workspace using dalmatian
     wm = dm.WorkspaceManager(wesrefworkspace)
     samp = wm.get_samples()
     vcfs = samp[vcf_colname]
     vcfslist = vcfs[~vcfs.isna()].tolist()
-    # load vcfs using dalmatian
     h.createFoldersFor(wesdir)
     guides_bed = pd.read_csv(
         bed_location,
@@ -1297,6 +1288,9 @@ def generateGermlineMatrix(
         header=None,
         names=["chrom", "start", "end", "foldchange"],
     )
+    # save vcfs from WES workspace locally,
+    # and run bcftools query to transform vcfs into format needed for subsequent steps
+    # only including regions in the guide bed file
     cmd = [
         "gsutil cp "
         + sam
@@ -1332,7 +1326,8 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    res_wes = pool.map(mapBedWES, os.listdir(wesdir))
+    print("mapping ")
+    res_wes = pool.starmap(mapBed, zip(os.listdir(wesdir), repeat(WESVCFDIR)))
     sorted_guides_bed_wes = guides_bed.sort_values(
         by=["chrom", "start", "end"]
     ).reset_index(drop=True)
@@ -1343,12 +1338,12 @@ def generateGermlineMatrix(
     print("saving wes matrix")
     sorted_guides_bed_wes.to_csv(savedir + "binary_mutguides_wes.tsv.gz")
 
+    # now the exact same process for wgs
     print("generating germline matrix for wgs")
     wm = dm.WorkspaceManager(wgsrefworkspace)
     samp = wm.get_samples()
     vcfs = samp[vcf_colname]
     vcfslist = vcfs[~vcfs.isna()].tolist()
-    # load vcfs using dalmatian
     h.createFoldersFor(wgsdir)
     cmd = [
         "gsutil cp "
@@ -1385,7 +1380,7 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    res_wgs = pool.map(mapBedWGS, os.listdir(wgsdir))  # TODO: use starmap
+    res_wgs = pool.map(mapBed, zip(os.listdir(wgsdir), repeat(WGSVCFDIR)))
     sorted_guides_bed_wgs = guides_bed.sort_values(
         by=["chrom", "start", "end"]
     ).reset_index(drop=True)
@@ -1402,6 +1397,7 @@ def generateGermlineMatrix(
     wes_mat_noguides = sorted_guides_bed_wes.iloc[:, 4:]
 
     pr_table = trackerobj.read_pr_table()
+    # transform from CDSID-level to PR-level
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
 
     wgs_whitelist = [x for x in wgs_mat_noguides.columns if x in renaming_dict]
@@ -1420,7 +1416,7 @@ def generateGermlineMatrix(
     from taigapy import TaigaClient
 
     tc = TaigaClient()
-
+    print("uploading merged germline matrix to taiga")
     tc.update_dataset(
         changes_description="add binary germline matrix",
         dataset_permaname=taiga_dataset,
