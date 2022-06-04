@@ -25,7 +25,6 @@ task RemoveFiltered {
         String bcftools_exclude_string = 'FILTER="weak_evidence"||FILTER="map_qual"||FILTER="strand_bias"||FILTER="slippage"||FILTER="clustered_events"||FILTER="base_qual"'
 
         String docker_image="dceoy/bcftools"
-        Int max_retries=4
         Int preemptible=3
         Int boot_disk_size=10
         Int cpu = 2
@@ -38,9 +37,8 @@ task RemoveFiltered {
 
     runtime {
         disks: "local-disk 10 HDD"
-        memory: "2 GB"
+        memory: "8 GB"
         cpu: cpu
-        maxRetries: max_retries
         preemptible: preemptible
         bootDiskSizeGb: boot_disk_size
         docker: docker_image
