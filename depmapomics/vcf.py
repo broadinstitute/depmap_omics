@@ -243,7 +243,6 @@ REPLACE_SPECIAL_CHAR = {
 
 def improve(
     vcf,
-    cols_to_drop=["clinvar_vcf_mc"],
     force_list=["oc_genehancer__feature_name"],
     torename=TO_RENAME,
     special_rep=REPLACE_SPECIAL_CHAR,
@@ -424,10 +423,7 @@ def improve(
 
     # splice_AI_info
 
-    # drop useless_cols
-    vcf.drop(columns=cols_to_drop)
-
-    # rename and drop
+    # rename columns
     vcf = vcf.rename(columns=torename)
 
     # setting the right types
