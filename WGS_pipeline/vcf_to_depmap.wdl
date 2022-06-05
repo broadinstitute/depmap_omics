@@ -49,7 +49,7 @@ task vcf_to_depmap {
 
     runtime {
         disks: "local-disk 10 HDD"
-        memory: "~{mem} Gb"
+        memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
         bootDiskSizeGb: boot_disk_size

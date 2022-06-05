@@ -36,6 +36,19 @@ for i in range(10_000):
         parse_filter=True,
         force_keep=force_keep,
         drop_null=True,
+        cols_to_drop=[
+            "clinvar_vcf_mc",
+            "oreganno_build",
+            "gt",
+            "ad",
+            "af",
+            "dp",
+            "f1r2",
+            "f2r1",
+            "fad",
+            "sb",
+            "pid",
+        ],
         nrows=n_rows,
         skiprows=n_rows * i,
     )
@@ -47,7 +60,6 @@ for i in range(10_000):
     # improve
     vcf_file = vcf.improve(
         vcf_file,
-        cols_to_drop=["clinvar_vcf_mc", "oreganno_build", "pid"],
         force_list=["oc_genehancer__feature_name"],
         with_onco_kb=onco_kb,
         split_multiallelic=use_multi,
@@ -55,14 +67,14 @@ for i in range(10_000):
     )
 
     # checking we have the same set of columns
-    dropped = vcf_file.columns.tolist()
+    cols = vcf_file.columns.tolist()
     if i == 0:
-        prev_dropped = dropped
-    if dropped != prev_dropped:
+        prev_cols = cols
+    if cols != prev_cols:
         raise ValueError(
             "we are removing different sets of columns",
-            dropped,
-            list(set(dropped) ^ set(prev_dropped)),
+            cols,
+            list(set(cols) ^ set(prev_cols)),
         )
 
     # save full
