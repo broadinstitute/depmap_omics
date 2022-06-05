@@ -25,13 +25,13 @@ task vcf_to_depmap {
         Boolean use_multi=false
         Boolean onco_kb=false
         Array[String] force_keep = ['clinvar_vcf_ssr', 'clinvar_vcf_clndisdbincl', 'clinvar_vcf_clnsigincl', 'clinvar_vcf_clndnincl', 'oc_oncokb__all', 'oc_oncokb__highestdiagnosticimplicationlevel', 'pid']
-        Int n_rows=500000
+        Int n_rows=1000000
 
         String docker_image="python"
         Int preemptible=3
         Int boot_disk_size=10
         Int cpu = 1
-        String mem = "16 GB"
+        Int mem = 16
     }
 
     command {
@@ -49,7 +49,7 @@ task vcf_to_depmap {
 
     runtime {
         disks: "local-disk 10 HDD"
-        memory: mem
+        memory: "~{mem} Gb"
         cpu: cpu
         preemptible: preemptible
         bootDiskSizeGb: boot_disk_size

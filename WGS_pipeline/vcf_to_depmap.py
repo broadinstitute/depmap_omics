@@ -78,6 +78,7 @@ for i in range(10_000):
         vcf.to_maf(vcf_file, sample_name, drop_multi=True)
     else:
         vcf.to_maf(vcf_file, sample_name, drop_multi=True, mode="a", header=False)
+    del vcf_file
 
     if tobreak:
         break
