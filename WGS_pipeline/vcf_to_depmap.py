@@ -56,6 +56,8 @@ for i in range(10_000):
         nrows=n_rows,
         skiprows=n_rows * i,
     )
+    if "PID" not in vcf_file.columns.tolist():
+        vcf_file["PID"] = ""
     filen = len(vcf_file)
     if filen < n_rows:
         # we have reached the end:
