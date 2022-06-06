@@ -24,8 +24,8 @@ task vcf_to_depmap {
         String sample_id
         Boolean use_multi=false
         Boolean onco_kb=false
-        Array[String] force_keep = ['clinvar_vcf_ssr', 'clinvar_vcf_clndisdbincl', 'clinvar_vcf_clnsigincl', 'clinvar_vcf_clndnincl', 'oc_oncokb__all', 'oc_oncokb__highestdiagnosticimplicationlevel', 'pid']
-        Int n_rows=1000000
+        Array[String] force_keep = ['clinvar_vcf_ssr', 'clinvar_vcf_clndisdbincl', 'clinvar_vcf_clnsigincl', 'clinvar_vcf_clndnincl', 'oc_oncokb__all', 'oc_oncokb__highestdiagnosticimplicationlevel', 'cgc_other_germline_mut', 'cgc_other_syndrome/disease', 'clinvar_vcf_clnsigconf']
+        Int n_rows=500000
 
         String docker_image="python"
         Int preemptible=3
