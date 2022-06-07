@@ -2,51 +2,50 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-workflow run_fix_mutect2 {
+workflow run_merge_vcfs {
     input {
-        File vcf
-        String sample_id 
+        Array[File] vcfs
+        String sample_id
     }
-    
-    call fix_mutect2 {
+
+    call merge_vcfs {
         input:
-        vcf_file=vcf,
-        sample_id=sample_id
-    }
-    output {
-        File vcf_fixed=fix_mutect2.vcf_fixed
+            vcfs=vcfs,
+            sample_id=sample_id
     }
 }
 
-task fix_mutect2 {
+task merge_vcfs {
     input {
-        File vcf_file
+        Array[File] vcfs
         String sample_id
-
+    
         Int memory = 4
         Int boot_disk_size = 10
         Int num_threads = 1
         Int num_preempt = 5
-        Int disk_space = 50
-        Int size_tocheck = 100
-        String docker = "python"
+        Int disk_space = 40
+        String docker = "biocontainers/bcftools:1.3"
     }
 
     command {
-        git clone https://github.com/broadinstitute/depmap_omics.git
-        pip install bgzip
+        set -euo pipefail
 
-        python depmap_omics/WGS_pipeline/fix_mutect2.py ${vcf_file} ${sample_id}_fixed.vcf.gz ${size_tocheck}
+        for vcf in "${vcfs}"; do
+            bcftools index "$vcf"
+        done
+ 
+        bcftools merge_vcfs 
     }
 
     output {
-        File vcf_fixed="${sample_id}_fixed.vcf.gz"
+        File vcf_fixedploid="${sample_id}.vcf.gz"
     }
 
     runtime {
         docker: docker
         bootDiskSizeGb: "${boot_disk_size}"
-        memory: "${memory} GB"
+        memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"
         preemptible: "${num_preempt}"

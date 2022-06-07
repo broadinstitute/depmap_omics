@@ -11,6 +11,8 @@ workflow run_opencravat {
         String? genome
         String? modules_options
         String? docker
+        # see https://github.com/rkimoakbioinformatics/oak-cravat-modules/tree/master/annotators/oncokb
+        File? oncokb_api_key
     }
     call opencravat {
         input:
@@ -20,7 +22,8 @@ workflow run_opencravat {
             annotators_to_use=annotators_to_use,
             genome=genome,
             modules_options=modules_options,
-            docker=docker
+            docker=docker,
+            oncokb_api_key=oncokb_api_key
     }
     output {
         File oc_error_files=opencravat.oc_error_files
@@ -39,7 +42,8 @@ task opencravat {
         #Int stripfolder = 0 
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
-        
+        File? oncokb_api_key
+
         Int memory = 16
         Int boot_disk_size = 20
         Int disk_space=20
@@ -56,6 +60,8 @@ task opencravat {
       pip install open-cravat --upgrade
       oc module install-base
       oc module install -y ${annotators_to_use} vcfreporter hg19
+
+      ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/token.txt" else ""}
       
       # fast version
       # ------------
@@ -68,7 +74,13 @@ task opencravat {
       # gsutil cp [modules] modules.tar
       # tar -tvf modules.tar --strip-components=[stripfolder]
       # oc config md ./modules
-      oc run ${vcf} -l ${genome} -t ${format} --mp ${num_threads} --module-option ${modules_options} -d out -a ${annotators_to_use}
+      oc run ${vcf} \
+        -l ${genome} \
+        -t ${format} \
+        --mp ${num_threads} \
+        ${"--module-option "+modules_options} \
+        -d out \
+        -a ${annotators_to_use}
       
       pip install bgzip
       
