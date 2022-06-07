@@ -23,15 +23,28 @@ DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU
 
 POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
 
+SAMPLES_FOUND_NAME = "depmap ALL samples found"
+
+SAMPLES_NOT_FOUND_NAME = "depmap samples not found"
+
+SAMPLES_NOT_FOUND_URL = "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
+
+SAMPLES_MISSING_ARXSPAN_NAME = "depmap samples missing arxspan"
+
+SAMPLES_MISSING_ARXSPAN_URL = "https://docs.google.com/spreadsheets/d/1htfgpXrMvXDlqbcZltpq6vOE_Vo2YZ3-3mdaXV-Irzk"
+
 DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 SAMPLEID = "DepMap_ID"
 
-SAMPLESETNAME = "21Q4"
+SAMPLESETNAME = "22Q2test"
 
 isCCLE = True
 
 doCleanup = True
+
+# from most prioritized to least prioritized:
+SOURCE_PRIORITY = ["BROAD", "DEPMAP", "IBM", "CCLE2", "SANGER", "CHORDOMA"]
 
 LINES_TO_RELEASE = [
     "ACH-000145",
@@ -136,7 +149,7 @@ TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
 TAIGA_LEGACY_CN = "copy-number-5f61"
 
 
-datasets = ["internal", "ibm", "dmc", "public"]
+DATASETS = ["internal", "ibm", "dmc", "public"]
 
 RUN_NOTEBOOKS = ["WGS_CCLE.ipynb", "RNA_CCLE.ipynb"]
 
@@ -144,7 +157,7 @@ UPLOAD_NOTEBOOK = ["DepMap_Upload.ipynb"]
 
 NOTEBOOKS = RUN_NOTEBOOKS + UPLOAD_NOTEBOOK
 
-VIRTUAL_FOLDER = ""
+VIRTUAL_FOLDER = "aee7ec053d434091a670bc64a9d7a3c1"
 
 RELEASE = SAMPLESETNAME.lower()
 
@@ -230,6 +243,8 @@ EXTRACT_DEFAULTS = {
     "from_arxspan_id": "individual_alias",
     "ref_id": "sample_id",
     "PDO_id": "PDO",
+    "root_sample_id": "root_sample_id",
+    "sm_id": "sm_id",
     "update_time": "update_time",
     "from_patient_id": "individual_alias",
     "patient_id": "participant_id",
@@ -311,7 +326,7 @@ WESSETENTITY = "pair_set"
 ############## Fingerprinting
 
 # Local directory to save intermediate files to
-WORKING_DIR = "temp/"
+WORKING_DIR = "output/"
 
 FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC-copy"
 
@@ -378,7 +393,28 @@ BAMQC = [
 
 KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 
+# germline matrix
+WESVCFDIR = "/tmp/vcfs_wes/"
+WGSVCFDIR = "/tmp/vcfs_wgs/"
+GUIDESBED = "data/avana_guides.bed"
+
+# rescue certain lines that are blacklisted in the tracker but we want them for MUTATION ONLY
+RESCUE_FOR_MUTATION_WES = {
+    "CDS-Rl87Z1": "ACH-001956",
+    "CDS-mys9Dm": "ACH-001955",
+    "CDS-TzQAjG": "ACH-001957",
+    "CDS-TuKZau": "ACH-001709",
+    "CDS-4lWqEA": "ACH-000859",
+    "CDS-Fyjj8I": "ACH-000116",
+}
+
+RESCUE_FOR_MUTATION_WGS = {"CDS-AqZLna": "ACH-002512"}
+
 ############## CN
+
+GENECHANGETHR = 0.025
+SEGMENTSTHR = 1500
+MAXYCHROM = 150
 
 COLRENAMING = {
     "CONTIG": "Chromosome",
@@ -391,6 +427,31 @@ COLRENAMING = {
     "NUM_POINTS_COPY_RATIO": "Num_Probes",
     "MEAN_LOG2_COPY_RATIO": "Segment_Mean",
     "CALL": "Status",
+}
+
+PURECN_COLRENAMING = {
+    "start": "Start",
+    "end": "End",
+    "chr": "Chromosome",
+    "Sampleid": SAMPLEID,
+    "seg.mean": "Segment_Mean",
+    "type": "LOH_status",
+}
+
+PURECN_LOH_COLNAME = ("PureCN_loh_merged",)
+PURECN_FAILED_COLNAME = ("PureCN_failed",)
+
+# if the loh function outputs one of these, record as 1 in the loh bool matrix
+PURECN_LOHVALUES = ["LOH", "COPY-NEUTRAL LOH", "WHOLE ARM COPY-NEUTRAL LOH"]
+
+SIGTABLE_TERRACOLS = {
+    "PureCN_ploidy",
+    "PureCN_wgd",
+    "PureCN_loh_fraction",
+    "PureCN_curated",
+    "PureCN_curated_solution",
+    "PureCN_failed",
+    "msisensor2_score",
 }
 
 SOURCE_RENAME = {
@@ -419,6 +480,8 @@ wrongwes_arxspan = {
     "ACH-001956",
     "ACH-001957",
 }
+
+CYTOBANDLOC = "data/hg38_cytoband.gz"
 
 toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 
@@ -475,11 +538,6 @@ MUTCOL_DEPMAP = [
     "ExAC_AF",
     "Variant_annotation",
     "CGA_WES_AC",
-    "HC_AC",
-    "RD_AC",
-    "RNAseq_AC",
-    "SangerWES_AC",
-    "WGS_AC",
 ]
 
 
@@ -513,6 +571,10 @@ FUSION_RED_HERRING = [
     "NEIGHBORS",
 ]
 
+FUSION_MAXFREQ = 0.1
+FUSION_MINFFPM = 0.05
+FUSION_MAXFFPM = 0.1
+
 ############## EXPRESSION
 
 BAM_GCS_BUCKET = "gs://cclebams-sandbox"
@@ -536,6 +598,8 @@ RSEMFILENAME_TRANSCRIPTS = ["transcripts_tpm", "transcripts_expected_count"]
 RSEMFILENAME = RSEMFILENAME_GENE + RSEMFILENAME_TRANSCRIPTS
 
 SSGSEAFILEPATH = "data/genesets/msigdb.v7.2.symbols.gmt"
+
+RNAMINSIMI = 0.95
 
 RNASEQC_THRESHOLDS_LOWQUAL = {
     "minmapping": 0.85,
@@ -749,3 +813,82 @@ __Columns__:
  gene names in the format HGNC\_symbol (Entrez\_ID)
 DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean
  """
+
+
+########### Gumbo configs #############
+GUMBO_SHEET = "https://docs.google.com/spreadsheets/d/10Lg0xkT5OHLYgJ9VKpkh8VR64TXfxPVJXRVAckU8uBg"
+GUMBO_SHEETNAME = "Backfilled profile IDs"
+
+# names of columns that contain release dates
+DATE_COL_DICT = {
+    "internal": "InternalReleaseDate",
+    "ibm": "IBMReleaseDate",
+    "dmc": "ConsortiumReleaseDate",
+    "public": "PublicReleaseDate",
+}
+
+MC_TABLE_NAME = "ModelCondition"
+PR_TABLE_NAME = "OmicsProfile"
+SEQ_TABLE_NAME = "OmicsSequencing"
+SAMPLE_TABLE_NAME = "Sample"
+ACH_CHOICE_TABLE_COLS = ["ModelConditionID", "ProfileID", "ProfileType"]
+ACH_CHOICE_TABLE_NAME = "achilles_choice_table"
+DEFAULT_TABLE_COLS = ["ModelID", "ProfileID", "ProfileType"]
+DEFAULT_TABLE_NAME = "default_model_table"
+
+# dictionaries mapping names of pr-level matrices on latest to names on virtual
+# NumericMatrixCSV matrices:
+VIRTUAL_FILENAMES_NUMMAT_EXP = {
+    "genes-expected_count-profile": "Omics_RNAseq_reads",
+    "genes-tpm_logp1-profile": "Omics_expression_full",
+    "transcripts-expected_count-profile": "Omics_expression_transcripts_expected_count",
+    "transcripts-tpm-profile": "Omics_RNAseq_transcripts",
+    "proteincoding_genes-expected_count-profile": "Omics_expression_proteincoding_genes_expected_count",
+    "proteincoding_genes-tpm-profile": "Omics_expression",
+}
+
+VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL = {
+    "gene_sets-profile": "Omics_ssGSEA",
+}
+
+VIRTUAL_FILENAMES_NUMMAT_CN = {
+    "merged-genecn-profile": "Omics_gene_cn",
+}
+
+VIRTUAL_FILENAMES_NUMMAT_MUT = {
+    "somatic_mutations_boolmatrix-hotspot-profile": "Omics_mutations_bool_hotspot",
+    "somatic_mutations_boolmatrix-othernoncons-profile": "Omics_mutations_bool_nonconserving",
+    "somatic_mutations_boolmatrix-damaging-profile": "Omics_mutations_bool_damaging",
+    "somatic_mutations_boolmatrix-othercons-profile": "Omics_mutations_bool_otherconserving",
+}
+
+VIRTUAL_FILENAMES_GERMLINE = {
+    "merged_binary_germline": "Omics_germline_mutation",
+}
+
+# TableCSV matrices:
+VIRTUAL_FILENAMES_TABLE_FUSION = {
+    "filtered_fusion-profile": "Omics_fusions",
+    "fusion-profile": "Omics_fusions_unfiltered",
+}
+
+VIRTUAL_FILENAMES_TABLE_CN = {
+    "merged-segments-profile": "Omics_segment_cn",
+}
+
+VIRTUAL_FILENAMES_TABLE_MUT = {
+    "somatic_mutations-profile": "Omics_mutations",
+}
+
+# upload mapping, taiga latest to file name dicts
+LATEST2FN_NUMMAT = {
+    TAIGA_CN: VIRTUAL_FILENAMES_NUMMAT_CN,
+    TAIGA_EXPRESSION: VIRTUAL_FILENAMES_NUMMAT_EXP,
+    TAIGA_MUTATION: VIRTUAL_FILENAMES_NUMMAT_MUT,
+}
+
+LATEST2FN_TABLE = {
+    TAIGA_CN: VIRTUAL_FILENAMES_TABLE_CN,
+    TAIGA_FUSION: VIRTUAL_FILENAMES_TABLE_FUSION,
+    TAIGA_MUTATION: VIRTUAL_FILENAMES_TABLE_MUT,
+}

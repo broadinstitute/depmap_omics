@@ -8,7 +8,7 @@
 # HELPER FUNC  ######################################
 #
 #
-from gsheets import Sheets
+
 from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
@@ -31,7 +31,7 @@ def GetNewCellLinesFromWorkspaces(
     sources,
     stype,
     maxage,
-    refurl="",
+    trackerobj,
     addonly=[],
     match="ACH",
     extract={},
@@ -42,8 +42,6 @@ def GetNewCellLinesFromWorkspaces(
     accept_unknowntypes=False,
     rename=dict(),
     recomputehash=False,
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
 ):
     """
     As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
@@ -91,10 +89,9 @@ def GetNewCellLinesFromWorkspaces(
     extract.update(extract_defaults)
     if type(match) is str and match:
         match = [match]
-    if refurl:
-        print("refsamples is overrided by a refurl")
-        sheets = Sheets.from_files(my_id, mystorage_id)
-        refsamples = sheets.get(refurl).sheets[0].to_frame(index_col=0)
+    if trackerobj is not None:
+        print("refsamples is overrided by a tracker object")
+        refsamples = trackerobj.read_tracker()
     if refsamples is None:
         if wto is None:
             raise ValueError("missing refsamples or refworkspace (wto)")
@@ -458,6 +455,7 @@ def mapSamples(samples, source, extract={}):
             extract["bai"]: extract["ref_bai"],
             extract["name"]: extract["ref_name"],
             extract["from_arxspan_id"]: extract["ref_arxspan_id"],
+            extract["root_sample_id"]: extract["sm_id"],
         }
     ).set_index(extract["ref_id"], drop=True)
     # subsetting
@@ -472,6 +470,7 @@ def mapSamples(samples, source, extract={}):
             extract["patient_id"],
             extract["legacy_size"],
             extract["PDO_id"],
+            extract["sm_id"],
             extract["update_time"],
             extract["source"],
         ]
@@ -656,15 +655,13 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
 def completeFromMasterSheet(
     samples,
     notfound,
+    trackerobj,
     toupdate=TO_UPDATE,
-    my_id=MY_ID,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
     pv_tokeep=["Culture Type", "Culture Medium"],
-    mystorage_id=MYSTORAGE_ID,
     masterfilename="ACH",
     nanslist=["None", "nan", "Unknown", None, np.nan],
-    depmap_pv=DEPMAP_PV,
     depmap_taiga=DEPMAP_TAIGA,
 ):
     """complete the missing sample information from a given DepMap Ops MasterSheet
@@ -690,13 +687,13 @@ def completeFromMasterSheet(
     from taigapy import TaigaClient
 
     tc = TaigaClient()
-    sheets = Sheets.from_files(my_id, mystorage_id)
 
-    depmap_pv = sheets.get(depmap_pv).sheets[0].to_frame(header=2)
+    depmap_pv = trackerobj.read_pv(pv_tokeep=pv_tokeep, index=pv_index)
     depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
     depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index).set_index(pv_index, drop=True)[
         pv_tokeep
     ]
+
     depmap_master = tc.get(name=depmap_taiga, file=masterfilename).set_index(
         master_index, drop=True
     )
@@ -758,6 +755,7 @@ def loadWES(
 
 def loadWGS(
     samplesetname,
+    trackerobj,
     workspaces=[wgsworkspace1, wgsworkspace2],
     sources=[wgssource1, wgssource2],
     maxage=MAXAGE,
@@ -778,12 +776,14 @@ def loadWGS(
         maxage=maxage,
         baits=baits,
         stype=stype,
+        trackerobj=trackerobj,
         **kwargs
     )
 
 
 def loadRNA(
-    samplesetname=SAMPLESETNAME,
+    samplesetname,
+    trackerobj,
     workspaces=[rnaworkspace6, rnaworkspace7],
     sources=[rnasource6, rnasource7],
     maxage=MAXAGE,
@@ -803,6 +803,7 @@ def loadRNA(
         maxage=maxage,
         baits=baits,
         stype=stype,
+        trackerobj=trackerobj,
         **kwargs
     )
 
@@ -814,14 +815,10 @@ def load(
     maxage,
     baits,
     stype,
+    trackerobj,
     toupdate=TO_UPDATE,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
-    my_id=MY_ID,
-    creds=SHEETCREDS,
-    mystorage_id=MYSTORAGE_ID,
-    refsheet_url=REFSHEET_URL,
-    depmappvlink=DEPMAP_PV,
     extract_to_change=EXTRACT_TO_CHANGE,
     extract_defaults=EXTRACT_DEFAULTS,
     # version 102
@@ -847,10 +844,6 @@ def load(
         toupdate ([type], optional): [description]. Defaults to TO_UPDATE.
         pv_index ([type], optional): [description]. Defaults to SAMPLEID.
         master_index (str, optional): [description]. Defaults to "arxspan_id".
-        my_id ([type], optional): [description]. Defaults to MY_ID.
-        creds ([type], optional): [description]. Defaults to SHEETCREDS.
-        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-        refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
         depmappvlink ([type], optional): [description]. Defaults to DEPMAP_PV.
         extract_to_change ([type], optional): [description]. Defaults to EXTRACT_TO_CHANGE.
         match ([type], optional): [description]. Defaults to MATCH.
@@ -870,8 +863,7 @@ def load(
         [type]: [description]
     """
     release = samplesetname
-    sheets = Sheets.from_files(my_id, mystorage_id)
-    ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+    ccle_refsamples = trackerobj.read_tracker()
 
     ## Adding new data
 
@@ -880,7 +872,7 @@ def load(
     samples, _, noarxspan = GetNewCellLinesFromWorkspaces(
         stype=stype,
         maxage=maxage,
-        refurl=refsheet_url,
+        trackerobj=trackerobj,
         wmfroms=workspaces,
         sources=sources,
         match=match,
@@ -895,8 +887,8 @@ def load(
         noarxspan,
         ccle_refsamples,
         datatype=stype,
-        depmappvlink=depmappvlink,
         extract=extract_to_change,
+        trackerobj=trackerobj,
     )
 
     # assess any potential issues
@@ -913,26 +905,19 @@ def load(
         h.inttodate(i) for i in samples[extract_defaults["release_date"]]
     ]
 
-    if os.path.isdir("temp/") == False:
-        os.makedirs("temp/")
+    if os.path.isdir("output/") == False:
+        os.makedirs("output/")
 
     if len(noarxspan) > 0:
         print("we found " + str(len(noarxspan)) + " samples without arxspan_ids!!")
         noarxspan = noarxspan.sort_values(by="stripped_cell_line_name")
-        dfToSheet(samples, "depmap ALL samples not found", creds)
-        noarxspan.to_csv("temp/noarxspan_" + stype + "_" + release + ".csv")
+        trackerobj.write_samples_missing_arxspan(noarxspan)
+        noarxspan.to_csv("output/noarxspan_" + stype + "_" + release + ".csv")
         if h.askif(
-            "Please review the samples (on 'depmap samples not found') and write yes once \
+            "Please review the samples (on 'depmap samples missing arxspan') and write yes once \
       finished, else write no to quit and they will not be added"
         ):
-            updated_samples = (
-                sheets.get(
-                    "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
-                )
-                .sheets[0]
-                .to_frame()
-                .set_index("sample_id")
-            )
+            updated_samples = trackerobj.read_samples_missing_arxspan()
             samples = pd.concat([samples, updated_samples], sort=False)
 
     samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
@@ -950,62 +935,49 @@ def load(
         samples, unk = completeFromMasterSheet(
             samples,
             notfound,
+            trackerobj,
             toupdate=toupdate,
-            my_id=my_id,
             pv_index=pv_index,
             master_index=master_index,
-            mystorage_id=mystorage_id,
             pv_tokeep=pv_tokeep,
             masterfilename=masterfilename,
             nanslist=nanslist,
-            depmap_pv=depmappvlink,
             depmap_taiga=depmap_taiga,
         )
         if len(unk) > 0:
             print("some samples could still not be inferred")
-            dfToSheet(samples.loc[notfound], "depmap samples not found", creds)
+            trackerobj.write_samples_not_found(samples.loc[notfound])
             samples.loc[notfound].to_csv(
-                "temp/notfound_" + stype + "_" + release + ".csv"
+                "output/notfound_" + stype + "_" + release + ".csv"
             )
             if h.askif(
                 "Please review the samples (on 'depmap samples not found') and write yes once \
         finished, else write no to quit and they will not be added"
             ):
-                updated_samples = (
-                    sheets.get(
-                        "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
-                    )
-                    .sheets[0]
-                    .to_frame()
-                    .set_index("sample_id")
-                )
+                updated_samples = trackerobj.read_samples_not_found()
                 samples.loc[
                     updated_samples.index, updated_samples.columns
                 ] = updated_samples.values
 
-    dfToSheet(samples, "depmap ALL samples found", secret=creds)
-    samples.to_csv("temp/new_" + stype + "_" + release + ".csv")
+    trackerobj.write_all_samples_found(samples)
+    samples.to_csv("output/new_" + stype + "_" + release + ".csv")
     return samples
 
 
 def updateWES(
     samples,
     samplesetname,
+    trackerobj,
     bucket=WES_GCS_PATH,
     name_col="index",
     values=["legacy_bam_filepath", "legacy_bai_filepath"],
     filetypes=["bam", "bai"],
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
     refworkspace=WESMUTWORKSPACE,
     cnworkspace=WESCNWORKSPACE,
     stype="wes",
     baits="ICE",
     extract={},
     extract_defaults=EXTRACT_DEFAULTS,
-    creds=SHEETCREDS,
-    sampletrackername=SHEETNAME,
-    refsheet_url=REFSHEET_URL,
 ):
     """[summary]
 
@@ -1040,8 +1012,7 @@ def updateWES(
     )
 
     extract.update(extract_defaults)
-    sheets = Sheets.from_files(my_id, mystorage_id)
-    ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+    ccle_refsamples = trackerobj.read_tracker()
 
     names = []
     subccle_refsamples = ccle_refsamples[ccle_refsamples["datatype"] == stype]
@@ -1055,7 +1026,7 @@ def updateWES(
 
     ccle_refsamples = ccle_refsamples.append(samples, sort=False)
 
-    dfToSheet(ccle_refsamples, sampletrackername, secret=creds)
+    trackerobj.write_tracker(ccle_refsamples)
 
     pairs = myterra.setupPairsFromSamples(samples, subccle_refsamples, extract)
 
@@ -1144,15 +1115,11 @@ def update(
     stype,
     bucket,
     refworkspace,
+    trackerobj,
     samplesetname=SAMPLESETNAME,
     name_col="index",
     values=["legacy_bam_filepath", "legacy_bai_filepath"],
     filetypes=["bam", "bai"],
-    my_id=MY_ID,
-    mystorage_id=MYSTORAGE_ID,
-    creds=SHEETCREDS,
-    sampletrackername=SHEETNAME,
-    refsheet_url=REFSHEET_URL,
     add_to_samplesets=[],
 ):
     """update the samples on a depmapomics terra processing workspace
@@ -1184,8 +1151,7 @@ def update(
         dryrun=False,
     )
 
-    sheets = Sheets.from_files(my_id, mystorage_id)
-    ccle_refsamples = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+    ccle_refsamples = trackerobj.read_tracker()
 
     names = []
     subccle_refsamples = ccle_refsamples[ccle_refsamples["datatype"] == stype]
@@ -1198,7 +1164,7 @@ def update(
     samples["version"] = samples["version"].astype(int)
 
     ccle_refsamples = ccle_refsamples.append(samples, sort=False)
-    dfToSheet(ccle_refsamples, sampletrackername, secret=creds)
+    trackerobj.write_tracker(ccle_refsamples)
 
     # uploading new samples
     samples.index.name = "sample_id"
@@ -1221,4 +1187,3 @@ def update(
         refwm.update_sample_set(
             sample_set_id=sname, sample_ids=list(set(samples_in_sname + new_samples))
         )
-

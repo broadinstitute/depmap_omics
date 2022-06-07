@@ -111,7 +111,7 @@ TAIGA_EXPRESSION = "expression-d035"
 TAIGA_FUSION = "fusions-95c9"
 TAIGA_LEGACY_CN = "copy-number-5f61"
 
-datasets = ["internal", "ibm", "dmc", "public"]
+DATASETS = ["internal", "ibm", "dmc", "public"]
 
 VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
@@ -286,7 +286,7 @@ WESSETENTITY = "pair_set"
 ############## Fingerprinting
 
 # Local directory to save intermediate files to
-WORKING_DIR = "temp/"
+WORKING_DIR = "output/"
 
 FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
 
@@ -569,6 +569,10 @@ FUSION_RED_HERRING = [
     "ConjoinG",
     "NEIGHBORS",
 ]
+
+FUSION_MAXFREQ = 0.1
+FUSION_MINFFPM = 0.05
+FUSION_MAXFFPM = 0.1
 
 ############## EXPRESSION
 
