@@ -174,18 +174,18 @@ def updateTracker(
             tracker.loc[k, "bam_qc"] = v[0]
     tracker.loc[tracker[tracker.datatype.isin(["rna"])].index, samplesetname] = 0
     return track.update(
+        trackerobj,
         tracker,
         selected,
         samplesetname,
         failed,
         lowqual,
-        newgs,
-        refworkspace,
-        bamfilepaths,
-        dry_run,
+        gumbo,
+        newgs=newgs,
+        refworkspace=refworkspace,
+        bamfilepaths=bamfilepaths,
+        dry_run=dry_run,
         todrop=todrop,
-        trackerobj=trackerobj,
-        gumbo=gumbo,
     )
 
 
@@ -514,7 +514,6 @@ async def postProcess(
     _, lowqual, failed = myQC.plot_rnaseqc_results(
         refworkspace,
         samplesinset,
-        rnaqc=rnaqclocs,
         save=bool(save_output),
         output_path=save_output + "rna_qcs/",
     )
