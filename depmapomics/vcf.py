@@ -243,7 +243,6 @@ REPLACE_SPECIAL_CHAR = {
 
 def improve(
     vcf,
-    cols_to_drop=["clinvar_vcf_mc"],
     force_list=["oc_genehancer__feature_name"],
     torename=TO_RENAME,
     special_rep=REPLACE_SPECIAL_CHAR,
@@ -424,10 +423,7 @@ def improve(
 
     # splice_AI_info
 
-    # drop useless_cols
-    vcf.drop(columns=cols_to_drop)
-
-    # rename and drop
+    # rename columns
     vcf = vcf.rename(columns=torename)
 
     # setting the right types
@@ -437,7 +433,18 @@ def improve(
     return vcf
 
 
-def to_maf(vcf, sample_id, tokeep=TOKEEP_SMALL, drop_multi=True):
+def to_maf(
+    vcf,
+    sample_id,
+    tokeep=TOKEEP_SMALL,
+    drop_multi=True,
+    min_freq=0.15,
+    min_depth=2,
+    max_log_pop_af=3,
+    only_coding=True,
+    only_somatic=True,
+    **kwargs
+):
     """to_maf 
 
     Args:
@@ -448,14 +455,10 @@ def to_maf(vcf, sample_id, tokeep=TOKEEP_SMALL, drop_multi=True):
     if drop_multi:
         vcf = vcf[~vcf["multiallelic"]]
 
-    # drops
-    # we will drop 99.93% of the variants and 90% of the columns
-    vcf = vcf[
-        # drops 95% of the variants
-        (vcf["is_coding"])
+    loc = (
         # drops 30% of the variants
-        & (vcf["af"].astype(float) >= 0.15)
-        & (vcf["ad"].str.split(",").str[1].astype(int) >= 2)
+        (vcf["af"].astype(float) >= min_freq)
+        & (vcf["ad"].str.split(",").str[1].astype(int) >= min_depth)
         # drops 90% of the variants
         & ~(
             vcf["map_qual"]
@@ -463,14 +466,27 @@ def to_maf(vcf, sample_id, tokeep=TOKEEP_SMALL, drop_multi=True):
             | vcf["strand_bias"]
             | vcf["weak_evidence"]
             | vcf["clustered_events"]
-            | vcf["pon"]
             | vcf["base_qual"]
             # | vcf["fragments"]
         )
-    ]
+    )
+    if only_coding:
+        # drops 95% of the variants
+        loc = loc & (vcf["is_coding"])
+    # drops
+    # we will drop 99.93% of the variants and 90% of the columns
+    vcf = vcf[loc]
+
     # redefine somatic
     # drops 80% of the variants
-    vcf = vcf[((~vcf["germline"]) & (vcf["popaf"].astype(float) > 3)) | vcf["hotspot"]]
+    if only_somatic:
+        vcf = vcf[
+            (
+                ~(vcf["germline"] | vcf["pon"])
+                & (vcf["popaf"].astype(float) > max_log_pop_af)
+            )
+            | vcf["hotspot"]
+        ]
     print(len(vcf))
     # creating count columns
     vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
@@ -483,5 +499,5 @@ def to_maf(vcf, sample_id, tokeep=TOKEEP_SMALL, drop_multi=True):
         vcf[k] = vcf[k].astype(v)
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%3B")
-    vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz")
+    vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
 

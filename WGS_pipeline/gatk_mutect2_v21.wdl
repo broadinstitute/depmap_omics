@@ -112,12 +112,13 @@ workflow Mutect2 {
       String? gcs_project_for_requester_pays
       Boolean? remove_filtered
 
+      String bcftools_exclude_string
+
       # Funcotator inputs
       Boolean? run_funcotator
       String? sequencing_center
       String? sequence_source
       String? funco_reference_version
-      String? funco_output_format
       Boolean? funco_compress
       Boolean? funco_use_gnomad_AF
       File? funco_data_sources_tar_gz
@@ -129,7 +130,7 @@ workflow Mutect2 {
       Boolean? funco_filter_funcotations
       String? funcotator_extra_args
 
-      String funco_default_output_format = "VCF"
+      String funco_output_format = "VCF"
 
       # runtime
       String gatk_docker
@@ -406,7 +407,7 @@ workflow Mutect2 {
                 input_vcf_idx = funcotate_vcf_input_index,
                 reference_version = select_first([funco_reference_version, "hg38"]),
                 output_file_base_name = basename(funcotate_vcf_input, ".vcf") + ".annotated",
-                output_format = if defined(funco_output_format) then "" + funco_output_format else funco_default_output_format,
+                output_format = funco_output_format,
                 compress = if defined(funco_compress) then select_first([funco_compress]) else false,
                 use_gnomad = if defined(funco_use_gnomad_AF) then select_first([funco_use_gnomad_AF]) else false,
                 data_sources_tar_gz = funco_data_sources_tar_gz,
@@ -452,10 +453,10 @@ task CramToBam {
       File? crai
       String name
       Int disk_size
-      Int? mem
+      Int mem=6
     }
 
-    Int machine_mem = if defined(mem) then mem * 1000 else 6000
+    Int machine_mem = mem * 1000
 
     #Calls samtools view to do the conversion
     command {
@@ -554,7 +555,7 @@ task M2 {
 
       # runtime
       String gatk_docker
-      Int? mem
+      Int mem=4
       Int? preemptible
       Int? max_retries
       Int? disk_space
@@ -568,7 +569,7 @@ task M2 {
     String output_stats = output_vcf + ".stats"
 
     # Mem is in units of GB but our command and memory runtime values are in MB
-    Int machine_mem = if defined(mem) then mem * 1000 else 3500
+    Int machine_mem = mem * 1000
     Int command_mem = machine_mem - 500
 
     parameter_meta{
@@ -1042,7 +1043,7 @@ task Funcotate {
        Array[String]? annotation_defaults
        Array[String]? annotation_overrides
        Array[String]? funcotator_excluded_fields
-       Boolean? filter_funcotations
+       Boolean filter_funcotations=true
        File? interval_list
 
        String? extra_args
@@ -1069,7 +1070,7 @@ task Funcotate {
      String transcript_selection_arg = if defined(transcript_selection_list) then " --transcript-list " else ""
      String annotation_def_arg = if defined(annotation_defaults) then " --annotation-default " else ""
      String annotation_over_arg = if defined(annotation_overrides) then " --annotation-override " else ""
-     String filter_funcotations_args = if defined(filter_funcotations) && (filter_funcotations) then " --remove-filtered-variants " else ""
+     String filter_funcotations_args = if filter_funcotations then " --remove-filtered-variants " else ""
      String excluded_fields_args = if defined(funcotator_excluded_fields) then " --exclude-field " else ""
      String interval_list_arg = if defined(interval_list) then " -L " else ""
      String extra_args_arg = select_first([extra_args, ""])
@@ -1123,7 +1124,7 @@ task Funcotate {
              --annotation-default Center:~{default="Unknown" sequencing_center} \
              --annotation-default source:~{default="Unknown" sequence_source} \
              ~{"--transcript-selection-mode " + transcript_selection_mode} \
-             ~{transcript_selection_arg}~{default="" sep=" --transcript-list " transcript_selection_list} \
+             ~{transcript_selection_arg}
              ~{annotation_def_arg}~{default="" sep=" --annotation-default " annotation_defaults} \
              ~{annotation_over_arg}~{default="" sep=" --annotation-override " annotation_overrides} \
              ~{excluded_fields_args}~{default="" sep=" --exclude-field " funcotator_excluded_fields} \
@@ -1165,13 +1166,13 @@ task RemoveFiltered {
     }
 
     command {
-        bcftools filter --exclude ~{bcftools_exclude_string} --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} && \
+        bcftools view --exclude ~{bcftools_exclude_string} --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} ~{input_vcf} && \
         bcftools index ~{sample_id}.filtered.vcf.gz --threads ~{cpu}
     }
 
     runtime {
         disks: "local-disk 10 HDD"
-        machine_mem: "2GB"
+        memory: "2 GB"
         cpu: cpu
         maxRetries: runtime_params.max_retries
         preemptible: runtime_params.preemptible

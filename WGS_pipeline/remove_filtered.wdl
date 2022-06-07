@@ -22,25 +22,24 @@ task RemoveFiltered {
     input {
         File input_vcf
         String sample_id
-        String bcftools_exclude_string = 'FILTER="weak_evidence" || FILTER="map_qual" || FILTER="strand_bias" || FILTER="slippage" || FILTER="clustered_events" || FILTER="base_qual"'
+        String bcftools_exclude_string = 'FILTER="weak_evidence"||FILTER="map_qual"||FILTER="strand_bias"||FILTER="slippage"||FILTER="clustered_events"||FILTER="base_qual"'
 
         String docker_image="dceoy/bcftools"
-        Int max_retries=4
         Int preemptible=3
         Int boot_disk_size=10
         Int cpu = 2
+        Int mem = 2
     }
 
     command {
-        bcftools filter --exclude ~{bcftools_exclude_string} --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} ~{input_vcf} && \
+        bcftools view --exclude '~{bcftools_exclude_string}' --output-type b -o ~{sample_id}.filtered.vcf.gz --threads ~{cpu} ~{input_vcf} && \
         bcftools index ~{sample_id}.filtered.vcf.gz --threads ~{cpu}
     }
 
     runtime {
-        disks: "local-disk 10 HDD"
-        machine_mem: "2 Gb"
+        disks: "local-disk 20 HDD"
+        memory: "~{mem} GB"
         cpu: cpu
-        maxRetries: max_retries
         preemptible: preemptible
         bootDiskSizeGb: boot_disk_size
         docker: docker_image
@@ -48,7 +47,7 @@ task RemoveFiltered {
 
     output {
         File output_vcf = "~{sample_id}.filtered.vcf.gz"
-        File output_vcf_idx = "~{sample_id}.filtered.vcf.gz.tbi"
+        File output_vcf_idx = "~{sample_id}.filtered.vcf.gz.csi"
         
     }
 }
