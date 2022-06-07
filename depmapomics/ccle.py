@@ -1380,7 +1380,7 @@ def generateGermlineMatrix(
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    res_wgs = pool.map(mapBed, zip(os.listdir(wgsdir), repeat(WGSVCFDIR)))
+    res_wgs = pool.starmap(mapBed, zip(os.listdir(wgsdir), repeat(WGSVCFDIR)))
     sorted_guides_bed_wgs = guides_bed.sort_values(
         by=["chrom", "start", "end"]
     ).reset_index(drop=True)
