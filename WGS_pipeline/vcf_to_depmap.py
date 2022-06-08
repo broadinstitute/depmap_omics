@@ -12,6 +12,8 @@ use_multi = "True" == sys.argv[4] if len(sys.argv) > 4 else False
 onco_kb = "True" == sys.argv[5] if len(sys.argv) > 5 else False
 force_keep = sys.argv[6].split(",") if len(sys.argv) > 6 else []
 
+prev_cols = []
+
 print(
     "inputs: vcf_filename:",
     vcf_filename,
@@ -83,11 +85,7 @@ for i in range(10_000):
             list(set(cols) ^ set(prev_cols)),
         )
     elif len(cols) != len(prev_cols):
-        raise ValueError(
-            "some columns have duplicate values"
-            prev_cols,
-            cols
-        )
+        raise ValueError("some columns have duplicate values", prev_cols, cols)
     elif cols != prev_cols:
         vcf_file = vcf_file[prev_cols]
 
