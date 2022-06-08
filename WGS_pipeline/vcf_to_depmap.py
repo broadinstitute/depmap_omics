@@ -76,12 +76,19 @@ for i in range(10_000):
     cols = vcf_file.columns.tolist()
     if i == 0:
         prev_cols = cols
-    if cols != prev_cols:
+    elif set(cols) != set(prev_cols)
         raise ValueError(
             "we are removing different sets of columns",
             cols,
             list(set(cols) ^ set(prev_cols)),
         )
+    elif len(cols) != len(prev_cols):
+        raise ValueError(
+            "columns have duplicate values"
+            prev_cols
+        )
+    elif cols != prev_cols:
+        vcf_file = vcf_file[prev_cols]
 
     # save full
     # need pyarrows
