@@ -611,7 +611,7 @@ def findLatestVersion(dataset, approved_only=True):
 
 
 def updateEternal(
-    eternal_id="depmap-a0ab", virtual=VIRTUAL, samplesetname=SAMPLESETNAME
+    eternal_id=TAIGA_ETERNAL_UPLOAD, virtual=VIRTUAL, samplesetname=SAMPLESETNAME
 ):
     """update taiga eternal dataset by linking to latest virtual internal dataset"""
     latest_version = findLatestVersion(virtual["internal"])

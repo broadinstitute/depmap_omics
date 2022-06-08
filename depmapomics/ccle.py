@@ -1265,6 +1265,7 @@ def generateGermlineMatrix(
     """
 
     print("generating germline matrix for wes")
+    h.createFoldersFor(savedir)
     # load vcfs from WES workspace using dalmatian
     wm = dm.WorkspaceManager(wesrefworkspace)
     samp = wm.get_samples()
