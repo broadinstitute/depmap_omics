@@ -1,13 +1,17 @@
-LINES_TO_RELEASE = []
+import numpy as np
 
+
+LINES_TO_RELEASE = []
+SAMPLESETNAME = "22Q2test"
+RELEASE = SAMPLESETNAME.lower()
 
 CACHE_PATH = "~/.depmapomics/"
 TMP_PATH = "/tmp/"
 
+### GCP credentials
 SHEETCREDS = "../.credentials.json"
 MY_ID = "~/.client_secret.json"
 MYSTORAGE_ID = "~/.storage.json"
-
 GCS_PAYER_PROJECT = "broad-firecloud-ccle"
 
 SAMPLEID = "DepMap_ID"

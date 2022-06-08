@@ -5,10 +5,6 @@ from depmapomics.config_global import *
 
 SHEETNAME = "ccle sample tracker"
 
-
-SAMPLESETNAME = "22Q2"
-RELEASE = SAMPLESETNAME.lower()
-
 isCCLE = True
 doCleanup = True
 
@@ -43,8 +39,14 @@ TAIGA_EXPRESSION = "expression-d035"
 TAIGA_FUSION = "fusions-95c9"
 TAIGA_LEGACY_CN = "copy-number-5f61"
 
-VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683
+VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
+VIRTUAL = {
+    "internal": "",
+    "ibm": "",
+    "dmc": "",
+    "public": "",
+}
 
 ## our working workspace (reference)
 RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
