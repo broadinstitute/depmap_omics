@@ -201,3 +201,4 @@ tmp.*
 
 .vscode/launch.json
 ccle_tasks/temp/*
+output/*
