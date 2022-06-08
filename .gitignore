@@ -200,3 +200,7 @@ tmp.py
 tmp.*
 
 .vscode/launch.json
+ccle_tasks/A3SS_JC_output_aggregated.csv
+.gitignore
+ccle_tasks/A5SS_JC_output_aggregated.csv
+ccle_tasks/temp/
