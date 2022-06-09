@@ -345,21 +345,18 @@ def improve(
 
     # ccle_deleterious
     vcf.loc[
-        ~(
-            vcf["gencode_34_secondaryvariantclassification"].isin(["INTRON"])
-            | vcf["gencode_34_variantclassification"].isin(
-                [
-                    "DE_NOVO_START_OUT_FRAME",
-                    "DE_NOVO_START_IN_FRAME" "NONSENSE",
-                    "FRAME_SHIFT_DEL",
-                    "FRAME_SHIFT_INS",
-                    "DE_NOVO_START_IN_FRAME",
-                    "START_CODON_INS",
-                    "START_CODON_DEL",
-                    "NONSTOP",
-                    "NONSENSE",
-                ]
-            )
+        vcf["gencode_34_variantclassification"].isin(
+            [
+                "DE_NOVO_START_OUT_FRAME",
+                "DE_NOVO_START_IN_FRAME" "NONSENSE",
+                "FRAME_SHIFT_DEL",
+                "FRAME_SHIFT_INS",
+                "DE_NOVO_START_IN_FRAME",
+                "START_CODON_INS",
+                "START_CODON_DEL",
+                "NONSTOP",
+                "NONSENSE",
+            ]
         ),
         "ccle_deleterious",
     ] = True
