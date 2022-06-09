@@ -165,10 +165,15 @@ TOKEEP_SMALL = {
     "alt_count": "int",
     "gt": "str",
     "ps": "str",
+    "dna_change": "str",
+    "protein_change": "str",
+    "variant_info": "str",
+    "hugo_symbol": "str",
     "hgnc_name": "str",
     "hgnc_family": "str",
     "transcript_exon": "str",
     "transcript_strand": "str",
+    "uniprot_id": "str",
     "str": "bool",
     "lineage_association": "str",
     "achilles_top_genes": "str",
@@ -179,6 +184,7 @@ TOKEEP_SMALL = {
     "issues": "str",
     "gc_content": "float",
     "dna_repair": "str",
+    "ccle_deleterious": "bool",
     "structural_relation": "str",
 }
 
@@ -330,11 +336,8 @@ def improve(
 
     # defining hotspot
     vcf["hotspot"] = False
-    loc = (
-        ~(vcf["cosmicfusion_fusion_genes"] == "")
-        | ~(vcf["cgc_cancer_syndrome"] == "")
-        | ~(vcf["cgc_cancer_germline_mut"] == "")
-        | ~(vcf["cgc_cancer_somatic_mut"] == "")
+    loc = ~(vcf["cgc_cancer_germline_mut"] == "") | ~(
+        vcf["cgc_cancer_somatic_mut"] == ""
     )
     if with_onco_kb:
         loc = loc | (vcf["oc_oncokb__oncogenic"] == "Likely Oncogenic")
