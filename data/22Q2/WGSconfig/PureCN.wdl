@@ -1,5 +1,5 @@
 version 1.0
-# PureCN repo: https://github.com/lima1/PureCN
+# PureCN repo, where dockerfile for image used here can be found: https://github.com/lima1/PureCN
 
 task PureCN {
     
@@ -46,7 +46,7 @@ task PureCN {
         Rscript ${call_wgd_and_cin_script} "${sampleID}_loh.csv" "${sampleID}.csv"
     }
 
-    Array[String] table = read_lines('${sampleID}.csv') # maybe wdl has builtin read_csv files?
+    Array[String] table = read_lines('table.txt') # maybe wdl has builtin read_csv files?
     Array[String] wgd_table = read_lines("out.txt")
 
     output {
