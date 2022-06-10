@@ -477,9 +477,6 @@ def cnPostProcessing(
     folder = os.path.join("output", samplesetname, "wes_")
     if wesfolder == "":
         print("doing wes")
-        priority = tracker[
-            (tracker.datatype == "wes") & (tracker.prioritized == 1)
-        ].index.tolist()
         todropwes = (
             todrop
             + tracker[
@@ -501,7 +498,6 @@ def cnPostProcessing(
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
             todrop=todropwes,
             save_output=folder,
-            priority=priority,
             genechangethresh=genechangethresh,
             segmentsthresh=segmentsthresh,
             maxYchrom=maxYchrom,
@@ -543,13 +539,6 @@ def cnPostProcessing(
     # doing wgs
     print("doing wgs")
     folder = os.path.join("output", samplesetname, "wgs_")
-    priority = tracker[
-        (tracker.datatype == "wgs") & (tracker.prioritized == 1)
-    ].index.tolist()
-    todropwgs = (
-        todrop
-        + tracker[(tracker.datatype == "wgs") & (tracker.blacklist == 1)].index.tolist()
-    )
     (
         wgssegments,
         genecn,
@@ -563,9 +552,7 @@ def cnPostProcessing(
         wgsrefworkspace,
         setEntity=wgssetentity,
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
-        todrop=todropwgs,
         save_output=folder,
-        priority=priority,
         genechangethresh=genechangethresh,
         segmentsthresh=segmentsthresh,
         maxYchrom=maxYchrom,
@@ -860,7 +847,6 @@ async def mutationPostProcessing(
     wesmutations_pr = wesmutations[
         wesmutations[SAMPLEID].isin(renaming_dict.keys())
     ].replace({SAMPLEID: renaming_dict})
-    wesmutations_pr.to_csv(folder + "somatic_mutations_all_profile.csv", index=None)
 
     # doing wgs
     print("doing wgs")
@@ -879,11 +865,12 @@ async def mutationPostProcessing(
         wgsmutations[SAMPLEID].isin(renaming_dict.keys())
     ].replace({SAMPLEID: renaming_dict})
 
-    wgsmutations_pr.to_csv(folder + "somatic_mutations_all_profile.csv", index=None)
-
     # merge
     print("merging")
     folder = os.path.join("output", samplesetname, "merged_")
+    mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
+    mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
+
     priomutations = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     # normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
     # mutations = mutations[~mutations[SAMPLEID].isin(normals)]
@@ -1001,152 +988,14 @@ async def mutationPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": "output/" + samplesetname + "/wes_somatic_mutations_all.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": "output/" + samplesetname + "/wgs_somatic_mutations_all.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": "output/"
-                + samplesetname
-                + "/wes_somatic_mutations_all_profile.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": "output/"
-                + samplesetname
-                + "/wgs_somatic_mutations_all_profile.csv",
+                "path": folder + "somatic_mutations.csv",
+                "name": "somatic_mutations",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
         ],
         upload_async=False,
         dataset_description=taiga_description,
-    )
-
-
-async def mutationAnalyzeUnfiltered(
-    workspace=WGSWORKSPACE,
-    allsampleset="all",
-    folder="output/",
-    subsetcol=[
-        SAMPLEID,
-        "Hugo_Symbol",
-        "Entrez_Gene_Id",
-        "Chromosome",
-        "Start_position",
-        "End_position",
-        "Variant_Classification",
-        "Variant_Type",
-        "Reference_Allele",
-        "Tumor_Allele",
-        "dbSNP_RS",
-        "dbSNP_Val_Status",
-        "Genome_Change",
-        "Annotation_Transcript",
-        "cDNA_Change",
-        "Codon_Change",
-        "HGVS_protein_change",
-        "Protein_Change",
-        "t_alt_count",
-        "t_ref_count",
-        "tumor_f",
-        "CGA_WES_AC",
-    ],
-    taiga_dataset=TAIGA_MUTATION,
-):
-    """_CCLEAnalyzeUnfiltered function to subset and filter the CGA unfiltered maf file.
-    This will output a much bigger maf file without CGA filters (usefull for QC and more).
-    Will take a lot of memory (expect ~32GB minimum). if you don't have that amount of RAM, don't use.
-    Args:
-        workspace (str): workspace name. Default is WGSWORKSPACE.
-        allsampleset (str, optional): sampleset name. Default is 'all'.
-        folder (str, optional): folder name. Default is 'output/'.
-        subsetcol (list, optional): list of columns to subset the maf file on. 
-            will also output the unfiltered version of themaf file.
-            Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id', 
-                        'Chromosome', 'Start_position', 'End_position', 
-                        'Variant_Classification', 'Variant_Type', 'Reference_Allele', 
-                        'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change', 
-                        'Annotation_Transcript', 'cDNA_Change', 'Codon_Change', 
-                        'HGVS_protein_change',  'Protein_Change', 't_alt_count', 
-                        't_ref_count', 'tumor_f', 'CGA_WES_AC'].
-        taiga_dataset (str, optional): taiga dataset path. Default is TAIGA_MUTATION.
-    """
-    print("retrieving unfiltered")
-    ####### WES
-    from taigapy import TaigaClient
-
-    tc = TaigaClient()
-    res = dm.WorkspaceManager(workspace).get_sample_sets()
-    unfiltered = pd.read_csv(
-        res.loc[allsampleset, "unfiltered_CGA_MAF_aggregated"],
-        sep="\t",
-        encoding="L6",
-        na_values=["__UNKNOWN__", "."],
-        engine="c",
-        dtype=str,
-    )
-    unfiltered["somatic"] = unfiltered["somatic"].replace("nan", "False")
-    unfiltered["HGNC_Status"] = unfiltered["HGNC_Status"].replace("nan", "Unapproved")
-    unfiltered["judgement"] = unfiltered["judgement"].replace("nan", "REMOVE")
-    unfiltered = unfiltered.rename(
-        columns={
-            "i_ExAC_AF": "ExAC_AF",
-            "Tumor_Sample_Barcode": SAMPLEID,
-            "Tumor_Seq_Allele2": "Tumor_Allele",
-        }
-    ).drop(columns=["Tumor_Seq_Allele1"])
-    unfiltered["CGA_WES_AC"] = [
-        str(i[0]) + ":" + str(i[1])
-        for i in np.nan_to_num(
-            unfiltered[["t_alt_count", "t_ref_count"]].values.astype(float), 0
-        ).astype(int)
-    ]
-    toremove = []
-    subunfilt = unfiltered.iloc[:10000]
-    for i, val in enumerate(unfiltered.columns):
-        h.showcount(i, len(unfiltered.columns))
-        if len(set(subunfilt[val]) - set(["nan"])) == 1:
-            if len(set(unfiltered[val]) - set(["nan"])) == 1:
-                toremove.append(val)
-    unfiltered = unfiltered.drop(columns=set(toremove))
-    toint = ["Start_position", "End_position"]
-    for val in toint:
-        unfiltered[val] = unfiltered[val].astype(int)
-    unfiltered.to_csv(
-        folder + "mutation_somatic_unfiltered_withreplicates.csv.gz", index=False
-    )
-    unfiltered = unfiltered[subsetcol]
-    unfiltered.to_csv(
-        folder + "mutation_somatic_unfiltered_withreplicates_subseted.csv.gz",
-        index=False,
-    )
-    os.system("gunzip " + folder + "mutation_somatic_unfiltered_withreplicates.csv.gz")
-    del unfiltered
-    tc.update_dataset(
-        changes_description="adding unfiltered mutations",
-        dataset_permaname=taiga_dataset,
-        upload_files=[
-            {
-                "path": folder
-                + "mutation_somatic_unfiltered_withreplicates_subseted.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "mutation_somatic_unfiltered_withreplicates.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-        ],
-        add_all_existing_files=True,
-        upload_async=False,
     )
 
 
@@ -1224,8 +1073,7 @@ def generateGermlineMatrix(
         + " "
         + wesdir
         + sam.split("/")[-1]
-        + "&& \
- bcftools index "
+        + "&& bcftools index "
         + wesdir
         + sam.split("/")[-1]
         + " && \
