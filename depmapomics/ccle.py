@@ -199,50 +199,8 @@ async def expressionPostProcessing(
             dataset_permaname=taiga_dataset,
             upload_files=[
                 {
-                    "path": folder + "proteincoding_genes_tpm_logp1.csv",
-                    "name": "proteincoding_genes-tpm_logp1",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "transcripts_tpm_logp1.csv",
-                    "name": "transcripts-tpm_logp1",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_tpm_logp1.csv",
-                    "name": "genes-tpm_logp1",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_tpm.csv",
-                    "name": "genes-tpm_logp1",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "transcripts_tpm.csv",
-                    "name": "transcripts-tpm",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "proteincoding_genes_tpm.csv",
-                    "name": "proteincoding_genes-tpm",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
                     "path": folder + "transcripts_expected_count.csv",
                     "name": "transcripts-expected_count",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "proteincoding_genes_expected_count.csv",
-                    "name": "proteincoding_genes-expected_count",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
@@ -428,12 +386,6 @@ async def fusionPostProcessing(
         dataset_permaname=taiga_dataset,
         changes_description="new " + sampleset + " release!",
         upload_files=[
-            {
-                "path": "output/" + sampleset + "/filteredfusions_latest.csv",
-                "name": "filtered_fusions",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
             {
                 "path": "output/" + sampleset + "/fusions_all.csv",
                 "name": "fusions-all",
