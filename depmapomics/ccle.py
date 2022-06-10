@@ -436,7 +436,6 @@ def cnPostProcessing(
     bamqc=BAMQC,
     procqc=PROCQC,
     source_rename=SOURCE_RENAME,
-    redoWES=False,
     wesfolder="",
     genechangethresh=GENECHANGETHR,
     segmentsthresh=SEGMENTSTHR,
@@ -468,15 +467,15 @@ def cnPostProcessing(
 
     prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
 
-    tracker = pd.DataFrame()
-    if trackerobj is not None:
-        tracker = trackerobj.read_seq_table()
+    tracker = trackerobj.read_seq_table()
 
     assert len(tracker) != 0, "broken source for sample tracker"
+    pr_table = trackerobj.read_pr_table()
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
 
     # doing wes
     folder = os.path.join("output", samplesetname, "wes_")
-    if redoWES:
+    if wesfolder == "":
         print("doing wes")
         priority = tracker[
             (tracker.datatype == "wes") & (tracker.prioritized == 1)
@@ -523,8 +522,6 @@ def cnPostProcessing(
         # wes_purecn_table.to_csv(folder + "purecn_table_latest.csv")
         # subset and rename to PR-indexed matrices
         # assuming no wgs
-        pr_table = trackerobj.read_pr_table()
-        renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
         wessegments_pr = (
             wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
             .replace({SAMPLEID: renaming_dict})
@@ -533,10 +530,10 @@ def cnPostProcessing(
         # wessegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
         # wescn_pr.to_csv(folder + "genecn_all_profile.csv")
     else:
-        print("bypassing WES using folder: " + (wesfolder if wesfolder else folder))
-        wesfailed = h.fileToList((wesfolder if wesfolder else folder) + "failed.txt")
-        wessegments = pd.read_csv(folder + "segments_all.csv")
-        genecn = pd.read_csv(folder + "genecn_all.csv", index_col=0)
+        print("bypassing WES using folder: " + wesfolder)
+        wesfailed = h.fileToList(wesfolder + "failed.txt")
+        wessegments = pd.read_csv(wesfolder + "segments_all.csv")
+        genecn = pd.read_csv(wesfolder + "genecn_all.csv", index_col=0)
         wessegments_pr = (
             wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
             .replace({SAMPLEID: renaming_dict})
@@ -629,8 +626,6 @@ def cnPostProcessing(
     except:
         print("no wes for this sampleset")
 
-    pr_table = track.update_pr_from_seq(trackerobj)
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     wgssegments_pr = (
         wgssegments[wgssegments[SAMPLEID].isin(set(renaming_dict.keys()))]
         .replace({SAMPLEID: renaming_dict})
