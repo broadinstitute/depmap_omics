@@ -54,6 +54,7 @@ for i in range(10_000):
             "ps",
             "gq",
             "pgt",
+            "gencode_34_chromosome",
         ],
         nrows=n_rows,
         skiprows=n_rows * i,
@@ -103,7 +104,6 @@ for i in range(10_000):
     else:
         vcf.to_maf(vcf_file, sample_name, drop_multi=True, mode="a", header=False)
     del vcf_file
-
     if tobreak:
         break
 print("finished, processed {} rows".format((n_rows * i) + filen))
