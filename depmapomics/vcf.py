@@ -336,9 +336,9 @@ def improve(
 
     # defining hotspot
     vcf["hotspot"] = False
-    loc = ~(vcf["cgc_cancer_germline_mut"] == "") | ~(
+    loc = ~(
         vcf["cgc_cancer_somatic_mut"] == ""
-    )
+    )  # | ~(vcf["cgc_cancer_germline_mut"] == "")
     if with_onco_kb:
         loc = loc | (vcf["oc_oncokb__oncogenic"] == "Likely Oncogenic")
     vcf.loc[loc, "hotspot"] = True
@@ -349,10 +349,9 @@ def improve(
         vcf["gencode_34_variantclassification"].isin(
             [
                 "DE_NOVO_START_OUT_FRAME",
-                "DE_NOVO_START_IN_FRAME" "NONSENSE",
+                "DE_NOVO_START_IN_FRAME",
                 "FRAME_SHIFT_DEL",
                 "FRAME_SHIFT_INS",
-                "DE_NOVO_START_IN_FRAME",
                 "START_CODON_INS",
                 "START_CODON_DEL",
                 "NONSTOP",
@@ -396,7 +395,7 @@ def improve(
     )
 
     if not with_onco_kb:
-        vcf["is_coding"] = vcf["gencode_34_hugosymbol"] != ""
+        vcf["is_coding"] = vcf["protein_change"] != ""
 
     for val in boolify:
         vcf[val] = (
@@ -454,6 +453,7 @@ def to_maf(
     """
     # dropping
     if drop_multi:
+        #  drops 2% of the variants
         vcf = vcf[~vcf["multiallelic"]]
 
     loc = (
@@ -472,10 +472,10 @@ def to_maf(
         )
     )
     if only_coding:
-        # drops 95% of the variants
-        loc = loc & (vcf["is_coding"])
-    # drops
-    # we will drop 99.93% of the variants and 90% of the columns
+        # drops 99.5% of the variants
+        loc = loc & (vcf["is_coding"] | (vcf["variant_info"] == "SPLICE_SITE"))
+
+    # we will drop 99.993% of the variants and 90% of the columns
     vcf = vcf[loc]
 
     # redefine somatic
