@@ -344,22 +344,20 @@ def improve(
     vcf.loc[loc, "hotspot"] = True
 
     # ccle_deleterious
+    vcf["ccle_deleterious"] = False
     vcf.loc[
-        ~(
-            vcf["gencode_34_secondaryvariantclassification"].isin(["INTRON"])
-            | vcf["gencode_34_variantclassification"].isin(
-                [
-                    "DE_NOVO_START_OUT_FRAME",
-                    "DE_NOVO_START_IN_FRAME" "NONSENSE",
-                    "FRAME_SHIFT_DEL",
-                    "FRAME_SHIFT_INS",
-                    "DE_NOVO_START_IN_FRAME",
-                    "START_CODON_INS",
-                    "START_CODON_DEL",
-                    "NONSTOP",
-                    "NONSENSE",
-                ]
-            )
+        vcf["gencode_34_variantclassification"].isin(
+            [
+                "DE_NOVO_START_OUT_FRAME",
+                "DE_NOVO_START_IN_FRAME" "NONSENSE",
+                "FRAME_SHIFT_DEL",
+                "FRAME_SHIFT_INS",
+                "DE_NOVO_START_IN_FRAME",
+                "START_CODON_INS",
+                "START_CODON_DEL",
+                "NONSTOP",
+                "NONSENSE",
+            ]
         ),
         "ccle_deleterious",
     ] = True
@@ -398,7 +396,7 @@ def improve(
     )
 
     if not with_onco_kb:
-        vcf["is_coding"] = vcf["gencode_34_transcriptexon"] != ""
+        vcf["is_coding"] = vcf["gencode_34_hugosymbol"] != ""
 
     for val in boolify:
         vcf[val] = (
@@ -489,6 +487,7 @@ def to_maf(
                 & (vcf["popaf"].astype(float) > max_log_pop_af)
             )
             | vcf["hotspot"]
+            | vcf["ccle_deleterious"]
         ]
     print(len(vcf))
     # creating count columns
