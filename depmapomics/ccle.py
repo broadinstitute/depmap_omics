@@ -34,7 +34,6 @@ async def expressionPostProcessing(
         "proteincoding_genes_tpm": "CCLE_expression",
     },
     todrop=KNOWN_DROP,
-    prevcounts="ccle",
     taiga_dataset=TAIGA_EXPRESSION,
     minsimi=RNAMINSIMI,
     dropNonMatching=True,
@@ -70,7 +69,6 @@ async def expressionPostProcessing(
         dropNonMatching (bool, optional): whether to drop the non matching genes 
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
-        prevcounts (str, optional): the previous counts to use to QC the data for the release. Defaults to 'ccle'.
         taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
         minsimi (float, optional): the minimum similarity to use for comparison to previous dataset. Defaults to 0.95.
         dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
@@ -83,8 +81,7 @@ async def expressionPostProcessing(
 
     tc = TaigaClient()
 
-    if prevcounts == "ccle":
-        prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
+    prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
 
     ccle_refsamples = trackerobj.read_tracker()
     if gumbo:
@@ -168,7 +165,7 @@ async def expressionPostProcessing(
 
     print("updating the tracker")
 
-    updated_tracker = expressions.updateTracker(
+    expressions.updateTracker(
         set(renaming.keys()) - set(["transcript_id(s)"]),
         failed,
         lowqual[lowqual.sum(1) > 3].index.tolist(),
@@ -327,18 +324,16 @@ async def expressionPostProcessing(
         )
         print("done")
 
-    return updated_tracker
-
 
 async def fusionPostProcessing(
     trackerobj,
+    gumbo,
     refworkspace=RNAWORKSPACE,
     sampleset=SAMPLESETNAME,
     fusionSamplecol=SAMPLEID,
     todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_FUSION,
     dataset_description=FUSIONreadme,
-    prevdataset="ccle",
     **kwargs,
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
@@ -356,7 +351,6 @@ async def fusionPostProcessing(
         refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
         my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
         mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
-        prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
     
     Returns:
         (pd.df): fusion dataframe
@@ -367,6 +361,8 @@ async def fusionPostProcessing(
     tc = TaigaClient()
 
     ccle_refsamples = trackerobj.read_tracker()
+    if gumbo:
+        ccle_refsamples = trackerobj.read_seq_table()
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
@@ -393,15 +389,14 @@ async def fusionPostProcessing(
         os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
     )
 
-    if prevdataset == "ccle":
-        prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
+    prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
 
-        print("comparing to previous version")
-        print("new")
-        print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
+    print("comparing to previous version")
+    print("new")
+    print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
 
-        print("removed")
-        print(set(prevdataset[fusionSamplecol]) - set(fusions[fusionSamplecol]))
+    print("removed")
+    print(set(prevdataset[fusionSamplecol]) - set(fusions[fusionSamplecol]))
 
     print("changes in fusion names")
     pf = prevdataset.copy()
@@ -474,7 +469,6 @@ def cnPostProcessing(
     samplesetname=SAMPLESETNAME,
     AllSamplesetName="all",
     todrop=KNOWN_DROP,
-    prevgenecn="ccle",
     taiga_dataset=TAIGA_CN,
     dataset_description=CNreadme,
     subsetsegs=[
@@ -509,7 +503,6 @@ def cnPostProcessing(
         sheetcreds (str, optional): @see updateTracker. Defaults to SHEETCREDS.
         sheetname (str, optional): @see updateTracker. Defaults to SHEETNAME.
         refsheet_url (str, optional): @see updateTracker. Defaults to REFSHEET_URL.
-        prevgenecn (str, optional): where the previous version exists on taiga (for QC purposes). Defaults to tc.get(name=TAIGA_ETERNAL, file='CCLE_gene_cn').
         taiga_dataset (str, optional): where to save the output to on taiga. Defaults to TAIGA_CN.
         dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to CNreadme.
         subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
@@ -521,8 +514,7 @@ def cnPostProcessing(
 
     tc = TaigaClient()
 
-    if prevgenecn == "ccle":
-        prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
+    prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
 
     tracker = pd.DataFrame()
     if trackerobj is not None:
@@ -870,7 +862,6 @@ async def mutationPostProcessing(
     mutation_groups=MUTATION_GROUPS,
     tokeep_wes=RESCUE_FOR_MUTATION_WES,
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
-    prev="ccle",
     minfreqtocall=0.25,
     **kwargs,
 ):
@@ -897,8 +888,7 @@ async def mutationPostProcessing(
     from taigapy import TaigaClient
 
     tc = TaigaClient()
-    if prev == "ccle":
-        prev = tc.get(name=TAIGA_ETERNAL, file="CCLE_mutations")
+    prev = tc.get(name=TAIGA_ETERNAL, file="CCLE_mutations")
     if doCleanup:
         # TODO:
         val = ""
