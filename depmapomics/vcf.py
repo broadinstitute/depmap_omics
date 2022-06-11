@@ -395,7 +395,7 @@ def improve(
     )
 
     if not with_onco_kb:
-        vcf["is_coding"] = vcf["protein_change"] != ""
+        vcf["is_coding"] = vcf["gencode_34_proteinchange"] != ""
 
     for val in boolify:
         vcf[val] = (
