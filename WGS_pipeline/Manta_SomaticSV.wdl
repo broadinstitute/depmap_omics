@@ -1,23 +1,25 @@
 version 1.0
 task Manta {
-    String sample_name
-    File tumor_bam
-    File tumor_bam_index
-    File? normal_bam
-    File? normal_bam_index
-    File ref_fasta
-    File ref_fasta_index
-    File? interval_bed
-    File? interval_bed_index
+    input {
+        String sample_name
+        File tumor_bam
+        File tumor_bam_index
+        File? normal_bam
+        File? normal_bam_index
+        File ref_fasta
+        File ref_fasta_index
+        File? interval_bed
+        File? interval_bed_index
 
-    Boolean is_cram
-    String manta_docker
-    String config_manta
+        Boolean is_cram
+        String manta_docker
+        String config_manta
 
-    Int? disk_size
-    Int? mem_size
-    Int? cpu_num
-    Int? preemptible_attempts
+        Int? disk_size
+        Int? mem_size
+        Int? cpu_num
+        Int? preemptible_attempts
+    }
 
     command {
         EXTENSION="bam"
@@ -89,8 +91,10 @@ task Manta {
 
 
 task ConvertToBedTabix {
-    File? interval_list
-    String output_bed = "interval.bed"
+    input {
+        File? interval_list
+        String output_bed = "interval.bed"
+    }
 
     command <<<
         if [[ "${interval_list}" == *.interval_list ]]
@@ -117,20 +121,22 @@ task ConvertToBedTabix {
 
 
 workflow MantaSomaticSV {
-    String sample_name
-    File tumor_bam
-    File tumor_bam_index
-    File? normal_bam
-    File? normal_bam_index
-    File ref_fasta
-    File ref_fasta_index
-    File? interval_list
-    
-    String manta_docker
-    String config_manta
+    input {
+        String sample_name
+        File tumor_bam
+        File tumor_bam_index
+        File? normal_bam
+        File? normal_bam_index
+        File ref_fasta
+        File ref_fasta_index
+        File? interval_list
+        
+        String manta_docker
+        String config_manta
 
-    Boolean is_exome = defined(interval_list)
-    Boolean is_cram
+        Boolean is_exome = defined(interval_list)
+        Boolean is_cram
+    }
 
     if (is_exome) {
         call ConvertToBedTabix {
