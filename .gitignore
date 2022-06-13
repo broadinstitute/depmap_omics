@@ -202,3 +202,4 @@ tmp.*
 .vscode/launch.json
 ccle_tasks/A3SS_JC_output_aggregated.csv
 ccle_tasks/temp/*
+output/*
