@@ -1,3 +1,4 @@
+version 1.0
 ## Copyright Broad Institute, 2017
 ## 
 ## This WDL pipeline implements data pre-processing according to the GATK Best Practices 
