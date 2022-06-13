@@ -3,7 +3,6 @@ version 1.0
 import "BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams
 import "PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4
 import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
-import "cnn-variant-filter.wdl" as cnn_variant_filter
 import "Manta_SomaticSV.wdl" as Manta_SomaticSV
 import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 import "gatk_mutect2_v21.wdl" as mutect2
