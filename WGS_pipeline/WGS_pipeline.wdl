@@ -9,7 +9,10 @@ import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
-import "opencravat.wdl" as openCravat
+import "remove_filtered.wdl" as removeFiltered
+import "vcf_to_depmap.wdl" as vcf_to_depmap
+import "PureCN.wdl" as PureCN
+# import "opencravat.wdl" as openCravat
 
 workflow WGS_pipeline {
 
@@ -64,6 +67,11 @@ workflow WGS_pipeline {
         String? m2_filter_args
         File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
         File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
+
+        # PureCN
+        File purecn_intervals
+        File call_wgd_and_cin_script
+
     }
 
     call BamToUnmappedRGBams.BamToUnmappedRGBamsWf as BamToUnmappedRGBamsWf {
@@ -154,15 +162,8 @@ workflow WGS_pipeline {
             sample_id=sample_id,
             segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
             vcf=mutect2.filtered_vcf,
-            intervals=intervals,
-            # Method configuration inputs
-            genome="hg38",
-            maxCopyNumber=8,
-            minPurity=0.90,
-            maxPurity=0.99,
-            funSegmentation="Hclust",
-            maxSegments=100,
-            otherArguments=" --post-optimize --model-homozygous --min-total-counts 20"
+            intervals=purecn_intervals,
+            call_wgd_and_cin_script=call_wgd_and_cin_script,
     } 
 
     call setGT.bcftools_fix_ploidy as set_GT {
@@ -175,6 +176,18 @@ workflow WGS_pipeline {
         input:
             sample_id=sample_id,
             vcf_file=set_GT.vcf_fixedploid
+    }
+
+    call removeFiltered.RemoveFiltered as RemoveFiltered {
+        input:
+            sample_id=sample_id,
+            input_vcf=fix_mutect2.vcf_fixed
+    }
+
+    call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
+        input:
+            input_vcf=RemoveFiltered.output_vcf,
+            sample_id=sample_id,
     }
 
     output {
@@ -255,5 +268,8 @@ workflow WGS_pipeline {
         String PureCN_cin_allele_specific = PureCN.cin_allele_specific
         String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
         String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
+        # vcf_to_depmap
+        Array[File] main_output=my_vcf_to_depmap.full_file
+        File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
