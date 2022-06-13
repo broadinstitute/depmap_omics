@@ -28,15 +28,17 @@ version 1.0
 # WORKFLOW DEFINITION
 workflow BamToUnmappedRGBamsWf {
 
-	File ref_fasta
-	File ref_fasta_index
+    input {
+        File ref_fasta
+        File ref_fasta_index
 
-	File input_bam
+        File input_bam
 
-	String picard_path
-	String picard_docker
+        String picard_path
+        String picard_docker
 
-	Int preemptible_tries
+        Int preemptible_tries
+    }
 
 	# Revert input to unmapped
 	call RevertBamToUnmappedRGBams {
@@ -83,15 +85,18 @@ workflow BamToUnmappedRGBamsWf {
 
 # Revert a BAM to uBAMs, one per readgroup
 task RevertBamToUnmappedRGBams {
-	File input_bam
-	String output_dir
+    
+    input {
+        File input_bam
+        String output_dir
 
-	Int disk_size
-	String mem_size
+        Int disk_size
+        String mem_size
 
-	String docker_image
-	String picard_path
-	String java_opt
+        String docker_image
+        String picard_path
+        String java_opt
+    }
 
 	command {
 		java ${java_opt} -jar ${picard_path}picard.jar \
@@ -116,16 +121,18 @@ task RevertBamToUnmappedRGBams {
 
 # Sort the BAM records by queryname
 task SortBamByQueryname {
-	File input_bam
-	String sorted_bam_name
+    input {
+        File input_bam
+        String sorted_bam_name
 
-	Int preemptible_tries
-	Int disk_size
-	String mem_size
+        Int preemptible_tries
+        Int disk_size
+        String mem_size
 
-	String docker_image
-	String picard_path
-	String java_opt
+        String docker_image
+        String picard_path
+        String java_opt
+    }
 
 	command {
 		java ${java_opt} -jar ${picard_path}picard.jar \
@@ -148,16 +155,18 @@ task SortBamByQueryname {
 
 # Check that the BAM format is technically valid
 task ValidateSamFile {
-	File input_bam
-	String report_filename
+    input {
+        File input_bam
+        String report_filename
 
-	Int preemptible_tries
-	Int disk_size
-	String mem_size
+        Int preemptible_tries
+        Int disk_size
+        String mem_size
 
-	String docker_image
-	String picard_path
-	String java_opt
+        String docker_image
+        String picard_path
+        String java_opt
+    }
 
 	command {
 		java ${java_opt} -jar ${picard_path}picard.jar \
