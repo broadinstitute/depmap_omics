@@ -1,3 +1,4 @@
+version 1.0
 workflow ArrayToTxt_workflow {
 	call CreateTxt {
 

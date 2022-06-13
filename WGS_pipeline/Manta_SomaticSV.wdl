@@ -1,3 +1,4 @@
+version 1.0
 task Manta {
     String sample_name
     File tumor_bam

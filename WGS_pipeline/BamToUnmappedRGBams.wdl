@@ -1,3 +1,4 @@
+version 1.0
 ## Copyright Broad Institute, 2017
 ## 
 ## This WDL reverts a SAM or BAM file to uBAMs, one per readgroup 
