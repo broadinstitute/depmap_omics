@@ -7,9 +7,11 @@ workflow ArrayToTxt_workflow {
 
 # Create the txt file from the list of files
 task CreateTxt {
-  # Command parameters
-  Array[String] array_of_files
-  String list_name
+  input {
+    # Command parameters
+    Array[String] array_of_files
+    String list_name
+  }
  
   command {
     mv ${write_lines(array_of_files)} ${list_name}.txt
