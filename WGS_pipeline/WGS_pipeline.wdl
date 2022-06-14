@@ -158,35 +158,35 @@ workflow WGS_pipeline {
 
     call PureCN.PureCN as PureCN {
         input:
-            sample_id=sample_id,
+            sample_id=sample_name,
             segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
-            vcf=mutect2.filtered_vcf,
+            vcf=mutect2.output_vcf,
             intervals=purecn_intervals,
             call_wgd_and_cin_script=call_wgd_and_cin_script,
     } 
 
     call setGT.bcftools_fix_ploidy as set_GT {
         input:
-            sample_id=sample_id,
-            vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
+            sample_id=sample_name,
+            vcf=select_first([mutect2.funcotated_file, mutect2.output_vcf]),
     }
 
     call fixmutect2.fix_mutect2 as fix_mutect2 {
         input:
-            sample_id=sample_id,
+            sample_id=sample_name,
             vcf_file=set_GT.vcf_fixedploid
     }
 
     call removeFiltered.RemoveFiltered as RemoveFiltered {
         input:
-            sample_id=sample_id,
+            sample_id=sample_name,
             input_vcf=fix_mutect2.vcf_fixed
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
             input_vcf=RemoveFiltered.output_vcf,
-            sample_id=sample_id,
+            sample_id=sample_name,
     }
 
     output {
