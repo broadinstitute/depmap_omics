@@ -1160,7 +1160,7 @@ task RemoveFiltered {
         String sample_id
         String bcftools_exclude_string = 'FILTER="weak_evidence" || FILTER="map_qual" || FILTER="strand_bias" || FILTER="slippage" || FILTER="clustered_events" || FILTER="base_qual"'
 
-        String docker_image
+        String docker_image = "dceoy/bcftools"
         Runtime runtime_params
         Int cpu = 2
     }
