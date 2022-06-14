@@ -1,10 +1,7 @@
 version 1.0
 
-import "BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams
-import "PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4
 import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
 import "Manta_SomaticSV.wdl" as Manta_SomaticSV
-import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
@@ -71,40 +68,6 @@ workflow WGS_pipeline {
         File purecn_intervals
         File call_wgd_and_cin_script
 
-    }
-
-    call BamToUnmappedRGBams.BamToUnmappedRGBamsWf as BamToUnmappedRGBamsWf {
-        input:
-            ref_fasta=ref_fasta,
-            ref_fasta_index=ref_fasta_index,
-            input_bam=input_bam,
-            picard_path=picard_path,
-            preemptible_tries=preemptible_tries
-    }
-
-    call ArrayOfFilesToTxt.CreateTxt as CreateTxt {
-        input:
-            array_of_files=BamToUnmappedRGBamsWf.sortsam_out,
-            list_name=sample_name
-    }
-
-    call PreProcessingForVariantDiscovery_GATK4.PreProcessingForVariantDiscovery_GATK4 as PreProcessingForVariantDiscovery_GATK4 {
-        input:
-            sample_name=sample_name,
-            ref_name=ref_name,
-            flowcell_unmapped_bams_list=CreateTxt.file_list_name,
-            ref_dict=ref_dict,
-            ref_fasta=ref_fasta,
-            ref_fasta_index=ref_fasta_index,
-            dbSNP_vcf=dbSNP_vcf,
-            dbSNP_vcf_index=dbSNP_vcf_index,
-            known_indels_sites_VCFs=known_indels_sites_VCFs,
-            known_indels_sites_indices=known_indels_sites_indices,
-            gotc_docker=gotc_docker,
-            python_docker=python_docker,
-            gotc_path=gotc_path,
-            picard_path=picard_path,
-            preemptible_tries=preemptible_tries
     }
 
     call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
@@ -190,14 +153,6 @@ workflow WGS_pipeline {
     }
 
     output {
-        #BamToUnmappedRGBams
-        #createTxT
-        #PreProcessingForVariantDiscovery_GATK4
-        File duplication_metrics = PreProcessingForVariantDiscovery_GATK4.duplication_metrics
-        File bqsr_report = PreProcessingForVariantDiscovery_GATK4.bqsr_report
-        File analysis_ready_bam = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam
-        File analysis_ready_bam_index = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
-        File analysis_ready_bam_md5 = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_md5
         #CNVSomaticPairWorkflow
         File preprocessed_intervals = CNVSomaticPairWorkflow.preprocessed_intervals
         File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor
