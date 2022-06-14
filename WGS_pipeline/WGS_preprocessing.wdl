@@ -32,7 +32,7 @@ workflow WGS_preprocessing {
         String unmapped_bam_suffix = ".bam"
     }
 
-    call BamToUnmappedRGBams.BamToUnmappedRGBamsWf as BamToUnmappedBams {
+    call BamToUnmappedRGBams.BamToUnmappedBams as BamToUnmappedBams {
         input:
             input_bam=input_bam,
     }
