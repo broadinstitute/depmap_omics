@@ -160,7 +160,7 @@ workflow WGS_pipeline {
         input:
             sample_id=sample_name,
             segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
-            vcf=mutect2.funcotated_output_file,
+            vcf=mutect2.funcotated_file,
             intervals=purecn_intervals,
             call_wgd_and_cin_script=call_wgd_and_cin_script,
     } 
@@ -168,7 +168,7 @@ workflow WGS_pipeline {
     call setGT.bcftools_fix_ploidy as set_GT {
         input:
             sample_id=sample_name,
-            vcf=select_first([mutect2.funcotated_file, mutect2.funcotated_output_file]),
+            vcf=select_first([mutect2.funcotated_file, mutect2.base_vcf]),
     }
 
     call fixmutect2.fix_mutect2 as fix_mutect2 {
