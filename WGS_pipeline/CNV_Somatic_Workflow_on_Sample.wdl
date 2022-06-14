@@ -31,8 +31,8 @@ version 1.0
 #############
 
 
-import "https://github.com/broadinstitute/gatk/blob/master/scripts/cnv_wdl/cnv_common_tasks.wdl" as CNVTasks
-import "https://github.com/broadinstitute/gatk/blob/master/scripts/cnv_wdl/somatic/cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
+import "cnv_common_tasks.wdl" as CNVTasks
+import "cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
 
 workflow CNVSomaticPairWorkflow {
 
