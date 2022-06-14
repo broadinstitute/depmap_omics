@@ -79,8 +79,8 @@ workflow WGS_pipeline {
             ref_fasta=ref_fasta,
             ref_fasta_dict=ref_dict,
             ref_fasta_fai=ref_fasta_index,
-            tumor_bam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-            tumor_bam_idx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+            tumor_bam=input_bam,
+            tumor_bam_idx=input_bam_index,
             read_count_pon=read_count_pon,
             gatk_docker=gatk_docker,
             is_run_funcotator=is_run_funcotator
@@ -89,8 +89,8 @@ workflow WGS_pipeline {
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
         input:
             sample_name=sample_name,
-            tumor_bam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-            tumor_bam_index=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+            tumor_bam=input_bam,
+            tumor_bam_index=input_bam_index,
             ref_fasta=ref_fasta,
             ref_fasta_index=ref_fasta_index,
             is_cram=false
@@ -103,8 +103,8 @@ workflow WGS_pipeline {
             ref_fai=ref_fasta_index,
             ref_fasta=ref_fasta,
             scatter_count=M2scatter,
-            tumor_reads=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-            tumor_reads_index=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+            tumor_reads=input_bam,
+            tumor_reads_index=input_bam_index,
             intervals=intervals,
             gcs_project_for_requester_pays=gcs_project_for_requester_pays,
             compress_vcfs=true,
@@ -180,7 +180,7 @@ workflow WGS_pipeline {
         File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
         File called_copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_legacy_segments_tumor
         File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
-        File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
+        # File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
         File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
         Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
         File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
