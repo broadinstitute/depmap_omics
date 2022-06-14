@@ -1,6 +1,6 @@
 version 1.0
 
-import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
+import "cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample
 import "Manta_SomaticSV.wdl" as Manta_SomaticSV
 import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
@@ -53,6 +53,8 @@ workflow WGS_pipeline {
         #us.gcr.io/broad-gatk/gatk:4.1.5.0
         File common_sites
         File intervals
+        File read_count_pon
+        Boolean is_run_funcotator
 
         # mutect2
         Int M2scatter=10
@@ -78,7 +80,10 @@ workflow WGS_pipeline {
             ref_fasta_dict=ref_dict,
             ref_fasta_fai=ref_fasta_index,
             tumor_bam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-            tumor_bam_idx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
+            tumor_bam_idx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+            read_count_pon=read_count_pon,
+            gatk_docker=gatk_docker,
+            is_run_funcotator=is_run_funcotator
     }
 
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
