@@ -126,9 +126,9 @@ workflow WGS_pipeline {
 
     call PureCN.PureCN as PureCN {
         input:
-            sample_id=sample_name,
+            sampleID=sample_name,
             segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
-            vcf=mutect2.funcotated_file,
+            vcf=mutect2.unfiltered_vcf,
             intervals=purecn_intervals,
             call_wgd_and_cin_script=call_wgd_and_cin_script,
     } 
