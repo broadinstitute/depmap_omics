@@ -20,6 +20,12 @@ workflow WGS_preprocessing {
         File ref_fasta
         File ref_fasta_index
         File ref_dict
+        File? ref_alt
+        File ref_sa
+        File ref_ann
+        File ref_bwt
+        File ref_pac
+        File ref_amb
 
         Int preemptible_tries
         

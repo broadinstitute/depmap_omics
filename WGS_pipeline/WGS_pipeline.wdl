@@ -54,7 +54,7 @@ workflow WGS_pipeline {
         File common_sites
         File intervals
         File read_count_pon
-        Boolean is_run_funcotator
+        Boolean is_run_funcotator_for_cnv
 
         # mutect2
         Int M2scatter=10
@@ -65,6 +65,7 @@ workflow WGS_pipeline {
         String? m2_filter_args
         File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
         File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
+        String bcftools_exclude_string='FILTER~"weak_evidence" || FILTER~"map_qual" || FILTER~"strand_bias" || FILTER~"slippage" || FILTER~"clustered_events" || FILTER~"base_qual"'
 
         # PureCN
         File purecn_intervals
@@ -83,7 +84,7 @@ workflow WGS_pipeline {
             tumor_bam_idx=input_bam_index,
             read_count_pon=read_count_pon,
             gatk_docker=gatk_docker,
-            is_run_funcotator=is_run_funcotator
+            is_run_funcotator=is_run_funcotator_for_cnv
     }
 
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
