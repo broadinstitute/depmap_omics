@@ -62,7 +62,13 @@ workflow WGS_preprocessing {
             dbSNP_vcf_index=dbSNP_vcf_index,
             known_indels_sites_VCFs=known_indels_sites_VCFs,
             known_indels_sites_indices=known_indels_sites_indices,
-            preemptible_tries=preemptible_tries
+            preemptible_tries=preemptible_tries,
+            ref_sa = ref_sa,
+            ref_ann = ref_ann,
+            ref_bwt = ref_bwt,
+            ref_pac = ref_pac,
+            ref_amb = ref_amb,
+            ref_alt = ref_alt
     }
 
     output {
