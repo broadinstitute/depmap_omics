@@ -105,7 +105,7 @@ workflow WGS_pipeline {
             ref_fai=ref_fasta_index,
             ref_fasta=ref_fasta,
             scatter_count=M2scatter,
-            tumor_name=sample_id,
+            tumor_name=sample_name,
             tumor_reads=input_bam,
             tumor_reads_index=input_bam_index,
             intervals=intervals,
