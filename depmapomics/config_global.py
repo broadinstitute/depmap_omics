@@ -724,43 +724,43 @@ DEFAULT_TABLE_NAME = "default_model_table"
 # dictionaries mapping names of pr-level matrices on latest to names on virtual
 # NumericMatrixCSV matrices:
 VIRTUAL_FILENAMES_NUMMAT_EXP = {
-    "genes-expected_count-profile": "Omics_RNAseq_reads",
-    "genes-tpm_logp1-profile": "Omics_expression_full",
-    "transcripts-expected_count-profile": "Omics_expression_transcripts_expected_count",
-    "transcripts-tpm-profile": "Omics_RNAseq_transcripts",
-    "proteincoding_genes-expected_count-profile": "Omics_expression_proteincoding_genes_expected_count",
-    "proteincoding_genes-tpm-profile": "Omics_expression",
+    "genes-expected_count-profile": "Omics_genes_expectedCount",
+    "genes-tpm_logp1-profile": "Omics_genes_tpm_logp1",
+    "transcripts-expected_count-profile": "Omics_transcripts_expectedCount",
+    "transcripts-tpm_logp1-profile": "Omics_transcripts_tpm_logp1",
+    "proteincoding_genes-expected_count-profile": "Omics_expression_proteinCoding_genes_expectedCount",
+    "proteincoding_genes-tpm-logp1-profile": "Omics_proteinCoding_genes_tpm_logp1",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL = {
-    "gene_sets-profile": "Omics_ssGSEA",
+    "gene_sets-profile": "Omics_gene_set_enrichment",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN = {
-    "merged-genecn-profile": "Omics_gene_cn",
+    "merged-genecn-profile": "Omics_merged_gene_cn",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_MUT = {
-    "somatic_mutations_boolmatrix-hotspot-profile": "Omics_mutations_bool_hotspot",
-    "somatic_mutations_boolmatrix-othernoncons-profile": "Omics_mutations_bool_nonconserving",
-    "somatic_mutations_boolmatrix-damaging-profile": "Omics_mutations_bool_damaging",
-    "somatic_mutations_boolmatrix-othercons-profile": "Omics_mutations_bool_otherconserving",
+    "somatic_mutations_boolmatrix-hotspot-profile": "Omics_somaticMutations_boolmatrix_hotspot",
+    "somatic_mutations_boolmatrix-othernoncons-profile": "Omics_somaticMutations_boolmatrix_nonconserving",
+    "somatic_mutations_boolmatrix-damaging-profile": "Omics_somaticMutations_boolmatrix_damaging",
+    "somatic_mutations_boolmatrix-othercons-profile": "Omics_somaticMutations_boolmatrix_otherconserving",
 }
 
 VIRTUAL_FILENAMES_GERMLINE = {
-    "merged_binary_germline": "Omics_germline_mutation",
+    "merged_binary_germline": "Omics_binary_germline_mutation",
 }
 
 # TableCSV matrices:
 VIRTUAL_FILENAMES_TABLE_FUSION = {
-    "filtered_fusion-profile": "Omics_fusions",
+    "filtered_fusion-profile": "Omics_fusions_filtered",
     "fusion-profile": "Omics_fusions_unfiltered",
 }
 
 VIRTUAL_FILENAMES_TABLE_CN = {
-    "merged-segments-profile": "Omics_segment_cn",
+    "merged-segments-profile": "Omics_merged_segments",
 }
 
 VIRTUAL_FILENAMES_TABLE_MUT = {
-    "somatic_mutations-profile": "Omics_mutations",
+    "somatic_mutations-profile": "Omics_somaticMutations",
 }
