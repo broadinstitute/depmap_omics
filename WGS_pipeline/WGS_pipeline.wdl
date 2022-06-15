@@ -122,7 +122,8 @@ workflow WGS_pipeline {
             pon=pon,
             pon_idx=pon_idx,
             run_funcotator=true,
-            run_orientation_bias_mixture_model_filter=true
+            run_orientation_bias_mixture_model_filter=true,
+            bcftools_exclude_string=bcftools_exclude_string
     }
 
     call PureCN.PureCN as PureCN {
