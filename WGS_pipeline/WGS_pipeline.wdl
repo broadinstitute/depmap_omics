@@ -228,7 +228,7 @@ workflow WGS_pipeline {
         String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
         String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
         # vcf_to_depmap
-        Array[File] main_output=my_vcf_to_depmap.full_file
+        Array[File] full_maf=my_vcf_to_depmap.full_file
         File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
