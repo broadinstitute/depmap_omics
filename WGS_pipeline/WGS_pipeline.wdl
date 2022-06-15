@@ -55,6 +55,7 @@ workflow WGS_pipeline {
         File intervals
         File read_count_pon
         Boolean is_run_funcotator_for_cnv
+        String funcotator_ref_version = "hg38"
 
         # mutect2
         Int M2scatter=10
@@ -85,6 +86,7 @@ workflow WGS_pipeline {
             read_count_pon=read_count_pon,
             gatk_docker=gatk_docker,
             is_run_funcotator=is_run_funcotator_for_cnv,
+            funcotator_ref_version=funcotator_ref_version,
             gcs_project_for_requester_pays=gcs_project_for_requester_pays
     }
 
