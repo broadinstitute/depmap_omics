@@ -84,7 +84,8 @@ workflow WGS_pipeline {
             tumor_bam_idx=input_bam_index,
             read_count_pon=read_count_pon,
             gatk_docker=gatk_docker,
-            is_run_funcotator=is_run_funcotator_for_cnv
+            is_run_funcotator=is_run_funcotator_for_cnv,
+            gcs_project_for_requester_pays=gcs_project_for_requester_pays
     }
 
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
