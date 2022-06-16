@@ -56,11 +56,10 @@ workflow msisensor2_workflow {
 		String sample_id
 		File bam
 		File bai
-		
-		Int memory
-		Int disk_space
-		Int num_threads
-		Int num_preempt
+		Int memory = 6
+		Int disk_space = 250
+		Int num_threads = 2
+		Int num_preempt = 1
 	}
 
 	call msisensor2 {
