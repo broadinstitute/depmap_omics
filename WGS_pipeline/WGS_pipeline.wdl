@@ -56,6 +56,7 @@ workflow WGS_pipeline {
         File read_count_pon
         Boolean is_run_funcotator_for_cnv
         String funcotator_ref_version = "hg38"
+        File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz"
 
         # mutect2
         Int M2scatter=10
@@ -87,7 +88,8 @@ workflow WGS_pipeline {
             gatk_docker=gatk_docker,
             is_run_funcotator=is_run_funcotator_for_cnv,
             funcotator_ref_version=funcotator_ref_version,
-            gcs_project_for_requester_pays=gcs_project_for_requester_pays
+            gcs_project_for_requester_pays=gcs_project_for_requester_pays,
+            funcotator_data_sources_tar_gz=funcotator_data_sources_tar_gz
     }
 
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
@@ -118,6 +120,7 @@ workflow WGS_pipeline {
             funco_filter_funcotations=false,
             funco_output_format="VCF",
             funco_reference_version="hg38",
+            funco_data_sources_tar_gz=funcotator_data_sources_tar_gz,
             gnomad=gnomad,
             gnomad_idx=gnomad_idx,
             m2_extra_args=m2_extra_args,
