@@ -8,6 +8,7 @@ import "fix_mutect2.wdl" as fixmutect2
 import "remove_filtered.wdl" as removeFiltered
 import "vcf_to_depmap.wdl" as vcf_to_depmap
 import "PureCN.wdl" as PureCN
+import "msisensor2.wdl" as msisensor2
 # import "opencravat.wdl" as openCravat
 
 workflow WGS_pipeline {
@@ -140,7 +141,14 @@ workflow WGS_pipeline {
             vcf=mutect2.unfiltered_vcf,
             intervals=purecn_intervals,
             call_wgd_and_cin_script=call_wgd_and_cin_script,
-    } 
+    }
+
+    call msisensor2.msisensor2_workflow as msisensor2_workflow{
+        input:
+            sample_id=sample_name,
+            bam=input_bam,
+            bai=input_bam_index
+    }
 
     call setGT.bcftools_fix_ploidy as set_GT {
         input:
@@ -236,6 +244,11 @@ workflow WGS_pipeline {
         String PureCN_cin_allele_specific = PureCN.cin_allele_specific
         String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
         String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
+        # msisensor2
+		Float msisensor2_score=msisensor2_workflow.msisensor2_score
+		File msisensor2_output=msisensor2_workflow.msisensor2_output
+		File msisensor2_output_dis=msisensor2_workflow.msisensor2_output_dis
+		File msisensor2_output_somatic=msisensor2_workflow.msisensor2_output_somatic
         # vcf_to_depmap
         Array[File] full_maf=my_vcf_to_depmap.full_file
         File somatic_maf=my_vcf_to_depmap.depmap_maf
