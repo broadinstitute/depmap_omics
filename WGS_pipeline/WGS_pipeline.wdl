@@ -56,7 +56,7 @@ workflow WGS_pipeline {
         File read_count_pon
         Boolean is_run_funcotator_for_cnv
         String funcotator_ref_version = "hg38"
-        File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz"
+        File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
 
         # mutect2
         Int M2scatter=10
