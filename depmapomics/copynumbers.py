@@ -41,7 +41,7 @@ def loadFromGATKAggregation(
     showPlots=False,
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
-    tempFolder="temp/",
+    tempFolder="output/",
     toremove=["readgroup_ubams",],
     sampleset="all",
     colRenaming=COLRENAMING,
@@ -57,7 +57,7 @@ def loadFromGATKAggregation(
         showPlots (bool, optional): whether to show plot output from the GATK pipeline. Defaults to False.
         colname (str, optional): the column in Terra where the file is saved in sampleset. Defaults to "combined_seg_file".
         plotColname (str, optional): the column on terra where the plots exist in sample. Defaults to "modeled_segments_plot_tumor".
-        tempFolder (str, optional): where to put temp files. Defaults to "temp/".
+        tempFolder (str, optional): where to put temp files. Defaults to "working/".
         toremove (list, optional): columns in Terra samples to remove (and delete corresponding data). Defaults to ["readgroup_ubams", ].
         sampleset (str, optional): sample set to load in terra. Defaults to "all".
         colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
@@ -125,6 +125,7 @@ def updateTracker(
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=False,
+    gumbo=True,
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -179,17 +180,18 @@ def updateTracker(
         datatype = [datatype]
     tracker.loc[tracker[tracker.datatype.isin(datatype)].index, samplesetname] = 0
     track.update(
+        trackerobj,
         tracker,
         selected,
         samplesetname,
         lowqual,
         lowqual,
-        newgs,
-        refworkspace,
-        bamfilepaths,
-        dry_run,
-        samplesinset,
-        trackerobj=trackerobj,
+        gumbo,
+        newgs=newgs,
+        refworkspace=refworkspace,
+        bamfilepaths=bamfilepaths,
+        dry_run=dry_run,
+        samplesinset=samplesinset,
     )
 
 
@@ -235,16 +237,17 @@ def pureCNpostprocess(
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     priority=[],
-    colname="PureCN_loh_merged",
+    lohcolname=PURECN_LOH_COLNAME,
+    failedcolname=PURECN_FAILED_COLNAME,
     sampleset="all",
     colRenaming=PURECN_COLRENAMING,
-    terracols=PURECN_TERRACOLS,
+    lohvals=PURECN_LOHVALUES,
+    terracols=SIGTABLE_TERRACOLS,
     save_output="",
     mappingdf=None,
-    genechangethresh=0.025,
-    segmentsthresh=2000,
 ):
-    """fetching PureCN data from Terra, generate one matrix for absolute copy number and one matrix for LOH
+    """fetching PureCN data from Terra, generate one matrix for absolute copy number, one matrix for LOH,
+    and one cell line signature table
 
     Args:
         refworkspace (str): workspace path
@@ -263,9 +266,9 @@ def pureCNpostprocess(
 
     print("loading PureCN merged LOH file")
     wm = dm.WorkspaceManager(refworkspace)
-    segments = pd.read_csv(wm.get_entities(setEntity).loc[sampleset, colname]).rename(
-        columns=colRenaming
-    )
+    segments = pd.read_csv(
+        wm.get_entities(setEntity).loc[sampleset, lohcolname]
+    ).rename(columns=colRenaming)
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -292,24 +295,23 @@ def pureCNpostprocess(
         absolute_genecn.values.mean(),
         absolute_genecn.values.max(),
     )
-    mut.checkGeneChangeAccrossAll(absolute_genecn, thresh=genechangethresh)
-    failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
     # Generate gene-level LOH status matrix
-    segments["type"] = segments["type"].replace(["LOH", "COPY-NEUTRAL LOH"], 1)
+    segments["type"] = segments["type"].replace(lohvals, 1)
     segments["type"] = segments["type"].replace("", 0)
 
     loh_status = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments), mappingdf, value_colname="LOH_status"
     )
 
-    print("PureCN: failed our QC")
-    print(failed)
-
     # Pull additional info directly from terra sample table
     samples = wm.get_samples()
     purecn_table = samples[terracols]
 
+    failed = purecn_table[purecn_table[failedcolname] == "TRUE"].index
+
+    # TO DO: generate the signature table in a separate function
+    # see ccle_tasks/signature_table.ipynb
     segments = segments[
         ~segments[SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
     ].reset_index(drop=True)
@@ -342,11 +344,12 @@ def postProcess(
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     priority=[],
-    genechangethresh=0.025,
-    segmentsthresh=2000,
+    genechangethresh=GENECHANGETHR,
+    segmentsthresh=SEGMENTSTHR,
     ensemblserver=ENSEMBL_SERVER_V,
     source_rename={},
     useCache=False,
+    maxYchrom=MAXYCHROM,
 ):
     """post process an aggregated CN segment file, the CCLE way
 
@@ -362,7 +365,7 @@ def postProcess(
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         genechangethresh (float, optional): above this threshold of variance of gene CN, the sample is considered failed. Defaults to 0.025.
-        segmentsthresh (int, optional): above this threshold of number of segments the WGS sample is considered failed. Defaults to 2000.
+        segmentsthresh (int, optional): above this threshold of number of segments the WGS sample is considered failed. Defaults to 1500.
         ensemblserver (str, optional): ensembl server biomart version . Defaults to ENSEMBL_SERVER_V.
         source_rename (dict, optional): dict to rename the source column if needed. Defaults to {}.
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
@@ -404,6 +407,19 @@ def postProcess(
         i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
         for _, i in mybiomart.iterrows()
     ]
+    mybiomart = mybiomart[
+        ~mybiomart.entrezgene_id.isna()
+    ]  # dropping all nan entrez id cols
+    # drop Ychrom if > maxYchrom
+    ychrom = segments[segments.Chromosome.str.contains("Y")]
+    countYdrop = [
+        i
+        for i in set(ychrom[SAMPLEID])
+        if len(ychrom[ychrom[SAMPLEID] == i]) > maxYchrom
+    ]
+    segments = segments[
+        ~((segments[SAMPLEID].isin(countYdrop)) & (segments.Chromosome == "Y"))
+    ]
     genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
     # validation step
     print("summary of the gene cn data:")
@@ -429,23 +445,23 @@ def postProcess(
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-
-    purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
-        refworkspace,
-        setEntity=setEntity,
-        sampleset=sampleset,
-        sortby=sortby,
-        todrop=todrop,
-        priority=priority,
-    )
-
+    # purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
+    #     refworkspace,
+    #     setEntity=setEntity,
+    #     sampleset=sampleset,
+    #     sortby=sortby,
+    #     todrop=todrop,
+    #     priority=priority,
+    # )
+    purecn_segments, purecn_genecn, loh_status, purecn_table = None, None, None, None
     return (
         segments,
         genecn,
+        failed,
         purecn_segments,
         purecn_genecn,
         loh_status,
         purecn_table,
-        failed,
+        mybiomart,
     )
 
