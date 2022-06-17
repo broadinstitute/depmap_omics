@@ -138,7 +138,7 @@ workflow WGS_pipeline {
         input:
             sampleID=sample_name,
             segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
-            vcf=mutect2.unfiltered_vcf,
+            vcf=mutect2.filtered_vcf,
             intervals=purecn_intervals,
             call_wgd_and_cin_script=call_wgd_and_cin_script,
     }
