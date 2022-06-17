@@ -15,9 +15,6 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 from depmapomics.config import *
 
-import multiprocessing
-from genepy.epigenetics import chipseq as chip
-
 
 async def expressionPostProcessing(
     trackerobj,
@@ -787,6 +784,8 @@ async def mutationPostProcessing(
     trackerobj,
     wesrefworkspace=WESMUTWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
+    wesvcfdir=WESVCFDIR,
+    wgsvcfdir=WGSVCFDIR,
     samplesetname=SAMPLESETNAME,
     todrop=KNOWN_DROP,
     AllSamplesetName="all",
@@ -796,6 +795,7 @@ async def mutationPostProcessing(
     mutation_groups=MUTATION_GROUPS,
     tokeep_wes=RESCUE_FOR_MUTATION_WES,
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
+    bed_location=GUIDESBED,
     minfreqtocall=0.25,
     **kwargs,
 ):
@@ -950,6 +950,45 @@ async def mutationPostProcessing(
         folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv"
     )
 
+    # generate germline binary matrix
+    print("generate germline binary matrix for wes")
+    wes_mat = mut.generateGermlineMatrix(
+        refworkspace=wesrefworkspace,
+        vcfdir=wesvcfdir,
+        savedir="output/" + samplesetname + "/",
+        filename="binary_mutguides_wes.tsv.gz",
+        bed_location=bed_location,
+    )
+    print("generate germline binary matrix for wgs")
+    wgs_mat = mut.generateGermlineMatrix(
+        refworkspace=wgsrefworkspace,
+        vcfdir=wgsvcfdir,
+        savedir="output/" + samplesetname + "/",
+        filename="binary_mutguides_wgs.tsv.gz",
+        bed_location=bed_location,
+    )
+    # merging wes and wgs
+    print("merging and renaming wes and wgs germline matrices")
+    wgs_mat_noguides = wgs_mat.iloc[:, 4:]
+    wes_mat_noguides = wes_mat.iloc[:, 4:]
+
+    pr_table = trackerobj.read_pr_table()
+    # transform from CDSID-level to PR-level
+    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+
+    wgs_whitelist = [x for x in wgs_mat_noguides.columns if x in renaming_dict]
+    wes_whitelist = [x for x in wes_mat_noguides.columns if x in renaming_dict]
+    wgs_whitelist_mat = wgs_mat_noguides[wgs_whitelist]
+    wes_whitelist_mat = wes_mat_noguides[wes_whitelist]
+    wgs_whitelist_mat = wgs_whitelist_mat.rename(columns=renaming_dict)
+    wes_whitelist_mat = wes_whitelist_mat.rename(columns=renaming_dict)
+
+    mergedmat = wgs_whitelist_mat.join(wes_whitelist_mat)
+    mergedmat = mergedmat.astype(bool).astype(int)
+    sorted_mat = wgs_mat.iloc[:, :4].join(mergedmat)
+    sorted_mat["end"] = sorted_mat["end"].astype(int)
+    print("saving wes and wgs germline matrices")
+    sorted_mat.to_csv(folder + "merged_binary_germline.csv", index=False)
     # uploading to taiga
     tc.update_dataset(
         changes_description="new " + samplesetname + " release!",
@@ -993,216 +1032,13 @@ async def mutationPostProcessing(
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
+            {
+                "path": folder + "merged_binary_germline.csv",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
         ],
         upload_async=False,
         dataset_description=taiga_description,
     )
 
-
-def mapBed(file, vcfdir):
-    """map mutations in one vcf file to regions in the guide bed file"""
-
-    guides_bed = pd.read_csv(
-        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
-    )
-
-    bed = pd.read_csv(
-        vcfdir + file,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    bed["foldchange"] = 1
-    name = file.split("/")[-1].split(".")[0].split("_")[1]
-    if len(bed) == 0:
-        return (name, None)
-    val = chip.putInBed(guides_bed, bed, mergetype="sum")
-
-    return (name, val)
-
-
-def generateGermlineMatrix(
-    trackerobj,
-    wesrefworkspace=WESCNWORKSPACE,
-    wgsrefworkspace=WGSWORKSPACE,
-    wesdir=WESVCFDIR,
-    wgsdir=WGSVCFDIR,
-    savedir="output/" + SAMPLESETNAME + "/",
-    bed_location=GUIDESBED,
-    taiga_dataset=TAIGA_CN,
-    vcf_colname="cnn_filtered_vcf",
-    cores=16,
-):
-    """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
-    using the CCLE pipeline on terra
-    Args:
-        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
-        wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to WGSWORKSPACE.
-        taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_CN.
-        wesdir (str, optional): directory where wes vcf files are saved.
-        wgsdir (str, optional): directory where wgs vcf files are saved.
-        savedir (str, optional): directory where output germline matrices are saved.
-        bed_location (str, optional): location of the guides bed file.
-        vcf_colname (str, optional): vcf column name on terra.
-        cores (int, optional): number of cores in parallel processing.
-    
-    Returns:
-        sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
-    """
-
-    print("generating germline matrix for wes")
-    h.createFoldersFor(savedir)
-    # load vcfs from WES workspace using dalmatian
-    wm = dm.WorkspaceManager(wesrefworkspace)
-    samp = wm.get_samples()
-    vcfs = samp[vcf_colname]
-    vcfslist = vcfs[~vcfs.isna()].tolist()
-    h.createFoldersFor(wesdir)
-    guides_bed = pd.read_csv(
-        bed_location,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    # save vcfs from WES workspace locally,
-    # and run bcftools query to transform vcfs into format needed for subsequent steps
-    # only including regions in the guide bed file
-    cmd = [
-        "gsutil cp "
-        + sam
-        + " "
-        + wesdir
-        + sam.split("/")[-1]
-        + "&& bcftools index "
-        + wesdir
-        + sam.split("/")[-1]
-        + " && \
- bcftools query \
-  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
-  --regions-file "
-        + bed_location
-        + " \
-  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-        + wesdir
-        + sam.split("/")[-1]
-        + " >\
- "
-        + wesdir
-        + "loc_"
-        + sam.split("/")[-1].split(".")[0]
-        + ".bed &&\
- rm "
-        + wesdir
-        + sam.split("/")[-1]
-        + "*"
-        for sam in vcfslist
-    ]
-
-    h.parrun(cmd, cores=cores)
-
-    pool = multiprocessing.Pool(cores)
-    print("mapping ")
-    res_wes = pool.starmap(mapBed, zip(os.listdir(wesdir), repeat(WESVCFDIR)))
-    sorted_guides_bed_wes = guides_bed.sort_values(
-        by=["chrom", "start", "end"]
-    ).reset_index(drop=True)
-    print("wes: done pooling")
-    for name, val in res_wes:
-        if val is not None:
-            sorted_guides_bed_wes[name] = val
-    print("saving wes matrix")
-    sorted_guides_bed_wes.to_csv(savedir + "binary_mutguides_wes.tsv.gz")
-
-    # now the exact same process for wgs
-    print("generating germline matrix for wgs")
-    wm = dm.WorkspaceManager(wgsrefworkspace)
-    samp = wm.get_samples()
-    vcfs = samp[vcf_colname]
-    vcfslist = vcfs[~vcfs.isna()].tolist()
-    h.createFoldersFor(wgsdir)
-    cmd = [
-        "gsutil cp "
-        + sam
-        + " "
-        + wgsdir
-        + sam.split("/")[-1]
-        + "&& \
- bcftools index "
-        + wgsdir
-        + sam.split("/")[-1]
-        + " && \
- bcftools query \
-  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
-  --regions-file "
-        + bed_location
-        + " \
-  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-        + wgsdir
-        + sam.split("/")[-1]
-        + " >\
- "
-        + wgsdir
-        + "loc_"
-        + sam.split("/")[-1].split(".")[0]
-        + ".bed &&\
- rm "
-        + wgsdir
-        + sam.split("/")[-1]
-        + "*"
-        for sam in vcfslist
-    ]
-
-    h.parrun(cmd, cores=cores)
-
-    pool = multiprocessing.Pool(cores)
-    res_wgs = pool.starmap(mapBed, zip(os.listdir(wgsdir), repeat(WGSVCFDIR)))
-    sorted_guides_bed_wgs = guides_bed.sort_values(
-        by=["chrom", "start", "end"]
-    ).reset_index(drop=True)
-    print("wgs: done pooling")
-    for name, val in res_wgs:
-        if val is not None:
-            sorted_guides_bed_wgs[name] = val
-    print("saving wgs matrix")
-    sorted_guides_bed_wgs.to_csv(savedir + "binary_mutguides_wgs.tsv.gz")
-
-    # merging wes and wgs
-    print("merging wes and wgs matrices")
-    wgs_mat_noguides = sorted_guides_bed_wgs.iloc[:, 4:]
-    wes_mat_noguides = sorted_guides_bed_wes.iloc[:, 4:]
-
-    pr_table = trackerobj.read_pr_table()
-    # transform from CDSID-level to PR-level
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
-
-    wgs_whitelist = [x for x in wgs_mat_noguides.columns if x in renaming_dict]
-    wes_whitelist = [x for x in wes_mat_noguides.columns if x in renaming_dict]
-    wgs_whitelist_mat = wgs_mat_noguides[wgs_whitelist]
-    wes_whitelist_mat = wes_mat_noguides[wes_whitelist]
-    wgs_whitelist_mat = wgs_whitelist_mat.rename(columns=renaming_dict)
-    wes_whitelist_mat = wes_whitelist_mat.rename(columns=renaming_dict)
-
-    mergedmat = wgs_whitelist_mat.join(wes_whitelist_mat)
-    mergedmat = mergedmat.astype(bool).astype(int)
-    sorted_mat = sorted_guides_bed_wgs.iloc[:, :4].join(mergedmat)
-    sorted_mat["end"] = sorted_mat["end"].astype(int)
-    sorted_mat.to_csv(savedir + "merged_binary_germline.csv", index=False)
-
-    from taigapy import TaigaClient
-
-    tc = TaigaClient()
-    print("uploading merged germline matrix to taiga")
-    tc.update_dataset(
-        changes_description="add binary germline matrix",
-        dataset_permaname=taiga_dataset,
-        upload_files=[
-            {
-                "path": savedir + "merged_binary_germline.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-        ],
-        add_all_existing_files=True,
-    )
-
-    return sorted_mat
