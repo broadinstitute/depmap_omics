@@ -17,7 +17,7 @@ task PureCN {
 		Float minPurity=0.90
 		Float maxPurity=0.99
 		String funSegmentation="Hclust"
-		Int maxSegments=100
+		Int maxSegments=1000
 		String otherArguments="--post-optimize --model-homozygous --min-total-counts 20"
 
 		# Hardware-related inputs
