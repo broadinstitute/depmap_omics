@@ -278,11 +278,11 @@ def test_compare_column_dtypes(data, method):
             lambda df: df.dtypes  # pylint: disable=unnecessary-lambda-assignment
         )
     elif method == "map_type":  # per element type
-        get_dtypes = lambda df: df.apply(
-            lambda x: x.dropna()  # pylint: disable=unnecessary-lambda-assignment
-            .map(type)
-            .unique()
-        ).T[0]
+        get_dtypes = lambda df: df.apply(  # pylint: disable=unnecessary-lambda-assignment
+            lambda x: x.dropna().map(type).unique()
+        ).T[
+            0
+        ]
     else:
         raise Exception("bad values for dtype method")
 
