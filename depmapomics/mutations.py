@@ -13,6 +13,9 @@ from depmapomics import tracker as track
 
 import dalmatian as dm
 import pandas as pd
+from genepy.epigenetics import chipseq as chip
+from itertools import repeat
+import multiprocessing
 
 
 def download_maf_from_workspace(
@@ -215,3 +218,119 @@ def postProcess(
     mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
     print("done")
     return mutations
+
+
+def mapBed(file, vcfdir, bed_location):
+    """map mutations in one vcf file to regions in the guide bed file"""
+
+    guides_bed = pd.read_csv(
+        bed_location,
+        sep="\t",
+        header=None,
+        names=["chrom", "start", "end", "foldchange"],
+    )
+
+    bed = pd.read_csv(
+        vcfdir + file,
+        sep="\t",
+        header=None,
+        names=["chrom", "start", "end", "foldchange"],
+    )
+    bed["foldchange"] = 1
+    name = file.split("/")[-1].split(".")[0].split("_")[1]
+    if len(bed) == 0:
+        return (name, None)
+    val = chip.putInBed(guides_bed, bed, mergetype="sum")
+
+    return (name, val)
+
+
+def generateGermlineMatrix(
+    refworkspace,
+    vcfdir,
+    savedir="output/" + SAMPLESETNAME + "/",
+    filename="binary_mutguides.tsv.gz",
+    bed_location=GUIDESBED,
+    vcf_colname="cnn_filtered_vcf",
+    cores=16,
+):
+    """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
+    using the CCLE pipeline on terra
+    Args:
+        refworkspace (str, optional): the reference workspace
+        taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_CN.
+        vcfdir (str, optional): directory where vcf files are saved.
+        savedir (str, optional): directory where output germline matrices are saved.
+        bed_location (str, optional): location of the guides bed file.
+        vcf_colname (str, optional): vcf column name on terra.
+        cores (int, optional): number of cores in parallel processing.
+    
+    Returns:
+        sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
+    """
+
+    print("generating germline matrix")
+    h.createFoldersFor(savedir)
+    # load vcfs from workspace using dalmatian
+    wm = dm.WorkspaceManager(refworkspace)
+    samp = wm.get_samples()
+    vcfs = samp[vcf_colname]
+    vcfslist = vcfs[~vcfs.isna()].tolist()
+    h.createFoldersFor(vcfdir)
+    guides_bed = pd.read_csv(
+        bed_location,
+        sep="\t",
+        header=None,
+        names=["chrom", "start", "end", "foldchange"],
+    )
+    # save vcfs from workspace locally,
+    # and run bcftools query to transform vcfs into format needed for subsequent steps
+    # only including regions in the guide bed file
+    cmd = [
+        "gsutil cp "
+        + sam
+        + " "
+        + vcfdir
+        + sam.split("/")[-1]
+        + "&& bcftools index "
+        + vcfdir
+        + sam.split("/")[-1]
+        + " && bcftools query \
+  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
+  --regions-file "
+        + bed_location
+        + " \
+  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
+        + vcfdir
+        + sam.split("/")[-1]
+        + " >\
+ "
+        + vcfdir
+        + "loc_"
+        + sam.split("/")[-1].split(".")[0]
+        + ".bed &&\
+ rm "
+        + vcfdir
+        + sam.split("/")[-1]
+        + "*"
+        for sam in vcfslist
+    ]
+
+    h.parrun(cmd, cores=cores)
+
+    pool = multiprocessing.Pool(cores)
+    print("mapping ")
+    res = pool.starmap(
+        mapBed, zip(os.listdir(vcfdir), repeat(vcfdir), repeat(bed_location))
+    )
+    sorted_guides_bed = guides_bed.sort_values(
+        by=["chrom", "start", "end"]
+    ).reset_index(drop=True)
+    print("done pooling")
+    for name, val in res:
+        if val is not None:
+            sorted_guides_bed[name] = val
+    print("saving matrix")
+    sorted_guides_bed.to_csv(savedir + filename)
+
+    return sorted_guides_bed
