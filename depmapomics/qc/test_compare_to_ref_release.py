@@ -189,6 +189,7 @@ def test_fraction_of_unequal_columns_from_merged_file(
     dataframe_merge_both.set_index("DepMap_ID", inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col + "_x" for col in cols]].dtypes
+
     def equal_nonNA(a, b):
         return (a == b) | (
             (a != a) & (b != b)
@@ -198,7 +199,7 @@ def test_fraction_of_unequal_columns_from_merged_file(
         return np.isclose(a, b) | (
             (a != a) & (b != b)
         )  # this is a regular equality tests with the exception that NA==NA
-    ) 
+
     for col in cols:
         if cols_dtype[col + "_x"] == np.dtype(
             "float64"
@@ -277,11 +278,11 @@ def test_compare_column_dtypes(data, method):
             lambda df: df.dtypes  # pylint: disable=unnecessary-lambda-assignment
         )
     elif method == "map_type":  # per element type
-        get_dtypes = lambda df: df.apply( # pylint: disable=unnecessary-lambda-assignment
-            lambda x: x.dropna()
-            .map(type)
-            .unique()
-        ).T[0]
+        get_dtypes = lambda df: df.apply(  # pylint: disable=unnecessary-lambda-assignment
+            lambda x: x.dropna().map(type).unique()
+        ).T[
+            0
+        ]
     else:
         raise Exception("bad values for dtype method")
 
