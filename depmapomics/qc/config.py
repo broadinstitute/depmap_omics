@@ -7,13 +7,18 @@ LEGACY_PATCH_FLAGS = {"rename_column": True, "tsv2csv": False}
 
 # release ids on taiga
 tc = TaigaClient()
-taiga_latest_version = lambda dataset_name: int(
-    tc.get_dataset_metadata(dataset_name)["versions"][-1]["name"]
-)
-taiga_latest_path = lambda dataset_name: {
-    "name": dataset_name,
-    "version": taiga_latest_version(dataset_name),
-}
+
+
+def taiga_latest_version(dataset_name):
+    return int(tc.get_dataset_metadata(dataset_name)["versions"][-1]["name"])
+
+
+def taiga_latest_path(dataset_name):
+    return {
+        "name": dataset_name,
+        "version": taiga_latest_version(dataset_name),
+    }
+
 
 # from depmapomics.qc.create_dataset import update_tentative_virtual
 # update_tentative_virtual()
