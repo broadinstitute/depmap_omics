@@ -21,8 +21,8 @@ task PureCN {
 		String otherArguments="--post-optimize --model-homozygous --min-total-counts 20"
 
 		# Hardware-related inputs
-		Int hardware_disk_size_GB = 50
-		Int hardware_memory_GB = 4
+		Int hardware_disk_size_GB = 250
+		Int hardware_memory_GB = 32
 		Int hardware_preemptible_tries = 2
 		Int num_threads = 1
 		Int max_retries = 0
