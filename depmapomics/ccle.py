@@ -24,8 +24,12 @@ async def expressionPostProcessing(
     gumbo,
     refworkspace=RNAWORKSPACE,
     samplesetname=SAMPLESETNAME,
-    colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
     ensemblserver=ENSEMBL_SERVER_V,
+    geneLevelCols=RSEMFILENAME_GENE,
+    trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
+    rsemfilename=RSEMFILENAME,
+    ssgseafilepath=SSGSEAFILEPATH,
+    colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
     doCleanup=True,
     samplesetToLoad="all",
     tocompare={
@@ -44,7 +48,6 @@ async def expressionPostProcessing(
     rsemfilelocs=None,
     rnaqclocs={},
     starlogs={},
-    **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
 
@@ -61,15 +64,15 @@ async def expressionPostProcessing(
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level 
+        geneLevelCols (list, optional): the columns that contain the gene level
         expression data in the workspace. Defaults to RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript 
+        trancriptLevelCols (list, optional): the columns that contain the transcript
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes 
+        dropNonMatching (bool, optional): whether to drop the non matching genes
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
         prevcounts (str, optional): the previous counts to use to QC the data for the release. Defaults to 'ccle'.
@@ -114,16 +117,17 @@ async def expressionPostProcessing(
         colstoclean=colstoclean,
         ensemblserver=ensemblserver,
         todrop=todrop,
+        rsemfilename=rsemfilename,
+        ssgseafilepath=ssgseafilepath,
         samplesetToLoad=samplesetToLoad,
-        geneLevelCols=RSEMFILENAME_GENE,
-        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,  # compute_enrichment=False,
+        geneLevelCols=geneLevelCols,
+        trancriptLevelCols=trancriptLevelCols,  # compute_enrichment=False,
         ssGSEAcol="genes_tpm",
         dropNonMatching=dropNonMatching,
         dry_run=dry_run,
         samplesinset=samplesinset,
         rsemfilelocs=rsemfilelocs,
         rnaqclocs=rnaqclocs,
-        **kwargs,
     )
 
     print("doing validation")
@@ -176,8 +180,9 @@ async def expressionPostProcessing(
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
         samplesetname,
-        gumbo,
-        refworkspace,
+        refworkspace=refworkspace,
+        onlycol=STARBAMCOLTERRA,
+        newgs=RNA_GCS_PATH_HG38,
         samplesinset=samplesinset,
         starlogs=starlogs,
         trackerobj=trackerobj,
@@ -361,7 +366,7 @@ async def fusionPostProcessing(
         my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
         mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
         prevdataset (str, optional): the previous dataset to use for the taiga upload. Defaults to 'ccle'.
-    
+
     Returns:
         (pd.df): fusion dataframe
         (pd.df): filtered fusion dataframe
@@ -898,7 +903,7 @@ async def mutationPostProcessing(
         mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
         tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
         tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
-        prev (pd.df, optional): the previous release dataset (to do QC). 
+        prev (pd.df, optional): the previous release dataset (to do QC).
             Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
         minfreqtocall (float, optional): the minimum frequency to call a mutation. Defaults to 0.25.
     """
@@ -1142,17 +1147,17 @@ async def mutationAnalyzeUnfiltered(
         folder (str, optional): folder name. Default is 'output/'.
         subsetcol (list, optional): list of columns to subset the maf file on. 
             will also output the unfiltered version of themaf file.
-            Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id', 
-                        'Chromosome', 'Start_position', 'End_position', 
-                        'Variant_Classification', 'Variant_Type', 'Reference_Allele', 
-                        'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change', 
-                        'Annotation_Transcript', 'cDNA_Change', 'Codon_Change', 
-                        'HGVS_protein_change',  'Protein_Change', 't_alt_count', 
+            Defaults to [SAMPLEID, 'Hugo_Symbol', 'Entrez_Gene_Id',
+                        'Chromosome', 'Start_position', 'End_position',
+                        'Variant_Classification', 'Variant_Type', 'Reference_Allele',
+                        'Tumor_Allele', 'dbSNP_RS', 'dbSNP_Val_Status', 'Genome_Change',
+                        'Annotation_Transcript', 'cDNA_Change', 'Codon_Change',
+                        'HGVS_protein_change',  'Protein_Change', 't_alt_count',
                         't_ref_count', 'tumor_f', 'CGA_WES_AC'].
         taiga_dataset (str, optional): taiga dataset path. Default is TAIGA_MUTATION.
     """
     print("retrieving unfiltered")
-    ####### WES
+    # WES
     from taigapy import TaigaClient
 
     tc = TaigaClient()
@@ -1222,212 +1227,3 @@ async def mutationAnalyzeUnfiltered(
         upload_async=False,
     )
 
-
-def mapBed(file, vcfdir):
-    """map mutations in one vcf file to regions in the guide bed file"""
-
-    guides_bed = pd.read_csv(
-        GUIDESBED, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"]
-    )
-
-    bed = pd.read_csv(
-        vcfdir + file,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    bed["foldchange"] = 1
-    name = file.split("/")[-1].split(".")[0].split("_")[1]
-    if len(bed) == 0:
-        return (name, None)
-    val = chip.putInBed(guides_bed, bed, mergetype="sum")
-
-    return (name, val)
-
-
-def generateGermlineMatrix(
-    trackerobj,
-    wesrefworkspace=WESCNWORKSPACE,
-    wgsrefworkspace=WGSWORKSPACE,
-    wesdir=WESVCFDIR,
-    wgsdir=WGSVCFDIR,
-    savedir="output/" + SAMPLESETNAME + "/",
-    bed_location=GUIDESBED,
-    taiga_dataset=TAIGA_CN,
-    vcf_colname="cnn_filtered_vcf",
-    cores=16,
-):
-    """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
-    using the CCLE pipeline on terra
-
-    Args:
-        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
-        wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to WGSWORKSPACE.
-        taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_CN.
-        wesdir (str, optional): directory where wes vcf files are saved.
-        wgsdir (str, optional): directory where wgs vcf files are saved.
-        savedir (str, optional): directory where output germline matrices are saved.
-        bed_location (str, optional): location of the guides bed file.
-        vcf_colname (str, optional): vcf column name on terra.
-        cores (int, optional): number of cores in parallel processing.
-    
-    Returns:
-        sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
-    """
-
-    print("generating germline matrix for wes")
-    # load vcfs from WES workspace using dalmatian
-    wm = dm.WorkspaceManager(wesrefworkspace)
-    samp = wm.get_samples()
-    vcfs = samp[vcf_colname]
-    vcfslist = vcfs[~vcfs.isna()].tolist()
-    h.createFoldersFor(wesdir)
-    guides_bed = pd.read_csv(
-        bed_location,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    # save vcfs from WES workspace locally,
-    # and run bcftools query to transform vcfs into format needed for subsequent steps
-    # only including regions in the guide bed file
-    cmd = [
-        "gsutil cp "
-        + sam
-        + " "
-        + wesdir
-        + sam.split("/")[-1]
-        + "&& \
- bcftools index "
-        + wesdir
-        + sam.split("/")[-1]
-        + " && \
- bcftools query \
-  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
-  --regions-file "
-        + bed_location
-        + " \
-  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-        + wesdir
-        + sam.split("/")[-1]
-        + " >\
- "
-        + wesdir
-        + "loc_"
-        + sam.split("/")[-1].split(".")[0]
-        + ".bed &&\
- rm "
-        + wesdir
-        + sam.split("/")[-1]
-        + "*"
-        for sam in vcfslist
-    ]
-
-    h.parrun(cmd, cores=cores)
-
-    pool = multiprocessing.Pool(cores)
-    print("mapping ")
-    res_wes = pool.starmap(mapBed, zip(os.listdir(wesdir), repeat(WESVCFDIR)))
-    sorted_guides_bed_wes = guides_bed.sort_values(
-        by=["chrom", "start", "end"]
-    ).reset_index(drop=True)
-    print("wes: done pooling")
-    for name, val in res_wes:
-        if val is not None:
-            sorted_guides_bed_wes[name] = val
-    print("saving wes matrix")
-    sorted_guides_bed_wes.to_csv(savedir + "binary_mutguides_wes.tsv.gz")
-
-    # now the exact same process for wgs
-    print("generating germline matrix for wgs")
-    wm = dm.WorkspaceManager(wgsrefworkspace)
-    samp = wm.get_samples()
-    vcfs = samp[vcf_colname]
-    vcfslist = vcfs[~vcfs.isna()].tolist()
-    h.createFoldersFor(wgsdir)
-    cmd = [
-        "gsutil cp "
-        + sam
-        + " "
-        + wgsdir
-        + sam.split("/")[-1]
-        + "&& \
- bcftools index "
-        + wgsdir
-        + sam.split("/")[-1]
-        + " && \
- bcftools query \
-  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
-  --regions-file "
-        + bed_location
-        + " \
-  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-        + wgsdir
-        + sam.split("/")[-1]
-        + " >\
- "
-        + wgsdir
-        + "loc_"
-        + sam.split("/")[-1].split(".")[0]
-        + ".bed &&\
- rm "
-        + wgsdir
-        + sam.split("/")[-1]
-        + "*"
-        for sam in vcfslist
-    ]
-
-    h.parrun(cmd, cores=cores)
-
-    pool = multiprocessing.Pool(cores)
-    res_wgs = pool.starmap(mapBed, zip(os.listdir(wgsdir), repeat(WGSVCFDIR)))
-    sorted_guides_bed_wgs = guides_bed.sort_values(
-        by=["chrom", "start", "end"]
-    ).reset_index(drop=True)
-    print("wgs: done pooling")
-    for name, val in res_wgs:
-        if val is not None:
-            sorted_guides_bed_wgs[name] = val
-    print("saving wgs matrix")
-    sorted_guides_bed_wgs.to_csv(savedir + "binary_mutguides_wgs.tsv.gz")
-
-    # merging wes and wgs
-    print("merging wes and wgs matrices")
-    wgs_mat_noguides = sorted_guides_bed_wgs.iloc[:, 4:]
-    wes_mat_noguides = sorted_guides_bed_wes.iloc[:, 4:]
-
-    pr_table = trackerobj.read_pr_table()
-    # transform from CDSID-level to PR-level
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
-
-    wgs_whitelist = [x for x in wgs_mat_noguides.columns if x in renaming_dict]
-    wes_whitelist = [x for x in wes_mat_noguides.columns if x in renaming_dict]
-    wgs_whitelist_mat = wgs_mat_noguides[wgs_whitelist]
-    wes_whitelist_mat = wes_mat_noguides[wes_whitelist]
-    wgs_whitelist_mat = wgs_whitelist_mat.rename(columns=renaming_dict)
-    wes_whitelist_mat = wes_whitelist_mat.rename(columns=renaming_dict)
-
-    mergedmat = wgs_whitelist_mat.join(wes_whitelist_mat)
-    mergedmat = mergedmat.astype(bool).astype(int)
-    sorted_mat = sorted_guides_bed_wgs.iloc[:, :4].join(mergedmat)
-    sorted_mat["end"] = sorted_mat["end"].astype(int)
-    sorted_mat.to_csv(savedir + "merged_binary_germline.csv", index=False)
-
-    from taigapy import TaigaClient
-
-    tc = TaigaClient()
-    print("uploading merged germline matrix to taiga")
-    tc.update_dataset(
-        changes_description="add binary germline matrix",
-        dataset_permaname=taiga_dataset,
-        upload_files=[
-            {
-                "path": savedir + "merged_binary_germline.csv",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-        ],
-        add_all_existing_files=True,
-    )
-
-    return sorted_mat
