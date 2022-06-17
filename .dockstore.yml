@@ -8,7 +8,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: RNA_aggregate
     subclass: WDL
@@ -18,7 +18,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: RNA_pipeline
     subclass: WDL
@@ -28,7 +28,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: WGS_pipeline
     subclass: WDL
@@ -38,7 +38,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: WGS_aggregate
     subclass: WDL
@@ -48,7 +48,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: rnaseq_mutect2_tumor_only
     subclass: WDL
@@ -58,7 +58,7 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
   - name: rsem_depmap
     subclass: WDL
@@ -68,6 +68,127 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - develop
+        - dev
         - master
         - rsem_confidence_interval_calculation
+  - name: opencravat
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/opencravat.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: bcftools_setGT
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/bcftools.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: fix_mutect2col
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/fix_mutect2col.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: omics_mutect2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/omics_mutect2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: manta_annot
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/manta_annot.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: Manta_SomaticSV
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/Manta_SomaticSV.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: fix_mutect2_clust
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/fix_mutect2_clust.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: merge_mutect2_replicates
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/merge_mutect2_replicates.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: filter_to_maf
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/filter_to_maf.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: merge_and_upload
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/merge_and_upload.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: omics_post_mutect2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/omics_post_mutect2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline

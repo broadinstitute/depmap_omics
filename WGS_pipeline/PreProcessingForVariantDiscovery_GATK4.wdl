@@ -1,3 +1,4 @@
+version 1.0
 ## Copyright Broad Institute, 2017
 ## 
 ## This WDL pipeline implements data pre-processing according to the GATK Best Practices 
@@ -37,46 +38,47 @@
 
 # WORKFLOW DEFINITION 
 workflow PreProcessingForVariantDiscovery_GATK4 {
+  input {
+    String sample_name
+    String ref_name
 
-  String sample_name
-  String ref_name
+    File flowcell_unmapped_bams_list
+    String unmapped_bam_suffix
+    
+    File ref_fasta
+    File ref_fasta_index
+    File ref_dict
 
-  File flowcell_unmapped_bams_list
-  String unmapped_bam_suffix
-  
-  File ref_fasta
-  File ref_fasta_index
-  File ref_dict
+    String bwa_commandline
+    Int compression_level
+    
+    File dbSNP_vcf
+    File dbSNP_vcf_index
+    Array[File] known_indels_sites_VCFs
+    Array[File] known_indels_sites_indices
 
-  String bwa_commandline
-  Int compression_level
-  
-  File dbSNP_vcf
-  File dbSNP_vcf_index
-  Array[File] known_indels_sites_VCFs
-  Array[File] known_indels_sites_indices
+    String gotc_docker
+    String picard_docker
+    String gatk_docker
+    String python_docker
 
-  String gotc_docker
-  String picard_docker
-  String gatk_docker
-  String python_docker
+    String gotc_path
+    String picard_path
+    String gatk_launch_path
+    
+    Int flowcell_small_disk
+    Int flowcell_medium_disk
+    Int agg_small_disk
+    Int agg_medium_disk
+    Int agg_large_disk
 
-  String gotc_path
-  String picard_path
-  String gatk_launch_path
-  
-  Int flowcell_small_disk
-  Int flowcell_medium_disk
-  Int agg_small_disk
-  Int agg_medium_disk
-  Int agg_large_disk
+    Int preemptible_tries
+    Int agg_preemptible_tries
 
-  Int preemptible_tries
-  Int agg_preemptible_tries
+    String base_file_name = sample_name + "." + ref_name
 
-  String base_file_name = sample_name + "." + ref_name
-
-  Array[File] flowcell_unmapped_bams = read_lines(flowcell_unmapped_bams_list)
+    Array[File] flowcell_unmapped_bams = read_lines(flowcell_unmapped_bams_list)
+  }
 
   # Get the version of BWA to include in the PG record in the header of the BAM produced 
   # by MergeBamAlignment. 
@@ -247,12 +249,13 @@ workflow PreProcessingForVariantDiscovery_GATK4 {
 
 # Get version of BWA
 task GetBwaVersion {
-  
-  Int preemptible_tries
-  String mem_size
+  input {
+    Int preemptible_tries
+    String mem_size
 
-  String docker_image
-  String bwa_path
+    String docker_image
+    String bwa_path
+  }
 
   command {
     # Not setting "set -o pipefail" here because /bwa has a rc=1 and we don't want to allow rc=1 to succeed 
@@ -273,33 +276,35 @@ task GetBwaVersion {
 
 # Read unmapped BAM, convert on-the-fly to FASTQ and stream to BWA MEM for alignment
 task SamToFastqAndBwaMem {
-  File input_bam
-  String bwa_commandline
-  String output_bam_basename
-  File ref_fasta
-  File ref_fasta_index
-  File ref_dict
+  input {
+    File input_bam
+    String bwa_commandline
+    String output_bam_basename
+    File ref_fasta
+    File ref_fasta_index
+    File ref_dict
 
-  # This is the .alt file from bwa-kit (https://github.com/lh3/bwa/tree/master/bwakit), 
-  # listing the reference contigs that are "alternative". Leave blank in JSON for legacy 
-  # references such as b37 and hg19.
-  File? ref_alt
-  File ref_amb
-  File ref_ann
-  File ref_bwt
-  File ref_pac
-  File ref_sa
+    # This is the .alt file from bwa-kit (https://github.com/lh3/bwa/tree/master/bwakit), 
+    # listing the reference contigs that are "alternative". Leave blank in JSON for legacy 
+    # references such as b37 and hg19.
+    File? ref_alt
+    File ref_amb
+    File ref_ann
+    File ref_bwt
+    File ref_pac
+    File ref_sa
 
-  Int compression_level
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
-  String num_cpu
+    Int compression_level
+    Int preemptible_tries
+    Int disk_size
+    String mem_size
+    String num_cpu
 
-  String docker_image
-  String bwa_path
-  String picard_path
-  String java_opt
+    String docker_image
+    String bwa_path
+    String picard_path
+    String java_opt
+  }
 
   command <<<
     set -o pipefail
@@ -308,16 +313,16 @@ task SamToFastqAndBwaMem {
     # set the bash variable needed for the command-line
     bash_ref_fasta=${ref_fasta}
 
-  	java -Dsamjdk.compression_level=${compression_level} ${java_opt} -jar ${picard_path}picard.jar \
+      java -Dsamjdk.compression_level=${compression_level} ${java_opt} -jar ${picard_path}picard.jar \
       SamToFastq \
-    	INPUT=${input_bam} \
-    	FASTQ=/dev/stdout \
-    	INTERLEAVE=true \
-    	NON_PF=true \
+        INPUT=${input_bam} \
+        FASTQ=/dev/stdout \
+        INTERLEAVE=true \
+        NON_PF=true \
     | \
-  	${bwa_path}${bwa_commandline} /dev/stdin -  2> >(tee ${output_bam_basename}.bwa.stderr.log >&2) \
+      ${bwa_path}${bwa_commandline} /dev/stdin -  2> >(tee ${output_bam_basename}.bwa.stderr.log >&2) \
     | \
-  	samtools view -1 - > ${output_bam_basename}.bam
+      samtools view -1 - > ${output_bam_basename}.bam
 
   >>>
   runtime {
@@ -335,23 +340,25 @@ task SamToFastqAndBwaMem {
 
 # Merge original input uBAM file with BWA-aligned BAM file
 task MergeBamAlignment {
-  File unmapped_bam
-  String bwa_commandline
-  String bwa_version
-  File aligned_bam
-  String output_bam_basename
-  File ref_fasta
-  File ref_fasta_index
-  File ref_dict
+  input {
+    File unmapped_bam
+    String bwa_commandline
+    String bwa_version
+    File aligned_bam
+    String output_bam_basename
+    File ref_fasta
+    File ref_fasta_index
+    File ref_dict
 
-  Int compression_level
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
+    Int compression_level
+    Int preemptible_tries
+    Int disk_size
+    String mem_size
 
-  String docker_image
-  String picard_path
-  String java_opt
+    String docker_image
+    String picard_path
+    String java_opt
+  }
 
   command {
     # set the bash variable needed for the command-line
@@ -395,21 +402,23 @@ task MergeBamAlignment {
 
 # Sort BAM file by coordinate order and fix tag values for NM and UQ
 task SortAndFixTags {
-  File input_bam
-  String output_bam_basename
-  File ref_dict
-  File ref_fasta
-  File ref_fasta_index
-  
-  Int compression_level
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
+  input {
+    File input_bam
+    String output_bam_basename
+    File ref_dict
+    File ref_fasta
+    File ref_fasta_index
+    
+    Int compression_level
+    Int preemptible_tries
+    Int disk_size
+    String mem_size
 
-  String docker_image
-  String picard_path
-  String java_opt_sort
-  String java_opt_fix
+    String docker_image
+    String picard_path
+    String java_opt_sort
+    String java_opt_fix
+  }
 
   command {
     set -o pipefail
@@ -445,18 +454,20 @@ task SortAndFixTags {
 
 # Mark duplicate reads to avoid counting non-independent observations
 task MarkDuplicates {
-  Array[File] input_bams
-  String output_bam_basename
-  String metrics_filename
-  
-  Int compression_level
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
+  input {
+    Array[File] input_bams
+    String output_bam_basename
+    String metrics_filename
+    
+    Int compression_level
+    Int preemptible_tries
+    Int disk_size
+    String mem_size
 
-  String docker_image
-  String picard_path
-  String java_opt
+    String docker_image
+    String picard_path
+    String java_opt
+  }
 
  # Task is assuming query-sorted input so that the Secondary and Supplementary reads get marked correctly.
  # This works because the output of BWA is query-grouped and therefore, so is the output of MergeBamAlignment.
@@ -486,12 +497,14 @@ task MarkDuplicates {
 
 # Generate sets of intervals for scatter-gathering over chromosomes
 task CreateSequenceGroupingTSV {
-  File ref_dict  
-  
-  Int preemptible_tries
-  String mem_size
+  input {
+    File ref_dict  
+    
+    Int preemptible_tries
+    String mem_size
 
-  String docker_image
+    String docker_image
+  }
 
   # Use python to create the Sequencing Groupings used for BQSR and PrintReads Scatter. 
   # It outputs to stdout where it is parsed into a wdl Array[Array[String]]
@@ -545,25 +558,27 @@ task CreateSequenceGroupingTSV {
 
 # Generate Base Quality Score Recalibration (BQSR) model
 task BaseRecalibrator {
-  File input_bam
-  File input_bam_index
-  String recalibration_report_filename
-  Array[String] sequence_group_interval
-  File dbSNP_vcf
-  File dbSNP_vcf_index
-  Array[File] known_indels_sites_VCFs
-  Array[File] known_indels_sites_indices
-  File ref_dict
-  File ref_fasta
-  File ref_fasta_index
-  
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
+  input {
+    File input_bam
+    File input_bam_index
+    String recalibration_report_filename
+    Array[String] sequence_group_interval
+    File dbSNP_vcf
+    File dbSNP_vcf_index
+    Array[File] known_indels_sites_VCFs
+    Array[File] known_indels_sites_indices
+    File ref_dict
+    File ref_fasta
+    File ref_fasta_index
+    
+    Int preemptible_tries
+    Int disk_size
+    String mem_size
 
-  String docker_image
-  String gatk_launch_path
-  String java_opt
+    String docker_image
+    String gatk_launch_path
+    String java_opt
+  }
 
   command { 
     ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \
@@ -590,16 +605,18 @@ task BaseRecalibrator {
 # Combine multiple recalibration tables from scattered BaseRecalibrator runs
 # Note that when run from GATK 3.x the tool is not a walker and is invoked differently.
 task GatherBqsrReports {
-  Array[File] input_bqsr_reports
-  String output_report_filename
+  input {
+    Array[File] input_bqsr_reports
+    String output_report_filename
 
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
+    Int preemptible_tries
+    Int disk_size
+    String mem_size
 
-  String docker_image
-  String gatk_launch_path
-  String java_opt
+    String docker_image
+    String gatk_launch_path
+    String java_opt
+  }
 
   command {
     ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \
@@ -620,22 +637,24 @@ task GatherBqsrReports {
 
 # Apply Base Quality Score Recalibration (BQSR) model
 task ApplyBQSR {
-  File input_bam
-  File input_bam_index
-  String output_bam_basename
-  File recalibration_report
-  Array[String] sequence_group_interval
-  File ref_dict
-  File ref_fasta
-  File ref_fasta_index
+  input {
+    File input_bam
+    File input_bam_index
+    String output_bam_basename
+    File recalibration_report
+    Array[String] sequence_group_interval
+    File ref_dict
+    File ref_fasta
+    File ref_fasta_index
 
-  Int preemptible_tries
-  Int disk_size 
-  String mem_size
+    Int preemptible_tries
+    Int disk_size 
+    String mem_size
 
-  String docker_image
-  String gatk_launch_path
-  String java_opt
+    String docker_image
+    String gatk_launch_path
+    String java_opt
+  }
 
   command {  
     ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \
@@ -663,17 +682,19 @@ task ApplyBQSR {
 
 # Combine multiple recalibrated BAM files from scattered ApplyRecalibration runs
 task GatherBamFiles {
-  Array[File] input_bams
-  String output_bam_basename
+  input {
+    Array[File] input_bams
+    String output_bam_basename
 
-  Int compression_level
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
+    Int compression_level
+    Int preemptible_tries
+    Int disk_size
+    String mem_size
 
-  String docker_image
-  String picard_path
-  String java_opt
+    String docker_image
+    String picard_path
+    String java_opt
+  }
 
   command {
     java -Dsamjdk.compression_level=${compression_level} ${java_opt} -jar ${picard_path}picard.jar \

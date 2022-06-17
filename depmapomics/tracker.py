@@ -4,11 +4,13 @@ from numpy import true_divide
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
+import pygsheets
 from depmapomics.config import *
 from genepy import terra
 from genepy.google import gcp
 from genepy.google.google_sheet import dfToSheet
 import dalmatian as dm
+import signal
 
 
 # condense all interactions with tracker (for emeril integration)
@@ -16,6 +18,8 @@ class SampleTracker:
     """
     interacts with (read + write) the sample tracker gsheet
     """
+
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(
         self,
@@ -26,6 +30,8 @@ class SampleTracker:
         depmap_pv,
         samples_not_found_url,
         samples_missing_arxspan_url,
+        gumbo_url,
+        gumbo_sheetname,
     ):
         self.my_id = my_id
         self.mystorage_id = mystorage_id
@@ -34,6 +40,9 @@ class SampleTracker:
         self.depmap_pv = depmap_pv
         self.samples_not_found_url = samples_not_found_url
         self.samples_missing_arxspan_url = samples_missing_arxspan_url
+        self.gumbo_url = gumbo_url
+        self.gumbo_sheetname = gumbo_sheetname
+        self.gc = pygsheets.authorize(service_file=sheetcreds)
 
     def read_tracker(self):
         return (
@@ -81,6 +90,46 @@ class SampleTracker:
             .set_index("sample_id")
         )
 
+    def read_mc_table(self):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", MC_TABLE_NAME)
+        return wksht.get_as_df(index_column=1)
+
+    def write_mc_table(self, df):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", MC_TABLE_NAME)
+        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+
+    def read_pr_table(self):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", PR_TABLE_NAME)
+        return wksht.get_as_df(index_column=1, start="A3")
+
+    def write_pr_table(self, df):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", PR_TABLE_NAME)
+        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
+
+    def read_seq_table(self):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", SEQ_TABLE_NAME)
+        return wksht.get_as_df(index_column=1, start="A3")
+
+    def write_seq_table(self, df):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", SEQ_TABLE_NAME)
+        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
+
+    def read_sample_table(self):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", SAMPLE_TABLE_NAME)
+        return wksht.get_as_df(index_column=1)
+
+    def write_sample_table(self, df):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", SAMPLE_TABLE_NAME)
+        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+
 
 def initTracker():
     """
@@ -94,6 +143,8 @@ def initTracker():
         depmap_pv=DEPMAP_PV,
         samples_not_found_url=SAMPLES_NOT_FOUND_URL,
         samples_missing_arxspan_url=SAMPLES_MISSING_ARXSPAN_URL,
+        gumbo_url=GUMBO_SHEET,
+        gumbo_sheetname=GUMBO_SHEETNAME,
     )
 
 
@@ -212,7 +263,7 @@ def updateFromTracker(
             "parent_cell_line": [],
             "matched_normal": [],
             "comments": [],
-            "mediatype": [],
+            # "mediatype": [],
             "condition": [],
             "stripped_cell_line_name": [],
             "participant_id": [],
@@ -600,9 +651,7 @@ def retrieveFromCellLineName(
 ):
     """
     Given a List of samples with no arxspan ids, will try to retrieve an arxspan id and associated data from trackers
-
     For now the sample tracker and paquita's depmap pv are used.
-
     Args:
     -----
         noarxspan: dataframe of samples with missing arxspan ids
@@ -611,7 +660,6 @@ def retrieveFromCellLineName(
         extract: dict(str:str) see the extract in the "resolveFromWorkspace" function
         stripped_cell_line_name: str colname where the cell line name is stored
         arxspan_id: str colname wherre the sample id is stored in both noarxspan and ccle_refsamples
-
     Returns:
     --------
         a new dataframe with filled annotations when possible
@@ -758,23 +806,23 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
 
 
 def update(
-    tracker,
+    trackerobj,
+    table,
     selected,
     samplesetname,
     failed,
     lowqual,
+    gumbo,
     newgs="",
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=True,
     samplesinset=[],
     todrop=[],
-    trackerobj=None,
 ):
-    """updates the sample tracker with the new samples and the QC metrics
-
+    """updates the sample tracker (or Gumbo omicSequencing table) with the new samples and the QC metrics
     Args:
-        tracker (df): [description]
+        table (df): [description]
         selected (list[str]): which samples were selected in the release of the analysis
         samplesetname (str): the name of the sample set or of the current analysis
         samplesinset (list[str]): list of samples in the analysis.
@@ -798,39 +846,167 @@ def update(
         res, _ = terra.changeGSlocation(
             refworkspace,
             newgs=newgs,
-            onlycol=bamfilepaths,
+            bamfilepaths=bamfilepaths,
             entity="sample",
             keeppath=False,
             dry_run=dry_run,
             onlysamples=samplesinset,
             workspaceto=refworkspace,
         )
-        tracker.loc[res.index.tolist()][
+        table.loc[res.index.tolist()][
             ["legacy_size", "legacy_crc32c_hash"]
-        ] = tracker.loc[res.index.tolist()][["size", "crc32c_hash"]].values
-        tracker.loc[res.index.tolist(), HG38BAMCOL] = res[bamfilepaths[:2]].values
-        tracker.loc[res.index.tolist(), "size"] = [
+        ] = table.loc[res.index.tolist()][["size", "crc32c_hash"]].values
+        table.loc[res.index.tolist(), HG38BAMCOL] = res[bamfilepaths[:2]].values
+        table.loc[res.index.tolist(), "size"] = [
             gcp.extractSize(i)[1]
             for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-l")
         ]
-        tracker.loc[res.index.tolist(), "crc32c_hash"] = [
+        table.loc[res.index.tolist(), "crc32c_hash"] = [
             gcp.extractHash(i) for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
         ]
-        tracker.loc[res.index.tolist(), "md5_hash"] = [
+        table.loc[res.index.tolist(), "md5_hash"] = [
             gcp.extractHash(i, typ="md5")
             for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
         ]
 
-    tracker.loc[selected, samplesetname] = 1
-    tracker.loc[samplesinset, ["low_quality", "blacklist", "prioritized"]] = 0
-    tracker.loc[lowqual, "low_quality"] = 1
+    if not gumbo:
+        table.loc[selected, samplesetname] = 1
+    table.loc[samplesinset, ["low_quality", "blacklist", "prioritized"]] = 0
+    table.loc[lowqual, "low_quality"] = 1
     failed_not_dropped = list(set(failed) - set(todrop))
     # print(todrop)
-    tracker.loc[failed_not_dropped, "blacklist"] = 1
+    table.loc[failed_not_dropped, "blacklist"] = 1
     if dry_run:
-        return tracker
+        return table
     else:
-        trackerobj.write_tracker(tracker)
+        if gumbo:
+            trackerobj.write_seq_table(table)
+        else:
+            trackerobj.write_tracker(table)
     print("updated the sheet, please reactivate protections")
     return None
+
+
+def update_pr_from_seq(
+    tracker,
+    cols={
+        "bam_public_sra_path": "BamPublicSRAPath",
+        "blacklist": "BlacklistOmics",
+        "issue": "Issue",
+        "prioritized": "Prioritized",
+    },
+    priority=None,
+    dryrun=True,
+):
+    seq_table = tracker.read_seq_table()
+    pr_table = tracker.read_pr_table()
+    prs_in_seq_table = seq_table.ProfileID.unique()
+
+    cds2pr_dict = {}
+    for pr in prs_in_seq_table:
+        if len(seq_table[seq_table.ProfileID == pr]) == 1:
+            pr_table.loc[pr, "CDSID"] = seq_table[seq_table.ProfileID == pr].index
+        else:
+            allv = seq_table[seq_table["ProfileID"] == pr]
+            for k, val in allv.iterrows():
+                if priority is None:
+                    if val["version"] == max(allv.version.values):
+                        cds2pr_dict[k] = pr
+                        break
+                else:
+                    if val["version"] == max(allv.version.values):
+                        cds2pr_dict[k] = pr
+                    if val["priority"] == 1:
+                        cds2pr_dict[k] = pr
+                        break
+    for k, v in cds2pr_dict.items():
+        pr_table.loc[v, "CDSID"] = k
+    if not dryrun:
+        tracker.write_pr_table(pr_table)
+    return pr_table
+
+
+async def shareCCLEbams(
+    samples,
+    users=[],
+    groups=[],
+    raise_error=True,
+    arg_max_length=100000,
+    bamcols=["internal_bam_filepath", "internal_bai_filepath"],
+    refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
+    privacy_sheeturl="https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4",
+    unshare=False,
+    requesterpays_project="",
+):
+    """
+  same as shareTerraBams but is completed to work with CCLE bams from the CCLE sample tracker
+
+  You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up
+
+  Args:
+  ----
+    users: list[str] of users' google accounts
+    groups: list[str] of groups' google accounts
+    samples list[str] of samples cds_ids for which you want to share data
+    bamcols: list[str] list of column names where bams/bais are
+    raise_error: whether or not to raise an error if we find blacklisted lines
+    refsheet_url: the google spreadsheet where the samples are stored
+    privacy_sheeturl: the google spreadsheet where the samples are stored
+    requesterpays_project: the google project where the requester pays bucket is located
+
+  Returns:
+  --------
+    a list of the gs path we have been giving access to
+  """
+    sheets = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
+    print(
+        "You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up"
+    )
+    privacy = sheets.get(privacy_sheeturl).sheets[6].to_frame()
+    refdata = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+    blacklist = [i for i in privacy["blacklist"].values.tolist() if i is not np.nan]
+    blacklisted = set(blacklist) & set(samples)
+    print("we have " + str(len(blacklist)) + " blacklisted files")
+    if len(blacklisted):
+        print("these lines are blacklisted " + str(blacklisted))
+        if raise_error:
+            raise ValueError("blacklistedlines")
+    if type(users) is str:
+        users = [users]
+
+    togiveaccess = np.ravel(refdata[bamcols].loc[samples].values)
+    usrs = ""
+    for group in groups:
+        usrs += (" -d " if unshare else " -g") + group + (":R" if not unshare else "")
+    for user in users:
+        usrs += (" -d " if unshare else " -u ") + user + (":R" if not unshare else "")
+    requesterpays_cmd = (
+        "" if requesterpays_project == "" else "-u " + requesterpays_project
+    )
+    cmd_prefix = "gsutil {} -m acl ch ".format(requesterpays_cmd) + usrs
+    cmd = cmd_prefix
+    for n, filename in enumerate(togiveaccess):
+        if type(filename) is str and filename:
+            oldcmd = cmd
+            cmd += " " + filename
+            if (len(cmd) > arg_max_length) | (n == len(togiveaccess) - 1):
+                if n < len(togiveaccess) - 1:
+                    cmd = oldcmd
+                if unshare:
+                    print("preventing access to {:d} files".format(n + 1))
+                else:
+                    print("granting access to {:d} files".format(n + 1))
+                with open("/tmp/grantaccess{:d}.sh".format(n), "w") as f:
+                    f.write(cmd)
+                code = os.system(cmd)
+                cmd = cmd_prefix + " " + filename
+                if code == signal.SIGINT:
+                    print("Awakened")
+                    return
+
+    print("the files are stored here:\n\n" + refsheet_url)
+    print("\n\njust install and use gsutil to copy them")
+    print("https://cloud.google.com/storage/docs/gsutil_install")
+    print("https://cloud.google.com/storage/docs/gsutil/commands/cp")
+    return togiveaccess
 
