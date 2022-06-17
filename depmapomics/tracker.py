@@ -93,12 +93,12 @@ class SampleTracker:
     def read_mc_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", MC_TABLE_NAME)
-        return wksht.get_as_df(index_column=1)
+        return wksht.get_as_df(index_column=1, start="A3")
 
     def write_mc_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", MC_TABLE_NAME)
-        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_pr_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
