@@ -430,7 +430,6 @@ workflow Mutect2 {
     output {
         File base_vcf = select_first([FilterAlignmentArtifacts.filtered_vcf, Filter.filtered_vcf])
         File base_vcf_vcf_idx = select_first([FilterAlignmentArtifacts.filtered_vcf_idx, Filter.filtered_vcf_idx])
-        File filtered_vcf = Filter.filtered_vcf
         File filtering_stats = Filter.filtering_stats
         File mutect_stats = MergeStats.merged_stats
         File? contamination_table = CalculateContamination.contamination_table
