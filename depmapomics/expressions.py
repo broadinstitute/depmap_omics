@@ -603,7 +603,7 @@ async def postProcess(
 
     if compute_enrichment:
         print("doing ssGSEA")
-        enrichments = await _ssGSEA(
+        enrichments = await ssGSEA(
             files[ssGSEAcol], ssgseafilepath, recompute=recompute_ssgsea
         )
         print("saving files")

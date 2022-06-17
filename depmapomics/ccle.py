@@ -188,7 +188,6 @@ async def expressionPostProcessing(
         trackerobj=trackerobj,
         todrop=todrop,
         dry_run=True,
-        newgs=None,
     )
 
     # subset and rename, include all PRs that have associated CDS-ids
