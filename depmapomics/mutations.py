@@ -248,7 +248,7 @@ def mapBed(file, vcfdir, bed_location):
 def generateGermlineMatrix(
     refworkspace,
     vcfdir,
-    savedir="output/" + SAMPLESETNAME + "/",
+    savedir=WORKING_DIR + SAMPLESETNAME + "/",
     filename="binary_mutguides.tsv.gz",
     bed_location=GUIDESBED,
     vcf_colname="cnn_filtered_vcf",

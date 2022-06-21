@@ -287,7 +287,7 @@ def uploadPRMatrix(
     virtual_fn,
     matrix_format,
     pr_col="index",
-    folder="output",
+    folder=WORKING_DIR,
     change_desc="",
 ):
     """subset, save and upload to taiga PR-level matrix
@@ -339,7 +339,7 @@ def uploadModelMatrix(
     virtual_fn,
     matrix_format,
     pr_col="index",
-    folder="output",
+    folder=WORKING_DIR,
     change_desc="",
 ):
     """subset, rename, save and upload to taiga model-level matrix
@@ -398,7 +398,7 @@ def uploadGermlineMatrixModel(
         taiga_latest (str): which dataset the matrices to be subsetted are being read from
         taiga_virtual (str): which dataset the matrices are being uploaded to
     """
-    folder = "output/" + portal + "/model/"
+    folder = WORKING_DIR + portal + "/model/"
     h.createFoldersFor(folder)
     # load cds-id indexed matrices for the current quarter
     print("Germline matrix: loading from taiga latest")
@@ -437,7 +437,7 @@ def uploadAuxTables(
     taiga_ids=VIRTUAL,
     ach_table_name=ACH_CHOICE_TABLE_NAME,
     default_table_name=DEFAULT_TABLE_NAME,
-    folder="output/" + SAMPLESETNAME,
+    folder=WORKING_DIR + SAMPLESETNAME,
 ):
     """upload achilles choice and default model table to all portals
     Args:
@@ -502,7 +502,6 @@ def makePRLvMatrices(
                     virtual,
                     "NumericMatrixCSV",
                     pr_col="index",
-                    folder="temp",
                     change_desc="adding " + virtual,
                 )
         for latest_id, fn_dict in LATEST2FN_TABLE.items():
@@ -515,7 +514,6 @@ def makePRLvMatrices(
                     virtual,
                     "TableCSV",
                     pr_col=SAMPLEID,
-                    folder="temp",
                     change_desc="adding " + virtual,
                 )
         if portal == "internal":
@@ -528,13 +526,12 @@ def makePRLvMatrices(
                     virtual,
                     "NumericMatrixCSV",
                     pr_col=SAMPLEID,
-                    folder="temp",
                     change_desc="adding " + virtual,
                 )
 
 
 def makeModelLvMatrices(
-    trackerobj, virtual_ids=VIRTUAL, folder="output/" + SAMPLESETNAME
+    trackerobj, virtual_ids=VIRTUAL, folder=WORKING_DIR + SAMPLESETNAME
 ):
     """for each portal, save and upload profile-indexed data matrices
     
@@ -561,7 +558,6 @@ def makeModelLvMatrices(
                     virtual,
                     "NumericMatrixCSV",
                     pr_col="index",
-                    folder="output",
                     change_desc="adding " + virtual,
                 )
         for latest_id, fn_dict in LATEST2FN_TABLE.items():
@@ -574,7 +570,6 @@ def makeModelLvMatrices(
                     virtual,
                     "TableCSV",
                     pr_col=SAMPLEID,
-                    folder="output",
                     change_desc="adding " + virtual,
                 )
         if portal == "internal":
@@ -587,7 +582,6 @@ def makeModelLvMatrices(
                     virtual,
                     "NumericMatrixCSV",
                     pr_col=SAMPLEID,
-                    folder="temp",
                     change_desc="adding " + virtual,
                 )
         uploadGermlineMatrixModel(

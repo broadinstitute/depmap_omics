@@ -289,6 +289,7 @@ async def fusionPostProcessing(
     todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_FUSION,
     dataset_description=FUSIONreadme,
+    folder=WORKING_DIR,
     **kwargs,
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
@@ -321,7 +322,6 @@ async def fusionPostProcessing(
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
-    folder = os.path.join("output", sampleset, "")
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
@@ -384,19 +384,19 @@ async def fusionPostProcessing(
         changes_description="new " + sampleset + " release!",
         upload_files=[
             {
-                "path": "output/" + sampleset + "/fusions_all.csv",
+                "path": folder + sampleset + "/fusions_all.csv",
                 "name": "fusions-all",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "output/" + sampleset + "/filteredfusions_latest_profile.csv",
+                "path": folder + sampleset + "/filteredfusions_latest_profile.csv",
                 "name": "filtered_fusion-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": "output/" + sampleset + "/fusions_all_profile.csv",
+                "path": folder + sampleset + "/fusions_all_profile.csv",
                 "name": "fusion-profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
@@ -783,6 +783,7 @@ def cnPostProcessing(
 async def mutationPostProcessing(
     trackerobj,
     wesrefworkspace=WESMUTWORKSPACE,
+    wescnworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     wesvcfdir=WESVCFDIR,
     wgsvcfdir=WGSVCFDIR,
@@ -831,7 +832,7 @@ async def mutationPostProcessing(
 
     # doing wes
     print("doing wes")
-    folder = os.path.join("output", samplesetname, "wes_")
+    folder = WORKING_DIR + samplesetname + "/wes_"
 
     wesmutations = mutations.postProcess(
         wesrefworkspace,
@@ -850,7 +851,7 @@ async def mutationPostProcessing(
 
     # doing wgs
     print("doing wgs")
-    folder = os.path.join("output", samplesetname, "wgs_")
+    folder = WORKING_DIR + samplesetname + "/wgs_"
 
     wgsmutations = mutations.postProcess(
         wgsrefworkspace,
@@ -867,7 +868,7 @@ async def mutationPostProcessing(
 
     # merge
     print("merging")
-    folder = os.path.join("output", samplesetname, "merged_")
+    folder = WORKING_DIR + samplesetname + "/merged_"
     mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
@@ -953,9 +954,9 @@ async def mutationPostProcessing(
     # generate germline binary matrix
     print("generate germline binary matrix for wes")
     wes_mat = mut.generateGermlineMatrix(
-        refworkspace=wesrefworkspace,
+        refworkspace=wescnworkspace,
         vcfdir=wesvcfdir,
-        savedir="output/" + samplesetname + "/",
+        savedir=WORKING_DIR + samplesetname + "/",
         filename="binary_mutguides_wes.tsv.gz",
         bed_location=bed_location,
     )
@@ -963,7 +964,7 @@ async def mutationPostProcessing(
     wgs_mat = mut.generateGermlineMatrix(
         refworkspace=wgsrefworkspace,
         vcfdir=wgsvcfdir,
-        savedir="output/" + samplesetname + "/",
+        savedir=WORKING_DIR + samplesetname + "/",
         filename="binary_mutguides_wgs.tsv.gz",
         bed_location=bed_location,
     )
@@ -988,7 +989,7 @@ async def mutationPostProcessing(
     sorted_mat = wgs_mat.iloc[:, :4].join(mergedmat)
     sorted_mat["end"] = sorted_mat["end"].astype(int)
     print("saving wes and wgs germline matrices")
-    sorted_mat.to_csv(folder + "merged_binary_germline.csv", index=False)
+    sorted_mat.to_csv(folder + "binary_germline.csv", index=False)
     # uploading to taiga
     tc.update_dataset(
         changes_description="new " + samplesetname + " release!",
