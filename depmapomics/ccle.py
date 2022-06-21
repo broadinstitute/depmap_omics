@@ -197,7 +197,7 @@ async def expressionPostProcessing(
             upload_files=[
                 {
                     "path": folder + "transcripts_expected_count.csv",
-                    "name": "transcripts-expected_count",
+                    "name": "transcripts-expected_count",  # TODO: add "withreplicates" suffix to all cds-id level matrices
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
@@ -797,7 +797,7 @@ async def mutationPostProcessing(
     tokeep_wes=RESCUE_FOR_MUTATION_WES,
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
     bed_location=GUIDESBED,
-    minfreqtocall=0.25,
+    minfreqtocall=MINFREQTOCALL,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
