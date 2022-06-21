@@ -384,6 +384,8 @@ toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 
 ############## Mutations
 
+MINFREQTOCALL = 0.25
+
 MUTATION_GROUPS = {
     "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
     "other non-conserving": [
