@@ -816,6 +816,7 @@ def load(
     baits,
     stype,
     trackerobj,
+    folder=WORKING_DIR,
     toupdate=TO_UPDATE,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
@@ -905,14 +906,14 @@ def load(
         h.inttodate(i) for i in samples[extract_defaults["release_date"]]
     ]
 
-    if os.path.isdir("output/") == False:
-        os.makedirs("output/")
+    if os.path.isdir(folder) == False:
+        os.makedirs(folder)
 
     if len(noarxspan) > 0:
         print("we found " + str(len(noarxspan)) + " samples without arxspan_ids!!")
         noarxspan = noarxspan.sort_values(by="stripped_cell_line_name")
         trackerobj.write_samples_missing_arxspan(noarxspan)
-        noarxspan.to_csv("output/noarxspan_" + stype + "_" + release + ".csv")
+        noarxspan.to_csv(folder + "noarxspan_" + stype + "_" + release + ".csv")
         if h.askif(
             "Please review the samples (on 'depmap samples missing arxspan') and write yes once \
       finished, else write no to quit and they will not be added"
@@ -948,7 +949,7 @@ def load(
             print("some samples could still not be inferred")
             trackerobj.write_samples_not_found(samples.loc[notfound])
             samples.loc[notfound].to_csv(
-                "output/notfound_" + stype + "_" + release + ".csv"
+                folder + "notfound_" + stype + "_" + release + ".csv"
             )
             if h.askif(
                 "Please review the samples (on 'depmap samples not found') and write yes once \
@@ -960,7 +961,7 @@ def load(
                 ] = updated_samples.values
 
     trackerobj.write_all_samples_found(samples)
-    samples.to_csv("output/new_" + stype + "_" + release + ".csv")
+    samples.to_csv(folder + "new_" + stype + "_" + release + ".csv")
     return samples
 
 

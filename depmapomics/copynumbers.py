@@ -41,7 +41,7 @@ def loadFromGATKAggregation(
     showPlots=False,
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
-    tempFolder="output/",
+    tempFolder=WORKING_DIR,
     toremove=["readgroup_ubams",],
     sampleset="all",
     colRenaming=COLRENAMING,
