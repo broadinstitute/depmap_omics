@@ -1,3 +1,4 @@
+version 1.0
 # Workflow for running the GATK CNV pipeline on a matched pair. Supports both WGS and WES.
 #
 # Notes:
@@ -29,123 +30,128 @@
 #
 #############
 
-import "https://raw.githubusercontent.com/gatk-workflows/gatk4-somatic-cnvs/1.3.0/cnv_common_tasks.wdl" as CNVTasks
-import "https://raw.githubusercontent.com/gatk-workflows/gatk4-somatic-cnvs/1.3.0/cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
+
+import "cnv_common_tasks.wdl" as CNVTasks
+import "cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
 
 workflow CNVSomaticPairWorkflow {
 
-    ##################################
-    #### required basic arguments ####
-    ##################################
-    File common_sites
-    File intervals
-    File? blacklist_intervals
-    File tumor_bam
-    File tumor_bam_idx
-    File? normal_bam
-    File? normal_bam_idx
-    File read_count_pon
-    File ref_fasta_dict
-    File ref_fasta_fai
-    File ref_fasta
-    String gatk_docker
+    input {
 
-    ##################################
-    #### optional basic arguments ####
-    ##################################
-     # For running oncotator
-    Boolean? is_run_oncotator
-    File? gatk4_jar_override
-    Int? preemptible_attempts
-    # Use as a last resort to increase the disk given to every task in case of ill behaving data
-    Int? emergency_extra_disk
+        ##################################
+        #### required basic arguments ####
+        ##################################
+        File common_sites
+        File intervals
+        File? blacklist_intervals
+        File tumor_bam
+        File tumor_bam_idx
+        File? normal_bam
+        File? normal_bam_idx
+        File read_count_pon
+        File ref_fasta_dict
+        File ref_fasta_fai
+        File ref_fasta
+        String gatk_docker
 
-    ####################################################
-    #### optional arguments for PreprocessIntervals ####
-    ####################################################
-    Int? padding
-    Int? bin_length
-    Int? mem_gb_for_preprocess_intervals
+        ##################################
+        #### optional basic arguments ####
+        ##################################
+        # For running oncotator
+        Boolean? is_run_oncotator
+        File? gatk4_jar_override
+        Int? preemptible_attempts
+        # Use as a last resort to increase the disk given to every task in case of ill behaving data
+        Int? emergency_extra_disk
 
-    ##############################################
-    #### optional arguments for CollectCounts ####
-    ##############################################
-    String? collect_counts_format
-    Int? mem_gb_for_collect_counts
+        ####################################################
+        #### optional arguments for PreprocessIntervals ####
+        ####################################################
+        Int? padding
+        Int? bin_length
+        Int? mem_gb_for_preprocess_intervals
 
-    #####################################################
-    #### optional arguments for CollectAllelicCounts ####
-    #####################################################
-    String? minimum_base_quality
-    Int? mem_gb_for_collect_allelic_counts
+        ##############################################
+        #### optional arguments for CollectCounts ####
+        ##############################################
+        String? collect_counts_format
+        Int? mem_gb_for_collect_counts
 
-    ##################################################
-    #### optional arguments for DenoiseReadCounts ####
-    ##################################################
-    Int? number_of_eigensamples
-    Int? mem_gb_for_denoise_read_counts
+        #####################################################
+        #### optional arguments for CollectAllelicCounts ####
+        #####################################################
+        String? minimum_base_quality
+        Int? mem_gb_for_collect_allelic_counts
 
-    ##############################################
-    #### optional arguments for ModelSegments ####
-    ##############################################
-    Int? max_num_segments_per_chromosome
-    Int? min_total_allele_count
-    Int? min_total_allele_count_normal
-    Float? genotyping_homozygous_log_ratio_threshold
-    Float? genotyping_base_error_rate
-    Float? kernel_variance_copy_ratio
-    Float? kernel_variance_allele_fraction
-    Float? kernel_scaling_allele_fraction
-    Int? kernel_approximation_dimension
-    Array[Int]+? window_sizes = [8, 16, 32, 64, 128, 256]
-    Float? num_changepoints_penalty_factor
-    Float? minor_allele_fraction_prior_alpha
-    Int? num_samples_copy_ratio
-    Int? num_burn_in_copy_ratio
-    Int? num_samples_allele_fraction
-    Int? num_burn_in_allele_fraction
-    Float? smoothing_threshold_copy_ratio
-    Float? smoothing_threshold_allele_fraction
-    Int? max_num_smoothing_iterations
-    Int? num_smoothing_iterations_per_fit
-    Int? mem_gb_for_model_segments
+        ##################################################
+        #### optional arguments for DenoiseReadCounts ####
+        ##################################################
+        Int? number_of_eigensamples
+        Int? mem_gb_for_denoise_read_counts
 
-    ######################################################
-    #### optional arguments for CallCopyRatioSegments ####
-    ######################################################
-    Float? neutral_segment_copy_ratio_lower_bound
-    Float? neutral_segment_copy_ratio_upper_bound
-    Float? outlier_neutral_segment_copy_ratio_z_score_threshold
-    Float? calling_copy_ratio_z_score_threshold
-    Int? mem_gb_for_call_copy_ratio_segments
+        ##############################################
+        #### optional arguments for ModelSegments ####
+        ##############################################
+        Int? max_num_segments_per_chromosome
+        Int? min_total_allele_count
+        Int? min_total_allele_count_normal
+        Float? genotyping_homozygous_log_ratio_threshold
+        Float? genotyping_base_error_rate
+        Float? kernel_variance_copy_ratio
+        Float? kernel_variance_allele_fraction
+        Float? kernel_scaling_allele_fraction
+        Int? kernel_approximation_dimension
+        Array[Int]+? window_sizes = [8, 16, 32, 64, 128, 256]
+        Float? num_changepoints_penalty_factor
+        Float? minor_allele_fraction_prior_alpha
+        Int? num_samples_copy_ratio
+        Int? num_burn_in_copy_ratio
+        Int? num_samples_allele_fraction
+        Int? num_burn_in_allele_fraction
+        Float? smoothing_threshold_copy_ratio
+        Float? smoothing_threshold_allele_fraction
+        Int? max_num_smoothing_iterations
+        Int? num_smoothing_iterations_per_fit
+        Int? mem_gb_for_model_segments
 
-    #########################################
-    #### optional arguments for plotting ####
-    #########################################
-    Int? minimum_contig_length
-    Int? mem_gb_for_plotting
+        ######################################################
+        #### optional arguments for CallCopyRatioSegments ####
+        ######################################################
+        Float? neutral_segment_copy_ratio_lower_bound
+        Float? neutral_segment_copy_ratio_upper_bound
+        Float? outlier_neutral_segment_copy_ratio_z_score_threshold
+        Float? calling_copy_ratio_z_score_threshold
+        Int? mem_gb_for_call_copy_ratio_segments
 
-    ##########################################
-    #### optional arguments for Oncotator ####
-    ##########################################
-    String? additional_args_for_oncotator
-    String? oncotator_docker
-    Int? mem_gb_for_oncotator
-    Int? boot_disk_space_gb_for_oncotator
+        #########################################
+        #### optional arguments for plotting ####
+        #########################################
+        Int? minimum_contig_length
+        Int? mem_gb_for_plotting
 
-    Int ref_size = ceil(size(ref_fasta, "GB") + size(ref_fasta_dict, "GB") + size(ref_fasta_fai, "GB"))
-    Int read_count_pon_size = ceil(size(read_count_pon, "GB"))
-    Int tumor_bam_size = ceil(size(tumor_bam, "GB") + size(tumor_bam_idx, "GB"))
-    Int normal_bam_size = if defined(normal_bam) then ceil(size(normal_bam, "GB") + size(normal_bam_idx, "GB")) else 0
+        ##########################################
+        #### optional arguments for Oncotator ####
+        ##########################################
+        String? additional_args_for_oncotator
+        String? oncotator_docker
+        Int? mem_gb_for_oncotator
+        Int? boot_disk_space_gb_for_oncotator
 
-    Int gatk4_override_size = if defined(gatk4_jar_override) then ceil(size(gatk4_jar_override, "GB")) else 0
-    # This is added to every task as padding, should increase if systematically you need more disk for every call
-    Int disk_pad = 20 + ceil(size(intervals, "GB")) + ceil(size(common_sites, "GB")) + gatk4_override_size + select_first([emergency_extra_disk, 0])
+        Int ref_size = ceil(size(ref_fasta, "GB") + size(ref_fasta_dict, "GB") + size(ref_fasta_fai, "GB"))
+        Int read_count_pon_size = ceil(size(read_count_pon, "GB"))
+        Int tumor_bam_size = ceil(size(tumor_bam, "GB") + size(tumor_bam_idx, "GB"))
+        Int normal_bam_size = if defined(normal_bam) then ceil(size(normal_bam, "GB") + size(normal_bam_idx, "GB")) else 0
 
-    File final_normal_bam = select_first([normal_bam, "null"])
-    File final_normal_bam_idx = select_first([normal_bam_idx, "null"])
+        Int gatk4_override_size = if defined(gatk4_jar_override) then ceil(size(gatk4_jar_override, "GB")) else 0
+        # This is added to every task as padding, should increase if systematically you need more disk for every call
+        Int disk_pad = 20 + ceil(size(intervals, "GB")) + ceil(size(common_sites, "GB")) + gatk4_override_size + select_first([emergency_extra_disk, 0])
 
-    Int preprocess_intervals_disk = ref_size + disk_pad
+        File final_normal_bam = select_first([normal_bam, "null"])
+        File final_normal_bam_idx = select_first([normal_bam_idx, "null"])
+
+        Int preprocess_intervals_disk = ref_size + disk_pad
+    }
+
     call CNVTasks.PreprocessIntervals {
         input:
             intervals = intervals,
@@ -504,22 +510,24 @@ workflow CNVSomaticPairWorkflow {
 }
 
 task DenoiseReadCounts {
-    String entity_id
-    File read_counts
-    File read_count_pon
-    Int? number_of_eigensamples #use all eigensamples in panel by default
-    File? gatk4_jar_override
+    input {
+        String entity_id
+        File read_counts
+        File read_count_pon
+        Int? number_of_eigensamples #use all eigensamples in panel by default
+        File? gatk4_jar_override
 
-    # Runtime parameters
-    String gatk_docker
-    Int? mem_gb
-    Int? disk_space_gb
-    Boolean use_ssd = false
-    Int? cpu
-    Int? preemptible_attempts
+        # Runtime parameters
+        String gatk_docker
+        Int? mem_gb
+        Int? disk_space_gb
+        Boolean use_ssd = false
+        Int? cpu
+        Int? preemptible_attempts
 
-    Int machine_mem_mb = select_first([mem_gb, 13]) * 1000
-    Int command_mem_mb = machine_mem_mb - 1000
+        Int machine_mem_mb = select_first([mem_gb, 13]) * 1000
+        Int command_mem_mb = machine_mem_mb - 1000
+    }
 
     command <<<
         set -e
@@ -548,52 +556,54 @@ task DenoiseReadCounts {
 }
 
 task ModelSegments {
-    String entity_id
-    File denoised_copy_ratios
-    File allelic_counts
-    File? normal_allelic_counts
-    Int? max_num_segments_per_chromosome
-    Int? min_total_allele_count
-    Int? min_total_allele_count_normal
-    Float? genotyping_homozygous_log_ratio_threshold
-    Float? genotyping_base_error_rate
-    Float? kernel_variance_copy_ratio
-    Float? kernel_variance_allele_fraction
-    Float? kernel_scaling_allele_fraction
-    Int? kernel_approximation_dimension
-    Array[Int]+? window_sizes = [8, 16, 32, 64, 128, 256]
-    Float? num_changepoints_penalty_factor
-    Float? minor_allele_fraction_prior_alpha
-    Int? num_samples_copy_ratio
-    Int? num_burn_in_copy_ratio
-    Int? num_samples_allele_fraction
-    Int? num_burn_in_allele_fraction
-    Float? smoothing_threshold_copy_ratio
-    Float? smoothing_threshold_allele_fraction
-    Int? max_num_smoothing_iterations
-    Int? num_smoothing_iterations_per_fit
-    String? output_dir
-    File? gatk4_jar_override
+    input {
+        String entity_id
+        File denoised_copy_ratios
+        File allelic_counts
+        File? normal_allelic_counts
+        Int? max_num_segments_per_chromosome
+        Int? min_total_allele_count
+        Int? min_total_allele_count_normal
+        Float? genotyping_homozygous_log_ratio_threshold
+        Float? genotyping_base_error_rate
+        Float? kernel_variance_copy_ratio
+        Float? kernel_variance_allele_fraction
+        Float? kernel_scaling_allele_fraction
+        Int? kernel_approximation_dimension
+        Array[Int]+? window_sizes = [8, 16, 32, 64, 128, 256]
+        Float? num_changepoints_penalty_factor
+        Float? minor_allele_fraction_prior_alpha
+        Int? num_samples_copy_ratio
+        Int? num_burn_in_copy_ratio
+        Int? num_samples_allele_fraction
+        Int? num_burn_in_allele_fraction
+        Float? smoothing_threshold_copy_ratio
+        Float? smoothing_threshold_allele_fraction
+        Int? max_num_smoothing_iterations
+        Int? num_smoothing_iterations_per_fit
+        String? output_dir
+        File? gatk4_jar_override
 
-    # Runtime parameters
-    String gatk_docker
-    Int? mem_gb
-    Int? disk_space_gb
-    Boolean use_ssd = false
-    Int? cpu
-    Int? preemptible_attempts
+        # Runtime parameters
+        String gatk_docker
+        Int? mem_gb
+        Int? disk_space_gb
+        Boolean use_ssd = false
+        Int? cpu
+        Int? preemptible_attempts
 
-    Int machine_mem_mb = select_first([mem_gb, 13]) * 1000
-    # ModelSegments seems to need at least 3GB of overhead to run
-    Int command_mem_mb = machine_mem_mb - 3000
+        Int machine_mem_mb = select_first([mem_gb, 13]) * 1000
+        # ModelSegments seems to need at least 3GB of overhead to run
+        Int command_mem_mb = machine_mem_mb - 3000
 
-    # If optional output_dir not specified, use "out"
-    String output_dir_ = select_first([output_dir, "out"])
+        # If optional output_dir not specified, use "out"
+        String output_dir_ = select_first([output_dir, "out"])
 
-    # default values are min_total_allele_count_ = 0 in matched-normal mode
-    #                                            = 30 in case-only mode
-    Int default_min_total_allele_count = if defined(normal_allelic_counts) then 0 else 30
-    Int min_total_allele_count_ = select_first([min_total_allele_count, default_min_total_allele_count])
+        # default values are min_total_allele_count_ = 0 in matched-normal mode
+        #                                            = 30 in case-only mode
+        Int default_min_total_allele_count = if defined(normal_allelic_counts) then 0 else 30
+        Int min_total_allele_count_ = select_first([min_total_allele_count, default_min_total_allele_count])
+    }
 
     command <<<
         set -e
@@ -655,24 +665,26 @@ task ModelSegments {
 }
 
 task CallCopyRatioSegments {
-    String entity_id
-    File copy_ratio_segments
-    Float? neutral_segment_copy_ratio_lower_bound
-    Float? neutral_segment_copy_ratio_upper_bound
-    Float? outlier_neutral_segment_copy_ratio_z_score_threshold
-    Float? calling_copy_ratio_z_score_threshold
-    File? gatk4_jar_override
+    input {
+        String entity_id
+        File copy_ratio_segments
+        Float? neutral_segment_copy_ratio_lower_bound
+        Float? neutral_segment_copy_ratio_upper_bound
+        Float? outlier_neutral_segment_copy_ratio_z_score_threshold
+        Float? calling_copy_ratio_z_score_threshold
+        File? gatk4_jar_override
 
-    # Runtime parameters
-    String gatk_docker
-    Int? mem_gb
-    Int? disk_space_gb
-    Boolean use_ssd = false
-    Int? cpu
-    Int? preemptible_attempts
+        # Runtime parameters
+        String gatk_docker
+        Int? mem_gb
+        Int? disk_space_gb
+        Boolean use_ssd = false
+        Int? cpu
+        Int? preemptible_attempts
 
-    Int machine_mem_mb = select_first([mem_gb, 7]) * 1000
-    Int command_mem_mb = machine_mem_mb - 1000
+        Int machine_mem_mb = select_first([mem_gb, 7]) * 1000
+        Int command_mem_mb = machine_mem_mb - 1000
+    }
 
     command <<<
         set -e
@@ -702,27 +714,29 @@ task CallCopyRatioSegments {
 }
 
 task PlotDenoisedCopyRatios {
-    String entity_id
-    File standardized_copy_ratios
-    File denoised_copy_ratios
-    File ref_fasta_dict
-    Int? minimum_contig_length
-    String? output_dir
-    File? gatk4_jar_override
+    input {
+        String entity_id
+        File standardized_copy_ratios
+        File denoised_copy_ratios
+        File ref_fasta_dict
+        Int? minimum_contig_length
+        String? output_dir
+        File? gatk4_jar_override
 
-    # Runtime parameters
-    String gatk_docker
-    Int? mem_gb
-    Int? disk_space_gb
-    Boolean use_ssd = false
-    Int? cpu
-    Int? preemptible_attempts
+        # Runtime parameters
+        String gatk_docker
+        Int? mem_gb
+        Int? disk_space_gb
+        Boolean use_ssd = false
+        Int? cpu
+        Int? preemptible_attempts
 
-    Int machine_mem_mb = select_first([mem_gb, 7]) * 1000
-    Int command_mem_mb = machine_mem_mb - 1000
+        Int machine_mem_mb = select_first([mem_gb, 7]) * 1000
+        Int command_mem_mb = machine_mem_mb - 1000
 
-    # If optional output_dir not specified, use "out"
-    String output_dir_ = select_first([output_dir, "out"])
+        # If optional output_dir not specified, use "out"
+        String output_dir_ = select_first([output_dir, "out"])
+    }
 
     command <<<
         set -e
@@ -760,28 +774,30 @@ task PlotDenoisedCopyRatios {
 }
 
 task PlotModeledSegments {
-    String entity_id
-    File denoised_copy_ratios
-    File het_allelic_counts
-    File modeled_segments
-    File ref_fasta_dict
-    Int? minimum_contig_length
-    String? output_dir
-    File? gatk4_jar_override
+    input {
+        String entity_id
+        File denoised_copy_ratios
+        File het_allelic_counts
+        File modeled_segments
+        File ref_fasta_dict
+        Int? minimum_contig_length
+        String? output_dir
+        File? gatk4_jar_override
 
-    # Runtime parameters
-    String gatk_docker
-    Int? mem_gb
-    Int? disk_space_gb
-    Boolean use_ssd = false
-    Int? cpu
-    Int? preemptible_attempts
+        # Runtime parameters
+        String gatk_docker
+        Int? mem_gb
+        Int? disk_space_gb
+        Boolean use_ssd = false
+        Int? cpu
+        Int? preemptible_attempts
 
-    Int machine_mem_mb = select_first([mem_gb, 7]) * 1000
-    Int command_mem_mb = machine_mem_mb - 1000
+        Int machine_mem_mb = select_first([mem_gb, 7]) * 1000
+        Int command_mem_mb = machine_mem_mb - 1000
 
-    # If optional output_dir not specified, use "out"
-    String output_dir_ = select_first([output_dir, "out"])
+        # If optional output_dir not specified, use "out"
+        String output_dir_ = select_first([output_dir, "out"])
+    }
 
     command <<<
         set -e
