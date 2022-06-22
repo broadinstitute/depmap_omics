@@ -34,7 +34,7 @@ workflow WGS_pipeline {
         #"broadinstitute/gatk:4.beta.3"
         #"broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
         String ref_name = "hg38"
-        
+
         String gatk_docker="broadinstitute/gatk:4.2.6.0"
 
         String gcs_project_for_requester_pays
@@ -45,8 +45,11 @@ workflow WGS_pipeline {
         File intervals
         File read_count_pon
         Boolean is_run_funcotator_for_cnv
+        Int cnv_preemptible_attempts = 1
+        Float num_changepoints_penalty_factor = 5
         String funcotator_ref_version = "hg38"
         File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
+        File blacklist_intervals = "gs://gatk-best-practices/somatic-hg38/CNV_and_centromere_blacklist.hg38liftover.list"
 
         String manta_docker = "wwliao/manta:latest"
         String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
@@ -81,7 +84,10 @@ workflow WGS_pipeline {
             is_run_funcotator=is_run_funcotator_for_cnv,
             funcotator_ref_version=funcotator_ref_version,
             gcs_project_for_requester_pays=gcs_project_for_requester_pays,
-            funcotator_data_sources_tar_gz=funcotator_data_sources_tar_gz
+            funcotator_data_sources_tar_gz=funcotator_data_sources_tar_gz,
+            blacklist_intervals=blacklist_intervals,
+            preemptible_attempts = cnv_preemptible_attempts,
+            num_changepoints_penalty_factor = num_changepoints_penalty_factor
     }
 
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
