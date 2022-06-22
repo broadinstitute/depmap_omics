@@ -73,8 +73,7 @@ task opencravat {
       cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/
       cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/
 
-      ${if defined(oncokb_api_key) then "mkdir /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/data/" else ""}
-      ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/data/token.txt" else ""}
+      ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm/data/token.txt" else ""}
       
       # fast version
       # ------------
