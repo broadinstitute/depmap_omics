@@ -1,59 +1,58 @@
 version 1.0
 
-import "BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams
-import "PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4
-import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
-import "cnn-variant-filter.wdl" as cnn_variant_filter
+import "cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample
 import "Manta_SomaticSV.wdl" as Manta_SomaticSV
-import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 import "gatk_mutect2_v21.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
-import "opencravat.wdl" as openCravat
+import "remove_filtered.wdl" as removeFiltered
+import "vcf_to_depmap.wdl" as vcf_to_depmap
+import "PureCN.wdl" as PureCN
+import "msisensor2.wdl" as msisensor2
+# import "opencravat.wdl" as openCravat
 
 workflow WGS_pipeline {
 
     input {
         #BamToUnmappedRGBams
         #"broadinstitute/genomes-in-the-cloud:2.3.1-1504795437"
-        File ref_fasta
-        File ref_fasta_index
-        File ref_dict
+        File ref_fasta = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta"
+        File ref_fasta_index = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
+        File ref_dict = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dict"
 
         File input_bam
         File input_bam_index
 
-        String picard_path
-        String picard_docker
+        String picard_path = "/usr/gitc/"
+        String picard_docker = "broadinstitute/genomes-in-the-cloud:2.3.1-1504795437"
 
-        Int preemptible_tries
+        Int preemptible_tries = 0
 
         String sample_name #this.name
 
         #PreProcessingForVariantDiscovery_GATK4
         #"broadinstitute/gatk:4.beta.3"
         #"broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
-        String ref_name
+        String ref_name = "hg38"
 
-
-        File dbSNP_vcf
-        File dbSNP_vcf_index
-
-        Array[File] known_indels_sites_VCFs
-        Array[File] known_indels_sites_indices
-
-        String gotc_docker
         String gatk_docker="broadinstitute/gatk:4.2.6.0"
-        String python_docker
 
         String gcs_project_for_requester_pays
 
-        String gotc_path
-
         #CNV_Somatic_Workflow_on_Sample
         #us.gcr.io/broad-gatk/gatk:4.1.5.0
-        File common_sites
+        File common_sites = "gs://ccleparams/references/intervals/common_sites_hg38_lifted.list"
         File intervals
+        File read_count_pon
+        Boolean is_run_funcotator_for_cnv
+        Int cnv_preemptible_attempts = 1
+        Float num_changepoints_penalty_factor = 5
+        String funcotator_ref_version = "hg38"
+        File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
+        File blacklist_intervals = "gs://gatk-best-practices/somatic-hg38/CNV_and_centromere_blacklist.hg38liftover.list"
+
+        String manta_docker = "wwliao/manta:latest"
+        String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
 
         # mutect2
         Int M2scatter=10
@@ -64,40 +63,11 @@ workflow WGS_pipeline {
         String? m2_filter_args
         File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
         File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
-    }
+        String bcftools_exclude_string='FILTER~"weak_evidence" || FILTER~"map_qual" || FILTER~"strand_bias" || FILTER~"slippage" || FILTER~"clustered_events" || FILTER~"base_qual"'
 
-    call BamToUnmappedRGBams.BamToUnmappedRGBamsWf as BamToUnmappedRGBamsWf {
-        input:
-            ref_fasta=ref_fasta,
-            ref_fasta_index=ref_fasta_index,
-            input_bam=input_bam,
-            picard_path=picard_path,
-            preemptible_tries=preemptible_tries
-    }
+        # PureCN
+        File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
 
-    call ArrayOfFilesToTxt.CreateTxt as CreateTxt {
-        input:
-            array_of_files=BamToUnmappedRGBamsWf.sortsam_out,
-            list_name=sample_name
-    }
-
-    call PreProcessingForVariantDiscovery_GATK4.PreProcessingForVariantDiscovery_GATK4 as PreProcessingForVariantDiscovery_GATK4 {
-        input:
-            sample_name=sample_name,
-            ref_name=ref_name,
-            flowcell_unmapped_bams_list=CreateTxt.file_list_name,
-            ref_dict=ref_dict,
-            ref_fasta=ref_fasta,
-            ref_fasta_index=ref_fasta_index,
-            dbSNP_vcf=dbSNP_vcf,
-            dbSNP_vcf_index=dbSNP_vcf_index,
-            known_indels_sites_VCFs=known_indels_sites_VCFs,
-            known_indels_sites_indices=known_indels_sites_indices,
-            gotc_docker=gotc_docker,
-            python_docker=python_docker,
-            gotc_path=gotc_path,
-            picard_path=picard_path,
-            preemptible_tries=preemptible_tries
     }
 
     call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
@@ -107,18 +77,29 @@ workflow WGS_pipeline {
             ref_fasta=ref_fasta,
             ref_fasta_dict=ref_dict,
             ref_fasta_fai=ref_fasta_index,
-            tumor_bam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-            tumor_bam_idx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
+            tumor_bam=input_bam,
+            tumor_bam_idx=input_bam_index,
+            read_count_pon=read_count_pon,
+            gatk_docker=gatk_docker,
+            is_run_funcotator=is_run_funcotator_for_cnv,
+            funcotator_ref_version=funcotator_ref_version,
+            gcs_project_for_requester_pays=gcs_project_for_requester_pays,
+            funcotator_data_sources_tar_gz=funcotator_data_sources_tar_gz,
+            blacklist_intervals=blacklist_intervals,
+            preemptible_attempts = cnv_preemptible_attempts,
+            num_changepoints_penalty_factor = num_changepoints_penalty_factor
     }
 
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
         input:
             sample_name=sample_name,
-            tumor_bam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-            tumor_bam_index=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+            tumor_bam=input_bam,
+            tumor_bam_index=input_bam_index,
             ref_fasta=ref_fasta,
             ref_fasta_index=ref_fasta_index,
-            is_cram=false
+            is_cram=false,
+            config_manta=config_manta,
+            manta_docker=manta_docker
     }
 
     call mutect2.Mutect2 as mutect2 {
@@ -128,8 +109,9 @@ workflow WGS_pipeline {
             ref_fai=ref_fasta_index,
             ref_fasta=ref_fasta,
             scatter_count=M2scatter,
-            tumor_reads=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-            tumor_reads_index=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index,
+            tumor_name=sample_name,
+            tumor_reads=input_bam,
+            tumor_reads_index=input_bam_index,
             intervals=intervals,
             gcs_project_for_requester_pays=gcs_project_for_requester_pays,
             compress_vcfs=true,
@@ -138,6 +120,7 @@ workflow WGS_pipeline {
             funco_filter_funcotations=false,
             funco_output_format="VCF",
             funco_reference_version="hg38",
+            funco_data_sources_tar_gz=funcotator_data_sources_tar_gz,
             gnomad=gnomad,
             gnomad_idx=gnomad_idx,
             m2_extra_args=m2_extra_args,
@@ -146,46 +129,50 @@ workflow WGS_pipeline {
             pon=pon,
             pon_idx=pon_idx,
             run_funcotator=true,
-            run_orientation_bias_mixture_model_filter=true
+            run_orientation_bias_mixture_model_filter=true,
+            bcftools_exclude_string=bcftools_exclude_string
     }
 
     call PureCN.PureCN as PureCN {
         input:
-            sample_id=sample_id,
+            sampleID=sample_name,
             segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
-            vcf=mutect2.filtered_vcf,
-            intervals=intervals,
-            # Method configuration inputs
-            genome="hg38",
-            maxCopyNumber=8,
-            minPurity=0.90,
-            maxPurity=0.99,
-            funSegmentation="Hclust",
-            maxSegments=100,
-            otherArguments=" --post-optimize --model-homozygous --min-total-counts 20"
-    } 
+            vcf=mutect2.base_vcf,
+            intervals=purecn_intervals,
+    }
+
+    call msisensor2.msisensor2_workflow as msisensor2_workflow{
+        input:
+            sample_id=sample_name,
+            bam=input_bam,
+            bai=input_bam_index
+    }
 
     call setGT.bcftools_fix_ploidy as set_GT {
         input:
-            sample_id=sample_id,
-            vcf=select_first([mutect2.funcotated_file, mutect2.filtered_vcf]),
+            sample_id=sample_name,
+            vcf=select_first([mutect2.funcotated_file, mutect2.base_vcf]),
     }
 
     call fixmutect2.fix_mutect2 as fix_mutect2 {
         input:
-            sample_id=sample_id,
+            sample_id=sample_name,
             vcf_file=set_GT.vcf_fixedploid
     }
 
+    call removeFiltered.RemoveFiltered as RemoveFiltered {
+        input:
+            sample_id=sample_name,
+            input_vcf=fix_mutect2.vcf_fixed
+    }
+
+    call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
+        input:
+            input_vcf=RemoveFiltered.output_vcf,
+            sample_id=sample_name,
+    }
+
     output {
-        #BamToUnmappedRGBams
-        #createTxT
-        #PreProcessingForVariantDiscovery_GATK4
-        File duplication_metrics = PreProcessingForVariantDiscovery_GATK4.duplication_metrics
-        File bqsr_report = PreProcessingForVariantDiscovery_GATK4.bqsr_report
-        File analysis_ready_bam = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam
-        File analysis_ready_bam_index = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
-        File analysis_ready_bam_md5 = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_md5
         #CNVSomaticPairWorkflow
         File preprocessed_intervals = CNVSomaticPairWorkflow.preprocessed_intervals
         File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor
@@ -208,7 +195,7 @@ workflow WGS_pipeline {
         File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
         File called_copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_legacy_segments_tumor
         File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
-        File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
+        # File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
         File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
         Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
         File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
@@ -255,5 +242,13 @@ workflow WGS_pipeline {
         String PureCN_cin_allele_specific = PureCN.cin_allele_specific
         String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
         String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
+        # msisensor2
+		Float msisensor2_score=msisensor2_workflow.msisensor2_score
+		File msisensor2_output=msisensor2_workflow.msisensor2_output
+		File msisensor2_output_dis=msisensor2_workflow.msisensor2_output_dis
+		File msisensor2_output_somatic=msisensor2_workflow.msisensor2_output_somatic
+        # vcf_to_depmap
+        Array[File] full_maf=my_vcf_to_depmap.full_file
+        File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }

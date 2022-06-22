@@ -166,7 +166,7 @@ workflow Mutect2 {
     Boolean make_bamout_or_default = select_first([make_bamout, false])
     Boolean run_funcotator_or_default = select_first([run_funcotator, false])
     Boolean filter_funcotations_or_default = select_first([filter_funcotations, true])
-    Boolean remove_filtered_or_default = select_first([remove_filtered, true])
+    Boolean remove_filtered_or_default = select_first([remove_filtered, false])
 
     # Disk sizes used for dynamic sizing
     Int ref_size = ceil(size(ref_fasta, "GB") + size(ref_dict, "GB") + size(ref_fai, "GB"))
@@ -1158,9 +1158,9 @@ task RemoveFiltered {
     input {
         File input_vcf
         String sample_id
-        String bcftools_exclude_string = 'FILTER="weak_evidence" || FILTER="map_qual" || FILTER="strand_bias" || FILTER="slippage" || FILTER="clustered_events" || FILTER="base_qual"'
+        String bcftools_exclude_string = 'FILTER~"weak_evidence" || FILTER~"map_qual" || FILTER~"strand_bias" || FILTER~"slippage" || FILTER~"clustered_events" || FILTER~"base_qual"'
 
-        String docker_image
+        String docker_image = "dceoy/bcftools"
         Runtime runtime_params
         Int cpu = 2
     }
