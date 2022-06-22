@@ -130,8 +130,9 @@ async def expressionPostProcessing(
     print(lost)
     # do we have samples that are missanotated compared to previous releases (replicate level)
     notindataset, missannotated, unmatched = rna.findMissAnnotatedReplicates(
-        replevel, prevcounts, renaming
+        files.get("genes_expected_count"), prevcounts, renaming
     )
+    print("missanotated compared to previous releases")
     for k, v in unmatched.items():
         if ccle_refsamples.loc[k].arxspan_id != v:
             print(k, v)
