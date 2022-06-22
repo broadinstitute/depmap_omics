@@ -34,21 +34,10 @@ workflow WGS_pipeline {
         #"broadinstitute/gatk:4.beta.3"
         #"broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
         String ref_name = "hg38"
-
-
-        File dbSNP_vcf = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
-        File dbSNP_vcf_index = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
-
-        Array[File] known_indels_sites_VCFs = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz"
-        Array[File] known_indels_sites_indices = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz.tbi"
-
-        String gotc_docker = "broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
+        
         String gatk_docker="broadinstitute/gatk:4.2.6.0"
-        String python_docker = "python:2.7"
 
         String gcs_project_for_requester_pays
-
-        String gotc_path = "/usr/gitc/"
 
         #CNV_Somatic_Workflow_on_Sample
         #us.gcr.io/broad-gatk/gatk:4.1.5.0
