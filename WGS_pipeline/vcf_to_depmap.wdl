@@ -45,6 +45,7 @@ task vcf_to_depmap {
               ~{use_multi} \
               ~{onco_kb} \
               '~{sep="," force_keep}'
+        rm ~{sample_id}-maf-full.parquet/
     }
 
     runtime {
@@ -57,7 +58,7 @@ task vcf_to_depmap {
     }
 
     output {
-        Array[File] full_file = glob("~{sample_id}-maf-full.parquet/*")
+        Array[File] full_file = glob("~{sample_id}-maf-full.parquet/*.parquet")
         File depmap_maf = "~{sample_id}-maf-coding_somatic-subset.csv.gz"
         
     }
