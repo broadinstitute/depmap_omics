@@ -880,21 +880,10 @@ async def mutationPostProcessing(
     mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
-    priomutations = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
-    # normals = set(ccle_refsamples[ccle_refsamples.primary_disease=="normal"].arxspan_id)
-    # mutations = mutations[~mutations[SAMPLEID].isin(normals)]
-    # priomutations.to_csv(folder + "somatic_mutations_profile.csv", index=False)
+    merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
 
     # making binary mutation matrices
     print("creating mutation matrices")
-
-    merged = priomutations[priomutations["tumor_f"] > 0.05]
-    merged = mutations.annotateLikelyImmortalized(
-        merged,
-        TCGAlocs=["TCGAhsCnt", "COSMIChsCnt"],
-        max_recurrence=0.05,
-        min_tcga_true_cancer=5,
-    )
     print("changing variant annotations")
     rename = {}
     for k, v in mutation_groups.items():
