@@ -112,28 +112,28 @@ workflow run_PureCN {
     }
 
     output {
-        File solutions_pdf = PureCN.solutions_pdf
-        File chromosomes_pdf = PureCN.chromosomes_pdf
-        File rds = PureCN.rds
-        File dnacopy = PureCN.dnacopy
-        File variants = PureCN.variants
-        File loh = PureCN.loh
-        File genes = PureCN.genes
-        File segmentation = PureCN.segmentation
-        File log = PureCN.log
-        File selected_solution = PureCN.selected_solution
-        File local_optima_pdf = PureCN.local_optima_pdf
-        String purity = PureCN.purity
-        String ploidy = PureCN.ploidy
-        String contamination = PureCN.contamination
-        String flagged = PureCN.flagged
-        String curated = PureCN.curated
-        String comment = PureCN.comment
-        String wgd = PureCN.wgd
-        String loh_fraction = PureCN.loh_fraction
-        String cin = PureCN.cin
-        String cin_allele_specific = PureCN.cin_allele_specific
-        String cin_ploidy_robust = PureCN.cin_ploidy_robust
-        String cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
+        File PureCN_solutions_pdf = PureCN.solutions_pdf
+        File PureCN_chromosomes_pdf = PureCN.chromosomes_pdf
+        File PureCN_rds = PureCN.rds
+        File PureCN_dnacopy = PureCN.dnacopy
+        File PureCN_variants = PureCN.variants
+        File PureCN_loh = PureCN.loh
+        File PureCN_genes = PureCN.genes
+        File PureCN_segmentation = PureCN.segmentation
+        File PureCN_log = PureCN.log
+        File PureCN_selected_solution = PureCN.selected_solution
+        File PureCN_local_optima_pdf = PureCN.local_optima_pdf
+        String PureCN_purity = PureCN.purity
+        String PureCN_ploidy = PureCN.ploidy
+        String PureCN_contamination = PureCN.contamination
+        String PureCN_flagged = PureCN.flagged
+        String PureCN_curated = PureCN.curated
+        String PureCN_comment = PureCN.comment
+        String PureCN_wgd = PureCN.wgd
+        String PureCN_loh_fraction = PureCN.loh_fraction
+        String PureCN_cin = PureCN.cin
+        String PureCN_cin_allele_specific = PureCN.cin_allele_specific
+        String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
+        String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
     }
 }
