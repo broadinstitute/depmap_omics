@@ -155,15 +155,15 @@ def updateTracker(
         samplesinset (list[str], optional): list of samples in set when refworkspace is None (bypass interacting with terra)
         starlogs (dict(str:list[str]), optional): dict of samples' star qc log locations when refworkspace is None (bypass interacting with terra)
     """
-    if refworkspace is not None:
-        refwm = dm.WorkspaceManager(refworkspace)
-        samplesinset = [
-            i["entityName"]
-            for i in refwm.get_entities("sample_set").loc[samplesetname].samples
-        ]
-        starlogs = myterra.getQC(
-            workspace=refworkspace, only=samplesinset, qcname=qcname, match=match
-        )
+
+    refwm = dm.WorkspaceManager(refworkspace)
+    samplesinset = [
+        i["entityName"]
+        for i in refwm.get_entities("sample_set").loc[samplesetname].samples
+    ]
+    starlogs = myterra.getQC(
+        workspace=refworkspace, only=samplesinset, qcname=qcname, match=match
+    )
     for k, v in starlogs.items():
         if k == "nan":
             continue
@@ -216,9 +216,9 @@ def loadFromRSEMaggregate(
     """
     files = {}
     renaming = {}
-    if refworkspace is not None:
-        refwm = dm.WorkspaceManager(refworkspace)
-        rsemfilelocs = refwm.get_sample_sets().loc[sampleset]
+
+    refwm = dm.WorkspaceManager(refworkspace)
+    rsemfilelocs = refwm.get_sample_sets().loc[sampleset]
     for val in filenames:
         file = pd.read_csv(
             rsemfilelocs[val],
@@ -491,25 +491,24 @@ async def postProcess(
     """
     if not samplesetToLoad:
         samplesetToLoad = samplesetname
-    if refworkspace is not None:
-        refwm = dm.WorkspaceManager(refworkspace)
-        if save_output:
-            terra.saveWorkspace(refworkspace, save_output + "terra/")
-        print("load QC and generate QC report")
-        samplesinset = [
-            i["entityName"]
-            for i in refwm.get_entities("sample_set").loc[samplesetname].samples
-        ]
-        if doCleanup:
-            print("cleaninp up data")
-            res = refwm.get_samples()
-            for val in colstoclean:
-                if val in res.columns.tolist():
-                    refwm.disable_hound().delete_entity_attributes(
-                        "sample", res[val], delete_files=True
-                    )
-                else:
-                    print(val + " not in the workspace's data")
+    refwm = dm.WorkspaceManager(refworkspace)
+    if save_output:
+        terra.saveWorkspace(refworkspace, save_output + "terra/")
+    print("load QC and generate QC report")
+    samplesinset = [
+        i["entityName"]
+        for i in refwm.get_entities("sample_set").loc[samplesetname].samples
+    ]
+    if doCleanup:
+        print("cleaninp up data")
+        res = refwm.get_samples()
+        for val in colstoclean:
+            if val in res.columns.tolist():
+                refwm.disable_hound().delete_entity_attributes(
+                    "sample", res[val], delete_files=True
+                )
+            else:
+                print(val + " not in the workspace's data")
 
     _, lowqual, failed = myQC.plot_rnaseqc_results(
         refworkspace,
