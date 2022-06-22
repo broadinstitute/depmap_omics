@@ -129,10 +129,12 @@ async def expressionPostProcessing(
     print("of which, lost genes:")
     print(lost)
     # do we have samples that are missanotated compared to previous releases (replicate level)
-    # notindataset, missannotated, unmatched = findMissAnnotatedReplicates(replevel, prevcounts, renaming)
-    # for k,v in unmatched.items():
-    #    if ccle_refsamples.loc[k].arxspan_id!=v:
-    #        print(k,v)
+    notindataset, missannotated, unmatched = rna.findMissAnnotatedReplicates(
+        replevel, prevcounts, renaming
+    )
+    for k, v in unmatched.items():
+        if ccle_refsamples.loc[k].arxspan_id != v:
+            print(k, v)
     # do we have samples that are missanotated compared to previous releases (sample level)
     unmatched = rna.getDifferencesFromCorrelations(
         files.get("genes_expected_count"), prevcounts, minsimi=minsimi
@@ -147,9 +149,14 @@ async def expressionPostProcessing(
 
     # CCLE_expression, CCLE_expression_full, ,
     print("comparing to previous release")
-    # h.compareDfs(files["rsem_transcripts_tpm"], tc.get(name=TAIGA_ETERNAL, file='CCLE_RNAseq_transcripts'))
-    # h.compareDfs(files["rsem_transcripts_expected_count"], tc.get(name=TAIGA_ETERNAL, file='CCLE_expression_transcripts_expected_count'))
-    # h.compareDfs(enrichments, tc.get(name=TAIGA_ETERNAL, file='CCLE_fusions_unfiltered'))
+    h.compareDfs(
+        files["rsem_transcripts_tpm"],
+        tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_transcripts"),
+    )
+    h.compareDfs(
+        files["rsem_transcripts_expected_count"],
+        tc.get(name=TAIGA_ETERNAL, file="CCLE_expression_transcripts_expected_count"),
+    )
     for key, val in tocompare.items():
         _, omissmatchCols, _, omissmatchInds, newNAs, new0s = h.compareDfs(
             files[key], tc.get(name=TAIGA_ETERNAL, file=val)
