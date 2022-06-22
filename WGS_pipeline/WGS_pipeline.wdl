@@ -16,48 +16,51 @@ workflow WGS_pipeline {
     input {
         #BamToUnmappedRGBams
         #"broadinstitute/genomes-in-the-cloud:2.3.1-1504795437"
-        File ref_fasta
-        File ref_fasta_index
-        File ref_dict
+        File ref_fasta = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta"
+        File ref_fasta_index = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
+        File ref_dict = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dict"
 
         File input_bam
         File input_bam_index
 
-        String picard_path
-        String picard_docker
+        String picard_path = "/usr/gitc/"
+        String picard_docker = "broadinstitute/genomes-in-the-cloud:2.3.1-1504795437"
 
-        Int preemptible_tries
+        Int preemptible_tries = 0
 
         String sample_name #this.name
 
         #PreProcessingForVariantDiscovery_GATK4
         #"broadinstitute/gatk:4.beta.3"
         #"broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
-        String ref_name
+        String ref_name = "hg38"
 
 
-        File dbSNP_vcf
-        File dbSNP_vcf_index
+        File dbSNP_vcf = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
+        File dbSNP_vcf_index = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
 
-        Array[File] known_indels_sites_VCFs
-        Array[File] known_indels_sites_indices
+        Array[File] known_indels_sites_VCFs = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz"
+        Array[File] known_indels_sites_indices = "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz.tbi"
 
-        String gotc_docker
+        String gotc_docker = "broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
         String gatk_docker="broadinstitute/gatk:4.2.6.0"
-        String python_docker
+        String python_docker = "python:2.7"
 
         String gcs_project_for_requester_pays
 
-        String gotc_path
+        String gotc_path = "/usr/gitc/"
 
         #CNV_Somatic_Workflow_on_Sample
         #us.gcr.io/broad-gatk/gatk:4.1.5.0
-        File common_sites
+        File common_sites = "gs://ccleparams/references/intervals/common_sites_hg38_lifted.list"
         File intervals
         File read_count_pon
         Boolean is_run_funcotator_for_cnv
         String funcotator_ref_version = "hg38"
         File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
+
+        String manta_docker = "wwliao/manta:latest"
+        String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
 
         # mutect2
         Int M2scatter=10
@@ -71,8 +74,7 @@ workflow WGS_pipeline {
         String bcftools_exclude_string='FILTER~"weak_evidence" || FILTER~"map_qual" || FILTER~"strand_bias" || FILTER~"slippage" || FILTER~"clustered_events" || FILTER~"base_qual"'
 
         # PureCN
-        File purecn_intervals
-        File call_wgd_and_cin_script
+        File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
 
     }
 
@@ -100,7 +102,9 @@ workflow WGS_pipeline {
             tumor_bam_index=input_bam_index,
             ref_fasta=ref_fasta,
             ref_fasta_index=ref_fasta_index,
-            is_cram=false
+            is_cram=false,
+            config_manta=config_manta,
+            manta_docker=manta_docker
     }
 
     call mutect2.Mutect2 as mutect2 {
