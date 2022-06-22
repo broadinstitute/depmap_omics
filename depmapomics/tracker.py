@@ -21,28 +21,25 @@ class SampleTracker:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(
-        self,
-        my_id,
-        mystorage_id,
-        sheetcreds,
-        refsheet_url,
-        depmap_pv,
-        samples_not_found_url,
-        samples_missing_arxspan_url,
-        gumbo_url,
-        gumbo_sheetname,
-    ):
-        self.my_id = my_id
-        self.mystorage_id = mystorage_id
-        self.sheetcreds = sheetcreds
-        self.refsheet_url = refsheet_url
-        self.depmap_pv = depmap_pv
-        self.samples_not_found_url = samples_not_found_url
-        self.samples_missing_arxspan_url = samples_missing_arxspan_url
-        self.gumbo_url = gumbo_url
-        self.gumbo_sheetname = gumbo_sheetname
-        self.gc = pygsheets.authorize(service_file=sheetcreds)
+    def __init__(self):
+        self.my_id = MY_ID
+        self.mystorage_id = MYSTORAGE_ID
+        self.sheetcreds = SHEETCREDS
+        self.refsheet_url = REFSHEET_URL
+        self.depmap_pv = DEPMAP_PV
+        self.samples_not_found_url = SAMPLES_NOT_FOUND_URL
+        self.samples_missing_arxspan_url = SAMPLES_MISSING_ARXSPAN_URL
+        self.gumbo_url = GUMBO_SHEET
+        self.gumbo_sheetname = GUMBO_SHEETNAME
+        self.sheetname = SHEETNAME
+        self.samples_found_name = SAMPLES_FOUND_NAME
+        self.samples_not_found_name = SAMPLES_NOT_FOUND_NAME
+        self.samples_missing_arxspan_name = SAMPLES_MISSING_ARXSPAN_NAME
+        self.mc_table_name = MC_TABLE_NAME
+        self.pr_table_name = PR_TABLE_NAME
+        self.seq_table_name = SEQ_TABLE_NAME
+        self.sample_table_name = SAMPLE_TABLE_NAME
+        self.gc = pygsheets.authorize(service_file=SHEETCREDS)
 
     def read_tracker(self):
         return (
@@ -53,7 +50,7 @@ class SampleTracker:
         )
 
     def write_tracker(self, df):
-        dfToSheet(df, SHEETNAME, secret=self.sheetcreds)
+        dfToSheet(df, self.sheetname, secret=self.sheetcreds)
 
     def read_pv(self):
         return (
@@ -64,13 +61,13 @@ class SampleTracker:
         )
 
     def write_all_samples_found(self, df):
-        dfToSheet(df, SAMPLES_FOUND_NAME, self.sheetcredscreds)
+        dfToSheet(df, self.samples_found_name, self.sheetcreds)
 
     def write_samples_not_found(self, df):
-        dfToSheet(df, SAMPLES_NOT_FOUND_NAME, self.sheetcredscreds)
+        dfToSheet(df, self.samples_not_found_name, self.sheetcreds)
 
     def write_samples_missing_arxspan(self, df):
-        dfToSheet(df, SAMPLES_MISSING_ARXSPAN_NAME, self.sheetcredscreds)
+        dfToSheet(df, self.samples_missing_arxspan_name, self.sheetcreds)
 
     def read_samples_not_found(self):
         return (
@@ -92,60 +89,43 @@ class SampleTracker:
 
     def read_mc_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", MC_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.mc_table_name)
         return wksht.get_as_df(index_column=1, start="A3")
 
     def write_mc_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", MC_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.mc_table_name)
         wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_pr_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", PR_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.pr_table_name)
         return wksht.get_as_df(index_column=1, start="A3")
 
     def write_pr_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", PR_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.pr_table_name)
         wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_seq_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", SEQ_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.seq_table_name)
         return wksht.get_as_df(index_column=1, start="A3")
 
     def write_seq_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", SEQ_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.seq_table_name)
         wksht.set_dataframe(df, "A3", copy_index=True, nan="")
 
     def read_sample_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", SAMPLE_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.sample_table_name)
         return wksht.get_as_df(index_column=1)
 
     def write_sample_table(self, df):
         sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", SAMPLE_TABLE_NAME)
+        wksht = sheet.worksheet("title", self.sample_table_name)
         wksht.set_dataframe(df, "A1", copy_index=True, nan="")
-
-
-def initTracker():
-    """
-    initialize a sample tracker object
-    """
-    return SampleTracker(
-        my_id=MY_ID,
-        mystorage_id=MYSTORAGE_ID,
-        sheetcreds=SHEETCREDS,
-        refsheet_url=REFSHEET_URL,
-        depmap_pv=DEPMAP_PV,
-        samples_not_found_url=SAMPLES_NOT_FOUND_URL,
-        samples_missing_arxspan_url=SAMPLES_MISSING_ARXSPAN_URL,
-        gumbo_url=GUMBO_SHEET,
-        gumbo_sheetname=GUMBO_SHEETNAME,
-    )
 
 
 def merge(tracker, new, old, arxspid, cols):
