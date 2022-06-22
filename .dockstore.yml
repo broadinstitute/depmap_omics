@@ -192,3 +192,12 @@ workflows:
         - dev
         - master
         - finishing_mutation_pipeline
+  - name: opencravat_dm
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/opencravat_dm.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
