@@ -1,4 +1,28 @@
-#Function from PureCN
+#' Call Chromosomal Instability from PureCN
+#'
+#' This function provides detailed CIN information.
+#'
+#'
+#' @param res Return object of the \code{\link{runAbsoluteCN}} function.
+#' @param id Candidate solution to extract CIN from. \code{id=1} will use the
+#' maximum likelihood solution.
+#' @param allele.specific Use allele-specific or only total copy number for
+#' detecting abnormal regions. Copy-number neutral LOH would be ignored when
+#' this parameter is set to \code{FALSE}.
+#' @param reference.state Copy number regions different from the reference
+#' state are counted as abnormal. Default is \code{dominant} means the most
+#' common state. The other option is \code{normal}, which defines normal
+#' heterozygous, diploid as reference. The default is robust to errors in
+#' ploidy.
+#' @return Returns \code{double(1)} with CIN value.
+#' @author Markus Riester
+#' @seealso \code{\link{runAbsoluteCN}}
+#' @examples
+#'
+#' data(purecn.example.output)
+#' head(callCIN(purecn.example.output))
+#'
+#' @export callCIN
 callCIN <- function(loh,allele.specific = TRUE, reference.state =
                       c("dominant", "normal")) {
   loh$size <- loh$end - loh$start + 1
@@ -39,7 +63,9 @@ cin.allele.specific = callCIN(loh, reference.state = "normal")
 cin.ploidy.robust = callCIN(loh, allele.specific = FALSE)
 cin.allele.specific.ploidy.robust = callCIN(loh)
 
+# WGD calling strategy from PCAWG https://www.sciencedirect.com/science/article/pii/S0092867421002944
 wgd <-  -2*loh_frac + 3 < ploidy
+
 writeLines(paste(as.character(wgd),
                  as.character(loh_frac),
                  as.character(cin),
