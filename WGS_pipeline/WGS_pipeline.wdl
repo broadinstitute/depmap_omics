@@ -144,7 +144,6 @@ workflow WGS_pipeline {
             segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
             vcf=mutect2.base_vcf,
             intervals=purecn_intervals,
-            call_wgd_and_cin_script=call_wgd_and_cin_script,
     }
 
     call msisensor2.msisensor2_workflow as msisensor2_workflow{
