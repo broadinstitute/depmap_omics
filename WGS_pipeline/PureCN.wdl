@@ -18,6 +18,7 @@ task PureCN {
 		String funSegmentation="Hclust"
 		Int maxSegments=1000
 		String otherArguments="--post-optimize --model-homozygous --min-total-counts 20"
+        String purecn_docker="markusriester/purecn:2.2.0"
 
 		# Hardware-related inputs
 		Int hardware_disk_size_GB = 250
@@ -76,7 +77,7 @@ task PureCN {
 	}
 
 	runtime {
-		docker: "markusriester/purecn:2.2.0"
+		docker: purecn_docker
 		bootDiskSizeGb: 32
 		disks: "local-disk ${hardware_disk_size_GB} HDD"
 		memory: "${hardware_memory_GB} GB"
