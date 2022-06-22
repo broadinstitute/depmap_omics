@@ -95,7 +95,6 @@ workflow run_PureCN {
 		File segFile
 		File vcf
 		File intervals
-		File call_wgd_and_cin_script
 
 		# Method configuration inputs
 		String genome
@@ -107,7 +106,6 @@ workflow run_PureCN {
 			segFile=segFile,
 			vcf=vcf,
 			intervals=intervals,
-			call_wgd_and_cin_script=call_wgd_and_cin_script,
 			genome=genome
 	}
 
