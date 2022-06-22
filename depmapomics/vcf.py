@@ -1,4 +1,4 @@
-import pdb
+import re
 import numpy as np
 
 BOOLIFY = [
@@ -90,14 +90,21 @@ DROPCOMMA = [
 REPLACE_EMPTY = {
     np.nan: "",
     None: "",
-    ",": "",
     "Unknown": "",
+    "unknown": "",
     "UNKNOWN": "",
+    ",": "",
     ",,": "",
     ",,,": "",
+    ",%3B,": "",
     ",,,,": "",
     ",,,,,": "",
     ",,,,,,": "",
+    ",%3B,,%3B,": "",
+    ",,,,,,,": "",
+    ",,,,,,,,": "",
+    ",,,,,,,,,": "",
+    ",%3B,,%3B,,%3B,": "",
     "|": "",
     "||": "",
     "|||": "",
@@ -256,6 +263,7 @@ def improve(
     boolify=BOOLIFY,
     with_onco_kb=False,
     split_multiallelic=False,
+    min_count_hotspot=5,
 ):
     """
     """
@@ -336,12 +344,41 @@ def improve(
 
     # defining hotspot
     vcf["hotspot"] = False
-    loc = ~(
-        vcf["cgc_cancer_somatic_mut"] == ""
-    )  # | ~(vcf["cgc_cancer_germline_mut"] == "")
+
+    hotspot_l = []
+    for cosmic_over in list(
+        set(
+            vcf[vcf["cosmic_overlapping_mutations"] != ""][
+                "cosmic_overlapping_mutations"
+            ]
+        )
+    ):
+        # finding the number in " p.I517T(13)", " p.I517T(13), p.G202G(15), p.?(56)"
+        res = sum(
+            [
+                int(val.group(0)[1:-1])
+                for val in re.finditer(r"([(])\d+([)])", cosmic_over)
+            ]
+        )
+        if res > min_count_hotspot:
+            hotspot_l.append(cosmic_over)
+    loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
+    # ~vcf["cgc_cancer_somatic_mut"] == ""
+    # | ~(vcf["cgc_cancer_germline_mut"] == "")
+    
+    # defining drivers
     if with_onco_kb:
         loc = loc | (vcf["oc_oncokb__oncogenic"] == "Likely Oncogenic")
-    vcf.loc[loc, "hotspot"] = True
+        vcf.loc[loc, "oncokb_driver"] = True
+    
+    for k, df in kwargs.items():
+        missing_col = set(['']) - set(df.columns)
+        if len(missing_col)>0:
+            raise ValueError('missing columns', missing_col)
+        else:
+            loc = 
+            vcf.loc[loc, k] = True
+
 
     # ccle_deleterious
     vcf["ccle_deleterious"] = False
@@ -443,6 +480,8 @@ def to_maf(
     max_log_pop_af=3,
     only_coding=True,
     only_somatic=True,
+    oncogenic_list=[],
+    tumor_suppressor_list=[],
     **kwargs
 ):
     """to_maf 
@@ -473,27 +512,33 @@ def to_maf(
     )
     if only_coding:
         # drops 99.5% of the variants
-        loc = loc & (vcf["is_coding"] | (vcf["variant_info"] == "SPLICE_SITE"))
+        loc = loc & (vcf["is_coding"] | (vcf["variant_info"] == "SPLICE_SITE")
+                    | (
+                        (vcf['oncokb_driver'] | vcf['hess_et_al_driver'])
+                        & vcf['hugo_symbol']!="")
+                    )
 
     # we will drop 99.993% of the variants and 90% of the columns
     vcf = vcf[loc]
 
-    # redefine somatic
+    # redefine somatic (not germline or pon and a log pop. af of > max_log_pop_af)
     # drops 80% of the variants
     if only_somatic:
-        vcf = vcf[
-            (
-                ~(vcf["germline"] | vcf["pon"])
-                & (vcf["popaf"].astype(float) > max_log_pop_af)
-            )
-            | vcf["hotspot"]
-            | vcf["ccle_deleterious"]
-        ]
+        loc = ((
+                    ~(vcf["germline"] | vcf["pon"])
+                    & (vcf["popaf"].astype(float) > max_log_pop_af)
+                )
+                | vcf["oncokb_driver"]
+                | vcf['hess_et_al_driver']
+                )
+        if tumor_suppressor_list:
+            loc = loc | (vcf["ccle_deleterious"] & vcf["hugo_symbol"].isin(tumor_suppressor_list))
+        vcf = vcf[loc]
     print(len(vcf))
     # creating count columns
     vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
 
-    # subsettingnz
+    # subsetting
     vcf = vcf[list(tokeep.keys())]
 
     # setting the right type

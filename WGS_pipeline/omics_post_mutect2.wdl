@@ -9,7 +9,7 @@ workflow omics_post_mutect2 {
     input {
         String sample_id
         File vcf
-        #String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb"
+        #String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb cancer_hotspots"
         #File oncokb_api_key="gs://jkobject/oncokb_key.txt"
         Boolean run_open_cravat=false
     }
