@@ -64,9 +64,14 @@ task opencravat {
 
       oc new annotator oncokb_dm
       rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/oncokb_dm
+      
+      oc new annotator hess_drivers
+      rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/hess_drivers
+      
       git clone https://github.com/broadinstitute/depmap_omics.git
       cd depmap_omics && git checkout dev && git pull && cd ..
       cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/
+      cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/
 
       ${if defined(oncokb_api_key) then "mkdir /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/data/" else ""}
       ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb/data/token.txt" else ""}
@@ -88,7 +93,7 @@ task opencravat {
         --mp ${num_threads} \
         ${"--module-option "+modules_options} \
         -d out \
-        -a ${annotators_to_use} oncokb_dm
+        -a ${annotators_to_use} oncokb_dm hess_drivers
       
       pip install bgzip
       
