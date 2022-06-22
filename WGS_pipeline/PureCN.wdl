@@ -9,7 +9,6 @@ task PureCN {
 		File segFile
 		File vcf
 		File intervals
-		File call_wgd_and_cin_script
 
 		# Method configuration inputs
 		String genome="hg38"
@@ -43,7 +42,9 @@ task PureCN {
 			${"--max-segments " + maxSegments} \
 			${otherArguments}
 		Rscript -e "write.table(read.csv('${sampleID}.csv'),'table.txt',sep='\n',row.names=F,col.names=F,quote=F)"
-		Rscript ${call_wgd_and_cin_script} "${sampleID}_loh.csv" "${sampleID}.csv"
+
+		git clone -b PureCN https://github.com/broadinstitute/depmap_omics.git
+		Rscript depmap_omics/WGS_pipeline/PureCN_pipeline/call_wgd_and_cin.R "${sampleID}_loh.csv" "${sampleID}.csv"
 	}
 
 	output {
@@ -58,14 +59,14 @@ task PureCN {
 		File log = "${sampleID}.log"
 		File selected_solution = "${sampleID}.csv"
 		File local_optima_pdf = "${sampleID}_local_optima.pdf"
-        Array[String] table = read_lines('table.txt')
+		Array[String] table = read_lines('table.txt')
 		String purity = table[1]
 		String ploidy = table[2]
 		String contamination = table[4]
 		String flagged = table[5]
 		String curated = table[7]
 		String comment = table[8]
-        Array[String] wgd_table = read_lines("out.txt")
+		Array[String] wgd_table = read_lines("out.txt")
 		String wgd = wgd_table[0]
 		String loh_fraction = wgd_table[1]
 		String cin = wgd_table[2]
