@@ -440,7 +440,6 @@ def cnPostProcessing(
     ],
     bamqc=BAMQC,
     procqc=PROCQC,
-    source_rename=SOURCE_RENAME,
     wesfolder="",
     genechangethresh=GENECHANGETHR,
     segmentsthresh=SEGMENTSTHR,
@@ -509,14 +508,6 @@ def cnPostProcessing(
             **kwargs,
         )
 
-        # annotating source
-        for v in set(wessegments[SAMPLEID]):
-            wessegments.loc[
-                wessegments[wessegments[SAMPLEID] == v].index, "Source"
-            ] = tracker.loc[v, "source"]
-
-        wessegments.Source = wessegments.Source.replace(source_rename)
-        wessegments.Source += " WES"
         # wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
         # wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
         # wes_loh.to_csv(folder + "purecn_loh_latest.csv")
@@ -563,15 +554,6 @@ def cnPostProcessing(
         maxYchrom=maxYchrom,
         **kwargs,
     )
-
-    # annotating source
-    for v in set(wgssegments[SAMPLEID]):
-        wgssegments.loc[
-            wgssegments[wgssegments[SAMPLEID] == v].index, "Source"
-        ] = tracker.loc[v, "source"]
-
-    wgssegments.Source = wgssegments.Source.replace(source_rename)
-    wgssegments.Source += " WGS"
 
     # wgs_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
     # wgs_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
