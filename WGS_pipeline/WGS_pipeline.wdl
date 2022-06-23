@@ -205,8 +205,6 @@ workflow WGS_pipeline {
         File scaled_delta_MAD_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_tumor
         Float scaled_delta_MAD_value_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_value_tumor
         File modeled_segments_plot_tumor = CNVSomaticPairWorkflow.modeled_segments_plot_tumor
-        File oncotated_called_file_tumor = CNVSomaticPairWorkflow.oncotated_called_file_tumor
-        File oncotated_called_gene_list_file_tumor = CNVSomaticPairWorkflow.oncotated_called_gene_list_file_tumor
         #MantaSomaticSV
         File candidate_indel_vcf= MantaSomaticSV.candidate_indel_vcf
         File candidate_indel_vcf_index= MantaSomaticSV.candidate_indel_vcf_index
