@@ -86,7 +86,6 @@ class CravatAnnotator(BaseAnnotator):
         if self.token is None:
             print("no token found!!")
             return
-        print(self.token)
         batch = []
         headers = {
             "accept": "application/json",
@@ -111,11 +110,9 @@ class CravatAnnotator(BaseAnnotator):
                         count = count + 1
                         hgvs_g = self._get_hgvs_g(chrom, pos, ref, alt)
                         batch.append(hgvs_g)
-                        print(count, end="\r")
                         reqd = False
                 datas = ""
                 if (count % 100 == 0 and lnum != 0 or lnum == max_lnum) and not reqd:
-                    print(lnum)
                     data = "[ "
                     for b in batch:
                         data = (
@@ -247,8 +244,6 @@ class CravatAnnotator(BaseAnnotator):
                             "variantSummary": variantSummary,
                             "all": precomp_data,
                         }
-                        if oncogenic != "Unknown":
-                            print(output_dict)
                         output_dict = self.handle_jsondata(output_dict)
                         if n in keys:
                             keys[n] = keys[n] + 100
@@ -259,7 +254,6 @@ class CravatAnnotator(BaseAnnotator):
                         output_dict = self.fill_empty_output(output_dict)
                         self.output_writer.write_data(output_dict)
             except Exception as e:
-                print(e)
                 self._log_runtime_exception(lnum, line, input_data, e)
 
     def cleanup(self):
