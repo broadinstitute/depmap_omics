@@ -35,7 +35,7 @@ workflow WGS_pipeline {
         #"broadinstitute/genomes-in-the-cloud:2.3.0-1501082129"
         String ref_name = "hg38"
 
-        String gatk_docker="broadinstitute/gatk:4.2.6.0"
+        String gatk_docker="broadinstitute/gatk:4.2.6.1"
 
         String gcs_project_for_requester_pays
 
