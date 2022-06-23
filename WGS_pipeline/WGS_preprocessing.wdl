@@ -1,7 +1,7 @@
 version 1.0
 # converts hg19 bams to hg38, and preprocesses it for the following steps (WGS_pipeline)
-import "bam-to-unmapped-bams.wdl" as BamToUnmappedRGBams
-import "processing-for-variant-discovery-gatk4.wdl" as PreProcessingForVariantDiscovery_GATK4
+import "https://raw.githubusercontent.com/gatk-workflows/seq-format-conversion/3.0.0/bam-to-unmapped-bams.wdl" as BamToUnmappedRGBams
+import "https://raw.githubusercontent.com/gatk-workflows/gatk4-data-processing/2.1.1/processing-for-variant-discovery-gatk4.wdl" as PreProcessingForVariantDiscovery_GATK4
 import "ArrayOfFilesToTxt.wdl" as ArrayOfFilesToTxt
 
 workflow WGS_preprocessing {
