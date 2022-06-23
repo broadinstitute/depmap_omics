@@ -63,15 +63,15 @@ task opencravat {
       oc module install -y ${annotators_to_use} vcfreporter hg19
 
       oc new annotator oncokb_dm
-      rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/oncokb_dm
+      rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
       
       oc new annotator hess_drivers
-      rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/hess_drivers
+      rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
       
       git clone https://github.com/broadinstitute/depmap_omics.git
       cd depmap_omics && git checkout dev && git pull && cd ..
-      cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/
-      cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/
+      cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
+      cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
 
       ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm/data/token.txt" else ""}
       
