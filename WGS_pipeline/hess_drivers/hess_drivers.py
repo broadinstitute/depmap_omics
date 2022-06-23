@@ -19,10 +19,14 @@ class CravatAnnotator(BaseAnnotator):
         datafile_path = os.path.join(dir_path, "data", "hess_drivers.csv.gz")
         self.drivers = pd.read_csv(datafile_path)
         self.driverset = {
-            "chr" + str(val["chr"]) + ":" + str(val["pos"]) + ":" + val["base_change"]: val["sig_assignments"]
+            "chr"
+            + str(val["chr"])
+            + ":"
+            + str(val["pos"])
+            + ":"
+            + val["base_change"]: val["sig_assignments"]
             for _, val in self.drivers.iterrows()
         }
-        print(self.driverset)
 
     def annotate(self, input_data, secondary_data=None):
         """
@@ -62,7 +66,6 @@ class CravatAnnotator(BaseAnnotator):
                 return out
         key = str(chrom) + ":" + str(pos) + ":" + alt
         if key in self.driverset:
-            print("found")
             out["hess_driver"] = "True"
             out["hess_driver_signature"] = self.driverset[key]
         return out
