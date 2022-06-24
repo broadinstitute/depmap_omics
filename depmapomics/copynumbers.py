@@ -119,13 +119,11 @@ def updateTracker(
     datatype,
     newgs=WGS_GCS_PATH_HG38,
     samplesinset=[],
-    trackerobj=None,
     procqc=[],
     bamqc=[],
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
     dry_run=False,
-    gumbo=True,
 ):
     """updates the sample tracker with the new samples and the QC metrics
 
@@ -180,13 +178,11 @@ def updateTracker(
         datatype = [datatype]
     tracker.loc[tracker[tracker.datatype.isin(datatype)].index, samplesetname] = 0
     track.update(
-        trackerobj,
         tracker,
         selected,
         samplesetname,
         lowqual,
         lowqual,
-        gumbo,
         newgs=newgs,
         refworkspace=refworkspace,
         bamfilepaths=bamfilepaths,

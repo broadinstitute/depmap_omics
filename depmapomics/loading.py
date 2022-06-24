@@ -31,7 +31,6 @@ def GetNewCellLinesFromWorkspaces(
     sources,
     stype,
     maxage,
-    trackerobj,
     addonly=[],
     match="ACH",
     extract={},
