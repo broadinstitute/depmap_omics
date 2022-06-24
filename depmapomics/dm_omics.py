@@ -77,7 +77,6 @@ async def expressionPostProcessing(
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
-
     prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
 
     ccle_refsamples = mytracker.read_seq_table()
@@ -595,7 +594,7 @@ def cnPostProcessing(
     wgscn_pr = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
         index=renaming_dict
     )
-    wgssegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
+
     wgscn_pr.to_csv(folder + "genecn_all_profile.csv")
 
     print("merging PR-level seg file")
@@ -621,6 +620,8 @@ def cnPostProcessing(
     ] = "U"
     # merging wes and wgs
     folder = os.path.join("output", samplesetname, "")
+    mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
+    mergedsegments.to_csv(folder + "merged_segments_all_profile.csv", index=False)
     mergedsegments_pr = mut.manageGapsInSegments(mergedsegments_pr)
     mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
 
@@ -638,18 +639,13 @@ def cnPostProcessing(
         dataset_permaname=taiga_dataset,
         upload_files=[
             {
-                "path": folder + "wes_segments_all.csv",
+                "path": folder + "merged_segments_all.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "wes_genecn_all.csv",
                 "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_segments_all.csv",
-                "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
