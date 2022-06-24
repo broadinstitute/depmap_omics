@@ -57,9 +57,13 @@ def makeAchillesChoiceTable(
         for mc in mcs:
             prs_in_mc = subset_pr_table[(subset_pr_table.ModelCondition == mc)]
             # rna
+            # if there is only one rna PR associated with this MC, pick that PR
             if len(prs_in_mc[prs_in_mc.Datatype == "rna"]) == 1:
                 pr = prs_in_mc[prs_in_mc.Datatype == "rna"].index[0]
                 rows.append((mc, pr, "rna"))
+            # if there are more than one PRs associated with this MC,
+            # pick the PR from the most prioritized source according to the
+            # ranking in source_priority
             elif len(prs_in_mc[prs_in_mc.Datatype == "rna"]) > 1:
                 cds_ids = prs_in_mc[prs_in_mc.Datatype == "rna"].CDSID.tolist()
                 # at this point it is guaranteed that all cds_ids have different sources
@@ -71,6 +75,7 @@ def makeAchillesChoiceTable(
                 pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[0]
                 rows.append((mc, pr, "rna"))
             # dna
+            # if there is only one dna (wes + wgs) PR associated with this MC, pick that PR
             if (
                 len(
                     prs_in_mc[
@@ -83,6 +88,7 @@ def makeAchillesChoiceTable(
                     (prs_in_mc.Datatype == "wgs") | (prs_in_mc.Datatype == "wes")
                 ].index[0]
                 rows.append((mc, pr, "dna"))
+            # if there are more than one PRs associated with this MC
             elif (
                 len(
                     prs_in_mc[
@@ -94,21 +100,24 @@ def makeAchillesChoiceTable(
                 cds_ids_wgs = prs_in_mc[prs_in_mc.Datatype == "wgs"].CDSID.tolist()
                 cds_ids_wes = prs_in_mc[prs_in_mc.Datatype == "wes"].CDSID.tolist()
                 pr = ""
+                # if this MC doesn't have any wgs PRs
                 if len(cds_ids_wgs) == 0:
-                    if len(prs_in_mc[prs_in_mc.Datatype == "wes"]) == 1:
-                        pr = prs_in_mc[prs_in_mc.Datatype == "wes"].index[0]
-                    else:
-                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
-                        subset_seq_table.source = subset_seq_table.source.replace(
-                            source_priority
-                        )
-                        latest_cds_id_wes = subset_seq_table.loc[
-                            cds_ids_wes, "source"
-                        ].idxmin()
-                        pr = subset_pr_table[
-                            subset_pr_table.CDSID == latest_cds_id_wes
-                        ].index[0]
+                    # out of the wes PRs, select the PR from the most prioritized source
+                    # according to the ranking in source_priority
+                    subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
+                    subset_seq_table.source = subset_seq_table.source.replace(
+                        source_priority
+                    )
+                    latest_cds_id_wes = subset_seq_table.loc[
+                        cds_ids_wes, "source"
+                    ].idxmin()
+                    pr = subset_pr_table[
+                        subset_pr_table.CDSID == latest_cds_id_wes
+                    ].index[0]
+                # if this MC has wgs PR(s)
                 else:
+                    # ignore the wes PRs, select the PR from the most prioritized source
+                    # according to the ranking in source_priority from the wgs PR(s)
                     subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
                     subset_seq_table.source = subset_seq_table.source.replace(
                         source_priority
@@ -151,7 +160,7 @@ def makeDefaultModelTable(
     subset_pr_table = subset_pr_table[subset_pr_table.BlacklistOmics != 1]
     mcs = set(subset_pr_table["ModelCondition"])
     models = set(mc_table.loc[mcs].ModelID)
-    # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each MC
+    # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each Model
     if one_pr_per_type:
         for m in models:
             subset_mc_table = mc_table[mc_table.ModelID == m]
@@ -160,9 +169,13 @@ def makeDefaultModelTable(
                 (subset_pr_table.ModelCondition.isin(mcs_in_model))
             ]
             # rna
+            # if there is only one rna PR associated with this Model, pick that PR
             if len(prs_in_model[prs_in_model.Datatype == "rna"]) == 1:
                 pr = prs_in_model[prs_in_model.Datatype == "rna"].index[0]
                 rows.append((m, pr, "rna"))
+            # if there are more than one PRs associated with this Model,
+            # pick the PR from the most prioritized source according to the
+            # ranking in source_priority
             elif len(prs_in_model[prs_in_model.Datatype == "rna"]) > 1:
                 cds_ids = prs_in_model[prs_in_model.Datatype == "rna"].CDSID.tolist()
                 subset_seq_table = seq_table[seq_table.index.isin(cds_ids)]
@@ -173,6 +186,7 @@ def makeDefaultModelTable(
                 pr = subset_pr_table[subset_pr_table.CDSID == latest_cds_id].index[0]
                 rows.append((m, pr, "rna"))
             # dna
+            # if there is only one dna (wes + wgs) PR associated with this Model, pick that PR
             if (
                 len(
                     prs_in_model[
@@ -186,6 +200,7 @@ def makeDefaultModelTable(
                     (prs_in_model.Datatype == "wgs") | (prs_in_model.Datatype == "wes")
                 ].index[0]
                 rows.append((m, pr, "dna"))
+            # if there are more than one PRs associated with this Model
             elif (
                 len(
                     prs_in_model[
@@ -195,7 +210,6 @@ def makeDefaultModelTable(
                 )
                 > 1
             ):
-                # assuming SANGER doesn't have wgs
                 cds_ids_wgs = prs_in_model[
                     prs_in_model.Datatype == "wgs"
                 ].CDSID.tolist()
@@ -203,21 +217,19 @@ def makeDefaultModelTable(
                     (prs_in_model.Datatype == "wes") & (prs_in_model.CDSID != "")
                 ].CDSID.tolist()  # CDSID is '' when the profile is in legacy
                 pr = ""
-                # if no wgs, look at MC table and select broad wes over sanger wes
+                # if no wgs, look at MC table and select the most prioritized source
+                # according to the ranking in source_priority
                 if len(cds_ids_wgs) == 0:
-                    if len(prs_in_model[prs_in_model.Datatype == "wes"]) == 1:
-                        pr = prs_in_model[prs_in_model.Datatype == "wes"].index[0]
-                    else:
-                        subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
-                        subset_seq_table.source = subset_seq_table.source.replace(
-                            source_priority
-                        )
-                        latest_cds_id_wes = subset_seq_table.loc[
-                            cds_ids_wes, "source"
-                        ].idxmin()
-                        pr = subset_pr_table[
-                            subset_pr_table.CDSID == latest_cds_id_wes
-                        ].index[0]
+                    subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wes)]
+                    subset_seq_table.source = subset_seq_table.source.replace(
+                        source_priority
+                    )
+                    latest_cds_id_wes = subset_seq_table.loc[
+                        cds_ids_wes, "source"
+                    ].idxmin()
+                    pr = subset_pr_table[
+                        subset_pr_table.CDSID == latest_cds_id_wes
+                    ].index[0]
                 # if there is wgs, always select wgs
                 else:
                     subset_seq_table = seq_table[seq_table.index.isin(cds_ids_wgs)]
