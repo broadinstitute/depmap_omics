@@ -125,9 +125,7 @@ def updateTracker(
     lowqual,
     tracker,
     samplesetname,
-    gumbo,
     refworkspace=RNAWORKSPACE,
-    trackerobj=None,
     bamfilepaths=STARBAMCOLTERRA,
     newgs=RNA_GCS_PATH_HG38,
     dry_run=False,
@@ -155,7 +153,6 @@ def updateTracker(
         samplesinset (list[str], optional): list of samples in set when refworkspace is None (bypass interacting with terra)
         starlogs (dict(str:list[str]), optional): dict of samples' star qc log locations when refworkspace is None (bypass interacting with terra)
     """
-
     refwm = dm.WorkspaceManager(refworkspace)
     samplesinset = [
         i["entityName"]
@@ -174,13 +171,11 @@ def updateTracker(
             tracker.loc[k, "bam_qc"] = v[0]
     tracker.loc[tracker[tracker.datatype.isin(["rna"])].index, samplesetname] = 0
     return track.update(
-        trackerobj,
         tracker,
         selected,
         samplesetname,
         failed,
         lowqual,
-        gumbo,
         newgs=newgs,
         refworkspace=refworkspace,
         bamfilepaths=bamfilepaths,

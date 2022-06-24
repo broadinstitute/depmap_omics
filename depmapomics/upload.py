@@ -4,22 +4,20 @@ import os
 from datetime import date
 
 from genepy.utils import helper as h
-from depmapomics import tracker
+from depmapomics import tracker as track
 from depmapomics.config import *
 from taigapy import TaigaClient
 
 
-def getPRToRelease(trackerobj, date_col_dict=DATE_COL_DICT):
+def getPRToRelease(date_col_dict=DATE_COL_DICT):
     """generate lists of profiles to release based on date for all portals
-    
-    Args:
-        trackerobj (SampleTracker): tracker object
 
     Returns:
         prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
     """
     today = int(str(date.today()).replace("-", ""))
-    pr_table = trackerobj.read_pr_table()
+    mytracker = track.SampleTracker()
+    pr_table = mytracker.read_pr_table()
     prs = dict()
     for k, v in date_col_dict.items():
         prs_with_date = pr_table[~(pr_table[v] == "")]
@@ -31,7 +29,6 @@ def getPRToRelease(trackerobj, date_col_dict=DATE_COL_DICT):
 
 
 def makeAchillesChoiceTable(
-    trackerobj,
     prs,
     one_pr_per_type=True,
     source_priority=SOURCE_PRIORITY,
@@ -40,7 +37,6 @@ def makeAchillesChoiceTable(
     """generate a table for each portal that indicates which profiles are released corresponding to which MC
 
     Args:
-        trackerobj (SampleTracker): tracker object
         prs (list): list of profile IDs to be released
         one_pr_per_type (bool, optional): whether to enforce including only one profile type per MC
         source_priority (list, optional): ordered list of how different data sources should be prioritized
@@ -48,8 +44,9 @@ def makeAchillesChoiceTable(
     Returns:
         ach_table (pd.DataFrame): a df containing MC-PR mapping
     """
-    pr_table = trackerobj.read_pr_table()
-    seq_table = trackerobj.read_seq_table()
+    mytracker = track.SampleTracker()
+    pr_table = mytracker.read_pr_table()
+    seq_table = mytracker.read_seq_table()
     source_priority = {source_priority[i]: i for i in range(len(source_priority))}
     rows = []
     subset_pr_table = pr_table.loc[prs]
@@ -129,7 +126,6 @@ def makeAchillesChoiceTable(
 
 
 def makeDefaultModelTable(
-    trackerobj,
     prs,
     one_pr_per_type=True,
     source_priority=SOURCE_PRIORITY,
@@ -138,7 +134,6 @@ def makeDefaultModelTable(
     """generate a table that indicates which profiles are released corresponding to which modelID
 
     Args:
-        trackerobj (SampleTracker): tracker object
         prs (list): list of profile IDs to be released
         one_pr_per_type (bool, optional): whether to enforce including only one profile type per model
         source_priority (list, optional): ordered list of how different data sources should be prioritized
@@ -146,9 +141,10 @@ def makeDefaultModelTable(
     Returns:
         default_table (pd.DataFrame): a df containing Model-PR mapping
     """
-    pr_table = trackerobj.read_pr_table()
-    mc_table = trackerobj.read_mc_table()
-    seq_table = trackerobj.read_seq_table()
+    mytracker = track.SampleTracker()
+    pr_table = mytracker.read_pr_table()
+    mc_table = mytracker.read_mc_table()
+    seq_table = mytracker.read_seq_table()
     source_priority = {source_priority[i]: i for i in range(len(source_priority))}
     rows = []
     subset_pr_table = pr_table.loc[prs]
@@ -433,7 +429,6 @@ def uploadGermlineMatrixModel(
 
 
 def uploadAuxTables(
-    trackerobj,
     taiga_ids=VIRTUAL,
     ach_table_name=ACH_CHOICE_TABLE_NAME,
     default_table_name=DEFAULT_TABLE_NAME,
@@ -441,14 +436,14 @@ def uploadAuxTables(
 ):
     """upload achilles choice and default model table to all portals
     Args:
-        trackerobj (SampleTracker): tracker object
+    
         taiga_ids (dict, optional): dict mapping portal name to taiga virtual dataset id
         folder (str, optional): where the tables are saved
     """
-    prs_allportals = getPRToRelease(trackerobj)
+    prs_allportals = getPRToRelease()
     for portal, prs in prs_allportals.items():
-        achilles_table = makeAchillesChoiceTable(trackerobj, prs)
-        default_table = makeDefaultModelTable(trackerobj, prs)
+        achilles_table = makeAchillesChoiceTable(prs)
+        default_table = makeDefaultModelTable(prs)
         achilles_table.to_csv(
             folder + portal + "_" + ach_table_name + ".csv", index=False
         )
@@ -477,19 +472,16 @@ def uploadAuxTables(
         )
 
 
-def makePRLvMatrices(
-    trackerobj, virtual_ids=VIRTUAL,
-):
+def makePRLvMatrices(virtual_ids=VIRTUAL):
     """for each portal, save and upload profile-indexed data matrices
     
     Args:
-        trackerobj (SampleTracker): tracker object
         taiga_ids (dict): dictionary that maps portal name to virtual taiga dataset id
 
     Returns:
         prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
     """
-    prs_allportals = getPRToRelease(trackerobj)
+    prs_allportals = getPRToRelease()
     for portal, prs_to_release in prs_allportals.items():
         print("uploading profile-level matrices to ", portal)
         for latest_id, fn_dict in LATEST2FN_NUMMAT.items():
@@ -530,21 +522,18 @@ def makePRLvMatrices(
                 )
 
 
-def makeModelLvMatrices(
-    trackerobj, virtual_ids=VIRTUAL, folder=WORKING_DIR + SAMPLESETNAME
-):
+def makeModelLvMatrices(virtual_ids=VIRTUAL, folder=WORKING_DIR + SAMPLESETNAME):
     """for each portal, save and upload profile-indexed data matrices
     
     Args:
-        trackerobj (SampleTracker): tracker object
         taiga_ids (dict): dictionary that maps portal name to virtual taiga dataset id
 
     Returns:
         prs (dict{(portal: list of PRs)}): for each portal, list of profile IDs
     """
-    prs_allportals = getPRToRelease(trackerobj)
+    prs_allportals = getPRToRelease()
     for portal, prs_to_release in prs_allportals.items():
-        default_table = makeDefaultModelTable(trackerobj, prs_to_release)
+        default_table = makeDefaultModelTable(prs_to_release)
         pr2model_dict = dict(list(zip(default_table.ProfileID, default_table.ModelID)))
         h.dictToFile(pr2model_dict, folder + "/" + portal + "_pr2model_renaming.json")
         print("uploading model-level matrices to", portal)
@@ -632,11 +621,11 @@ def updateEternal(
     )
 
 
-def CCLEupload(trackerobj, taiga_ids=""):
+def CCLEupload(taiga_ids=""):
     if taiga_ids == "":
         taiga_ids = initVirtualDatasets()
 
-    makePRLvMatrices(trackerobj, virtual_ids=taiga_ids)
-    makeModelLvMatrices(trackerobj, virtual_ids=taiga_ids)
-    uploadAuxTables(trackerobj, taiga_ids=taiga_ids)
+    makePRLvMatrices(virtual_ids=taiga_ids)
+    makeModelLvMatrices(virtual_ids=taiga_ids)
+    uploadAuxTables(taiga_ids=taiga_ids)
     updateEternal(virtual=taiga_ids)

@@ -17,8 +17,6 @@ from depmapomics.config import *
 
 
 async def expressionPostProcessing(
-    trackerobj,
-    gumbo,
     refworkspace=RNAWORKSPACE,
     samplesetname=SAMPLESETNAME,
     colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
@@ -78,11 +76,11 @@ async def expressionPostProcessing(
 
     tc = TaigaClient()
 
+    mytracker = track.SampleTracker()
+
     prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
 
-    ccle_refsamples = trackerobj.read_tracker()
-    if gumbo:
-        ccle_refsamples = trackerobj.read_seq_table()
+    ccle_refsamples = mytracker.read_seq_table()
 
     todrop += ccle_refsamples[
         (ccle_refsamples.blacklist == 1) & (ccle_refsamples.datatype == "rna")
@@ -176,18 +174,16 @@ async def expressionPostProcessing(
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
         samplesetname,
-        gumbo,
         refworkspace,
         samplesinset=samplesinset,
         starlogs=starlogs,
-        trackerobj=trackerobj,
         todrop=todrop,
         dry_run=True,
         newgs=None,
     )
 
     # subset and rename, include all PRs that have associated CDS-ids
-    pr_table = track.update_pr_from_seq(trackerobj)
+    pr_table = track.update_pr_from_seq()
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
@@ -289,8 +285,6 @@ async def expressionPostProcessing(
 
 
 async def fusionPostProcessing(
-    trackerobj,
-    gumbo,
     refworkspace=RNAWORKSPACE,
     sampleset=SAMPLESETNAME,
     fusionSamplecol=SAMPLEID,
@@ -324,9 +318,8 @@ async def fusionPostProcessing(
 
     tc = TaigaClient()
 
-    ccle_refsamples = trackerobj.read_tracker()
-    if gumbo:
-        ccle_refsamples = trackerobj.read_seq_table()
+    mytracker = track.SampleTracker()
+    ccle_refsamples = mytracker.read_seq_table()
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
@@ -338,7 +331,7 @@ async def fusionPostProcessing(
     )
 
     # subset, rename from seqid to prid, and save pr-indexed matrices
-    pr_table = trackerobj.read_pr_table()
+    pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     fusions_pr = fusions[
         fusions[fusionSamplecol].isin(set(renaming_dict.keys()))
@@ -417,8 +410,6 @@ async def fusionPostProcessing(
 
 
 def cnPostProcessing(
-    trackerobj,
-    gumbo,
     wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     wessetentity=WESSETENTITY,
@@ -470,11 +461,11 @@ def cnPostProcessing(
     tc = TaigaClient()
 
     prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
-
-    tracker = trackerobj.read_seq_table()
+    mytracker = track.SampleTracker()
+    tracker = mytracker.read_seq_table()
 
     assert len(tracker) != 0, "broken source for sample tracker"
-    pr_table = trackerobj.read_pr_table()
+    pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
 
     # doing wes
@@ -573,12 +564,10 @@ def cnPostProcessing(
             samplesetname,
             wgsfailed,
             datatype=["wgs", "wes"],
-            trackerobj=trackerobj,
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wgsrefworkspace,
             dry_run=True,
-            gumbo=gumbo,
         )
     except:
         print("no wgs for this sampleset")
@@ -590,12 +579,10 @@ def cnPostProcessing(
             samplesetname,
             list(wesfailed),
             datatype=["wes", "wgs"],
-            trackerobj=trackerobj,
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wesrefworkspace,
             dry_run=True,
-            gumbo=gumbo,
         )
     except:
         print("no wes for this sampleset")
@@ -771,7 +758,6 @@ def cnPostProcessing(
 
 
 async def mutationPostProcessing(
-    trackerobj,
     wesrefworkspace=WESMUTWORKSPACE,
     wescnworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
@@ -833,7 +819,8 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    pr_table = trackerobj.read_pr_table()
+    mytracker = track.SampleTracker()
+    pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
     wesmutations_pr = wesmutations[
         wesmutations[SAMPLEID].isin(renaming_dict.keys())
@@ -952,7 +939,7 @@ async def mutationPostProcessing(
     wgs_mat_noguides = wgs_mat.iloc[:, 4:]
     wes_mat_noguides = wes_mat.iloc[:, 4:]
 
-    pr_table = trackerobj.read_pr_table()
+    pr_table = mytracker.read_pr_table()
     # transform from CDSID-level to PR-level
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
 

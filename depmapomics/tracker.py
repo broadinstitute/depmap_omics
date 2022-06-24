@@ -620,79 +620,6 @@ def resolveIssues(tracker, issus, arxspid, cols):
     return False
 
 
-def retrieveFromCellLineName(
-    noarxspan,
-    ccle_refsamples,
-    datatype,
-    extract={},
-    stripped_cell_line_name="stripped_cell_line_name",
-    arxspan_id="arxspan_id",
-    trackerobj=None,
-):
-    """
-    Given a List of samples with no arxspan ids, will try to retrieve an arxspan id and associated data from trackers
-    For now the sample tracker and paquita's depmap pv are used.
-    Args:
-    -----
-        noarxspan: dataframe of samples with missing arxspan ids
-        ccle_refsamples: dataframe of the sample tracker
-        datatype: str the datatype we are interested in (wes/rna/..) see the ones in the sample tracker
-        extract: dict(str:str) see the extract in the "resolveFromWorkspace" function
-        stripped_cell_line_name: str colname where the cell line name is stored
-        arxspan_id: str colname wherre the sample id is stored in both noarxspan and ccle_refsamples
-    Returns:
-    --------
-        a new dataframe with filled annotations when possible
-    """
-
-    # find back from cell line name in ccle ref samples
-    noarxspan.arxspan_id = [
-        ccle_refsamples[ccle_refsamples[stripped_cell_line_name] == i].arxspan_id[0]
-        if i in ccle_refsamples[stripped_cell_line_name].tolist()
-        else 0
-        for i in noarxspan[arxspan_id]
-    ]
-    a = [
-        ccle_refsamples[ccle_refsamples[stripped_cell_line_name] == i][arxspan_id][0]
-        if i in ccle_refsamples[stripped_cell_line_name].tolist()
-        else 0
-        for i in noarxspan[stripped_cell_line_name]
-    ]
-    noarxspan[arxspan_id] = [
-        i if i != 0 else a[e] for e, i in enumerate(noarxspan.arxspan_id)
-    ]
-
-    # get depmap pv
-    depmap_pv = trackerobj.read_pv()
-    depmap_pv = depmap_pv.drop(depmap_pv.iloc[:1].index)
-
-    # find back from depmapPV
-    signs = ["-", "_", ".", " "]
-    for k, val in noarxspan[noarxspan[arxspan_id] == 0].iterrows():
-        val = val[stripped_cell_line_name].upper()
-        for s in signs:
-            val = val.replace(s, "")
-        a = depmap_pv[
-            depmap_pv["CCLE_name"].str.contains(val)
-            | depmap_pv["Stripped Cell Line Name"].str.contains(val)
-            | depmap_pv["Aliases"].str.contains(val)
-        ]
-        if len(a) > 0:
-            noarxspan.loc[k, arxspan_id] = a["DepMap_ID"].values[0]
-    noarxspan[arxspan_id] = noarxspan[arxspan_id].astype(str)
-    new_noarxspan = loading.resolveFromWorkspace(
-        noarxspan[noarxspan[arxspan_id].str.contains("ACH-")],
-        refsamples=ccle_refsamples[ccle_refsamples["datatype"] == datatype],
-        match=["ACH", "CDS"],
-        participantslicepos=10,
-        accept_unknowntypes=True,
-        extract=extract,
-    )
-    return pd.concat(
-        [new_noarxspan, noarxspan[~noarxspan[arxspan_id].str.contains("ACH-")]]
-    )
-
-
 def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
     """
     given a list of samples, a release name and our sample tracker, 
@@ -786,13 +713,11 @@ def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
 
 
 def update(
-    trackerobj,
     table,
     selected,
     samplesetname,
     failed,
     lowqual,
-    gumbo,
     newgs="",
     refworkspace=None,
     bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
@@ -849,26 +774,21 @@ def update(
             for i in gcp.lsFiles(res[bamfilepaths[0]].tolist(), "-L")
         ]
 
-    if not gumbo:
-        table.loc[selected, samplesetname] = 1
     table.loc[samplesinset, ["low_quality", "blacklist", "prioritized"]] = 0
     table.loc[lowqual, "low_quality"] = 1
     failed_not_dropped = list(set(failed) - set(todrop))
     # print(todrop)
     table.loc[failed_not_dropped, "blacklist"] = 1
+    mytracker = SampleTracker()
     if dry_run:
         return table
     else:
-        if gumbo:
-            trackerobj.write_seq_table(table)
-        else:
-            trackerobj.write_tracker(table)
+        mytracker.write_seq_table(table)
     print("updated the sheet, please reactivate protections")
     return None
 
 
 def update_pr_from_seq(
-    tracker,
     cols={
         "bam_public_sra_path": "BamPublicSRAPath",
         "blacklist": "BlacklistOmics",
@@ -878,8 +798,9 @@ def update_pr_from_seq(
     priority=None,
     dryrun=True,
 ):
-    seq_table = tracker.read_seq_table()
-    pr_table = tracker.read_pr_table()
+    mytracker = SampleTracker()
+    seq_table = mytracker.read_seq_table()
+    pr_table = mytracker.read_pr_table()
     prs_in_seq_table = seq_table.ProfileID.unique()
 
     cds2pr_dict = {}
@@ -902,7 +823,7 @@ def update_pr_from_seq(
     for k, v in cds2pr_dict.items():
         pr_table.loc[v, "CDSID"] = k
     if not dryrun:
-        tracker.write_pr_table(pr_table)
+        mytracker.write_pr_table(pr_table)
     return pr_table
 
 
