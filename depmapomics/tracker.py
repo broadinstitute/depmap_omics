@@ -1,6 +1,7 @@
 # tracker.py
 from genepy.utils import helper as h
-from numpy import true_divide
+import numpy as np
+import os
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
@@ -126,6 +127,133 @@ class SampleTracker:
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", self.sample_table_name)
         wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+
+    def update_pr_from_seq(
+        self,
+        cols={
+            "bam_public_sra_path": "BamPublicSRAPath",
+            "blacklist": "BlacklistOmics",
+            "issue": "Issue",
+            "prioritized": "Prioritized",
+        },
+        priority=None,
+        dryrun=True,
+    ):
+        seq_table = self.read_seq_table()
+        pr_table = self.read_pr_table()
+        prs_in_seq_table = seq_table.ProfileID.unique()
+
+        cds2pr_dict = {}
+        for pr in prs_in_seq_table:
+            if len(seq_table[seq_table.ProfileID == pr]) == 1:
+                pr_table.loc[pr, "CDSID"] = seq_table[seq_table.ProfileID == pr].index
+            else:
+                allv = seq_table[seq_table["ProfileID"] == pr]
+                for k, val in allv.iterrows():
+                    if priority is None:
+                        if val["version"] == max(allv.version.values):
+                            cds2pr_dict[k] = pr
+                            break
+                    else:
+                        if val["version"] == max(allv.version.values):
+                            cds2pr_dict[k] = pr
+                        if val["priority"] == 1:
+                            cds2pr_dict[k] = pr
+                            break
+        for k, v in cds2pr_dict.items():
+            pr_table.loc[v, "CDSID"] = k
+        if not dryrun:
+            self.write_pr_table(pr_table)
+        return pr_table
+
+    def shareCCLEbams(
+        self,
+        samples,
+        users=[],
+        groups=[],
+        raise_error=True,
+        arg_max_length=100000,
+        bamcols=["internal_bam_filepath", "internal_bai_filepath"],
+        refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
+        privacy_sheeturl="https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4",
+        unshare=False,
+        requesterpays_project="",
+    ):
+        """
+    same as shareTerraBams but is completed to work with CCLE bams from the CCLE sample tracker
+
+    You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up
+
+    Args:
+    ----
+        users: list[str] of users' google accounts
+        groups: list[str] of groups' google accounts
+        samples list[str] of samples cds_ids for which you want to share data
+        bamcols: list[str] list of column names where bams/bais are
+        raise_error: whether or not to raise an error if we find blacklisted lines
+        refsheet_url: the google spreadsheet where the samples are stored
+        privacy_sheeturl: the google spreadsheet where the samples are stored
+        requesterpays_project: the google project where the requester pays bucket is located
+
+    Returns:
+    --------
+        a list of the gs path we have been giving access to
+    """
+        sheets = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
+        print(
+            "You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up"
+        )
+        privacy = sheets.get(privacy_sheeturl).sheets[6].to_frame()
+        refdata = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
+        blacklist = [i for i in privacy["blacklist"].values.tolist() if i is not np.nan]
+        blacklisted = set(blacklist) & set(samples)
+        print("we have " + str(len(blacklist)) + " blacklisted files")
+        if len(blacklisted):
+            print("these lines are blacklisted " + str(blacklisted))
+            if raise_error:
+                raise ValueError("blacklistedlines")
+        if type(users) is str:
+            users = [users]
+
+        togiveaccess = np.ravel(refdata[bamcols].loc[samples].values)
+        usrs = ""
+        for group in groups:
+            usrs += (
+                (" -d " if unshare else " -g") + group + (":R" if not unshare else "")
+            )
+        for user in users:
+            usrs += (
+                (" -d " if unshare else " -u ") + user + (":R" if not unshare else "")
+            )
+        requesterpays_cmd = (
+            "" if requesterpays_project == "" else "-u " + requesterpays_project
+        )
+        cmd_prefix = "gsutil {} -m acl ch ".format(requesterpays_cmd) + usrs
+        cmd = cmd_prefix
+        for n, filename in enumerate(togiveaccess):
+            if type(filename) is str and filename:
+                oldcmd = cmd
+                cmd += " " + filename
+                if (len(cmd) > arg_max_length) | (n == len(togiveaccess) - 1):
+                    if n < len(togiveaccess) - 1:
+                        cmd = oldcmd
+                    if unshare:
+                        print("preventing access to {:d} files".format(n + 1))
+                    else:
+                        print("granting access to {:d} files".format(n + 1))
+                    with open("/tmp/grantaccess{:d}.sh".format(n), "w") as f:
+                        f.write(cmd)
+                    code = os.system(cmd)
+                    cmd = cmd_prefix + " " + filename
+                    if code == signal.SIGINT:
+                        print("Awakened")
+                        return
+
+        print("the files are stored here:\n\n" + refsheet_url)
+        print("\n\njust install and use gsutil to copy them")
+        print("https://cloud.google.com/storage/docs/gsutil_install")
+        print("https://cloud.google.com/storage/docs/gsutil/commands/cp")
+        return togiveaccess
 
 
 def merge(tracker, new, old, arxspid, cols):
@@ -466,17 +594,6 @@ def changeCellLineName(
     return tracker
 
 
-def updatePairs(
-    workspaceID, tracker, removeDataFiles=True,
-):
-    """
-    looks at the current sample tracker and updates the pairs in Terra
-
-    It will add and remove them based on what information of match normal is available in the sample tracker. if an update happens it will remove the data files for the row.
-    """
-    return False
-
-
 def cleanVersions(
     tracker,
     samplecol="arxspan_id",
@@ -605,113 +722,6 @@ def findLikelyDup(
     return simi, arxsp, issues
 
 
-def resolveIssues(tracker, issus, arxspid, cols):
-    """
-    given a dict of names: [arxp ids] will try to find back the right name for the right
-    arxspan id by looking at their rfequncy of occurance along the tracker
-
-    if we have rh12: [ACH-00001,ACH-0002]
-    and rh12 is associated 1 time with ach-00002 and 3 with ach-00001
-    and rh13 is assocated 2 time with ach-00002, then it associates:
-    ach-00001 : rh12
-    ach-00002 : rh13
-    """
-    # for val in issus:
-    return False
-
-
-def updateSamplesSelectedForRelease(refsamples, releaseName, samples):
-    """
-    given a list of samples, a release name and our sample tracker, 
-    
-    will set these samples as 1 for this releasename and the rest at 0
-
-    Args:
-        refsamples (): of the sample tracker
-    """
-    refsamples[releaseName] = "0"
-    refsamples.loc[samples, releaseName] = "1"
-    return refsamples
-
-
-def makeCCLE2(tracker, source="CCLE2"):
-    """will turn the ccle sample tracker into the original ccle2 dataset based on the source column
-
-    this means it will return a table with arxspan ids, cell line name, ...[bam file type]
-
-    Args:
-        tracker (dataframe): the sample tracker
-        source (str, optional): the source column to use. Defaults to 'CCLE2'.
-
-    Returns:
-        pd.df: a table with arxspan ids, cell line name, ...[bam file type]
-    """
-    tracker = tracker[tracker.source == source]
-    ccle = pd.DataFrame(
-        index=set(tracker.arxspan_id),
-        data=tracker["stripped_cell_line_name"],
-        columns=["stripped_cell_line_name"],
-    )
-    ccle = ccle[~ccle.index.duplicated(keep="first")]
-    ccle["stripped_cell_line_name"] = tracker[~tracker.index.duplicated(keep="first")][
-        "stripped_cell_line_name"
-    ]
-    for val in ["wes", "wgs", "rna"]:
-        a = tracker[tracker.datatype == val].set_index("arxspan_id")
-        ccle[val + "_bam"] = a[~a.index.duplicated(keep="first")]["legacy_bam_filepath"]
-        ccle[val + "_bai"] = a[~a.index.duplicated(keep="first")]["legacy_bai_filepath"]
-    for val in ["hybrid_capture", "targeted", "raindance"]:
-        a = tracker[tracker.datatype == val].set_index("arxspan_id")
-        ccle[val + "_bam"] = a[~a.index.duplicated(keep="first")][
-            "internal_bam_filepath"
-        ]
-        ccle[val + "_bai"] = a[~a.index.duplicated(keep="first")][
-            "internal_bai_filepath"
-        ]
-    return ccle
-
-
-def updateParentRelationFromCellosaurus(ref, cellosaurus=None):
-    """
-    """
-    if cellosaurus is None:
-        cellosaurus = h.makeCellosaurusExport()
-    nol = []
-    for val in set(cellosaurus.patient_id):
-        mcellosaurus = set(cellosaurus[cellosaurus.patient_id == val].depmap_id) - {""}
-        if len(mcellosaurus) > 0:
-            pref = set(ref[ref.arxspan_id.isin(mcellosaurus)].participant_id)
-            if len(pref) < 1:
-                nol.append(mcellosaurus)
-                continue
-            elif len(pref) > 1:
-                print("unmatching lines in the ref:")
-                print(mcellosaurus)
-            other = set()
-            # finding if linked to other
-            for val in pref:
-                other.update(ref[ref.participant_id == val].arxspan_id.tolist())
-            if len(other - mcellosaurus) > 0:
-                print("we have some unmatch to the ref:")
-                print(other - mcellosaurus)
-            ref.loc[
-                ref[ref.arxspan_id.isin(other)].index, "participant_id"
-            ] = pref.pop()
-    print("\n_________________\nno lines found:")
-    print(nol)
-    print("\n_________________________\nparents:")
-    for val in set(ref.arxspan_id):
-        pos = cellosaurus[cellosaurus.depmap_id == val]
-        if len(pos) > 0:
-            pcellosaurus = pos.parent_id[0]
-            if pcellosaurus in cellosaurus.index.tolist():
-                a = cellosaurus.loc[pcellosaurus, "depmap_id"]
-                if a in set(ref.arxspan_id):
-                    print(val, "<--", a)
-                    ref.loc[ref[ref.arxspan_id == val].index, "parent_id"] = a
-    return ref
-
-
 def update(
     table,
     selected,
@@ -787,126 +797,3 @@ def update(
     print("updated the sheet, please reactivate protections")
     return None
 
-
-def update_pr_from_seq(
-    cols={
-        "bam_public_sra_path": "BamPublicSRAPath",
-        "blacklist": "BlacklistOmics",
-        "issue": "Issue",
-        "prioritized": "Prioritized",
-    },
-    priority=None,
-    dryrun=True,
-):
-    mytracker = SampleTracker()
-    seq_table = mytracker.read_seq_table()
-    pr_table = mytracker.read_pr_table()
-    prs_in_seq_table = seq_table.ProfileID.unique()
-
-    cds2pr_dict = {}
-    for pr in prs_in_seq_table:
-        if len(seq_table[seq_table.ProfileID == pr]) == 1:
-            pr_table.loc[pr, "CDSID"] = seq_table[seq_table.ProfileID == pr].index
-        else:
-            allv = seq_table[seq_table["ProfileID"] == pr]
-            for k, val in allv.iterrows():
-                if priority is None:
-                    if val["version"] == max(allv.version.values):
-                        cds2pr_dict[k] = pr
-                        break
-                else:
-                    if val["version"] == max(allv.version.values):
-                        cds2pr_dict[k] = pr
-                    if val["priority"] == 1:
-                        cds2pr_dict[k] = pr
-                        break
-    for k, v in cds2pr_dict.items():
-        pr_table.loc[v, "CDSID"] = k
-    if not dryrun:
-        mytracker.write_pr_table(pr_table)
-    return pr_table
-
-
-async def shareCCLEbams(
-    samples,
-    users=[],
-    groups=[],
-    raise_error=True,
-    arg_max_length=100000,
-    bamcols=["internal_bam_filepath", "internal_bai_filepath"],
-    refsheet_url="https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY",
-    privacy_sheeturl="https://docs.google.com/spreadsheets/d/115TUgA1t_mD32SnWAGpW9OKmJ2W5WYAOs3SuSdedpX4",
-    unshare=False,
-    requesterpays_project="",
-):
-    """
-  same as shareTerraBams but is completed to work with CCLE bams from the CCLE sample tracker
-
-  You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up
-
-  Args:
-  ----
-    users: list[str] of users' google accounts
-    groups: list[str] of groups' google accounts
-    samples list[str] of samples cds_ids for which you want to share data
-    bamcols: list[str] list of column names where bams/bais are
-    raise_error: whether or not to raise an error if we find blacklisted lines
-    refsheet_url: the google spreadsheet where the samples are stored
-    privacy_sheeturl: the google spreadsheet where the samples are stored
-    requesterpays_project: the google project where the requester pays bucket is located
-
-  Returns:
-  --------
-    a list of the gs path we have been giving access to
-  """
-    sheets = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
-    print(
-        "You need to have gsheet installed and you '~/.client_secret.json', '~/.storage.json' set up"
-    )
-    privacy = sheets.get(privacy_sheeturl).sheets[6].to_frame()
-    refdata = sheets.get(refsheet_url).sheets[0].to_frame(index_col=0)
-    blacklist = [i for i in privacy["blacklist"].values.tolist() if i is not np.nan]
-    blacklisted = set(blacklist) & set(samples)
-    print("we have " + str(len(blacklist)) + " blacklisted files")
-    if len(blacklisted):
-        print("these lines are blacklisted " + str(blacklisted))
-        if raise_error:
-            raise ValueError("blacklistedlines")
-    if type(users) is str:
-        users = [users]
-
-    togiveaccess = np.ravel(refdata[bamcols].loc[samples].values)
-    usrs = ""
-    for group in groups:
-        usrs += (" -d " if unshare else " -g") + group + (":R" if not unshare else "")
-    for user in users:
-        usrs += (" -d " if unshare else " -u ") + user + (":R" if not unshare else "")
-    requesterpays_cmd = (
-        "" if requesterpays_project == "" else "-u " + requesterpays_project
-    )
-    cmd_prefix = "gsutil {} -m acl ch ".format(requesterpays_cmd) + usrs
-    cmd = cmd_prefix
-    for n, filename in enumerate(togiveaccess):
-        if type(filename) is str and filename:
-            oldcmd = cmd
-            cmd += " " + filename
-            if (len(cmd) > arg_max_length) | (n == len(togiveaccess) - 1):
-                if n < len(togiveaccess) - 1:
-                    cmd = oldcmd
-                if unshare:
-                    print("preventing access to {:d} files".format(n + 1))
-                else:
-                    print("granting access to {:d} files".format(n + 1))
-                with open("/tmp/grantaccess{:d}.sh".format(n), "w") as f:
-                    f.write(cmd)
-                code = os.system(cmd)
-                cmd = cmd_prefix + " " + filename
-                if code == signal.SIGINT:
-                    print("Awakened")
-                    return
-
-    print("the files are stored here:\n\n" + refsheet_url)
-    print("\n\njust install and use gsutil to copy them")
-    print("https://cloud.google.com/storage/docs/gsutil_install")
-    print("https://cloud.google.com/storage/docs/gsutil/commands/cp")
-    return togiveaccess
