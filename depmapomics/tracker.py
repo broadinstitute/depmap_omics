@@ -7,6 +7,7 @@ from depmapomics import loading
 from gsheets import Sheets
 import pygsheets
 from depmapomics.config import *
+from depmapomics import terra as myterra
 from genepy import terra
 from genepy.google import gcp
 from genepy.google.google_sheet import dfToSheet
@@ -247,7 +248,7 @@ class SampleTracker:
                     cmd = cmd_prefix + " " + filename
                     if code == signal.SIGINT:
                         print("Awakened")
-                        return
+                        return None
 
         print("the files are stored here:\n\n" + refsheet_url)
         print("\n\njust install and use gsutil to copy them")
@@ -797,3 +798,147 @@ def update(
     print("updated the sheet, please reactivate protections")
     return None
 
+
+def updateTrackerRNA(
+    selected,
+    failed,
+    lowqual,
+    tracker,
+    samplesetname,
+    refworkspace=RNAWORKSPACE,
+    bamfilepaths=STARBAMCOLTERRA,
+    newgs=RNA_GCS_PATH_HG38,
+    dry_run=False,
+    qcname="star_logs",
+    match=".Log.final.out",
+    samplesinset=[],
+    starlogs={},
+    todrop=[],
+):
+    """updates the sample tracker with the new rna samples and the QC metrics
+
+    Args:
+        tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
+        selected (list[str]): which samples were selected in the release of the analysis
+        samplesetname (str): the name of the sample set or of the current analysis
+        samplesinset (list[str]): list of samples in the analysis.
+        lowqual (list[str]): list of samples that failed QC
+        newgs (str, optional): google storage path where to move the files. Defaults to ''.
+        sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
+        sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
+        qcname (str, optional): Terra column containing QC files. Defaults to "star_logs".
+        refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
+        bamfilepaths (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
+        todrop (list, optional): list of samples to be dropped. Defaults to []
+        samplesinset (list[str], optional): list of samples in set when refworkspace is None (bypass interacting with terra)
+        starlogs (dict(str:list[str]), optional): dict of samples' star qc log locations when refworkspace is None (bypass interacting with terra)
+    """
+    refwm = dm.WorkspaceManager(refworkspace)
+    samplesinset = [
+        i["entityName"]
+        for i in refwm.get_entities("sample_set").loc[samplesetname].samples
+    ]
+    starlogs = myterra.getQC(
+        workspace=refworkspace, only=samplesinset, qcname=qcname, match=match
+    )
+    for k, v in starlogs.items():
+        if k == "nan":
+            continue
+        a = tracker.loc[k, "processing_qc"]
+        a = "" if a is np.nan else a
+        tracker.loc[k, "processing_qc"] = str(v) + "," + a
+        if tracker.loc[k, "bam_qc"] != v[0]:
+            tracker.loc[k, "bam_qc"] = v[0]
+    tracker.loc[tracker[tracker.datatype.isin(["rna"])].index, samplesetname] = 0
+    return update(
+        tracker,
+        selected,
+        samplesetname,
+        failed,
+        lowqual,
+        newgs=newgs,
+        refworkspace=refworkspace,
+        bamfilepaths=bamfilepaths,
+        dry_run=dry_run,
+        todrop=todrop,
+    )
+
+
+def updateTrackerWGS(
+    tracker,
+    selected,
+    samplesetname,
+    lowqual,
+    datatype,
+    newgs=WGS_GCS_PATH_HG38,
+    samplesinset=[],
+    procqc=[],
+    bamqc=[],
+    refworkspace=None,
+    bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
+    dry_run=False,
+):
+    """updates the sample tracker with the new wgs samples and the QC metrics
+
+    Args:
+        tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
+        selected (list[str]): which samples were selected in the release of the analysis
+        samplesetname (str): the name of the sample set or of the current analysis
+        samplesinset (list[str]): list of samples in the analysis.
+        lowqual (list[str]): list of samples that failed QC
+        newgs (str, optional): google storage path where to move the files. Defaults to ''.
+        sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
+        sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
+        procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
+        bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
+        refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
+        bamfilepaths (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
+    """
+    # computing QC
+    print("looking for QC..")
+    if refworkspace is not None:
+        if not samplesinset:
+            samplesinset = [
+                i["entityName"]
+                for i in dm.WorkspaceManager(refworkspace)
+                .get_entities("sample_set")
+                .loc[samplesetname]
+                .samples
+            ]
+        dataProc = (
+            {}
+            if procqc == []
+            else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=procqc)
+        )
+        dataBam = (
+            {}
+            if bamqc == []
+            else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=bamqc)
+        )
+        for k, v in dataProc.items():
+            if k == "nan":
+                continue
+            a = tracker.loc[k, "processing_qc"]
+            a = "" if a is np.nan else a
+            tracker.loc[k, "processing_qc"] = str(v) + "," + a
+        for k, v in dataBam.items():
+            if k == "nan":
+                continue
+            a = tracker.loc[k, "bam_qc"]
+            a = "" if a is np.nan else a
+            tracker.loc[k, "bam_qc"] = str(v) + "," + a
+    if type(datatype) is str:
+        datatype = [datatype]
+    tracker.loc[tracker[tracker.datatype.isin(datatype)].index, samplesetname] = 0
+    update(
+        tracker,
+        selected,
+        samplesetname,
+        lowqual,
+        lowqual,
+        newgs=newgs,
+        refworkspace=refworkspace,
+        bamfilepaths=bamfilepaths,
+        dry_run=dry_run,
+        samplesinset=samplesinset,
+    )
