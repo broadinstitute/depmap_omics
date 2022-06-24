@@ -167,7 +167,7 @@ async def expressionPostProcessing(
 
     print("updating the tracker")
 
-    expressions.updateTracker(
+    track.updateTrackerRNA(
         set(renaming.keys()) - set(["transcript_id(s)"]),
         failed,
         lowqual[lowqual.sum(1) > 3].index.tolist(),
@@ -557,7 +557,7 @@ def cnPostProcessing(
     selected = []
 
     try:
-        cn.updateTracker(
+        track.updateTrackerWGS(
             tracker,
             selected,
             samplesetname,
@@ -572,7 +572,7 @@ def cnPostProcessing(
         print("no wgs for this sampleset")
 
     try:
-        cn.updateTracker(
+        track.updateTrackerWGS(
             tracker,
             selected,
             samplesetname,
