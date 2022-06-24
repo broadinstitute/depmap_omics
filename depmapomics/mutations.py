@@ -9,13 +9,13 @@ import numpy as np
 from collections import Counter
 
 from depmapomics.config import *
-from depmapomics import tracker as track
 
 import dalmatian as dm
 import pandas as pd
 from genepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
+import subprocess
 
 
 def download_maf_from_workspace(
@@ -268,8 +268,16 @@ def generateGermlineMatrix(
     Returns:
         sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
     """
-
+    # check if bcftools is installed
     print("generating germline matrix")
+    print(
+        "bcftools is required in order to generate the matrix. Checking if bcftools is installed..."
+    )
+    try:
+        subprocess.call(["bcftools"])
+    except FileNotFoundError:
+        raise Exception("bcftools not installed!")
+
     h.createFoldersFor(savedir)
     # load vcfs from workspace using dalmatian
     wm = dm.WorkspaceManager(refworkspace)
