@@ -54,8 +54,8 @@ class CravatAnnotator(BaseAnnotator):
         carefully to ensure that your data is ending up where you intend.
         """
         out = {}
-        out["hess_driver"] = ""
-        out["hess_driver_signature"] = ""
+        out["is_driver"] = ""
+        out["signature"] = ""
 
         chrom = input_data["chrom"]
         pos = input_data["pos"]
@@ -66,8 +66,8 @@ class CravatAnnotator(BaseAnnotator):
                 return out
         key = str(chrom) + ":" + str(pos) + ":" + alt
         if key in self.driverset:
-            out["hess_driver"] = "True"
-            out["hess_driver_signature"] = self.driverset[key]
+            out["is_driver"] = "Y"
+            out["signature"] = self.driverset[key]
         return out
 
     def cleanup(self):

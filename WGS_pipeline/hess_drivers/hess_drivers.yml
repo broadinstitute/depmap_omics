@@ -20,15 +20,15 @@ developer:
 level: variant
 input_format: crx
 output_columns:
-  - name: hess_driver
-    title: hess_driver
-    type: bool
+  - name: is_driver
+    title: Hess Driver
+    type: string
     width: 50
     hidden: false
     desc: is in the hess et all list of driver.
     category: single
-  - name: hess_driver_signature
-    title: hess_driver_signature
+  - name: signature
+    title: Hess Driver Signature
     type: string
     width: 100
     hidden: false
@@ -41,7 +41,3 @@ type: annotator
 requires_opencravat: ">=2.2.7"
 tags:
   - cancer
-requires:
-  - wgoncokb
-commercial_warning:
-  "For commercial use, visit https://www.oncokb.org/account/register."
