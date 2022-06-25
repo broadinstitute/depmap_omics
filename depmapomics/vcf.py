@@ -375,9 +375,9 @@ def improve(
         missing_col = set(['']) - set(df.columns)
         if len(missing_col)>0:
             raise ValueError('missing columns', missing_col)
-        else:
-            loc = 
-            vcf.loc[loc, k] = True
+       # else:
+           # loc = 
+          #  vcf.loc[loc, k] = True
 
 
     # ccle_deleterious
