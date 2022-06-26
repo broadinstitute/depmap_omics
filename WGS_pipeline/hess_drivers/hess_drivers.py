@@ -3,7 +3,6 @@ from cravat import BaseAnnotator
 from cravat import InvalidData
 import sqlite3
 import os
-import pandas as pd
 
 
 class CravatAnnotator(BaseAnnotator):
@@ -15,6 +14,14 @@ class CravatAnnotator(BaseAnnotator):
         sqlite3.Connection object is stored as self.dbconn, and the
         sqlite3.Cursor object is stored as self.cursor.
         """
+        try:
+            import pandas as pd
+        except ModuleNotFoundError:
+            res = os.system("pip install pandas")
+            if res != 0:
+                print("pip install pandas failed")
+                sys.exit(1)
+            import pandas as pd
         dir_path = os.path.dirname(os.path.realpath(__file__))
         datafile_path = os.path.join(dir_path, "data", "hess_drivers.csv.gz")
         self.drivers = pd.read_csv(datafile_path)
