@@ -45,9 +45,9 @@ task opencravat {
         File? oncokb_api_key
 
         Int memory = 16
-        Int boot_disk_size = 20
-        Int disk_space=20
-        Int num_threads = 10
+        Int boot_disk_size = 100
+        Int disk_space = 20
+        Int num_threads = 4
         Int num_preempt = 2
         String docker = "karchinlab/opencravat"
     }
@@ -125,7 +125,7 @@ with open(sys.argv[1],'rb') as f:
     output {
         File oc_error_files="out/${basename(vcf)}.err"
         File oc_log_files="out/${basename(vcf)}.log"
-        File oc_sql_files="out/${basename(vcf)}.sqlite"
+        #File oc_sql_files="out/${basename(vcf)}.sqlite"
         File oc_main_files="out/${basename(vcf)}.${format}.gz"
     }
 
