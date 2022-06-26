@@ -28,7 +28,7 @@ workflow run_opencravat {
     output {
         File oc_error_files=opencravat.oc_error_files
         File oc_log_files=opencravat.oc_log_files
-        File oc_sql_files=opencravat.oc_sql_files
+        #File oc_sql_files=opencravat.oc_sql_files
         File oc_main_files=opencravat.oc_main_files
     }
 }
