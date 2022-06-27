@@ -9,7 +9,7 @@ CACHE_PATH = "~/.depmapomics/"
 TMP_PATH = "/tmp/"
 
 ### GCP credentials
-SHEETCREDS = "../../.credentials.json"
+SHEETCREDS = "~/.credentials.json"
 MY_ID = "~/.client_secret.json"
 MYSTORAGE_ID = "~/.storage.json"
 GCS_PAYER_PROJECT = "broad-firecloud-ccle"
