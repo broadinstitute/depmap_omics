@@ -53,6 +53,7 @@ def makeAchillesChoiceTable(
     subset_pr_table = subset_pr_table[subset_pr_table.BlacklistOmics != 1]
     mcs = set(subset_pr_table["ModelCondition"])
     # one_pr_per_type assumes we're only picking one PR per datatype (rna/dna) for each MC
+    # TODO: no more one_pr_per_type
     if one_pr_per_type:
         for mc in mcs:
             prs_in_mc = subset_pr_table[(subset_pr_table.ModelCondition == mc)]
