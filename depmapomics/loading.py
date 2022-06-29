@@ -79,7 +79,7 @@ def loadFromTerraWorkspace(
     )
     samples = extractFromWorkspace(samples, stype)
     print("generating CDS-ids, annotating source, and renaming columns")
-    samples = mapSamples(samples, source, extract)
+    samples = mapSamples(samples, source, extract=extract, mappingcol=wsidcol)
     # since datatype is not on seq table, here find a list of profile ids within stype
     prs_within_type = pr_table[pr_table[extract["ref_type"]] == stype].index
     print("checking for duplicates in the workspace by comparing file sizes")
@@ -95,7 +95,22 @@ def loadFromTerraWorkspace(
         print("no new data available")
         return None
 
-    return samples
+    # out of the new samples, see if ops has registered them in gumbo
+    unmapped_new_lines = []
+    # FOR NOW, assume the id col to map by is in profile table (might change??)
+    for k, v in samples.iterrows():
+        if v[gumboidcol] in pr_table[gumboidcol]:
+            pr_id = pr_table[pr_table[gumboidcol] == v[gumboidcol]].index
+            if len(pr_id) > 1:
+                raise ValueError(
+                    "multiple validation ids mapped to the same profile. check with ops!"
+                )
+            else:
+                samples.loc[k, extract["profile_id"]] = pr_id[0]
+        else:
+            unmapped_new_lines.append(k)
+
+    return samples, unmapped_new_lines
 
 
 def GetNewCellLinesFromWorkspaces(
@@ -488,16 +503,20 @@ def mapSamples(samples, source, extract={}):
     # subsetting
     print(samples.columns)
     samples = samples[
-        [
-            extract["ref_bam"],
-            extract["ref_bai"],
-            extract["release_date"],
-            extract["legacy_size"],
-            extract["PDO_id_gumbo"],
-            extract["sm_id"],
-            extract["update_time"],
-            extract["source"],
-        ]
+        list(
+            set(
+                [
+                    extract["ref_bam"],
+                    extract["ref_bai"],
+                    extract["release_date"],
+                    extract["legacy_size"],
+                    extract["PDO_id_gumbo"],
+                    extract["sm_id"],
+                    extract["update_time"],
+                    extract["source"],
+                ]
+            )
+        )
     ]
     return samples
 
