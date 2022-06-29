@@ -65,9 +65,9 @@ EXTRACT_DEFAULTS = {
     "name": "sample_alias",
     "bai": "crai_or_bai_path",
     "bam": "cram_or_bam_path",
-    "ref_bam": "legacy_bam_filepath",
-    "ref_type": "datatype",
-    "ref_bai": "legacy_bai_filepath",
+    "ref_bam": "hg19_bam_filepath",
+    "ref_type": "Datatype",
+    "ref_bai": "hg19_bai_filepath",
     "version": "version",
     "primary_disease": "primary_disease",
     "ref_arxspan_id": "arxspan_id",
@@ -77,7 +77,8 @@ EXTRACT_DEFAULTS = {
     "legacy_size": "legacy_size",
     "from_arxspan_id": "individual_alias",
     "ref_id": "sample_id",
-    "PDO_id": "PDO",
+    "PDO_id_terra": "PDO",
+    "PDO_id_gumbo": "PDO_ID",
     "update_time": "update_time",
     "from_patient_id": "individual_alias",
     "patient_id": "participant_id",
@@ -92,6 +93,9 @@ EXTRACT_DEFAULTS = {
     "hash": "crc32c_hash",
     "legacy_hash": "legacy_crc32c_hash",
     "mean_depth": "mean_depth",
+    "root_sample_id": "root_sample_id",
+    "sm_id": "SM_ID",
+    "profile_id": "ProfileID",
 }
 
 # minimum bam file size in bytes for each sequencing type

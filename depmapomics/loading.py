@@ -13,7 +13,7 @@ from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from depmapomics import tracker
+from depmapomics import tracker as track
 from depmapomics.config import *
 from depmapomics import terra as myterra
 from genepy import terra
@@ -24,6 +24,78 @@ from genepy.google import gcp
 #####################
 # Loading Functions
 #####################
+
+
+def loadFromTerraWorkspace(
+    wsname,
+    wsidcol,
+    gumboidcol,
+    source,
+    stype,
+    bamcol="cram_or_bam_path",
+    load_undefined=False,
+    extract=EXTRACT_DEFAULTS,
+    accept_unknowntypes=True,
+    addonly=[],
+):
+    """
+    Load new samples from a terra workspace and attempt to map them to existing profiles in gumbo.
+
+    Args:
+    -----
+        wsname (str): name of terra workspace to load data from
+        wsidcol (str): name of column in wsname's sample table that contains IDs to map to ProfileIDs by
+        gumboidcol (str): name of column in gumbo's profile table that contains IDs to map to ProfileIDs by
+        source (str): source of the data delivered (DEPMAP, IBM, etc.)
+        stype (str): type of the data (wgs, rna, etc.)
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+
+    Returns:
+    --------
+        samples: pd dataframe the filtered sample list
+    """
+    mytracker = track.SampleTracker()
+    seq_table = mytracker.read_seq_table()
+    pr_table = mytracker.read_pr_table()
+    wm = dm.WorkspaceManager(wsname).disable_hound()
+    samples_in_ws = wm.get_samples().replace(np.nan, "", regex=True).reset_index()
+
+    # check broken bam file paths
+    print("checking if there are any broken file paths")
+    foundfiles = gcp.lsFiles(samples_in_ws[bamcol])
+    broken_bams = set(samples_in_ws[bamcol]) - set(foundfiles)
+    print(
+        "These "
+        + str(len(broken_bams))
+        + " bam file path do not exist: "
+        + str(broken_bams)
+    )
+    samples = samples_in_ws[(~samples_in_ws[extract["bam"]].isin(broken_bams))]
+
+    print(
+        "extracting information from workspace including hash, size, update time, etc."
+    )
+    samples = extractFromWorkspace(samples, stype)
+    print("generating CDS-ids, annotating source, and renaming columns")
+    samples = mapSamples(samples, source, extract)
+    # since datatype is not on seq table, here find a list of profile ids within stype
+    prs_within_type = pr_table[pr_table[extract["ref_type"]] == stype].index
+    print("checking for duplicates in the workspace by comparing file sizes")
+    samples = resolveFromWorkspace(
+        samples,
+        seq_table[seq_table[extract["profile_id"]].isin(prs_within_type)],
+        wsidcol,
+        accept_unknowntypes,
+        addonly,
+        extract,
+    )
+    if len(samples) == 0:
+        print("no new data available")
+        return None
+
+    return samples
 
 
 def GetNewCellLinesFromWorkspaces(
@@ -91,42 +163,6 @@ def GetNewCellLinesFromWorkspaces(
     if trackerobj is not None:
         print("refsamples is overrided by a tracker object")
         refsamples = trackerobj.read_tracker()
-    if refsamples is None:
-        if wto is None:
-            raise ValueError("missing refsamples or refworkspace (wto)")
-        wto = dm.WorkspaceManager(wto)
-        print(
-            "we do not have refsamples data. Using the wto workspace sample data instead"
-        )
-        refsamples = wto.get_samples()
-        # TODO: update directly the df if data is not already in here)
-        refsamples[extract["ref_arxspan_id"]] = [
-            a.split("_")[0]
-            for a in refsamples[extract["ref_arxspan_id"]]
-            if type(a) is str
-        ]
-        if extract["hash"] not in refsamples.columns:
-            refsamples[extract["hash"]] = [
-                gcp.extractHash(val)
-                for val in gcp.lsFiles(
-                    [
-                        i
-                        for i in refsamples[extract["ref_bams"]]
-                        if type(i) is str and str(i) != "NA"
-                    ],
-                    "-L",
-                    200,
-                )
-            ]
-        if extract["size"] not in refsamples.columns:
-            refsamples["size"] = [
-                gcp.extractSize(i)[1]
-                for i in gcp.lsFiles(refsamples[extract["bam"]].tolist(), "-al", 200)
-            ]
-        if extract["release_date"] not in refsamples.columns:
-            refsamples[extract["ref_bams"]] = seq.getBamDate(
-                refsamples[extract["ref_bams"]]
-            )
     refsamples[extract["release_date"]] = list(
         h.datetoint(refsamples[extract["release_date"]].values, split="-")
     )
@@ -408,9 +444,6 @@ def extractFromWorkspace(
         return None
     if extract["release_date"] not in samples.columns or recomputedate:
         samples[extract["release_date"]] = seq.getBamDate(samples[extract["bam"]])
-    samples[extract["release_date"]] = list(
-        h.datetoint(samples[extract["release_date"]].values)
-    )
     return samples
 
 
@@ -440,10 +473,6 @@ def mapSamples(samples, source, extract={}):
         "CDS-" + h.randomString(stringLength=6, stype="all", withdigits=True)
         for _ in range(len(samples))
     ]
-    samples[extract["patient_id"]] = [
-        "PT-" + h.randomString(stringLength=8, stype="all", withdigits=True)
-        for _ in range(len(samples))
-    ]
     samples.reset_index(drop=True, inplace=True)
     samples[extract["source"]] = source
 
@@ -452,9 +481,8 @@ def mapSamples(samples, source, extract={}):
         columns={
             extract["bam"]: extract["ref_bam"],
             extract["bai"]: extract["ref_bai"],
-            extract["name"]: extract["ref_name"],
-            extract["from_arxspan_id"]: extract["ref_arxspan_id"],
             extract["root_sample_id"]: extract["sm_id"],
+            extract["PDO_id_terra"]: extract["PDO_id_gumbo"],
         }
     ).set_index(extract["ref_id"], drop=True)
     # subsetting
@@ -463,12 +491,9 @@ def mapSamples(samples, source, extract={}):
         [
             extract["ref_bam"],
             extract["ref_bai"],
-            extract["ref_name"],
-            extract["ref_arxspan_id"],
             extract["release_date"],
-            extract["patient_id"],
             extract["legacy_size"],
-            extract["PDO_id"],
+            extract["PDO_id_gumbo"],
             extract["sm_id"],
             extract["update_time"],
             extract["source"],
@@ -478,13 +503,7 @@ def mapSamples(samples, source, extract={}):
 
 
 def resolveFromWorkspace(
-    samples,
-    refsamples,
-    match,
-    participantslicepos=10,
-    accept_unknowntypes=True,
-    addonly=[],
-    extract={},
+    samples, refsamples, wsidcol, accept_unknowntypes=True, addonly=[], extract={},
 ):
     """
     Filters our list by trying to find duplicate in our dataset and remove any sample that isn't tumor
@@ -510,33 +529,10 @@ def resolveFromWorkspace(
         samples: pd dataframe the filtered sample list
     """
     extract.update(EXTRACT_DEFAULTS)
-    prevlen = len(samples)
-    for match_substring in match:
-        samples[extract["ref_arxspan_id"]] = [
-            (match_substring + i.split(match_substring)[-1])
-            if match_substring in i
-            else i
-            for i in samples[extract["ref_arxspan_id"]]
-        ]
-    samples[extract["ref_arxspan_id"]] = [
-        i[:participantslicepos] for i in samples[extract["ref_arxspan_id"]]
-    ]
-    print(
-        "we found and removed "
-        + str(prevlen - len(samples))
-        + " samples which did not match our id names: "
-        + str(match)
-    )
 
-    tolookfor = [
-        val[extract["ref_bam"]]
-        for _, val in samples.iterrows()
-        if val[extract["ref_arxspan_id"]] in set(refsamples[extract["ref_arxspan_id"]])
-    ]
-    print("found " + str(len(tolookfor)) + " likely replicate")
     sample_size = {
         gcp.extractSize(val)[1]: gcp.extractSize(val)[0]
-        for val in gcp.lsFiles(tolookfor, "-la")
+        for val in gcp.lsFiles(samples[extract["ref_bam"]], "-la")
     }
     dups_to_remove = [
         sample_size[a]
@@ -559,7 +555,7 @@ def resolveFromWorkspace(
 
     # if only add some samples
     if len(addonly) > 0:
-        samples = samples[samples[extract["ref_arxspan_id"]].isin(addonly)]
+        samples = samples[samples[wsidcol].isin(addonly)]
 
     # unknown types
     if "sample_type" in samples.columns:
