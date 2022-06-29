@@ -479,7 +479,7 @@ def cnPostProcessing(
         )
         (
             wessegments,
-            genecn,
+            wesgenecn,
             wesfailed,
             wes_purecn_segments,
             wes_purecn_genecn,
@@ -515,7 +515,7 @@ def cnPostProcessing(
         print("bypassing WES using folder: " + wesfolder)
         wesfailed = h.fileToList(wesfolder + "failed.txt")
         wessegments = pd.read_csv(wesfolder + "segments_all.csv")
-        genecn = pd.read_csv(wesfolder + "genecn_all.csv", index_col=0)
+        wesgenecn = pd.read_csv(wesfolder + "genecn_all.csv", index_col=0)
         wessegments_pr = (
             wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
             .replace({SAMPLEID: renaming_dict})
@@ -527,7 +527,7 @@ def cnPostProcessing(
     folder = os.path.join("output", samplesetname, "wgs_")
     (
         wgssegments,
-        genecn,
+        wgsgenecn,
         wgsfailed,
         wgs_purecn_segments,
         wgs_purecn_genecn,
@@ -591,11 +591,6 @@ def cnPostProcessing(
         .replace({SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
-    wgscn_pr = genecn[genecn.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
-
-    wgscn_pr.to_csv(folder + "genecn_all_profile.csv")
 
     print("merging PR-level seg file")
     mergedsegments_pr = wgssegments_pr.append(wessegments_pr).reset_index(drop=True)
@@ -621,7 +616,9 @@ def cnPostProcessing(
     # merging wes and wgs
     folder = os.path.join("output", samplesetname, "")
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
-    mergedsegments.to_csv(folder + "merged_segments_all_profile.csv", index=False)
+    mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
+    mergedcn = wgsgenecn.append(wesgenecn)
+    mergedcn.to_csv(folder + "merged_genecn.csv")
     mergedsegments_pr = mut.manageGapsInSegments(mergedsegments_pr)
     mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
 
@@ -639,17 +636,12 @@ def cnPostProcessing(
         dataset_permaname=taiga_dataset,
         upload_files=[
             {
-                "path": folder + "merged_segments_all.csv",
+                "path": folder + "merged_segments.csv",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "wes_genecn_all.csv",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "wgs_genecn_all.csv",
+                "path": folder + "merged_genecn.csv",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
