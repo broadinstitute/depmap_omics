@@ -78,7 +78,7 @@ EXTRACT_DEFAULTS = {
     "from_arxspan_id": "individual_alias",
     "ref_id": "sample_id",
     "PDO_id_terra": "PDO",
-    "PDO_id_gumbo": "PDO_ID",
+    "PDO_id_gumbo": "PDO-ID",
     "update_time": "update_time",
     "from_patient_id": "individual_alias",
     "patient_id": "participant_id",
@@ -94,7 +94,7 @@ EXTRACT_DEFAULTS = {
     "legacy_hash": "legacy_crc32c_hash",
     "mean_depth": "mean_depth",
     "root_sample_id": "root_sample_id",
-    "sm_id": "SM_ID",
+    "sm_id": "SM-ID",
     "profile_id": "ProfileID",
     "expected_type": "ExpectedType",
 }
@@ -692,6 +692,7 @@ DATE_COL_DICT = {
     "public": "PublicReleaseDate",
 }
 
+MODEL_TABLE_NAME = "Model"
 MC_TABLE_NAME = "ModelCondition"
 PR_TABLE_NAME = "OmicsProfile"
 SEQ_TABLE_NAME = "OmicsSequencing"

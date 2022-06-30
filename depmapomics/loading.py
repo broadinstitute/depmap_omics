@@ -522,7 +522,6 @@ def mapSamples(samples, source, extract={}):
                 [
                     extract["ref_bam"],
                     extract["ref_bai"],
-                    extract["from_arxspan_id"],
                     extract["release_date"],
                     extract["legacy_size"],
                     extract["PDO_id_gumbo"],
@@ -1145,10 +1144,9 @@ def update(
     stype,
     bucket,
     refworkspace,
-    trackerobj,
     samplesetname=SAMPLESETNAME,
     name_col="index",
-    values=["legacy_bam_filepath", "legacy_bai_filepath"],
+    values=["hg19_bam_filepath", "hg19_bai_filepath"],
     filetypes=["bam", "bai"],
     add_to_samplesets=[],
 ):
@@ -1171,6 +1169,7 @@ def update(
         add_to_samplesets (list, optional): add new samples to additional sample_sets on terra. Defaults to []
     """
     # uploading to our bucket (now a new function)
+    assert set(values).issubset(set(samples.columns))
     samples = terra.changeToBucket(
         samples,
         bucket,
@@ -1181,20 +1180,34 @@ def update(
         dryrun=False,
     )
 
-    ccle_refsamples = trackerobj.read_tracker()
+    mytracker = track.SampleTracker()
+    ccle_refsamples = mytracker.read_seq_table()
 
     names = []
-    subccle_refsamples = ccle_refsamples[ccle_refsamples["datatype"] == stype]
+    subccle_refsamples = ccle_refsamples[ccle_refsamples["ExpectedType"] == stype]
     for k, val in samples.iterrows():
-        val = val["arxspan_id"]
-        names.append(val)
-        samples.loc[k, "version"] = len(
-            subccle_refsamples[subccle_refsamples["arxspan_id"] == val]
-        ) + names.count(val)
+        val = val["ProfileID"]
+        if val != "":
+            names.append(val)
+            samples.loc[k, "version"] = len(
+                subccle_refsamples[subccle_refsamples["ProfileID"] == val]
+            ) + names.count(val)
     samples["version"] = samples["version"].astype(int)
 
     ccle_refsamples = ccle_refsamples.append(samples, sort=False)
-    trackerobj.write_tracker(ccle_refsamples)
+    mytracker.write_seq_table(ccle_refsamples)
+
+    # terra requires a participant id column
+    # temp multi-step solution here: get participant id from seq id
+    seq_table = mytracker.read_seq_table()
+    pr_table = mytracker.read_pr_table()
+    mc_table = mytracker.read_mc_table()
+    model_table = mytracker.read_model_table()
+
+    for i in samples.index:
+        samples.loc[i, "participant_id"] = mytracker.get_participant_id(
+            i, seq_table, pr_table, mc_table, model_table
+        )
 
     # uploading new samples
     samples.index.name = "sample_id"

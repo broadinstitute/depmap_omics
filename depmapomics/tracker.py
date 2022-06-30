@@ -37,6 +37,7 @@ class SampleTracker:
         self.samples_found_name = SAMPLES_FOUND_NAME
         self.samples_not_found_name = SAMPLES_NOT_FOUND_NAME
         self.samples_missing_arxspan_name = SAMPLES_MISSING_ARXSPAN_NAME
+        self.model_table_name = MODEL_TABLE_NAME
         self.mc_table_name = MC_TABLE_NAME
         self.pr_table_name = PR_TABLE_NAME
         self.seq_table_name = SEQ_TABLE_NAME
@@ -89,6 +90,11 @@ class SampleTracker:
             .set_index("sample_id")
         )
 
+    def read_model_table(self):
+        sheet = self.gc.open(self.gumbo_sheetname)
+        wksht = sheet.worksheet("title", self.model_table_name)
+        return wksht.get_as_df(index_column=1, start="A3")
+
     def read_mc_table(self):
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", self.mc_table_name)
@@ -128,6 +134,16 @@ class SampleTracker:
         sheet = self.gc.open(self.gumbo_sheetname)
         wksht = sheet.worksheet("title", self.sample_table_name)
         wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+
+    def get_participant_id(self, seqid, seq_table, pr_table, mc_table, model_table):
+        pr = seq_table.loc[seqid, "ProfileID"]
+        if pr != "":
+            mc = pr_table.loc[pr, "ModelCondition"]
+            model = mc_table.loc[mc, "ModelID"]
+            participant = model_table.loc[model, "PatientID"]
+            return participant
+        else:
+            return "NA"
 
     def update_pr_from_seq(
         self,
