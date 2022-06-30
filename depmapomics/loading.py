@@ -32,6 +32,7 @@ def loadFromTerraWorkspace(
     gumboidcol,
     source,
     stype,
+    only_load_mapped=False,
     bamcol="cram_or_bam_path",
     load_undefined=False,
     extract=EXTRACT_DEFAULTS,
@@ -79,13 +80,11 @@ def loadFromTerraWorkspace(
     )
     samples = extractFromWorkspace(samples, stype)
     print("generating CDS-ids, annotating source, and renaming columns")
-    samples = mapSamples(samples, source, extract=extract, mappingcol=wsidcol)
-    # since datatype is not on seq table, here find a list of profile ids within stype
-    prs_within_type = pr_table[pr_table[extract["ref_type"]] == stype].index
+    samples = mapSamples(samples, source, extract=extract)
     print("checking for duplicates in the workspace by comparing file sizes")
     samples = resolveFromWorkspace(
         samples,
-        seq_table[seq_table[extract["profile_id"]].isin(prs_within_type)],
+        seq_table[seq_table[extract["expected_type"]] == stype],
         wsidcol,
         accept_unknowntypes,
         addonly,
@@ -99,8 +98,8 @@ def loadFromTerraWorkspace(
     unmapped_new_lines = []
     # FOR NOW, assume the id col to map by is in profile table (might change??)
     for k, v in samples.iterrows():
-        if v[gumboidcol] in pr_table[gumboidcol]:
-            pr_id = pr_table[pr_table[gumboidcol] == v[gumboidcol]].index
+        if v[wsidcol] in pr_table[gumboidcol].tolist():
+            pr_id = pr_table[pr_table[gumboidcol] == v[wsidcol]].index
             if len(pr_id) > 1:
                 raise ValueError(
                     "multiple validation ids mapped to the same profile. check with ops!"
@@ -111,6 +110,21 @@ def loadFromTerraWorkspace(
             unmapped_new_lines.append(k)
 
     return samples, unmapped_new_lines
+
+
+def loadFromMultipleSources(terraworkspaces=[]):
+    """
+    Load new samples from multiple sources
+
+    Args:
+    -----
+        terraworkspaces ([dict]): 
+
+    Returns:
+    --------
+        samples: pd dataframe the filtered sample list
+    """
+    return True
 
 
 def GetNewCellLinesFromWorkspaces(
@@ -508,6 +522,7 @@ def mapSamples(samples, source, extract={}):
                 [
                     extract["ref_bam"],
                     extract["ref_bai"],
+                    extract["from_arxspan_id"],
                     extract["release_date"],
                     extract["legacy_size"],
                     extract["PDO_id_gumbo"],
