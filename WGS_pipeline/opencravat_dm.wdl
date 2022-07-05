@@ -5,7 +5,7 @@ version 1.0
 workflow run_opencravat {
     input {
         String sample_id
-        Array[File] vcfs
+        File vcf
         String? format
         String? annotators_to_use
         String? genome
@@ -17,7 +17,7 @@ workflow run_opencravat {
     call opencravat {
         input:
             sample_id=sample_id,
-            vcfs=vcfs,
+            vcf=vcf,
             format=format,
             annotators_to_use=annotators_to_use,
             genome=genome,
@@ -36,7 +36,7 @@ workflow run_opencravat {
 task opencravat {
     input {
         String sample_id
-        Array[File] vcfs
+        File vcf
         String format = "vcf"
         String annotators_to_use = ""
         #Int stripfolder = 0 
@@ -98,20 +98,15 @@ with open(sys.argv[1],'rb') as f:
         shutil.copyfileobj(f, fout)
 """ > fix_name.py
 
-        for file in {sep=' ' files}
-        do
-            oc run $file \
-                -l ${genome} \
-                -t ${format} \
-                --mp ${num_threads} \
-                ${"--module-option "+modules_options} \
-                -d out \
-                -a ${annotators_to_use} oncokb_dm hess_drivers
-        
-            filename=$\{file\#\#\*/}
-            basename=$\{filename%".vcf.gz"}
-            python fix_name.py out/$filename.${format} out/$basename.${format}.gz
-        done
+        oc run $file \
+            -l ${genome} \
+            -t ${format} \
+            --mp ${num_threads} \
+            ${"--module-option "+modules_options} \
+            -d out \
+            -a ${annotators_to_use} oncokb_dm hess_drivers
+    
+        python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf, '.vcf.gz')}.${format}.gz
     }
 
     output {
