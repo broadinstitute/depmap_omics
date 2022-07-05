@@ -10,8 +10,10 @@ vcf_filename = sys.argv[1]
 sample_name = sys.argv[2]
 n_rows = int(sys.argv[3]) if len(sys.argv) > 3 else 500_000
 use_multi = "True" == sys.argv[4] if len(sys.argv) > 4 else False
-onco_kb = "True" == sys.argv[5] if len(sys.argv) > 5 else False
+opencravat = "True" == sys.argv[5] if len(sys.argv) > 5 else False
 force_keep = sys.argv[6].split(",") if len(sys.argv) > 6 else []
+whitelist= "True" == sys.argv[7] if len(sys.argv) > 7 else False
+
 
 prev_cols = []
 
@@ -24,8 +26,8 @@ print(
     n_rows,
     ", use_multi:",
     use_multi,
-    ", onco_kb:",
-    onco_kb,
+    ", opencravat:",
+    opencravat,
     ", force_keep:",
     force_keep,
 )
@@ -96,7 +98,7 @@ for i in range(10_000):
             "dida",
             "gwas_catalog",
         ]
-        if onco_kb
+        if opencravat
         else [],
     )
 
@@ -130,6 +132,7 @@ for i in range(10_000):
             sample_name,
             only_somatic=True,
             only_coding=True,
+            whitelist=whitelist,
             drop_multi=True,
             oncogenic_list=oncogene,
             tumor_suppressor_list=tumor_suppressor_list,
@@ -142,6 +145,7 @@ for i in range(10_000):
             sample_name,
             only_somatic=True,
             only_coding=True,
+            whitelist=whitelist,
             drop_multi=True,
             mode="a",
             header=False,

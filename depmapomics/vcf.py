@@ -714,6 +714,7 @@ def to_maf(
     vcf,
     sample_id,
     tokeep=TOKEEP_BASE,
+    whitelist=False,
     drop_multi=True,
     min_freq=0.15,
     min_depth=2,
@@ -729,6 +730,7 @@ def to_maf(
     Args:
         vcf (_type_): _description_
         tokeep (_type_, optional): _description_. Defaults to TOKEEP_SMALL.
+        whitelist (bool): set it to true to whitelist, needs output from vcf.improve and annotators
     """
     # dropping
     initsize = len(vcf)
@@ -751,22 +753,24 @@ def to_maf(
             # | vcf["fragments"]
         )
     )
-
-    important = (
-        (vcf["driver"] == "Y")
-        | (vcf["pathogenic"] == "Y")
-        | (vcf["likely_gof"] == "Y")
-        | (vcf["clinically_significant"] == "Y")
-        | (vcf["lof"] == "Y")
-        | (
-            (vcf["likely_lof"] == "Y")
-            & (vcf["hugo_symbol"].isin(tumor_suppressor_list))
+    if whitelist:
+        important = (
+            (vcf["driver"] == "Y")
+            | (vcf["pathogenic"] == "Y")
+            | (vcf["likely_gof"] == "Y")
+            | (vcf["clinically_significant"] == "Y")
+            | (vcf["lof"] == "Y")
+            | (
+                (vcf["likely_lof"] == "Y")
+                & (vcf["hugo_symbol"].isin(tumor_suppressor_list))
+            )
+            | (
+                (vcf["likely_driver"] == "Y")
+                & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list)
+            )
         )
-        | (
-            (vcf["likely_driver"] == "Y")
-            & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list)
-        )
-    )
+    else:
+        important = vcf['is_coding'].isna()
     if only_coding:
         # drops 99.5% of the variants
         loc = loc & (
