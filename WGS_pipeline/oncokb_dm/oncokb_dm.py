@@ -117,7 +117,7 @@ class CravatAnnotator(BaseAnnotator):
                     for b in batch:
                         data = (
                             data
-                            + '{ "evidenceTypes": [ "GENE_SUMMARY", "MUTATION_SUMMARY", "TUMOR_TYPE_SUMMARY", "PROGNOSTIC_SUMMARY", "DIAGNOSTIC_SUMMARY", "ONCOGENIC", "MUTATION_EFFECT", "PROGNOSTIC_IMPLICATION", "DIAGNOSTIC_IMPLICATION", "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY", "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE"], "hgvsg":'
+                            + '{ "evidenceTypes": ["MUTATION_SUMMARY", "TUMOR_TYPE_SUMMARY", "PROGNOSTIC_SUMMARY", "DIAGNOSTIC_SUMMARY", "ONCOGENIC", "MUTATION_EFFECT", "PROGNOSTIC_IMPLICATION", "DIAGNOSTIC_IMPLICATION", "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY", "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE"], "hgvsg":'
                             + '"'
                             + b
                             + '"'
@@ -169,7 +169,6 @@ class CravatAnnotator(BaseAnnotator):
                                 "LEVEL_Px", ""
                             )
                         hotspot = x["hotspot"]
-                        geneSummary = x["geneSummary"]
                         variantSummary = x["variantSummary"]
                         tumorSummary = x["tumorTypeSummary"]
                         diagnosticImplications = x["diagnosticImplications"]
@@ -231,17 +230,21 @@ class CravatAnnotator(BaseAnnotator):
                         if len(precomp_data) < 1:
                             precomp_data = None
                         output_dict = {
-                            "oncogenic": oncogenic,
-                            "knownEffect": knownEffect,
+                            "oncogenic": oncogenic if oncogenic != "Unknown" else None,
+                            "knownEffect": knownEffect
+                            if knownEffect != "Unknown"
+                            else None,
                             "pmids": pmids,
                             "highestSensitiveLevel": highestSensitiveLevel,
                             "highestResistanceLevel": highestResistanceLevel,
                             "highestDiagnosticImplicationLevel": highestDiagnosticImplicationLevel,
                             "highestPrognosticImplicationLevel": highestPrognosticImplicationLevel,
-                            "hotspot": hotspot,
-                            "geneSummary": geneSummary,
+                            "hotspot": hotspot if hotspot else None,
                             "tumorSummary": tumorSummary,
-                            "variantSummary": variantSummary,
+                            "variantSummary": None
+                            if variantSummary.endswith("is unknown.")
+                            | variantSummary.endswith("likely oncogenic.")
+                            else variantSummary,
                             "all": precomp_data,
                         }
                         output_dict = self.handle_jsondata(output_dict)
