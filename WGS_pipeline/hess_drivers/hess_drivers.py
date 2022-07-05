@@ -33,7 +33,6 @@ class CravatAnnotator(BaseAnnotator):
             + val["ALT"]: val["sig_assignments"]
             for _, val in self.drivers.iterrows()
         }
-        print(self.driverset)
 
     def annotate(self, input_data, secondary_data=None):
         """
@@ -72,7 +71,6 @@ class CravatAnnotator(BaseAnnotator):
             if input_data["coding"] != "Y":
                 return out
         key = str(chrom) + ":" + str(pos) + ":" + alt
-        print(key)
         # print(self.driverset.get(key, 0))
         if key in self.driverset:
             print("found driver:" + key)
