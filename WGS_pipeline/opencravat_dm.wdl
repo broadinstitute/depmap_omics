@@ -5,7 +5,7 @@ version 1.0
 workflow run_opencravat {
     input {
         String sample_id
-        File vcf
+        Array[File] vcfs
         String? format
         String? annotators_to_use
         String? genome
@@ -17,7 +17,7 @@ workflow run_opencravat {
     call opencravat {
         input:
             sample_id=sample_id,
-            vcf=vcf,
+            vcfs=vcfs,
             format=format,
             annotators_to_use=annotators_to_use,
             genome=genome,
@@ -36,7 +36,7 @@ workflow run_opencravat {
 task opencravat {
     input {
         String sample_id
-        File vcf
+        Array[File] vcfs
         String format = "vcf"
         String annotators_to_use = ""
         #Int stripfolder = 0 
@@ -53,50 +53,28 @@ task opencravat {
     }
     
     command {
-      set -euo pipefail
+        set -euo pipefail
+            
+        pip install open-cravat --upgrade
+
+        oc module install-base
+        oc module install -y ${annotators_to_use} vcfreporter hg19
+
+        oc new annotator oncokb_dm
+        rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
         
-      # regular version
-      # ---------------
-      pip install open-cravat --upgrade
+        oc new annotator hess_drivers
+        rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
+        
+        git clone https://github.com/broadinstitute/depmap_omics.git
+        cd depmap_omics && git checkout dev && git pull && cd ..
+        cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
+        cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
 
-      oc module install-base
-      oc module install -y ${annotators_to_use} vcfreporter hg19
-
-      oc new annotator oncokb_dm
-      rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
-      
-      oc new annotator hess_drivers
-      rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
-      
-      git clone https://github.com/broadinstitute/depmap_omics.git
-      cd depmap_omics && git checkout dev && git pull && cd ..
-      cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
-      cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
-
-      ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm/data/token.txt" else ""}
-      
-      # fast version
-      # ------------
-      # to make it faster we should use a copy from a bucket using gsutil cp
-      # we install everything on a machine, then get path to data using `oc config md`
-      # we then cp it on a bucket.
-      # now we can add two additional commands here:
-      # 1. to copy the content of the bucket here: gsutil cp gs://path/to/modules.gz .
-      # 2. to use this location as the md location: oc config md LOCATION
-      # gsutil cp [modules] modules.tar
-      # tar -tvf modules.tar --strip-components=[stripfolder]
-      # oc config md ./modules
-      oc run ${vcf} \
-        -l ${genome} \
-        -t ${format} \
-        --mp ${num_threads} \
-        ${"--module-option "+modules_options} \
-        -d out \
-        -a ${annotators_to_use} oncokb_dm hess_drivers
-      
-      pip install bgzip
-      
-      echo """
+        ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm/data/token.txt" else ""}
+        pip install bgzip pytabix scipy
+        
+        echo """
 import re
 import sys
 import gzip
@@ -119,14 +97,28 @@ with open(sys.argv[1],'rb') as f:
                 break
         shutil.copyfileobj(f, fout)
 """ > fix_name.py
-      python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf)}.${format}.gz
+
+        for file in {sep=' ' files}
+        do
+            oc run $file \
+                -l ${genome} \
+                -t ${format} \
+                --mp ${num_threads} \
+                ${"--module-option "+modules_options} \
+                -d out \
+                -a ${annotators_to_use} oncokb_dm hess_drivers
+        
+            filename=$\{file\#\#\*/}
+            basename=$\{filename%".vcf.gz"}
+            python fix_name.py out/$filename.${format} out/$basename.${format}.gz
+        done
     }
 
     output {
         File oc_error_files="out/${basename(vcf)}.err"
         File oc_log_files="out/${basename(vcf)}.log"
         #File oc_sql_files="out/${basename(vcf)}.sqlite"
-        File oc_main_files="out/${basename(vcf)}.${format}.gz"
+        File oc_main_files="out/${basename(vcf, '.vcf.gz')}.${format}.gz"
     }
 
     runtime {

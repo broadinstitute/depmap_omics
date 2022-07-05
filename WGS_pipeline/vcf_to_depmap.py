@@ -3,7 +3,8 @@ from genepy import mutations
 import sys
 import pyarrow.parquet as pq
 import pyarrow as pa
-
+from genepy.utils import helper as h
+import os
 
 vcf_filename = sys.argv[1]
 sample_name = sys.argv[2]
@@ -30,6 +31,14 @@ print(
 )
 
 tobreak = False
+
+loc = os.path.dirname(os.path.abspath(__file__))
+
+oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
+tumor_suppressor_list = h.fileToList(
+    loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
+)
+
 for i in range(10_000):
     # read in vcf as a df
     vcf_file, _, _ = mutations.vcf_to_df(
@@ -70,9 +79,25 @@ for i in range(10_000):
     vcf_file = vcf.improve(
         vcf_file,
         force_list=["oc_genehancer__feature_name"],
-        with_onco_kb=onco_kb,
         split_multiallelic=use_multi,
-        torename=vcf.TO_RENAME_OC if onco_kb else vcf.TO_RENAME,
+        annotators=[
+            "oncokb",
+            "cscape",
+            "civic",
+            "brca1_func",
+            "sift",
+            "provean",
+            "dann",
+            "revel",
+            "spliceai",
+            "gtex",
+            "funseq2",
+            "pharmgkb",
+            "dida",
+            "gwas_catalog",
+        ]
+        if onco_kb
+        else [],
     )
 
     # checking we have the same set of columns
@@ -100,9 +125,31 @@ for i in range(10_000):
     # save maf
     print("saving maf")
     if i == 0:
-        vcf.to_maf(vcf_file, sample_name, drop_multi=True)
+        vcf.to_maf(
+            vcf_file,
+            sample_name,
+            only_somatic=True,
+            only_coding=True,
+            drop_multi=True,
+            oncogenic_list=oncogene,
+            tumor_suppressor_list=tumor_suppressor_list,
+            tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+            index=False,
+        )
     else:
-        vcf.to_maf(vcf_file, sample_name, drop_multi=True, mode="a", header=False)
+        vcf.to_maf(
+            vcf_file,
+            sample_name,
+            only_somatic=True,
+            only_coding=True,
+            drop_multi=True,
+            mode="a",
+            header=False,
+            oncogenic_list=oncogene,
+            tumor_suppressor_list=tumor_suppressor_list,
+            tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+            index=False,
+        )
     del vcf_file
     if tobreak:
         break

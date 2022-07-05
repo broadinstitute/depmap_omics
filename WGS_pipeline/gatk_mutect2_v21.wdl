@@ -1124,7 +1124,7 @@ task Funcotate {
              --annotation-default Center:~{default="Unknown" sequencing_center} \
              --annotation-default source:~{default="Unknown" sequence_source} \
              ~{"--transcript-selection-mode " + transcript_selection_mode} \
-             ~{transcript_selection_arg}
+             ~{transcript_selection_arg}~{default="" sep=" --transcript-list " transcript_selection_list} \
              ~{annotation_def_arg}~{default="" sep=" --annotation-default " annotation_defaults} \
              ~{annotation_over_arg}~{default="" sep=" --annotation-override " annotation_overrides} \
              ~{excluded_fields_args}~{default="" sep=" --exclude-field " funcotator_excluded_fields} \
