@@ -98,7 +98,7 @@ with open(sys.argv[1],'rb') as f:
         shutil.copyfileobj(f, fout)
 """ > fix_name.py
 
-        oc run ${file} \
+        oc run ${vcf} \
             -l ${genome} \
             -t ${format} \
             --mp ${num_threads} \
