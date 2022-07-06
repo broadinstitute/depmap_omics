@@ -31,7 +31,7 @@ task opencravat {
 
         Int memory = 16
         Int boot_disk_size = 100
-        Int reries=0
+        Int retries=1
         Int disk_space = 20
         Int num_threads = 4
         Int num_preempt = 2
@@ -44,7 +44,7 @@ task opencravat {
         pip install open-cravat --upgrade
 
         oc module install-base
-        oc module install -y vcfreporter hg19 '~{sep=" " annotators_to_use}'
+        oc module install -y vcfreporter hg19 ~{sep=" " annotators_to_use}
 
         ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm/data/token.txt" else ""}
         pip install bgzip pytabix scipy
@@ -79,7 +79,7 @@ with open(sys.argv[1],'rb') as f:
             --mp ${num_threads} \
             ${"--module-option "+modules_options} \
             -d out \
-            -a '~{sep=" " annotators_to_use}'
+            -a ~{sep=" " annotators_to_use}
     
         python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf, '.vcf.gz')}.${format}.gz
     }
@@ -98,7 +98,7 @@ with open(sys.argv[1],'rb') as f:
         disks: "local-disk ${disk_space} HDD"
         cpu: "${num_threads}"
         preemptible: "${num_preempt}"
-        maxRetries: "${reries}"
+        maxRetries: "${retries}"
     }
 
     meta {
