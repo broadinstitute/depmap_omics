@@ -7,7 +7,9 @@ from genepy.utils import helper as h
 import os
 
 vcf_filename = sys.argv[1]
-sample_name = sys.argv[2]
+sample_name = (
+    sys.argv[2] if len(sys.argv) > 2 else vcf_filename.split("/")[-1].split(".")[0]
+)
 n_rows = int(sys.argv[3]) if len(sys.argv) > 3 else 500_000
 use_multi = "true" == sys.argv[4] if len(sys.argv) > 4 else False
 opencravat = "true" == sys.argv[5] if len(sys.argv) > 5 else False
@@ -48,7 +50,7 @@ for i in range(10_000):
         additional_cols=["PON"],
         parse_filter=True,
         force_keep=force_keep,
-        drop_null=True,
+        drop_null=False,
         cols_to_drop=[
             "clinvar_vcf_mc",
             "oreganno_build",
