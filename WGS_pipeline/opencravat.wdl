@@ -4,7 +4,6 @@ version 1.0
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
 workflow run_opencravat {
     input {
-        String sample_id
         File vcf
         String? format
         String? annotators_to_use
@@ -26,16 +25,15 @@ workflow run_opencravat {
             oncokb_api_key=oncokb_api_key
     }
     output {
-        File oc_error_files=opencravat.oc_error_files
-        File oc_log_files=opencravat.oc_log_files
-        File oc_sql_files=opencravat.oc_sql_files
-        File oc_main_files=opencravat.oc_main_files
+        File oc_error_file=opencravat.oc_error_file
+        File oc_log_file=opencravat.oc_log_file
+        File oc_sql_file=opencravat.oc_sql_file
+        File oc_main_file=opencravat.oc_main_file
     }
 }
 
 task opencravat {
     input {
-        String sample_id
         File vcf
         String format = "vcf"
         String annotators_to_use = ""
@@ -111,10 +109,10 @@ with open(sys.argv[1],'rb') as f:
     }
 
     output {
-        File oc_error_files="out/${basename(vcf)}.err"
-        File oc_log_files="out/${basename(vcf)}.log"
-        File oc_sql_files="out/${basename(vcf)}.sqlite"
-        File oc_main_files="out/${basename(vcf)}.${format}.gz"
+        File oc_error_file="out/${basename(vcf)}.err"
+        File oc_log_file="out/${basename(vcf)}.log"
+        File oc_sql_file="out/${basename(vcf)}.sqlite"
+        File oc_main_file="out/${basename(vcf)}.${format}.gz"
     }
 
     runtime {
