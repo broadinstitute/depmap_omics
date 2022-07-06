@@ -35,7 +35,7 @@ task opencravat {
     input {
         File vcf
         String format = "vcf"
-        String annotators_to_use = ""
+        Array[String] annotators_to_use = []
         #Int stripfolder = 0 
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
@@ -56,7 +56,7 @@ task opencravat {
         pip install open-cravat --upgrade
 
         oc module install-base
-        oc module install -y ${annotators_to_use} vcfreporter hg19
+        oc module install -y vcfreporter hg19 '~{sep=" " annotators_to_use}'
 
         oc new annotator oncokb_dm
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
@@ -102,7 +102,7 @@ with open(sys.argv[1],'rb') as f:
             --mp ${num_threads} \
             ${"--module-option "+modules_options} \
             -d out \
-            -a ${annotators_to_use} oncokb_dm hess_drivers
+            -a oncokb_dm hess_drivers '~{sep=" " annotators_to_use}'
     
         python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf, '.vcf.gz')}.${format}.gz
     }

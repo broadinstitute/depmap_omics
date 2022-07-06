@@ -13,7 +13,7 @@ use_multi = "true" == sys.argv[4] if len(sys.argv) > 4 else False
 opencravat = "true" == sys.argv[5] if len(sys.argv) > 5 else False
 force_keep = sys.argv[6].split(",") if len(sys.argv) > 6 else []
 whitelist = "true" == sys.argv[7] if len(sys.argv) > 7 else False
-
+annotators = sys.argv[8].split(",") if len(sys.argv) > 8 else []
 
 prev_cols = []
 
@@ -82,24 +82,7 @@ for i in range(10_000):
         vcf_file,
         force_list=["oc_genehancer__feature_name"],
         split_multiallelic=use_multi,
-        annotators=[
-            "oncokb",
-            "cscape",
-            "civic",
-            "brca1_func",
-            "sift",
-            "provean",
-            "dann",
-            "revel",
-            "spliceai",
-            "gtex",
-            "funseq2",
-            "pharmgkb",
-            "dida",
-            "gwas_catalog",
-        ]
-        if opencravat
-        else [],
+        annotators=annotators,
     )
 
     # checking we have the same set of columns
