@@ -9,10 +9,10 @@ import os
 vcf_filename = sys.argv[1]
 sample_name = sys.argv[2]
 n_rows = int(sys.argv[3]) if len(sys.argv) > 3 else 500_000
-use_multi = "True" == sys.argv[4] if len(sys.argv) > 4 else False
-opencravat = "True" == sys.argv[5] if len(sys.argv) > 5 else False
+use_multi = "true" == sys.argv[4] if len(sys.argv) > 4 else False
+opencravat = "true" == sys.argv[5] if len(sys.argv) > 5 else False
 force_keep = sys.argv[6].split(",") if len(sys.argv) > 6 else []
-whitelist= "True" == sys.argv[7] if len(sys.argv) > 7 else False
+whitelist = "true" == sys.argv[7] if len(sys.argv) > 7 else False
 
 
 prev_cols = []
