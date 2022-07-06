@@ -49,7 +49,6 @@ task vcf_to_depmap {
               '~{sep="," force_keep}' \
               ~{whitelist} \
               '~{sep="," annotators}'
-        rm ~{sample_id}-maf-full.parquet/
     }
 
     runtime {
