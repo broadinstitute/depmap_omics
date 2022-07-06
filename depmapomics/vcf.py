@@ -581,9 +581,9 @@ def improve(
         loc = vcf[name] != ""
         for k, val in vcf[loc][[name]].iterrows():
             trsc = ""
-            for trsc in [i.split(",") for i in val[name][2:-2].split("],[")]:
-                if float(trsc[2]) <= score:
-                    trsc += trsc[0][1:-1] + ";"
+            for v in [i.split(",") for i in val[name][2:-2].split("],[")]:
+                if float(v[2]) <= score:
+                    trsc += v[0][1:-1] + ";"
             trscs.append(trsc)
         vcf.loc[loc, "transcript_likely_lof"] = trscs
 
@@ -622,9 +622,9 @@ def improve(
         loc = vcf["oc_revel__all"] != ""
         for k, val in vcf[loc][["oc_revel__all"]].iterrows():
             trsc = ""
-            for trsc in [i.split(",") for i in val.oc_revel__all[2:-2].split("],[")]:
-                if float(trsc[1]) >= 0.7:
-                    trsc += trsc[0][1:-1] + ";"
+            for v in [i.split(",") for i in val.oc_revel__all[2:-2].split("],[")]:
+                if float(v[1]) >= 0.7:
+                    trsc += v[0][1:-1] + ";"
             trscs.append(trsc)
 
         vcf.loc[loc, "trancript_likely_pathogenic"] = trscs
