@@ -5,23 +5,10 @@ version 1.0
 workflow run_opencravat {
     input {
         File vcf
-        String? format
-        String? annotators_to_use
-        String? genome
-        String? modules_options
-        String? docker
-        # see https://github.com/rkimoakbioinformatics/oak-cravat-modules/tree/master/annotators/oncokb
-        File? oncokb_api_key
     }
     call opencravat {
         input:
-            vcf=vcf,
-            format=format,
-            annotators_to_use=annotators_to_use,
-            genome=genome,
-            modules_options=modules_options,
-            docker=docker,
-            oncokb_api_key=oncokb_api_key
+            vcf=vcf
     }
     output {
         File oc_error_file=opencravat.oc_error_file
@@ -39,6 +26,7 @@ task opencravat {
         #Int stripfolder = 0 
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
+        # see https://github.com/rkimoakbioinformatics/oak-cravat-modules/tree/master/annotators/oncokb
         File? oncokb_api_key
 
         Int memory = 16
