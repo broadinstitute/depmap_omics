@@ -184,7 +184,7 @@ TO_RENAME_OC = {
     "oc_cscape_coding__score": "cscape_score",
     "oc_brca1_func_assay__score": "brca1_func_score",
     "oc_dann__score": "dann_score",
-    "oc_dann_coding__score": "dann_score",
+    "OC_dann_coding__dann_coding_score": "dann_score",
     "oc_revel__score": "revel_score",
     "oc_spliceai__ds_ag": "spliceai_ds_ag",
     "oc_spliceai__ds_al": "spliceai_ds_al",
@@ -590,7 +590,9 @@ def improve(
     # likely lof in DANN
     if "dann" in annotators or "dann_coding" in annotators:
         name_score = (
-            "oc_dann__score" if "dann" in annotators else "oc_dann_coding__score"
+            "oc_dann__score"
+            if "dann" in annotators
+            else "OC_dann_coding__dann_coding_score"
         )
         if "likely_lof" not in vcf.columns.tolist():
             vcf["likely_lof"] = ""
