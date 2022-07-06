@@ -1,7 +1,7 @@
 version 1.0
 
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-import "gatk_mutect2_v21.wdl" as mutect2
+import "mutect2_v4.2.6.1.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
 import "merge_vcfs.wdl" as mergevcfs
@@ -64,7 +64,6 @@ workflow omics_mutect2 {
             pon_idx=pon_idx,
             run_funcotator=true,
             run_orientation_bias_mixture_model_filter=true,
-            remove_filtered=false,
     }
 
     call setGT.bcftools_fix_ploidy as set_GT {

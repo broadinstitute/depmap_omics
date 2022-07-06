@@ -181,8 +181,10 @@ TO_RENAME_OC = {
     "oc_ccre_screen___group": "encode_group",
     "oc_ccre_screen__bound": "encode_bound",
     "oc_cscape__score": "cscape_score",
+    "oc_cscape_coding__score": "cscape_score",
     "oc_brca1_func_assay__score": "brca1_func_score",
     "oc_dann__score": "dann_score",
+    "oc_dann_coding__score": "dann_score",
     "oc_revel__score": "revel_score",
     "oc_spliceai__ds_ag": "spliceai_ds_ag",
     "oc_spliceai__ds_al": "spliceai_ds_al",
@@ -526,21 +528,24 @@ def improve(
         vcf.loc[loc, "likely_gof"] = "Y"
 
     # additional defining drivers
-    if "cscape" in annotators:
+    if "cscape" in annotators or "cscape_coding" in annotators:
+        score_name = (
+            "oc_cscape__score" if "cscape" in annotators else "oc_cscape_coding__score"
+        )
         if "likely_driver" not in vcf.columns.tolist():
             vcf["likely_driver"] = ""
-        subvcf = vcf[(vcf["oc_cscape__score"] != "") & (vcf["multiallelic"] != "Y")][
-            ["oc_base__coding", "oc_cscape__score"]
+        subvcf = vcf[(vcf[score_name] != "") & (vcf["multiallelic"] != "Y")][
+            ["oc_base__coding", score_name]
         ]
         vcf.loc[
             subvcf[
                 (
                     (subvcf["oc_base__coding"] != "")
-                    & (subvcf["oc_cscape__score"].astype(float) >= 0.89)
+                    & (subvcf[score_name].astype(float) >= 0.89)
                 )
                 | (
                     (subvcf["oc_base__coding"] == "")
-                    & (subvcf["oc_cscape__score"].astype(float) >= 0.80)
+                    & (subvcf[score_name].astype(float) >= 0.80)
                 )
             ].index,
             "likely_driver",
@@ -583,12 +588,15 @@ def improve(
         vcf.loc[loc, "transcript_likely_lof"] = trscs
 
     # likely lof in DANN
-    if "dann" in annotators:
+    if "dann" in annotators or "dann_coding" in annotators:
+        name_score = (
+            "oc_dann__score" if "dann" in annotators else "oc_dann_coding__score"
+        )
         if "likely_lof" not in vcf.columns.tolist():
             vcf["likely_lof"] = ""
         # http://www.enlis.com/blog/2015/03/17/the-best-variant-prediction-method-that-no-one-is-using/
-        loc = (vcf["oc_dann__score"] != "") & (vcf["multiallelic"] != "Y")
-        loc = vcf[loc][vcf[loc]["oc_dann__score"].astype(float) >= 0.96].index
+        loc = (vcf[name_score] != "") & (vcf["multiallelic"] != "Y")
+        loc = vcf[loc][vcf[loc][name_score].astype(float) >= 0.96].index
         vcf.loc[loc, "likely_lof"] = "Y"
 
     # pathogenic
@@ -754,6 +762,28 @@ def to_maf(
         )
     )
     if whitelist:
+        # if missing columns print issue
+        if (
+            len(
+                set(
+                    [
+                        "driver",
+                        "pathogenic",
+                        "likely_gof",
+                        "clinically_significant",
+                        "lof",
+                        "likely_lof",
+                        "likely_driver",
+                    ]
+                )
+                - set(vcf.columns)
+            )
+            > 0
+        ):
+            print(
+                "missing columns to perform whitelisting",
+                set(tokeep) - set(vcf.columns),
+            )
         important = (
             (vcf["driver"] == "Y")
             | (vcf["pathogenic"] == "Y")
@@ -770,7 +800,7 @@ def to_maf(
             )
         )
     else:
-        important = vcf['is_coding'].isna()
+        important = vcf["is_coding"].isna()
     if only_coding:
         # drops 99.5% of the variants
         loc = loc & (
