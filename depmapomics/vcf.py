@@ -296,7 +296,7 @@ ALL_ANNOTATORS = [
     "oncokb",
     "cscape",
     "civic",
-    "brca1_func",
+    "brca1_func_assay",
     "sift",
     "provean",
     "dann",
@@ -322,7 +322,7 @@ def improve(
     **kwargs
 ):
     """
-    annotators: list(str) many of: [oncokb, cscape, civic, brca1_func, sift, provean, dann, 
+    annotators: list(str) many of: [oncokb, cscape, civic, brca1_func_assay, sift, provean, dann, 
     revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
     """
 
@@ -559,7 +559,7 @@ def improve(
         vcf.loc[loc, "clinically_significant"] = "Y"
 
     # lof more
-    if "brca1_func" in annotators:
+    if "brca1_func_assay" in annotators:
         if "lof" not in vcf.columns.tolist():
             vcf["lof"] = ""
         loc = (vcf["oc_brca1_func_assay__score"] != "") & (vcf["multiallelic"] != "Y")
