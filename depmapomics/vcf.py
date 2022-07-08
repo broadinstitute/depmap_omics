@@ -424,7 +424,6 @@ def improve(
             ]
         )
         if res > min_count_hotspot:
-
             hotspot_l.append(cosmic_over)
     loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
     vcf["cosmic_hotspot"] = "Y"
@@ -722,9 +721,6 @@ def improve(
     # vcf["is_coding"].replace({"Yes": True, "": False})
     # ...
 
-    # creating count columns
-    vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
-
     return vcf
 
 
@@ -836,6 +832,9 @@ def to_maf(
         + ". removed: {:2f}%".format((1 - (len(vcf) / initsize)) * 100)
     )
 
+    # creating count columns
+    vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
+
     # subsetting
     vcf = vcf[list(tokeep.keys())]
 
@@ -845,4 +844,14 @@ def to_maf(
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%2C")
     vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
+
+
+def read_parquet(link):
+    """read_parquet 
+
+    Args:
+        link (_type_): _description_
+    """
+
+    return pq.read_parquet("tmp/depmapomics/")
 
