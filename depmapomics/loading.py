@@ -96,6 +96,8 @@ def loadFromTerraWorkspace(
 
     # out of the new samples, see if ops has registered them in gumbo
     unmapped_new_lines = []
+    # init profile id column
+    samples[extract["profile_id"]] = ""
     # FOR NOW, assume the id col to map by is in profile table (might change??)
     for k, v in samples.iterrows():
         if v[wsidcol] in pr_table[gumboidcol].tolist():
