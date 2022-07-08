@@ -29,16 +29,12 @@ def getPRToRelease(date_col_dict=DATE_COL_DICT):
 
 
 def makeAchillesChoiceTable(
-    prs,
-    one_pr_per_type=True,
-    source_priority=SOURCE_PRIORITY,
-    colnames=ACH_CHOICE_TABLE_COLS,
+    prs, source_priority=SOURCE_PRIORITY, colnames=ACH_CHOICE_TABLE_COLS,
 ):
     """generate a table for each portal that indicates which profiles are released corresponding to which MC
 
     Args:
         prs (list): list of profile IDs to be released
-        one_pr_per_type (bool, optional): whether to enforce including only one profile type per MC
         source_priority (list, optional): ordered list of how different data sources should be prioritized
 
     Returns:
@@ -124,16 +120,12 @@ def makeAchillesChoiceTable(
 
 
 def makeDefaultModelTable(
-    prs,
-    one_pr_per_type=True,
-    source_priority=SOURCE_PRIORITY,
-    colnames=DEFAULT_TABLE_COLS,
+    prs, source_priority=SOURCE_PRIORITY, colnames=DEFAULT_TABLE_COLS,
 ):
     """generate a table that indicates which profiles are released corresponding to which modelID
 
     Args:
         prs (list): list of profile IDs to be released
-        one_pr_per_type (bool, optional): whether to enforce including only one profile type per model
         source_priority (list, optional): ordered list of how different data sources should be prioritized
 
     Returns:
