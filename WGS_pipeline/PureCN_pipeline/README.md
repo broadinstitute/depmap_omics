@@ -22,6 +22,7 @@ Here we uniformly sample 2% of the genome to use for absolution copy number infe
 
 `Rscript make_wgs_intervals.R`
 
+We have also created new intervals from the recommended pureCN workflow, including mappability information on both the wgs intervals and wes intervals
 `Rscript $PURECN/IntervalFile.R --in-file wgs_hg38_intervals.bed --fasta ~/Data/VCFs/Liftover/hg38.fa --out-file wgs_hg38_intervals.txt --genome hg38 --mappability GCA_000001405.15_GRCh38_no_alt_analysis_set_100.bw`
 
 ## Terra workflows
