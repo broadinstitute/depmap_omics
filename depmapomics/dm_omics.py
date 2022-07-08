@@ -77,7 +77,6 @@ async def expressionPostProcessing(
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
-    prevcounts = tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_reads")
 
     ccle_refsamples = mytracker.read_seq_table()
 
@@ -114,56 +113,6 @@ async def expressionPostProcessing(
         rnaqclocs=rnaqclocs,
         **kwargs,
     )
-
-    print("doing validation")
-    nonoverlap = set(prevcounts.columns) ^ set(
-        files.get("genes_expected_count").columns
-    )
-    print("number of non overlaping genes:")
-    print(len(nonoverlap))
-    # have we lost any samples compared to last release?
-    lost = set(prevcounts.index) - set(files.get("genes_expected_count").index)
-    print("of which, lost genes:")
-    print(lost)
-    # do we have samples that are missanotated compared to previous releases (replicate level)
-    notindataset, missannotated, unmatched = rna.findMissAnnotatedReplicates(
-        files.get("genes_expected_count"), prevcounts, renaming
-    )
-    print("missanotated compared to previous releases")
-    for k, v in unmatched.items():
-        if ccle_refsamples.loc[k].arxspan_id != v:
-            print(k, v)
-    # do we have samples that are missanotated compared to previous releases (sample level)
-    unmatched = rna.getDifferencesFromCorrelations(
-        files.get("genes_expected_count"), prevcounts, minsimi=minsimi
-    )
-    print("differences in correlations against the previous release")
-    print(unmatched)
-    # Is it because of  duplicate version?
-    print("do we see it as a duplicate in the tracker?")
-    rnasamples = ccle_refsamples[ccle_refsamples.datatype == "rna"]
-    for i, _ in unmatched:
-        print(len(rnasamples[rnasamples.arxspan_id == i]))
-
-    # CCLE_expression, CCLE_expression_full, ,
-    print("comparing to previous release")
-    h.compareDfs(
-        files["rsem_transcripts_tpm"],
-        tc.get(name=TAIGA_ETERNAL, file="CCLE_RNAseq_transcripts"),
-    )
-    h.compareDfs(
-        files["rsem_transcripts_expected_count"],
-        tc.get(name=TAIGA_ETERNAL, file="CCLE_expression_transcripts_expected_count"),
-    )
-    for key, val in tocompare.items():
-        _, omissmatchCols, _, omissmatchInds, newNAs, new0s = h.compareDfs(
-            files[key], tc.get(name=TAIGA_ETERNAL, file=val)
-        )
-        print(key)
-        print(len(omissmatchCols), "columns NOT IN df1")
-        print(len(omissmatchInds), "indices NOT IN df1")
-        print(newNAs, "new NAs")
-        print(new0s, "New 0s")
 
     print("updating the tracker")
 
@@ -326,39 +275,6 @@ async def fusionPostProcessing(
         os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
     )
 
-    prevdataset = tc.get(name=TAIGA_ETERNAL, file="CCLE_fusions_unfiltered")
-
-    print("comparing to previous version")
-    print("new")
-    print(set(fusions[fusionSamplecol]) - set(prevdataset[fusionSamplecol]))
-
-    print("removed")
-    print(set(prevdataset[fusionSamplecol]) - set(fusions[fusionSamplecol]))
-
-    print("changes in fusion names")
-    pf = prevdataset.copy()
-    pf["id"] = pf[fusionSamplecol] + "_" + pf["FusionName"]
-    f = fusions.copy()
-    f["id"] = f[fusionSamplecol] + "_" + f["FusionName"]
-    print(len(set(pf[~pf.id.isin(f.id.tolist())][fusionSamplecol])))
-
-    print("changes in junction read counts")
-    f["sid"] = (
-        f[fusionSamplecol]
-        + "_"
-        + f["FusionName"]
-        + "_"
-        + f["JunctionReadCount"].astype(str)
-    )
-    pf["sid"] = (
-        pf[fusionSamplecol]
-        + "_"
-        + pf["FusionName"]
-        + "_"
-        + pf["JunctionReadCount"].astype(str)
-    )
-    print(len(set(pf[~pf.sid.isin(f.sid.tolist())][fusionSamplecol])))
-
     # taiga
     print("uploading to taiga")
     tc.update_dataset(
@@ -441,7 +357,6 @@ def cnPostProcessing(
 
     tc = TaigaClient()
 
-    prevgenecn = tc.get(name=TAIGA_ETERNAL, file="CCLE_gene_cn")
     mytracker = track.SampleTracker()
     tracker = mytracker.read_seq_table()
 
@@ -771,12 +686,6 @@ async def mutationPostProcessing(
     from taigapy import TaigaClient
 
     tc = TaigaClient()
-    prev = tc.get(name=TAIGA_ETERNAL, file="CCLE_mutations")
-    if doCleanup:
-        # TODO:
-        val = ""
-        # gcp.rmFiles('gs://fc-secure-012d088c-f039-4d36-bde5-ee9b1b76b912/$val/**/call-tumorMM_Task/*.cleaned.bam')
-    # sometimes it does not work so better check again
 
     # doing wes
     print("doing wes")
@@ -833,14 +742,6 @@ async def mutationPostProcessing(
     merged["Variant_annotation"] = [
         rename[i] for i in merged["Variant_Classification"].tolist()
     ]
-
-    print("compare to previous release")
-    a = set(merged[SAMPLEID])
-    b = set(prev[SAMPLEID])
-    print("new lines:")
-    print(a - b)
-    print("lost lines:")
-    print(b - a)
 
     # making a depmap version
     # removing immortalized ffor now
