@@ -200,79 +200,61 @@ async def expressionPostProcessing(
             upload_files=[
                 {
                     "path": folder + "transcripts_expected_count.csv",
-                    "name": "transcripts-expected_count",  # TODO: add "withreplicates" suffix to all cds-id level matrices
+                    "name": "transcripts_expectedCount_withReplicates",  # TODO: add "withreplicates" suffix to all cds-id level matrices
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "genes_expected_count.csv",
-                    "name": "genes-expected_count",
+                    "name": "genes_expectedCount_withReplicates",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "proteincoding_genes_tpm_profile_logp1.csv",
-                    "name": "proteincoding_genes-tpm_logp1-profile",
+                    "name": "proteinCoding_genes_tpm_logp1_profile",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "transcripts_tpm_profile_logp1.csv",
-                    "name": "transcripts-tpm_logp1-profile",
+                    "name": "transcripts_tpm_logp1_profile",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "genes_tpm_profile_logp1.csv",
-                    "name": "genes-tpm_logp1-profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_tpm_profile.csv",
-                    "name": "genes-tpm-profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "transcripts_tpm_profile.csv",
-                    "name": "transcripts-tpm-profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "proteincoding_genes_tpm_profile.csv",
-                    "name": "proteincoding_genes-tpm-profile",
+                    "name": "genes_tpm_logp1_profile",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "transcripts_expected_count_profile.csv",
-                    "name": "transcripts-expected_count-profile",
+                    "name": "transcripts_expectedCount_profile",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "proteincoding_genes_expected_count_profile.csv",
-                    "name": "proteincoding_genes-expected_count-profile",
+                    "name": "proteinCoding_genes_expectedCount_profile",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 {
                     "path": folder + "genes_expected_count_profile.csv",
-                    "name": "genes-expected_count-profile",
+                    "name": "genes_expectedCount_profile",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
                 # {
                 #     "path": folder+'gene_sets_all.csv',
-                #     "name": "gene_sets",
+                #     "name": "gene_set_enrichment_withReplicates",
                 #     "format": "NumericMatrixCSV",
                 #     "encoding": "utf-8"
                 # },
                 # {
                 #     "path": folder+'gene_sets_profile.csv',
-                #     "name": "gene_sets-profile",
+                #     "name": "gene_set_enrichment_profile",
                 #     "format": "NumericMatrixCSV",
                 #     "encoding": "utf-8"
                 # },
@@ -385,19 +367,19 @@ async def fusionPostProcessing(
         upload_files=[
             {
                 "path": folder + sampleset + "/fusions_all.csv",
-                "name": "fusions-all",
+                "name": "fusions_unfiltered_withReplicates",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + sampleset + "/filteredfusions_latest_profile.csv",
-                "name": "filtered_fusion-profile",
+                "name": "fusions_filtered_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + sampleset + "/fusions_all_profile.csv",
-                "name": "fusion-profile",
+                "name": "fusions_unfiltered_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
@@ -637,23 +619,25 @@ def cnPostProcessing(
         upload_files=[
             {
                 "path": folder + "merged_segments.csv",
+                "name": "merged_segments_withReplicates",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "merged_genecn.csv",
+                "name": "merged_gene_cn_withReplicates",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "merged_segments_all_profile.csv",
-                "name": "merged-segments-profile",
+                "name": "merged_segments_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "merged_genecn_all_profile.csv",
-                "name": "merged-genecn-profile",
+                "name": "merged_gene_cn_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
@@ -952,43 +936,44 @@ async def mutationPostProcessing(
             # for depmap
             {
                 "path": folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
-                "name": "somatic_mutations_boolmatrix-hotspot-profile",
+                "name": "somaticMutations_boolMatrix_hotspot_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder
                 + "somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
-                "name": "somatic_mutations_boolmatrix-othernoncons-profile",
+                "name": "somaticMutations_boolMatrix_otherNonconserving_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv",
-                "name": "somatic_mutations_boolmatrix-damaging-profile",
+                "name": "somaticMutations_boolMatrix_damaging_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             # {
             #     "path": folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv",
-            #     "name": "somatic_mutations_boolmatrix-othercons-profile",
+            #     "name": "somaticMutations_boolMatrix_otherConserving_profile",
             #     "format": "NumericMatrixCSV",
             #     "encoding": "utf-8",
             # },
             {
                 "path": folder + "somatic_mutations_fordepmap_profile.csv",
-                "name": "somatic_mutations-profile",
+                "name": "somaticMutations_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "somatic_mutations.csv",
-                "name": "somatic_mutations",
+                "name": "somaticMutations_withReplicates",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
                 "path": folder + "merged_binary_germline.csv",
+                "name": "binary_germline_mutation",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
