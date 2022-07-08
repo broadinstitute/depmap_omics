@@ -98,6 +98,7 @@ def loadFromTerraWorkspace(
     unmapped_new_lines = []
     # init profile id column
     samples[extract["profile_id"]] = ""
+    samples[extract["version"]] = 1
     # FOR NOW, assume the id col to map by is in profile table (might change??)
     for k, v in samples.iterrows():
         if v[wsidcol] in pr_table[gumboidcol].tolist():
