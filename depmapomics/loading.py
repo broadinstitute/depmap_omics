@@ -9,7 +9,6 @@
 #
 #
 
-from genepy.google.google_sheet import dfToSheet
 import pandas as pd
 import numpy as np
 import dalmatian as dm
@@ -24,6 +23,37 @@ from genepy.google import gcp
 #####################
 # Loading Functions
 #####################
+def loadRNAFromTerraWorkspaces(
+    wsnames,
+    wsidcol,
+    gumboidcol,
+    sources,
+    stype="rna",
+    only_load_mapped=False,
+    bamcol="cram_or_bam_path",
+    load_undefined=False,
+    extract=EXTRACT_DEFAULTS,
+    accept_unknowntypes=True,
+    addonly=[],
+):
+    """
+    Load new samples from a terra workspace and attempt to map them to existing profiles in gumbo.
+
+    Args:
+    -----
+        wsname (str): name of terra workspace to load data from
+        wsidcol (str): name of column in wsname's sample table that contains IDs to map to ProfileIDs by
+        gumboidcol (str): name of column in gumbo's profile table that contains IDs to map to ProfileIDs by
+        source (str): source of the data delivered (DEPMAP, IBM, etc.)
+        stype (str): type of the data (wgs, rna, etc.)
+        extract: if you want to specify what values should refer to which column names
+        dict{
+        'name':
+
+    Returns:
+    --------
+        samples: pd dataframe the filtered sample list
+    """
 
 
 def loadFromTerraWorkspace(
@@ -952,7 +982,7 @@ def load(
             updated_samples = trackerobj.read_samples_missing_arxspan()
             samples = pd.concat([samples, updated_samples], sort=False)
 
-    samples, notfound = tracker.updateFromTracker(samples, ccle_refsamples)
+    samples, notfound = track.updateFromTracker(samples, ccle_refsamples)
 
     for val in toraise:
         if val in samples["arxspan_id"].tolist():
@@ -994,152 +1024,6 @@ def load(
     trackerobj.write_all_samples_found(samples)
     samples.to_csv(folder + "new_" + stype + "_" + release + ".csv")
     return samples
-
-
-def updateWES(
-    samples,
-    samplesetname,
-    trackerobj,
-    bucket=WES_GCS_PATH,
-    name_col="index",
-    values=["legacy_bam_filepath", "legacy_bai_filepath"],
-    filetypes=["bam", "bai"],
-    refworkspace=WESMUTWORKSPACE,
-    cnworkspace=WESCNWORKSPACE,
-    stype="wes",
-    baits="ICE",
-    extract={},
-    extract_defaults=EXTRACT_DEFAULTS,
-):
-    """[summary]
-
-    Args:
-        samples ([type]): [description]
-        samplesetname ([type]): [description]
-        bucket (str, optional): [description]. Defaults to "gs://cclebams/wes/".
-        name_col (str, optional): [description]. Defaults to "index".
-        values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
-        filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
-        my_id ([type], optional): [description]. Defaults to MY_ID.
-        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-        refworkspace ([type], optional): [description]. Defaults to WESMUTWORKSPACE.
-        cnworkspace ([type], optional): [description]. Defaults to WESCNWORKSPACE.
-        stype (str, optional): [description]. Defaults to "wes".
-        baits (str, optional): [description]. Defaults to 'ICE'.
-        extract (dict, optional): [description]. Defaults to {}.
-        creds ([type], optional): [description]. Defaults to SHEETCREDS.
-        sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
-        refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-    """
-
-    # uploading to our bucket (now a new function)
-    terra.changeToBucket(
-        samples,
-        bucket,
-        name_col=name_col,
-        values=values,
-        filetypes=filetypes,
-        catchdup=True,
-        test=False,
-    )
-
-    extract.update(extract_defaults)
-    ccle_refsamples = trackerobj.read_tracker()
-
-    names = []
-    subccle_refsamples = ccle_refsamples[ccle_refsamples["datatype"] == stype]
-    for k, val in samples.iterrows():
-        val = val["arxspan_id"]
-        names.append(val)
-        samples.loc[k, "version"] = len(
-            subccle_refsamples[subccle_refsamples["arxspan_id"] == val]
-        ) + names.count(val)
-    samples["version"] = samples["version"].astype(int)
-
-    ccle_refsamples = ccle_refsamples.append(samples, sort=False)
-
-    trackerobj.write_tracker(ccle_refsamples)
-
-    pairs = myterra.setupPairsFromSamples(samples, subccle_refsamples, extract)
-
-    # uploading new samples to mut
-    refwm = dm.WorkspaceManager(refworkspace)
-    refwm = refwm.disable_hound()
-    refwm.upload_samples(samples)
-    refwm.upload_entities("pairs", pairs)
-    refwm.update_pair_set(pair_set_id=samplesetname, pair_ids=pairs.index)
-    sam = refwm.get_samples()
-
-    pair = refwm.get_pairs()
-    refwm.update_pair_set(pair_set_id="all", pair_ids=pair.index)
-
-    refwm.update_pair_set(
-        pair_set_id="all_" + baits,
-        pair_ids=pair[
-            pair["case_sample"].isin(
-                [
-                    i
-                    for i in sam[
-                        (sam["baits"] == baits) | (sam["baits"].isna())
-                    ].index.tolist()
-                    if i != "nan"
-                ]
-            )
-        ].index,
-    )
-
-    # creating a sample set
-    refwm.update_sample_set(sample_set_id=samplesetname, sample_ids=samples.index)
-    refwm.update_sample_set(
-        sample_set_id="all", sample_ids=[i for i in sam.index.tolist() if i != "nan"]
-    )
-
-    refwm.update_sample_set(
-        sample_set_id="all_" + baits,
-        sample_ids=[
-            i
-            for i in sam[(sam["baits"] == baits) | (sam["baits"].isna())].index.tolist()
-            if i != "nan"
-        ],
-    )
-
-    # and CN
-    cnwm = dm.WorkspaceManager(cnworkspace)
-    cnwm = cnwm.disable_hound()
-    cnwm.upload_samples(samples)
-    cnwm.upload_entities("pairs", pairs)
-    cnwm.update_pair_set(pair_set_id=samplesetname, pair_ids=pairs.index)
-    sam = cnwm.get_samples()
-
-    pair = cnwm.get_pairs()
-    cnwm.update_pair_set(pair_set_id="all", pair_ids=pair.index)
-    cnwm.update_pair_set(
-        pair_set_id="all_" + baits,
-        pair_ids=pair[
-            pair["case_sample"].isin(
-                [
-                    i
-                    for i in sam[
-                        (sam["baits"] == baits) | (sam["baits"].isna())
-                    ].index.tolist()
-                    if i != "nan"
-                ]
-            )
-        ].index,
-    )
-    # creating a sample set
-    cnwm.update_sample_set(sample_set_id=samplesetname, sample_ids=samples.index)
-    cnwm.update_sample_set(
-        sample_set_id="all", sample_ids=[i for i in sam.index.tolist() if i != "nan"]
-    )
-    cnwm.update_sample_set(
-        sample_set_id="all_" + baits,
-        sample_ids=[
-            i
-            for i in sam[(sam["baits"] == baits) | (sam["baits"].isna())].index.tolist()
-            if i != "nan"
-        ],
-    )
 
 
 def update(
