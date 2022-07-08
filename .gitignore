@@ -200,3 +200,4 @@ tmp.py
 tmp.*
 
 .vscode/launch.json
+output/*

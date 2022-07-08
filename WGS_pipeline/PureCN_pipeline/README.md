@@ -6,7 +6,7 @@
 
 ## Reference files
 
-PureCN interval files with mappability were generated with following commands.
+PureCN interval files with mappability were generated with following commands. The interval files used in DepMap data generation can be found in `gs://ccleparams/references/PureCN_intervals`.
 
 **WES AGILENT**
 
