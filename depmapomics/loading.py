@@ -3,12 +3,6 @@
 # for BroadInsitute
 # in 2019
 
-####
-#
-# HELPER FUNC  ######################################
-#
-#
-
 import pandas as pd
 import numpy as np
 import dalmatian as dm
@@ -36,6 +30,7 @@ def loadFromMultipleWorkspaces(
     extract=EXTRACT_DEFAULTS,
     accept_unknowntypes=True,
     addonly=[],
+    maxage=MAXAGE,
 ):
     """
     Load new RNAseq samples from multiple terra workspace and attempt to map them to existing profiles in gumbo.
@@ -87,6 +82,7 @@ def loadFromTerraWorkspace(
     extract=EXTRACT_DEFAULTS,
     accept_unknowntypes=True,
     addonly=[],
+    maxage=MAXAGE,
 ):
     """
     Load new samples from a terra workspace and attempt to map them to existing profiles in gumbo.
@@ -140,6 +136,7 @@ def loadFromTerraWorkspace(
         addonly,
         extract,
     )
+    samples = samples[samples[extract["update_time"]] > maxage]
     if len(samples) == 0:
         print("no new data available")
         return None
@@ -151,10 +148,9 @@ def loadFromTerraWorkspace(
     samples[extract["version"]] = 1
     # FOR NOW, assume the id col to map by is in profile table (might change??)
     for k, v in samples.iterrows():
-        if v[wsidcol] in pr_table[gumboidcol].tolist():
+        if (not pd.isnull(v[wsidcol])) and v[wsidcol] in pr_table[gumboidcol].tolist():
             pr_id = pr_table[pr_table[gumboidcol] == v[wsidcol]].index
             if len(pr_id) > 1:
-                print(pr_id, v[wsidcol])
                 raise ValueError(
                     "multiple validation ids mapped to the same profile. check with ops!"
                 )
