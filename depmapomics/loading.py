@@ -23,12 +23,13 @@ from genepy.google import gcp
 #####################
 # Loading Functions
 #####################
-def loadRNAFromTerraWorkspaces(
+
+
+def loadFromMultipleWorkspaces(
     wsnames,
     wsidcol,
     gumboidcol,
-    sources,
-    stype="rna",
+    stype,
     only_load_mapped=False,
     bamcol="cram_or_bam_path",
     load_undefined=False,
@@ -37,23 +38,41 @@ def loadRNAFromTerraWorkspaces(
     addonly=[],
 ):
     """
-    Load new samples from a terra workspace and attempt to map them to existing profiles in gumbo.
+    Load new RNAseq samples from multiple terra workspace and attempt to map them to existing profiles in gumbo.
 
     Args:
     -----
-        wsname (str): name of terra workspace to load data from
+        wsnames (dict): dictionary mapping source to workspace name ({source: ws name})
         wsidcol (str): name of column in wsname's sample table that contains IDs to map to ProfileIDs by
         gumboidcol (str): name of column in gumbo's profile table that contains IDs to map to ProfileIDs by
-        source (str): source of the data delivered (DEPMAP, IBM, etc.)
         stype (str): type of the data (wgs, rna, etc.)
         extract: if you want to specify what values should refer to which column names
-        dict{
-        'name':
 
     Returns:
     --------
         samples: pd dataframe the filtered sample list
+        unmapped_new_lines: list of lines that don't have PR ids assigned in gumbo
     """
+    samples = []
+    unmapped_samples = []
+    for s, wsname in wsnames.items():
+        print("loading " + stype + " samples from terra workspace: " + wsname)
+        samples_per_ws, unmapped = loadFromTerraWorkspace(
+            wsname,
+            wsidcol,
+            gumboidcol,
+            s,
+            stype,
+            only_load_mapped,
+            bamcol,
+            load_undefined,
+            extract,
+            accept_unknowntypes,
+            addonly,
+        )
+        samples.append(samples_per_ws)
+        unmapped_samples.extend(unmapped)
+    return pd.concat(samples), pd.concat(unmapped_samples)
 
 
 def loadFromTerraWorkspace(
@@ -86,6 +105,7 @@ def loadFromTerraWorkspace(
     Returns:
     --------
         samples: pd dataframe the filtered sample list
+        unmapped_new_lines: list of lines that don't have PR ids assigned in gumbo
     """
     mytracker = track.SampleTracker()
     seq_table = mytracker.read_seq_table()
