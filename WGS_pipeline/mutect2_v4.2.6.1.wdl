@@ -375,6 +375,7 @@ workflow Mutect2 {
                 annotation_defaults = funco_annotation_defaults,
                 annotation_overrides = funco_annotation_overrides,
                 funcotator_excluded_fields = funcotator_excluded_fields,
+                interval_list=intervals,
                 filter_funcotations = filter_funcotations_or_default,
                 extra_args = funcotator_extra_args,
                 runtime_params = standard_runtime,
