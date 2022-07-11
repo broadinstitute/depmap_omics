@@ -67,7 +67,7 @@ def loadFromMultipleWorkspaces(
         )
         samples.append(samples_per_ws)
         unmapped_samples.extend(unmapped)
-    return pd.concat(samples), pd.concat(unmapped_samples)
+    return pd.concat(samples), unmapped_samples
 
 
 def loadFromTerraWorkspace(
