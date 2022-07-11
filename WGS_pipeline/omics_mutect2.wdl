@@ -13,7 +13,7 @@ workflow omics_mutect2 {
     input {
         String sample_id
         String gatk_docker="broadinstitute/gatk:4.2.6.1"
-        String gcs_project_for_requester_pays
+        String gcs_project_for_requester_pays= "broad-firecloud-ccle"
         File ref_dict
         File ref_fai
         File ref_fasta
@@ -22,7 +22,7 @@ workflow omics_mutect2 {
         File tumor_reads_index
 
         Boolean run_open_cravat=false
-        String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb cancer_hotspotstrinity brca1_func_assay cancer_genome_interpreter ccre_screen gtex lrt"
+        Array[String] annotators=["spliceai", "alfa", "cscape", "civic", "mavedb", "uniprot", "fitcons", "dann", "dida", "funseq2", "genehancer", "gwas_catalog", "pharmgkb", "provean", "revel", "chasmplus", "brca1_func_assay", "cancer_genome_interpreter", "ccre_screen", "gtex"]
         File oncokb_api_key="gs://jkobject/oncokb_key.txt"
 
         File? intervals
