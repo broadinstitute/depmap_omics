@@ -87,7 +87,6 @@ workflow omics_mutect2 {
     if (run_open_cravat){
         call openCravat.opencravat as open_cravat {
             input:
-                sample_id=sample_id,
                 vcf=RemoveFiltered.output_vcf,
                 annotators_to_use=annotators,
                 oncokb_api_key=oncokb_api_key
