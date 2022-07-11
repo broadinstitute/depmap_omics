@@ -5,7 +5,7 @@ import "mutect2_v4.2.6.1.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
 import "merge_vcfs.wdl" as mergevcfs
-import "opencravat.wdl" as openCravat
+import "opencravat_dm.wdl" as openCravat
 import "remove_filtered.wdl" as removeFiltered
 import "vcf_to_depmap.wdl" as vcf_to_depmap
 
@@ -96,17 +96,18 @@ workflow omics_mutect2 {
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
-            input_vcf=select_first([open_cravat.oc_main_files,RemoveFiltered.output_vcf]),
+            input_vcf=select_first([open_cravat.oc_main_file, RemoveFiltered.output_vcf]),
             sample_id=sample_id,
+            annotators=flatten([annotators, ["oncokb_dm", "hess_et_al"]])
     }
 
     output {
         Array[File] main_output=my_vcf_to_depmap.full_file
         File full_vcf=fix_mutect2.vcf_fixed
         File full_vcf_idx=select_first([mutect2.funcotated_file_index, mutect2.filtered_vcf_idx])
-        File oc_error_files=open_cravat.oc_error_files
-        File oc_log_files=open_cravat.oc_log_files
-        File oc_sql_files=open_cravat.oc_sql_files
+        File oc_error_files=open_cravat.oc_error_file
+        File oc_log_files=open_cravat.oc_log_file
+       # File oc_sql_files=open_cravat.oc_sql_file
         File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
