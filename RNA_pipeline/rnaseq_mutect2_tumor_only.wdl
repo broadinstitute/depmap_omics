@@ -321,7 +321,7 @@ workflow RNAseq_mutect2 {
         ref_dict = ref_dict,
         input_vcf = VariantFiltration.output_vcf,
         input_vcf_idx = VariantFiltration.output_vcf_index,
-        reference_version = select_first([funco_reference_version, "hg19"]),
+        reference_version = select_first([funco_reference_version, "hg38"]),
         output_file_base_name = basename(VariantFiltration.output_vcf, ".vcf") + ".annotated",
         output_format = if defined(funco_output_format) then "" + funco_output_format else funco_default_output_format,
         compress = if defined(funco_compress) then select_first([funco_compress]) else false,
@@ -631,6 +631,7 @@ task M2 {
     File ref_dict
     File tumor_bam
     File tumor_bai
+    String? tumor_name
     File? normal_bam
     File? normal_bai
     File? pon
@@ -698,10 +699,13 @@ task M2 {
       touch f1r2.tar.gz
       echo "" > normal_name.txt
 
-      gatk --java-options "-Xmx~{command_mem}m" GetSampleName -R ~{ref_fasta} -I ~{tumor_bam} -O tumor_name.txt -encode \
-      ~{"--gcs-project-for-requester-pays " + gcs_project_for_requester_pays}
-      tumor_command_line="-I ~{tumor_bam} -tumor `cat tumor_name.txt`"
-
+      if [[ ! -z "~{tumor_name}" ]]; then
+          gatk --java-options "-Xmx~{command_mem}m" GetSampleName -R ~{ref_fasta} -I ~{tumor_bam} -O tumor_name.txt -encode \
+          ~{"--gcs-project-for-requester-pays " + gcs_project_for_requester_pays}
+          tumor_command_line="-I ~{tumor_bam} -tumor `cat tumor_name.txt`"
+      else
+          tumor_command_line="-I ~{tumor_bam} -tumor ~{tumor_name}"
+      fi
       if [[ ! -z "~{normal_bam}" ]]; then
           gatk --java-options "-Xmx~{command_mem}m" GetSampleName -R ~{ref_fasta} -I ~{normal_bam} -O normal_name.txt -encode \
           ~{"--gcs-project-for-requester-pays " + gcs_project_for_requester_pays}
