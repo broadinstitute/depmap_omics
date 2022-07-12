@@ -149,10 +149,14 @@ def loadFromTerraWorkspace(
     # FOR NOW, assume the id col to map by is in profile table (might change??)
     for k, v in samples.iterrows():
         if (not pd.isnull(v[wsidcol])) and v[wsidcol] in pr_table[gumboidcol].tolist():
-            pr_id = pr_table[pr_table[gumboidcol] == v[wsidcol]].index
+            # different datatypes from the same line might share the same SM-ID
+            # so mapping should condition on datatype as well
+            pr_id = pr_table[
+                (pr_table[gumboidcol] == v[wsidcol]) & (pr_table.Datatype == stype)
+            ].index
             if len(pr_id) > 1:
                 raise ValueError(
-                    "multiple validation ids mapped to the same profile. check with ops!"
+                    "multiple profile ids mapped to the same validation id. check with ops!"
                 )
             else:
                 samples.loc[k, extract["profile_id"]] = pr_id[0]
@@ -484,34 +488,23 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
     return sampless
 
 
-def update(
+def addSamplesToGumbo(
     samples,
     stype,
     bucket,
-    refworkspace,
-    samplesetname=SAMPLESETNAME,
     name_col="index",
     values=["hg19_bam_filepath", "hg19_bai_filepath"],
     filetypes=["bam", "bai"],
-    add_to_samplesets=[],
 ):
-    """update the samples on a depmapomics terra processing workspace
+    """update the samples on gumbo's sequencing sheet
 
     Args:
         samples ([type]): [description]
-        samplesetname ([type]): [description]
         stype ([type]): [description]
         bucket ([type]): [description]
-        refworkspace ([type]): [description]
         name_col (str, optional): [description]. Defaults to "index".
         values (list, optional): [description]. Defaults to ['legacy_bam_filepath', 'legacy_bai_filepath'].
         filetypes (list, optional): [description]. Defaults to ['bam', 'bai'].
-        my_id ([type], optional): [description]. Defaults to MY_ID.
-        mystorage_id ([type], optional): [description]. Defaults to MYSTORAGE_ID.
-        creds ([type], optional): [description]. Defaults to SHEETCREDS.
-        sampletrackername ([type], optional): [description]. Defaults to SHEETNAME.
-        refsheet_url ([type], optional): [description]. Defaults to REFSHEET_URL.
-        add_to_samplesets (list, optional): add new samples to additional sample_sets on terra. Defaults to []
     """
     # uploading to our bucket (now a new function)
     assert set(values).issubset(set(samples.columns))
@@ -542,35 +535,60 @@ def update(
     ccle_refsamples = ccle_refsamples.append(samples, sort=False)
     mytracker.write_seq_table(ccle_refsamples)
 
+
+def addSamplesToDepMapWorkspace(
+    stype, refworkspace, samplesetname="", add_to_samplesets=[],
+):
+    """update the samples on a depmapomics terra processing workspace
+
+    Args:
+        stype (str): data type
+        refworkspace (str): terra processing workspace to import data to
+        add_to_samplesets (list, optional): add new samples to additional sample_sets on terra. Defaults to []
+    """
+    mytracker = track.SampleTracker()
+    refwm = dm.WorkspaceManager(refworkspace).disable_hound()
+
+    terra_samples = refwm.get_samples()
+    seq_table = mytracker.read_seq_table()
+    # check which lines are new and need to be imported to terra
+    samples_to_add = seq_table[
+        (~seq_table.index.isin(terra_samples.index)) & (seq_table.ExpectedType == stype)
+    ]
+    print("found " + str(len(samples_to_add)) + " new samples to import!")
+
     # terra requires a participant id column
     # temp multi-step solution here: get participant id from seq id
-    seq_table = mytracker.read_seq_table()
     pr_table = mytracker.read_pr_table()
     mc_table = mytracker.read_mc_table()
     model_table = mytracker.read_model_table()
 
-    for i in samples.index:
-        samples.loc[i, "participant_id"] = mytracker.get_participant_id(
+    for i in samples_to_add.index:
+        samples_to_add.loc[i, "participant_id"] = mytracker.get_participant_id(
             i, seq_table, pr_table, mc_table, model_table
         )
 
     # uploading new samples
-    samples.index.name = "sample_id"
-    refwm = dm.WorkspaceManager(refworkspace).disable_hound()
-    refwm.upload_samples(samples)
+    samples_to_add.index.name = "sample_id"
 
-    # creating a sample set
-    refwm.update_sample_set(sample_set_id=samplesetname, sample_ids=samples.index)
+    refwm.upload_samples(samples_to_add)
 
     refwm.update_sample_set(
         sample_set_id="all",
         sample_ids=[i for i in refwm.get_samples().index.tolist() if i != "nan"],
     )
 
-    # add new samples to additional sample_sets
+    # creating a sample set, if samplesetname is provided
+    if samplesetname != "":
+        print("adding new samples to sampleset: " + samplesetname)
+        refwm.update_sample_set(
+            sample_set_id=samplesetname, sample_ids=samples_to_add.index
+        )
+
+    # add new samples to additional existing sample_sets if needed
     for sname in add_to_samplesets:
         samples_in_sname = refwm.get_sample_sets().loc[sname, "samples"]
-        new_samples = refwm.get_sample_sets().loc[samplesetname, "samples"]
+        new_samples = samples_to_add.index
 
         refwm.update_sample_set(
             sample_set_id=sname, sample_ids=list(set(samples_in_sname + new_samples))
