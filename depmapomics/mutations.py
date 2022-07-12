@@ -295,32 +295,21 @@ def generateGermlineMatrix(
     # and run bcftools query to transform vcfs into format needed for subsequent steps
     # only including regions in the guide bed file
     cmd = [
-        "gsutil cp "
+        "bcftools index "
         + sam
-        + " "
-        + vcfdir
-        + sam.split("/")[-1]
-        + "&& bcftools index "
-        + vcfdir
-        + sam.split("/")[-1]
         + " && bcftools query \
   --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
   --regions-file "
         + bed_location
         + " \
   --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-        + vcfdir
-        + sam.split("/")[-1]
+        + sam
         + " >\
  "
         + vcfdir
         + "loc_"
         + sam.split("/")[-1].split(".")[0]
-        + ".bed &&\
- rm "
-        + vcfdir
-        + sam.split("/")[-1]
-        + "*"
+        + ".bed"
         for sam in vcfslist
     ]
 
