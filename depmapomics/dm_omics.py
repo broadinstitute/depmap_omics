@@ -81,10 +81,10 @@ async def expressionPostProcessing(
     ccle_refsamples = mytracker.read_seq_table()
 
     todrop += ccle_refsamples[
-        (ccle_refsamples.blacklist == 1) & (ccle_refsamples.datatype == "rna")
+        (ccle_refsamples.blacklist == 1) & (ccle_refsamples.ExpectedType == "rna")
     ].index.tolist()
     priority = ccle_refsamples[
-        (ccle_refsamples.prioritized == 1) & (ccle_refsamples.datatype == "rna")
+        (ccle_refsamples.prioritized == 1) & (ccle_refsamples.ExpectedType == "rna")
     ].index.tolist()
 
     folder = os.path.join("output", samplesetname, "")
@@ -371,7 +371,7 @@ def cnPostProcessing(
         todropwes = (
             todrop
             + tracker[
-                (tracker.datatype == "wes") & (tracker.blacklist == 1)
+                (tracker.ExpectedType == "wes") & (tracker.blacklist == 1)
             ].index.tolist()
         )
         (
