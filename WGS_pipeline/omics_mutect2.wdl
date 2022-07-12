@@ -21,7 +21,7 @@ workflow omics_mutect2 {
         File tumor_reads
         File tumor_reads_index
 
-        Boolean run_open_cravat=false
+        Boolean run_open_cravat=true
         Array[String] annotators=["spliceai", "alfa", "cscape", "civic", "mavedb", "uniprot", "fitcons", "dann", "dida", "funseq2", "genehancer", "gwas_catalog", "pharmgkb", "provean", "revel", "chasmplus", "brca1_func_assay", "cancer_genome_interpreter", "ccre_screen", "gtex"]
         File oncokb_api_key="gs://jkobject/oncokb_key.txt"
 
@@ -97,7 +97,7 @@ workflow omics_mutect2 {
         input:
             input_vcf=select_first([open_cravat.oc_main_file, RemoveFiltered.output_vcf]),
             sample_id=sample_id,
-            annotators=flatten([annotators, ["oncokb_dm", "hess_et_al"]])
+            annotators=flatten([annotators, ["oncokb", "hess_et_al"]])
     }
 
     output {
