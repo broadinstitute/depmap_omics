@@ -21,6 +21,7 @@ workflow run_opencravat {
 task opencravat {
     input {
         File vcf
+        File? oc_modules # a tar ball of the entie oc module folder (must start with the module folder in the path)
         String format = "vcf"
         Array[String] annotators_to_use = []
         #Int stripfolder = 0 
@@ -37,14 +38,17 @@ task opencravat {
         Int num_preempt = 2
         String docker = "karchinlab/opencravat"
     }
+
+    String oc_extract = "cd /usr/local/lib/python3.6/site-packages/cravat/ && rm -r modules && tar -x ${oc_modules}"
+    String oc_install = "oc module install-base && oc module install -y vcfreporter hg19 ~{sep=' ' annotators_to_use}"
+
     
     command {
         set -euo pipefail
             
         pip install open-cravat --upgrade
 
-        oc module install-base
-        oc module install -y vcfreporter hg19 ~{sep=" " annotators_to_use}
+        ${if defined(oc_modules) then oc_extract else oc_install}
 
         oc new annotator oncokb_dm
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
