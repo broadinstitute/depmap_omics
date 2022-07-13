@@ -426,7 +426,7 @@ async def fingerPrint(
     ref = pd.DataFrame()
 
     if trackerobj is not None:
-        ref = trackerobj.read_tracker()
+        ref = trackerobj.read_seq_table()
 
     ref = ref.append(samples)
 

@@ -31,6 +31,7 @@ def GetNewCellLinesFromWorkspaces(
     sources,
     stype,
     maxage,
+    trackerobj,
     addonly=[],
     match="ACH",
     extract={},
@@ -41,7 +42,6 @@ def GetNewCellLinesFromWorkspaces(
     accept_unknowntypes=False,
     rename=dict(),
     recomputehash=False,
-    trackerobj=None,
 ):
     """
     As GP almost always upload their data to a data workspace. we have to merge it to our processing workspace
@@ -655,6 +655,7 @@ def assessAllSamples(sampless, refsamples, stype, rename={}, extract={}):
 def completeFromMasterSheet(
     samples,
     notfound,
+    trackerobj,
     toupdate=TO_UPDATE,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
@@ -662,7 +663,6 @@ def completeFromMasterSheet(
     masterfilename="ACH",
     nanslist=["None", "nan", "Unknown", None, np.nan],
     depmap_taiga=DEPMAP_TAIGA,
-    trackerobj=None,
 ):
     """complete the missing sample information from a given DepMap Ops MasterSheet
 
@@ -755,7 +755,7 @@ def loadWES(
 
 def loadWGS(
     samplesetname,
-    trackerobj=None,
+    trackerobj,
     workspaces=[wgsworkspace1, wgsworkspace2],
     sources=[wgssource1, wgssource2],
     maxage=MAXAGE,
@@ -782,8 +782,8 @@ def loadWGS(
 
 
 def loadRNA(
-    samplesetname=SAMPLESETNAME,
-    trackerobj=None,
+    samplesetname,
+    trackerobj,
     workspaces=[rnaworkspace6, rnaworkspace7],
     sources=[rnasource6, rnasource7],
     maxage=MAXAGE,
@@ -815,7 +815,7 @@ def load(
     maxage,
     baits,
     stype,
-    trackerobj=None,
+    trackerobj,
     toupdate=TO_UPDATE,
     pv_index=SAMPLEID,
     master_index="arxspan_id",
@@ -905,14 +905,14 @@ def load(
         h.inttodate(i) for i in samples[extract_defaults["release_date"]]
     ]
 
-    if os.path.isdir("temp/") == False:
-        os.makedirs("temp/")
+    if os.path.isdir("output/") == False:
+        os.makedirs("output/")
 
     if len(noarxspan) > 0:
         print("we found " + str(len(noarxspan)) + " samples without arxspan_ids!!")
         noarxspan = noarxspan.sort_values(by="stripped_cell_line_name")
         trackerobj.write_samples_missing_arxspan(noarxspan)
-        noarxspan.to_csv("temp/noarxspan_" + stype + "_" + release + ".csv")
+        noarxspan.to_csv("output/noarxspan_" + stype + "_" + release + ".csv")
         if h.askif(
             "Please review the samples (on 'depmap samples missing arxspan') and write yes once \
       finished, else write no to quit and they will not be added"
@@ -935,6 +935,7 @@ def load(
         samples, unk = completeFromMasterSheet(
             samples,
             notfound,
+            trackerobj,
             toupdate=toupdate,
             pv_index=pv_index,
             master_index=master_index,
@@ -942,13 +943,12 @@ def load(
             masterfilename=masterfilename,
             nanslist=nanslist,
             depmap_taiga=depmap_taiga,
-            trackerobj=trackerobj,
         )
         if len(unk) > 0:
             print("some samples could still not be inferred")
             trackerobj.write_samples_not_found(samples.loc[notfound])
             samples.loc[notfound].to_csv(
-                "temp/notfound_" + stype + "_" + release + ".csv"
+                "output/notfound_" + stype + "_" + release + ".csv"
             )
             if h.askif(
                 "Please review the samples (on 'depmap samples not found') and write yes once \
@@ -960,14 +960,14 @@ def load(
                 ] = updated_samples.values
 
     trackerobj.write_all_samples_found(samples)
-    samples.to_csv("temp/new_" + stype + "_" + release + ".csv")
+    samples.to_csv("output/new_" + stype + "_" + release + ".csv")
     return samples
 
 
 def updateWES(
     samples,
     samplesetname,
-    trackerobj=None,
+    trackerobj,
     bucket=WES_GCS_PATH,
     name_col="index",
     values=["legacy_bam_filepath", "legacy_bai_filepath"],
@@ -1115,7 +1115,7 @@ def update(
     stype,
     bucket,
     refworkspace,
-    trackerobj=None,
+    trackerobj,
     samplesetname=SAMPLESETNAME,
     name_col="index",
     values=["legacy_bam_filepath", "legacy_bai_filepath"],

@@ -1,0 +1,24 @@
+{
+  "annotators": [
+    "hess_drivers"
+  ],
+  "assembly": "hg38",
+  "db_path": "/home/jeremie/ccle_processing/WGS_pipeline/out/small.vcf.sqlite",
+  "id": "out",
+  "job_dir": "/home/jeremie/ccle_processing/WGS_pipeline/out",
+  "note": "",
+  "open_cravat_version": "2.2.7",
+  "orig_input_fname": [
+    "small.vcf"
+  ],
+  "orig_input_path": [
+    "/home/jeremie/ccle_processing/WGS_pipeline/small.vcf"
+  ],
+  "reports": [
+    "vcf"
+  ],
+  "run_name": "small.vcf",
+  "status": "Error",
+  "submission_time": "2022-06-22T22:20:50.973285",
+  "viewable": false
+}

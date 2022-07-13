@@ -9,7 +9,7 @@ ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
 SAMPLEID = "DepMap_ID"
 
-SAMPLESETNAME = "22Q1"
+SAMPLESETNAME = "22Q2"
 
 isCCLE = True
 
@@ -86,16 +86,22 @@ PREV_VIRTUAL = {}
 # PREV_VIRTUAL["internal"] = "internal-21q3-fe4c"
 
 # 21Q4
-PREV_VIRTUAL["public"] = "public-21q4-a0d6"
-PREV_VIRTUAL["ibm"] = "ibm-21q4-4e18"
-PREV_VIRTUAL["dmc"] = "dmc-21q4-5725"
-PREV_VIRTUAL["internal"] = "internal-21q4-ac0a"
+# PREV_VIRTUAL["public"] = "public-21q4-a0d6"
+# PREV_VIRTUAL["ibm"] = "ibm-21q4-4e18"
+# PREV_VIRTUAL["dmc"] = "dmc-21q4-5725"
+# PREV_VIRTUAL["internal"] = "internal-21q4-ac0a"
 
 # 21Q4v2
 # PREV_VIRTUAL["public"] = "public-21q4v2-103d"
 # PREV_VIRTUAL["ibm"] = "ibm-21q4v2-2d92"
 # PREV_VIRTUAL["dmc"] = "dmc-21q4v2-0e7c"
 # PREV_VIRTUAL["internal"] = "internal-21q4v2-403b"
+
+# 22Q1
+PREV_VIRTUAL["public"] = "public-22q1-305b"
+PREV_VIRTUAL["ibm"] = "ibm-22q1-cce1"
+PREV_VIRTUAL["dmc"] = "dmc-22q1-d00a"
+PREV_VIRTUAL["internal"] = "internal-22q1-1778"
 
 TAIGA_MUTATION = "mutations-latest-ed72"
 
@@ -105,7 +111,7 @@ TAIGA_EXPRESSION = "expression-d035"
 TAIGA_FUSION = "fusions-95c9"
 TAIGA_LEGACY_CN = "copy-number-5f61"
 
-datasets = ["internal", "ibm", "dmc", "public"]
+DATASETS = ["internal", "ibm", "dmc", "public"]
 
 VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
@@ -137,7 +143,7 @@ TO_UPDATE = {
     # 'source': ['Flagship'],
     "parent_cell_line": ["Parental ID"],
     "comments": ["Comments"],
-    "mediatype": ["Culture Medium", "Culture Type"],
+    # "mediatype": ["Culture Medium", "Culture Type"],
     "stripped_cell_line_name": ["Stripped Cell Line Name"],
     "cellosaurus_id": ["RRID"],
     "age": ["CCLF Age"],
@@ -219,9 +225,9 @@ EXTRACT_DEFAULTS = {
 
 # minimum bam file size in bytes for each sequencing type
 MINSIZES = {
-    "rna": 2000000000,
-    "wes": 3000000000,
-    "wgs": 50000000000,
+    "rna": 2_000_000_000,
+    "wes": 3_000_000_000,
+    "wgs": 50_000_000_000,
 }
 
 # known cell lines that are from the same patient (not called?)
@@ -280,7 +286,7 @@ WESSETENTITY = "pair_set"
 ############## Fingerprinting
 
 # Local directory to save intermediate files to
-WORKING_DIR = "temp/"
+WORKING_DIR = "output/"
 
 FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
 
@@ -293,21 +299,70 @@ TAIGA_FP_FILENAME = "fingerprint_lod_matrix"
 
 
 LINES_TO_RELEASE = [
-    "ACH-002077",
-    "ACH-002523",
-    "ACH-002531",
-    "ACH-000860",
-    "ACH-002778",
-    "ACH-002781",
-    "ACH-002703",
-    "ACH-002784",
-    "ACH-002806",
-    "ACH-002922",
+    "ACH-000145",
+    "ACH-000359",
+    "ACH-000871",
+    "ACH-001393",
     "ACH-001481",
-    "ACH-002070",
-    "ACH-002500",
-    "ACH-002485",
+    "ACH-001558",
+    "ACH-002035",
+    "ACH-002051",
+    "ACH-002077",
+    "ACH-002471",
+    "ACH-002486",
+    "ACH-002524",
     "ACH-002526",
+    "ACH-002531",
+    "ACH-002535",
+    "ACH-002647",
+    "ACH-002650",
+    "ACH-002664",
+    "ACH-002669",
+    "ACH-002672",
+    "ACH-002680",
+    "ACH-002690",
+    "ACH-002693",
+    "ACH-002710",
+    "ACH-002730",
+    "ACH-002733",
+    "ACH-002736",
+    "ACH-002737",
+    "ACH-002738",
+    "ACH-002741",
+    "ACH-002742",
+    "ACH-002743",
+    "ACH-002744",
+    "ACH-002745",
+    "ACH-002757",
+    "ACH-002778",
+    "ACH-002780",
+    "ACH-002781",
+    "ACH-002784",
+    "ACH-002785",
+    "ACH-002787",
+    "ACH-002806",
+    "ACH-002834",
+    "ACH-002835",
+    "ACH-002837",
+    "ACH-002839",
+    "ACH-002841",
+    "ACH-002847",
+    "ACH-002853",
+    "ACH-002869",
+    "ACH-002871",
+    "ACH-002883",
+    "ACH-002884",
+    "ACH-002885",
+    "ACH-002926",
+    "ACH-002947",
+    "ACH-002950",
+    "ACH-002951",
+    "ACH-002954",
+    "ACH-002967",
+    "ACH-002968",
+    "ACH-002972",
+    "ACH-002979",
+    "ACH-002981",
 ]
 
 ############## DNAseq
@@ -514,6 +569,10 @@ FUSION_RED_HERRING = [
     "ConjoinG",
     "NEIGHBORS",
 ]
+
+FUSION_MAXFREQ = 0.1
+FUSION_MINFFPM = 0.05
+FUSION_MAXFFPM = 0.1
 
 ############## EXPRESSION
 
