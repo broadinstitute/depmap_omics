@@ -295,10 +295,20 @@ def generateGermlineMatrix(
     # and run bcftools query to transform vcfs into format needed for subsequent steps
     # only including regions in the guide bed file
     cmd = [
-        "bcftools index "
+        "gsutil cp "
         + sam
-        + " && bcftools query \
-  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\" \
+        + " "
+        + vcfdir
+        + sam.split("/")[-1]
+        + " && gsutil cp "
+        + sam
+        + ".tbi"
+        + " "
+        + vcfdir
+        + sam.split("/")[-1]
+        + ".tbi"
+        + " && bcftools query\
+  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
   --regions-file "
         + bed_location
         + " \
@@ -309,10 +319,15 @@ def generateGermlineMatrix(
         + vcfdir
         + "loc_"
         + sam.split("/")[-1].split(".")[0]
-        + ".bed"
+        + ".bed &&\
+ rm "
+        + vcfdir
+        + sam.split("/")[-1]
+        + "*"
         for sam in vcfslist
     ]
 
+    print("running bcftools index and query")
     h.parrun(cmd, cores=cores)
 
     pool = multiprocessing.Pool(cores)
