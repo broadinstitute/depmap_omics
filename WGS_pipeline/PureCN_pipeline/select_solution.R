@@ -1,5 +1,9 @@
 library(VariantAnnotation)
+####################### 
 
+This is a copy of a piece of code from PureCN to update results and plots from a solution to the duplication value.
+
+#############
 callAlterations <- function(res, id = 1, cutoffs = c(0.5, 6, 7),
                             log.ratio.cutoffs = c(-0.9, 0.9),
                             failed = NULL, all.genes = FALSE) {
