@@ -12,8 +12,6 @@ from depmapomics import terra as myterra
 from depmapomics.qc import rna as myQC
 from depmapomics import tracker as track
 
-from depmapomics.config import *
-
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
     """
@@ -25,17 +23,17 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
     """
     genes_count = pd.read_csv(
-        "temp/" + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        "output/" + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
     transcripts_tpm = pd.read_csv(
-        "temp/" + main_filename["rsem_transcripts_tpm"].split("/")[-1],
+        "output/" + main_filename["rsem_transcripts_tpm"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
     genes_tpm = pd.read_csv(
-        "temp/" + main_filename["rsem_genes_tpm"].split("/")[-1],
+        "output/" + main_filename["rsem_genes_tpm"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
@@ -43,10 +41,10 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
     for input_filename in input_filenames:
         name = input_filename["rsem_genes"].split("/")[-1].split(".")[0].split("_")[-1]
         rsem_genes = pd.read_csv(
-            "temp/" + input_filename["rsem_genes"].split("/")[-1], sep="\t"
+            "output/" + input_filename["rsem_genes"].split("/")[-1], sep="\t"
         )
         rsem_transcripts = pd.read_csv(
-            "temp/" + input_filename["rsem_isoforms"].split("/")[-1], sep="\t"
+            "output/" + input_filename["rsem_isoforms"].split("/")[-1], sep="\t"
         )
         genes_count[name] = pd.Series(
             rsem_genes["expected_count"], index=rsem_genes.index
@@ -57,21 +55,21 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         genes_tpm[name] = pd.Series(rsem_genes["TPM"], index=rsem_genes.index)
 
     genes_count.to_csv(
-        "temp/" + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        "output/" + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
         compression="gzip",
     )
     transcripts_tpm.to_csv(
-        "temp/" + main_filename["rsem_transcripts_tpm"].split("/")[-1],
+        "output/" + main_filename["rsem_transcripts_tpm"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
         compression="gzip",
     )
     genes_tpm.to_csv(
-        "temp/" + main_filename["rsem_genes_tpm"].split("/")[-1],
+        "output/" + main_filename["rsem_genes_tpm"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
@@ -115,7 +113,7 @@ def solveQC(tracker, failed, save="", newname="arxspan_id"):
     print("samples that failed:")
     print(newfail)
     if save:
-        h.listToFile(newfail, save + "_rnafailed.txt")
+        h.listToFile(newfail, save + "rna_newfailed.txt")
     return rename
 
 
@@ -125,10 +123,10 @@ def updateTracker(
     lowqual,
     tracker,
     samplesetname,
-    refworkspace=RNAWORKSPACE,
+    refworkspace,
+    onlycol,
+    newgs,
     trackerobj=None,
-    onlycol=STARBAMCOLTERRA,
-    newgs=RNA_GCS_PATH_HG38,
     dry_run=False,
     qcname="star_logs",
     match=".Log.final.out",
@@ -149,7 +147,7 @@ def updateTracker(
         sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
         qcname (str, optional): Terra column containing QC files. Defaults to "star_logs".
         refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-        onlycol (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
+        bamfilepaths (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
         todrop (list, optional): list of samples to be dropped. Defaults to []
         samplesinset (list[str], optional): list of samples in set when refworkspace is None (bypass interacting with terra)
         starlogs (dict(str:list[str]), optional): dict of samples' star qc log locations when refworkspace is None (bypass interacting with terra)
@@ -180,20 +178,23 @@ def updateTracker(
         lowqual,
         newgs,
         refworkspace,
-        onlycol,
+        bamfilepaths,
         dry_run,
         todrop=todrop,
         trackerobj=trackerobj,
+        gumbo=gumbo,
     )
 
 
-def loadFromRSEMaggregate(
+def _loadFromRSEMaggregate(
     refworkspace,
+    filenames,
+    *,
     todrop=[],
-    filenames=RSEMFILENAME,
     sampleset="all",
     renamingFunc=None,
     rsemfilelocs=None,
+    folder="",
 ):
     """Load the rsem aggregated files from Terra
 
@@ -202,10 +203,10 @@ def loadFromRSEMaggregate(
         todrop (list[str], optional): list of samples to drop. Defaults to [].
         filenames (list[str], optional): the filenames to load. Defaults to RSEMFILENAME.
         sampleset (str, optional): the sample set to load. Defaults to 'all'.
-        renamingFunc (function, optional): the function to rename the samples 
+        renamingFunc (function, optional): the function to rename the samples
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (no interaction with terra)
-    
+
     Returns:
         dict(str: pd.df): the loaded dataframes
         dict: the renaming dict used to rename the dfs columns
@@ -227,7 +228,7 @@ def loadFromRSEMaggregate(
         )
         if renamingFunc is not None:
             # removing failed version
-            renaming = renamingFunc(file.columns[2:], todrop)
+            renaming = renamingFunc(file.columns[2:], todrop, folder=folder)
         else:
             renaming.update({i: i for i in file.columns[2:] if i not in todrop})
         renaming.update({"transcript_id(s)": "transcript_id"})
@@ -239,9 +240,7 @@ def loadFromRSEMaggregate(
     return files, renaming
 
 
-def subsetGenes(
-    files, gene_rename, filenames=RSEM_TRANSCRIPTS, drop=[], index="transcript_id"
-):
+def subsetGenes(files, gene_rename, filenames, *, drop=[], index="transcript_id"):
     """
     Subset the rsem transcripts file to keep only the genes of interest
 
@@ -255,11 +254,11 @@ def subsetGenes(
     Returns:
         dict(str: pd.df): the subsetted dfs
     """
-    print("subsetting " + index + " columns")
+    print("subsetting " + index_id + " columns")
     rename_transcript = {}
     missing = []
     for val in filenames:
-        if len(rename_transcript) == 0 and index == "transcript_id":
+        if len(rename_transcript) == 0 and index_id == "transcript_id":
             for _, v in files[val].iterrows():
                 if v["gene_id"].split(".")[0] in gene_rename:
                     rename_transcript[v["transcript_id"].split(".")[0]] = (
@@ -271,13 +270,26 @@ def subsetGenes(
                 else:
                     missing.append(v.gene_id.split(".")[0])
             print("missing: " + str(len(missing)) + " genes")
-        file = files[val].drop(columns=drop).set_index(index)
+        file = files[val].drop(columns=drop).set_index(index_id)
         file = file[(file.sum(1) != 0) & (file.var(1) != 0)]
+        r = [i.split(".")[0] for i in file.index]
+        dup = h.dups(r)
+        par_y_drop = []
+        for d in dup:
+            idx = file[
+                (file.index.str.startswith(d)) & (~file.index.str.endswith("_PAR_Y"))
+            ].index[0]
+            idx_par_y = file[
+                (file.index.str.startswith(d)) & (file.index.str.endswith("_PAR_Y"))
+            ].index[0]
+            file.loc[idx] = file.loc[[idx, idx_par_y], :].sum(numeric_only=True)
+            par_y_drop.append(idx_par_y)
+        file = file.drop(index=par_y_drop)
         r = [i.split(".")[0] for i in file.index]
         dup = h.dups(r)
         if len(dup) > 0:
             print(dup)
-            raise ValueError("duplicate " + index)
+            raise ValueError("duplicate " + index_id)
         file.index = r
         file = file.rename(
             index=rename_transcript if len(rename_transcript) != 0 else gene_rename
@@ -290,7 +302,8 @@ def extractProtCod(
     files,
     mybiomart,
     protcod_rename,
-    filenames=RSEMFILENAME_GENE,
+    filenames,
+    *,
     dropNonMatching=False,
     rep=("genes", "proteincoding_genes"),
 ):
@@ -298,9 +311,9 @@ def extractProtCod(
 
     Args:
         files (dict(str: pd.dfs)): the rsem transcripts dfs to subset samples x genes
-        mybiomart (pd.df): the biomart dataframe should contain the following columns: 
+        mybiomart (pd.df): the biomart dataframe should contain the following columns:
         'ensembl_gene_id', 'entrezgene_id', 'gene_biotype'
-        protcod_rename (dict(str, str)): the protein coding gene renaming dict 
+        protcod_rename (dict(str, str)): the protein coding gene renaming dict
         (here we expect a dict of ensembl transcript ids: gene names)
         filenames (list[str], optional): the dict dfs to look at. Defaults to RSEMFILENAME_GENE.
         rep (tuple, optional): how to rename the protein gene subseted df copies in the dict. Defaults to ('genes', 'proteincoding_genes').
@@ -315,6 +328,26 @@ def extractProtCod(
         name = val.replace(rep[0], rep[1])
         files[name] = files[val].drop(columns="transcript_id").set_index("gene_id")
         files[name] = files[name][(files[name].sum(1) != 0) & (files[name].var(1) != 0)]
+        r = [i.split(".")[0] for i in files[name].index]
+        dup = h.dups(r)
+        # STAR, RSEM and GENCODE were updated in 22Q2, indroducing dup gene ids ending with "_PAR_Y"
+        # here we sum these entries with their corresponding _PAR_Y entries
+        par_y_drop = []
+        for d in dup:
+            idx = files[name][
+                (files[name].index.str.startswith(d))
+                & (~files[name].index.str.endswith("_PAR_Y"))
+            ].index[0]
+            idx_par_y = files[name][
+                (files[name].index.str.startswith(d))
+                & (files[name].index.str.endswith("_PAR_Y"))
+            ].index[0]
+            files[name].loc[idx] = (
+                files[name].loc[[idx, idx_par_y], :].sum(numeric_only=True)
+            )
+            par_y_drop.append(idx_par_y)
+        files[name] = files[name].drop(index=par_y_drop)
+
         r = [i.split(".")[0] for i in files[name].index]
         dup = h.dups(r)
         if len(dup) > 0:
@@ -340,7 +373,7 @@ def extractProtCod(
     return files
 
 
-async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
+async def ssGSEA(tpm_genes, geneset_file, recompute=True):
     """the way we run ssGSEA on the CCLE dataset
 
     Args:
@@ -370,7 +403,7 @@ async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     )
 
     # MAYBE NOT NEEDED
-    #### merging splicing variants into the same gene
+    # merging splicing variants into the same gene
     # counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
     enrichments = (
@@ -382,36 +415,48 @@ async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     return enrichments
 
 
-def saveFiles(files, folder=TMP_PATH, rep=("rsem", "expression")):
+def _log2_tpm_dataframes(files):
+    new_files = {}
+    for k, val in files.items():
+        new_files[k.replace("rsem", "expression") + ".csv"] = val
+
+        # compute transformed version for all files containing TPM values
+        if "tpm" in k:
+            new_files[k.replace("rsem", "expression") + "_logp1.csv"] = val.apply(
+                lambda x: np.log2(x + 1)
+            )
+
+    return new_files
+
+
+def _saveFiles(files, folder):
     """
     saves the files in the dict to the folder
 
     Args:
         files (dict(str: pd.df)): the dfs to save
-        folder (str, optional): the folder to save the files. Defaults to TMP_PATH.
-        rep (tuple, optional): how to rename (parts of) the files. Defaults to ('rsem', 'expression').
+        folder: the folder to write files to
     """
     print("storing files in {}".format(folder))
     for k, val in files.items():
-        val.to_csv(os.path.join(folder, k.replace(rep[0], rep[1]) + ".csv"))
-        if "tpm" in k:
-            val.apply(lambda x: np.log2(x + 1)).to_csv(
-                os.path.join(folder, k.replace(rep[0], rep[1]) + "_logp1.csv")
-            )
+        val.to_csv(k)
 
 
 async def postProcess(
     refworkspace,
     samplesetname,
+    ensemblserver,
+    geneLevelCols,
+    trancriptLevelCols,
+    rsemfilename,
+    ssgseafilepath,
+    *,
     save_output="",
     doCleanup=False,
     colstoclean=[],
-    ensemblserver=ENSEMBL_SERVER_V,
     todrop=[],
     samplesetToLoad="all",
     priority=[],
-    geneLevelCols=RSEMFILENAME_GENE,
-    trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
     ssGSEAcol="genes_tpm",
     renamingFunc=None,
     samplesinset=[],
@@ -438,9 +483,9 @@ async def postProcess(
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level 
+        geneLevelCols (list, optional): the columns that contain the gene level
         expression data in the workspace. Defaults to RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript 
+        trancriptLevelCols (list, optional): the columns that contain the transcript
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
@@ -449,7 +494,7 @@ async def postProcess(
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes 
+        dropNonMatching (bool, optional): whether to drop the non matching genes
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
     """
@@ -514,13 +559,14 @@ async def postProcess(
             )
 
     print("loading files")
-    files, renaming = loadFromRSEMaggregate(
+    files, renaming = _loadFromRSEMaggregate(
         refworkspace,
         todrop=failed,
         filenames=trancriptLevelCols + geneLevelCols,
         sampleset=samplesetToLoad,
         renamingFunc=renamingFunc,
         rsemfilelocs=rsemfilelocs,
+        folder=save_output,
     )
     if save_output:
         h.dictToFile(renaming, save_output + "rna_sample_renaming.json")
@@ -542,7 +588,7 @@ async def postProcess(
             files,
             gene_rename,
             filenames=geneLevelCols,
-            index="gene_id",
+            index_id="gene_id",
             drop="transcript_id",
         )
         # assert {v.columns[-1] for k,v in files.items()} == {'ACH-000052'}
@@ -552,15 +598,18 @@ async def postProcess(
             gene_rename,
             filenames=trancriptLevelCols,
             drop="gene_id",
-            index="transcript_id",
+            index_id="transcript_id",
         )
 
     if compute_enrichment:
         print("doing ssGSEA")
-        enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
+        enrichments = await ssGSEA(
+            files[ssGSEAcol], ssgseafilepath, recompute=recompute_ssgsea
+        )
         print("saving files")
         enrichments.to_csv(save_output + "gene_sets_all.csv")
-    saveFiles(files, save_output)
+    files = _log2_tpm_dataframes(files)
+    _saveFiles(files, save_output)
     print("done")
 
     return (
@@ -571,4 +620,3 @@ async def postProcess(
         lowqual,
         enrichments if compute_enrichment else None,
     )
-

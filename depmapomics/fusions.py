@@ -40,9 +40,9 @@ def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
 def filterFusions(
     fusions,
     sampleCol,
-    maxfreq=0.1,
-    minffpm=0.05,
-    maxffpm=0.1,
+    maxfreq=FUSION_MAXFREQ,
+    minffpm=FUSION_MINFFPM,
+    maxffpm=FUSION_MAXFFPM,
     countCol="CCLE_count",
     red_herring=FUSION_RED_HERRING,
     **kwargs
@@ -155,7 +155,7 @@ def postProcess(
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
         sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
-        colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.  
+        colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.
         doplot (bool, optional): whether to plot the data. Defaults to True.
         countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
         save_output (str, optional): whether and where to save our data. Defaults to "".
@@ -208,11 +208,11 @@ def postProcess(
         fusions, sampleCol=sampleCol, countCol=countCol, **kwargs
     )
     if doplot:
-        sns.kdeplot(fusions[countCol])
+        print("Plotting filtered fusions:")
+        sns.kdeplot(fusions_filtered[countCol])
     fusions_filtered.to_csv(
         os.path.join(save_output, "filteredfusions_latest.csv"), index=False
     )
 
     print("done")
     return fusions, fusions_filtered
-

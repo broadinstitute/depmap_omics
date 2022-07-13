@@ -37,9 +37,8 @@
 
 version 1.0
 
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.0.0/scripts/cnv_wdl/cnv_common_tasks.wdl" as CNVTasks
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.0.0/scripts/cnv_wdl/somatic/cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.0.0/scripts/cnv_wdl/somatic/cnv_somatic_funcotate_seg_workflow.wdl" as CNVFuncotateSegments
+import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.6.1/scripts/cnv_wdl/cnv_common_tasks.wdl" as CNVTasks
+import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.6.1/scripts/cnv_wdl/somatic/cnv_somatic_funcotate_seg_workflow.wdl" as CNVFuncotateSegments
 
 workflow CNVSomaticPairWorkflow {
 
@@ -63,8 +62,6 @@ workflow CNVSomaticPairWorkflow {
       ##################################
       #### optional basic arguments ####
       ##################################
-       # For running oncotator
-      Boolean? is_run_oncotator
        # For running funcotator
       Boolean? is_run_funcotator
 
@@ -144,14 +141,6 @@ workflow CNVSomaticPairWorkflow {
       Float? point_size_copy_ratio
       Float? point_size_allele_fraction
       Int? mem_gb_for_plotting
-
-      ##########################################
-      #### optional arguments for Oncotator ####
-      ##########################################
-      String? additional_args_for_oncotator
-      String? oncotator_docker
-      Int? mem_gb_for_oncotator
-      Int? boot_disk_space_gb_for_oncotator
 
       ##################################################
       #### optional arguments for FuncotateSegments ####
@@ -475,17 +464,6 @@ workflow CNVSomaticPairWorkflow {
         }
     }
 
-    if (select_first([is_run_oncotator, false])) {
-        call CNVOncotator.CNVOncotatorWorkflow as CNVOncotatorWorkflow {
-            input:
-                 called_file = CallCopyRatioSegmentsTumor.called_copy_ratio_segments,
-                 additional_args = additional_args_for_oncotator,
-                 oncotator_docker = oncotator_docker,
-                 mem_gb_for_oncotator = mem_gb_for_oncotator,
-                 boot_disk_space_gb_for_oncotator = boot_disk_space_gb_for_oncotator,
-                 preemptible_attempts = preemptible_attempts
-        }
-    }
     if (select_first([is_run_funcotator, false])) {
         call CNVFuncotateSegments.CNVFuncotateSegmentsWorkflow as CNVFuncotateSegmentsWorkflow {
             input:
@@ -575,8 +553,6 @@ workflow CNVSomaticPairWorkflow {
         Float? scaled_delta_MAD_value_normal = PlotDenoisedCopyRatiosNormal.scaled_delta_MAD_value
         File? modeled_segments_plot_normal = PlotModeledSegmentsNormal.modeled_segments_plot
 
-        File oncotated_called_file_tumor = select_first([CNVOncotatorWorkflow.oncotated_called_file, "null"])
-        File oncotated_called_gene_list_file_tumor = select_first([CNVOncotatorWorkflow.oncotated_called_gene_list_file, "null"])
         File funcotated_called_file_tumor = select_first([CNVFuncotateSegmentsWorkflow.funcotated_seg_simple_tsv, "null"])
         File funcotated_called_gene_list_file_tumor = select_first([CNVFuncotateSegmentsWorkflow.funcotated_gene_list_tsv, "null"])
     }
