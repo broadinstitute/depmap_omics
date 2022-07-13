@@ -11,7 +11,7 @@ workflow omics_post_mutect2 {
     input {
         String sample_id
         File vcf
-        #String annotators="spliceai alfa cscape civic mavedb uniprot loftool fitcons dann dida funseq2 genehancer gwas_catalog pharmgkb provean revel chasmplus oncokb cancer_hotspots"
+        Array[String] annotators
         #File oncokb_api_key="gs://jkobject/oncokb_key.txt"
         Boolean run_open_cravat=false
     }
@@ -44,7 +44,8 @@ workflow omics_post_mutect2 {
     if (run_open_cravat){
         call openCravat.opencravat as open_cravat {
             input:
-                vcf=RemoveFiltered.output_vcf
+                vcf=RemoveFiltered.output_vcf,
+                annotators_to_use=annotators
         }
     }
 
@@ -52,6 +53,7 @@ workflow omics_post_mutect2 {
         input:
             input_vcf=select_first([open_cravat.oc_main_file, RemoveFiltered.output_vcf]),
             sample_id=sample_id,
+            annotators=flatten([annotators, ["oncokb", "hess_et_al"]])
     }
 
     output {
