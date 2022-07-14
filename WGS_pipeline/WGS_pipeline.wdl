@@ -7,7 +7,7 @@ import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
 import "remove_filtered.wdl" as removeFiltered
 import "vcf_to_depmap.wdl" as vcf_to_depmap
-import "PureCN.wdl" as PureCN
+import "PureCN_pipeline/PureCN.wdl" as PureCN
 import "msisensor2.wdl" as msisensor2
 # import "opencravat.wdl" as openCravat
 
