@@ -44,7 +44,7 @@ task PureCN {
 			${otherArguments}
 		Rscript -e "write.table(read.csv('${sampleID}.csv'),'table.txt',sep='\n',row.names=F,col.names=F,quote=F)"
 
-		git clone -b PureCN https://github.com/broadinstitute/depmap_omics.git
+		git clone -b dev https://github.com/broadinstitute/depmap_omics.git
 		Rscript depmap_omics/WGS_pipeline/PureCN_pipeline/call_wgd_and_cin.R "${sampleID}_loh.csv" "${sampleID}.csv"
 	}
 

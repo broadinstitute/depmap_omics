@@ -17,7 +17,7 @@ task run_update_solution {
   }
 
   command {
-	git clone -b PureCN https://github.com/broadinstitute/depmap_omics.git
+	git clone -b dev https://github.com/broadinstitute/depmap_omics.git
 
 	Rscript depmap_omics/WGS_pipeline/PureCN_pipeline/select_solution.R ${purecn_rds} /cromwell_root/"${sampleID}" ${solution_num}
 	Rscript -e "write.table(read.csv('${sampleID}.csv'),'table.txt',sep='\n',row.names=F,col.names=F,quote=F)"
