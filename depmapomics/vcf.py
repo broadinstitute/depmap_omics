@@ -208,6 +208,8 @@ TO_RENAME_OC = {
     "oc_funseq2__score": "funseq2_score",
     "oc_funseq2__motif": "funseq2_motif",
     "oc_funseq2__hot": "funseq2_hot",
+    "oc_hess_drivers__is_driver": "hess_driver",
+    "oc_hess_drivers__signature": "hess_signture",
 }
 
 TOKEEP_BASE = {
@@ -254,8 +256,6 @@ TOKEEP_ADD = {
     "lof": "str",
     "driver": "str",
     "likely_driver": "str",
-    "pathogenic": "str",
-    "trancript_likely_pathogenic": "str",
     "transcript_likely_lof": "str",
     "oncokb_sensitivelevel": "str",
     "oncokb_resistancelevel": "str",
@@ -305,7 +305,8 @@ TOKEEP_LARGE_ADD = {
     "funseq2_hot": "str",
     "likely_gof": "str",
     "likely_lof": "str",
-    "likely_pathogenic": "str",
+    "hess_driver": "str",
+    "hess_signture": "str",
 }
 
 
