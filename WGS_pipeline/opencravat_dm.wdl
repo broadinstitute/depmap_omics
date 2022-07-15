@@ -94,7 +94,7 @@ with open(sys.argv[1],'rb') as f:
             --mp ${num_threads} \
             ${"--module-option "+modules_options} \
             -d out \
-            -a oncokb_dm hess_drivers ~{sep=" " annotators_to_use}
+            -a hess_drivers ~{sep=" " annotators_to_use}
     
         python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf, '.vcf.gz')}.${format}.gz
     }
