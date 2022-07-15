@@ -39,7 +39,7 @@ task opencravat {
         String docker = "karchinlab/opencravat"
     }
 
-    String oc_extract = "cd /usr/local/lib/python3.6/site-packages/cravat/ && rm -r modules && tar -x ${oc_modules}"
+    String oc_extract = "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -x ${oc_modules}"
     String oc_install = "oc module install-base && oc module install -y vcfreporter hg19 ~{sep=' ' annotators_to_use}"
 
     
