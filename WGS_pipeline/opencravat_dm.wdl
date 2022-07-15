@@ -38,17 +38,14 @@ task opencravat {
         Int num_preempt = 2
         String docker = "karchinlab/opencravat"
     }
-
-    String oc_extract = "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -x ${oc_modules}"
     String oc_install = "oc module install-base && oc module install -y vcfreporter hg19 ~{sep=' ' annotators_to_use}"
-
     
     command {
         set -euo pipefail
             
         pip install open-cravat --upgrade
 
-        ${if defined(oc_modules) then oc_extract else oc_install}
+        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xv "+oc_modules else oc_install}
 
         oc new annotator oncokb_dm
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
