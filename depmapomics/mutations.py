@@ -220,6 +220,39 @@ def postProcess(
     return mutations
 
 
+def aggregateSV(
+    refworkspace,
+    sampleids,
+    all_sv_colname="filtered_annotated_sv",
+    save_output="",
+    save_filename="",
+):
+    """aggregate SVs pulled from a terra workspace
+
+    Args:
+        refworkspace (str): terra workspace where the ref data is stored
+        sampleids (list[str]): list of sequencing IDs
+        all_sv_colname (str): name of column in terra workspace that contains sv output files. Defaults to "filtered_annotated_sv"
+        save_output (str, optional): whether to save our data. Defaults to "".
+
+    Returns:
+        
+    """
+    print("aggregating SVs")
+    wm = dm.WorkspaceManager(refworkspace).disable_hound()
+    sample_table = wm.get_samples()
+    sample_table = sample_table[sample_table.index.isin(sampleids)]
+    all_svs = []
+    for name, row in sample_table.iterrows():
+        sv = pd.read_csv(row[all_sv_colname], sep="\t")
+        sv[SAMPLEID] = name
+        all_svs.append(sv)
+    all_svs = pd.concat(all_svs)
+    print("saving aggregated SVs")
+    all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
+    return all_svs
+
+
 def mapBed(file, vcfdir, bed_location):
     """map mutations in one vcf file to regions in the guide bed file"""
 
