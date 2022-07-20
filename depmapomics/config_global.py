@@ -323,8 +323,8 @@ PURECN_COLRENAMING = {
     "type": "LOH_status",
 }
 
-PURECN_LOH_COLNAME = ("PureCN_loh_merged",)
-PURECN_FAILED_COLNAME = ("PureCN_failed",)
+PURECN_LOH_COLNAME = "PureCN_loh_merged"
+PURECN_FAILED_COLNAME = "PureCN_failed"
 
 # if the loh function outputs one of these, record as 1 in the loh bool matrix
 PURECN_LOHVALUES = ["LOH", "COPY-NEUTRAL LOH", "WHOLE ARM COPY-NEUTRAL LOH"]
@@ -335,8 +335,20 @@ SIGTABLE_TERRACOLS = {
     "PureCN_loh_fraction",
     "PureCN_curated",
     "PureCN_curated_solution",
-    "PureCN_failed",
-    "msisensor2_score",
+    "PureCN_cin_allele_specific_ploidy_robust",
+}
+MISC_SIG_TERRACOLS = {"msisensor2_score"}
+PURECN_FAILED_COLNAME = "PureCN_failed"
+SIGTABLE_BINARYCOLS = [
+    "PureCN_wgd",
+    "PureCN_curated",
+]
+
+SIGTABLE_RENAMING = {
+    "PureCN_loh_fraction": "loh_fraction",
+    "PureCN_wgd": "wgd",
+    "PureCN_cin_allele_specific_ploidy_robust": "cin",
+    "PureCN_ploidy": "ploidy",
 }
 
 SOURCE_RENAME = {
@@ -374,8 +386,8 @@ toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 
 MINFREQTOCALL = 0.25
 
-SV_COLNAME="filtered_annotated_sv"
-SV_FILENAME="all_sv.bedpe"
+SV_COLNAME = "filtered_annotated_sv"
+SV_FILENAME = "all_sv.bedpe"
 
 MUTATION_GROUPS = {
     "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
