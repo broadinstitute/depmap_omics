@@ -374,6 +374,9 @@ toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 
 MINFREQTOCALL = 0.25
 
+SV_COLNAME="filtered_annotated_sv"
+SV_FILENAME="all_sv.bedpe"
+
 MUTATION_GROUPS = {
     "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
     "other non-conserving": [

@@ -168,6 +168,8 @@ def postProcess(
         "Tumor_Sample_Barcode": SAMPLEID,
         "Tumor_Seq_Allele2": "Tumor_Allele",
     },
+    sv_col=SV_COLNAME,
+    sv_filename=SV_FILENAME,
 ):
     """post process an aggregated MAF file the CCLE way
 
@@ -217,13 +219,22 @@ def postProcess(
 
     mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
     print("done")
-    return mutations
+
+    sampleids = refwm.get_sample_sets().loc[sampleset, "samples"]
+    svs = aggregateSV(
+        refworkspace,
+        sampleids,
+        all_sv_colname=sv_col,
+        save_output=save_output,
+        save_filename=sv_filename,
+    )
+    return mutations, svs
 
 
 def aggregateSV(
     refworkspace,
     sampleids,
-    all_sv_colname="filtered_annotated_sv",
+    all_sv_colname=SV_COLNAME,
     save_output="",
     save_filename="",
 ):

@@ -661,6 +661,8 @@ async def mutationPostProcessing(
     tokeep_wgs=RESCUE_FOR_MUTATION_WGS,
     bed_location=GUIDESBED,
     minfreqtocall=MINFREQTOCALL,
+    sv_col=SV_COLNAME,
+    sv_filename=SV_FILENAME,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -691,7 +693,7 @@ async def mutationPostProcessing(
     print("doing wes")
     folder = WORKING_DIR + samplesetname + "/wes_"
 
-    wesmutations = mutations.postProcess(
+    wesmutations, wessvs = mutations.postProcess(
         wesrefworkspace,
         AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
@@ -711,7 +713,7 @@ async def mutationPostProcessing(
     print("doing wgs")
     folder = WORKING_DIR + samplesetname + "/wgs_"
 
-    wgsmutations = mutations.postProcess(
+    wgsmutations, wgssvs = mutations.postProcess(
         wgsrefworkspace,
         sampleset="allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
@@ -729,6 +731,13 @@ async def mutationPostProcessing(
     folder = WORKING_DIR + samplesetname + "/merged_"
     mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
+
+    mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
+    mergedsvs.to_csv(folder + "svs.bedpe", index=False)
+    mergedsvs_pr = mergedsvs[mergedsvs[SAMPLEID].isin(renaming_dict.keys())].replace(
+        {SAMPLEID: renaming_dict}
+    )
+    mergedsvs_pr.to_csv(folder + "svs_profile.bedpe", index=False)
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
 
@@ -875,6 +884,18 @@ async def mutationPostProcessing(
             {
                 "path": folder + "merged_binary_germline.csv",
                 "name": "binary_germline_mutation",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "svs.bedpe",
+                "name": "structuralVariants_withReplicates",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "svs_profile.bedpe",
+                "name": "structuralVariants_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
