@@ -567,20 +567,30 @@ def cnPostProcessing(
     mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
     mergedcn = wgsgenecn.append(wesgenecn)
     mergedcn.to_csv(folder + "merged_genecn.csv")
+    merged_purecn_segments = wgs_purecn_segments.append(
+        wes_purecn_segments
+    ).reset_index(drop=True)
+    merged_purecn_segments.to_csv(folder + "merged_absolute_segments.csv", index=False)
+    merged_purecn_genecn = wgs_purecn_genecn.append(wes_purecn_genecn)
+    merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn.csv")
     merged_loh = wgs_loh.append(wgs_loh)
     merged_loh.to_csv(folder + "merged_loh.csv")
+    merged_feature_table = wgs_feature_table.append(wes_feature_table)
+    merged_feature_table.to_csv(folder + "merged_feature_table.csv")
 
-    # profile level
-    mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
-    merged_purecn_segments_pr.to_csv(
-        folder + "merged_absolute_segments_all_profile.csv", index=False
-    )
+    # profile-ID level
+    mergedsegments_pr.to_csv(folder + "merged_segments_profile.csv", index=False)
     mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
-    mergedgenecn_pr.to_csv(folder + "merged_genecn_all_profile.csv")
-    merged_purecn_genecn = wgs_purecn_genecn_pr.append(wes_purecn_genecn_pr)
-    merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn_all_profile.csv")
+    mergedgenecn_pr.to_csv(folder + "merged_genecn_profile.csv")
+    merged_purecn_segments_pr.to_csv(
+        folder + "merged_absolute_segments_profile.csv", index=False
+    )
+    merged_purecn_genecn_pr = wgs_purecn_genecn_pr.append(wes_purecn_genecn_pr)
+    merged_purecn_genecn_pr.to_csv(folder + "merged_absolute_genecn_profile.csv")
     merged_loh_pr = wgs_loh_pr.append(wes_loh_pr)
     merged_loh_pr.to_csv(folder + "merged_loh_profile.csv")
+    merged_feature_table_pr = wgs_feature_table_pr.append(wes_feature_table_pr)
+    merged_feature_table_pr.to_csv(folder + "merged_feature_table_profile.csv")
 
     # uploading to taiga
     print("uploading to taiga")
@@ -615,86 +625,54 @@ def cnPostProcessing(
                 "encoding": "utf-8",
             },
             # Pure CN outputs
-            # {
-            #     "path": folder + "wes_purecn_segments_latest.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wes_purecn_genecn_latest.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wes_purecn_segments_all.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wes_purecn_genecn_all.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wes_purecn_loh_latest.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wes_purecn_loh_all.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wes_purecn_table_latest.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wes_purecn_table_all.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_segments_latest.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_genecn_latest.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_segments_all.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_genecn_all.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_loh_latest.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_loh_all.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_table_latest.csv",
-            #     "format": "TableCSV",
-            #     "encoding": "utf-8",
-            # },
-            # {
-            #     "path": folder + "wgs_purecn_table_all.csv",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
+            {
+                "path": folder + "merged_absolute_segments.csv",
+                "name": "merged_absolute_segments_withReplicates",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_absolute_genecn.csv",
+                "name": "merged_absolute_gene_cn_withReplicates",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_loh.csv",
+                "name": "merged_loh_withReplicates",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_feature_table.csv",
+                "name": "globalGenomicFeatures_withReplicates",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_absolute_segments_profile.csv",
+                "name": "merged_absolute_segments_profile",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_absolute_genecn_profile.csv",
+                "name": "merged_absolute_gene_cn_profile",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_loh_profile.csv",
+                "name": "merged_loh_profile",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_feature_table_profile.csv",
+                "name": "globalGenomicFeatures_profile",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
         ],
         dataset_description=dataset_description,
     )
