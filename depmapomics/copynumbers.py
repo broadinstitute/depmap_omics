@@ -184,6 +184,8 @@ def pureCNpostprocess(
     segments = pd.read_csv(
         wm.get_entities(setEntity).loc[sampleset, lohcolname]
     ).rename(columns=colRenaming)
+    samples = wm.get_samples()
+    failed = samples[samples[failedcolname] == "TRUE"].index
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -205,24 +207,6 @@ def pureCNpostprocess(
         style="closest",
         value_colname="Absolute_CN",
     )
-    print("summary of PureCN absolute cn data:")
-    print(
-        absolute_genecn.values.min(),
-        absolute_genecn.values.mean(),
-        absolute_genecn.values.max(),
-    )
-
-    # Generate gene-level LOH status matrix
-    segments["LOH_status"] = segments["LOH_status"].replace(lohvals, 1)
-    segments["LOH_status"] = segments["LOH_status"].fillna(0)
-
-    loh_status = mut.toGeneMatrix(
-        mut.manageGapsInSegments(segments), mappingdf, value_colname="LOH_status"
-    )
-
-    # Pull additional info directly from terra sample table
-    samples = wm.get_samples()
-    failed = samples[samples[failedcolname] == "TRUE"].index
 
     segments = segments[
         ~segments[SAMPLEID].isin(set(failed) | set(todrop))
@@ -230,11 +214,35 @@ def pureCNpostprocess(
     absolute_genecn = absolute_genecn[
         ~absolute_genecn.index.isin(set(failed) | set(todrop))
     ]
-    loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
 
-    print("PureCN: saving files")
+    print("summary of PureCN absolute cn data:")
+    print(
+        absolute_genecn.values.min(),
+        absolute_genecn.values.mean(),
+        absolute_genecn.values.max(),
+    )
+
+    print("PureCN: saving seg and gene cn files")
     segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
+    print("done")
+
+    # Generate gene-level LOH status matrix
+    segments_binarized = segments.copy()
+    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].replace(
+        lohvals, 1
+    )
+    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].fillna(0)
+
+    loh_status = mut.toGeneMatrix(
+        mut.manageGapsInSegments(segments_binarized),
+        mappingdf,
+        value_colname="LOH_status",
+    )
+
+    loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
+
+    print("PureCN: saving LOH matrix")
     loh_status.to_csv(save_output + "purecn_loh_all.csv")
     print("done")
 
