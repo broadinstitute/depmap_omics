@@ -423,6 +423,9 @@ def cnPostProcessing(
         .replace({SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
+    wes_genecn_pr = wesgenecn[wesgenecn.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
     wes_purecn_genecn_pr = wes_purecn_genecn[
         wes_purecn_genecn.index.isin(set(renaming_dict.keys()))
     ].rename(index=renaming_dict)
@@ -501,6 +504,9 @@ def cnPostProcessing(
         .replace({SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
+    wgs_genecn_pr = wgsgenecn[wgsgenecn.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
     wgs_purecn_genecn_pr = wgs_purecn_genecn[
         wgs_purecn_genecn.index.isin(set(renaming_dict.keys()))
     ].rename(index=renaming_dict)
@@ -511,7 +517,7 @@ def cnPostProcessing(
         wgs_feature_table.index.isin(set(renaming_dict.keys()))
     ].rename(index=renaming_dict)
 
-    print("merging PR-level absolute seg file")
+    print("merging PR-level seg file")
     mergedsegments_pr = wgssegments_pr.append(wessegments_pr).reset_index(drop=True)
     mergedsegments_pr = (
         mergedsegments_pr[
@@ -533,7 +539,7 @@ def cnPostProcessing(
         mergedsegments_pr[mergedsegments_pr.Chromosome == "X"].index, "Status"
     ] = "U"
 
-    print("merging PR-level seg file")
+    print("merging PR-level absolute seg file")
     merged_purecn_segments_pr = wgs_purecn_segments_pr.append(
         wes_purecn_segments_pr
     ).reset_index(drop=True)
@@ -544,10 +550,9 @@ def cnPostProcessing(
                 "Chromosome",
                 "Start",
                 "End",
-                "Segment_Mean",
-                "Num_Probes",
-                "Status",
-                "Source",
+                "Absolute_CN",
+                "Minor_allele_absolute_CN",
+                "LOH_status",
             ]
         ]
         .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
@@ -555,18 +560,27 @@ def cnPostProcessing(
     )
 
     # merging wes and wgs
+    # CDS-ID level
+    print("saving merged files")
     folder = os.path.join("output", samplesetname, "")
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
     mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
     mergedcn = wgsgenecn.append(wesgenecn)
     mergedcn.to_csv(folder + "merged_genecn.csv")
-    mergedsegments_pr = mut.manageGapsInSegments(mergedsegments_pr)
-    mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
+    merged_loh = wgs_loh.append(wgs_loh)
+    merged_loh.to_csv(folder + "merged_loh.csv")
 
-    mergedgenecn_pr = mut.toGeneMatrix(mergedsegments_pr, mybiomart).apply(
-        lambda x: np.log2(1 + x)
+    # profile level
+    mergedsegments_pr.to_csv(folder + "merged_segments_all_profile.csv", index=False)
+    merged_purecn_segments_pr.to_csv(
+        folder + "merged_absolute_segments_all_profile.csv", index=False
     )
+    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
     mergedgenecn_pr.to_csv(folder + "merged_genecn_all_profile.csv")
+    merged_purecn_genecn = wgs_purecn_genecn_pr.append(wes_purecn_genecn_pr)
+    merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn_all_profile.csv")
+    merged_loh_pr = wgs_loh_pr.append(wes_loh_pr)
+    merged_loh_pr.to_csv(folder + "merged_loh_profile.csv")
 
     # uploading to taiga
     print("uploading to taiga")
