@@ -322,6 +322,7 @@ PURECN_COLRENAMING = {
     "seg.mean": "Segment_Mean",
     "type": "LOH_status",
     "C": "Absolute_CN",
+    "M": "Minor_allele_absolute_CN",
 }
 
 PURECN_LOH_COLNAME = "PureCN_loh_merged"

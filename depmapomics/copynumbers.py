@@ -190,12 +190,8 @@ def pureCNpostprocess(
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
-    segments.Segment_Mean = 2 ** segments.Segment_Mean
     segments.Start = segments.Start.astype(int)
     segments.End = segments.End.astype(int)
-    segments.loc[
-        segments[segments.Chromosome.isin(["X", "Y"])].index, "Segment_Mean"
-    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["Segment_Mean"] / 2)
     segments = segments.sort_values(by=sortby)
 
     mappingdf = mappingdf[mappingdf["Chromosome"].isin(set(segments["Chromosome"]))]
