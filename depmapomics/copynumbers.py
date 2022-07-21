@@ -152,7 +152,6 @@ def pureCNpostprocess(
     setEntity="sample_set",
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
-    priority=[],
     lohcolname=PURECN_LOH_COLNAME,
     failedcolname=PURECN_FAILED_COLNAME,
     sampleset="all",
@@ -199,11 +198,16 @@ def pureCNpostprocess(
     ] = (segments[segments.Chromosome.isin(["X", "Y"])]["Segment_Mean"] / 2)
     segments = segments.sort_values(by=sortby)
 
+    mappingdf = mappingdf[mappingdf["Chromosome"].isin(set(segments["Chromosome"]))]
+
     print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
 
     # Generate gene-level absolute cn matrix
     absolute_genecn = mut.toGeneMatrix(
-        mut.manageGapsInSegments(segments), mappingdf, value_colname="Segment_Mean"
+        mut.manageGapsInSegments(segments),
+        mappingdf,
+        style="closest",
+        value_colname="Absolute_CN",
     )
     print("summary of PureCN absolute cn data:")
     print(
@@ -213,8 +217,8 @@ def pureCNpostprocess(
     )
 
     # Generate gene-level LOH status matrix
-    segments["type"] = segments["type"].replace(lohvals, 1)
-    segments["type"] = segments["type"].replace("", 0)
+    segments["LOH_status"] = segments["LOH_status"].replace(lohvals, 1)
+    segments["LOH_status"] = segments["LOH_status"].fillna(0)
 
     loh_status = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments), mappingdf, value_colname="LOH_status"
@@ -222,39 +226,28 @@ def pureCNpostprocess(
 
     # Pull additional info directly from terra sample table
     samples = wm.get_samples()
-    purecn_table = samples[terracols]
+    failed = samples[samples[failedcolname] == "TRUE"].index
 
-    failed = purecn_table[purecn_table[failedcolname] == "TRUE"].index
-
-    # TO DO: generate the signature table in a separate function
-    # see ccle_tasks/signature_table.ipynb
     segments = segments[
-        ~segments[SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
+        ~segments[SAMPLEID].isin(set(failed) | set(todrop))
     ].reset_index(drop=True)
     absolute_genecn = absolute_genecn[
-        ~absolute_genecn.index.isin((set(failed) | set(todrop)) - set(priority))
+        ~absolute_genecn.index.isin(set(failed) | set(todrop))
     ]
-    loh_status = loh_status[
-        ~loh_status.index.isin((set(failed) | set(todrop)) - set(priority))
-    ]
-    purecn_table = purecn_table[
-        ~purecn_table.index.isin((set(failed) | set(todrop)) - set(priority))
-    ]
+    loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
 
     print("PureCN: saving files")
     segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
     loh_status.to_csv(save_output + "purecn_loh_all.csv")
-    purecn_table.to_csv(save_output + "purecn_table_all.csv")
     print("done")
 
-    return segments, absolute_genecn, loh_status, purecn_table
+    return segments, absolute_genecn, loh_status
 
 
 def generateSigTable(
     refworkspace,
     todrop=[],
-    priority=[],
     purecncols=SIGTABLE_TERRACOLS,
     misccols=MISC_SIG_TERRACOLS,
     purecn_failed_col=PURECN_FAILED_COLNAME,
@@ -262,6 +255,7 @@ def generateSigTable(
     colrenaming=SIGTABLE_RENAMING,
     save_output="",
 ):
+    print("generating global genomic feature table")
     wm = dm.WorkspaceManager(refworkspace).disable_hound()
     samples = wm.get_samples()
     samples = samples[samples.index != "nan"]
@@ -269,7 +263,7 @@ def generateSigTable(
     # discard lines that have failed PureCN for the PureCN columns
     purecn_passed = samples[samples[purecn_failed_col] == "FALSE"]
     purecn_table = purecn_passed[purecncols]
-    purecn_table = purecn_table[~purecn_table.index.isin(set(todrop) - set(priority))]
+    purecn_table = purecn_table[~purecn_table.index.isin(set(todrop))]
 
     # use 1/0 for binary values
     purecn_table = purecn_table.replace({"TRUE": 1, "FALSE": 0})
@@ -285,7 +279,7 @@ def generateSigTable(
     # rename columns
     sig_table = sig_table.rename(columns=colrenaming)
 
-    print("PureCN: saving files")
+    print("saving global genomic feature table")
     sig_table.to_csv(save_output + "globalGenomicFeatures_all.csv")
     print("done")
 
@@ -402,15 +396,16 @@ def postProcess(
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-    # purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
-    #     refworkspace,
-    #     setEntity=setEntity,
-    #     sampleset=sampleset,
-    #     sortby=sortby,
-    #     todrop=todrop,
-    #     priority=priority,
-    # )
-    purecn_segments, purecn_genecn, loh_status, purecn_table = None, None, None, None
+    purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
+        refworkspace,
+        setEntity=setEntity,
+        sampleset=sampleset,
+        mappingdf=mybiomart,
+        sortby=sortby,
+        todrop=todrop,
+        save_output=save_output,
+    )
+    feature_table = generateSigTable(refworkspace, save_output=save_output)
     return (
         segments,
         genecn,
@@ -418,6 +413,6 @@ def postProcess(
         purecn_segments,
         purecn_genecn,
         loh_status,
-        purecn_table,
+        feature_table,
         mybiomart,
     )

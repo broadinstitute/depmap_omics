@@ -381,7 +381,7 @@ def cnPostProcessing(
             wes_purecn_segments,
             wes_purecn_genecn,
             wes_loh,
-            wes_purecn_table,
+            wes_feature_table,
             _,
         ) = cn.postProcess(
             wesrefworkspace,
@@ -395,17 +395,6 @@ def cnPostProcessing(
             **kwargs,
         )
 
-        # wes_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
-        # wes_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
-        # wes_loh.to_csv(folder + "purecn_loh_latest.csv")
-        # wes_purecn_table.to_csv(folder + "purecn_table_latest.csv")
-        # subset and rename to PR-indexed matrices
-        # assuming no wgs
-        wessegments_pr = (
-            wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
-            .replace({SAMPLEID: renaming_dict})
-            .reset_index(drop=True)
-        )
         # wessegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
         # wescn_pr.to_csv(folder + "genecn_all_profile.csv")
     else:
@@ -413,11 +402,36 @@ def cnPostProcessing(
         wesfailed = h.fileToList(wesfolder + "failed.txt")
         wessegments = pd.read_csv(wesfolder + "segments_all.csv")
         wesgenecn = pd.read_csv(wesfolder + "genecn_all.csv", index_col=0)
-        wessegments_pr = (
-            wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
-            .replace({SAMPLEID: renaming_dict})
-            .reset_index(drop=True)
+        wes_purecn_segments = pd.read_csv(wesfolder + "purecn_segments_all.csv")
+        wes_purecn_genecn = pd.read_csv(
+            wesfolder + "purecn_genecn_all.csv", index_col=0
         )
+        wes_loh = pd.read_csv(wesfolder + "purecn_loh_all.csv", index_col=0)
+        wes_feature_table = pd.read_csv(
+            wesfolder + "globalGenomicFeatures_all.csv", index_col=0
+        )
+    # subset and rename to PR-indexed matrices
+    wessegments_pr = (
+        wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({SAMPLEID: renaming_dict})
+        .reset_index(drop=True)
+    )
+    wes_purecn_segments_pr = (
+        wes_purecn_segments[
+            wes_purecn_segments[SAMPLEID].isin(set(renaming_dict.keys()))
+        ]
+        .replace({SAMPLEID: renaming_dict})
+        .reset_index(drop=True)
+    )
+    wes_purecn_genecn_pr = wes_purecn_genecn[
+        wes_purecn_genecn.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
+    wes_loh_pr = wes_loh[wes_loh.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    wes_feature_table_pr = wes_feature_table[
+        wes_feature_table.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
 
     # doing wgs
     print("doing wgs")
@@ -429,7 +443,7 @@ def cnPostProcessing(
         wgs_purecn_segments,
         wgs_purecn_genecn,
         wgs_loh,
-        wgs_purecn_table,
+        wgs_feature_table,
         mybiomart,
     ) = cn.postProcess(
         wgsrefworkspace,
@@ -441,14 +455,6 @@ def cnPostProcessing(
         maxYchrom=maxYchrom,
         **kwargs,
     )
-
-    # wgs_purecn_segments.to_csv(folder + "purecn_segments_latest.csv", index=False)
-    # wgs_purecn_genecn.to_csv(folder + "purecn_genecn_latest.csv")
-    # wgs_loh.to_csv(folder + "purecn_loh_latest.csv")
-    # wgs_purecn_table.to_csv(folder + "purecn_table_latest.csv")
-
-    # print("comparing to previous version")
-    # h.compareDfs(wespriogenecn, prevgenecn)
 
     # with gumbo, no need to mark this selected field
     selected = []
@@ -488,8 +494,24 @@ def cnPostProcessing(
         .replace({SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
+    wgs_purecn_segments_pr = (
+        wgs_purecn_segments[
+            wgs_purecn_segments[SAMPLEID].isin(set(renaming_dict.keys()))
+        ]
+        .replace({SAMPLEID: renaming_dict})
+        .reset_index(drop=True)
+    )
+    wgs_purecn_genecn_pr = wgs_purecn_genecn[
+        wgs_purecn_genecn.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
+    wgs_loh_pr = wgs_loh[wgs_loh.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    wgs_feature_table_pr = wgs_feature_table[
+        wgs_feature_table.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
 
-    print("merging PR-level seg file")
+    print("merging PR-level absolute seg file")
     mergedsegments_pr = wgssegments_pr.append(wessegments_pr).reset_index(drop=True)
     mergedsegments_pr = (
         mergedsegments_pr[
@@ -510,6 +532,28 @@ def cnPostProcessing(
     mergedsegments_pr.loc[
         mergedsegments_pr[mergedsegments_pr.Chromosome == "X"].index, "Status"
     ] = "U"
+
+    print("merging PR-level seg file")
+    merged_purecn_segments_pr = wgs_purecn_segments_pr.append(
+        wes_purecn_segments_pr
+    ).reset_index(drop=True)
+    merged_purecn_segments_pr = (
+        merged_purecn_segments_pr[
+            [
+                SAMPLEID,
+                "Chromosome",
+                "Start",
+                "End",
+                "Segment_Mean",
+                "Num_Probes",
+                "Status",
+                "Source",
+            ]
+        ]
+        .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
+        .reset_index(drop=True)
+    )
+
     # merging wes and wgs
     folder = os.path.join("output", samplesetname, "")
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
