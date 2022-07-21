@@ -321,13 +321,19 @@ PURECN_COLRENAMING = {
     "Sampleid": SAMPLEID,
     "seg.mean": "Segment_Mean",
     "type": "LOH_status",
+    "C": "Absolute_CN",
 }
 
 PURECN_LOH_COLNAME = "PureCN_loh_merged"
 PURECN_FAILED_COLNAME = "PureCN_failed"
 
 # if the loh function outputs one of these, record as 1 in the loh bool matrix
-PURECN_LOHVALUES = ["LOH", "COPY-NEUTRAL LOH", "WHOLE ARM COPY-NEUTRAL LOH"]
+PURECN_LOHVALUES = [
+    "LOH",
+    "COPY-NEUTRAL LOH",
+    "WHOLE ARM COPY-NEUTRAL LOH",
+    "WHOLE ARM LOH",
+]
 
 SIGTABLE_TERRACOLS = {
     "PureCN_ploidy",
