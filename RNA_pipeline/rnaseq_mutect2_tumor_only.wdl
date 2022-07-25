@@ -40,6 +40,7 @@ workflow RNAseq_mutect2 {
     File ref_dict
     File tumor_bam
     File tumor_bai
+    File? tumor_name
     File? normal_reads
     File? normal_reads_index
     File? pon
@@ -250,6 +251,7 @@ workflow RNAseq_mutect2 {
           ref_dict = ref_dict,
           tumor_bam = ApplyBQSR.output_bam,
           tumor_bai = ApplyBQSR.output_bam_index,
+          tumor_name = tumor_name,
           pon = pon,
           pon_idx = pon_idx,
           gnomad = gnomad,
