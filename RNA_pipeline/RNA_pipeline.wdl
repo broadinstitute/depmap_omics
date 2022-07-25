@@ -22,6 +22,9 @@ workflow RNA_pipeline {
   Array[File] ctat_genome_lib_build_dir_files
   Array[File] ref_genome_fa_star_idx_files
 
+  #rsem
+  File rsem_reference
+
   #rnaseqc2_v1
   File genes_gtf
   String sample_id
@@ -80,6 +83,7 @@ workflow RNA_pipeline {
     input:
       transcriptome_bam=star.transcriptome_bam,
       prefix=sample_id,
+      rsem_reference=rsem_reference,
       is_stranded="false",
       paired_end="true"
   }
