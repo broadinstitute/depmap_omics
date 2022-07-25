@@ -33,7 +33,6 @@ workflow RNA_pipeline {
   Array[File] knownVcfsIndices
   File dbSnpVcf
   File dbSnpVcfIndex
-  File intervals
   File ref_fasta
   File ref_fai
   File ref_dict
@@ -48,7 +47,7 @@ workflow RNA_pipeline {
   Boolean funco_use_gnomad_AF=true
   Int scatter_count=20
   String gcs_project_for_requester_pays="broad-firecloud-ccle"
-  File interval_list="gs://gcp-public-data--broad-references/hg38/v0/wgs_coverage_regions.hg38.interval_list"
+  File intervals="gs://gcp-public-data--broad-references/hg38/v0/wgs_coverage_regions.hg38.interval_list"
   File gnomad = "gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
   File gnomad_idx = "gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
   String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
@@ -121,7 +120,6 @@ workflow RNA_pipeline {
         funco_use_gnomad_AF=funco_use_gnomad_AF,
         scatter_count=scatter_count,
         gcs_project_for_requester_pays=gcs_project_for_requester_pays,
-        interval_list=interval_list,
         gnomad = gnomad,
         gnomad_idx = gnomad_idx,
         m2_extra_args=m2_extra_args,
