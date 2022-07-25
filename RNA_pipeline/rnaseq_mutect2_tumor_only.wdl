@@ -321,6 +321,7 @@ workflow RNAseq_mutect2 {
         ref_fasta = ref_fasta,
         ref_fai = ref_fai,
         ref_dict = ref_dict,
+        interval_list = intervals,
         input_vcf = VariantFiltration.output_vcf,
         input_vcf_idx = VariantFiltration.output_vcf_index,
         reference_version = select_first([funco_reference_version, "hg38"]),
