@@ -1,5 +1,5 @@
 import "samtofastq_wdl1-0.wdl" as samtofastq_v1
-import "star_v1-0_BETA_cfg.wdl" as star_v1
+import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_v1-0_BETA_cfg.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
 import "hg38_STAR_fusion.wdl" as hg38_STAR_fusion
@@ -10,6 +10,9 @@ workflow RNA_pipeline {
   #samtofastq_v1
   File input_bam_cram
   File reference_fasta
+
+  #star_v1
+  File star_index
 
   #rnaseqc2_v1
   File genes_gtf
@@ -26,7 +29,8 @@ workflow RNA_pipeline {
     input:
       prefix=sample_id,
       fastq1=samtofastq.fastq1,
-      fastq2=samtofastq.fastq2
+      fastq2=samtofastq.fastq2,
+      star_index=star_index
   }
 
   call rnaseqc2_v1.rnaseqc2 as rnaseqc2 {
