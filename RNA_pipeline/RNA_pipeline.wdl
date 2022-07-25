@@ -61,7 +61,7 @@ workflow RNA_pipeline {
       left_fastq=samtofastq.fastq1,
       right_fastq=samtofastq.fastq2,
       prefix=sample_id,
-      ctat_genome_lib_build_dir_files=ctat_genome_lib_build_dir_files],
+      ctat_genome_lib_build_dir_files=ctat_genome_lib_build_dir_files,
       ref_genome_fa_star_idx_files=ref_genome_fa_star_idx_files
   }
 
