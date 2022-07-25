@@ -4,7 +4,7 @@ import "samtofastq_wdl1-0.wdl" as samtofastq_v1
 import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_wdl1-0.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
-import "hg38_STAR_fusion.wdl" as hg38_STAR_fusion
+import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
 
 
 workflow RNA_pipeline {
