@@ -1,4 +1,4 @@
-import "samtofastq_v1-0_BETA_cfg.wdl" as samtofastq_v1
+import "samtofastq_wdl1-0.wdl" as samtofastq_v1
 import "star_v1-0_BETA_cfg.wdl" as star_v1
 import "rnaseqc2_v1-0_BETA_cfg.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
