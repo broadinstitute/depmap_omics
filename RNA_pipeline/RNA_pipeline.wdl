@@ -36,8 +36,6 @@ workflow RNA_pipeline {
   File ref_fasta
   File ref_fai
   File ref_dict
-  File tumor_bam
-  File tumor_bai
   String source
   Boolean compress_vcfs=true
   Boolean filter_funcotations=false
@@ -107,8 +105,8 @@ workflow RNA_pipeline {
         ref_fasta=ref_fasta,
         ref_fai=ref_fasta,
         ref_dict=ref_dict,
-        tumor_bam=tumor_bam,
-        tumor_bai=tumor_bai,
+        tumor_bam=star.bam_file,
+        tumor_bai=star.bam_index,
         tumor_name=sample_id,
         sequencing_center=source,
         sequence_source=source,
