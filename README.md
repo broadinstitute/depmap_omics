@@ -13,12 +13,12 @@ What you need to process the Quarterly DepMap-Omics releases from Terra.
   - [Installation](#installation)
   - [For Internal Users](#internal-users)
   - [For External Users](#external-users)
+- [Repository File Structure](#file-structure)
 - [Running the Pipeline](#running-pipeline)
   - [Uploading and Preprocessing](#upload-preprocess)
   - [Running Terra Pipelines](#running-terra-pipelines)
   - [Downloading and Postprocessing](#downloading-postprocessing)
   - [QC, Groupding and Uploading](#qc-grouping-uploading)
-- [Repository File Structure](#file-structure)
 - [Auxiliary Data for the Pipeline](#data)
 
 ## Getting Started <a name="quickstart"></a>
@@ -48,11 +48,11 @@ Some important data and code from the [genepy Library](https://github.com/broadi
 
 Use the instructions in the genepy page to install the package.
 
-### :warning: you would need the approriate R packages and python packages
+### :warning: you would need the following R python packages
 
 1. You will need to install jupyter notetbooks and google cloud sdk
   - install [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive).
-  - authenticate my SDK account by running `gcloud auth application-default login` in the terminal.
+  - authenticate my SDK account by running `gcloud auth application-default login` in the terminal, and follow the instrucion to log in.
 
 2. and GSVA for ssGSEA in R `R` run `R -e 'if(!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")};BiocManager::install(c("GSEABase", "erccdashboard", "GSVA", "DESeq2"));'`
 
@@ -60,7 +60,7 @@ Use the instructions in the genepy page to install the package.
 
 ## For Internal Users <a name="internal-users"></a>
 
-> To learn about the tools we use in the pipeline, see [here](#running-pipeline) for a detailed walkthrough
+> To learn about the tools we use in the pipeline, see [this section](#running-pipeline) for a detailed walkthrough
 
 ### Getting Terra Access
 
@@ -77,7 +77,7 @@ The current owners of these workspaces should give you access.
   - depmap_ccle_data
   - depmap-pipelines
   - ccle-pipeline
-5. If you need to get access to the data delivered by GP, use the following links:
+5. If you need to get access to the data delivered by Genomics Platform (GP) at the Broad, use the following links:
   - __WES__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
   - __WES__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
   - __RNA__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData)
@@ -85,39 +85,16 @@ The current owners of these workspaces should give you access.
   - __WGS__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_WGS)
   - __WGS__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/DepMap_WGS)
 6. Request access to the data bucket `gs://cclebams/`
-7. You will need also access to the billing project `broad-firecloud-ccle`
 
 
-### Additional Logins:
-- In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites).
-- In order to run the imports [gsheets](https://pypi.org/project/gsheets/), you need to make sure your broad google account has access to the cell line info sheets. In addition, you will need to obtain the following google API credential files:
-  - Go to [console](https://console.developers.google.com/), acquire access if you don't have it already. Under credentials -> create credentials -> OAuth Client ID -> application type = Desktop app -> create. Download `client_secreat.json` and save as `~/.client_secret.json` (Refer to quickstart [here](https://gsheets.readthedocs.io/en/stable/)).
-  - After calling `gsheets.from_files` for the first time using `~/.client_secret.json`, log in via google following the prompt in browser, `storage.json` will be created automatically. Save it as `~/.storage.json`.
-  - Follow instruction [here](https://cloud.google.com/docs/authentication/production?authuser=1#create_service_account), create service account if needed, and save key file as `../.credentials.json`.
-
-*Remember to share relevant gsheets with the service account (`client_email` in `../.credentials.json`).
-
-We are instantiating all the parameters needed for this pipeline to run
-
-#### Adding new data
-
-We are looking for new samples in a range of workspaces.
-
-They are quite messy and might contain duplicates and/or broken file paths...
-
-- We are thus looking at the bam files one by one and comparing them with bams we have onboarded. 
-- We remove broken files, duplicates and add new version of a cell line's bam if we find some.
-
-#### Check that we have all the cell lines we expect for this release
-
-This involves comparing to the list in the Google sheet "Lines to Release"
-
-_As the list cannot be parsed, we are not comparing it for now_
+### Additional python dependencies:
+- [Taiga](https://cds.team/taiga) is a platform that allows the Cancer Data Science team to store and share data. In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites) for the python client.
+- We are currently using a relational database, Gumbo, to track our cell lines' metadata and release status. In order to interact with Gumbo through python, follow the instruction and install the Gumbo client [here](https://github.com/broadinstitute/gumbo_client).
 
 
 ## For External Users <a name="external-users"></a>
 
-> To learn about the tools we use in the pipeline, see [here](#running-pipeline) for a detailed walkthrough
+> To learn about the tools we use in the pipeline, see [this section](#running-pipeline) for a detailed walkthrough
 
 ### Creating your Terra Workspaces:
 
@@ -145,6 +122,37 @@ The notebook architectures are as follows:
 1. Uploading and preprocessing
 2. Running the Terra Pipelines
 3. Downloading and postprocessing the samples
+
+
+## Repository File Structure <a name="file-structure"></a>
+
+For our 2 computation pipelines for depmap omics:
+- Expression (RNA)
+- Copy number and Mutations (WGS)
+
+Each:
+- can be run in a jupyter notebook file,
+- gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
+- updates the sample TSVs on Terra with paths to the files, 
+- computes the results for each samples by running workflows, 
+- downloads the results and postprocesses them with additional local functions,
+- performs QC and uploads them to taiga (internal only).
+
+__data/__ Contains important information used for processing, including terra workspace configurations from past quarters
+
+__src__ Contains the location of function files
+
+__\*\_pipeline__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
+
+__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform as well as one-off tasks run by the omics team
+
+__legacy__ Contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
+
+__readmes__ Contains some of the depmap readmes 
+
+__temp__ Contains the temp file that can get removed after processing (should be empty)
+
+__documentation__ Contains some additional files for documenting the pipelines
 
 ## Pipeline Walkthrough <a name="running-pipeline"></a>
 
@@ -174,6 +182,11 @@ We are using a set of key tools to process the sequencing output:
 - __strelka__:
   - [https://www.nature.com/articles/s41592-018-0051-x](https://www.nature.com/articles/s41592-018-0051-x)
   - [https://github.com/Illumina/strelka](https://github.com/Illumina/strelka)
+- __PureCN__:
+  - [https://github.com/lima1/PureCN](https://github.com/lima1/PureCN)
+- __MSIsensor2__:
+  - [https://github.com/niu-lab/msisensor2](https://github.com/niu-lab/msisensor2)
+
 
 The following flowchart provides another good overview of what the pipeline is doing.
 
@@ -182,13 +195,16 @@ The following flowchart provides another good overview of what the pipeline is d
 _What is explained below comes from the notebook's documentations and might be better understood by reading them directly on the notebooks_
 
 
-### 1. Uploading and Preprocessing <a name="upload-preprocess"></a>
+### 1. Uploading and Preprocessing (internal only) <a name="upload-preprocess"></a>
 
-The first phase really is about getting samples generated at the broad and located into different places. Looking for duplicates and finding/adding the metadata we will need in order to have coherent and complete sample information. __For external users, this is not something you would need to run. Please skip directly to part2__.
+Currently, sequenced data for DepMap is generated by the Genomics Platform (GP) at the Broad who deposit them into several different Terra workspaces. Therefore, the first step of this pipeline is to look at these workspaces and
 
-**Remarks:** 
-- in the initialization step, external users might want to remove any import related to `taiga` and `gsheet` to not cause any errors.
-- feel free to reuse `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function for your own needs.
+- identify new samples by looking at the bam files one by one and comparing them with bams we have onboarded
+- remove duplicates and ones with broken file paths
+- onboard new version of an old cell line's bam if we find any
+
+**Remarks:**
+- Although the loading function is for internal use only, external users should feel free to modify and use `createDatasetWithNewCellLines`, `GetNewCellLinesFromWorkspaces` or any other function in `loading.py` for their own needs when loading samples into Terra workspaces.
 
 ### 2. Running Terra Pipelines <a name="running-terra-pipelines"></a>
 
@@ -199,7 +215,7 @@ You can then run the following two pipelines on your samples. The whole process 
 
 We are running the following workflows in this order to generate copy number and mutation datasets:
 
-[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) imports and runs several sub-processes to generate copy number segments and MAF data.
+[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) imports and runs several sub-processes to generate copy number segments and mutation MAF data.
 
 [WGS_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate:master?tab=info) aggregates CN segments and MAFs into their respective files.
 
@@ -310,36 +326,6 @@ Once the expression files are saved, we do the following validations:
 > After QC, we are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
 
 We are then uploading the data to a server called taiga where it will be used in the depmap portal
-## Repository File Structure <a name="file-structure"></a>
-
-For our 2 computation pipelines for depmap omics:
-- Expression (RNA)
-- Copy number and Mutations (WGS)
-
-Each:
-- can be run in a jupyter notebook file,
-- gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
-- updates the sample TSVs on Terra with paths to the files, 
-- computes the results for each samples by running workflows, 
-- downloads the results and postprocesses them with additional local functions,
-- performs QC and uploads them to taiga (internal only).
-
-__data/__ Contains important information used for processing, including terra workspace configurations from past quarters
-
-__src__ Contains the location of function files
-
-__\*\_pipeline__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
-
-__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform as well as one-off tasks run by the omics team
-
-__legacy__ Contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
-
-__readmes__ Contains some of the depmap readmes 
-
-__temp__ Contains the temp file that can get removed after processing (should be empty)
-
-__documentation__ Contains some additional files for documenting the pipelines
-
 
 ## Auxiliary Data for the Pipeline <a name="data"></a>
 
@@ -367,4 +353,4 @@ __additional auxilliary data is used and listed in some of our workflow, like th
 @5im1z
 @__[BroadInsitute](https://www.broadinstitute.org)
 
-For any questions/issues, send us an email at ccle-help@broadinstitute.org or write down an issue on the github repo
+If you have any feedback or run into any issues, feel free to post an issue on the github repo.
