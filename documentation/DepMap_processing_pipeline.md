@@ -1,4 +1,4 @@
-![schema](documentation/architecture_diagram_white.png)
+![schema](architecture_diagram_white.png)
 
 We are using a set of key tools to process the sequencing output:
 - __star (from docker image `gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10`)__:
@@ -37,7 +37,7 @@ We are using a set of key tools to process the sequencing output:
 
 The following flowchart provides another good overview of what the pipeline is doing.
 
-![](documentation/updated-flowchart.png)
+![](updated-flowchart.png)
 
 Note that the input references and parameters used in generating DepMap data for the following pipelines in any given quarter can be found in `data/*quarter*/`.
 
@@ -59,7 +59,7 @@ The outputs to be downloaded will be saved under the sample set that you ran. Th
 
 #### Expression and Fusion
 
-We are generating both expression and fusion datasets with RNAseq data. Specifically, we use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, and [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs) that can be large and might cost a lot to store. Run the following tasks on all samples that you need, in this order:
+We are generating both expression and fusion datasets with RNAseq data. Specifically, we use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, and [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs) that can be large and might cost a lot to store. The following two workflows are run in this order:
 
 [RNA_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline:master?tab=info) imports and runs several sub-processes to generate RNA expression and fusion data matrices.
 
@@ -77,7 +77,6 @@ __Finally, we save the workflow configurations used in the pipeline runs__
 **Remarks:**
 - for the copy number pipeline we have parametrized both an XX version and an XY version, we recommend using the XY version as it covers the entire genome
 - for the mutation pipeline we are working on Tumor-Normal pairs which explain some of the back and forth between the two workspace data table. (workflows works as well with or without matched normals.)
-- for the expression pipeline, we have an additional set of workflows to call mutations from RNAseq, this might not be relevant to your need.
 
 ### 3. Downloading and Postprocessing (often called **on local** in the notebooks) <a name="downloading-postprocessing"></a>
 
