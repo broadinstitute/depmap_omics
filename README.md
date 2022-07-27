@@ -113,46 +113,38 @@ The current owners of these workspaces should give you access.
 Once this is done, you can launch your jupyter notebook server and run the `*_CCLE` jupyter notebooks corresponding to our RNA pipeline and WGS pipeline (older versions for WES (CN and mutations are available in a previous commit labelled 20Q4)).
 
 Remark:
-  1. you will need to use the `postProcesssing()` functions for post processing instead of the CCLE ones in the `ccle.py` module.
+  1. you will need to use the `postProcesssing()` functions for post processing instead of the CCLE ones in the `dm_omics.py` module.
   2. you will need to change some of the variables in the `config_prod.py`.
   3. you won't be able to run the function conditional on the CCLE boolean. You can however reimplement them to create your own pipeline.
-
-The notebook architectures are as follows:
-
-1. Uploading and preprocessing
-2. Running the Terra Pipelines
-3. Downloading and postprocessing the samples
 
 
 ## Repository File Structure <a name="file-structure"></a>
 
 For our 2 computation pipelines for depmap omics:
-- Expression (RNA)
+- Expression and Fusion (RNA)
 - Copy number and Mutations (WGS)
 
 Each:
 - can be run in a jupyter notebook file,
-- gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps, 
-- updates the sample TSVs on Terra with paths to the files, 
+- gets data from Terra workspace's gcp buckets managed by Broad's Genomics Platform + DevOps (internal only), 
+- updates the sample TSVs in the processing workspace on terra with paths to the files, 
 - computes the results for each samples by running workflows, 
 - downloads the results and postprocesses them with additional local functions,
 - performs QC and uploads them to taiga (internal only).
 
+__ccle_tasks/__ Contains a notebook for each of the different additional processing that the CCLE team has to perform as well as one-off tasks run by the omics team
+
 __data/__ Contains important information used for processing, including terra workspace configurations from past quarters
 
-__src__ Contains the location of function files
+__depmapomics/__ Contains the core python code used in the pipeline and called by the processing jupyter notebooks
 
-__\*\_pipeline__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
+__\*\_pipeline/__ Contains some of the pipeline's workflows' wdl files and script files used by these workflows 
 
-__ccle_tasks__ Contains a notebook for each of the different additional processing that the CCLE team has to perform as well as one-off tasks run by the omics team
+__temp/__ Contains the temp file that can get removed after processing (should be empty)
 
-__legacy__ Contains the previous R markdown files that were used as templates for the previous pipeline's post-processing
+__documentation/__ Contains some additional files and diagrams for documenting the pipelines
 
-__readmes__ Contains some of the depmap readmes 
-
-__temp__ Contains the temp file that can get removed after processing (should be empty)
-
-__documentation__ Contains some additional files for documenting the pipelines
+__tests/__ Contains automated pytest functions used internally for development
 
 ## Pipeline Walkthrough <a name="running-pipeline"></a>
 
@@ -227,7 +219,7 @@ The outputs to be downloaded will be saved under the sample set that you ran. Th
 
 * Note that additional files are used for QC
 
-#### RNAseq
+#### Expression and Fusion
 
 We are generating both expression and fusion datasets with RNAseq data. Specifically, we use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, and [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs) that can be large and might cost a lot to store. Run the following tasks on all samples that you need, in this order:
 
