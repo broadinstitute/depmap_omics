@@ -3,17 +3,6 @@ This document summarizes the key components in DepMap omics' processing pipeline
 ![schema](architecture_diagram_white.png) (outdated)
 
 We are using a set of key tools to process the sequencing output:
-- __star (from docker image `gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10`)__:
-  - [https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886)
-  - [https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
-  - aligns RNAseq bam files for downstream processing
-- __rsem (from docker image `gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10`)__: 
-  - [https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323)
-  - quantifes gene and isoform abundances from RNAseq data
-- __star fusion (from docker image `trinityctat/starfusion:1.7.0`)__: 
-  - [https://github.com/STAR-Fusion/STAR-Fusion/wiki](https://github.com/STAR-Fusion/STAR-Fusion/wiki)
-  - [http://biorxiv.org/content/early/2017/03/24/120295](http://biorxiv.org/content/early/2017/03/24/120295)
-  - outputs fusion predictions from RNAseq data
 - __mutect__: (outdated?)
   - [https://software.broadinstitute.org/cancer/cga/mutect](https://software.broadinstitute.org/cancer/cga/mutect)
   - [https://youtu.be/rN-cLrb5aGs](https://youtu.be/rN-cLrb5aGs)
@@ -24,13 +13,13 @@ The following flowchart provides another good overview of what the pipeline is d
 
 ![](updated-flowchart.png) (outdated)
 
-Note that the WDL workflows (including their corresponding input references and parameters) for the following pipelines in any given quarter can be found in `data/*quarter*/`.
+Note that input references, indices, and parameters used in the WDL workflows for the following pipelines in any given quarter can be found in `data/*quarter*/*.json`.
 
-#### Copy Numbers and Somatic Mutations
+### Copy Numbers and Somatic Mutations
 
-We are running the following workflows to generate datasets from WGS data:
+We are currently running the following workflows to generate datasets from WGS data:
 
-[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) runs several sub-processes to generate relative and absolute copy number segments, mutation MAF data, structural variant calls, and various genomic features including loss of heterozygosity (LOH), LOH fraction, ploidy estimate, Whole Genome Doubling (WGD), Chromasomal Instability (CIN), and MSI score. This workflow runs the following subtasks:
+[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) runs the following sub-processes to generate relative and absolute copy number segments, mutation MAF data, structural variant calls, and various genomic features including loss of heterozygosity (LOH), LOH fraction, ploidy estimate, Whole Genome Doubling (WGD), Chromasomal Instability (CIN), and MSI score. This workflow runs the following subtasks:
 - __gatk cnv__:
   - outputs relative segment and copy number from WES/WGS data
   - [https://software.broadinstitute.org/gatk/documentation/article?id=11682](https://software.broadinstitute.org/gatk/documentation/article?id=11682)
@@ -54,6 +43,19 @@ We are running the following workflows to generate datasets from WGS data:
 
 [WGS_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_aggregate:master?tab=info) aggregates outputs from the previous workflow (CN segments and MAFs) into their respective files.
 
+WES (wip):
+
+The data we are presenting comes from different WES targets/baits/intervals.
+
+We are currently using Illumina ICE intervals and Agilent intervals. you can find their related PON files and interval files as parameters in our workspace files in `data/xQx.json`
+
+#### PONS
+
+For CN pons are made from a set of ~400 normals from the GTEx project as they were sequenced in the same fashion as CCLE samples with the same set of baits. you can see the ID of the samples in `data/samples_for_pons.csv`.
+We have created pons for each bait set and using XY only.
+We have used workflow from the pipeline:
+`gatk/CNV_Somatic_Panel_Workflow`
+
 The outputs to be downloaded will be saved under the sample set that you ran. The outputs we use for the release are:
 
 *   combined_seg_file
@@ -62,13 +64,27 @@ The outputs to be downloaded will be saved under the sample set that you ran. Th
 
 * Note that additional files are used for QC
 
-#### Expression and Fusion
+### Expression and Fusion
 
 We are generating both expression and fusion datasets with RNAseq data. Specifically, we use the [GTEx pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md) to generate the expression dataset, and [STAR-Fusion](https://github.com/STAR-Fusion/STAR-Fusion/wiki) to generate gene fusion calls. This task also contains a flag that lets you specify if you want to delete the intermediates (fastqs) that can be large and might cost a lot to store. The following two workflows are run in this order:
 
-[RNA_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline:master?tab=info) imports and runs several sub-processes to generate RNA expression and fusion data matrices.
+[RNA_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_pipeline:master?tab=info) imports and runs the following sub-processes to generate RNA expression and fusion data matrices.
+
+- __star (from docker image `gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10`)__:
+  - aligns RNAseq bam files for downstream processing
+  - [https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886)
+  - [https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
+- __rsem (from docker image `gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10`)__: 
+  - quantifes gene and isoform abundances from RNAseq data
+  - [https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323)
+- __star fusion (from docker image `trinityctat/starfusion:1.7.0`)__: 
+  - outputs fusion from RNAseq data
+  - [https://github.com/STAR-Fusion/STAR-Fusion/wiki](https://github.com/STAR-Fusion/STAR-Fusion/wiki)
+  - [http://biorxiv.org/content/early/2017/03/24/120295](http://biorxiv.org/content/early/2017/03/24/120295)
 
 [RNA_aggregate](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/RNA_aggregate:master?tab=info) aggregates expression and fusion data files into their respective aggregated file.
+
+STAR and RSEM indices are generated using GENCODE's "comprehensive gene annotations" GTF and the GRCh38 reference genome for RNA-seq alignment provided in [GTEx's pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md). The STAR index is generated with flag `--sjdbOverhang 100`.
 
 The outputs to be downloaded will be saved under the sample set that you ran. The outputs we use for the release are:
 
