@@ -4,7 +4,7 @@ __have a look at [DepMap](https://www.depmap.org)__
 
 ![](documentation/depmap-logo_white.png)
 
-This repository contains code that processes data for the biannual DepMap data release. 
+This repository contains code that processes data for the biannual DepMap data release. State of the pipeline for each release can be found under the "Releases" tab.
 
 [Here](https://docs.google.com/presentation/d/1i0HI31dBejTYmzI9Cp6Ij7--t6eSR2r9vcC22TxSnNI/edit#slide=id.g525fd14bef_0_116) is an overview of the pipeline and the data it produces. (very outdated)
 
@@ -29,9 +29,8 @@ The processing pipeline rely on the following tools:
 - [gcp](https://cloud.google.com/sdk/docs/quickstart-macos)
 - [docker](https://docs.docker.com/get-started/)
 - [Terra](https://software.broadinstitute.org/firecloud/documentation/)
+- [The Terra Convention: The dos and donts for maintaining a cleaner terra.](https://docs.google.com/document/d/1zTtaN-Px64f8JvgydZNdBbzBpFWyZzEpshSNxQh43Oc/edit#heading=h.dz5wh0l4bu9g)
 - [dalmatian](https://github.com/broadinstitute/dalmatian)
-- [Terra and gcp](https://docs.google.com/document/d/1zTtaN-Px64f8JvgydZNdBbzBpFWyZzEpshSNxQh43Oc/edit#heading=h.dz5wh0l4bu9g)
-
 
 ### Installatiion <a name="installation"></a>
 
@@ -139,8 +138,8 @@ Functions that postprocess aggregated fusion data can be found in `fusions.py`. 
 
 * Remove fusions involving mitochondrial chromosomes, or HLA genes, or immunoglobulin genes
 * Remove red herring fusions (from STAR-Fusion annotations column)
-* Remove recurrent in CCLE (>= 25 samples)
-* Remove fusion with (SpliceType=" INCL_NON_REF_SPLICE" and LargeAnchorSupport="No" and FFPM < 0.1)
+* Remove fusions recurrent in CCLE (>= 25 samples)
+* Remove fusions that have (SpliceType=" INCL_NON_REF_SPLICE" AND LargeAnchorSupport="No" AND FFPM < 0.1)
 * Remove fusions with FFPM < 0.05 (STAR-Fusion suggests using 0.1, but looking at the translocation data, this looks like it might be too aggressive)
 
 _Internal only: `dm_omics.fusionPostProcessing()` is a wrapper for the above function. It renames the indices into ProfileIDs and uploads the data to taiga._
