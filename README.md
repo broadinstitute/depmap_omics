@@ -17,7 +17,6 @@ This repository contains code that processes data for the biannual DepMap data r
   - [Running Terra Pipelines](#running-terra-pipelines)
   - [Downloading and Postprocessing](#downloading-postprocessing)
   - [QC, Groupding and Uploading](#qc-grouping-uploading)
-- [Auxiliary Data for the Pipeline](#data)
 
 ## Getting Started <a name="quickstart"></a>
 
@@ -115,7 +114,7 @@ The main postprocessing steps for each pipeline are as followed:
 
 _Internal only: `dm_omics.cnPostProcessing()` calls the above function on both WES and WGS data, merges them, renames the indices into ProfileIDs, and upload them to taiga._
 
-- to get the exact same results as in DepMap, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to the genecn dataframe in the CNV pipeline
+Note: to get the exact same results as in DepMap, be sure to run `genecn = genecn.apply(lambda x: np.log2(1+x))` to the genecn dataframe in the CNV pipeline
 
 #### Mutation
 
@@ -144,14 +143,14 @@ _Internal only: `dm_omics.fusionPostProcessing()` is a wrapper for the above fun
 
 ### 4. QC, Grouping and Uploading to the Portal (internal use only) <a name="qc-grouping-uploading"></a>
 
-We then perform the following QC tasks for each dataset. These tasks should not be very interesting for external user as they revolve around manual checks of the data, comparison to previous releases, etc.
+We then perform the following QC tasks for each dataset:
 
 #### CN
 
 Once the CN files are saved, we load them back in python and do some validations, in brief:
 
 - mean, max, var...
-- to previous version: same mean, max, var...
+- to previous release: same mean, max, var...
 - checkAmountOfSegments: flag any samples with a very high number of segments
 - checkGeneChangeAccrossAll: flag any genes which stay at a similar value across all samples
 
@@ -176,26 +175,7 @@ Once the expression files are saved, we do the following validations:
 
 > After QC, we are also preparing the data to be released to different groups, removing the samples per access category: Blacklist\|Internal\|DepMapConsortium\|Public.
 
-We are then uploading the data to a server called taiga where it will be used in the depmap portal
-
-## Auxiliary Data for the Pipeline <a name="data"></a>
-
-
-### PONS
-
-for CN pons are made from a set of ~400 normals from the GTEx project as they were sequenced in the same fashion as CCLE samples with the same set of baits. you can see the ID of the samples in `data/samples_for_pons.csv`.
-We have created pons for each bait set and using XY only.
-We have used workflow from the pipeline:
-`gatk/CNV_Somatic_Panel_Workflow`
-
-
-### targets
-
-The data we are presenting comes from different WES targets/baits/intervals.
-
-We are currently using Illumina ICE intervals and Agilent intervals. you can find their related PON files and interval files as parameters in our workspace files in `data/xQx.json`
-
-__additional auxilliary data is used and listed in some of our workflow, like the CGA pipeline. You will be able to find them by looking at the wdl scripts of each pipelines and looking into the data/xQx.json` files for workspace data files.__
+We are then uploading the data to taiga where it will be used in the depmap portal.
 
 
 @[jkobject](https://www.jkobject.com)
