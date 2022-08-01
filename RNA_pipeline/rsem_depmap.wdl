@@ -1,20 +1,24 @@
+version 1.0
+
 task rsem {
 
-    File transcriptome_bam
-    File rsem_reference
-    String prefix
+    input {
+        File transcriptome_bam
+        File rsem_reference
+        String prefix
 
-    Int memory
-    Int disk_space
-    Int num_threads
-    Int num_preempt
+        Int memory = 128
+        Int disk_space = 500
+        Int num_threads = 32
+        Int num_preempt = 1
 
-    Int? max_frag_len
-    String? estimate_rspd
-    String? is_stranded
-    String? paired_end
-    String? calc_ci
-    Int? ci_memory
+        Int max_frag_len = 1000
+        String estimate_rspd = "true"
+        String? is_stranded
+        String? paired_end
+        String? calc_ci
+        Int? ci_memory
+    }
 
     command {
         set -euo pipefail
@@ -57,5 +61,21 @@ task rsem {
 
 
 workflow rsem_workflow {
-    call rsem
+    input {
+        File transcriptome_bam
+        File rsem_reference
+        String prefix
+    }
+
+    call rsem {
+        input:
+            transcriptome_bam = transcriptome_bam,
+            rsem_reference = rsem_reference,
+            prefix = prefix
+    }
+
+    output {   
+        File genes=rsem.genes
+        File isoforms=rsem.isoforms
+    }
 }
