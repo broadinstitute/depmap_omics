@@ -149,7 +149,7 @@ async def expressionPostProcessing(
             upload_files=[
                 {
                     "path": folder + "transcripts_expected_count.csv",
-                    "name": "transcripts_expectedCount_withReplicates",  # TODO: add "withreplicates" suffix to all cds-id level matrices
+                    "name": "transcripts_expectedCount_withReplicates",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },

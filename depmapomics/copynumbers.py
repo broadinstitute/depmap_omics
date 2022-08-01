@@ -379,7 +379,6 @@ def postProcess(
     # validation step
     print("summary of the gene cn data:")
     print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
-    mut.checkGeneChangeAccrossAll(genecn, thresh=genechangethresh)
     failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
     print("failed our QC")
