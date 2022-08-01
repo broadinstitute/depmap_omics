@@ -538,26 +538,6 @@ RNASEQC_THRESHOLDS_FAILED = {
     "mingenes": 10000,
 }
 
-PREVIOUS_QC_FAIL = [
-    "CDS-12DTEw",
-    "CDS-9hv1zM",
-    "CDS-A6GSeQ",
-    "CDS-aWlMRt",
-    "CDS-B1ywOH",
-    "CDS-BixxtG",
-    "CDS-DRM3l2",
-    "CDS-jOlYT4",
-    "CDS-KMhiT9",
-    "CDS-M6mnMA",
-    "CDS-pYwECX",
-    "CDS-v6E624",
-    "CDS-vxTqNJ",
-    "CDS-YxtmkI",
-    "CDS-fk564T",
-    "CDS-kU30H5",
-    "CDS-G0F5f5",
-    "CDS-ABH0uZ",
-]
 
 ###################### READMEs output
 
@@ -717,6 +697,9 @@ DepMap\_ID, Chromosome, Start, End, Num\_Probes, Segment\_Mean
 ########### Gumbo configs #############
 
 # names of columns that contain release dates
+
+GUMBO_CLIENT_USERNAME = "szhang"
+
 DATE_COL_DICT = {
     "internal": "InternalReleaseDate",
     "ibm": "IBMReleaseDate",
@@ -724,11 +707,15 @@ DATE_COL_DICT = {
     "public": "PublicReleaseDate",
 }
 
-MODEL_TABLE_NAME = "Model"
-MC_TABLE_NAME = "ModelCondition"
-PR_TABLE_NAME = "OmicsProfile"
-SEQ_TABLE_NAME = "OmicsSequencing"
-SAMPLE_TABLE_NAME = "Sample"
+MODEL_TABLE_NAME = "model"
+MODEL_TABLE_INDEX = "ModelID"
+MC_TABLE_NAME = "model_condition"
+MC_TABLE_INDEX = "ModelConditionID"
+PR_TABLE_NAME = "omics_profile"
+PR_TABLE_INDEX = "ProfileID"
+SEQ_TABLE_NAME = "omics_sequencing"
+SEQ_TABLE_INDEX = "SequencingID"
+SAMPLE_TABLE_NAME = "sample"
 ACH_CHOICE_TABLE_COLS = ["ModelConditionID", "ProfileID", "ProfileType"]
 ACH_CHOICE_TABLE_NAME = "achilles_choice_table"
 DEFAULT_TABLE_COLS = ["ModelID", "ProfileID", "ProfileType"]

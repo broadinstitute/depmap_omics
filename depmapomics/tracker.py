@@ -5,14 +5,13 @@ import os
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
-import pygsheets
 from depmapomics.config import *
 from depmapomics import terra as myterra
 from genepy import terra
 from genepy.google import gcp
-from genepy.google.google_sheet import dfToSheet
 import dalmatian as dm
 import signal
+import gumbo_client
 
 
 # condense all interactions with tracker (for emeril integration)
@@ -24,122 +23,85 @@ class SampleTracker:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self):
-        self.my_id = MY_ID
-        self.mystorage_id = MYSTORAGE_ID
-        self.sheetcreds = SHEETCREDS
-        self.refsheet_url = REFSHEET_URL
-        self.depmap_pv = DEPMAP_PV
-        self.samples_not_found_url = SAMPLES_NOT_FOUND_URL
-        self.samples_missing_arxspan_url = SAMPLES_MISSING_ARXSPAN_URL
-        self.gumbo_url = GUMBO_SHEET
-        self.gumbo_sheetname = GUMBO_SHEETNAME
-        self.sheetname = SHEETNAME
-        self.samples_found_name = SAMPLES_FOUND_NAME
-        self.samples_not_found_name = SAMPLES_NOT_FOUND_NAME
-        self.samples_missing_arxspan_name = SAMPLES_MISSING_ARXSPAN_NAME
         self.model_table_name = MODEL_TABLE_NAME
         self.mc_table_name = MC_TABLE_NAME
         self.pr_table_name = PR_TABLE_NAME
         self.seq_table_name = SEQ_TABLE_NAME
+        self.model_table_index = MODEL_TABLE_INDEX
+        self.mc_table_index = MC_TABLE_INDEX
+        self.pr_table_index = PR_TABLE_INDEX
+        self.seq_table_index = SEQ_TABLE_INDEX
         self.sample_table_name = SAMPLE_TABLE_NAME
-        self.gc = pygsheets.authorize(service_file=SHEETCREDS)
+        self.gumbo_client = gumbo_client.Client(username=GUMBO_CLIENT_USERNAME)
+        self.mapping_utils = gumbo_client.utils.NameMappingUtils()
 
-    def read_tracker(self):
-        return (
-            Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(self.refsheet_url)
-            .sheets[0]
-            .to_frame(index_col=0)
-        )
+    def commit_gumbo(self):
+        self.gumbo_client.commit()
 
-    def write_tracker(self, df):
-        dfToSheet(df, self.sheetname, secret=self.sheetcreds)
-
-    def read_pv(self):
-        return (
-            Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(self.depmap_pv)
-            .sheets[0]
-            .to_frame(header=2)
-        )
-
-    def write_all_samples_found(self, df):
-        dfToSheet(df, self.samples_found_name, self.sheetcreds)
-
-    def write_samples_not_found(self, df):
-        dfToSheet(df, self.samples_not_found_name, self.sheetcreds)
-
-    def write_samples_missing_arxspan(self, df):
-        dfToSheet(df, self.samples_missing_arxspan_name, self.sheetcreds)
-
-    def read_samples_not_found(self):
-        return (
-            Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(self.samples_not_found_url)
-            .sheets[0]
-            .to_frame()
-            .set_index("sample_id")
-        )
-
-    def read_samples_missing_arxspan(self):
-        return (
-            Sheets.from_files(self.my_id, self.mystorage_id)
-            .get(self.samples_missing_arxspan_url)
-            .sheets[0]
-            .to_frame()
-            .set_index("sample_id")
-        )
+    def close_gumbo_client(self):
+        self.gumbo_client.close()
 
     def read_model_table(self):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.model_table_name)
-        return wksht.get_as_df(index_column=1, start="A3")
+        model_table = self.gumbo_client.get(self.model_table_name)
+        model_table_camel = self.mapping_utils.rename_columns(
+            self.model_table_name, model_table
+        )
+        model_table_camel = model_table_camel.set_index(self.model_table_index)
+        return model_table_camel
 
     def read_mc_table(self):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.mc_table_name)
-        return wksht.get_as_df(index_column=1, start="A3")
-
-    def write_mc_table(self, df):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.mc_table_name)
-        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
+        mc_table = self.gumbo_client.get(self.mc_table_name)
+        mc_table_camel = self.mapping_utils.rename_columns(self.mc_table_name, mc_table)
+        mc_table_camel = mc_table_camel.set_index(self.mc_table_index)
+        return mc_table_camel
 
     def read_pr_table(self):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.pr_table_name)
-        return wksht.get_as_df(index_column=1, start="A3")
-
-    def write_pr_table(self, df):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.pr_table_name)
-        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
+        pr_table = self.gumbo_client.get(self.pr_table_name)
+        pr_table_camel = self.mapping_utils.rename_columns(self.pr_table_name, pr_table)
+        pr_table_camel = pr_table_camel.set_index(self.pr_table_index)
+        return pr_table_camel
 
     def read_seq_table(self):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.seq_table_name)
-        return wksht.get_as_df(index_column=1, start="A3")
+        seq_table = self.gumbo_client.get(self.seq_table_name)
+        seq_table_camel = self.mapping_utils.rename_columns(
+            self.seq_table_name, seq_table
+        )
+        seq_table_camel = seq_table_camel.set_index(self.seq_table_index)
+        return seq_table_camel
+
+    def write_mc_table(self, df):
+        # assumes df's columns are camelCase, and converts it back to snake_case
+        df = df.reset_index(level=0)
+        df = self.mapping_utils.rename_columns(
+            self.mc_table_name, df, convert_to_custom_names=False, inplace=True
+        )
+        self.gumbo_client.update(self.mc_table_name, df)
+        self.client.commit()
+
+    def write_pr_table(self, df):
+        # assumes df's columns are camelCase, and converts it back to snake_case
+        df = df.reset_index(level=0)
+        df = self.mapping_utils.rename_columns(
+            self.pr_table_name, df, convert_to_custom_names=False, inplace=True
+        )
+        self.gumbo_client.update(self.pr_table_name, df)
+        self.client.commit()
 
     def write_seq_table(self, df):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.seq_table_name)
-        wksht.set_dataframe(df, "A3", copy_index=True, nan="")
-
-    def read_sample_table(self):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.sample_table_name)
-        return wksht.get_as_df(index_column=1)
-
-    def write_sample_table(self, df):
-        sheet = self.gc.open(self.gumbo_sheetname)
-        wksht = sheet.worksheet("title", self.sample_table_name)
-        wksht.set_dataframe(df, "A1", copy_index=True, nan="")
+        # assumes df's columns are camelCase, and converts it back to snake_case
+        df = df.reset_index(level=0)
+        df = self.mapping_utils.rename_columns(
+            self.seq_table_name, df, convert_to_custom_names=False, inplace=True
+        )
+        self.gumbo_client.update(self.seq_table_name, df)
+        self.client.commit()
 
     def get_participant_id(self, seqid, seq_table, pr_table, mc_table, model_table):
-        pr = seq_table.loc[seqid, "ProfileID"]
+        # assumes all tables are camelCase
+        pr = seq_table.loc[seqid, self.pr_table_index]
         if pr != "":
-            mc = pr_table.loc[pr, "ModelCondition"]
-            model = mc_table.loc[mc, "ModelID"]
+            mc = pr_table.loc[pr, self.mc_table_index]
+            model = mc_table.loc[mc, self.model_table_index]
             participant = model_table.loc[model, "PatientID"]
             return participant
         else:
