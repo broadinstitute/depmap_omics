@@ -40,6 +40,7 @@ workflow RNAseq_mutect2 {
     File ref_dict
     File tumor_bam
     File tumor_bai
+    File? tumor_name
     File? normal_reads
     File? normal_reads_index
     File? pon
@@ -250,6 +251,7 @@ workflow RNAseq_mutect2 {
           ref_dict = ref_dict,
           tumor_bam = ApplyBQSR.output_bam,
           tumor_bai = ApplyBQSR.output_bam_index,
+          tumor_name = tumor_name,
           pon = pon,
           pon_idx = pon_idx,
           gnomad = gnomad,
@@ -319,6 +321,7 @@ workflow RNAseq_mutect2 {
         ref_fasta = ref_fasta,
         ref_fai = ref_fai,
         ref_dict = ref_dict,
+        interval_list = intervals,
         input_vcf = VariantFiltration.output_vcf,
         input_vcf_idx = VariantFiltration.output_vcf_index,
         reference_version = select_first([funco_reference_version, "hg38"]),

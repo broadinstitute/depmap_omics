@@ -119,6 +119,7 @@ workflow Mutect2 {
       String? sequencing_center
       String? sequence_source
       String? funco_reference_version
+      String? funco_output_format
       Boolean? funco_compress
       Boolean? funco_use_gnomad_AF
       File? funco_data_sources_tar_gz
@@ -130,7 +131,7 @@ workflow Mutect2 {
       Boolean? funco_filter_funcotations
       String? funcotator_extra_args
 
-      String funco_output_format = "VCF"
+      String funco_default_output_format = "VCF"
 
       # runtime
       String gatk_docker
@@ -407,7 +408,7 @@ workflow Mutect2 {
                 input_vcf_idx = funcotate_vcf_input_index,
                 reference_version = select_first([funco_reference_version, "hg38"]),
                 output_file_base_name = basename(funcotate_vcf_input, ".vcf") + ".annotated",
-                output_format = funco_output_format,
+                output_format = if defined(funco_output_format) then "" + funco_output_format else funco_default_output_format,
                 compress = if defined(funco_compress) then select_first([funco_compress]) else false,
                 use_gnomad = if defined(funco_use_gnomad_AF) then select_first([funco_use_gnomad_AF]) else false,
                 data_sources_tar_gz = funco_data_sources_tar_gz,
