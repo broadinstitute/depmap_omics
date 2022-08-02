@@ -212,16 +212,19 @@ def deleteClosest(
     Returns:
     --------
         samples: pd dataframe the filtered sample list
+        dropped: list of dropped samples
     """
     sizes = refsamples[ref_size].tolist()
+    dropped = []
     print("deleting closest samples:")
     for k, v in sampless.iterrows():
         if type(v[size]) is int:
             val = refsamples.iloc[sizes.index(h.closest(sizes, v[size]))]
             if val[arxspid] == v[arxspid]:
                 sampless = sampless.drop(v.name)
+                dropped.append(v.name)
                 print(v.name)
-    return sampless
+    return sampless, dropped
 
 
 def extractFromWorkspace(
