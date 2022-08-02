@@ -12,6 +12,7 @@ from genepy.google import gcp
 import dalmatian as dm
 import signal
 import gumbo_client
+import gumbo_client.utils as gumbo_utils
 
 
 # condense all interactions with tracker (for emeril integration)
@@ -32,17 +33,17 @@ class SampleTracker:
         self.pr_table_index = PR_TABLE_INDEX
         self.seq_table_index = SEQ_TABLE_INDEX
         self.sample_table_name = SAMPLE_TABLE_NAME
-        self.gumbo_client = gumbo_client.Client(username=GUMBO_CLIENT_USERNAME)
-        self.mapping_utils = gumbo_client.utils.NameMappingUtils()
+        self.client = gumbo_client.Client(username=GUMBO_CLIENT_USERNAME)
+        self.mapping_utils = gumbo_utils.NameMappingUtils()
 
     def commit_gumbo(self):
-        self.gumbo_client.commit()
+        self.client.commit()
 
     def close_gumbo_client(self):
-        self.gumbo_client.close()
+        self.client.close()
 
     def read_model_table(self):
-        model_table = self.gumbo_client.get(self.model_table_name)
+        model_table = self.client.get(self.model_table_name)
         model_table_camel = self.mapping_utils.rename_columns(
             self.model_table_name, model_table
         )
@@ -50,19 +51,19 @@ class SampleTracker:
         return model_table_camel
 
     def read_mc_table(self):
-        mc_table = self.gumbo_client.get(self.mc_table_name)
+        mc_table = self.client.get(self.mc_table_name)
         mc_table_camel = self.mapping_utils.rename_columns(self.mc_table_name, mc_table)
         mc_table_camel = mc_table_camel.set_index(self.mc_table_index)
         return mc_table_camel
 
     def read_pr_table(self):
-        pr_table = self.gumbo_client.get(self.pr_table_name)
+        pr_table = self.client.get(self.pr_table_name)
         pr_table_camel = self.mapping_utils.rename_columns(self.pr_table_name, pr_table)
         pr_table_camel = pr_table_camel.set_index(self.pr_table_index)
         return pr_table_camel
 
     def read_seq_table(self):
-        seq_table = self.gumbo_client.get(self.seq_table_name)
+        seq_table = self.client.get(self.seq_table_name)
         seq_table_camel = self.mapping_utils.rename_columns(
             self.seq_table_name, seq_table
         )
@@ -75,7 +76,7 @@ class SampleTracker:
         df = self.mapping_utils.rename_columns(
             self.mc_table_name, df, convert_to_custom_names=False, inplace=True
         )
-        self.gumbo_client.update(self.mc_table_name, df)
+        self.client.update(self.mc_table_name, df)
         self.client.commit()
 
     def write_pr_table(self, df):
@@ -84,7 +85,7 @@ class SampleTracker:
         df = self.mapping_utils.rename_columns(
             self.pr_table_name, df, convert_to_custom_names=False, inplace=True
         )
-        self.gumbo_client.update(self.pr_table_name, df)
+        self.client.update(self.pr_table_name, df)
         self.client.commit()
 
     def write_seq_table(self, df):
@@ -93,7 +94,7 @@ class SampleTracker:
         df = self.mapping_utils.rename_columns(
             self.seq_table_name, df, convert_to_custom_names=False, inplace=True
         )
-        self.gumbo_client.update(self.seq_table_name, df)
+        self.client.update(self.seq_table_name, df)
         self.client.commit()
 
     def get_participant_id(self, seqid, seq_table, pr_table, mc_table, model_table):
@@ -108,18 +109,21 @@ class SampleTracker:
             return "NA"
 
     def add_model_cols_to_seqtable(self, cols=[]):
+        # add columns from model table to seq table
         seq_table = self.read_seq_table()
         pr_table = self.read_pr_table()
         mc_table = self.read_mc_table()
-        model_table = self.read_model_table()
+        model_table = self.read_model_table().reset_index(level=0)
         for c in cols:
-            assert c in model_table.columns, c + "is not a column in model table"
+            assert c in model_table.columns, c + " is not a column in model table"
         for seq_id in seq_table.index:
             pr = seq_table.loc[seq_id, self.pr_table_index]
-            mc = pr_table.loc[pr, self.mc_table_index]
+            mc = pr_table.loc[pr, "ModelCondition"]
             model = mc_table.loc[mc, self.model_table_index]
             for c in cols:
-                seq_table.loc[seq_id, c] = model_table.loc[model, c]
+                seq_table.loc[seq_id, c] = model_table[
+                    model_table[self.model_table_index] == model
+                ][c].values[0]
         return seq_table
 
     def update_pr_from_seq(
