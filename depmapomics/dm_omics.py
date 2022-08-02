@@ -30,6 +30,7 @@ async def expressionPostProcessing(
     },
     todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_EXPRESSION,
+    save_output=WORKING_DIR,
     minsimi=RNAMINSIMI,
     dropNonMatching=True,
     dataset_description=RNAseqreadme,
@@ -87,10 +88,10 @@ async def expressionPostProcessing(
         (ccle_refsamples.prioritized == 1) & (ccle_refsamples.ExpectedType == "rna")
     ].index.tolist()
 
-    folder = os.path.join("output", samplesetname, "")
+    folder = save_output + samplesetname + "/"
 
     if dry_run:
-        folder = os.path.join("output", "dryrun", "")
+        folder = save_output + "dryrun/"
 
     h.createFoldersFor(folder)
     files, failed, _, renaming, lowqual, _ = await expressions.postProcess(
@@ -328,6 +329,7 @@ def cnPostProcessing(
     ],
     bamqc=BAMQC,
     procqc=PROCQC,
+    save_dir=WORKING_DIR,
     wesfolder="",
     genechangethresh=GENECHANGETHR,
     segmentsthresh=SEGMENTSTHR,
@@ -365,7 +367,7 @@ def cnPostProcessing(
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
 
     # doing wes
-    folder = os.path.join("output", samplesetname, "wes_")
+    folder = save_dir + "wes_"
     if wesfolder == "":
         print("doing wes")
         todropwes = (
@@ -438,7 +440,7 @@ def cnPostProcessing(
 
     # doing wgs
     print("doing wgs")
-    folder = os.path.join("output", samplesetname, "wgs_")
+    folder = save_dir + "wgs_"
     (
         wgssegments,
         wgsgenecn,
@@ -562,7 +564,7 @@ def cnPostProcessing(
     # merging wes and wgs
     # CDS-ID level
     print("saving merged files")
-    folder = os.path.join("output", samplesetname, "")
+    folder = save_dir
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
     mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
     mergedcn = wgsgenecn.append(wesgenecn)
