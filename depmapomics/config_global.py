@@ -722,7 +722,10 @@ VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL = {
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN = {
-    "merged_gene_cn_profile": "Omics_merged_gene_cn",
+    "merged_gene_cn_profile": "Omics_cn_gene",
+    "merged_absolute_gene_cn_profile": "Omics_absoluteCN_gene",
+    "merged_loh_profile": "Omics_loh",
+    "globalGenomicFeatures_profile": "Omics_signatures",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_MUT = {
@@ -743,7 +746,8 @@ VIRTUAL_FILENAMES_TABLE_FUSION = {
 }
 
 VIRTUAL_FILENAMES_TABLE_CN = {
-    "merged_segments_profile": "Omics_merged_segments",
+    "merged_segments_profile": "Omics_cn_segments",
+    "merged_absolute_segments_profile": "Omics_absoluteCN_segments",
 }
 
 VIRTUAL_FILENAMES_TABLE_MUT = {
