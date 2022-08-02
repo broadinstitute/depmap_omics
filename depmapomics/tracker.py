@@ -107,6 +107,21 @@ class SampleTracker:
         else:
             return "NA"
 
+    def add_model_cols_to_seqtable(self, cols=[]):
+        seq_table = self.read_seq_table()
+        pr_table = self.read_pr_table()
+        mc_table = self.read_mc_table()
+        model_table = self.read_model_table()
+        for c in cols:
+            assert c in model_table.columns, c + "is not a column in model table"
+        for seq_id in seq_table.index:
+            pr = seq_table.loc[seq_id, self.pr_table_index]
+            mc = pr_table.loc[pr, self.mc_table_index]
+            model = mc_table.loc[mc, self.model_table_index]
+            for c in cols:
+                seq_table.loc[seq_id, c] = model_table.loc[model, c]
+        return seq_table
+
     def update_pr_from_seq(
         self,
         cols={
