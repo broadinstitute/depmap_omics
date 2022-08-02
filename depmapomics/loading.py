@@ -376,7 +376,7 @@ def resolveFromWorkspace(
 
     sample_size = {
         gcp.extractSize(val)[1]: gcp.extractSize(val)[0]
-        for val in gcp.lsFiles(samples[extract["ref_bam"]], "-la")
+        for val in gcp.lsFiles(samples[extract["ref_bam"]].tolist(), "-la")
     }
     dups_to_remove = [
         sample_size[a]
@@ -591,7 +591,7 @@ def addSamplesToDepMapWorkspace(
     # add new samples to additional existing sample_sets if needed
     for sname in add_to_samplesets:
         samples_in_sname = refwm.get_sample_sets().loc[sname, "samples"]
-        new_samples = samples_to_add.index
+        new_samples = samples_to_add.index.tolist()
 
         refwm.update_sample_set(
             sample_set_id=sname, sample_ids=list(set(samples_in_sname + new_samples))
