@@ -348,13 +348,13 @@ async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     return enrichments
 
 
-def saveFiles(files, folder=TMP_PATH, rep=("rsem", "expression")):
+def saveFiles(files, folder=WORKING_DIR, rep=("rsem", "expression")):
     """
     saves the files in the dict to the folder
 
     Args:
         files (dict(str: pd.df)): the dfs to save
-        folder (str, optional): the folder to save the files. Defaults to TMP_PATH.
+        folder (str, optional): the folder to save the files. Defaults to WORKING_DIR.
         rep (tuple, optional): how to rename (parts of) the files. Defaults to ('rsem', 'expression').
     """
     print("storing files in {}".format(folder))
