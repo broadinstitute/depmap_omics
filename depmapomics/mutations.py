@@ -290,18 +290,17 @@ def mapBed(file, vcfdir, bed_location):
 
 
 def generateGermlineMatrix(
-    refworkspace,
+    vcfs,
     vcfdir,
     savedir=WORKING_DIR + SAMPLESETNAME + "/",
     filename="binary_mutguides.tsv.gz",
     bed_location=GUIDESBED,
-    vcf_colname="cnn_filtered_vcf",
     cores=16,
 ):
     """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
     using the CCLE pipeline on terra
     Args:
-        refworkspace (str, optional): the reference workspace
+        vcfs (list): list of vcf file locations (gs links)
         taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_CN.
         vcfdir (str, optional): directory where vcf files are saved.
         savedir (str, optional): directory where output germline matrices are saved.
@@ -324,10 +323,6 @@ def generateGermlineMatrix(
 
     h.createFoldersFor(savedir)
     # load vcfs from workspace using dalmatian
-    wm = dm.WorkspaceManager(refworkspace)
-    samp = wm.get_samples()
-    vcfs = samp[vcf_colname]
-    vcfslist = vcfs[~vcfs.isna()].tolist()
     h.createFoldersFor(vcfdir)
     guides_bed = pd.read_csv(
         bed_location,
@@ -368,7 +363,7 @@ def generateGermlineMatrix(
         + vcfdir
         + sam.split("/")[-1]
         + "*"
-        for sam in vcfslist
+        for sam in vcfs
     ]
 
     print("running bcftools index and query")
