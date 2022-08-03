@@ -179,6 +179,7 @@ TO_RENAME_OC = {
     ## same
     "oc_civic__description": "civic_description",
     "oc_civic__clinical_a_score": "civic_score",
+    "oc_civic__id": "civic_id",
     "oc_pharmgkb__id": "pharmgkb_id",
     "oc_pharmgkb__chemicals": "pharmgkb_chemicals",
     "oc_pharmgkb__pheno_cat": "pharmgkb_pheno_cat",
@@ -245,24 +246,31 @@ TOKEEP_ADD = {
     "lineage_association": "str",
     "achilles_top_genes": "str",
     "cancer_molecular_genetics": "str",
-    "hotspot": "str",
+    # "hotspot": "str",
     "ccle_deleterious": "str",
     "structural_relation": "str",
     "cosmic_hotspot": "str",
     "cosmic_overlapping_mutations": "str",
     "associated_with": "str",
-    "clinically_significant": "str",
-    "gof": "str",
+    # "clinically_significant": "str",
+    #"gof": "str",
     "lof": "str",
     "driver": "str",
     "likely_driver": "str",
     "transcript_likely_lof": "str",
-    "oncokb_sensitivelevel": "str",
-    "oncokb_resistancelevel": "str",
-    "oncokb_diagnosticlevel": "str",
-    "oncokb_prognosticlevel": "str",
-    "oncokb_pmids": "str",
+    # "oncokb_sensitivelevel": "str",
+    # "oncokb_resistancelevel": "str",
+    # "oncokb_diagnosticlevel": "str",
+    # "oncokb_prognosticlevel": "str",
+    # "oncokb_pmids": "str",
+    "civic_id": "str",
+    "civic_description": "str",
+    "civic_score": "str",
     "popaf": "str",
+    "likely_gof": "str",
+    "likely_lof": "str",
+    "hess_driver": "str",
+    "hess_signture": "str",
 }
 
 
@@ -273,9 +281,7 @@ TOKEEP_LARGE_ADD = {
     ###############
     # "quality_score": "float",
     # "somatic_score": "float",
-    "oncokb_variant_summary": "str",
-    "civic_description": "str",
-    "civic_score": "str",
+    #"oncokb_variant_summary": "str",
     "pharmgkb_id": "str",
     "pharmgkb_chemicals": "str",
     "pharmgkb_pheno_cat": "str",
@@ -303,10 +309,6 @@ TOKEEP_LARGE_ADD = {
     "funseq2_score": "str",
     "funseq2_motif": "str",
     "funseq2_hot": "str",
-    "likely_gof": "str",
-    "likely_lof": "str",
-    "hess_driver": "str",
-    "hess_signture": "str",
 }
 
 
@@ -667,13 +669,13 @@ def improve(
     vcf.loc[list(set(loc)), "associated_with"] += "chemicals;"
 
     loc = []
+    if "likely_gof" not in vcf.columns.tolist():
+        vcf["likely_gof"] = ""
     if "likely_driver" in vcf.columns.tolist():
-        if "likely_lof" in vcf.columns.tolist():
-            if "likely_gof" not in vcf.columns.tolist():
-                vcf["likely_gof"] = ""
-            vcf.loc[
-                (vcf["likely_driver"] == "Y") & (vcf["likely_lof"] != "Y"), "likely_gof"
-            ] = "Y"
+        # if "likely_lof" in vcf.columns.tolist():
+        # vcf.loc[
+        #    (vcf["likely_driver"] == "Y") & (vcf["likely_lof"] != "Y"), "likely_gof"
+        # ] = "Y"
         loc += vcf[(vcf["likely_driver"] == "Y")].index.tolist()
     if "hotspot" in vcf.columns.tolist():
         loc += vcf[
