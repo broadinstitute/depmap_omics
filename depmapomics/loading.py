@@ -37,7 +37,7 @@ def loadFromMultipleWorkspaces(
 
     Args:
     -----
-        wsnames (dict): dictionary mapping source to workspace name ({source: ws name})
+        wsnames (list): list of tuples mapping source to workspace name ([(source, ws name)])
         wsidcol (str): name of column in wsname's sample table that contains IDs to map to ProfileIDs by
         gumboidcol (str): name of column in gumbo's profile table that contains IDs to map to ProfileIDs by
         stype (str): type of the data (wgs, rna, etc.)
@@ -50,7 +50,7 @@ def loadFromMultipleWorkspaces(
     """
     samples = []
     unmapped_samples = []
-    for s, wsname in wsnames.items():
+    for s, wsname in wsnames:
         print("loading " + stype + " samples from terra workspace: " + wsname)
         samples_per_ws, unmapped = loadFromTerraWorkspace(
             wsname,
@@ -556,6 +556,7 @@ def addSamplesToDepMapWorkspace(
         refworkspace (str): terra processing workspace to import data to
         add_to_samplesets (list, optional): add new samples to additional sample_sets on terra. Defaults to []
     """
+    # TODO: make this work for other gumbo tables (improrts to DEPMAP_OMICS)
     mytracker = track.SampleTracker()
     refwm = dm.WorkspaceManager(refworkspace).disable_hound()
 
