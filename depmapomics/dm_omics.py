@@ -384,7 +384,6 @@ def cnPostProcessing(
             wes_purecn_genecn,
             wes_loh,
             wes_feature_table,
-            _,
         ) = cn.postProcess(
             wesrefworkspace,
             setEntity=wessetentity,
@@ -449,7 +448,6 @@ def cnPostProcessing(
         wgs_purecn_genecn,
         wgs_loh,
         wgs_feature_table,
-        mybiomart,
     ) = cn.postProcess(
         wgsrefworkspace,
         setEntity=wgssetentity,

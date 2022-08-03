@@ -417,5 +417,4 @@ def postProcess(
         purecn_genecn,
         loh_status,
         feature_table,
-        mybiomart,
     )
