@@ -45,7 +45,7 @@ task opencravat {
             
         pip install open-cravat --upgrade
 
-        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xvf "+oc_modules else oc_install}
+        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xvf && cd -"+oc_modules else oc_install}
 
         oc new annotator oncokb_dm
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
