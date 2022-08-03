@@ -170,6 +170,7 @@ def postProcess(
     },
     sv_col=SV_COLNAME,
     sv_filename=SV_FILENAME,
+    sv_renaming=SV_COLRENAME,
 ):
     """post process an aggregated MAF file the CCLE way
 
@@ -235,6 +236,7 @@ def aggregateSV(
     refworkspace,
     sampleids,
     all_sv_colname=SV_COLNAME,
+    sv_renaming=SV_COLRENAME,
     save_output="",
     save_filename="",
 ):
@@ -259,6 +261,7 @@ def aggregateSV(
         sv[SAMPLEID] = name
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
+    all_svs = all_svs.rename(columns=sv_renaming)
     print("saving aggregated SVs")
     all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
     return all_svs
