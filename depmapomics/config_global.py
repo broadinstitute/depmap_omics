@@ -353,21 +353,6 @@ SOURCE_RENAME = {
     "Broad CCLF": "Broad WES",
 }
 
-wrongwes_arxspan = {
-    "ACH-001189",
-    "ACH-002303",
-    "ACH-002315",
-    "ACH-002341",
-    "ACH-001011",
-    "ACH-001108",
-    "ACH-001187",
-    "ACH-002875",
-    "ACH-002874",
-    "ACH-001955",  # chordoma lines
-    "ACH-001956",
-    "ACH-001957",
-}
-
 CYTOBANDLOC = "data/hg38_cytoband.gz"
 
 toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
@@ -377,7 +362,44 @@ toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
 MINFREQTOCALL = 0.25
 
 SV_COLNAME = "filtered_annotated_sv"
-SV_FILENAME = "all_sv.bedpe"
+SV_FILENAME = "all_sv.csv"
+
+SV_COLRENAME = {
+    "CHROM_A": "chromA",
+    "START_A": "startA",
+    "END_A": "endA",
+    "CHROM_B": "chromB",
+    "START_B": "startB",
+    "END_B": "endB",
+    "ID": "id",
+    "QUAL": "qual",
+    "STRAND_A": "strandA",
+    "STRAND_B": "strandB",
+    "TYPE": "type",
+    "FILTER": "filter",
+    "NAME_A": "nameA",
+    "REF_A": "refA",
+    "ALT_A": "altA",
+    "NAME_B": "nameB",
+    "REF_B": "refB",
+    "ALT_B": "altB",
+    "INFO_A": "infoA",
+    "INFO_B": "infoB",
+    "FORMAT": "format",
+    "SPAN": "span",
+    "HOMSEQ": "homSeq",
+    "HOMLEN": "homLen",
+    "BREAK_A_Ensembl_Gene": "breakAEnsemblGene",
+    "BREAK_A_Gene_Name": "breakAGeneName",
+    "BREAK_B_Ensembl_Gene": "breakBEnsemblGene",
+    "BREAK_B_Gene_Name": "breakBGeneName",
+    "BREAK_A_Ensembl_Exon": "breakAEnsemblExon",
+    "BREAK_B_Ensembl_Exon": "breakBEnsemblExon",
+    "Filter": "filter",
+    # temporary
+    "OCILY12": "tumor"
+}
+
 
 MUTATION_GROUPS = {
     "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
@@ -750,4 +772,6 @@ VIRTUAL_FILENAMES_TABLE_CN = {
 
 VIRTUAL_FILENAMES_TABLE_MUT = {
     "somaticMutations_profile": "Omics_somaticMutations",
+    "structuralVariants_profile": "Omics_structuralVariants",
 }
+

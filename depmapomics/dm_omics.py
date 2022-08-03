@@ -766,11 +766,11 @@ async def mutationPostProcessing(
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
     mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
-    mergedsvs.to_csv(folder + "svs.bedpe", index=False)
+    mergedsvs.to_csv(folder + "svs.csv", index=False)
     mergedsvs_pr = mergedsvs[mergedsvs[SAMPLEID].isin(renaming_dict.keys())].replace(
         {SAMPLEID: renaming_dict}
     )
-    mergedsvs_pr.to_csv(folder + "svs_profile.bedpe", index=False)
+    mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
 
@@ -916,13 +916,13 @@ async def mutationPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "svs.bedpe",
+                "path": folder + "svs.csv",
                 "name": "structuralVariants_withReplicates",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "svs_profile.bedpe",
+                "path": folder + "svs_profile.csv",
                 "name": "structuralVariants_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
