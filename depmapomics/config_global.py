@@ -287,27 +287,25 @@ SEGMENTSTHR = 1500
 MAXYCHROM = 150
 
 COLRENAMING = {
-    "CONTIG": "Chromosome",
-    "START": "Start",
-    "END": "End",
-    "end": "End",
-    "seqnames": "Chromosome",
-    "start": "Start",
+    "CONTIG": "chromosome",
+    "START": "start",
+    "END": "end",
+    "seqnames": "chromosome",
+    "start": "start",
     "Sample": SAMPLEID,
-    "NUM_POINTS_COPY_RATIO": "Num_Probes",
-    "MEAN_LOG2_COPY_RATIO": "Segment_Mean",
-    "CALL": "Status",
+    "NUM_POINTS_COPY_RATIO": "numProbes",
+    "MEAN_LOG2_COPY_RATIO": "segmentMean",
+    "CALL": "status",
 }
 
 PURECN_COLRENAMING = {
-    "start": "Start",
-    "end": "End",
-    "chr": "Chromosome",
+    "start": "start",
+    "end": "end",
+    "chr": "chromosome",
     "Sampleid": SAMPLEID,
-    "seg.mean": "Segment_Mean",
-    "type": "LOH_status",
-    "C": "Absolute_CN",
-    "M": "Minor_allele_absolute_CN",
+    "type": "lohStatus",
+    "C": "majorAlleleAbsoluteCN",
+    "M": "monirAlleleAbsoluteCN",
 }
 
 PURECN_LOH_COLNAME = "PureCN_loh_merged"
@@ -437,23 +435,23 @@ MUTCOL_DEPMAP = [
 
 ############## FUSION
 
-FUSION_COLNAME = [
-    "FusionName",
-    "JunctionReadCount",
-    "SpanningFragCount",
-    "SpliceType",
-    "LeftGene",
-    "LeftBreakpoint",
-    "RightGene",
-    "RightBreakpoint",
-    "LargeAnchorSupport",
-    "FFPM",
-    "LeftBreakDinuc",
-    "LeftBreakEntropy",
-    "RightBreakDinuc",
-    "RightBreakEntropy",
-    "annots",
-]
+FUSION_COLNAME = {
+    "FusionName": "fusionName",
+    "JunctionReadCount": "junctionReadCount",
+    "SpanningFragCount": "spanningFragCount",
+    "SpliceType": "spliceType",
+    "LeftGene": "leftGene",
+    "LeftBreakpoint": "leftBreakpoint",
+    "RightGene": "rightGene",
+    "RightBreakpoint": "rightBreakpoint",
+    "LargeAnchorSupport": "largeAnchorSupport",
+    "FFPM": "ffpm",
+    "LeftBreakDinuc": "leftBreakDinuc",
+    "LeftBreakEntropy": "leftBreakEntropy",
+    "RightBreakDinuc": "rightBreakDinuc",
+    "RightBreakEntropy": "rightBreakEntropy",
+    "annots": "annots",
+}
 
 FUSION_RED_HERRING = [
     "GTEx_recurrent",
