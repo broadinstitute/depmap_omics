@@ -353,10 +353,6 @@ SOURCE_RENAME = {
     "Broad CCLF": "Broad WES",
 }
 
-CYTOBANDLOC = "data/hg38_cytoband.gz"
-
-toreprocess = ["CDS-C2RlCj", "CDS-8GqFo5"]
-
 ############## Mutations
 
 MINFREQTOCALL = 0.25
@@ -397,7 +393,7 @@ SV_COLRENAME = {
     "BREAK_B_Ensembl_Exon": "breakBEnsemblExon",
     "Filter": "filter",
     # temporary
-    "OCILY12": "tumor"
+    "OCILY12": "sample",
 }
 
 
