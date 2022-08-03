@@ -53,7 +53,7 @@ workflow omics_post_mutect2 {
         input:
             input_vcf=select_first([open_cravat.oc_main_file, RemoveFiltered.output_vcf]),
             sample_id=sample_id,
-            annotators=flatten([annotators, ["oncokb", "hess_et_al"]])
+            annotators=flatten([annotators, ["hess_et_al"]])
     }
 
     output {
