@@ -353,7 +353,7 @@ workflow Mutect2 {
     if (run_funcotator_or_default) {
         File funcotate_vcf_input = select_first([FilterAlignmentArtifacts.filtered_vcf, Filter.filtered_vcf])
         File funcotate_vcf_input_index = select_first([FilterAlignmentArtifacts.filtered_vcf_idx, Filter.filtered_vcf_idx])
-        Runtime standard_runtime = {"gatk_docker": gatk_docker, "gatk_override": "gs://ccleparams/gatk-4.2.6.1-39-g6af550c-SNAPSHOT.jar",
+        Runtime standard_runtime = {"gatk_docker": gatk_docker, "gatk_override": "gs://ccleparams/gatk-4.2.6.1-39-funco-debug-local.jar",
             "max_retries": max_retries_or_default, "preemptible": preemptible_or_default, "cpu": small_task_cpu,
             "machine_mem": small_task_mem * 1000, "command_mem": small_task_mem * 1000 - 500,
             "disk": small_task_disk + disk_pad, "boot_disk_size": boot_disk_size}
