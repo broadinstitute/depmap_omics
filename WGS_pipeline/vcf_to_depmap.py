@@ -49,7 +49,9 @@ for i in range(10_000):
         vcf_filename,
         additional_cols=["PON"],
         parse_filter=True,
-        force_keep=force_keep,
+        force_keep=force_keep
+        + list(vcf.TO_RENAME_OC.keys())
+        + list(vcf.TO_RENAME_BASE.keys()),
         drop_null=False,
         cols_to_drop=[
             "clinvar_vcf_mc",
