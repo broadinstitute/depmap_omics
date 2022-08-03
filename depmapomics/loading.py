@@ -540,7 +540,14 @@ def addSamplesToGumbo(
 
 
 def addSamplesToDepMapWorkspace(
-    stype, refworkspace, samplesetname="", add_to_samplesets=[],
+    stype,
+    refworkspace,
+    samplesetname="",
+    add_to_samplesets=[],
+    model_cols_to_add=[
+        "PatientID",
+        "ModelID",
+    ],  # TODO: add stripped cell line name after it's populated on model table in gumbo
 ):
     """update the samples on a depmapomics terra processing workspace
 
@@ -553,23 +560,14 @@ def addSamplesToDepMapWorkspace(
     refwm = dm.WorkspaceManager(refworkspace).disable_hound()
 
     terra_samples = refwm.get_samples()
-    seq_table = mytracker.read_seq_table()
+    seq_table = mytracker.add_model_cols_to_seqtable(cols=model_cols_to_add)
+    # terra requires a participant_id column
+    seq_table = seq_table.rename(columns={"PatientID": "participant_id"})
     # check which lines are new and need to be imported to terra
     samples_to_add = seq_table[
         (~seq_table.index.isin(terra_samples.index)) & (seq_table.ExpectedType == stype)
     ]
     print("found " + str(len(samples_to_add)) + " new samples to import!")
-
-    # terra requires a participant id column
-    # temp multi-step solution here: get participant id from seq id
-    pr_table = mytracker.read_pr_table()
-    mc_table = mytracker.read_mc_table()
-    model_table = mytracker.read_model_table()
-
-    for i in samples_to_add.index:
-        samples_to_add.loc[i, "participant_id"] = mytracker.get_participant_id(
-            i, seq_table, pr_table, mc_table, model_table
-        )
 
     # uploading new samples
     samples_to_add.index.name = "sample_id"
