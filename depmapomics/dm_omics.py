@@ -684,8 +684,8 @@ async def mutationPostProcessing(
     wesrefworkspace=WESMUTWORKSPACE,
     wescnworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
-    wesvcfdir=WESVCFDIR,
-    wgsvcfdir=WGSVCFDIR,
+    vcfdir=VCFDIR,
+    vcf_colname=VCFCOLNAME,
     samplesetname=SAMPLESETNAME,
     AllSamplesetName="all",
     doCleanup=False,
@@ -833,41 +833,36 @@ async def mutationPostProcessing(
     )
 
     # generate germline binary matrix
-    print("generate germline binary matrix for wes")
-    wes_mat = mut.generateGermlineMatrix(
-        refworkspace=wescnworkspace,
-        vcfdir=wesvcfdir,
+    wgswm = dm.WorkspaceManager(wgsrefworkspace)
+    weswm = dm.WorkspaceManager(wescnworkspace)
+    wgs_samples = wgswm.get_samples()
+    wes_samples = weswm.get_samples()
+    wgs_vcfs = wgs_samples[vcf_colname]
+    wes_vcfs = wes_samples[vcf_colname]
+    vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+
+    print("generate germline binary matrix")
+    germline_mat = mut.generateGermlineMatrix(
+        vcflist,
+        vcfdir=vcfdir,
         savedir=WORKING_DIR + samplesetname + "/",
-        filename="binary_mutguides_wes.tsv.gz",
-        bed_location=bed_location,
-    )
-    print("generate germline binary matrix for wgs")
-    wgs_mat = mut.generateGermlineMatrix(
-        refworkspace=wgsrefworkspace,
-        vcfdir=wgsvcfdir,
-        savedir=WORKING_DIR + samplesetname + "/",
-        filename="binary_mutguides_wgs.tsv.gz",
+        filename="binary_mutguides.tsv.gz",
         bed_location=bed_location,
     )
     # merging wes and wgs
     print("merging and renaming wes and wgs germline matrices")
-    wgs_mat_noguides = wgs_mat.iloc[:, 4:]
-    wes_mat_noguides = wes_mat.iloc[:, 4:]
+    germline_mat_noguides = germline_mat.iloc[:, 4:]
 
     pr_table = mytracker.read_pr_table()
     # transform from CDSID-level to PR-level
     renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
 
-    wgs_whitelist = [x for x in wgs_mat_noguides.columns if x in renaming_dict]
-    wes_whitelist = [x for x in wes_mat_noguides.columns if x in renaming_dict]
-    wgs_whitelist_mat = wgs_mat_noguides[wgs_whitelist]
-    wes_whitelist_mat = wes_mat_noguides[wes_whitelist]
-    wgs_whitelist_mat = wgs_whitelist_mat.rename(columns=renaming_dict)
-    wes_whitelist_mat = wes_whitelist_mat.rename(columns=renaming_dict)
+    whitelist_cols = [x for x in germline_mat_noguides.columns if x in renaming_dict]
+    whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
+    mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
 
-    mergedmat = wgs_whitelist_mat.join(wes_whitelist_mat)
     mergedmat = mergedmat.astype(bool).astype(int)
-    sorted_mat = wgs_mat.iloc[:, :4].join(mergedmat)
+    sorted_mat = germline_mat.iloc[:, :4].join(mergedmat)
     sorted_mat["end"] = sorted_mat["end"].astype(int)
     print("saving wes and wgs germline matrices")
     sorted_mat.to_csv(folder + "binary_germline.csv", index=False)

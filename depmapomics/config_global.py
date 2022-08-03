@@ -276,9 +276,9 @@ BAMQC = [
 KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 
 # germline matrix
-WESVCFDIR = "/tmp/vcfs_wes/"
-WGSVCFDIR = "/tmp/vcfs_wgs/"
+VCFDIR = "/tmp/vcfs/"
 GUIDESBED = "../data/avana_guides.bed"
+VCFCOLNAME = "cnn_filtered_vcf"
 
 ############## CN
 
