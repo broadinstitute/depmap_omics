@@ -138,10 +138,10 @@ rnaworkspace7 = "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData"
 rnasource6 = "DEPMAP"
 rnasource7 = "IBM"
 
-RNAWORKSPACES = {
-    "DEPMAP": "terra-broad-cancer-prod/CCLE_DepMap_RNAseq",
-    "IBM": "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData",
-}
+RNAWORKSPACES = [
+    ("DEPMAP", "terra-broad-cancer-prod/CCLE_DepMap_RNAseq"),
+    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData"),
+]
 
 ## curent WGS GP buckets
 wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
@@ -151,10 +151,10 @@ wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
 wgssource1 = "DEPMAP"
 wgssource2 = "IBM"
 
-WGSWORKSPACES = {
-    "DEPMAP": "terra-broad-cancer-prod/DepMap_WGS",
-    "IBM": "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS",
-}
+WGSWORKSPACES = [
+    ("DEPMAP", "terra-broad-cancer-prod/DepMap_WGS"),
+    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"),
+]
 
 WGSSETENTITY = "sample_set"
 WESSETENTITY = "pair_set"
