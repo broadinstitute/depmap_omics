@@ -588,13 +588,13 @@ def improve(
             vcf[loc][vcf[loc]["oc_revel__score"].astype(float) >= 0.9].index, "lof",
         ] = "Y"
 
-        # likely pathogenic
+        # likely lof
         vcf["likely_lof"] = ""
         vcf.loc[
             vcf[loc][vcf[loc]["oc_revel__score"].astype(float) >= 0.7].index,
             "likely_lof",
         ] = "Y"
-        # trancript pathogenic
+        # trancript lof
         vcf["trancript_likely_lof"] = ""
         trscs = []
         loc = vcf["oc_revel__all"] != ""
@@ -605,10 +605,7 @@ def improve(
                     trsc += v[0][1:-1] + ";"
             trscs.append(trsc)
 
-        vcf.loc[loc, "trancript_likely_pathogenic"] = trscs
-
-        loc = vcf["likely_pathogenic"] == "Y"
-        vcf.loc[loc, "associated_with"] += "disease;"
+        vcf.loc[loc, "trancript_likely_lof"] = trscs
 
     # additional defining drivers
     if "cscape" in annotators or "cscape_coding" in annotators:
@@ -778,7 +775,6 @@ def to_maf(
                 set(
                     [
                         "driver",
-                        "pathogenic",
                         "likely_gof",
                         "clinically_significant",
                         "lof",
@@ -796,7 +792,6 @@ def to_maf(
             )
         important = (
             (vcf["driver"] == "Y")
-            | (vcf["pathogenic"] == "Y")
             | (vcf["likely_gof"] == "Y")
             | (vcf["clinically_significant"] == "Y")
             | (vcf["lof"] == "Y")
