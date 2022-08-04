@@ -9,7 +9,7 @@ from genepy.utils import helper as h
 from genepy import rna
 from genepy import mutations as mut
 
-from depmapomics import tracker as track
+from depmap_omics_upload import tracker as track
 from depmapomics import expressions, mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn

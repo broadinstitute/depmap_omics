@@ -3,10 +3,9 @@
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from genepy.google import gcp
 from genepy import terra
 from genepy.utils import helper as h
-from depmapomics import tracker as track
+from depmap_omics_upload import tracker as track
 from depmapomics.config import *
 from depmapomics import terra as myterra
 

@@ -1,8 +1,6 @@
 # cn.py
 
-import numpy as np
-from depmapomics import tracker as track
-from depmapomics.qc import cn
+from depmap_omics_upload import tracker as track
 from depmapomics.config import *
 from IPython.display import Image, display
 import dalmatian as dm
@@ -11,9 +9,6 @@ import os
 from genepy import mutations as mut
 from genepy.utils import helper as h
 from genepy import terra
-from genepy import rna
-import matplotlib.pyplot as plt
-from depmapomics import terra as myterra
 
 
 def renameColumns(df):

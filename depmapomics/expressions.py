@@ -7,10 +7,7 @@ from scipy.stats import zscore
 
 from genepy.utils import helper as h
 from genepy import rna, terra
-
-from depmapomics import terra as myterra
 from depmapomics.qc import rna as myQC
-from depmapomics import tracker as track
 
 from depmapomics.config import *
 
