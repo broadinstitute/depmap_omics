@@ -253,7 +253,7 @@ TOKEEP_ADD = {
     "cosmic_overlapping_mutations": "str",
     "associated_with": "str",
     # "clinically_significant": "str",
-    #"gof": "str",
+    # "gof": "str",
     "lof": "str",
     "driver": "str",
     "likely_driver": "str",
@@ -281,7 +281,7 @@ TOKEEP_LARGE_ADD = {
     ###############
     # "quality_score": "float",
     # "somatic_score": "float",
-    #"oncokb_variant_summary": "str",
+    # "oncokb_variant_summary": "str",
     "pharmgkb_id": "str",
     "pharmgkb_chemicals": "str",
     "pharmgkb_pheno_cat": "str",
@@ -548,7 +548,8 @@ def improve(
         loc = vcf["oc_civic__clinical_a_score"] != ""
         subvcf = vcf.loc[loc][["oc_civic__clinical_a_score"]]
         vcf.loc[
-            subvcf[subvcf["oc_civic__clinical_a_score"].astype(float) >= 8], "driver"
+            subvcf[subvcf["oc_civic__clinical_a_score"].astype(float) >= 8].index,
+            "driver",
         ] = "Y"
 
         if "likely_driver" not in vcf.columns.tolist():
