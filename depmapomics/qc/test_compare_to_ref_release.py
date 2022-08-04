@@ -189,12 +189,18 @@ def test_fraction_of_unequal_columns_from_merged_file(
     dataframe_merge_both.set_index("DepMap_ID", inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col + "_x" for col in cols]].dtypes
-    equal_nonNA = lambda a, b: (a == b) | (
-        (a != a) & (b != b)
-    )  # this is a regular equality tests with the exception that NA==NA
-    almost_equal_nonNA = lambda a, b: np.isclose(a, b) | (
-        (a != a) & (b != b)
-    )  # this is a regular equality tests with the exception that NA==NA
+
+    # TODO: what is this??
+    def equal_nonNA(a, b):
+        return (a == b) | (
+            (a != a) & (b != b)
+        )  # this is a regular equality tests with the exception that NA==NA
+
+    def almost_equal_nonNA(a, b):
+        return np.isclose(a, b) | (
+            (a != a) & (b != b)
+        )  # this is a regular equality tests with the exception that NA==NA
+
     for col in cols:
         if cols_dtype[col + "_x"] == np.dtype(
             "float64"
@@ -269,9 +275,15 @@ PARAMS_compare_column_dtypes = [x["file"] for x in FILE_ATTRIBUTES_PAIRED]
 def test_compare_column_dtypes(data, method):
     data1, data2 = data
     if method == "pd_dtypes":  # per column dtype
-        get_dtypes = lambda df: df.dtypes
+        get_dtypes = (
+            lambda df: df.dtypes  # pylint: disable=unnecessary-lambda-assignment
+        )
     elif method == "map_type":  # per element type
-        get_dtypes = lambda df: df.apply(lambda x: x.dropna().map(type).unique()).T[0]
+        get_dtypes = lambda df: df.apply(  # pylint: disable=unnecessary-lambda-assignment
+            lambda x: x.dropna().map(type).unique()
+        ).T[
+            0
+        ]
     else:
         raise Exception("bad values for dtype method")
 

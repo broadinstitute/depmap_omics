@@ -3,10 +3,9 @@
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from genepy.google import gcp
 from genepy import terra
 from genepy.utils import helper as h
-from depmapomics import tracker
+from depmap_omics_upload import tracker as track
 from depmapomics.config import *
 from depmapomics import terra as myterra
 
@@ -101,11 +100,11 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
     """
     mismatches = {}
     print("\n\nsamples that should match but don't:")
-    for u in set(samples.arxspan_id):
+    for u in set(samples.PatientID):
         scores = lod_mat.loc[
-            samples[samples.arxspan_id == u].index,
+            samples[samples.ModelID == u].index,
             ref[
-                (ref.arxspan_id == u)
+                (ref.ModelID == u)
                 & (ref.index.isin(lod_mat.columns))
                 & (ref.blacklist != 1)
             ].index.tolist(),
@@ -120,22 +119,14 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                 i,
                 ":",
                 tuple(
-                    ref.loc[
-                        i, ["arxspan_id", "version", "datatype", "participant_id"]
-                    ].values
+                    ref.loc[i, ["ModelID", "version", "datatype", "PatientID"]].values
                 ),
                 j,
                 ":",
                 tuple(
                     ref.loc[
                         j,
-                        [
-                            "arxspan_id",
-                            "version",
-                            "datatype",
-                            "participant_id",
-                            "blacklist",
-                        ],
+                        ["ModelID", "version", "datatype", "PatientID", "blacklist",],
                     ]
                 ),
             )
@@ -146,8 +137,7 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                     + str(
                         tuple(
                             ref.loc[
-                                i,
-                                ["arxspan_id", "version", "datatype", "participant_id"],
+                                i, ["ModelID", "version", "datatype", "PatientID"],
                             ].values
                         )
                     )
@@ -157,10 +147,10 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                             ref.loc[
                                 j,
                                 [
-                                    "arxspan_id",
+                                    "ModelID",
                                     "version",
                                     "datatype",
-                                    "participant_id",
+                                    "PatientID",
                                     "blacklist",
                                 ],
                             ]
@@ -202,7 +192,7 @@ def checkMatches(lod_mat, ref, thr=500):
         ):
             if i == j:
                 continue
-            if ref.loc[i]["participant_id"] == ref.loc[j]["participant_id"]:
+            if ref.loc[i]["PatientID"] == ref.loc[j]["PatientID"]:
                 continue
             if i != previ:
                 if previ != "":
@@ -212,10 +202,10 @@ def checkMatches(lod_mat, ref, thr=500):
                                 ref.loc[
                                     previ,
                                     [
-                                        "arxspan_id",
+                                        "ModelID",
                                         "version",
                                         "datatype",
-                                        "participant_id",
+                                        "PatientID",
                                         "stripped_cell_line_name",
                                     ],
                                 ]
@@ -229,10 +219,10 @@ def checkMatches(lod_mat, ref, thr=500):
                         ref.loc[
                             j,
                             [
-                                "arxspan_id",
+                                "ModelID",
                                 "version",
                                 "datatype",
-                                "participant_id",
+                                "PatientID",
                                 "stripped_cell_line_name",
                             ],
                         ].values
@@ -244,10 +234,10 @@ def checkMatches(lod_mat, ref, thr=500):
                         ref.loc[
                             j,
                             [
-                                "arxspan_id",
+                                "ModelID",
                                 "version",
                                 "datatype",
-                                "participant_id",
+                                "PatientID",
                                 "stripped_cell_line_name",
                             ],
                         ].values
@@ -334,6 +324,7 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
 async def fingerPrint(
     samples,
     sid="id",
+    use_gumbo=False,
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
@@ -421,7 +412,14 @@ async def fingerPrint(
 
     # finding issues with the dataset
     latest_lod_mat = updated_lod_mat.loc[new_ids]
-    ref = tracker.getTracker()
+
+    ref = pd.DataFrame()
+
+    if use_gumbo:
+        mytracker = track.SampleTracker()
+        ref = mytracker.add_model_cols_to_seqtable(["PatientID", "ModelID"])
+
+    samples = samples.rename(columns={"participant_id": "PatientID"})
     ref = ref.append(samples)
 
     # find samples that should match but don't
@@ -436,6 +434,7 @@ async def fingerPrint(
 async def _CCLEFingerPrint(
     rnasamples,
     wgssamples,
+    trackerobj=None,
     sid="id",
     sampleset=SAMPLESETNAME,
     allbatchpairset=FPALLBATCHPAIRSETS,
@@ -472,6 +471,7 @@ async def _CCLEFingerPrint(
     # call generic function
     updated_lod_mat, mismatches, matches = await fingerPrint(
         samples,
+        use_gumbo=True,
         sid=sid,
         sampleset=sampleset,
         allbatchpairset=allbatchpairset,
