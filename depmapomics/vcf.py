@@ -793,7 +793,7 @@ def to_maf(
             )
         important = (
             (vcf["driver"] == "Y")
-            | (vcf["likely_gof"] == "Y")
+            # | (vcf["likely_gof"] == "Y")
             # TODO: could define it with civic if grabbdd drugs in addition to diseases
             # | (vcf["clinically_significant"] == "Y")
             | (vcf["lof"] == "Y")
