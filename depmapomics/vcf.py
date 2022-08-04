@@ -596,7 +596,7 @@ def improve(
             "likely_lof",
         ] = "Y"
         # trancript lof
-        vcf["trancript_likely_lof"] = ""
+        vcf["transcript_likely_lof"] = ""
         trscs = []
         loc = vcf["oc_revel__all"] != ""
         for k, val in vcf[loc][["oc_revel__all"]].iterrows():
@@ -606,7 +606,7 @@ def improve(
                     trsc += v[0][1:-1] + ";"
             trscs.append(trsc)
 
-        vcf.loc[loc, "trancript_likely_lof"] = trscs
+        vcf.loc[loc, "transcript_likely_lof"] = trscs
 
     # additional defining drivers
     if "cscape" in annotators or "cscape_coding" in annotators:
@@ -769,6 +769,10 @@ def to_maf(
             # | vcf["fragments"]
         )
     )
+
+    # creating count columns
+    vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
+
     if whitelist:
         # if missing columns print issue
         if (
@@ -832,9 +836,6 @@ def to_maf(
         + str(len(vcf))
         + ". removed: {:2f}%".format((1 - (len(vcf) / initsize)) * 100)
     )
-
-    # creating count columns
-    vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
 
     # subsetting
     vcf = vcf[list(tokeep.keys())]

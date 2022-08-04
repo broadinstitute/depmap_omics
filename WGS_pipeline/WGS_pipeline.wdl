@@ -10,7 +10,7 @@ import "remove_filtered.wdl" as removeFiltered
 import "vcf_to_depmap.wdl" as vcf_to_depmap
 import "PureCN_pipeline/PureCN.wdl" as PureCN
 import "msisensor2.wdl" as msisensor2
-# import "opencravat.wdl" as openCravat
+import "opencravat_dm.wdl" as openCravat
 
 workflow WGS_pipeline {
 
@@ -172,15 +172,22 @@ workflow WGS_pipeline {
             input_vcf=fix_mutect2.vcf_fixed
     }
 
+    call openCravat.opencravat as open_cravat {
+        input:
+            vcf=RemoveFiltered.output_vcf,
+            annotators_to_use=annotators,
+            oncokb_api_key=oncokb_api_key
+    }
+
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
-            input_vcf=RemoveFiltered.output_vcf,
+            input_vcf=open_cravat.oc_main_file,
             sample_id=sample_name,
+            annotators=flatten([annotators, ["hess_et_al"]])
     }
 
     output {
         #CNVSomaticPairWorkflow
-        File preprocessed_intervals = CNVSomaticPairWorkflow.preprocessed_intervals
         File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor
         File read_counts_tumor = CNVSomaticPairWorkflow.read_counts_tumor
         File allelic_counts_entity_id_tumor = CNVSomaticPairWorkflow.allelic_counts_entity_id_tumor
@@ -188,7 +195,6 @@ workflow WGS_pipeline {
         File denoised_copy_ratios_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_tumor
         File standardized_copy_ratios_tumor = CNVSomaticPairWorkflow.standardized_copy_ratios_tumor
         File het_allelic_counts_tumor = CNVSomaticPairWorkflow.het_allelic_counts_tumor
-        File normal_het_allelic_counts_tumor = CNVSomaticPairWorkflow.normal_het_allelic_counts_tumor
         File copy_ratio_only_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_only_segments_tumor
         File copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_legacy_segments_tumor
         File allele_fraction_legacy_segments_tumor = CNVSomaticPairWorkflow.allele_fraction_legacy_segments_tumor
@@ -199,7 +205,6 @@ workflow WGS_pipeline {
         File copy_ratio_parameters_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_tumor
         File allele_fraction_parameters_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_tumor
         File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
-        File called_copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_legacy_segments_tumor
         File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
         # File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
         File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
@@ -226,6 +231,7 @@ workflow WGS_pipeline {
         File dropped_sv = manta_annotator.dropped 
         # omics_mutect2
         File omics_mutect2_out_vcf=fix_mutect2.vcf_fixed
+        File full_vcf_idx=select_first([mutect2.funcotated_file_index, mutect2.base_vcf_idx])
         # PureCN
         File PureCN_solutions_pdf = PureCN.solutions_pdf
         File chromosomes_pdf = PureCN.chromosomes_pdf
@@ -251,12 +257,16 @@ workflow WGS_pipeline {
         String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
         String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
         # msisensor2
-		Float msisensor2_score=msisensor2_workflow.msisensor2_score
-		File msisensor2_output=msisensor2_workflow.msisensor2_output
-		File msisensor2_output_dis=msisensor2_workflow.msisensor2_output_dis
-		File msisensor2_output_somatic=msisensor2_workflow.msisensor2_output_somatic
+        Float msisensor2_score=msisensor2_workflow.msisensor2_score
+        File msisensor2_output=msisensor2_workflow.msisensor2_output
+        File msisensor2_output_dis=msisensor2_workflow.msisensor2_output_dis
+        File msisensor2_output_somatic=msisensor2_workflow.msisensor2_output_somatic
+        # opencravat
+        File? oc_error_files=open_cravat.oc_error_file
+        File? oc_log_files=open_cravat.oc_log_file
+        # File oc_sql_files=open_cravat.oc_sql_file
         # vcf_to_depmap
-        Array[File] full_maf=my_vcf_to_depmap.full_file
+        Array[File] main_output=my_vcf_to_depmap.full_file
         File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
