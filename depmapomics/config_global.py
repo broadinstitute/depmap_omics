@@ -357,7 +357,7 @@ SOURCE_RENAME = {
 
 MINFREQTOCALL = 0.25
 
-SV_COLNAME = "filtered_annotated_sv"
+SV_COLNAME = "somatic_annotated_sv"
 SV_FILENAME = "all_sv.csv"
 
 SV_COLRENAME = {
