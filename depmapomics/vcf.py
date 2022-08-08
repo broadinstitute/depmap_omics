@@ -442,7 +442,7 @@ def improve(
         if res > min_count_hotspot:
             hotspot_l.append(cosmic_over)
     loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
-    vcf["cosmic_hotspot"] = "Y"
+    vcf.loc[loc, "cosmic_hotspot"] = "Y"
 
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
