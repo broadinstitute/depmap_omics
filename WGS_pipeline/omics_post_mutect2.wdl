@@ -38,20 +38,20 @@ workflow omics_post_mutect2 {
     call removeFiltered.RemoveFiltered as RemoveFiltered {
         input:
             sample_id=sample_id,
-            input_vcf=fixm2.vcf_fixed
+            input_vcf=vcf
     }
 
     if (run_open_cravat){
         call openCravat.opencravat as open_cravat {
             input:
-                vcf=vcf,
+                vcf=RemoveFiltered.output_vcf,
                 annotators_to_use=annotators
         }
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
-            input_vcf=select_first([open_cravat.oc_main_file, vcf]),
+            input_vcf=select_first([open_cravat.oc_main_file, RemoveFiltered.output_vcf]),
             sample_id=sample_id,
             annotators=flatten([annotators, ["hess_et_al"]])
     }
