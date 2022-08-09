@@ -35,11 +35,11 @@ workflow omics_post_mutect2 {
     #        vcf_file=fix_ploid.vcf_fixedploid
     #}
     #
-    #call removeFiltered.RemoveFiltered as RemoveFiltered {
-    #    input:
-    #        sample_id=sample_id,
-    #        input_vcf=fixm2.vcf_fixed
-    #}
+    call removeFiltered.RemoveFiltered as RemoveFiltered {
+        input:
+            sample_id=sample_id,
+            input_vcf=fixm2.vcf_fixed
+    }
 
     if (run_open_cravat){
         call openCravat.opencravat as open_cravat {
