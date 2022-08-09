@@ -23,35 +23,35 @@ workflow omics_post_mutect2 {
     #        merge_mode='all'
     #}
     
-    call bcftools.bcftools_fix_ploidy as fix_ploid {
-        input:
-            sample_id=sample_id,
-            vcf=vcf,
-    }
-
-    call fix_mutect2.fix_mutect2 as fixm2 {
-        input:
-            sample_id=sample_id,
-            vcf_file=fix_ploid.vcf_fixedploid
-    }
-    
-    call removeFiltered.RemoveFiltered as RemoveFiltered {
-        input:
-            sample_id=sample_id,
-            input_vcf=fixm2.vcf_fixed
-    }
+    #call bcftools.bcftools_fix_ploidy as fix_ploid {
+    #    input:
+    #        sample_id=sample_id,
+    #        vcf=vcf,
+    #}
+#
+    #call fix_mutect2.fix_mutect2 as fixm2 {
+    #    input:
+    #        sample_id=sample_id,
+    #        vcf_file=fix_ploid.vcf_fixedploid
+    #}
+    #
+    #call removeFiltered.RemoveFiltered as RemoveFiltered {
+    #    input:
+    #        sample_id=sample_id,
+    #        input_vcf=fixm2.vcf_fixed
+    #}
 
     if (run_open_cravat){
         call openCravat.opencravat as open_cravat {
             input:
-                vcf=RemoveFiltered.output_vcf,
+                vcf=vcf,
                 annotators_to_use=annotators
         }
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
-            input_vcf=select_first([open_cravat.oc_main_file, RemoveFiltered.output_vcf]),
+            input_vcf=select_first([open_cravat.oc_main_file, vcf]),
             sample_id=sample_id,
             annotators=flatten([annotators, ["hess_et_al"]])
     }
