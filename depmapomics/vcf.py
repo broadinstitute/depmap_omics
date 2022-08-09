@@ -545,7 +545,7 @@ def improve(
     if "civic" in annotators:
         if "driver" not in vcf.columns.tolist():
             vcf["driver"] = ""
-        loc = vcf["oc_civic__clinical_a_score"] != ""
+        loc = (vcf["oc_civic__clinical_a_score"] != "") & (vcf["multiallelic"] != "Y")
         subvcf = vcf.loc[loc][["oc_civic__clinical_a_score"]]
         vcf.loc[
             subvcf[subvcf["oc_civic__clinical_a_score"].astype(float) >= 8].index,
@@ -598,7 +598,6 @@ def improve(
         # trancript lof
         vcf["transcript_likely_lof"] = ""
         trscs = []
-        loc = vcf["oc_revel__all"] != ""
         for k, val in vcf[loc][["oc_revel__all"]].iterrows():
             trsc = ""
             for v in [i.split(",") for i in val.oc_revel__all[2:-2].split("],[")]:
