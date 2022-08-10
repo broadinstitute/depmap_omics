@@ -723,51 +723,68 @@ DEFAULT_TABLE_COLS = ["ModelID", "ProfileID", "ProfileType"]
 DEFAULT_TABLE_NAME = "default_model_table"
 
 # dictionaries mapping names of pr-level matrices on latest to names on virtual
+###### Model-level ##########
 # NumericMatrixCSV matrices:
-VIRTUAL_FILENAMES_NUMMAT_EXP = {
-    "genes_expectedCount_profile": "Omics_expression_genes_expectedCount",
-    "genes_tpm_logp1_profile": "Omics_expression_genes_tpm_logp1",
-    "transcripts_expectedCount_profile": "Omics_expression_transcripts_expectedCount",
-    "transcripts_tpm_logp1_profile": "Omics_expression_transcripts_tpm_logp1",
-    "proteinCoding_genes_expectedCount_profile": "Omics_expression_proteinCoding_genes_expectedCount",
-    "proteinCoding_genes_tpm_logp1_profile": "Omics_expression_proteinCoding_genes_tpm_logp1",
+VIRTUAL_FILENAMES_NUMMAT_EXP_MODEL = {
+    "proteinCoding_genes_tpm_logp1_profile": "OmicsExpressionProteinCodingGenesTPMLogp1",
+    "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichment",
 }
 
-VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL = {
-    "gene_set_enrichment_profile": "Omics_gene_set_enrichment",
+VIRTUAL_FILENAMES_NUMMAT_CN_MODEL = {
+    "merged_gene_cn_profile": "OmicsCNGene",
+    "merged_absolute_gene_cn_profile": "OmicsAbsoluteCNGene",
+    "merged_loh_profile": "OmicsLoH",
+    "globalGenomicFeatures_profile": "OmicsSignatures",
 }
 
-VIRTUAL_FILENAMES_NUMMAT_CN = {
-    "merged_gene_cn_profile": "Omics_cn_gene",
-    "merged_absolute_gene_cn_profile": "Omics_absoluteCN_gene",
-    "merged_loh_profile": "Omics_loh",
-    "globalGenomicFeatures_profile": "Omics_signatures",
+VIRTUAL_FILENAMES_NUMMAT_MUT_MODEL = {
+    "somaticMutations_boolMatrix_hotspot_profile": "OmicsSomaticMutationsBoolmatrixDriver",
+    "somaticMutations_boolMatrix_damaging_profile": "OmicsSomaticMutationsBoolmatrixDamaging",
 }
 
-VIRTUAL_FILENAMES_NUMMAT_MUT = {
-    "somaticMutations_boolMatrix_hotspot_profile": "Omics_somaticMutations_boolMatrix_hotspot",
-    "somaticMutations_boolMatrix_otherNonconserving_profile": "Omics_somaticMutations_boolMatrix_otherNonconserving",
-    "somaticMutations_boolMatrix_damaging_profile": "Omics_somaticMutations_boolMatrix_damaging",
-    "somaticMutations_boolMatrix_otherConserving_profile": "Omics_somaticMutations_boolMatrix_otherConserving",
-}
-
-VIRTUAL_FILENAMES_GERMLINE = {
-    "binary_germline_mutation": "Omics_binary_germline_mutation",
+VIRTUAL_FILENAMES_GERMLINE_MODEL = {
+    "binary_germline_mutation": "OmicsGuideMutationsBinaryAvana",
 }
 
 # TableCSV matrices:
-VIRTUAL_FILENAMES_TABLE_FUSION = {
-    "fusions_filtered_profile": "Omics_fusions_filtered",
-    "fusions_unfiltered_profile": "Omics_fusions_unfiltered",
+VIRTUAL_FILENAMES_TABLE_FUSION_MODEL = {
+    "fusions_filtered_profile": "OmicsFusionFiltered",
 }
 
-VIRTUAL_FILENAMES_TABLE_CN = {
-    "merged_segments_profile": "Omics_cn_segments",
-    "merged_absolute_segments_profile": "Omics_absoluteCN_segments",
+VIRTUAL_FILENAMES_TABLE_CN_MODEL = {}
+
+VIRTUAL_FILENAMES_TABLE_MUT_MODEL = {
+    "somaticMutations_profile": "OmicsSomaticMutations",
+    "structuralVariants_profile": "​​OmicsStructuralVariants",
 }
 
-VIRTUAL_FILENAMES_TABLE_MUT = {
-    "somaticMutations_profile": "Omics_somaticMutations",
-    "structuralVariants_profile": "Omics_structuralVariants",
+###### Profile-level ##########
+# NumericMatrixCSV matrices:
+VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
+    "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
+    "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
+    "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
 }
 
+VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
+    "globalGenomicFeatures_profile": "OmicsSignaturesProfile",
+}
+
+VIRTUAL_FILENAMES_NUMMAT_MUT_PR = {}
+
+VIRTUAL_FILENAMES_GERMLINE_PR = {}
+
+# TableCSV matrices:
+VIRTUAL_FILENAMES_TABLE_FUSION_PR = {
+    "fusions_unfiltered_profile": "OmicsFusionUnfilteredProfile",
+}
+
+VIRTUAL_FILENAMES_TABLE_CN_PR = {
+    "merged_segments_profile": "OmicsCNSegmentsProfile",
+    "merged_absolute_segments_profile": "OmicsAbsoluteCNSegmentsProfile",
+}
+
+VIRTUAL_FILENAMES_TABLE_MUT_PR = {
+    "somaticMutations_profile": "OmicsSomaticMutationsProfile",
+    "structuralVariants_profile": "O​micsStructuralVariantsProfile",
+}
