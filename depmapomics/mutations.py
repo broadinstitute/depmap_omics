@@ -297,7 +297,7 @@ def generateGermlineMatrix(
     vcfdir,
     savedir=WORKING_DIR + SAMPLESETNAME + "/",
     filename="binary_mutguides.tsv.gz",
-    bed_location=GUIDESBED,
+    bed_locations=GUIDESBED,
     cores=16,
 ):
     """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
@@ -327,64 +327,70 @@ def generateGermlineMatrix(
     h.createFoldersFor(savedir)
     # load vcfs from workspace using dalmatian
     h.createFoldersFor(vcfdir)
-    guides_bed = pd.read_csv(
-        bed_location,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
+
     # save vcfs from workspace locally,
     # and run bcftools query to transform vcfs into format needed for subsequent steps
     # only including regions in the guide bed file
-    cmd = [
-        "gsutil cp "
-        + sam
-        + " "
-        + vcfdir
-        + sam.split("/")[-1]
-        + " && gsutil cp "
-        + sam
-        + ".tbi"
-        + " "
-        + vcfdir
-        + sam.split("/")[-1]
-        + ".tbi"
-        + " && bcftools query\
-  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
-  --regions-file "
-        + bed_location
-        + " \
-  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-        + sam
-        + " >\
- "
-        + vcfdir
-        + "loc_"
-        + sam.split("/")[-1].split(".")[0]
-        + ".bed &&\
- rm "
-        + vcfdir
-        + sam.split("/")[-1]
-        + "*"
-        for sam in vcfs
-    ]
+
+    cmds = []
+    for sam in vcfs:
+        cmd = (
+            "gsutil cp "
+            + sam
+            + " "
+            + vcfdir
+            + sam.split("/")[-1]
+            + " && gsutil cp "
+            + sam
+            + ".tbi"
+            + " "
+            + vcfdir
+            + sam.split("/")[-1]
+            + ".tbi && "
+        )
+        for lib, fn in bed_locations.items():
+            # h.createFoldersFor(vcfdir + lib + "/")
+            cmd += (
+                "bcftools query\
+                    --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
+                    --regions-file "
+                + fn
+                + " \
+                    --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
+                + vcfdir
+                + sam.split("/")[-1]
+                + " > "
+                + vcfdir
+                + lib
+                + "/"
+                + "loc_"
+                + sam.split("/")[-1].split(".")[0]
+                + ".bed && "
+            )
+        cmd += "rm " + vcfdir + sam.split("/")[-1] + "*"
+        cmds.append(cmd)
 
     print("running bcftools index and query")
-    h.parrun(cmd, cores=cores)
+    h.parrun(cmds, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    print("mapping ")
-    res = pool.starmap(
-        mapBed, zip(os.listdir(vcfdir), repeat(vcfdir), repeat(bed_location))
-    )
-    sorted_guides_bed = guides_bed.sort_values(
-        by=["chrom", "start", "end"]
-    ).reset_index(drop=True)
-    print("done pooling")
-    for name, val in res:
-        if val is not None:
-            sorted_guides_bed[name] = val
-    print("saving matrix")
-    sorted_guides_bed.to_csv(savedir + filename)
+    for lib, fn in bed_locations.items():
+        print("mapping to library: ", lib)
+        res = pool.starmap(
+            mapBed,
+            zip(os.listdir(vcfdir + lib + "/"), repeat(vcfdir + lib + "/"), repeat(fn)),
+        )
+        guides_bed = pd.read_csv(
+            fn, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"],
+        )
+        sorted_guides_bed = guides_bed.sort_values(
+            by=["chrom", "start", "end"]
+        ).reset_index(drop=True)
+        print("done pooling")
+        for name, val in res:
+            if val is not None:
+                sorted_guides_bed[name] = val
+        print("saving binary matrix for library: ", lib)
+        sorted_guides_bed.to_csv(savedir + "_" + lib + "_" + filename)
 
     return sorted_guides_bed
