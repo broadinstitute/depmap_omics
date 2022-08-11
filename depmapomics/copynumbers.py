@@ -144,7 +144,6 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
 
 def pureCNpostprocess(
     refworkspace,
-    setEntity="sample_set",
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     lohcolname=PURECN_LOH_COLNAME,
@@ -177,7 +176,7 @@ def pureCNpostprocess(
     print("loading PureCN merged LOH file")
     wm = dm.WorkspaceManager(refworkspace)
     segments = pd.read_csv(
-        wm.get_entities(setEntity).loc[sampleset, lohcolname]
+        wm.get_entities("sample_set").loc[sampleset, lohcolname]
     ).rename(columns=colRenaming)
     samples = wm.get_samples()
     failed = samples[samples[failedcolname] == "TRUE"].index
@@ -200,7 +199,7 @@ def pureCNpostprocess(
         mut.manageGapsInSegments(segments),
         mappingdf,
         style="closest",
-        value_colname="Absolute_CN",
+        value_colname="MajorAlleleAbsoluteCN",
     )
 
     segments = segments[
@@ -224,15 +223,15 @@ def pureCNpostprocess(
 
     # Generate gene-level LOH status matrix
     segments_binarized = segments.copy()
-    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].replace(
+    segments_binarized["LoHStatus"] = segments_binarized["LoHStatus"].replace(
         lohvals, 1
     )
-    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].fillna(0)
+    segments_binarized["LoHStatus"] = segments_binarized["LoHStatus"].fillna(0)
 
     loh_status = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments_binarized),
         mappingdf,
-        value_colname="LOH_status",
+        value_colname="LoHStatus",
     )
 
     loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
@@ -399,7 +398,6 @@ def postProcess(
     print("done")
     purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
         refworkspace,
-        setEntity=setEntity,
         sampleset=purecnsampleset,
         mappingdf=mybiomart,
         sortby=sortby,

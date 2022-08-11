@@ -337,10 +337,13 @@ SIGTABLE_BINARYCOLS = [
 ]
 
 SIGTABLE_RENAMING = {
-    "PureCN_loh_fraction": "loh_fraction",
-    "PureCN_wgd": "wgd",
-    "PureCN_cin_allele_specific_ploidy_robust": "cin",
-    "PureCN_ploidy": "ploidy",
+    "PureCN_loh_fraction": "LoHFraction",
+    "PureCN_wgd": "WGD",
+    "PureCN_cin_allele_specific_ploidy_robust": "CIN",
+    "PureCN_ploidy": "Ploidy",
+    "msisensor2_score": "MSIScore",
+    "PureCN_curated": "PureCNCurated",
+    "PureCN_curated_solution": "PureCNCuratedSolution",
 }
 
 SOURCE_RENAME = {
