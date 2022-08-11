@@ -367,6 +367,7 @@ def cnPostProcessing(
 
     mytracker.close_gumbo_client()
 
+    save_dir = save_dir + "/" + samplesetname + "/"
     # doing wes
     folder = save_dir + "wes_"
     if wesfolder == "":
