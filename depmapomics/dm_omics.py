@@ -23,11 +23,6 @@ async def expressionPostProcessing(
     ensemblserver=ENSEMBL_SERVER_V,
     doCleanup=True,
     samplesetToLoad="all",
-    tocompare={
-        "genes_expected_count": "CCLE_RNAseq_reads",
-        "genes_tpm": "CCLE_expression_full",
-        "proteincoding_genes_tpm": "CCLE_expression",
-    },
     todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_EXPRESSION,
     save_output=WORKING_DIR,
@@ -81,6 +76,8 @@ async def expressionPostProcessing(
 
     ccle_refsamples = mytracker.read_seq_table()
 
+    mytracker.close_gumbo_client()
+
     todrop += ccle_refsamples[
         (ccle_refsamples.blacklist == 1) & (ccle_refsamples.ExpectedType == "rna")
     ].index.tolist()
@@ -133,7 +130,7 @@ async def expressionPostProcessing(
 
     # subset and rename, include all PRs that have associated CDS-ids
     pr_table = track.update_pr_from_seq()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
     for k, v in files.items():
@@ -251,6 +248,7 @@ async def fusionPostProcessing(
 
     mytracker = track.SampleTracker()
     ccle_refsamples = mytracker.read_seq_table()
+    mytracker.close_gumbo_client()
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
@@ -263,7 +261,7 @@ async def fusionPostProcessing(
 
     # subset, rename from seqid to prid, and save pr-indexed matrices
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     fusions_pr = fusions[
         fusions[fusionSamplecol].isin(set(renaming_dict.keys()))
     ].replace({fusionSamplecol: renaming_dict})
@@ -313,6 +311,7 @@ def cnPostProcessing(
     wessetentity=WESSETENTITY,
     wgssetentity=WGSSETENTITY,
     samplesetname=SAMPLESETNAME,
+    purecnsampleset=PURECN_SAMPLESET,
     AllSamplesetName="all",
     todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_CN,
@@ -364,18 +363,14 @@ def cnPostProcessing(
 
     assert len(tracker) != 0, "broken source for sample tracker"
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
+
+    mytracker.close_gumbo_client()
 
     # doing wes
     folder = save_dir + "wes_"
     if wesfolder == "":
         print("doing wes")
-        todropwes = (
-            todrop
-            + tracker[
-                (tracker.ExpectedType == "wes") & (tracker.blacklist == 1)
-            ].index.tolist()
-        )
         (
             wessegments,
             wesgenecn,
@@ -388,11 +383,11 @@ def cnPostProcessing(
             wesrefworkspace,
             setEntity=wessetentity,
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
-            todrop=todropwes,
             save_output=folder,
             genechangethresh=genechangethresh,
             segmentsthresh=segmentsthresh,
             maxYchrom=maxYchrom,
+            purecnsampleset=purecnsampleset,
             **kwargs,
         )
 
@@ -456,6 +451,7 @@ def cnPostProcessing(
         genechangethresh=genechangethresh,
         segmentsthresh=segmentsthresh,
         maxYchrom=maxYchrom,
+        purecnsampleset=purecnsampleset,
         **kwargs,
     )
 
@@ -732,12 +728,14 @@ async def mutationPostProcessing(
         save_output=folder,
         doCleanup=True,
         mutCol="CGA_WES_AC",
+        sv_col=sv_col,
+        sv_filename=sv_filename,
         **kwargs,
     )
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     wesmutations_pr = wesmutations[
         wesmutations[SAMPLEID].isin(renaming_dict.keys())
     ].replace({SAMPLEID: renaming_dict})
@@ -752,6 +750,8 @@ async def mutationPostProcessing(
         save_output=folder,
         doCleanup=True,
         mutCol="CGA_WES_AC",
+        sv_col=sv_col,
+        sv_filename=sv_filename,
         **kwargs,
     )
 
@@ -850,12 +850,15 @@ async def mutationPostProcessing(
         bed_location=bed_location,
     )
     # merging wes and wgs
-    print("merging and renaming wes and wgs germline matrices")
+    print("renaming merged wes and wgs germline matrix")
     germline_mat_noguides = germline_mat.iloc[:, 4:]
 
     pr_table = mytracker.read_pr_table()
+
+    mytracker.close_gumbo_client()
+
     # transform from CDSID-level to PR-level
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
     whitelist_cols = [x for x in germline_mat_noguides.columns if x in renaming_dict]
     whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
@@ -879,24 +882,11 @@ async def mutationPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder
-                + "somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
-                "name": "somaticMutations_boolMatrix_otherNonconserving_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
                 "path": folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv",
                 "name": "somaticMutations_boolMatrix_damaging_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
-            # {
-            #     "path": folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv",
-            #     "name": "somaticMutations_boolMatrix_otherConserving_profile",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
             {
                 "path": folder + "somatic_mutations_fordepmap_profile.csv",
                 "name": "somaticMutations_profile",

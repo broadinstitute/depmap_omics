@@ -82,12 +82,12 @@ def loadFromGATKAggregation(
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
-    segments.Segment_Mean = 2 ** segments.Segment_Mean
+    segments.SegmentMean = 2 ** segments.SegmentMean
     segments.Start = segments.Start.astype(int)
     segments.End = segments.End.astype(int)
     segments.loc[
-        segments[segments.Chromosome.isin(["X", "Y"])].index, "Segment_Mean"
-    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["Segment_Mean"] / 2)
+        segments[segments.Chromosome.isin(["X", "Y"])].index, "SegmentMean"
+    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2)
     segments = segments.sort_values(by=sortby)
 
     print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
@@ -149,7 +149,7 @@ def pureCNpostprocess(
     todrop=[],
     lohcolname=PURECN_LOH_COLNAME,
     failedcolname=PURECN_FAILED_COLNAME,
-    sampleset="all",
+    sampleset=PURECN_SAMPLESET,
     colRenaming=PURECN_COLRENAMING,
     lohvals=PURECN_LOHVALUES,
     terracols=SIGTABLE_TERRACOLS,
@@ -289,6 +289,7 @@ def postProcess(
     refworkspace,
     setEntity="sample_set",
     sampleset="all",
+    purecnsampleset=PURECN_SAMPLESET,
     save_output="",
     doCleanup=True,
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
@@ -370,7 +371,9 @@ def postProcess(
     segments = segments[
         ~((segments[SAMPLEID].isin(countYdrop)) & (segments.Chromosome == "Y"))
     ]
-    genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
+    genecn = mut.toGeneMatrix(
+        mut.manageGapsInSegments(segments), mybiomart, value_colname="SegmentMean"
+    )
     # validation step
     print("summary of the gene cn data:")
     print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
@@ -397,7 +400,7 @@ def postProcess(
     purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
         refworkspace,
         setEntity=setEntity,
-        sampleset=sampleset,
+        sampleset=purecnsampleset,
         mappingdf=mybiomart,
         sortby=sortby,
         todrop=todrop,
