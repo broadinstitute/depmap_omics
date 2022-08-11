@@ -277,7 +277,11 @@ KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 
 # germline matrix
 VCFDIR = "/tmp/vcfs/"
-GUIDESBED = "../data/avana_guides.bed"
+GUIDESBED = {
+    "avana": "data/avana_guides.bed",
+    "humagne": "data/humagne_guides.bed",
+    "ky": "data/ky_guides.bed",
+}
 VCFCOLNAME = "cnn_filtered_vcf"
 
 ############## CN
