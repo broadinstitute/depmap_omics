@@ -2,7 +2,7 @@ import numpy as np
 
 
 LINES_TO_RELEASE = []
-SAMPLESETNAME = "CCLF"
+SAMPLESETNAME = "22Q2test"
 RELEASE = SAMPLESETNAME.lower()
 
 ### GCP credentials
@@ -287,29 +287,31 @@ SEGMENTSTHR = 1500
 MAXYCHROM = 150
 
 COLRENAMING = {
-    "CONTIG": "chromosome",
-    "START": "start",
-    "END": "end",
-    "seqnames": "chromosome",
-    "start": "start",
+    "CONTIG": "Chromosome",
+    "START": "Start",
+    "END": "End",
+    "end": "End",
+    "seqnames": "Chromosome",
+    "start": "Start",
     "Sample": SAMPLEID,
-    "NUM_POINTS_COPY_RATIO": "numProbes",
-    "MEAN_LOG2_COPY_RATIO": "segmentMean",
-    "CALL": "status",
+    "NUM_POINTS_COPY_RATIO": "NumProbes",
+    "MEAN_LOG2_COPY_RATIO": "SegmentMean",
+    "CALL": "Status",
 }
 
 PURECN_COLRENAMING = {
-    "start": "start",
-    "end": "end",
-    "chr": "chromosome",
+    "start": "Start",
+    "end": "End",
+    "chr": "Chromosome",
     "Sampleid": SAMPLEID,
-    "type": "lohStatus",
-    "C": "majorAlleleAbsoluteCN",
-    "M": "monirAlleleAbsoluteCN",
+    "type": "LoHStatus",
+    "C": "MajorAlleleAbsoluteCN",
+    "M": "MonirAlleleAbsoluteCN",
 }
 
 PURECN_LOH_COLNAME = "PureCN_loh_merged"
 PURECN_FAILED_COLNAME = "PureCN_failed"
+PURECN_SAMPLESET = "PureCN"
 
 # if the loh function outputs one of these, record as 1 in the loh bool matrix
 PURECN_LOHVALUES = [
