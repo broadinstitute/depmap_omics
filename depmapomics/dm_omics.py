@@ -523,8 +523,8 @@ def cnPostProcessing(
                 "Chromosome",
                 "Start",
                 "End",
-                "Segment_Mean",
-                "Num_Probes",
+                "SegmentMean",
+                "NumProbes",
                 "Status",
                 "Source",
             ]
@@ -547,9 +547,9 @@ def cnPostProcessing(
                 "Chromosome",
                 "Start",
                 "End",
-                "Absolute_CN",
-                "Minor_allele_absolute_CN",
-                "LOH_status",
+                "MajorAlleleAbsoluteCN",
+                "MinorAlleleAbsoluteCN",
+                "LoHStatus",
             ]
         ]
         .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
@@ -809,22 +809,6 @@ async def mutationPostProcessing(
         folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv"
     )
     mut.mafToMat(
-        merged[(merged.Variant_annotation == "other conserving")],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv"
-    )
-    mut.mafToMat(
-        merged[(merged.Variant_annotation == "other non-conserving")],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_othernoncons.csv"
-    )
-    mut.mafToMat(
         merged[(merged.isCOSMIChotspot | merged.isTCGAhotspot)],
         mode="bool",
         mutNameCol="mutname",
@@ -842,7 +826,7 @@ async def mutationPostProcessing(
     wes_vcfs = wes_samples[vcf_colname]
     vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
 
-    print("generate germline binary matrix")
+    print("generating germline binary matrix")
     germline_mat = mut.generateGermlineMatrix(
         vcflist,
         vcfdir=vcfdir,

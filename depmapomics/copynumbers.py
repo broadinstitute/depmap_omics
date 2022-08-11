@@ -151,7 +151,6 @@ def pureCNpostprocess(
     sampleset=PURECN_SAMPLESET,
     colRenaming=PURECN_COLRENAMING,
     lohvals=PURECN_LOHVALUES,
-    terracols=SIGTABLE_TERRACOLS,
     save_output="",
     mappingdf=None,
 ):
@@ -235,6 +234,7 @@ def pureCNpostprocess(
     )
 
     loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
+    loh_status = (loh_status > 0).astype(int)
 
     print("PureCN: saving LOH matrix")
     loh_status.to_csv(save_output + "purecn_loh_all.csv")

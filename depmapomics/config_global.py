@@ -306,7 +306,7 @@ PURECN_COLRENAMING = {
     "Sampleid": SAMPLEID,
     "type": "LoHStatus",
     "C": "MajorAlleleAbsoluteCN",
-    "M": "MonirAlleleAbsoluteCN",
+    "M": "MinorAlleleAbsoluteCN",
 }
 
 PURECN_LOH_COLNAME = "PureCN_loh_merged"
