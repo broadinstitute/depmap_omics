@@ -526,7 +526,6 @@ def cnPostProcessing(
                 "SegmentMean",
                 "NumProbes",
                 "Status",
-                "Source",
             ]
         ]
         .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
@@ -737,6 +736,8 @@ async def mutationPostProcessing(
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
+    mytracker.close_gumbo_client()
+
     wesmutations_pr = wesmutations[
         wesmutations[SAMPLEID].isin(renaming_dict.keys())
     ].replace({SAMPLEID: renaming_dict})
@@ -818,10 +819,8 @@ async def mutationPostProcessing(
     )
 
     # generate germline binary matrix
-    wgswm = dm.WorkspaceManager(wgsrefworkspace)
-    weswm = dm.WorkspaceManager(wescnworkspace)
-    wgs_samples = wgswm.get_samples()
-    wes_samples = weswm.get_samples()
+    wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
+    wes_samples = dm.WorkspaceManager(wescnworkspace).get_samples()
     wgs_vcfs = wgs_samples[vcf_colname]
     wes_vcfs = wes_samples[vcf_colname]
     vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
@@ -838,13 +837,7 @@ async def mutationPostProcessing(
     print("renaming merged wes and wgs germline matrix")
     germline_mat_noguides = germline_mat.iloc[:, 4:]
 
-    pr_table = mytracker.read_pr_table()
-
-    mytracker.close_gumbo_client()
-
     # transform from CDSID-level to PR-level
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
-
     whitelist_cols = [x for x in germline_mat_noguides.columns if x in renaming_dict]
     whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
     mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
