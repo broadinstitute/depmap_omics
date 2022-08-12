@@ -333,6 +333,8 @@ def generateGermlineMatrix(
     # only including regions in the guide bed file
 
     cmds = []
+    for lib, _ in bed_locations.items():
+        h.createFoldersFor(vcfdir + lib + "/")
     for sam in vcfs:
         cmd = (
             "gsutil cp "
@@ -349,7 +351,6 @@ def generateGermlineMatrix(
             + ".tbi && "
         )
         for lib, fn in bed_locations.items():
-            # h.createFoldersFor(vcfdir + lib + "/")
             cmd += (
                 "bcftools query\
                     --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
@@ -374,6 +375,7 @@ def generateGermlineMatrix(
     h.parrun(cmds, cores=cores)
 
     pool = multiprocessing.Pool(cores)
+    binary_matrices = dict()
     for lib, fn in bed_locations.items():
         print("mapping to library: ", lib)
         res = pool.starmap(
@@ -392,5 +394,6 @@ def generateGermlineMatrix(
                 sorted_guides_bed[name] = val
         print("saving binary matrix for library: ", lib)
         sorted_guides_bed.to_csv(savedir + "_" + lib + "_" + filename)
+        binary_matrices[lib] = sorted_guides_bed
 
-    return sorted_guides_bed
+    return binary_matrices
