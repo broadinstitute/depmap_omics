@@ -23,7 +23,6 @@ async def expressionPostProcessing(
     ensemblserver=ENSEMBL_SERVER_V,
     doCleanup=True,
     samplesetToLoad="all",
-    todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_EXPRESSION,
     save_output=WORKING_DIR,
     minsimi=RNAMINSIMI,
@@ -78,13 +77,6 @@ async def expressionPostProcessing(
 
     mytracker.close_gumbo_client()
 
-    todrop += ccle_refsamples[
-        (ccle_refsamples.blacklist == 1) & (ccle_refsamples.ExpectedType == "rna")
-    ].index.tolist()
-    priority = ccle_refsamples[
-        (ccle_refsamples.prioritized == 1) & (ccle_refsamples.ExpectedType == "rna")
-    ].index.tolist()
-
     folder = save_output + samplesetname + "/"
 
     if dry_run:
@@ -96,10 +88,8 @@ async def expressionPostProcessing(
         samplesetname,
         save_output=folder,
         doCleanup=doCleanup,
-        priority=priority,
         colstoclean=colstoclean,
         ensemblserver=ensemblserver,
-        todrop=todrop,
         samplesetToLoad=samplesetToLoad,
         geneLevelCols=RSEMFILENAME_GENE,
         trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,  # compute_enrichment=False,
@@ -123,7 +113,6 @@ async def expressionPostProcessing(
         refworkspace,
         samplesinset=samplesinset,
         starlogs=starlogs,
-        todrop=todrop,
         dry_run=True,
         newgs=None,
     )
@@ -216,7 +205,6 @@ async def fusionPostProcessing(
     refworkspace=RNAWORKSPACE,
     sampleset=SAMPLESETNAME,
     fusionSamplecol=SAMPLEID,
-    todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_FUSION,
     dataset_description=FUSIONreadme,
     folder=WORKING_DIR,
@@ -671,6 +659,7 @@ def cnPostProcessing(
             },
         ],
         dataset_description=dataset_description,
+        upload_async=False,
     )
     print("done")
     return wessegments, wgssegments
@@ -688,7 +677,7 @@ async def mutationPostProcessing(
     taiga_description=Mutationsreadme,
     taiga_dataset=TAIGA_MUTATION,
     mutation_groups=MUTATION_GROUPS,
-    bed_location=GUIDESBED,
+    bed_locations=GUIDESBED,
     minfreqtocall=MINFREQTOCALL,
     sv_col=SV_COLNAME,
     sv_filename=SV_FILENAME,
@@ -826,27 +815,30 @@ async def mutationPostProcessing(
     vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
 
     print("generating germline binary matrix")
-    germline_mat = mut.generateGermlineMatrix(
+    germline_mats = mut.generateGermlineMatrix(
         vcflist,
         vcfdir=vcfdir,
         savedir=WORKING_DIR + samplesetname + "/",
         filename="binary_mutguides.tsv.gz",
-        bed_location=bed_location,
+        bed_locations=bed_locations,
     )
-    # merging wes and wgs
-    print("renaming merged wes and wgs germline matrix")
-    germline_mat_noguides = germline_mat.iloc[:, 4:]
+    for lib, mat in germline_mats.items():
+        # merging wes and wgs
+        print("renaming merged wes and wgs germline matrix for library: ", lib)
+        germline_mat_noguides = mat.iloc[:, 4:]
 
-    # transform from CDSID-level to PR-level
-    whitelist_cols = [x for x in germline_mat_noguides.columns if x in renaming_dict]
-    whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
-    mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
+        # transform from CDSID-level to PR-level
+        whitelist_cols = [
+            x for x in germline_mat_noguides.columns if x in renaming_dict
+        ]
+        whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
+        mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
 
-    mergedmat = mergedmat.astype(bool).astype(int)
-    sorted_mat = germline_mat.iloc[:, :4].join(mergedmat)
-    sorted_mat["end"] = sorted_mat["end"].astype(int)
-    print("saving wes and wgs germline matrices")
-    sorted_mat.to_csv(folder + "binary_germline.csv", index=False)
+        mergedmat = mergedmat.astype(bool).astype(int)
+        sorted_mat = mat.iloc[:, :4].join(mergedmat)
+        sorted_mat["end"] = sorted_mat["end"].astype(int)
+        print("saving merged binary matrix for library: ", lib)
+        sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
     # uploading to taiga
     tc.update_dataset(
         changes_description="new " + samplesetname + " release!",
@@ -878,8 +870,20 @@ async def mutationPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "merged_binary_germline.csv",
-                "name": "binary_germline_mutation",
+                "path": folder + "merged_binary_germline_avana.csv",
+                "name": "binary_mutation_avana",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_binary_germline_ky.csv",
+                "name": "binary_mutation_ky",
+                "format": "TableCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_binary_germline_humagne.csv",
+                "name": "binary_mutation_humagne",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
