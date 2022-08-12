@@ -609,13 +609,13 @@ def cnPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "merged_segments_all_profile.csv",
+                "path": folder + "merged_segments_profile.csv",
                 "name": "merged_segments_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "merged_genecn_all_profile.csv",
+                "path": folder + "merged_genecn_profile.csv",
                 "name": "merged_gene_cn_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
