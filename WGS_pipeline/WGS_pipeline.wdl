@@ -139,7 +139,6 @@ workflow WGS_pipeline {
             pon_idx=pon_idx,
             run_funcotator=true,
             run_orientation_bias_mixture_model_filter=true,
-            bcftools_exclude_string=bcftools_exclude_string
     }
 
     call PureCN.PureCN as PureCN {
@@ -172,7 +171,8 @@ workflow WGS_pipeline {
     call removeFiltered.RemoveFiltered as RemoveFiltered {
         input:
             sample_id=sample_name,
-            input_vcf=fix_mutect2.vcf_fixed
+            input_vcf=fix_mutect2.vcf_fixed,
+            bcftools_exclude_string=bcftools_exclude_string
     }
 
     call openCravat.opencravat as open_cravat {
