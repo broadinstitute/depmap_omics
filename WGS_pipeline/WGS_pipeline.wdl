@@ -176,7 +176,6 @@ workflow WGS_pipeline {
         input:
             vcf=RemoveFiltered.output_vcf,
             annotators_to_use=annotators,
-            oncokb_api_key=oncokb_api_key
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
@@ -262,8 +261,9 @@ workflow WGS_pipeline {
         File msisensor2_output_dis=msisensor2_workflow.msisensor2_output_dis
         File msisensor2_output_somatic=msisensor2_workflow.msisensor2_output_somatic
         # opencravat
-        File? oc_error_files=open_cravat.oc_error_file
-        File? oc_log_files=open_cravat.oc_log_file
+        File oc_error_file=open_cravat.oc_error_file
+        File oc_log_file=open_cravat.oc_log_file
+        File oc_main_file=open_cravat.oc_main_file
         # File oc_sql_files=open_cravat.oc_sql_file
         # vcf_to_depmap
         Array[File] main_output=my_vcf_to_depmap.full_file
