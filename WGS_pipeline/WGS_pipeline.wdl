@@ -69,6 +69,9 @@ workflow WGS_pipeline {
         # PureCN
         File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
 
+        #opencravat
+        Array[String] annotators = []
+
     }
 
     call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
