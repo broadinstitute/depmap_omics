@@ -33,6 +33,7 @@ async def expressionPostProcessing(
     rsemfilelocs=None,
     rnaqclocs={},
     starlogs={},
+    compute_enrichment=False,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -81,7 +82,7 @@ async def expressionPostProcessing(
         folder = save_output + "dryrun/"
 
     h.createFoldersFor(folder)
-    files, failed, _, renaming, lowqual, _ = await expressions.postProcess(
+    files, failed, _, renaming, lowqual, enrichments = await expressions.postProcess(
         refworkspace,
         samplesetname,
         save_output=folder,
@@ -90,13 +91,14 @@ async def expressionPostProcessing(
         ensemblserver=ensemblserver,
         samplesetToLoad=samplesetToLoad,
         geneLevelCols=RSEMFILENAME_GENE,
-        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,  # compute_enrichment=False,
+        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
         ssGSEAcol="genes_tpm",
         dropNonMatching=dropNonMatching,
         dry_run=dry_run,
         samplesinset=samplesinset,
         rsemfilelocs=rsemfilelocs,
         rnaqclocs=rnaqclocs,
+        compute_enrichment=compute_enrichment,
         **kwargs,
     )
 
@@ -125,6 +127,10 @@ async def expressionPostProcessing(
         pr_files[k + "_profile"] = v[v.index.isin(set(renaming_dict.keys()))].rename(
             index=renaming_dict
         )
+    enrichments = enrichments[enrichments.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
     mytracker.close_gumbo_client()
 
@@ -182,18 +188,18 @@ async def expressionPostProcessing(
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
-                # {
-                #     "path": folder+'gene_sets_all.csv',
-                #     "name": "gene_set_enrichment_withReplicates",
-                #     "format": "NumericMatrixCSV",
-                #     "encoding": "utf-8"
-                # },
-                # {
-                #     "path": folder+'gene_sets_profile.csv',
-                #     "name": "gene_set_enrichment_profile",
-                #     "format": "NumericMatrixCSV",
-                #     "encoding": "utf-8"
-                # },
+                {
+                    "path": folder + "gene_sets_all.csv",
+                    "name": "gene_set_enrichment_withReplicates",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "gene_sets_profile.csv",
+                    "name": "gene_set_enrichment_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
             ],
             upload_async=False,
             dataset_description=dataset_description,
@@ -236,12 +242,13 @@ async def fusionPostProcessing(
 
     mytracker = track.SampleTracker()
     ccle_refsamples = mytracker.read_seq_table()
-    mytracker.close_gumbo_client()
 
     previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
 
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
+
+    folder = folder + sampleset + "/"
 
     fusions, fusions_filtered = fusion.postProcess(
         refworkspace, todrop=previousQCfail, save_output=folder, **kwargs,
@@ -262,6 +269,8 @@ async def fusionPostProcessing(
         os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
     )
 
+    mytracker.close_gumbo_client()
+
     # taiga
     print("uploading to taiga")
     tc.update_dataset(
@@ -269,19 +278,19 @@ async def fusionPostProcessing(
         changes_description="new " + sampleset + " release!",
         upload_files=[
             {
-                "path": folder + sampleset + "/fusions_all.csv",
+                "path": folder + "/fusions_all.csv",
                 "name": "fusions_unfiltered_withReplicates",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + sampleset + "/filteredfusions_latest_profile.csv",
+                "path": folder + "/filteredfusions_latest_profile.csv",
                 "name": "fusions_filtered_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + sampleset + "/fusions_all_profile.csv",
+                "path": folder + "/fusions_all_profile.csv",
                 "name": "fusions_unfiltered_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
