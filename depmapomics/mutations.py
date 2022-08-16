@@ -393,7 +393,7 @@ def generateGermlineMatrix(
             if val is not None:
                 sorted_guides_bed[name] = val
         print("saving binary matrix for library: ", lib)
-        sorted_guides_bed.to_csv(savedir + "_" + lib + "_" + filename)
+        sorted_guides_bed.to_csv(savedir + lib + "_" + filename)
         binary_matrices[lib] = sorted_guides_bed
 
     return binary_matrices
