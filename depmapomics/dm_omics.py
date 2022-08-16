@@ -75,8 +75,6 @@ async def expressionPostProcessing(
 
     ccle_refsamples = mytracker.read_seq_table()
 
-    mytracker.close_gumbo_client()
-
     folder = save_output + samplesetname + "/"
 
     if dry_run:
@@ -118,7 +116,8 @@ async def expressionPostProcessing(
     )
 
     # subset and rename, include all PRs that have associated CDS-ids
-    pr_table = track.update_pr_from_seq()
+    pr_table = mytracker.update_pr_from_seq()
+    pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
@@ -127,6 +126,7 @@ async def expressionPostProcessing(
             index=renaming_dict
         )
     expressions.saveFiles(pr_files, folder)
+    mytracker.close_gumbo_client()
 
     if not dry_run:
         print("uploading to taiga")
@@ -813,6 +813,7 @@ async def mutationPostProcessing(
     wgs_vcfs = wgs_samples[vcf_colname]
     wes_vcfs = wes_samples[vcf_colname]
     vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+    vcflist = [v for v in vcflist if v.startswith("gs://")]
 
     print("generating germline binary matrix")
     germline_mats = mut.generateGermlineMatrix(

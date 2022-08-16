@@ -767,6 +767,12 @@ VIRTUAL_FILENAMES_TABLE_MUT_MODEL = {
     "structuralVariants_profile": "​​OmicsStructuralVariants",
 }
 
+VIRTUAL_FILENAMES_GUIDEMUT = {
+    "binary_mutation_avana": "OmicsGuideMutationsBinaryAvana",
+    "binary_mutation_ky": "OmicsGuideMutationsBinaryKY",
+    "binary_mutation_humagne": "OmicsGuideMutationsBinaryHumagne",
+}
+
 ###### Profile-level ##########
 # NumericMatrixCSV matrices:
 VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
