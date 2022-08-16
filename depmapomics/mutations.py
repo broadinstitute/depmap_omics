@@ -392,6 +392,7 @@ def generateGermlineMatrix(
         for name, val in res:
             if val is not None:
                 sorted_guides_bed[name] = val
+        sorted_guides_bed = sorted_guides_bed.rename(columns={"foldchange": "sgRNA"})
         print("saving binary matrix for library: ", lib)
         sorted_guides_bed.to_csv(savedir + lib + "_" + filename)
         binary_matrices[lib] = sorted_guides_bed
