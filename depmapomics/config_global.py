@@ -736,7 +736,7 @@ DEFAULT_TABLE_NAME = "default_model_table"
 # NumericMatrixCSV matrices:
 VIRTUAL_FILENAMES_NUMMAT_EXP_MODEL = {
     "proteinCoding_genes_tpm_logp1_profile": "OmicsExpressionProteinCodingGenesTPMLogp1",
-    # "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichment",
+    "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichment",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN_MODEL = {
@@ -778,7 +778,7 @@ VIRTUAL_FILENAMES_GUIDEMUT = {
 VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
     "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
     "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
-    # "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
+    "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
