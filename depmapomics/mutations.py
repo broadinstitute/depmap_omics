@@ -18,37 +18,12 @@ import multiprocessing
 import subprocess
 
 
-def download_maf_from_workspace(
-    refwm,
-    sample_set_ids=["all_ice", "all_agilent"],
-    output_maf="/tmp/mutation_filtered_terra_merged.txt",
-):
-    """
-    TODO: javad to document
-    """
-    sample_sets = refwm.get_sample_sets()
-    dfs = []
-    for sample_set_id in sample_sets.index.intersection(sample_set_ids):
-        cpFiles(
-            sample_sets.loc[sample_set_id, "filtered_CGA_MAF_aggregated"],
-            "/tmp/tmp.txt",
-            payer_project_id="broad-firecloud-ccle",
-            verbose=False,
-        )
-        df = pd.read_csv("/tmp/tmp.txt", sep="\t", low_memory=False)
-        dfs.append(df)
-    dfs_concat = pd.concat(dfs)
-    dfs_concat.to_csv(output_maf, index=False, sep="\t")
-    return dfs_concat
-
-
 def annotateLikelyImmortalized(
     maf,
     sample_col=SAMPLEID,
-    genome_change_col="Genome_Change",
-    TCGAlocs=["TCGAhsCnt", "COSMIChsCnt"],
+    genome_change_col="dna_change",
+    hotspotcol="cosmic_hotspot",
     max_recurrence=0.05,
-    min_tcga_true_cancer=5,
 ):
     """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
 
@@ -72,10 +47,7 @@ def annotateLikelyImmortalized(
         if v > max_recurrence * leng:
             tocheck.append(k)
     for val in list(set(tocheck) - set([np.nan])):
-        if (
-            np.nan_to_num(maf[maf[genome_change_col] == val][TCGAlocs], 0).max()
-            < min_tcga_true_cancer
-        ):
+        if "Y" in maf[maf[genome_change_col] == val][hotspotcol]:
             maf.loc[
                 maf[maf[genome_change_col] == val].index, "is_likely_immortalization"
             ] = True
@@ -97,6 +69,47 @@ def addAnnotation(maf, NCBI_Build="37", Strand="+"):
     maf["NCBI_Build"] = NCBI_Build
     maf["Strand"] = Strand
     return maf
+
+
+def makeMatrices(maf, homin=0.95, id_col=SAMPLEID, save_output=WORKING_DIR, **kwargs):
+    """ generates genotyped driver and damaging mutation matrices
+
+    Returns:
+        lof_mat (pd.DataFrame): genotyped damaging mutation matrix. 0 == not damaging, 1 == heterozygous, 2 == homozygous
+        driver_mat (pd.DataFrame): genotyped driver mutation matrix. 0 == not driver, 1 == heterozygous, 2 == homozygous
+    """
+    val = h.generateGeneNames()  # .hugo_symbol.unique()
+    lof_mat = pd.DataFrame(index=val.hgnc_symbol.unique())
+    driver_mat = pd.DataFrame(index=val.hgnc_symbol.unique())
+    sample_ids = list(maf.id[id_col].unique())
+    le = len(sample_ids)
+    for j in range(le):
+        h.showcount(j, le)
+        sample = sample_ids[j]
+        subset_maf = maf[maf[id_col] == sample]
+        lof = subset_maf[(subset_maf.likely_lof == "Y") | (subset_maf.ccle_deleterious)]
+        homlof = set(lof[lof["gt"] == "1|1"].hugo_symbol)
+        for dup in h.dups(lof.hugo_symbol):
+            if lof[lof.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
+                homlof.add(dup)
+        hetlof = set(lof.hugo_symbol) - homlof
+        lof_mat.loc[homlof, sample] = "2"
+        lof_mat.loc[hetlof, sample] = "1"
+        # driver
+        driver = subset_maf[
+            (subset_maf.civic_score != "") | (subset_maf.hess_driver == "Y")
+        ]
+        homdriv = set(driver[driver["gt"] == "1|1"].hugo_symbol)
+        for dup in h.dups(driver.hugo_symbol):
+            if driver[driver.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
+                homdriv.add(dup)
+        hetdriv = set(driver.hugo_symbol) - homdriv
+        driver_mat.loc[homdriv, sample] = "2"
+        driver_mat.loc[hetdriv, sample] = "1"
+    lof_mat[lof_mat.isna().sum(1) < lof_mat.shape[1]]
+    driver_mat[driver_mat.isna().sum(1) < driver_mat.shape[1]]
+
+    return lof_mat, driver_mat
 
 
 def add_variant_annotation_column(maf):
@@ -157,17 +170,41 @@ def managingDuplicates(samples, failed, datatype, tracker):
     return renaming
 
 
+def aggregateMAFs(
+    refworkspace, sampleset="all", mafcol=MAF_COL, keep_cols=MUTCOL_DEPMAP,
+):
+    """aggregate MAF files from terra
+
+    Args:
+        refworkspace (str): the reference workspace
+        sampleset (str, optional): the sample set to use. Defaults to 'all'.
+        mutCol (str, optional): the MAF column name. Defaults to "somatic_maf".
+        keep_cols (list, optional): which columns to keep in the aggregate MAF file. Defaults to MUTCOL_DEPMAP
+        
+    Returns:
+        aggregated_maf (df.DataFrame): aggregated MAF
+    """
+    print("aggregating MAF files")
+    wm = dm.WorkspaceManager(refworkspace).disable_hound()
+    sample_table = wm.get_samples()
+    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    all_mafs = []
+    for name, row in sample_table.iterrows():
+        maf = pd.read_csv(row[mafcol])
+        maf[SAMPLEID] = name
+        maf = maf[MUTCOL_DEPMAP]
+        all_mafs.append(maf)
+    all_mafs = pd.concat(all_mafs)
+    return all_mafs
+
+
 def postProcess(
     refworkspace,
     sampleset="all",
     mutCol="mut_AC",
-    save_output="",
-    doCleanup=False,
-    rename_cols={
-        "i_ExAC_AF": "ExAC_AF",
-        "Tumor_Sample_Barcode": SAMPLEID,
-        "Tumor_Seq_Allele2": "Tumor_Allele",
-    },
+    mafcol=MAF_COL,
+    save_output=WORKING_DIR,
     sv_col=SV_COLNAME,
     sv_filename=SV_FILENAME,
     sv_renaming=SV_COLRENAME,
@@ -194,28 +231,21 @@ def postProcess(
     print("loading from Terra")
     # if save_output:
     # terra.saveConfigs(refworkspace, save_output + 'config/')
-    refwm = dm.WorkspaceManager(refworkspace)
-    mutations = pd.read_csv(
-        refwm.get_sample_sets().loc[sampleset, "filtered_CGA_MAF_aggregated"], sep="\t"
+    refwm = dm.WorkspaceManager(refworkspace).disable_hound()
+    mutations = aggregateMAFs(
+        refworkspace, sampleset=sampleset, mafcol=mafcol, keep_cols=MUTCOL_DEPMAP,
     )
-    mutations = mutations.rename(columns=rename_cols).drop(
-        columns=["Center", "Tumor_Seq_Allele1"]
-    )
-
     mutations[mutCol] = [
         str(i[0]) + ":" + str(i[1])
-        for i in np.nan_to_num(
-            mutations[["t_alt_count", "t_ref_count"]].values, 0
-        ).astype(int)
+        for i in np.nan_to_num(mutations[["alt_count", "ref_count"]].values, 0).astype(
+            int
+        )
     ]
     mutations = mut.filterCoverage(mutations, loc=[mutCol], sep=":", cov=2)
     mutations = mut.filterAllelicFraction(mutations, loc=[mutCol], sep=":", frac=0.1)
     mutations = addAnnotation(mutations, NCBI_Build="37", Strand="+")
     mutations = annotateLikelyImmortalized(
-        mutations,
-        TCGAlocs=["TCGAhsCnt", "COSMIChsCnt"],
-        max_recurrence=0.05,
-        min_tcga_true_cancer=5,
+        mutations, hotspotcol="cosmic_hotspot", max_recurrence=0.05,
     )
 
     mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
@@ -228,6 +258,7 @@ def postProcess(
         all_sv_colname=sv_col,
         save_output=save_output,
         save_filename=sv_filename,
+        sv_renaming=sv_renaming,
     )
     return mutations, svs
 
