@@ -786,8 +786,6 @@ async def mutationPostProcessing(
     ]
 
     # making a depmap version
-    # removing immortalized ffor now
-    merged = merged[~merged["is_likely_immortalization"]]
     # reverting to previous versions
     merged_maf = merged[MUTCOL_DEPMAP].rename(
         columns={"Tumor_Allele": "Alternate_Allele"}
