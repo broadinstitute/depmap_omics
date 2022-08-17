@@ -1,9 +1,11 @@
 import numpy as np
+from os.path import expanduser
 
+locu = expanduser('~')
 ########################## GENERIC PARAMS
 
 ## General
-CACHE_PATH = "~/.depmapomics/"
+CACHE_PATH = locu+"/.depmapomics/"
 TMP_PATH = "/tmp/"
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
@@ -28,9 +30,9 @@ WGS_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/wgs_hg38/"
 WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
 
 ### google sheet specific
-SHEETCREDS = "../.credentials.json"
-MY_ID = "~/.client_secret.json"
-MYSTORAGE_ID = "~/.storage.json"
+SHEETCREDS = locu+"/.credentials.json"
+MY_ID = locu+"/.client_secret.json"
+MYSTORAGE_ID = locu+"/.storage.json"
 
 SHEETNAME = "ccle sample tracker"
 REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"

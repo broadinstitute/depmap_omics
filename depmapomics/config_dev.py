@@ -1,14 +1,16 @@
 import numpy as np
+from os.path import expanduser
 
+locu = expanduser('~')
 ########################## GENERIC PARAMS
 
-CACHE_PATH = "~/.depmapomics/"
+CACHE_PATH = locu+"/.depmapomics/"
 TMP_PATH = "/tmp/"
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
-SHEETCREDS = "../.credentials.json"
-MY_ID = "~/.client_secret.json"
-MYSTORAGE_ID = "~/.storage.json"
+SHEETCREDS = locu+"/.credentials.json"
+MY_ID = locu+"/.client_secret.json"
+MYSTORAGE_ID = locu+"/.storage.json"
 
 SHEETNAME = "ccle sample tracker"
 

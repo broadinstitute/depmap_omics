@@ -1,6 +1,5 @@
 # tracker.py
 from genepy.utils import helper as h
-from numpy import true_divide
 import pandas as pd
 from depmapomics import loading
 from gsheets import Sheets
