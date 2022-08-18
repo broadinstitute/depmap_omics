@@ -71,30 +71,43 @@ def addAnnotation(maf, NCBI_Build="37", Strand="+"):
     return maf
 
 
-def makeMatrices(maf, homin=0.95, id_col=SAMPLEID, save_output=WORKING_DIR, **kwargs):
-    """ generates genotyped driver and damaging mutation matrices
+def makeMatrices(maf, homin=0.95, id_col=SAMPLEID):
+    """ generates genotyped hotspot, driver and damaging mutation matrices
 
     Returns:
+        hotspot_mat (pd.DataFrame): genotyped hotspot mutation matrix. 0 == not damaging, 1 == heterozygous, 2 == homozygous
         lof_mat (pd.DataFrame): genotyped damaging mutation matrix. 0 == not damaging, 1 == heterozygous, 2 == homozygous
         driver_mat (pd.DataFrame): genotyped driver mutation matrix. 0 == not driver, 1 == heterozygous, 2 == homozygous
     """
-    val = h.generateGeneNames()  # .hugo_symbol.unique()
-    lof_mat = pd.DataFrame(index=val.hgnc_symbol.unique())
-    driver_mat = pd.DataFrame(index=val.hgnc_symbol.unique())
-    sample_ids = list(maf.id[id_col].unique())
+    print("generating genotyped driver and damaging mutation matrix")
+    gene_names = list(maf.hugo_symbol.unique())
+    hotspot_mat = pd.DataFrame(columns=gene_names)
+    lof_mat = pd.DataFrame(columns=gene_names)
+    driver_mat = pd.DataFrame(columns=gene_names)
+    sample_ids = list(maf[id_col].unique())
     le = len(sample_ids)
     for j in range(le):
         h.showcount(j, le)
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
+        # hotspot
+        hotspot = subset_maf[subset_maf.cosmic_hotspot == "Y"]
+        homhotspot = set(hotspot[hotspot["gt"] == "1|1"].hugo_symbol)
+        for dup in h.dups(hotspot.hugo_symbol):
+            if hotspot[hotspot.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
+                homhotspot.add(dup)
+        hethotspot = set(hotspot.hugo_symbol) - homhotspot
+        hotspot_mat.loc[sample, homhotspot] = "2"
+        hotspot_mat.loc[sample, hethotspot] = "1"
+        # damaging
         lof = subset_maf[(subset_maf.likely_lof == "Y") | (subset_maf.ccle_deleterious)]
         homlof = set(lof[lof["gt"] == "1|1"].hugo_symbol)
         for dup in h.dups(lof.hugo_symbol):
             if lof[lof.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
                 homlof.add(dup)
         hetlof = set(lof.hugo_symbol) - homlof
-        lof_mat.loc[homlof, sample] = "2"
-        lof_mat.loc[hetlof, sample] = "1"
+        lof_mat.loc[sample, homlof] = "2"
+        lof_mat.loc[sample, hetlof] = "1"
         # driver
         driver = subset_maf[
             (subset_maf.civic_score != "") | (subset_maf.hess_driver == "Y")
@@ -104,12 +117,13 @@ def makeMatrices(maf, homin=0.95, id_col=SAMPLEID, save_output=WORKING_DIR, **kw
             if driver[driver.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
                 homdriv.add(dup)
         hetdriv = set(driver.hugo_symbol) - homdriv
-        driver_mat.loc[homdriv, sample] = "2"
-        driver_mat.loc[hetdriv, sample] = "1"
-    lof_mat[lof_mat.isna().sum(1) < lof_mat.shape[1]]
-    driver_mat[driver_mat.isna().sum(1) < driver_mat.shape[1]]
+        driver_mat.loc[sample, homdriv] = "2"
+        driver_mat.loc[sample, hetdriv] = "1"
+    hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
+    lof_mat = lof_mat.dropna(axis="columns", how="all")
+    driver_mat = driver_mat.dropna(axis="columns", how="all")
 
-    return lof_mat, driver_mat
+    return hotspot_mat, lof_mat, driver_mat
 
 
 def add_variant_annotation_column(maf):
@@ -189,8 +203,16 @@ def aggregateMAFs(
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    sample_table_valid = sample_table[~sample_table[mafcol].isna()]
+    na_samples = set(sample_table.index) - set(sample_table_valid.index)
+    print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
     all_mafs = []
-    for name, row in sample_table.iterrows():
+    le = len(sample_table_valid)
+    counter = 0
+    for name, row in sample_table_valid.iterrows():
+        # prints out progress bar
+        h.showcount(counter, le)
+        counter += 1
         maf = pd.read_csv(row[mafcol])
         maf[SAMPLEID] = name
         maf = maf[MUTCOL_DEPMAP]
@@ -243,11 +265,12 @@ def postProcess(
     ]
     mutations = mut.filterCoverage(mutations, loc=[mutCol], sep=":", cov=2)
     mutations = mut.filterAllelicFraction(mutations, loc=[mutCol], sep=":", frac=0.1)
-    mutations = addAnnotation(mutations, NCBI_Build="37", Strand="+")
+    print("annotating likeli immpotalized status")
     mutations = annotateLikelyImmortalized(
         mutations, hotspotcol="cosmic_hotspot", max_recurrence=0.05,
     )
 
+    print("saving somatic mutations (all)")
     mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
     print("done")
 

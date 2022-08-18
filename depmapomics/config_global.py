@@ -430,6 +430,7 @@ MUTATION_GROUPS = {
 }
 
 MAF_COL = "somatic_maf"
+HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
 
 MUTCOL_DEPMAP = [
     "chrom",
@@ -768,8 +769,9 @@ VIRTUAL_FILENAMES_NUMMAT_CN_MODEL = {
 }
 
 VIRTUAL_FILENAMES_NUMMAT_MUT_MODEL = {
-    "somaticMutations_boolMatrix_hotspot_profile": "OmicsSomaticMutationsBoolmatrixDriver",
-    "somaticMutations_boolMatrix_damaging_profile": "OmicsSomaticMutationsBoolmatrixDamaging",
+    "somaticMutations_genotypedMatrix_hotspot_profile": "OmicsSomaticMutationsMatrixHotspot",
+    "somaticMutations_genotypedMatrix_damaging_profile": "OmicsSomaticMutationsMatrixDamaging",
+    "somaticMutations_genotypedMatrix_driver_profile": "OmicsSomaticMutationsMatrixDriver",
 }
 
 VIRTUAL_FILENAMES_GERMLINE_MODEL = {

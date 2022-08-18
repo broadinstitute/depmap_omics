@@ -675,8 +675,7 @@ def cnPostProcessing(
 
 
 async def mutationPostProcessing(
-    wesrefworkspace=WESMUTWORKSPACE,
-    wescnworkspace=WESCNWORKSPACE,
+    wesrefworkspace=WESCNWORKSPACE,
     wgsrefworkspace=WGSWORKSPACE,
     vcfdir=VCFDIR,
     vcf_colname=VCFCOLNAME,
@@ -685,9 +684,7 @@ async def mutationPostProcessing(
     doCleanup=False,
     taiga_description=Mutationsreadme,
     taiga_dataset=TAIGA_MUTATION,
-    mutation_groups=MUTATION_GROUPS,
     bed_locations=GUIDESBED,
-    minfreqtocall=MINFREQTOCALL,
     sv_col=SV_COLNAME,
     sv_filename=SV_FILENAME,
     **kwargs,
@@ -710,7 +707,6 @@ async def mutationPostProcessing(
         tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
         prev (pd.df, optional): the previous release dataset (to do QC). 
             Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
-        minfreqtocall (float, optional): the minimum frequency to call a mutation. Defaults to 0.25.
     """
     from taigapy import TaigaClient
 
@@ -724,10 +720,10 @@ async def mutationPostProcessing(
         wesrefworkspace,
         AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
-        doCleanup=True,
-        mutCol="CGA_WES_AC",
+        mutCol="mut_AC",
         sv_col=sv_col,
         sv_filename=sv_filename,
+        mafcol="depmap_maf",
         **kwargs,
     )
 
@@ -746,10 +742,9 @@ async def mutationPostProcessing(
 
     wgsmutations, wgssvs = mutations.postProcess(
         wgsrefworkspace,
-        sampleset="allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
+        sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
-        doCleanup=True,
-        mutCol="CGA_WES_AC",
+        mutCol="mut_AC",
         sv_col=sv_col,
         sv_filename=sv_filename,
         **kwargs,
@@ -763,6 +758,35 @@ async def mutationPostProcessing(
     print("merging")
     folder = WORKING_DIR + samplesetname + "/merged_"
     mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
+    # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
+    print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
+    hugo_mapping = pd.read_csv(HGNC_MAPPING, sep="\t")
+    hugo_mapping = {
+        b: a for a, b in hugo_mapping[~hugo_mapping["Previous symbol"].isna()].values
+    }
+
+    mybiomart = h.generateGeneNames()
+    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
+
+    genes_in_maf = set(mergedmutations.hugo_symbol)
+    genes_not_in_biomart = genes_in_maf - set(mybiomart.hgnc_symbol)
+    maf_gene_renaming = dict()
+    maf_genes_to_drop = []
+    for gene in genes_not_in_biomart:
+        # if the hugo symbol in maf is outdated, and the new name is in biomart,
+        # we will rename it to the new name in the maf
+        if gene in hugo_mapping and hugo_mapping[gene] in set(mybiomart.hgnc_symbol):
+            maf_gene_renaming[gene] = hugo_mapping[gene]
+        # if the hugo symbol can't be found in biomart with or without hugo_mapping,
+        # we will drop that gene from the maf
+        else:
+            maf_genes_to_drop.append(gene)
+    mergedmutations = mergedmutations[
+        ~mergedmutations.hugo_symbol.isin(maf_genes_to_drop)
+    ]
+    mergedmutations = mergedmutations.replace({"hugo_symbol": maf_gene_renaming})
+
+    print("saving merged somatic mutations")
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
     mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
@@ -770,83 +794,65 @@ async def mutationPostProcessing(
     mergedsvs_pr = mergedsvs[mergedsvs[SAMPLEID].isin(renaming_dict.keys())].replace(
         {SAMPLEID: renaming_dict}
     )
+    print("saving somatic svs")
     mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
 
     # making binary mutation matrices
     print("creating mutation matrices")
-    print("changing variant annotations")
-    rename = {}
-    for k, v in mutation_groups.items():
-        for e in v:
-            rename[e] = k
-    merged["Variant_annotation"] = [
-        rename[i] for i in merged["Variant_Classification"].tolist()
+
+    merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
+
+    # making genotyped matrices
+    hotspot_mat, lof_mat, driver_mat = mutations.makeMatrices(merged)
+    # add entrez ids to column names
+    mybiomart["gene_name"] = [
+        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
+        for _, i in mybiomart.iterrows()
     ]
+    symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
+    hotspot_mat = hotspot_mat.rename(columns=symbol_to_symbolentrez_dict)
+    lof_mat = lof_mat.rename(columns=symbol_to_symbolentrez_dict)
+    driver_mat = driver_mat.rename(columns=symbol_to_symbolentrez_dict)
 
-    # making a depmap version
-    # reverting to previous versions
-    merged_maf = merged[MUTCOL_DEPMAP].rename(
-        columns={"Tumor_Allele": "Alternate_Allele"}
-    )
-    merged_maf.to_csv(folder + "somatic_mutations_fordepmap_profile.csv", index=False)
-
-    # making binary matrices
-    merged = merged[merged["Entrez_Gene_Id"] != 0]
-    merged["mutname"] = (
-        merged["Hugo_Symbol"] + " (" + merged["Entrez_Gene_Id"].astype(str) + ")"
-    )
-    mut.mafToMat(
-        merged[(merged.Variant_annotation == "damaging")],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv"
-    )
-    mut.mafToMat(
-        merged[(merged.isCOSMIChotspot | merged.isTCGAhotspot)],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv"
-    )
+    hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
+    lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
+    driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
 
     # generate germline binary matrix
     wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
-    wes_samples = dm.WorkspaceManager(wescnworkspace).get_samples()
+    wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
     wgs_vcfs = wgs_samples[vcf_colname]
     wes_vcfs = wes_samples[vcf_colname]
     vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
     vcflist = [v for v in vcflist if v.startswith("gs://")]
 
-    print("generating germline binary matrix")
-    germline_mats = mut.generateGermlineMatrix(
-        vcflist,
-        vcfdir=vcfdir,
-        savedir=WORKING_DIR + samplesetname + "/",
-        filename="binary_mutguides.tsv.gz",
-        bed_locations=bed_locations,
-    )
-    for lib, mat in germline_mats.items():
-        # merging wes and wgs
-        print("renaming merged wes and wgs germline matrix for library: ", lib)
-        germline_mat_noguides = mat.iloc[:, 4:]
+    # print("generating germline binary matrix")
+    # germline_mats = mut.generateGermlineMatrix(
+    #     vcflist,
+    #     vcfdir=vcfdir,
+    #     savedir=WORKING_DIR + samplesetname + "/",
+    #     filename="binary_mutguides.tsv.gz",
+    #     bed_locations=bed_locations,
+    # )
+    # for lib, mat in germline_mats.items():
+    #     # merging wes and wgs
+    #     print("renaming merged wes and wgs germline matrix for library: ", lib)
+    #     germline_mat_noguides = mat.iloc[:, 4:]
 
-        # transform from CDSID-level to PR-level
-        whitelist_cols = [
-            x for x in germline_mat_noguides.columns if x in renaming_dict
-        ]
-        whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
-        mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
+    #     # transform from CDSID-level to PR-level
+    #     whitelist_cols = [
+    #         x for x in germline_mat_noguides.columns if x in renaming_dict
+    #     ]
+    #     whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
+    #     mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
 
-        mergedmat = mergedmat.astype(bool).astype(int)
-        sorted_mat = mat.iloc[:, :4].join(mergedmat)
-        sorted_mat["end"] = sorted_mat["end"].astype(int)
-        print("saving merged binary matrix for library: ", lib)
-        sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
+    #     mergedmat = mergedmat.astype(bool).astype(int)
+    #     sorted_mat = mat.iloc[:, :4].join(mergedmat)
+    #     sorted_mat["end"] = sorted_mat["end"].astype(int)
+    #     print("saving merged binary matrix for library: ", lib)
+    #     sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
     # uploading to taiga
     tc.update_dataset(
         changes_description="new " + samplesetname + " release!",
@@ -854,19 +860,25 @@ async def mutationPostProcessing(
         upload_files=[
             # for depmap
             {
-                "path": folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
-                "name": "somaticMutations_boolMatrix_hotspot_profile",
+                "path": folder + "somatic_mutations_genotyped_driver_profile.csv",
+                "name": "somaticMutations_genotypedMatrix_driver_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv",
-                "name": "somaticMutations_boolMatrix_damaging_profile",
+                "path": folder + "somatic_mutations_genotyped_hotspot_profile.csv",
+                "name": "somaticMutations_genotypedMatrix_hotspot_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "somatic_mutations_fordepmap_profile.csv",
+                "path": folder + "somatic_mutations_genotyped_damaging_profile.csv",
+                "name": "somaticMutations_genotypedMatrix_damaging_profile",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "somatic_mutations_profile.csv",
                 "name": "somaticMutations_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
@@ -877,24 +889,24 @@ async def mutationPostProcessing(
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
-            {
-                "path": folder + "merged_binary_germline_avana.csv",
-                "name": "binary_mutation_avana",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_binary_germline_ky.csv",
-                "name": "binary_mutation_ky",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_binary_germline_humagne.csv",
-                "name": "binary_mutation_humagne",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
+            # {
+            #     "path": folder + "merged_binary_germline_avana.csv",
+            #     "name": "binary_mutation_avana",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "merged_binary_germline_ky.csv",
+            #     "name": "binary_mutation_ky",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
+            # {
+            #     "path": folder + "merged_binary_germline_humagne.csv",
+            #     "name": "binary_mutation_humagne",
+            #     "format": "TableCSV",
+            #     "encoding": "utf-8",
+            # },
             {
                 "path": folder + "svs.csv",
                 "name": "structuralVariants_withReplicates",
