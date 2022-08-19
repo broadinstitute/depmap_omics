@@ -1,5 +1,4 @@
 import re
-from stringprep import in_table_c11_c12
 import numpy as np
 
 DROPCOMMA = [
@@ -271,6 +270,16 @@ TOKEEP_ADD = {
     "likely_lof": "str",
     "hess_driver": "str",
     "hess_signture": "str",
+    "cscape_score": "str",
+    "dann_score": "str",
+    "revel_score": "str",
+    "funseq2_score": "str",
+    "pharmgkb_id": "str",
+    "dida_id": "str",
+    "dida_name": "str",
+    "gwas_disease": "str",
+    "gwas_pmid": "str",
+    "gtex_gene": "str",
 }
 
 
@@ -282,31 +291,21 @@ TOKEEP_LARGE_ADD = {
     # "quality_score": "float",
     # "somatic_score": "float",
     # "oncokb_variant_summary": "str",
-    "pharmgkb_id": "str",
     "pharmgkb_chemicals": "str",
     "pharmgkb_pheno_cat": "str",
-    "dida_id": "str",
-    "dida_name": "str",
     "dida_effect": "str",
     "dida_relation": "str",
     "dida_fam": "str",
     "dida_funct": "str",
     "dida_dist": "str",
     "dida_pub": "str",
-    "gwas_disease": "str",
-    "gwas_pmid": "str",
     "encode_group": "str",
     "encode_bound": "str",
-    "cscape_score": "str",
     "brca1_func_score": "str",
-    "dann_score": "str",
-    "revel_score": "str",
     "spliceai_ds_ag": "str",
     "spliceai_ds_al": "str",
     "spliceai_ds_dg": "str",
     "spliceai_ds_dl": "str",
-    "gtex_gene": "str",
-    "funseq2_score": "str",
     "funseq2_motif": "str",
     "funseq2_hot": "str",
 }
@@ -342,8 +341,23 @@ def improve(
     **kwargs
 ):
     """
-    annotators: list(str) many of: [oncokb, cscape, civic, brca1_func_assay, sift, provean, dann, 
-    revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
+    given a dataframe representing vcf annotated with opencravat, will improve it.
+    
+
+    Args:
+    ----- 
+        annotators: list(str) many of: [oncokb, cscape, civic, brca1_func_assay, sift, provean, dann, 
+        revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
+        vcf: a df from geney.mutations.vcf_to_df(): the input vcf annotated with opencravat
+        force_list: list of elements we know have ',' separated values.
+        torename: dict(str: str) renaming dict for columns
+        special_rep: dict(str: str) special characters to replace with something else
+        replace_empty: dict(str: str) values representing empty fields to replace with something else
+        split_multiallelic: bool if True, will split multiallelic variants into separate rows
+        min_count_hotspot: int minimum number of mutations in cosmic to consider the loci a hotspot
+    
+    Returns:
+        the imrpoved vcf
     """
 
     # mutect2 generates 2 DP columns, one in INFO and the other in FORMAT
@@ -446,21 +460,21 @@ def improve(
 
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
-    vcf.loc[
-        vcf["gencode_34_variantclassification"].isin(
-            [
-                "DE_NOVO_START_OUT_FRAME",
-                "DE_NOVO_START_IN_FRAME",
-                "FRAME_SHIFT_DEL",
-                "FRAME_SHIFT_INS",
-                "START_CODON_INS",
-                "START_CODON_DEL",
-                "NONSTOP",
-                "NONSENSE",
-            ]
-        ),
-        "ccle_deleterious",
-    ] = "Y"
+    loc = vcf["gencode_34_variantclassification"].isin(
+        [
+            "DE_NOVO_START_OUT_FRAME",
+            "DE_NOVO_START_IN_FRAME",
+            "FRAME_SHIFT_DEL",
+            "FRAME_SHIFT_INS",
+            "START_CODON_INS",
+            "START_CODON_DEL",
+            "NONSTOP",
+            "NONSENSE",
+        ]
+    )
+    vcf.loc[loc, "ccle_deleterious",] = "Y"
+    vcf["likely_lof"] = ""
+    vcf.loc[loc, "likely_lof"] = "Y"
 
     # structural_relation
     vcf["structural_relation"] = vcf["cgc_translocation_partner"]
@@ -524,7 +538,6 @@ def improve(
         vcf.loc[loc, "lof"] = "Y"
 
         # likely lof
-        vcf["likely_lof"] = ""
         vcf.loc[loc, "likely_lof"] = "Y"
         loc = vcf["oc_oncokb_dm__knowneffect"] == "Likely Loss-of-function"  # |
         vcf.loc[loc, "likely_lof"] = "Y"
@@ -574,8 +587,6 @@ def improve(
             if "dann" in annotators
             else "oc_dann_coding__dann_coding_score"
         )
-        if "likely_lof" not in vcf.columns.tolist():
-            vcf["likely_lof"] = ""
         # http://www.enlis.com/blog/2015/03/17/the-best-variant-prediction-method-that-no-one-is-using/
         loc = (vcf[name_score] != "") & (vcf["multiallelic"] != "Y")
         loc = vcf[loc][vcf[loc][name_score].astype(float) >= 0.96].index
@@ -583,14 +594,14 @@ def improve(
 
     # lof revel
     if "revel" in annotators:
-        vcf["lof"] = ""
+        if "likely_lof" not in vcf.columns.tolist():
+            vcf["lof"] = ""
         loc = (vcf["oc_revel__score"] != "") & (vcf["multiallelic"] != "Y")
         vcf.loc[
             vcf[loc][vcf[loc]["oc_revel__score"].astype(float) >= 0.9].index, "lof",
         ] = "Y"
 
         # likely lof
-        vcf["likely_lof"] = ""
         vcf.loc[
             vcf[loc][vcf[loc]["oc_revel__score"].astype(float) >= 0.7].index,
             "likely_lof",
@@ -745,7 +756,18 @@ def to_maf(
     Args:
         vcf (_type_): _description_
         tokeep (_type_, optional): _description_. Defaults to TOKEEP_SMALL.
-        whitelist (bool): set it to true to whitelist, needs output from vcf.improve and annotators
+        whitelist (bool): set it to true to whitelist some mutatios and prevent them
+            from being dropped being germline. needs output from vcf.improve and annotators
+        sample_id (str): sample id to use for the maf file
+        drop_multi (bool): set it to true to drop multi-allelic variants
+        min_freq (float): minimum allelic frequency to keep a variant
+        min_depth (int): minimum read depth to keep a variant
+        max_log_pop_af (float): maximum -log10 population allele frequency to keep a variant
+        only_coding (bool): set it to true to keep only coding variants
+        only_somatic (bool): set it to true to keep only somatic variants
+        oncogenic_list (list[str]): list of oncogenes
+        tumor_suppressor_list (list[str]): list of tumor suppressors
+
     """
     # dropping
     initsize = len(vcf)
@@ -848,11 +870,11 @@ def to_maf(
 
 
 def read_parquet(link):
-    """read_parquet 
+    """auto read the set of parquet files from one sample and merge them
 
     Args:
-        link (_type_): _description_
+        link (str): gs link to the parquet files
     """
-
+    print("tofinish")
     return pq.read_parquet("tmp/depmapomics/")
 
