@@ -221,10 +221,48 @@ def aggregateMAFs(
     return all_mafs
 
 
+def aggregateSV(
+    refworkspace,
+    sampleset="all",
+    sv_colname=SV_COLNAME,
+    sv_renaming=SV_COLRENAME,
+    save_output="",
+    save_filename="",
+):
+    """aggregate SVs pulled from a terra workspace
+
+    Args:
+        refworkspace (str): terra workspace where the ref data is stored
+        sampleids (list[str]): list of sequencing IDs
+        all_sv_colname (str): name of column in terra workspace that contains sv output files. Defaults to "filtered_annotated_sv"
+        save_output (str, optional): whether to save our data. Defaults to "".
+
+    Returns:
+        
+    """
+    print("aggregating SVs")
+    wm = dm.WorkspaceManager(refworkspace).disable_hound()
+    sample_table = wm.get_samples()
+    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    sample_table_valid = sample_table[~sample_table[sv_colname].isna()]
+    na_samples = set(sample_table.index) - set(sample_table_valid.index)
+    print(str(len(na_samples)) + " samples don't have corresponding sv: ", na_samples)
+    all_svs = []
+    for name, row in sample_table.iterrows():
+        sv = pd.read_csv(row[sv_colname], sep="\t")
+        sv[SAMPLEID] = name
+        all_svs.append(sv)
+    all_svs = pd.concat(all_svs)
+    all_svs = all_svs.rename(columns=sv_renaming)
+    print("saving aggregated SVs")
+    all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
+    return all_svs
+
+
 def postProcess(
     refworkspace,
     sampleset="all",
-    mutCol="mut_AC",
     mafcol=MAF_COL,
     save_output=WORKING_DIR,
     sv_col=SV_COLNAME,
@@ -253,19 +291,11 @@ def postProcess(
     print("loading from Terra")
     # if save_output:
     # terra.saveConfigs(refworkspace, save_output + 'config/')
-    refwm = dm.WorkspaceManager(refworkspace).disable_hound()
     mutations = aggregateMAFs(
         refworkspace, sampleset=sampleset, mafcol=mafcol, keep_cols=MUTCOL_DEPMAP,
     )
-    mutations[mutCol] = [
-        str(i[0]) + ":" + str(i[1])
-        for i in np.nan_to_num(mutations[["alt_count", "ref_count"]].values, 0).astype(
-            int
-        )
-    ]
-    mutations = mut.filterCoverage(mutations, loc=[mutCol], sep=":", cov=2)
-    mutations = mut.filterAllelicFraction(mutations, loc=[mutCol], sep=":", frac=0.1)
-    print("annotating likeli immpotalized status")
+
+    print("annotating likely immortalized status")
     mutations = annotateLikelyImmortalized(
         mutations, hotspotcol="cosmic_hotspot", max_recurrence=0.05,
     )
@@ -274,51 +304,18 @@ def postProcess(
     mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
     print("done")
 
-    sampleids = refwm.get_sample_sets().loc[sampleset, "samples"]
     svs = aggregateSV(
         refworkspace,
-        sampleids,
-        all_sv_colname=sv_col,
+        sampleset=sampleset,
+        sv_colname=sv_col,
         save_output=save_output,
         save_filename=sv_filename,
         sv_renaming=sv_renaming,
     )
+    print("saving svs (all)")
+    svs.to_csv(save_output + "svs_all.csv", index=None)
+
     return mutations, svs
-
-
-def aggregateSV(
-    refworkspace,
-    sampleids,
-    all_sv_colname=SV_COLNAME,
-    sv_renaming=SV_COLRENAME,
-    save_output="",
-    save_filename="",
-):
-    """aggregate SVs pulled from a terra workspace
-
-    Args:
-        refworkspace (str): terra workspace where the ref data is stored
-        sampleids (list[str]): list of sequencing IDs
-        all_sv_colname (str): name of column in terra workspace that contains sv output files. Defaults to "filtered_annotated_sv"
-        save_output (str, optional): whether to save our data. Defaults to "".
-
-    Returns:
-        
-    """
-    print("aggregating SVs")
-    wm = dm.WorkspaceManager(refworkspace).disable_hound()
-    sample_table = wm.get_samples()
-    sample_table = sample_table[sample_table.index.isin(sampleids)]
-    all_svs = []
-    for name, row in sample_table.iterrows():
-        sv = pd.read_csv(row[all_sv_colname], sep="\t")
-        sv[SAMPLEID] = name
-        all_svs.append(sv)
-    all_svs = pd.concat(all_svs)
-    all_svs = all_svs.rename(columns=sv_renaming)
-    print("saving aggregated SVs")
-    all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
-    return all_svs
 
 
 def mapBed(file, vcfdir, bed_location):
