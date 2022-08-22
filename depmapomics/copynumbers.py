@@ -230,6 +230,7 @@ def pureCNpostprocess(
     loh_status = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments_binarized),
         mappingdf,
+        style="closest",
         value_colname="LoHStatus",
     )
 
