@@ -245,7 +245,6 @@ TOKEEP_ADD = {
     "lineage_association": "str",
     "achilles_top_genes": "str",
     "cancer_molecular_genetics": "str",
-    # "hotspot": "str",
     "ccle_deleterious": "str",
     "structural_relation": "str",
     "cosmic_hotspot": "str",
@@ -598,6 +597,7 @@ def improve(
     # lof revel
     if "oc_revel__score" in vcf.columns.tolist():
         # trancript lof
+        loc = (vcf["oc_revel__score"] != "") & (vcf["multiallelic"] != "Y")
         vcf["transcript_likely_lof"] = ""
         trscs = []
         for k, val in vcf[loc][["oc_revel__all"]].iterrows():
@@ -685,19 +685,22 @@ def improve(
             else "cosmic_hotspot"
         )
         vcf.loc[
-            (vcf[name] == "Y")
-            & vcf["gencode_34_hugosymbol"].isin(tumor_suppressor_list),
-            "likely_lof",
-        ] = "Y"
-        vcf.loc[
-            (vcf[name] == "Y") & vcf["gencode_34_hugosymbol"].isin(oncogene_list),
-            "likely_gof",
-        ] = "Y"
-        vcf.loc[
             (vcf[name] == "Y") | (vcf["clinically_significant"] == "Y"),
             "associated_with",
         ] += "cancer;"
         vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
+
+    if "likely_driver" in vcf.columns.tolist():
+        vcf.loc[
+            (vcf["likely_driver"] == "Y")
+            & vcf["gencode_34_hugosymbol"].isin(tumor_suppressor_list),
+            "likely_lof",
+        ] = "Y"
+        vcf.loc[
+            (vcf["likely_driver"] == "Y")
+            & vcf["gencode_34_hugosymbol"].isin(oncogene_list),
+            "likely_gof",
+        ] = "Y"
 
     if "likely_gof" in vcf.columns.tolist():
         loc = vcf[vcf["likely_gof"] == "Y"].index.tolist()
