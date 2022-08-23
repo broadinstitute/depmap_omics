@@ -37,11 +37,18 @@ print(
 tobreak = False
 
 loc = os.path.dirname(os.path.abspath(__file__))
-
 oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
 tumor_suppressor_list = h.fileToList(
     loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 )
+
+"""
+we are running through these likely very large files by loading a chunk at a time
+
+the issue is to make sure that each chunk is the same as the previous chunk (we don't remove differ
+set of columns etc..) 
+
+"""
 
 for i in range(10_000):
     # read in vcf as a df

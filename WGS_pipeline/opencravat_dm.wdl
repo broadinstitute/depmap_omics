@@ -2,6 +2,9 @@ version 1.0
 
 # Given a set of samples, combine segment files into a single file
 # more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
+# more information about the modules used: 
+# https://docs.google.com/document/d/1CdeeprU3oNE9j9-rwjRX_CommeRqwW78Lu2HEHOLdK0
+
 workflow run_opencravat {
     input {
         File vcf
@@ -18,6 +21,7 @@ workflow run_opencravat {
     }
 }
 
+# only the new version of opencravat actually works and it is not in this docker
 task opencravat {
     input {
         File vcf
@@ -42,9 +46,11 @@ task opencravat {
     
     command {
         set -euo pipefail
-            
+        
+        # only the new version of opencravat actually works and it is not in this docker
         pip install open-cravat --upgrade
-
+        
+        # only the new version of opencravat actually works and it is not in this docker
         ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xvf "+oc_modules+" && cd -" else oc_install}
 
         oc new annotator oncokb_dm
@@ -52,7 +58,7 @@ task opencravat {
         
         oc new annotator hess_drivers
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
-        
+
         git clone https://github.com/broadinstitute/depmap_omics.git
         cd depmap_omics && git checkout dev && git pull && cd ..
         cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
