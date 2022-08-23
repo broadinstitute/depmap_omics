@@ -335,9 +335,10 @@ def improve(
     torename={**TO_RENAME_BASE, **TO_RENAME_OC},
     special_rep=REPLACE_SPECIAL_CHAR,
     replace_empty=REPLACE_EMPTY,
-    annotators=[],
     split_multiallelic=False,
     min_count_hotspot=5,
+    oncogene_list=[],
+    tumor_suppressor_list=[],
     **kwargs
 ):
     """
@@ -346,7 +347,6 @@ def improve(
 
     Args:
     ----- 
-        annotators: list(str) many of: [oncokb, cscape, civic, brca1_func_assay, sift, provean, dann, 
         revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
         vcf: a df from geney.mutations.vcf_to_df(): the input vcf annotated with opencravat
         force_list: list of elements we know have ',' separated values.
@@ -511,7 +511,7 @@ def improve(
 
     vcf["associated_with"] = ""
 
-    if "oncokb" in annotators:
+    if "oc_oncokb_dm__oncogenic" in vcf.columns.tolist():
         # defining drivers
         vcf["driver"] = ""
         loc = vcf["oc_oncokb_dm__oncogenic"] == "Oncogenic"
@@ -555,7 +555,7 @@ def improve(
 
     # clinical evidence:
     # https://civic.readthedocs.io/en/latest/model/variants/evidence_score.html
-    if "civic" in annotators:
+    if "oc_civic__clinical_a_score" in vcf.columns.tolist():
         if "driver" not in vcf.columns.tolist():
             vcf["driver"] = ""
         loc = (vcf["oc_civic__clinical_a_score"] != "") & (vcf["multiallelic"] != "Y")
@@ -571,7 +571,7 @@ def improve(
         vcf.loc[loc, "likely_driver"] = "Y"
 
     # lof more
-    if "brca1_func_assay" in annotators:
+    if "oc_brca1_func_assay__score" in vcf.columns.tolist():
         if "lof" not in vcf.columns.tolist():
             vcf["lof"] = ""
         loc = (vcf["oc_brca1_func_assay__score"] != "") & (vcf["multiallelic"] != "Y")
@@ -581,10 +581,13 @@ def improve(
         vcf.loc[loc, "lof"] = "Y"
 
     # likely lof in DANN
-    if "dann" in annotators or "dann_coding" in annotators:
+    if (
+        "oc_dann__score" in vcf.columns.tolist()
+        or "oc_dann_coding__dann_coding_score" in vcf.columns.tolist()
+    ):
         name_score = (
             "oc_dann__score"
-            if "dann" in annotators
+            if "oc_dann__score" in vcf.columns.tolist()
             else "oc_dann_coding__dann_coding_score"
         )
         # http://www.enlis.com/blog/2015/03/17/the-best-variant-prediction-method-that-no-one-is-using/
@@ -593,19 +596,7 @@ def improve(
         vcf.loc[loc, "likely_lof"] = "Y"
 
     # lof revel
-    if "revel" in annotators:
-        if "likely_lof" not in vcf.columns.tolist():
-            vcf["lof"] = ""
-        loc = (vcf["oc_revel__score"] != "") & (vcf["multiallelic"] != "Y")
-        vcf.loc[
-            vcf[loc][vcf[loc]["oc_revel__score"].astype(float) >= 0.9].index, "lof",
-        ] = "Y"
-
-        # likely lof
-        vcf.loc[
-            vcf[loc][vcf[loc]["oc_revel__score"].astype(float) >= 0.7].index,
-            "likely_lof",
-        ] = "Y"
+    if "oc_revel__score" in vcf.columns.tolist():
         # trancript lof
         vcf["transcript_likely_lof"] = ""
         trscs = []
@@ -618,32 +609,37 @@ def improve(
 
         vcf.loc[loc, "transcript_likely_lof"] = trscs
 
-    # additional defining drivers
-    if "cscape" in annotators or "cscape_coding" in annotators:
-        score_name = (
-            "oc_cscape__score" if "cscape" in annotators else "oc_cscape_coding__score"
-        )
-        if "likely_driver" not in vcf.columns.tolist():
-            vcf["likely_driver"] = ""
-        subvcf = vcf[(vcf[score_name] != "") & (vcf["multiallelic"] != "Y")][
-            ["oc_base__coding", score_name]
-        ]
-        vcf.loc[
-            subvcf[
-                (
-                    (subvcf["oc_base__coding"] != "")
-                    & (subvcf[score_name].astype(float) >= 0.89)
-                )
-                | (
-                    (subvcf["oc_base__coding"] == "")
-                    & (subvcf[score_name].astype(float) >= 0.80)
-                )
-            ].index,
-            "likely_driver",
-        ] = "Y"
+    # additional defining drivers --> TRAINED ON SOMATIC SO DOING NONSENSE
+    # if (
+    #    "oc_cscape__score" in vcf.columns.tolist()
+    #    or "oc_cscape_coding__score" in vcf.columns.tolist()
+    # ):
+    # score_name = (
+    #    "oc_cscape__score"
+    #    if "oc_cscape__score" in vcf.columns.tolist()
+    #    else "oc_cscape_coding__score"
+    # )
+    # if "likely_driver" not in vcf.columns.tolist():
+    #    vcf["likely_driver"] = ""
+    # subvcf = vcf[(vcf[score_name] != "") & (vcf["multiallelic"] != "Y")][
+    #    ["oc_base__coding", score_name]
+    # ]
+    # vcf.loc[
+    #    subvcf[
+    #        (
+    #            (subvcf["oc_base__coding"] != "")
+    #            & (subvcf[score_name].astype(float) >= 0.89)
+    #        )
+    #        | (
+    #            (subvcf["oc_base__coding"] == "")
+    #            & (subvcf[score_name].astype(float) >= 0.80)
+    #        )
+    #    ].index,
+    #    "likely_driver",
+    # ] = "Y"
 
     # generic annotation
-    if "spliceai" in annotators:
+    if "oc_spliceai__ds_ag" in vcf.columns.tolist():
         subvcf = vcf[(vcf["oc_spliceai__ds_ag"] != "") & (vcf["multiallelic"] != "Y")]
         loc = subvcf[
             (subvcf["oc_spliceai__ds_ag"].astype(float) >= 0.5)
@@ -654,10 +650,10 @@ def improve(
         vcf.loc[loc, "associated_with"] += "splicing;"
 
     loc_e = []
-    if "gtex" in annotators:
+    if "oc_gtex__gtex_gene" in vcf.columns.tolist():
         loc_e += vcf[vcf["oc_gtex__gtex_gene"] != ""].index.tolist()
 
-    if "funseq2" in annotators:
+    if "oc_funseq2__score" in vcf.columns.tolist():
         loc = (vcf["oc_funseq2__score"] != "") & (vcf["multiallelic"] != "Y")
         loc_e += vcf[loc][
             (vcf[loc].oc_funseq2__score.astype(float) >= 0.5)
@@ -670,28 +666,40 @@ def improve(
     vcf.loc[list(set(loc_e)), "associated_with"] += "expression;"
 
     loc = []
-    if "pharmgkb" in annotators:
+    if "pharmoc_pharmgkb__chemicalsgkb" in vcf.columns.tolist():
         loc += vcf[vcf["oc_pharmgkb__chemicals"] != ""].index.tolist()
-    if "oncokb" in annotators:
+    if "oc_oncokb_dm__highestsensitivelevel" in vcf.columns.tolist():
         loc += vcf[vcf["oc_oncokb_dm__highestsensitivelevel"] != ""].index.tolist()
     vcf.loc[list(set(loc)), "associated_with"] += "chemicals;"
 
-    loc = []
     if "likely_gof" not in vcf.columns.tolist():
         vcf["likely_gof"] = ""
-    if "likely_driver" in vcf.columns.tolist():
-        # if "likely_lof" in vcf.columns.tolist():
-        # vcf.loc[
-        #    (vcf["likely_driver"] == "Y") & (vcf["likely_lof"] != "Y"), "likely_gof"
-        # ] = "Y"
-        loc += vcf[(vcf["likely_driver"] == "Y")].index.tolist()
-    if "hotspot" in vcf.columns.tolist():
-        loc += vcf[
-            (vcf["hotspot"] == "Y") | (vcf["clinically_significant"] == "Y")
-        ].index.tolist()
-    vcf.loc[list(set(loc)), "associated_with"] += "cancer;"
 
-    if "likely_gof" in annotators:
+    if (
+        "oc_hess_drivers__is_driver" in vcf.columns.tolist()
+        or "cosmic_hotspot" in vcf.columns.tolist()
+    ):
+        name = (
+            "oc_hess_drivers__is_driver"
+            if "oc_hess_drivers__is_driver" in vcf.columns.tolist()
+            else "cosmic_hotspot"
+        )
+        vcf.loc[
+            (vcf[name] == "Y")
+            & vcf["gencode_34_hugosymbol"].isin(tumor_suppressor_list),
+            "likely_lof",
+        ] = "Y"
+        vcf.loc[
+            (vcf[name] == "Y") & vcf["gencode_34_hugosymbol"].isin(oncogene_list),
+            "likely_gof",
+        ] = "Y"
+        vcf.loc[
+            (vcf[name] == "Y") | (vcf["clinically_significant"] == "Y"),
+            "associated_with",
+        ] += "cancer;"
+        vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
+
+    if "likely_gof" in vcf.columns.tolist():
         loc = vcf[vcf["likely_gof"] == "Y"].index.tolist()
         vcf.loc[loc, "associated_with"] += "gene_function_gain;"
 
@@ -699,12 +707,12 @@ def improve(
         loc = vcf[vcf["likely_lof"] == "Y"].index.tolist()
     vcf.loc[loc, "associated_with"] += "gene_function_loss;"
 
-    if "dida" in annotators:
+    if "oc_dida__id" in vcf.columns.tolist():
         loc_dida = vcf["oc_dida__id"] != ""
         vcf.loc[loc_dida, "associated_with"] += "digenic_disease;"
 
     # gwas
-    if "gwas_catalog" in annotators:
+    if "oc_gwas_catalog__disease" in vcf.columns.tolist():
         loc_g = vcf["oc_gwas_catalog__disease"] != ""
         vcf.loc[loc_g, "associated_with"] += "gwas;"
 
@@ -818,10 +826,11 @@ def to_maf(
             )
         important = (
             (vcf["driver"] == "Y")
-            # | (vcf["likely_gof"] == "Y")
+            # | (vcf["gof"] == "Y")
             # TODO: could define it with civic if grabbdd drugs in addition to diseases
             # | (vcf["clinically_significant"] == "Y")
             | (vcf["lof"] == "Y")
+            | (vcf["cosmic_hotspot"] == "Y")
             | (
                 (vcf["likely_lof"] == "Y")
                 & (vcf["hugo_symbol"].isin(tumor_suppressor_list))
