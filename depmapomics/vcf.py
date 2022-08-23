@@ -684,10 +684,6 @@ def improve(
             if "oc_hess_drivers__is_driver" in vcf.columns.tolist()
             else "cosmic_hotspot"
         )
-        vcf.loc[
-            (vcf[name] == "Y") | (vcf["clinically_significant"] == "Y"),
-            "associated_with",
-        ] += "cancer;"
         vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
 
     if "likely_driver" in vcf.columns.tolist():
@@ -701,6 +697,10 @@ def improve(
             & vcf["gencode_34_hugosymbol"].isin(oncogene_list),
             "likely_gof",
         ] = "Y"
+        vcf.loc[
+            (vcf["likely_driver"] == "Y"),  # | (vcf["clinically_significant"] == "Y"),
+            "associated_with",
+        ] += "cancer;"
 
     if "likely_gof" in vcf.columns.tolist():
         loc = vcf[vcf["likely_gof"] == "Y"].index.tolist()
