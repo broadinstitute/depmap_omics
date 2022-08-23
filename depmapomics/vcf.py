@@ -728,21 +728,12 @@ def improve(
     vcf.loc[vcf["gencode_34_proteinchange"] != "", "is_coding"] = "Y"
     # else it is an oncokb value
 
-    for k, df in kwargs.items():
-        missing_col = set([""]) - set(df.columns)
-        if len(missing_col) > 0:
-            raise ValueError("missing columns", missing_col)
-
     # somatic_score
 
     # quality_score
 
     # rename columns
     vcf = vcf.drop(columns=todrop).rename(columns=torename)
-
-    # setting the right types
-    # vcf["is_coding"].replace({"Yes": True, "": False})
-    # ...
 
     return vcf
 
