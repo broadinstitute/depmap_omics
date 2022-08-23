@@ -329,15 +329,12 @@ SIGTABLE_TERRACOLS = {
     "PureCN_ploidy",
     "PureCN_wgd",
     "PureCN_loh_fraction",
-    "PureCN_curated",
-    "PureCN_curated_solution",
     "PureCN_cin_allele_specific_ploidy_robust",
 }
 MISC_SIG_TERRACOLS = {"msisensor2_score"}
 PURECN_FAILED_COLNAME = "PureCN_failed"
 SIGTABLE_BINARYCOLS = [
     "PureCN_wgd",
-    "PureCN_curated",
 ]
 
 SIGTABLE_RENAMING = {
@@ -346,8 +343,6 @@ SIGTABLE_RENAMING = {
     "PureCN_cin_allele_specific_ploidy_robust": "CIN",
     "PureCN_ploidy": "Ploidy",
     "msisensor2_score": "MSIScore",
-    "PureCN_curated": "PureCNCurated",
-    "PureCN_curated_solution": "PureCNCuratedSolution",
 }
 
 SOURCE_RENAME = {
