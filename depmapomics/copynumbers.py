@@ -260,7 +260,7 @@ def generateSigTable(
     samples = samples[samples.index != "nan"]
 
     # discard lines that have failed PureCN for the PureCN columns
-    purecn_passed = samples[samples[purecn_failed_col] == "FALSE"]
+    purecn_passed = samples[samples[purecn_failed_col] != "TRUE"]
     purecn_table = purecn_passed[purecncols]
     purecn_table = purecn_table[~purecn_table.index.isin(set(todrop))]
 

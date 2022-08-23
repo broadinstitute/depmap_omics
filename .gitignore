@@ -204,3 +204,4 @@ ccle_tasks/temp/*
 output/*
 ccle_tasks/cloud_sql_proxy
 
+ccle_tasks/output/*
