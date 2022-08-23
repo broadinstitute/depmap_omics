@@ -19,6 +19,12 @@ workflow run_vcf_to_depmap {
     }
 }
 
+# transforms a vcf file (if possible annotated with opencravat) into:
+# 1. a set of parquet files (representing one full file)
+#     with a much cleaner structure / annotation / logic than the original vcf file
+#     with additional columns from parsing the existing ones (see improve method)
+# 2. a maf file that represent what depmap releases. it is a tiny subset of the original vcf file
+#     as we remove non coding and germline variants (with some whitelisting) (see to_depmap_maf() method)
 task vcf_to_depmap {
     input {
         File input_vcf
