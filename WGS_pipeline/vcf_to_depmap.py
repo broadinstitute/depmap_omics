@@ -12,10 +12,8 @@ sample_name = (
 )
 n_rows = int(sys.argv[3]) if len(sys.argv) > 3 else 500_000
 use_multi = "true" == sys.argv[4] if len(sys.argv) > 4 else False
-opencravat = "true" == sys.argv[5] if len(sys.argv) > 5 else False
 force_keep = sys.argv[6].split(",") if len(sys.argv) > 6 else []
 whitelist = "true" == sys.argv[7] if len(sys.argv) > 7 else False
-annotators = sys.argv[8].split(",") if len(sys.argv) > 8 else []
 
 prev_cols = []
 
@@ -28,8 +26,6 @@ print(
     n_rows,
     ", use_multi:",
     use_multi,
-    ", opencravat:",
-    opencravat,
     ", force_keep:",
     force_keep,
 )
@@ -93,7 +89,8 @@ for i in range(10_000):
         vcf_file,
         force_list=["oc_genehancer__feature_name"],
         split_multiallelic=use_multi,
-        annotators=annotators,
+        oncogene_list=oncogene,
+        tumor_suppressor_list=tumor_suppressor_list,
     )
 
     # checking we have the same set of columns
