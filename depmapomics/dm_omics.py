@@ -711,7 +711,7 @@ async def mutationPostProcessing(
     tc = TaigaClient()
 
     # doing wes
-    print("doing wes")
+    print("DOING WES")
     folder = WORKING_DIR + samplesetname + "/wes_"
 
     wesmutations, wessvs = mutations.postProcess(
@@ -720,7 +720,6 @@ async def mutationPostProcessing(
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
-        mafcol="depmap_maf",
         **kwargs,
     )
 
@@ -734,7 +733,7 @@ async def mutationPostProcessing(
     ].replace({SAMPLEID: renaming_dict})
 
     # doing wgs
-    print("doing wgs")
+    print("DOING WGS")
     folder = WORKING_DIR + samplesetname + "/wgs_"
 
     wgsmutations, wgssvs = mutations.postProcess(
@@ -851,7 +850,6 @@ async def mutationPostProcessing(
         changes_description="new " + samplesetname + " release!",
         dataset_permaname=taiga_dataset,
         upload_files=[
-            # for depmap
             {
                 "path": folder + "somatic_mutations_genotyped_driver_profile.csv",
                 "name": "somaticMutations_genotypedMatrix_driver_profile",
