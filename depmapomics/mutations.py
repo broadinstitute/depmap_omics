@@ -46,8 +46,13 @@ def annotateLikelyImmortalized(
     for k, v in Counter(maf[genome_change_col].tolist()).items():
         if v > max_recurrence * leng:
             tocheck.append(k)
-    for val in list(set(tocheck) - set([np.nan])):
-        if "Y" in maf[maf[genome_change_col] == val][hotspotcol]:
+    tocheck = list(set(tocheck) - set([np.nan]))
+    le = len(tocheck)
+    counter = 0
+    for val in tocheck:
+        h.showcount(counter, le)
+        counter += 1
+        if "Y" not in set(maf[maf[genome_change_col] == val][hotspotcol]):
             maf.loc[
                 maf[maf[genome_change_col] == val].index, "is_likely_immortalization"
             ] = True
@@ -215,7 +220,9 @@ def aggregateMAFs(
         counter += 1
         maf = pd.read_csv(row[mafcol])
         maf[SAMPLEID] = name
-        maf = maf[MUTCOL_DEPMAP]
+        if len(set(keep_cols) - set(maf.columns)) > 0:
+            print(name + " is missing columns")
+        maf = maf[keep_cols]
         all_mafs.append(maf)
     all_mafs = pd.concat(all_mafs)
     return all_mafs
