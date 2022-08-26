@@ -338,7 +338,6 @@ def improve(
     min_count_hotspot=5,
     oncogene_list=[],
     tumor_suppressor_list=[],
-    **kwargs
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
