@@ -280,7 +280,7 @@ VCFDIR = "/tmp/vcfs/"
 GUIDESBED = {
     "avana": "data/avana_guides.bed",
     "humagne": "data/humagne_guides.bed",
-    "ky": "data/ky_guides.bed",
+    "ky": "data/ky_score_guides.bed",
 }
 VCFCOLNAME = "cnn_filtered_vcf"
 
@@ -424,7 +424,7 @@ MUTATION_GROUPS = {
     ],
 }
 
-MAF_COL = "somatic_maf"
+MAF_COL = "depmap_maf"
 HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
 
 MUTCOL_DEPMAP = [
@@ -473,6 +473,16 @@ MUTCOL_DEPMAP = [
     "likely_lof",
     "hess_driver",
     "hess_signture",
+    "cscape_score",
+    "dann_score",
+    "revel_score",
+    "funseq2_score",
+    "pharmgkb_id",
+    "dida_id",
+    "dida_name",
+    "gwas_disease",
+    "gwas_pmid",
+    "gtex_gene",
     SAMPLEID,
 ]
 
@@ -729,7 +739,6 @@ GUMBO_CLIENT_USERNAME = "szhang"
 
 DATE_COL_DICT = {
     "internal": "InternalReleaseDate",
-    "ibm": "IBMReleaseDate",
     "dmc": "ConsortiumReleaseDate",
     "public": "PublicReleaseDate",
 }
