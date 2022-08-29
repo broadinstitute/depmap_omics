@@ -30,6 +30,7 @@ The current owners of these workspaces should give you access.
 ### Additional python dependencies:
 - [Taiga](https://cds.team/taiga) is a platform that allows the Cancer Data Science team to store and share data. In order to access and upload data, you will need to login to [taiga](https://cds.team/taiga) with your broad google account and [set up your token](https://github.com/broadinstitute/taigapy#prerequisites) for the python client.
 - We are currently using a relational database, Gumbo, to track our cell lines' metadata and release status. In order to interact with Gumbo through python, follow the instruction and install the Gumbo client [here](https://github.com/broadinstitute/gumbo_client).
+- In order to use internal-only functions involved in the loading, depmap data post-processing, and uploading, you need to install the [depmap_omics_upload repo](https://github.com/broadinstitute/depmap_omics_upload)
 
 
 ## For External Users <a name="external-users"></a>
