@@ -1,12 +1,8 @@
 import os.path
 import dalmatian as dm
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from itertools import repeat
 
 from genepy.utils import helper as h
-from genepy import rna
 from genepy import mutations as mut
 
 from depmap_omics_upload import tracker as track
