@@ -791,7 +791,7 @@ VIRTUAL_FILENAMES_TABLE_CN_MODEL = {}
 
 VIRTUAL_FILENAMES_TABLE_MUT_MODEL = {
     "somaticMutations_profile": "OmicsSomaticMutations",
-    "structuralVariants_profile": "​​OmicsStructuralVariants",
+    "structuralVariants_profile": "OmicsStructuralVariants",
 }
 
 VIRTUAL_FILENAMES_GUIDEMUT = {
@@ -828,5 +828,5 @@ VIRTUAL_FILENAMES_TABLE_CN_PR = {
 
 VIRTUAL_FILENAMES_TABLE_MUT_PR = {
     "somaticMutations_profile": "OmicsSomaticMutationsProfile",
-    "structuralVariants_profile": "O​micsStructuralVariantsProfile",
+    "structuralVariants_profile": "OmicsStructuralVariantsProfile",
 }
