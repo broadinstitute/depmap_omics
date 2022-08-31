@@ -1,4 +1,3 @@
-from gsheets import Sheets
 import dalmatian as dm
 import pandas as pd
 import os.path
@@ -41,9 +40,9 @@ def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
 def filterFusions(
     fusions,
     sampleCol,
-    maxfreq=0.1,
-    minffpm=0.05,
-    maxffpm=0.1,
+    maxfreq=FUSION_MAXFREQ,
+    minffpm=FUSION_MINFFPM,
+    maxffpm=FUSION_MAXFFPM,
     countCol="CCLE_count",
     red_herring=FUSION_RED_HERRING,
     **kwargs
@@ -175,7 +174,7 @@ def postProcess(
     print("loading fusions")
     aggregated = refwm.get_sample_sets().loc[samplesetToLoad]["fusions_star"]
     fusions = pd.read_csv(
-        aggregated, names=[sampleCol] + colnames, skiprows=1, sep="\t"
+        aggregated, names=[sampleCol] + list(colnames.keys()), skiprows=1, sep="\t"
     )
 
     fusions[sampleCol] = fusions[sampleCol].str.split(".").str[0]
@@ -194,6 +193,7 @@ def postProcess(
     fusions = fusions[~fusions[sampleCol].isin(todrop)]
 
     print("saving")
+    fusions = fusions.rename(columns=colnames)
     fusions.to_csv(os.path.join(save_output, "fusions_all.csv"), index=False)
     if rnFunc is not None or renaming is not None:
         print("renaming")
