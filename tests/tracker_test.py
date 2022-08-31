@@ -3,7 +3,7 @@ import pandas as pd
 from depmapomics.config import *
 from depmapomics import tracker as track
 from depmapomics import expressions
-from depmapomics import ccle
+from depmapomics import dm_omics
 
 
 def test_expression_outputs():
@@ -64,7 +64,7 @@ def test_expression_outputs():
             trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
             compute_enrichment=False,
             ssGSEAcol="genes_tpm",
-            renamingFunc=ccle.expressionRenaming,
+            renamingFunc=dm_omics.expressionRenaming,
             dry_run=True,
             samplesinset=samplesintestset,
             rsemfilelocs=rsemfilelocs,
