@@ -202,9 +202,6 @@ tmp.*
 .vscode/launch.json
 ccle_tasks/temp/*
 output/*
-<<<<<<< HEAD
 ccle_tasks/output/*
-=======
 ccle_tasks/cloud_sql_proxy
 
->>>>>>> 13b4237de7cbaebb4562ea47c5afaa950cd1fe9e
