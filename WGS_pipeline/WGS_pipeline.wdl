@@ -185,7 +185,6 @@ workflow WGS_pipeline {
         input:
             input_vcf=open_cravat.oc_main_file,
             sample_id=sample_name,
-            annotators=flatten([annotators, ["hess_et_al"]])
     }
 
     output {
