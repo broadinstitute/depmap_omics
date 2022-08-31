@@ -48,10 +48,8 @@ def annotateLikelyImmortalized(
             tocheck.append(k)
     tocheck = list(set(tocheck) - set([np.nan]))
     le = len(tocheck)
-    counter = 0
-    for val in tocheck:
-        h.showcount(counter, le)
-        counter += 1
+    for i, val in enumerate(tocheck):
+        h.showcount(i, le)
         if "Y" not in set(maf[maf[genome_change_col] == val][hotspotcol]):
             maf.loc[
                 maf[maf[genome_change_col] == val].index, "is_likely_immortalization"
@@ -190,7 +188,7 @@ def managingDuplicates(samples, failed, datatype, tracker):
 
 
 def aggregateMAFs(
-    refworkspace, sampleset="all", mafcol=MAF_COL, keep_cols=MUTCOL_DEPMAP,
+    wm, sampleset="all", mafcol=MAF_COL, keep_cols=MUTCOL_DEPMAP,
 ):
     """aggregate MAF files from terra
 
@@ -204,7 +202,6 @@ def aggregateMAFs(
         aggregated_maf (df.DataFrame): aggregated MAF
     """
     print("aggregating MAF files")
-    wm = dm.WorkspaceManager(refworkspace).disable_hound()
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
@@ -229,7 +226,7 @@ def aggregateMAFs(
 
 
 def aggregateSV(
-    refworkspace,
+    wm,
     sampleset="all",
     sv_colname=SV_COLNAME,
     sv_renaming=SV_COLRENAME,
@@ -248,7 +245,6 @@ def aggregateSV(
         
     """
     print("aggregating SVs")
-    wm = dm.WorkspaceManager(refworkspace).disable_hound()
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
@@ -296,10 +292,11 @@ def postProcess(
     """
     h.createFoldersFor(save_output)
     print("loading from Terra")
+    wm = dm.WorkspaceManager(refworkspace)
     # if save_output:
     # terra.saveConfigs(refworkspace, save_output + 'config/')
     mutations = aggregateMAFs(
-        refworkspace, sampleset=sampleset, mafcol=mafcol, keep_cols=MUTCOL_DEPMAP,
+        wm, sampleset=sampleset, mafcol=mafcol, keep_cols=MUTCOL_DEPMAP,
     )
 
     print("annotating likely immortalized status")
@@ -312,7 +309,7 @@ def postProcess(
     print("done")
 
     svs = aggregateSV(
-        refworkspace,
+        wm,
         sampleset=sampleset,
         sv_colname=sv_col,
         save_output=save_output,
