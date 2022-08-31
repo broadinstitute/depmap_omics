@@ -1,8 +1,6 @@
 # cn.py
 
-import numpy as np
-from depmapomics import tracker as track
-from depmapomics.qc import cn
+from depmap_omics_upload import tracker as track
 from depmapomics.config import *
 from IPython.display import Image, display
 import dalmatian as dm
@@ -11,9 +9,6 @@ import os
 from genepy import mutations as mut
 from genepy.utils import helper as h
 from genepy import terra
-from genepy import rna
-import matplotlib.pyplot as plt
-from depmapomics import terra as myterra
 
 
 def renameColumns(df):
@@ -41,7 +36,7 @@ def loadFromGATKAggregation(
     showPlots=False,
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
-    tempFolder="output/",
+    tempFolder=WORKING_DIR,
     toremove=["readgroup_ubams",],
     sampleset="all",
     colRenaming=COLRENAMING,
@@ -111,90 +106,6 @@ def loadFromGATKAggregation(
     return segments
 
 
-def updateTracker(
-    tracker,
-    selected,
-    samplesetname,
-    lowqual,
-    datatype,
-    newgs=WGS_GCS_PATH_HG38,
-    samplesinset=[],
-    trackerobj=None,
-    procqc=[],
-    bamqc=[],
-    refworkspace=None,
-    bamfilepaths=["internal_bam_filepath", "internal_bai_filepath"],
-    dry_run=False,
-    gumbo=True,
-):
-    """updates the sample tracker with the new samples and the QC metrics
-
-    Args:
-        tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
-        selected (list[str]): which samples were selected in the release of the analysis
-        samplesetname (str): the name of the sample set or of the current analysis
-        samplesinset (list[str]): list of samples in the analysis.
-        lowqual (list[str]): list of samples that failed QC
-        newgs (str, optional): google storage path where to move the files. Defaults to ''.
-        sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
-        sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
-        procqc (list, optional): list of Terra columns containing QC files. Defaults to [].
-        bamqc (list, optional): list of Terra columns containing bam QC files. Defaults to [].
-        refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-        bamfilepaths (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to ['internal_bam_filepath', 'internal_bai_filepath'].
-    """
-    # computing QC
-    print("looking for QC..")
-    if refworkspace is not None:
-        if not samplesinset:
-            samplesinset = [
-                i["entityName"]
-                for i in dm.WorkspaceManager(refworkspace)
-                .get_entities("sample_set")
-                .loc[samplesetname]
-                .samples
-            ]
-        dataProc = (
-            {}
-            if procqc == []
-            else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=procqc)
-        )
-        dataBam = (
-            {}
-            if bamqc == []
-            else myterra.getQC(workspace=refworkspace, only=samplesinset, qcname=bamqc)
-        )
-        for k, v in dataProc.items():
-            if k == "nan":
-                continue
-            a = tracker.loc[k, "processing_qc"]
-            a = "" if a is np.nan else a
-            tracker.loc[k, "processing_qc"] = str(v) + "," + a
-        for k, v in dataBam.items():
-            if k == "nan":
-                continue
-            a = tracker.loc[k, "bam_qc"]
-            a = "" if a is np.nan else a
-            tracker.loc[k, "bam_qc"] = str(v) + "," + a
-    if type(datatype) is str:
-        datatype = [datatype]
-    tracker.loc[tracker[tracker.datatype.isin(datatype)].index, samplesetname] = 0
-    track.update(
-        trackerobj,
-        tracker,
-        selected,
-        samplesetname,
-        lowqual,
-        lowqual,
-        gumbo,
-        newgs=newgs,
-        refworkspace=refworkspace,
-        bamfilepaths=bamfilepaths,
-        dry_run=dry_run,
-        samplesinset=samplesinset,
-    )
-
-
 def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id"):
     """removes duplicates and solves failed data
 
@@ -236,7 +147,6 @@ def pureCNpostprocess(
     setEntity="sample_set",
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
-    priority=[],
     lohcolname=PURECN_LOH_COLNAME,
     failedcolname=PURECN_FAILED_COLNAME,
     sampleset="all",
@@ -269,26 +179,37 @@ def pureCNpostprocess(
     segments = pd.read_csv(
         wm.get_entities(setEntity).loc[sampleset, lohcolname]
     ).rename(columns=colRenaming)
+    samples = wm.get_samples()
+    failed = samples[samples[failedcolname] == "TRUE"].index
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
-    segments.Segment_Mean = 2 ** segments.Segment_Mean
     segments.Start = segments.Start.astype(int)
     segments.End = segments.End.astype(int)
-    segments.loc[
-        segments[segments.Chromosome.isin(["X", "Y"])].index, "Segment_Mean"
-    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["Segment_Mean"] / 2)
     segments = segments.sort_values(by=sortby)
+
+    mappingdf = mappingdf[mappingdf["Chromosome"].isin(set(segments["Chromosome"]))]
 
     print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
 
     # Generate gene-level absolute cn matrix
     absolute_genecn = mut.toGeneMatrix(
-        mut.manageGapsInSegments(segments), mappingdf, value_colname="Segment_Mean"
+        mut.manageGapsInSegments(segments),
+        mappingdf,
+        style="closest",
+        value_colname="Absolute_CN",
     )
+
+    segments = segments[
+        ~segments[SAMPLEID].isin(set(failed) | set(todrop))
+    ].reset_index(drop=True)
+    absolute_genecn = absolute_genecn[
+        ~absolute_genecn.index.isin(set(failed) | set(todrop))
+    ]
+
     print("summary of PureCN absolute cn data:")
     print(
         absolute_genecn.values.min(),
@@ -296,43 +217,72 @@ def pureCNpostprocess(
         absolute_genecn.values.max(),
     )
 
-    # Generate gene-level LOH status matrix
-    segments["type"] = segments["type"].replace(lohvals, 1)
-    segments["type"] = segments["type"].replace("", 0)
-
-    loh_status = mut.toGeneMatrix(
-        mut.manageGapsInSegments(segments), mappingdf, value_colname="LOH_status"
-    )
-
-    # Pull additional info directly from terra sample table
-    samples = wm.get_samples()
-    purecn_table = samples[terracols]
-
-    failed = purecn_table[purecn_table[failedcolname] == "TRUE"].index
-
-    # TO DO: generate the signature table in a separate function
-    # see ccle_tasks/signature_table.ipynb
-    segments = segments[
-        ~segments[SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
-    ].reset_index(drop=True)
-    absolute_genecn = absolute_genecn[
-        ~absolute_genecn.index.isin((set(failed) | set(todrop)) - set(priority))
-    ]
-    loh_status = loh_status[
-        ~loh_status.index.isin((set(failed) | set(todrop)) - set(priority))
-    ]
-    purecn_table = purecn_table[
-        ~purecn_table.index.isin((set(failed) | set(todrop)) - set(priority))
-    ]
-
-    print("PureCN: saving files")
+    print("PureCN: saving seg and gene cn files")
     segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
-    loh_status.to_csv(save_output + "purecn_loh_all.csv")
-    purecn_table.to_csv(save_output + "purecn_table_all.csv")
     print("done")
 
-    return segments, absolute_genecn, loh_status, purecn_table
+    # Generate gene-level LOH status matrix
+    segments_binarized = segments.copy()
+    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].replace(
+        lohvals, 1
+    )
+    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].fillna(0)
+
+    loh_status = mut.toGeneMatrix(
+        mut.manageGapsInSegments(segments_binarized),
+        mappingdf,
+        value_colname="LOH_status",
+    )
+
+    loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
+
+    print("PureCN: saving LOH matrix")
+    loh_status.to_csv(save_output + "purecn_loh_all.csv")
+    print("done")
+
+    return segments, absolute_genecn, loh_status
+
+
+def generateSigTable(
+    refworkspace,
+    todrop=[],
+    purecncols=SIGTABLE_TERRACOLS,
+    misccols=MISC_SIG_TERRACOLS,
+    purecn_failed_col=PURECN_FAILED_COLNAME,
+    binary_cols=SIGTABLE_BINARYCOLS,
+    colrenaming=SIGTABLE_RENAMING,
+    save_output="",
+):
+    print("generating global genomic feature table")
+    wm = dm.WorkspaceManager(refworkspace).disable_hound()
+    samples = wm.get_samples()
+    samples = samples[samples.index != "nan"]
+
+    # discard lines that have failed PureCN for the PureCN columns
+    purecn_passed = samples[samples[purecn_failed_col] == "FALSE"]
+    purecn_table = purecn_passed[purecncols]
+    purecn_table = purecn_table[~purecn_table.index.isin(set(todrop))]
+
+    # use 1/0 for binary values
+    purecn_table = purecn_table.replace({"TRUE": 1, "FALSE": 0})
+    purecn_table[binary_cols] = purecn_table[binary_cols].astype("Int64")
+
+    # table containing cols that are not generated by pureCN,
+    # which may include samples that have failed pureCN
+    misc_table = samples[misccols]
+    sig_table = misc_table.merge(
+        purecn_table, how="outer", left_index=True, right_index=True
+    )
+
+    # rename columns
+    sig_table = sig_table.rename(columns=colrenaming)
+
+    print("saving global genomic feature table")
+    sig_table.to_csv(save_output + "globalGenomicFeatures_all.csv")
+    print("done")
+
+    return sig_table
 
 
 def postProcess(
@@ -424,7 +374,6 @@ def postProcess(
     # validation step
     print("summary of the gene cn data:")
     print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
-    mut.checkGeneChangeAccrossAll(genecn, thresh=genechangethresh)
     failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
     print("failed our QC")
@@ -445,15 +394,16 @@ def postProcess(
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-    # purecn_segments, purecn_genecn, loh_status, purecn_table = pureCNpostprocess(
-    #     refworkspace,
-    #     setEntity=setEntity,
-    #     sampleset=sampleset,
-    #     sortby=sortby,
-    #     todrop=todrop,
-    #     priority=priority,
-    # )
-    purecn_segments, purecn_genecn, loh_status, purecn_table = None, None, None, None
+    purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
+        refworkspace,
+        setEntity=setEntity,
+        sampleset=sampleset,
+        mappingdf=mybiomart,
+        sortby=sortby,
+        todrop=todrop,
+        save_output=save_output,
+    )
+    feature_table = generateSigTable(refworkspace, save_output=save_output)
     return (
         segments,
         genecn,
@@ -461,7 +411,5 @@ def postProcess(
         purecn_segments,
         purecn_genecn,
         loh_status,
-        purecn_table,
-        mybiomart,
+        feature_table,
     )
-
