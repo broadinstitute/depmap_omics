@@ -200,8 +200,10 @@ tmp.py
 tmp.*
 
 .vscode/launch.json
+ccle_tasks/A3SS_JC_output_aggregated.csv
 ccle_tasks/temp/*
 output/*
-ccle_tasks/output/*
+WGS_pipeline/oncokb_dm/data/oncokb.txt
 ccle_tasks/cloud_sql_proxy
+ccle_tasks/output/*
 
