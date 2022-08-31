@@ -190,6 +190,7 @@ def test_fraction_of_unequal_columns_from_merged_file(
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col + "_x" for col in cols]].dtypes
 
+    # TODO: what is this??
     def equal_nonNA(a, b):
         return (a == b) | (
             (a != a) & (b != b)
