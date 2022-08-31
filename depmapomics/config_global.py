@@ -1,7 +1,6 @@
 import numpy as np
 
 
-LINES_TO_RELEASE = []
 SAMPLESETNAME = "22Q2test"
 RELEASE = SAMPLESETNAME.lower()
 
