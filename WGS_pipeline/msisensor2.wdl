@@ -1,5 +1,6 @@
 # Given a set of samples, combine segment files into a single file
 # MSIsensor2 repo, where models_hg38 referenced below can be found: https://github.com/niu-lab/msisensor2
+# Dockerfile for the image can be found in depmap_omics/WGS_pipeline/msisensor2/Dockerfile
 version 1.0
 
 task msisensor2 {
@@ -14,18 +15,18 @@ task msisensor2 {
 		Int num_threads = 2
 		Int num_preempt = 1
 	}
+    
+    String new_bam_path=basename(bam)
 
 	command {
 		set -euo pipefail
 		
 		mv ${bam} .
 		mv ${bai} .
-		echo ${bam} | rev | cut -d'/' -f1 | rev > new_bam_path.txt
-		new_bam_path=$(cat new_bam_path.txt)
-	
+
 		msisensor2 msi \
 			-M /msisensor2/models_hg38 \
-			-t $new_bam_path \
+			-t ${new_bam_path} \
 			-o ${sample_id}.msisensor2.output
 		head -2 ${sample_id}.msisensor2.output | tail -1 | cut -f3 > ${sample_id}.msisensor2.score
 	}
@@ -55,11 +56,10 @@ workflow msisensor2_workflow {
 		String sample_id
 		File bam
 		File bai
-		
-		Int memory
-		Int disk_space
-		Int num_threads
-		Int num_preempt
+		Int memory = 6
+		Int disk_space = 250
+		Int num_threads = 2
+		Int num_preempt = 1
 	}
 
 	call msisensor2 {
