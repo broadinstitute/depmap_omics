@@ -676,12 +676,10 @@ def improve(
 
     if (
         "oc_hess_drivers__is_driver" in vcf.columns.tolist()
-        or "cosmic_hotspot" in vcf.columns.tolist()
     ):
         name = (
             "oc_hess_drivers__is_driver"
             if "oc_hess_drivers__is_driver" in vcf.columns.tolist()
-            else "cosmic_hotspot"
         )
         vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
 
@@ -823,7 +821,6 @@ def to_maf(
             # TODO: could define it with civic if grabbdd drugs in addition to diseases
             # | (vcf["clinically_significant"] == "Y")
             | (vcf["lof"] == "Y")
-            | (vcf["cosmic_hotspot"] == "Y")
             | (
                 (vcf["likely_lof"] == "Y")
                 & (vcf["hugo_symbol"].isin(tumor_suppressor_list))

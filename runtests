@@ -1,4 +1,0 @@
-#!/bin/bash
-set -ex
-
-pytest tests/tracker_test.py
