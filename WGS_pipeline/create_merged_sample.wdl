@@ -1,7 +1,7 @@
 version 1.0
 
-# Given a set of samples, combine segment files into a single file
-# more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
+#It is getting a merged vcf file as input (CHROM POS ... SAMPLE1 SAMPLE2).
+#It tries to add an additional sample representing the merged SAMPLE fields of the vcf.
 workflow run_create_merged_sample {
     input {
         Array[File] vcfs
