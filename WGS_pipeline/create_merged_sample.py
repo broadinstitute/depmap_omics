@@ -166,6 +166,21 @@ def merging(mut_s, num, min_af_tocall=0.05, pseudo_count=0.95):
 
 
 """ reads in a vcf file and adds the fake sample mutation information
+
+It is getting a merged vcf file as input (CHROM POS ... SAMPLE1 SAMPLE2).
+It tries to add an additional sample representing the merged SAMPLE fields of the vcf.
+This field contains data about the values listed in the FORMAT table GT:AD:AF:DP:F1R2:F2R1:FAD:SB. 
+It does it one variant at a time. Each column has to have some heuristic in how it is merged. 
+In addition it adds the "conflict" & "A_SPE_EXP" fields to the INFO column
+
+there is many tricks and things to look at like:
+mutations that appear in just one file
+change  in frequency. 
+HET that become HOM, 
+mutation in RNAseq,
+new phasing information
+multi allelic site difference and phasing of multi allelic sites
+
 Raises:
     ValueError: 
 """
