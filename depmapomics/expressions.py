@@ -7,10 +7,9 @@ from scipy.stats import zscore
 
 from genepy.utils import helper as h
 from genepy import rna, terra
-
-from depmapomics import terra as myterra
 from depmapomics.qc import rna as myQC
-from depmapomics import tracker as track
+
+from depmapomics.config import *
 
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
@@ -23,17 +22,17 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
     """
     genes_count = pd.read_csv(
-        "output/" + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        WORKING_DIR + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
     transcripts_tpm = pd.read_csv(
-        "output/" + main_filename["rsem_transcripts_tpm"].split("/")[-1],
+        WORKING_DIR + main_filename["rsem_transcripts_tpm"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
     genes_tpm = pd.read_csv(
-        "output/" + main_filename["rsem_genes_tpm"].split("/")[-1],
+        WORKING_DIR + main_filename["rsem_genes_tpm"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
@@ -41,10 +40,10 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
     for input_filename in input_filenames:
         name = input_filename["rsem_genes"].split("/")[-1].split(".")[0].split("_")[-1]
         rsem_genes = pd.read_csv(
-            "output/" + input_filename["rsem_genes"].split("/")[-1], sep="\t"
+            WORKING_DIR + input_filename["rsem_genes"].split("/")[-1], sep="\t"
         )
         rsem_transcripts = pd.read_csv(
-            "output/" + input_filename["rsem_isoforms"].split("/")[-1], sep="\t"
+            WORKING_DIR + input_filename["rsem_isoforms"].split("/")[-1], sep="\t"
         )
         genes_count[name] = pd.Series(
             rsem_genes["expected_count"], index=rsem_genes.index
@@ -55,21 +54,21 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         genes_tpm[name] = pd.Series(rsem_genes["TPM"], index=rsem_genes.index)
 
     genes_count.to_csv(
-        "output/" + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        WORKING_DIR + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
         compression="gzip",
     )
     transcripts_tpm.to_csv(
-        "output/" + main_filename["rsem_transcripts_tpm"].split("/")[-1],
+        WORKING_DIR + main_filename["rsem_transcripts_tpm"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
         compression="gzip",
     )
     genes_tpm.to_csv(
-        "output/" + main_filename["rsem_genes_tpm"].split("/")[-1],
+        WORKING_DIR + main_filename["rsem_genes_tpm"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
@@ -117,80 +116,10 @@ def solveQC(tracker, failed, save="", newname="arxspan_id"):
     return rename
 
 
-def updateTracker(
-    selected,
-    failed,
-    lowqual,
-    tracker,
-    samplesetname,
+def loadFromRSEMaggregate(
     refworkspace,
-    onlycol,
-    newgs,
-    trackerobj=None,
-    dry_run=False,
-    qcname="star_logs",
-    match=".Log.final.out",
-    samplesinset=[],
-    starlogs={},
     todrop=[],
-):
-    """updates the sample tracker with the new samples and the QC metrics
-
-    Args:
-        tracker (dataframe[datatype, prioritized, arxspan_id, index, ($newname)]): the sample tracker containing necessary info to compute which duplicates to keep
-        selected (list[str]): which samples were selected in the release of the analysis
-        samplesetname (str): the name of the sample set or of the current analysis
-        samplesinset (list[str]): list of samples in the analysis.
-        lowqual (list[str]): list of samples that failed QC
-        newgs (str, optional): google storage path where to move the files. Defaults to ''.
-        sheetcreds (str, optional): google sheet service account file path. Defaults to SHEETCREDS.
-        sheetname (str, optional): google sheet service account file path. Defaults to SHEETNAME.
-        qcname (str, optional): Terra column containing QC files. Defaults to "star_logs".
-        refworkspace (str, optional): if provideed will extract workspace values (bam files path, QC,...). Defaults to None.
-        bamfilepaths (list, optional): Terra columns containing the bam filepath for which to change the location. Defaults to STARBAMCOLTERRA.
-        todrop (list, optional): list of samples to be dropped. Defaults to []
-        samplesinset (list[str], optional): list of samples in set when refworkspace is None (bypass interacting with terra)
-        starlogs (dict(str:list[str]), optional): dict of samples' star qc log locations when refworkspace is None (bypass interacting with terra)
-    """
-    if refworkspace is not None:
-        refwm = dm.WorkspaceManager(refworkspace)
-        samplesinset = [
-            i["entityName"]
-            for i in refwm.get_entities("sample_set").loc[samplesetname].samples
-        ]
-        starlogs = myterra.getQC(
-            workspace=refworkspace, only=samplesinset, qcname=qcname, match=match
-        )
-    for k, v in starlogs.items():
-        if k == "nan":
-            continue
-        a = tracker.loc[k, "processing_qc"]
-        a = "" if a is np.nan else a
-        tracker.loc[k, "processing_qc"] = str(v) + "," + a
-        if tracker.loc[k, "bam_qc"] != v[0]:
-            tracker.loc[k, "bam_qc"] = v[0]
-    tracker.loc[tracker[tracker.datatype.isin(["rna"])].index, samplesetname] = 0
-    return track.update(
-        tracker,
-        selected,
-        samplesetname,
-        failed,
-        lowqual,
-        newgs,
-        refworkspace,
-        bamfilepaths,
-        dry_run,
-        todrop=todrop,
-        trackerobj=trackerobj,
-        gumbo=gumbo,
-    )
-
-
-def _loadFromRSEMaggregate(
-    refworkspace,
-    filenames,
-    *,
-    todrop=[],
+    filenames=RSEMFILENAME,
     sampleset="all",
     renamingFunc=None,
     rsemfilelocs=None,
@@ -203,10 +132,10 @@ def _loadFromRSEMaggregate(
         todrop (list[str], optional): list of samples to drop. Defaults to [].
         filenames (list[str], optional): the filenames to load. Defaults to RSEMFILENAME.
         sampleset (str, optional): the sample set to load. Defaults to 'all'.
-        renamingFunc (function, optional): the function to rename the samples
+        renamingFunc (function, optional): the function to rename the samples 
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (no interaction with terra)
-
+    
     Returns:
         dict(str: pd.df): the loaded dataframes
         dict: the renaming dict used to rename the dfs columns
@@ -214,9 +143,9 @@ def _loadFromRSEMaggregate(
     """
     files = {}
     renaming = {}
-    if refworkspace is not None:
-        refwm = dm.WorkspaceManager(refworkspace)
-        rsemfilelocs = refwm.get_sample_sets().loc[sampleset]
+
+    refwm = dm.WorkspaceManager(refworkspace)
+    rsemfilelocs = refwm.get_sample_sets().loc[sampleset]
     for val in filenames:
         file = pd.read_csv(
             rsemfilelocs[val],
@@ -240,7 +169,9 @@ def _loadFromRSEMaggregate(
     return files, renaming
 
 
-def subsetGenes(files, gene_rename, filenames, *, drop=[], index="transcript_id"):
+def subsetGenes(
+    files, gene_rename, filenames=RSEM_TRANSCRIPTS, drop=[], index_id="transcript_id"
+):
     """
     Subset the rsem transcripts file to keep only the genes of interest
 
@@ -302,8 +233,7 @@ def extractProtCod(
     files,
     mybiomart,
     protcod_rename,
-    filenames,
-    *,
+    filenames=RSEMFILENAME_GENE,
     dropNonMatching=False,
     rep=("genes", "proteincoding_genes"),
 ):
@@ -311,9 +241,9 @@ def extractProtCod(
 
     Args:
         files (dict(str: pd.dfs)): the rsem transcripts dfs to subset samples x genes
-        mybiomart (pd.df): the biomart dataframe should contain the following columns:
+        mybiomart (pd.df): the biomart dataframe should contain the following columns: 
         'ensembl_gene_id', 'entrezgene_id', 'gene_biotype'
-        protcod_rename (dict(str, str)): the protein coding gene renaming dict
+        protcod_rename (dict(str, str)): the protein coding gene renaming dict 
         (here we expect a dict of ensembl transcript ids: gene names)
         filenames (list[str], optional): the dict dfs to look at. Defaults to RSEMFILENAME_GENE.
         rep (tuple, optional): how to rename the protein gene subseted df copies in the dict. Defaults to ('genes', 'proteincoding_genes').
@@ -373,7 +303,7 @@ def extractProtCod(
     return files
 
 
-async def ssGSEA(tpm_genes, geneset_file, recompute=True):
+async def ssGSEA(tpm_genes, geneset_file=SSGSEAFILEPATH, recompute=True):
     """the way we run ssGSEA on the CCLE dataset
 
     Args:
@@ -403,7 +333,7 @@ async def ssGSEA(tpm_genes, geneset_file, recompute=True):
     )
 
     # MAYBE NOT NEEDED
-    # merging splicing variants into the same gene
+    #### merging splicing variants into the same gene
     # counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
     enrichments = (
@@ -415,48 +345,36 @@ async def ssGSEA(tpm_genes, geneset_file, recompute=True):
     return enrichments
 
 
-def _log2_tpm_dataframes(files):
-    new_files = {}
-    for k, val in files.items():
-        new_files[k.replace("rsem", "expression") + ".csv"] = val
-
-        # compute transformed version for all files containing TPM values
-        if "tpm" in k:
-            new_files[k.replace("rsem", "expression") + "_logp1.csv"] = val.apply(
-                lambda x: np.log2(x + 1)
-            )
-
-    return new_files
-
-
-def _saveFiles(files, folder):
+def saveFiles(files, folder=WORKING_DIR, rep=("rsem", "expression")):
     """
     saves the files in the dict to the folder
 
     Args:
         files (dict(str: pd.df)): the dfs to save
-        folder: the folder to write files to
+        folder (str, optional): the folder to save the files. Defaults to WORKING_DIR.
+        rep (tuple, optional): how to rename (parts of) the files. Defaults to ('rsem', 'expression').
     """
     print("storing files in {}".format(folder))
     for k, val in files.items():
-        val.to_csv(k)
+        val.to_csv(os.path.join(folder, k.replace(rep[0], rep[1]) + ".csv"))
+        if "tpm" in k:
+            val.apply(lambda x: np.log2(x + 1)).to_csv(
+                os.path.join(folder, k.replace(rep[0], rep[1]) + "_logp1.csv")
+            )
 
 
 async def postProcess(
     refworkspace,
     samplesetname,
-    ensemblserver,
-    geneLevelCols,
-    trancriptLevelCols,
-    rsemfilename,
-    ssgseafilepath,
-    *,
     save_output="",
     doCleanup=False,
     colstoclean=[],
+    ensemblserver=ENSEMBL_SERVER_V,
     todrop=[],
     samplesetToLoad="all",
     priority=[],
+    geneLevelCols=RSEMFILENAME_GENE,
+    trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
     ssGSEAcol="genes_tpm",
     renamingFunc=None,
     samplesinset=[],
@@ -483,9 +401,9 @@ async def postProcess(
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level
+        geneLevelCols (list, optional): the columns that contain the gene level 
         expression data in the workspace. Defaults to RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript
+        trancriptLevelCols (list, optional): the columns that contain the transcript 
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
@@ -494,36 +412,34 @@ async def postProcess(
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes
+        dropNonMatching (bool, optional): whether to drop the non matching genes 
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
     """
     if not samplesetToLoad:
         samplesetToLoad = samplesetname
-    if refworkspace is not None:
-        refwm = dm.WorkspaceManager(refworkspace)
-        if save_output:
-            terra.saveWorkspace(refworkspace, save_output + "terra/")
-        print("load QC and generate QC report")
-        samplesinset = [
-            i["entityName"]
-            for i in refwm.get_entities("sample_set").loc[samplesetname].samples
-        ]
-        if doCleanup:
-            print("cleaninp up data")
-            res = refwm.get_samples()
-            for val in colstoclean:
-                if val in res.columns.tolist():
-                    refwm.disable_hound().delete_entity_attributes(
-                        "sample", res[val], delete_files=True
-                    )
-                else:
-                    print(val + " not in the workspace's data")
+    refwm = dm.WorkspaceManager(refworkspace)
+    if save_output:
+        terra.saveWorkspace(refworkspace, save_output + "terra/")
+    print("load QC and generate QC report")
+    samplesinset = [
+        i["entityName"]
+        for i in refwm.get_entities("sample_set").loc[samplesetname].samples
+    ]
+    if doCleanup:
+        print("cleaninp up data")
+        res = refwm.get_samples()
+        for val in colstoclean:
+            if val in res.columns.tolist():
+                refwm.disable_hound().delete_entity_attributes(
+                    "sample", res[val], delete_files=True
+                )
+            else:
+                print(val + " not in the workspace's data")
 
     _, lowqual, failed = myQC.plot_rnaseqc_results(
         refworkspace,
         samplesinset,
-        rnaqc=rnaqclocs,
         save=bool(save_output),
         output_path=save_output + "rna_qcs/",
     )
@@ -559,7 +475,7 @@ async def postProcess(
             )
 
     print("loading files")
-    files, renaming = _loadFromRSEMaggregate(
+    files, renaming = loadFromRSEMaggregate(
         refworkspace,
         todrop=failed,
         filenames=trancriptLevelCols + geneLevelCols,
@@ -603,13 +519,10 @@ async def postProcess(
 
     if compute_enrichment:
         print("doing ssGSEA")
-        enrichments = await ssGSEA(
-            files[ssGSEAcol], ssgseafilepath, recompute=recompute_ssgsea
-        )
+        enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
         print("saving files")
         enrichments.to_csv(save_output + "gene_sets_all.csv")
-    files = _log2_tpm_dataframes(files)
-    _saveFiles(files, save_output)
+    saveFiles(files, save_output)
     print("done")
 
     return (
