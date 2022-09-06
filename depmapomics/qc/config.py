@@ -120,6 +120,7 @@ PLOTS_OUTPUT_FILENAME_PREFIX = "/tmp/plots_"  # location/prefix for saving outpu
 
 # all the file attributes
 FILE_ATTRIBUTES = [
+    # all model level
     {
         "file": "CCLE_expression",
         "ismatrix": True,
