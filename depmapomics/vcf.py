@@ -677,10 +677,7 @@ def improve(
     if (
         "oc_hess_drivers__is_driver" in vcf.columns.tolist()
     ):
-        name = (
-            "oc_hess_drivers__is_driver"
-            if "oc_hess_drivers__is_driver" in vcf.columns.tolist()
-        )
+        name = "oc_hess_drivers__is_driver"
         vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
 
     if "likely_driver" in vcf.columns.tolist():
