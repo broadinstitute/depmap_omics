@@ -42,7 +42,7 @@ task opencravat {
         Int num_preempt = 2
         String docker = "karchinlab/opencravat"
     }
-    String oc_install = "oc module install-base && oc module install -y vcfreporter hg19 ~{sep=' ' annotators_to_use}"
+    String oc_install = "oc module install-base && oc module install -y vcfreporter hg19 cscape_coding civic brca1_func_assay sift provean dann_coding revel spliceai gtex funseq2 pharmgkb dida gwas_catalog mavedb alfa ccre_screen"
     
     command {
         set -euo pipefail
