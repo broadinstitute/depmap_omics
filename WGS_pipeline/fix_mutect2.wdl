@@ -1,8 +1,21 @@
 version 1.0
 
-# Given a set of samples, combine segment files into a single file
-# more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
-workflow run_fix_mutect2 {
+
+# this correct know issues in Mutect2 using the script ./fix_mutect2.py
+
+# the AS_filter_status field in the vcf file contains “|” and “,”. 
+# But their meanings are swapped compared to other columns in the VCF file, 
+# so we swap these back everywhere to keep the same meaning and be able to parse the file easily.
+
+# There is a known issue with filtering combined somatic and germline calls from Mutect2: 
+#https://gatk.broadinstitute.org/hc/en-us/community/posts/4404184803227-Mutect2-genotype-germline-sites-filtering-discrepancy-
+# Germline variants should not be considered when filtering out clustered events.
+# The somatic variant on the left is flagged as a clustered_event because 
+# it is near two germline variants. This issue affects about 2.5% of our Mutect2 somatic calls. 
+# Unfortunately, we can't just ignore the clustered events filter since it removes a large number of
+# sequencing and mapping errors. So we remove the clustered_event flag if less than 2 events in 100bp region are somatic.
+
+workflow run_fix_mutect2 { 
     input {
         File vcf
         String sample_id 
