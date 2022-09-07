@@ -1,0 +1,115 @@
+datasource: 11.29.21
+description:
+  OncoKB is a precision oncology knowledge base that annotates the biological
+  consequences and clinical implications (therapeutic, diagnostic, and
+  prognostic) of genetic variants in cancer.
+developer:
+  name: "Memorial Sloan Cancer Center"
+  organization: "Memorial Sloan Cancer Center"
+  email: "support@cravat.us"
+  website: "https://www.oncokb.org/"
+  citation:
+    'Chakravarty, Debyani, et al. "OncoKB: a precision oncology knowledge base."
+    JCO precision oncology 1 (2017): 1-16.'
+
+level: variant
+input_format: crx
+output_columns:
+  - name: oncogenic
+    title: Oncogenic
+    type: string
+    width: 110
+    hidden: false
+    desc: Oncogenic effect of the variant.
+    category: single
+  - name: knownEffect
+    title: Known Effect
+    type: string
+    width: 100
+    hidden: false
+    category: single
+  - name: hotspot
+    title: Hotspot
+    type: string
+    width: 70
+    category: single
+  - name: highestSensitiveLevel
+    title: Highest Sensitive Level
+    type: string
+    width: 85
+    category: single
+  - name: highestResistanceLevel
+    title: Highest Resistance Level
+    type: string
+    width: 85
+    category: single
+    desc:
+      Mutations that have been shown to confer resistance to specific targeted
+      therapies. Level 1 is standard care. Level 2 is clinical evidence.
+  - name: highestDiagnosticImplicationLevel
+    title: Highest Dx Level
+    type: string
+    width: 85
+    desc:
+      Highest Diagnostic Level of Evidence. Level 1 is required for diagnosis.
+      Level 2 supports diagnosis. Level 3 is investigational diagnosis.
+    category: single
+  - name: highestPrognosticImplicationLevel
+    title: Highest Px Level
+    type: string
+    width: 85
+    desc:
+      Highest Prognistic Level of Evidence. Level 1 is guideline-recognized with
+      well-powered data. Level 2 is guideline-recognized with limited data.
+      Level 3 is investigational.
+    category: single
+  - name: pmids
+    title: PubMed
+    type: string
+    link_format: "https://pubmed.ncbi.nlm.nih.gov/${[^;]+}"
+    width: 70
+    desc: Link to Literature
+    hidden: true
+  - name: geneSummary
+    title: Gene Summary
+    type: string
+    width: 80
+    hidden: true
+  - name: variantSummary
+    title: Variant Summary
+    type: string
+    width: 80
+    hidden: true
+  - name: tumorSummary
+    title: Tumor Summary
+    type: string
+    width: 80
+    hidden: true
+  - name: all
+    title: All Annotations
+    type: string
+    width: 75
+    hidden: true
+    filterable: false
+    table: true
+    table_headers:
+      - name: diagnostic
+        title: diagnostic
+        type: string
+      - name: therapeutic
+        title: therapeutic
+        type: string
+      - name: prognostic
+        title: prognostic
+        type: string
+
+title: OncoKB
+version: 1.0.1
+type: annotator
+requires_opencravat: ">=2.2.7"
+tags:
+  - cancer
+requires:
+  - wgoncokb
+commercial_warning:
+  "For commercial use, visit https://www.oncokb.org/account/register."

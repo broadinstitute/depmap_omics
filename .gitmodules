@@ -1,3 +1,6 @@
 [submodule "WGS_pipeline/MantaSVAnnotator"]
 	path = WGS_pipeline/MantaSVAnnotator
 	url = https://github.com/acranej/MantaSVAnnotator.git
+[submodule "CCLE_methylation"]
+	path = CCLE_methylation
+	url = https://github.com/broadinstitute/CCLE_methylation.git
