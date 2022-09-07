@@ -1,0 +1,43 @@
+datasource: 11.29.21
+description:
+  Current statistical models for assessing hotspot significance do not properly account for 
+  variation in site-specific mutability, thereby yielding many false-positives. We thus 
+  (i) detail a Log-normal-Poisson (LNP) background model that accounts for this variability in a manner consistent with models of mutagenesis; 
+  (ii) use it to show that passenger hotspots arise from all common mutational processes; and 
+  (iii) apply it to a ∼10,000-patient cohort to nominate driver hotspots with far fewer false-positives compared with conventional methods. 
+  Overall, we show that many cancer hotspot mutations recurring at the same genomic site across multiple tumors are actually passenger events, 
+  recurring at inherently mutable genomic sites under no positive selection.
+developer:
+  name: "Broad Institute"
+  organization: "Memorial Sloan Cancer Center"
+  email: "jkalfon@broadinstitute.org"
+  website: "https://www.cancerdatascience.org/"
+  citation:
+    'Jérémie Kalfon & Julian M Hess 1, Andre Bernards 2, 
+    Jaegil Kim 1, Mendy Miller 1, Amaro Taylor-Weiner 1,
+     Nicholas J Haradhvala 3, Michael S Lawrence 4, Gad Getz 5'
+
+level: variant
+input_format: crx
+output_columns:
+  - name: is_driver
+    title: Hess Driver
+    type: string
+    width: 50
+    hidden: false
+    desc: is in the hess et all list of driver.
+    category: single
+  - name: signature
+    title: Hess Driver Signature
+    type: string
+    width: 100
+    hidden: false
+    desc: the mutational signature associated with the driver.
+    category: single
+
+title: Hess et All somatic driver Mutations Annotator
+version: 1.0.1
+type: annotator
+requires_opencravat: ">=2.2.7"
+tags:
+  - cancer

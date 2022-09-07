@@ -1,7 +1,6 @@
 version 1.0
 
-# Given a set of samples, combine segment files into a single file
-# more information available at https://open-cravat.readthedocs.io/en/latest/2.-Command-line-usage.html
+# we try to set back the genotype annotation to be homozygous when we have no ref reads and at least 3 alt reads.
 workflow run_fix_ploidy {
     input {
         File vcf
@@ -15,6 +14,13 @@ workflow run_fix_ploidy {
     }
 }
 
+# we try to set back the genotype annotation to be homozygous when we have no ref reads and at least 3 alt reads.
+# e.g.
+#0/1/2 --> 1/2
+#0/1/2/3 --> 1/2/3
+#0/1/2/3/4 --> 1/2/3/4
+#0/1/2/3/4/5 --> 1/2/3/4/5
+#0/1/2/3/4/5/6 --> 1/2/3/4/5/6
 task bcftools_fix_ploidy {
     input {
         File vcf
