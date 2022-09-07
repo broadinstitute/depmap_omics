@@ -268,7 +268,7 @@ workflow WGS_pipeline {
         File oc_main_file=open_cravat.oc_main_file
         # File oc_sql_files=open_cravat.oc_sql_file
         # vcf_to_depmap
-        Array[File] main_output=my_vcf_to_depmap.full_file
+        Array[File] dna_pipeline_main_parquet=my_vcf_to_depmap.full_file
         File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
