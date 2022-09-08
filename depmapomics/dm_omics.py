@@ -123,10 +123,11 @@ async def expressionPostProcessing(
         pr_files[k + "_profile"] = v[v.index.isin(set(renaming_dict.keys()))].rename(
             index=renaming_dict
         )
-    enrichments = enrichments[enrichments.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
-    enrichments.to_csv(folder + "gene_sets_profile.csv")
+    if enrichments != None:
+        enrichments = enrichments[
+            enrichments.index.isin(set(renaming_dict.keys()))
+        ].rename(index=renaming_dict)
+        enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
     mytracker.close_gumbo_client()
 
@@ -184,22 +185,33 @@ async def expressionPostProcessing(
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
-                {
-                    "path": folder + "gene_sets_all.csv",
-                    "name": "gene_set_enrichment_withReplicates",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "gene_sets_profile.csv",
-                    "name": "gene_set_enrichment_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
             ],
             upload_async=False,
             dataset_description=dataset_description,
         )
+        if enrichments != None:
+            tc.update_dataset(
+                changes_description="adding enrichments for new "
+                + samplesetname
+                + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "gene_sets_all.csv",
+                        "name": "gene_set_enrichment_withReplicates",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "gene_sets_profile.csv",
+                        "name": "gene_set_enrichment_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                ],
+                upload_async=False,
+                dataset_description=dataset_description,
+            )
         print("done")
 
 
