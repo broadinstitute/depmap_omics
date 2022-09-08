@@ -404,6 +404,12 @@ MUTATION_GROUPS = {
 }
 
 MAF_COL = "depmap_maf"
+# The following mapping table is used in mapping gene names in mutation postprocessing
+# In order to generate the table, go to https://biomart.genenames.org/
+# select "Gene"
+# under "attributes: HGNC data", only check "Approved Symbol" and "Previous Symbol"
+# click "Go"
+# click "download data"
 HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
 
 DNA_CHANGE_COL = "dna_change"
