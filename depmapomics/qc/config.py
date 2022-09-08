@@ -73,21 +73,6 @@ NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
 # NEW_RELEASE = TENTATIVE_VIRTUAL
 PORTALS = [PORTAL]
 
-
-LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011", "ACH-001092"}
-LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
-LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {"ACH-002778", "ACH-002745"}
-LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
-
-LINES_TO_RELEASE = {}
-LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"])
-LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(LINES_TO_RELEASE_DF["dmc"])
-LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(LINES_TO_RELEASE_DF["ibm"])
-LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
-    LINES_TO_RELEASE_DF["internal"]
-)
-IGNORE_FAILED_TO_RELEASE = True
-
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
 FUSIONS_MERGE_COLS = [

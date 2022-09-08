@@ -115,7 +115,7 @@ async def expressionPostProcessing(
 
     # subset and rename, include all PRs that have associated CDS-ids
     pr_table = mytracker.update_pr_from_seq()
-    pr_table = mytracker.read_pr_table()
+
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()

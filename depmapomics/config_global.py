@@ -426,6 +426,17 @@ MUTATION_GROUPS = {
 MAF_COL = "depmap_maf"
 HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
 
+DNA_CHANGE_COL = "dna_change"
+CHROM_COL = "chrom"
+POS_COL = "pos"
+HOTSPOT_COL = "cosmic_hotspot"
+IMMORTALIZED_THR = 0.05
+HUGO_COL = "hugo_symbol"
+LIKELY_LOF_COL = "likely_lof"
+CCLE_DELETERIOUS_COL = "ccle_deleterious"
+CIVIC_SCORE_COL = "civic_score"
+HESS_COL = "hess_driver"
+
 MUTCOL_DEPMAP = [
     "chrom",
     "pos",
