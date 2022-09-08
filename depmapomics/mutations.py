@@ -320,15 +320,8 @@ def postProcess(
     return mutations, svs
 
 
-def mapBed(file, vcfdir, bed_location):
+def mapBed(file, vcfdir, guide_df):
     """map mutations in one vcf file to regions in the guide bed file"""
-
-    guides_bed = pd.read_csv(
-        bed_location,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
 
     bed = pd.read_csv(
         vcfdir + file,
@@ -340,7 +333,7 @@ def mapBed(file, vcfdir, bed_location):
     name = file.split("/")[-1].split(".")[0].split("_")[1]
     if len(bed) == 0:
         return (name, None)
-    val = chip.putInBed(guides_bed, bed, mergetype="sum")
+    val = chip.putInBed(guide_df, bed, mergetype="sum")
 
     return (name, val)
 
@@ -431,12 +424,16 @@ def generateGermlineMatrix(
     binary_matrices = dict()
     for lib, fn in bed_locations.items():
         print("mapping to library: ", lib)
-        res = pool.starmap(
-            mapBed,
-            zip(os.listdir(vcfdir + lib + "/"), repeat(vcfdir + lib + "/"), repeat(fn)),
-        )
         guides_bed = pd.read_csv(
             fn, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"],
+        )
+        res = pool.starmap(
+            mapBed,
+            zip(
+                os.listdir(vcfdir + lib + "/"),
+                repeat(vcfdir + lib + "/"),
+                repeat(guides_bed),
+            ),
         )
         sorted_guides_bed = guides_bed.sort_values(
             by=["chrom", "start", "end"]
