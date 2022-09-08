@@ -221,24 +221,6 @@ PREV_VIRTUAL["internal"] = "internal-22q1-1778"
 
 ############## DNAseq
 
-WGS_methods = [
-    "gatk/PreProcessingForVariantDiscovery_GATK4/8",
-    "GP-TAG/Manta_SomaticSV/9",
-    "gkugener/ArrayOfFilesToTxt/1",
-    "vdauwera/BamToUnmappedRGBams/4",
-    "gatk/CNV_Somatic_Pair_Workflow/9",
-    "gkugener/Aggregate_CN_seg_files/2",
-]
-
-CNWES_methods = [
-    "gatk/PreProcessingForVariantDiscovery_GATK4/8",
-    "GP-TAG/Manta_SomaticSV/9",
-    "gkugener/ArrayOfFilesToTxt/1",
-    "vdauwera/BamToUnmappedRGBams/4",
-    "gatk/CNV_Somatic_Pair_Workflow/9",
-    "gkugener/Aggregate_CN_seg_files/2",
-]
-
 PROCQC = [
     "allelic_counts_tumor",
     "delta_MAD_tumor",
@@ -271,8 +253,6 @@ BAMQC = [
     "tumor_bam_quality_distribution_metrics",
     "tumor_bam_quality_yield_metrics",
 ]
-
-KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
 
 # germline matrix
 VCFDIR = "/tmp/vcfs/"

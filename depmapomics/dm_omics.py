@@ -306,7 +306,6 @@ def cnPostProcessing(
     samplesetname=SAMPLESETNAME,
     purecnsampleset=PURECN_SAMPLESET,
     AllSamplesetName="all",
-    todrop=KNOWN_DROP,
     taiga_dataset=TAIGA_CN,
     dataset_description=CNreadme,
     subsetsegs=[
