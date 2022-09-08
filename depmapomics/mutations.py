@@ -21,9 +21,11 @@ import subprocess
 def annotateLikelyImmortalized(
     maf,
     sample_col=SAMPLEID,
-    genome_change_col="dna_change",
-    hotspotcol="cosmic_hotspot",
-    max_recurrence=0.05,
+    genome_change_col=DNA_CHANGE_COL,
+    chrom_col=CHROM_COL,
+    pos_col=POS_COL,
+    hotspotcol=HOTSPOT_COL,
+    max_recurrence=IMMORTALIZED_THR,
 ):
     """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
 
@@ -41,19 +43,23 @@ def annotateLikelyImmortalized(
         pandas.DataFrame: the maf file with the added column: immortalized
     """
     maf["is_likely_immortalization"] = False
+    maf["combined_mut"] = (
+        maf[chrom_col] + maf[pos_col].astype(str) + maf[genome_change_col]
+    )
     leng = len(set(maf[sample_col]))
-    tocheck = []
-    for k, v in Counter(maf[genome_change_col].tolist()).items():
-        if v > max_recurrence * leng:
-            tocheck.append(k)
-    tocheck = list(set(tocheck) - set([np.nan]))
-    le = len(tocheck)
-    for i, val in enumerate(tocheck):
-        h.showcount(i, le)
-        if "Y" not in set(maf[maf[genome_change_col] == val][hotspotcol]):
-            maf.loc[
-                maf[maf[genome_change_col] == val].index, "is_likely_immortalization"
-            ] = True
+    maf[
+        (maf[hotspotcol] != "Y")
+        & (
+            maf["combined_mut"].isin(
+                [
+                    k
+                    for k, v in Counter(maf["combined_mut"].tolist().items())
+                    if v > max_recurrence * leng
+                ]
+            )
+        )
+    ]["is_likely_immortalization"] = True
+    maf = maf.drop(columns=["combined_mut"])
     return maf
 
 
@@ -74,7 +80,17 @@ def addAnnotation(maf, NCBI_Build="37", Strand="+"):
     return maf
 
 
-def makeMatrices(maf, homin=0.95, id_col=SAMPLEID):
+def makeMatrices(
+    maf,
+    homin=0.95,
+    id_col=SAMPLEID,
+    hotspot_col=HOTSPOT_COL,
+    hugo_col=HUGO_COL,
+    lof_col=LIKELY_LOF_COL,
+    ccle_deleterious_col=CCLE_DELETERIOUS_COL,
+    civic_col=CIVIC_SCORE_COL,
+    hess_col=HESS_COL,
+):
     """ generates genotyped hotspot, driver and damaging mutation matrices
 
     Returns:
@@ -83,7 +99,7 @@ def makeMatrices(maf, homin=0.95, id_col=SAMPLEID):
         driver_mat (pd.DataFrame): genotyped driver mutation matrix. 0 == not driver, 1 == heterozygous, 2 == homozygous
     """
     print("generating genotyped driver and damaging mutation matrix")
-    gene_names = list(maf.hugo_symbol.unique())
+    gene_names = list(maf[hugo_col].unique())
     hotspot_mat = pd.DataFrame(columns=gene_names)
     lof_mat = pd.DataFrame(columns=gene_names)
     driver_mat = pd.DataFrame(columns=gene_names)
@@ -94,32 +110,34 @@ def makeMatrices(maf, homin=0.95, id_col=SAMPLEID):
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[subset_maf.cosmic_hotspot == "Y"]
-        homhotspot = set(hotspot[hotspot["gt"] == "1|1"].hugo_symbol)
-        for dup in h.dups(hotspot.hugo_symbol):
-            if hotspot[hotspot.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
+        hotspot = subset_maf[subset_maf[hotspot_col] == "Y"]
+        homhotspot = set(hotspot[hotspot["gt"] == "1|1"][hugo_col])
+        for dup in h.dups(hotspot[hugo_col]):
+            if hotspot[hotspot[hugo_col] == dup]["af"].astype(float).sum() >= homin:
                 homhotspot.add(dup)
-        hethotspot = set(hotspot.hugo_symbol) - homhotspot
+        hethotspot = set(hotspot[hugo_col]) - homhotspot
         hotspot_mat.loc[sample, homhotspot] = "2"
         hotspot_mat.loc[sample, hethotspot] = "1"
         # damaging
-        lof = subset_maf[(subset_maf.likely_lof == "Y") | (subset_maf.ccle_deleterious)]
-        homlof = set(lof[lof["gt"] == "1|1"].hugo_symbol)
-        for dup in h.dups(lof.hugo_symbol):
-            if lof[lof.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
+        lof = subset_maf[
+            (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col])
+        ]
+        homlof = set(lof[lof["gt"] == "1|1"][hugo_col])
+        for dup in h.dups(lof[hugo_col]):
+            if lof[lof[hugo_col] == dup]["af"].astype(float).sum() >= homin:
                 homlof.add(dup)
-        hetlof = set(lof.hugo_symbol) - homlof
+        hetlof = set(lof[hugo_col]) - homlof
         lof_mat.loc[sample, homlof] = "2"
         lof_mat.loc[sample, hetlof] = "1"
         # driver
         driver = subset_maf[
-            (subset_maf.civic_score != "") | (subset_maf.hess_driver == "Y")
+            (subset_maf[civic_col] != "") | (subset_maf[hess_col] == "Y")
         ]
-        homdriv = set(driver[driver["gt"] == "1|1"].hugo_symbol)
-        for dup in h.dups(driver.hugo_symbol):
-            if driver[driver.hugo_symbol == dup]["af"].astype(float).sum() >= homin:
+        homdriv = set(driver[driver["gt"] == "1|1"][hugo_col])
+        for dup in h.dups(driver[hugo_col]):
+            if driver[driver[hugo_col] == dup]["af"].astype(float).sum() >= homin:
                 homdriv.add(dup)
-        hetdriv = set(driver.hugo_symbol) - homdriv
+        hetdriv = set(driver[hugo_col]) - homdriv
         driver_mat.loc[sample, homdriv] = "2"
         driver_mat.loc[sample, hetdriv] = "1"
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
@@ -127,26 +145,6 @@ def makeMatrices(maf, homin=0.95, id_col=SAMPLEID):
     driver_mat = driver_mat.dropna(axis="columns", how="all")
 
     return hotspot_mat, lof_mat, driver_mat
-
-
-def add_variant_annotation_column(maf):
-    """
-    adds variant annotation column to the maf file
-
-    Args:
-        maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
-
-    Returns:
-        pandas.DataFrame: the maf file with the added column: variant_annotation
-    """
-    rename = {}
-    for k, v in MUTATION_GROUPS.items():
-        for e in v:
-            rename[e] = k
-    maf["Variant_annotation"] = [
-        rename[i] for i in maf["Variant_Classification"].tolist()
-    ]
-    return maf
 
 
 def managingDuplicates(samples, failed, datatype, tracker):
@@ -301,7 +299,7 @@ def postProcess(
 
     print("annotating likely immortalized status")
     mutations = annotateLikelyImmortalized(
-        mutations, hotspotcol="cosmic_hotspot", max_recurrence=0.05,
+        mutations, hotspotcol=HOTSPOT_COL, max_recurrence=IMMORTALIZED_THR,
     )
 
     print("saving somatic mutations (all)")
