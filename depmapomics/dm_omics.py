@@ -235,10 +235,6 @@ async def fusionPostProcessing(
         fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
         taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
         dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
-        sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
-        refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
-        my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
-        mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
     
     Returns:
         (pd.df): fusion dataframe
@@ -346,11 +342,6 @@ def cnPostProcessing(
         wgsrefworkspace (str): wgs terra workspace where the ref data is stored
         samplesetname (str): name of the current release
         AllSamplesetName (str, optional): name of the sample set to get the data from (should contain everything). Defaults to 'all'.
-        my_id (str, optional): google sheet user id to access the ref sheets . Defaults to MY_ID.
-        mystorage_id (str, optional): google sheet storage id to access the ref sheets . Defaults to MYSTORAGE_ID.
-        sheetcreds (str, optional): @see updateTracker. Defaults to SHEETCREDS.
-        sheetname (str, optional): @see updateTracker. Defaults to SHEETNAME.
-        refsheet_url (str, optional): @see updateTracker. Defaults to REFSHEET_URL.
         taiga_dataset (str, optional): where to save the output to on taiga. Defaults to TAIGA_CN.
         dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to CNreadme.
         subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
@@ -702,9 +693,6 @@ async def mutationPostProcessing(
         samplesetname (str, optional): the sample set name to use (for the release). Defaults to SAMPLESETNAME.
         AllSamplesetName (str, optional): the sample set to use for all samples. Defaults to 'all'.
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
-        my_id (str, optional): filepath for google cloud access id file. Defaults to MY_ID.
-        mystorage_id (str, optional): filepath to a google cloud storage access file. Defaults to MYSTORAGE_ID.
-        refsheet_url (str, optional): path to the sample tracker google sheet. Defaults to REFSHEET_URL.
         taiga_description (str, optional): description of the dataset on taiga. Defaults to Mutationsreadme.
         taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_MUTATION.
         mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
