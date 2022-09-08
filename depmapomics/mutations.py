@@ -44,7 +44,7 @@ def annotateLikelyImmortalized(
     """
     maf["is_likely_immortalization"] = False
     maf["combined_mut"] = (
-        maf[chrom_col] + maf[pos_col].astype(str) + maf[genome_change_col]
+        maf[chrom_col] + "_" + maf[pos_col].astype(str) + "_" + maf[genome_change_col]
     )
     leng = len(set(maf[sample_col]))
     maf[
@@ -270,9 +270,8 @@ def postProcess(
     sv_filename=SV_FILENAME,
     sv_renaming=SV_COLRENAME,
 ):
-    """post process an aggregated MAF file the CCLE way
-
-    (usually a MAF file from the Aggregate_MAF Terra worklflow)
+    """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations, 
+    and aggregate structural variants (SVs)
 
     Args:
         refworkspace (str): the reference workspace
