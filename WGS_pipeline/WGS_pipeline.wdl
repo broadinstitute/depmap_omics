@@ -121,7 +121,6 @@ workflow WGS_pipeline {
             tumor_name=sample_name,
             tumor_reads=input_bam,
             tumor_reads_index=input_bam_index,
-            intervals=intervals,
             gcs_project_for_requester_pays=gcs_project_for_requester_pays,
             compress_vcfs=true,
             filter_funcotations=false,
