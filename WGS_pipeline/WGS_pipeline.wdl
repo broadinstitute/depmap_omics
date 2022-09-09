@@ -70,7 +70,7 @@ workflow WGS_pipeline {
         File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
 
         #opencravat
-        Array[String] annotators = []
+        Array[String] annotators = ["cscape", "civic", "brca1_func_assay", "provean", "dann", "revel", "spliceai", "gtex", "funseq2", "pharmgkb", "dida", "gwas_catalog", "ccre_screen", "alfa"]
 
     }
 
