@@ -58,6 +58,7 @@ workflow WGS_pipeline {
         # mutect2
         Int M2scatter=30
 
+        File mutect2_intervals="gs://ccleparams/region_file_wgs.list"
         File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
         File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
         String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
@@ -118,6 +119,7 @@ workflow WGS_pipeline {
             ref_fai=ref_fasta_index,
             ref_fasta=ref_fasta,
             scatter_count=M2scatter,
+            intervals=mutect2_intervals,
             tumor_name=sample_name,
             tumor_reads=input_bam,
             tumor_reads_index=input_bam_index,
