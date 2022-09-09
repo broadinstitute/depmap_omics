@@ -71,7 +71,7 @@ workflow WGS_pipeline {
 
         #opencravat
         Array[String] annotators = ["cscape", "civic", "brca1_func_assay", "provean", "dann", "revel", "spliceai", "gtex", "funseq2", "pharmgkb", "dida", "gwas_catalog", "ccre_screen", "alfa"]
-
+        File oc_modules = "gs://ccleparams/oc_modules.tar"
     }
 
     call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
@@ -178,6 +178,7 @@ workflow WGS_pipeline {
         input:
             vcf=RemoveFiltered.output_vcf,
             annotators_to_use=annotators,
+            oc_modules=oc_modules,
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
