@@ -56,7 +56,7 @@ workflow WGS_pipeline {
         String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
 
         # mutect2
-        Int M2scatter=10
+        Int M2scatter=30
 
         File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
         File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
