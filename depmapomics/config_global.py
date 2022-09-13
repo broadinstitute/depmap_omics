@@ -21,7 +21,7 @@ ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 ############## TERRA
 
 HG38BAMCOL = ["internal_bam_filepath", "internal_bai_filepath"]
-LEGACY_BAM_COLNAMES = ["legacy_bam_filepath", "legacy_bai_filepath"]
+LEGACY_BAM_COLNAMES = ["hg19_bam_filepath", "hg19_bai_filepath"]
 
 ############## LOADING
 
@@ -92,7 +92,7 @@ EXTRACT_DEFAULTS = {
     "root_sample_id": "root_sample_id",
     "sm_id": "SM-ID",
     "profile_id": "ProfileID",
-    "expected_type": "ExpectedType",
+    "expected_type": "expected_type",
 }
 
 # minimum bam file size in bytes for each sequencing type
