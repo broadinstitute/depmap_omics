@@ -209,7 +209,7 @@ TO_RENAME_OC = {
     "oc_funseq2__motif": "funseq2_motif",
     "oc_funseq2__hot": "funseq2_hot",
     "oc_hess_drivers__is_driver": "hess_driver",
-    "oc_hess_drivers__signature": "hess_signture",
+    "oc_hess_drivers__signature": "hess_signature",
 }
 
 TOKEEP_BASE = {
@@ -268,7 +268,7 @@ TOKEEP_ADD = {
     "likely_gof": "str",
     "likely_lof": "str",
     "hess_driver": "str",
-    "hess_signture": "str",
+    "hess_signature": "str",
     "cscape_score": "str",
     "dann_score": "str",
     "revel_score": "str",
@@ -674,9 +674,7 @@ def improve(
     if "likely_gof" not in vcf.columns.tolist():
         vcf["likely_gof"] = ""
 
-    if (
-        "oc_hess_drivers__is_driver" in vcf.columns.tolist()
-    ):
+    if "oc_hess_drivers__is_driver" in vcf.columns.tolist():
         name = "oc_hess_drivers__is_driver"
         vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
 

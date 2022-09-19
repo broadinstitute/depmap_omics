@@ -412,75 +412,76 @@ MAF_COL = "depmap_maf"
 # click "download data"
 HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
 
-DNA_CHANGE_COL = "dna_change"
-CHROM_COL = "chrom"
-POS_COL = "pos"
-HOTSPOT_COL = "cosmic_hotspot"
+DNA_CHANGE_COL = "DNAChange"
+CHROM_COL = "Chrom"
+POS_COL = "Pos"
+HOTSPOT_COL = "CosmicHotspot"
 IMMORTALIZED_THR = 0.05
-HUGO_COL = "hugo_symbol"
-LIKELY_LOF_COL = "likely_lof"
-CCLE_DELETERIOUS_COL = "ccle_deleterious"
-CIVIC_SCORE_COL = "civic_score"
-HESS_COL = "hess_driver"
+HUGO_COL = "HugoSymbol"
+LIKELY_LOF_COL = "LikelyLoF"
+CCLE_DELETERIOUS_COL = "CCLEDeleterious"
+CIVIC_SCORE_COL = "CivicScore"
+HESS_COL = "HessDriver"
 
-MUTCOL_DEPMAP = [
-    "chrom",
-    "pos",
-    "ref",
-    "alt",
-    "af",
-    "ref_count",
-    "alt_count",
-    "gt",
-    "ps",
-    "variant_type",
-    "variant_info",
-    "dna_change",
-    "protein_change",
-    "hugo_symbol",
-    "hgnc_name",
-    "hgnc_family",
-    "transcript",
-    "transcript_exon",
-    "transcript_strand",
-    "uniprot_id",
-    "str",
-    "dbsnp_id",
-    "dbsnp_filter",
-    "issues",
-    "gc_content",
-    "lineage_association",
-    "achilles_top_genes",
-    "cancer_molecular_genetics",
-    "ccle_deleterious",
-    "structural_relation",
-    "cosmic_hotspot",
-    "cosmic_overlapping_mutations",
-    "associated_with",
-    "lof",
-    "driver",
-    "likely_driver",
-    "transcript_likely_lof",
-    "civic_id",
-    "civic_description",
-    "civic_score",
-    "popaf",
-    "likely_gof",
-    "likely_lof",
-    "hess_driver",
-    "hess_signture",
-    "cscape_score",
-    "dann_score",
-    "revel_score",
-    "funseq2_score",
-    "pharmgkb_id",
-    "dida_id",
-    "dida_name",
-    "gwas_disease",
-    "gwas_pmid",
-    "gtex_gene",
-    SAMPLEID,
-]
+MUTCOL_DEPMAP = {
+    "chrom": "Chrom",
+    "pos": "Pos",
+    "ref": "Ref",
+    "alt": "Alt",
+    "af": "AF",
+    "ref_count": "RefCount",
+    "alt_count": "AltCount",
+    "gt": "GT",
+    "ps": "PS",
+    "variant_type": "VariantType",
+    "variant_info": "VariantInfo",
+    "dna_change": "DNAChange",
+    "protein_change": "ProteinChange",
+    "hugo_symbol": "HugoSymbol",
+    "hgnc_name": "HgncName",
+    "hgnc_family": "HgncFamily",
+    "transcript": "Transcript",
+    "transcript_exon": "TranscriptExon",
+    "transcript_strand": "TranscriptStrand",
+    "uniprot_id": "UniprotID",
+    "str": "Str",
+    "dbsnp_id": "DbsnpID",
+    "dbsnp_filter": "DbsnpFilter",
+    "issues": "Issues",
+    "gc_content": "GcContent",
+    "lineage_association": "LineageAssociation",
+    "achilles_top_genes": "AchillesTopGenes",
+    "cancer_molecular_genetics": "CancerMolecularGenetics",
+    "ccle_deleterious": "CCLEDeleterious",
+    "structural_relation": "StructuralRelation",
+    "cosmic_hotspot": "CosmicHotspot",
+    "cosmic_overlapping_mutations": "CosmicOverlappingMutations",
+    "associated_with": "AssociatedWith",
+    "lof": "LoF",
+    "driver": "Driver",
+    "likely_driver": "LikelyDriver",
+    "transcript_likely_lof": "TranscriptLikelyLoF",
+    "civic_id": "CivicID",
+    "civic_description": "CivicDescription",
+    "civic_score": "CivicScore",
+    "popaf": "Popaf",
+    "likely_gof": "LikelyGoF",
+    "likely_lof": "LikelyLoF",
+    "hess_driver": "HessDriver",
+    "hess_signture": "HessSignature",
+    "hess_signature": "HessSignature",
+    "cscape_score": "CscapeScore",
+    "dann_score": "DannScore",
+    "revel_score": "RevelScore",
+    "funseq2_score": "Funseq2Score",
+    "pharmgkb_id": "PharmgkbID",
+    "dida_id": "DidaID",
+    "dida_name": "DidaName",
+    "gwas_disease": "GwasDisease",
+    "gwas_pmid": "GwasPmID",
+    "gtex_gene": "GTexGene",
+    SAMPLEID: SAMPLEID,
+}
 
 
 ############## FUSION
@@ -787,7 +788,7 @@ VIRTUAL_FILENAMES_TABLE_CN_MODEL = {}
 
 VIRTUAL_FILENAMES_TABLE_MUT_MODEL = {
     "somaticMutations_profile": "OmicsSomaticMutations",
-    "structuralVariants_profile": "OmicsStructuralVariants",
+    # "structuralVariants_profile": "OmicsStructuralVariants",
 }
 
 VIRTUAL_FILENAMES_GUIDEMUT = {
@@ -801,7 +802,7 @@ VIRTUAL_FILENAMES_GUIDEMUT = {
 VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
     "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
     "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
-    "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
+    # "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
@@ -824,5 +825,5 @@ VIRTUAL_FILENAMES_TABLE_CN_PR = {
 
 VIRTUAL_FILENAMES_TABLE_MUT_PR = {
     "somaticMutations_profile": "OmicsSomaticMutationsProfile",
-    "structuralVariants_profile": "OmicsStructuralVariantsProfile",
+    # "structuralVariants_profile": "OmicsStructuralVariantsProfile",
 }
