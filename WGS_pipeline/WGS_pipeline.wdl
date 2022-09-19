@@ -1,6 +1,6 @@
 version 1.0
 
-import "cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample
+#import "cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample
 import "Manta_SomaticSV.wdl" as Manta_SomaticSV
 import "manta_annot.wdl" as manta_annot
 import "mutect2_v4.2.6.1.wdl" as mutect2
@@ -8,7 +8,7 @@ import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
 import "remove_filtered.wdl" as removeFiltered
 import "vcf_to_depmap.wdl" as vcf_to_depmap
-import "PureCN_pipeline/PureCN.wdl" as PureCN
+#import "PureCN_pipeline/PureCN.wdl" as PureCN
 import "msisensor2.wdl" as msisensor2
 import "opencravat_dm.wdl" as openCravat
 
