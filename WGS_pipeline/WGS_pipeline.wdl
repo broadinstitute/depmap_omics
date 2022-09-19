@@ -37,6 +37,8 @@ workflow WGS_pipeline {
         String ref_name = "hg38"
 
         String gatk_docker="broadinstitute/gatk:4.2.6.1"
+        # To be updated after 22Q4:
+        String gatk_docker_cnv="us.gcr.io/broad-gatk/gatk:4.1.5.0"
 
         String gcs_project_for_requester_pays
 
@@ -85,7 +87,7 @@ workflow WGS_pipeline {
             tumor_bam=input_bam,
             tumor_bam_idx=input_bam_index,
             read_count_pon=read_count_pon,
-            gatk_docker=gatk_docker,
+            gatk_docker=gatk_docker_cnv,
             is_run_funcotator=is_run_funcotator_for_cnv,
             funcotator_ref_version=funcotator_ref_version,
             gcs_project_for_requester_pays=gcs_project_for_requester_pays,
