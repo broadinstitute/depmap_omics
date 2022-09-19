@@ -683,6 +683,7 @@ async def mutationPostProcessing(
     bed_locations=GUIDESBED,
     sv_col=SV_COLNAME,
     sv_filename=SV_FILENAME,
+    mutcol=MUTCOL_DEPMAP,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -705,12 +706,15 @@ async def mutationPostProcessing(
 
     tc = TaigaClient()
 
+    wes_wm = dm.WorkspaceManager(wesrefworkspace)
+    wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
+
     # doing wes
     print("DOING WES")
     folder = WORKING_DIR + samplesetname + "/wes_"
 
     wesmutations, wessvs = mutations.postProcess(
-        wesrefworkspace,
+        wes_wm,
         AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
@@ -732,7 +736,7 @@ async def mutationPostProcessing(
     folder = WORKING_DIR + samplesetname + "/wgs_"
 
     wgsmutations, wgssvs = mutations.postProcess(
-        wgsrefworkspace,
+        wgs_wm,
         sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
@@ -776,6 +780,13 @@ async def mutationPostProcessing(
     ]
     mergedmutations = mergedmutations.replace({"hugo_symbol": maf_gene_renaming})
 
+    # add entrez id column
+    symbol_to_entrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.entrezgene_id))
+    mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
+        symbol_to_entrez_dict
+    )
+    mergedmutations = mergedmutations.rename(columns=mutcol)
+
     print("saving merged somatic mutations")
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
@@ -788,6 +799,8 @@ async def mutationPostProcessing(
     mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
+    merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
+    merged = merged.rename(columns=mutcol)
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
 
     # making genotyped mutation matrices

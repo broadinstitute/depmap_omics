@@ -21,10 +21,10 @@ import subprocess
 def annotateLikelyImmortalized(
     maf,
     sample_col=SAMPLEID,
-    genome_change_col=DNA_CHANGE_COL,
-    chrom_col=CHROM_COL,
-    pos_col=POS_COL,
-    hotspotcol=HOTSPOT_COL,
+    genome_change_col="dna_change",
+    chrom_col="chrom",
+    pos_col="pos",
+    hotspotcol="cosmic_hotspot",
     max_recurrence=IMMORTALIZED_THR,
 ):
     """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
@@ -53,12 +53,12 @@ def annotateLikelyImmortalized(
             maf["combined_mut"].isin(
                 [
                     k
-                    for k, v in Counter(maf["combined_mut"].tolist().items())
+                    for k, v in Counter(maf["combined_mut"].tolist()).items()
                     if v > max_recurrence * leng
                 ]
             )
         )
-    ]["is_likely_immortalization"] = True
+    ]["LikelyImmortalized"] = True
     maf = maf.drop(columns=["combined_mut"])
     return maf
 
@@ -111,9 +111,9 @@ def makeMatrices(
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
         hotspot = subset_maf[subset_maf[hotspot_col] == "Y"]
-        homhotspot = set(hotspot[hotspot["gt"] == "1|1"][hugo_col])
+        homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
-            if hotspot[hotspot[hugo_col] == dup]["af"].astype(float).sum() >= homin:
+            if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homhotspot.add(dup)
         hethotspot = set(hotspot[hugo_col]) - homhotspot
         hotspot_mat.loc[sample, homhotspot] = "2"
@@ -122,9 +122,9 @@ def makeMatrices(
         lof = subset_maf[
             (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col])
         ]
-        homlof = set(lof[lof["gt"] == "1|1"][hugo_col])
+        homlof = set(lof[lof["GT"] == "1|1"][hugo_col])
         for dup in h.dups(lof[hugo_col]):
-            if lof[lof[hugo_col] == dup]["af"].astype(float).sum() >= homin:
+            if lof[lof[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homlof.add(dup)
         hetlof = set(lof[hugo_col]) - homlof
         lof_mat.loc[sample, homlof] = "2"
@@ -133,9 +133,9 @@ def makeMatrices(
         driver = subset_maf[
             (subset_maf[civic_col] != "") | (subset_maf[hess_col] == "Y")
         ]
-        homdriv = set(driver[driver["gt"] == "1|1"][hugo_col])
+        homdriv = set(driver[driver["GT"] == "1|1"][hugo_col])
         for dup in h.dups(driver[hugo_col]):
-            if driver[driver[hugo_col] == dup]["af"].astype(float).sum() >= homin:
+            if driver[driver[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homdriv.add(dup)
         hetdriv = set(driver[hugo_col]) - homdriv
         driver_mat.loc[sample, homdriv] = "2"
@@ -215,9 +215,10 @@ def aggregateMAFs(
         counter += 1
         maf = pd.read_csv(row[mafcol])
         maf[SAMPLEID] = name
-        if len(set(keep_cols) - set(maf.columns)) > 0:
+        # >1 because of the hess_signature typo in input mafs
+        # can be 0 once the type is fixed upstream
+        if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
-        maf = maf[keep_cols]
         all_mafs.append(maf)
     all_mafs = pd.concat(all_mafs)
     return all_mafs
@@ -262,7 +263,7 @@ def aggregateSV(
 
 
 def postProcess(
-    refworkspace,
+    wm,
     sampleset="all",
     mafcol=MAF_COL,
     save_output=WORKING_DIR,
@@ -274,7 +275,7 @@ def postProcess(
     and aggregate structural variants (SVs)
 
     Args:
-        refworkspace (str): the reference workspace
+        wm (dalmatian.WorkspaceManager): workspace manager of the reference workspace
         sampleset (str, optional): the sample set to use. Defaults to 'all'.
         mutCol (str, optional): the mutation column name. Defaults to "mut_AC".
         save_output (str, optional): the output file name to save results into. Defaults to "".
@@ -289,7 +290,6 @@ def postProcess(
     """
     h.createFoldersFor(save_output)
     print("loading from Terra")
-    wm = dm.WorkspaceManager(refworkspace)
     # if save_output:
     # terra.saveConfigs(refworkspace, save_output + 'config/')
     mutations = aggregateMAFs(
@@ -298,7 +298,7 @@ def postProcess(
 
     print("annotating likely immortalized status")
     mutations = annotateLikelyImmortalized(
-        mutations, hotspotcol=HOTSPOT_COL, max_recurrence=IMMORTALIZED_THR,
+        mutations, hotspotcol="cosmic_hotspot", max_recurrence=IMMORTALIZED_THR,
     )
 
     print("saving somatic mutations (all)")
