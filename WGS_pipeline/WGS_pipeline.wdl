@@ -56,8 +56,9 @@ workflow WGS_pipeline {
         String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
 
         # mutect2
-        Int M2scatter=10
+        Int M2scatter=30
 
+        File mutect2_intervals="gs://ccleparams/region_file_wgs.list"
         File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
         File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
         String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
@@ -70,8 +71,8 @@ workflow WGS_pipeline {
         File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
 
         #opencravat
-        Array[String] annotators = []
-
+        Array[String] annotators = ["cscape", "civic", "brca1_func_assay", "provean", "dann", "revel", "spliceai", "gtex", "funseq2", "pharmgkb", "dida", "gwas_catalog", "ccre_screen", "alfa"]
+        File oc_modules = "gs://ccleparams/oc_modules.tar"
     }
 
     call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
@@ -118,10 +119,10 @@ workflow WGS_pipeline {
             ref_fai=ref_fasta_index,
             ref_fasta=ref_fasta,
             scatter_count=M2scatter,
+            intervals=mutect2_intervals,
             tumor_name=sample_name,
             tumor_reads=input_bam,
             tumor_reads_index=input_bam_index,
-            intervals=intervals,
             gcs_project_for_requester_pays=gcs_project_for_requester_pays,
             compress_vcfs=true,
             filter_funcotations=false,
@@ -179,6 +180,7 @@ workflow WGS_pipeline {
         input:
             vcf=RemoveFiltered.output_vcf,
             annotators_to_use=annotators,
+            oc_modules=oc_modules,
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
