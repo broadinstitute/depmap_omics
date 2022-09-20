@@ -60,7 +60,8 @@ workflow WGS_pipeline {
         # mutect2
         Int M2scatter=30
 
-        File mutect2_intervals="gs://ccleparams/region_file_wgs.list"
+        File mutect2_intervals
+        File mutect2_intervals_for_contamination
         File gnomad="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz"
         File gnomad_idx="gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz.tbi"
         String m2_extra_args="--genotype-germline-sites true --genotype-pon-sites true"
