@@ -37,9 +37,9 @@ task vcf_to_depmap {
         String docker_image="python"
         Int preemptible=3
         Int boot_disk_size=10
-        Int disk_space=20
+        Int disk_space=40
         Int cpu = 4
-        Int mem = 16
+        Int mem = 32
     }
 
     command {
