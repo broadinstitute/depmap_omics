@@ -123,6 +123,7 @@ workflow WGS_pipeline {
             ref_fasta=ref_fasta,
             scatter_count=M2scatter,
             intervals=mutect2_intervals,
+            intervals_for_contamination=mutect2_intervals_for_contamination,
             tumor_name=sample_name,
             tumor_reads=input_bam,
             tumor_reads_index=input_bam_index,
