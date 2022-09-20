@@ -84,6 +84,7 @@ workflow Mutect2 {
     input {
       # Mutect2 inputs
       File? intervals
+      File? intervals_for_contamination
       File ref_fasta
       File ref_fai
       File ref_dict
@@ -307,7 +308,8 @@ workflow Mutect2 {
             input:
                 tumor_pileups = MergeTumorPileups.merged_table,
                 normal_pileups = MergeNormalPileups.merged_table,
-                runtime_params = standard_runtime
+                runtime_params = standard_runtime,
+                intervals = intervals_for_contamination
         }
     }
 
