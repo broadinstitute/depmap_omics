@@ -338,6 +338,7 @@ def improve(
     min_count_hotspot=5,
     oncogene_list=[],
     tumor_suppressor_list=[],
+    civic_df=None,
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
@@ -353,6 +354,7 @@ def improve(
         replace_empty: dict(str: str) values representing empty fields to replace with something else
         split_multiallelic: bool if True, will split multiallelic variants into separate rows
         min_count_hotspot: int minimum number of mutations in cosmic to consider the loci a hotspot
+        civic_df (pd.DataFrame): dataframe containing civic annotations
     
     Returns:
         the imrpoved vcf
@@ -417,6 +419,8 @@ def improve(
     # replace empty characters:
     print("replacing empty characters:")
     vcf = vcf.replace(replace_empty)
+
+    print("re-annotating CIVIC using static dataframe:")
 
     print("making new annotations")
     # creating merged annotations

@@ -5,6 +5,7 @@ import pyarrow.parquet as pq
 import pyarrow as pa
 from genepy.utils import helper as h
 import os
+import pandas as pd
 
 vcf_filename = sys.argv[1]
 sample_name = (
@@ -37,6 +38,7 @@ oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
 tumor_suppressor_list = h.fileToList(
     loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 )
+civic_df = pd.read_csv("civic.csv")
 
 """
 we are running through these likely very large files by loading a chunk at a time
@@ -91,6 +93,7 @@ for i in range(10_000):
         split_multiallelic=use_multi,
         oncogene_list=oncogene,
         tumor_suppressor_list=tumor_suppressor_list,
+        civic_df=civic_df,
     )
 
     # checking we have the same set of columns
