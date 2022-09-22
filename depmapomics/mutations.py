@@ -18,37 +18,14 @@ import multiprocessing
 import subprocess
 
 
-def download_maf_from_workspace(
-    refwm,
-    sample_set_ids=["all_ice", "all_agilent"],
-    output_maf="/tmp/mutation_filtered_terra_merged.txt",
-):
-    """
-    TODO: javad to document
-    """
-    sample_sets = refwm.get_sample_sets()
-    dfs = []
-    for sample_set_id in sample_sets.index.intersection(sample_set_ids):
-        cpFiles(
-            sample_sets.loc[sample_set_id, "filtered_CGA_MAF_aggregated"],
-            "/tmp/tmp.txt",
-            payer_project_id="broad-firecloud-ccle",
-            verbose=False,
-        )
-        df = pd.read_csv("/tmp/tmp.txt", sep="\t", low_memory=False)
-        dfs.append(df)
-    dfs_concat = pd.concat(dfs)
-    dfs_concat.to_csv(output_maf, index=False, sep="\t")
-    return dfs_concat
-
-
 def annotateLikelyImmortalized(
     maf,
     sample_col=SAMPLEID,
-    genome_change_col="Genome_Change",
-    TCGAlocs=["TCGAhsCnt", "COSMIChsCnt"],
-    max_recurrence=0.05,
-    min_tcga_true_cancer=5,
+    genome_change_col="dna_change",
+    chrom_col="chrom",
+    pos_col="pos",
+    hotspotcol="cosmic_hotspot",
+    max_recurrence=IMMORTALIZED_THR,
 ):
     """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
 
@@ -66,19 +43,23 @@ def annotateLikelyImmortalized(
         pandas.DataFrame: the maf file with the added column: immortalized
     """
     maf["is_likely_immortalization"] = False
+    maf["combined_mut"] = (
+        maf[chrom_col] + "_" + maf[pos_col].astype(str) + "_" + maf[genome_change_col]
+    )
     leng = len(set(maf[sample_col]))
-    tocheck = []
-    for k, v in Counter(maf[genome_change_col].tolist()).items():
-        if v > max_recurrence * leng:
-            tocheck.append(k)
-    for val in list(set(tocheck) - set([np.nan])):
-        if (
-            np.nan_to_num(maf[maf[genome_change_col] == val][TCGAlocs], 0).max()
-            < min_tcga_true_cancer
-        ):
-            maf.loc[
-                maf[maf[genome_change_col] == val].index, "is_likely_immortalization"
-            ] = True
+    maf[
+        (maf[hotspotcol] != "Y")
+        & (
+            maf["combined_mut"].isin(
+                [
+                    k
+                    for k, v in Counter(maf["combined_mut"].tolist()).items()
+                    if v > max_recurrence * leng
+                ]
+            )
+        )
+    ]["LikelyImmortalized"] = True
+    maf = maf.drop(columns=["combined_mut"])
     return maf
 
 
@@ -99,24 +80,71 @@ def addAnnotation(maf, NCBI_Build="37", Strand="+"):
     return maf
 
 
-def add_variant_annotation_column(maf):
-    """
-    adds variant annotation column to the maf file
-
-    Args:
-        maf (pandas.DataFrame): the maf file with columns: sample_col, genome_change_col, TCGAlocs
+def makeMatrices(
+    maf,
+    homin=0.95,
+    id_col=SAMPLEID,
+    hotspot_col=HOTSPOT_COL,
+    hugo_col=HUGO_COL,
+    lof_col=LIKELY_LOF_COL,
+    ccle_deleterious_col=CCLE_DELETERIOUS_COL,
+    civic_col=CIVIC_SCORE_COL,
+    hess_col=HESS_COL,
+):
+    """ generates genotyped hotspot, driver and damaging mutation matrices
 
     Returns:
-        pandas.DataFrame: the maf file with the added column: variant_annotation
+        hotspot_mat (pd.DataFrame): genotyped hotspot mutation matrix. 0 == not damaging, 1 == heterozygous, 2 == homozygous
+        lof_mat (pd.DataFrame): genotyped damaging mutation matrix. 0 == not damaging, 1 == heterozygous, 2 == homozygous
+        driver_mat (pd.DataFrame): genotyped driver mutation matrix. 0 == not driver, 1 == heterozygous, 2 == homozygous
     """
-    rename = {}
-    for k, v in MUTATION_GROUPS.items():
-        for e in v:
-            rename[e] = k
-    maf["Variant_annotation"] = [
-        rename[i] for i in maf["Variant_Classification"].tolist()
-    ]
-    return maf
+    print("generating genotyped driver and damaging mutation matrix")
+    gene_names = list(maf[hugo_col].unique())
+    hotspot_mat = pd.DataFrame(columns=gene_names)
+    lof_mat = pd.DataFrame(columns=gene_names)
+    driver_mat = pd.DataFrame(columns=gene_names)
+    sample_ids = list(maf[id_col].unique())
+    le = len(sample_ids)
+    for j in range(le):
+        h.showcount(j, le)
+        sample = sample_ids[j]
+        subset_maf = maf[maf[id_col] == sample]
+        # hotspot
+        hotspot = subset_maf[subset_maf[hotspot_col] == "Y"]
+        homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
+        for dup in h.dups(hotspot[hugo_col]):
+            if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
+                homhotspot.add(dup)
+        hethotspot = set(hotspot[hugo_col]) - homhotspot
+        hotspot_mat.loc[sample, homhotspot] = "2"
+        hotspot_mat.loc[sample, hethotspot] = "1"
+        # damaging
+        lof = subset_maf[
+            (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col])
+        ]
+        homlof = set(lof[lof["GT"] == "1|1"][hugo_col])
+        for dup in h.dups(lof[hugo_col]):
+            if lof[lof[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
+                homlof.add(dup)
+        hetlof = set(lof[hugo_col]) - homlof
+        lof_mat.loc[sample, homlof] = "2"
+        lof_mat.loc[sample, hetlof] = "1"
+        # driver
+        driver = subset_maf[
+            (subset_maf[civic_col] != "") | (subset_maf[hess_col] == "Y")
+        ]
+        homdriv = set(driver[driver["GT"] == "1|1"][hugo_col])
+        for dup in h.dups(driver[hugo_col]):
+            if driver[driver[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
+                homdriv.add(dup)
+        hetdriv = set(driver[hugo_col]) - homdriv
+        driver_mat.loc[sample, homdriv] = "2"
+        driver_mat.loc[sample, hetdriv] = "1"
+    hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
+    lof_mat = lof_mat.dropna(axis="columns", how="all")
+    driver_mat = driver_mat.dropna(axis="columns", how="all")
+
+    return hotspot_mat, lof_mat, driver_mat
 
 
 def managingDuplicates(samples, failed, datatype, tracker):
@@ -157,85 +185,49 @@ def managingDuplicates(samples, failed, datatype, tracker):
     return renaming
 
 
-def postProcess(
-    refworkspace,
-    sampleset="all",
-    mutCol="mut_AC",
-    save_output="",
-    doCleanup=False,
-    rename_cols={
-        "i_ExAC_AF": "ExAC_AF",
-        "Tumor_Sample_Barcode": SAMPLEID,
-        "Tumor_Seq_Allele2": "Tumor_Allele",
-    },
-    sv_col=SV_COLNAME,
-    sv_filename=SV_FILENAME,
-    sv_renaming=SV_COLRENAME,
+def aggregateMAFs(
+    wm, sampleset="all", mafcol=MAF_COL, keep_cols=MUTCOL_DEPMAP,
 ):
-    """post process an aggregated MAF file the CCLE way
-
-    (usually a MAF file from the Aggregate_MAF Terra worklflow)
+    """aggregate MAF files from terra
 
     Args:
         refworkspace (str): the reference workspace
         sampleset (str, optional): the sample set to use. Defaults to 'all'.
-        mutCol (str, optional): the mutation column name. Defaults to "mut_AC".
-        save_output (str, optional): the output file name to save results into. Defaults to "".
-        doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
-        rename_cols (dict, optional): the rename dict for the columns.
-            Defaults to {"i_ExAC_AF": "ExAC_AF", 
-                        "Tumor_Sample_Barcode": SAMPLEID,
-                        "Tumor_Seq_Allele2": "Tumor_Allele"}.
-
+        mutCol (str, optional): the MAF column name. Defaults to "somatic_maf".
+        keep_cols (list, optional): which columns to keep in the aggregate MAF file. Defaults to MUTCOL_DEPMAP
+        
     Returns:
-        pandas.DataFrame: the maf file with the added columns: variant_annotation
+        aggregated_maf (df.DataFrame): aggregated MAF
     """
-    h.createFoldersFor(save_output)
-    print("loading from Terra")
-    # if save_output:
-    # terra.saveConfigs(refworkspace, save_output + 'config/')
-    refwm = dm.WorkspaceManager(refworkspace)
-    mutations = pd.read_csv(
-        refwm.get_sample_sets().loc[sampleset, "filtered_CGA_MAF_aggregated"], sep="\t"
-    )
-    mutations = mutations.rename(columns=rename_cols).drop(
-        columns=["Center", "Tumor_Seq_Allele1"]
-    )
-
-    mutations[mutCol] = [
-        str(i[0]) + ":" + str(i[1])
-        for i in np.nan_to_num(
-            mutations[["t_alt_count", "t_ref_count"]].values, 0
-        ).astype(int)
-    ]
-    mutations = mut.filterCoverage(mutations, loc=[mutCol], sep=":", cov=2)
-    mutations = mut.filterAllelicFraction(mutations, loc=[mutCol], sep=":", frac=0.1)
-    mutations = addAnnotation(mutations, NCBI_Build="37", Strand="+")
-    mutations = annotateLikelyImmortalized(
-        mutations,
-        TCGAlocs=["TCGAhsCnt", "COSMIChsCnt"],
-        max_recurrence=0.05,
-        min_tcga_true_cancer=5,
-    )
-
-    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
-    print("done")
-
-    sampleids = refwm.get_sample_sets().loc[sampleset, "samples"]
-    svs = aggregateSV(
-        refworkspace,
-        sampleids,
-        all_sv_colname=sv_col,
-        save_output=save_output,
-        save_filename=sv_filename,
-    )
-    return mutations, svs
+    print("aggregating MAF files")
+    sample_table = wm.get_samples()
+    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    sample_table_valid = sample_table[~sample_table[mafcol].isna()]
+    na_samples = set(sample_table.index) - set(sample_table_valid.index)
+    print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
+    all_mafs = []
+    le = len(sample_table_valid)
+    counter = 0
+    for name, row in sample_table_valid.iterrows():
+        # prints out progress bar
+        h.showcount(counter, le)
+        counter += 1
+        maf = pd.read_csv(row[mafcol])
+        maf[SAMPLEID] = name
+        # >1 because of the hess_signature typo in input mafs
+        # can be 0 once the type is fixed upstream
+        if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
+            print(name + " is missing columns")
+        all_mafs.append(maf)
+    all_mafs = pd.concat(all_mafs)
+    return all_mafs
 
 
 def aggregateSV(
-    refworkspace,
-    sampleids,
-    all_sv_colname=SV_COLNAME,
+    wm,
+    sampleset="all",
+    sv_colname=SV_COLNAME,
     sv_renaming=SV_COLRENAME,
     save_output="",
     save_filename="",
@@ -252,12 +244,15 @@ def aggregateSV(
         
     """
     print("aggregating SVs")
-    wm = dm.WorkspaceManager(refworkspace).disable_hound()
     sample_table = wm.get_samples()
-    sample_table = sample_table[sample_table.index.isin(sampleids)]
+    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    sample_table_valid = sample_table[~sample_table[sv_colname].isna()]
+    na_samples = set(sample_table.index) - set(sample_table_valid.index)
+    print(str(len(na_samples)) + " samples don't have corresponding sv: ", na_samples)
     all_svs = []
     for name, row in sample_table.iterrows():
-        sv = pd.read_csv(row[all_sv_colname], sep="\t")
+        sv = pd.read_csv(row[sv_colname], sep="\t")
         sv[SAMPLEID] = name
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
@@ -267,15 +262,65 @@ def aggregateSV(
     return all_svs
 
 
-def mapBed(file, vcfdir, bed_location):
-    """map mutations in one vcf file to regions in the guide bed file"""
+def postProcess(
+    wm,
+    sampleset="all",
+    mafcol=MAF_COL,
+    save_output=WORKING_DIR,
+    sv_col=SV_COLNAME,
+    sv_filename=SV_FILENAME,
+    sv_renaming=SV_COLRENAME,
+):
+    """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations, 
+    and aggregate structural variants (SVs)
 
-    guides_bed = pd.read_csv(
-        bed_location,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
+    Args:
+        wm (dalmatian.WorkspaceManager): workspace manager of the reference workspace
+        sampleset (str, optional): the sample set to use. Defaults to 'all'.
+        mutCol (str, optional): the mutation column name. Defaults to "mut_AC".
+        save_output (str, optional): the output file name to save results into. Defaults to "".
+        doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
+        rename_cols (dict, optional): the rename dict for the columns.
+            Defaults to {"i_ExAC_AF": "ExAC_AF", 
+                        "Tumor_Sample_Barcode": SAMPLEID,
+                        "Tumor_Seq_Allele2": "Tumor_Allele"}.
+
+    Returns:
+        pandas.DataFrame: the maf file with the added columns: variant_annotation
+    """
+    h.createFoldersFor(save_output)
+    print("loading from Terra")
+    # if save_output:
+    # terra.saveConfigs(refworkspace, save_output + 'config/')
+    mutations = aggregateMAFs(
+        wm, sampleset=sampleset, mafcol=mafcol, keep_cols=MUTCOL_DEPMAP,
     )
+
+    print("annotating likely immortalized status")
+    mutations = annotateLikelyImmortalized(
+        mutations, hotspotcol="cosmic_hotspot", max_recurrence=IMMORTALIZED_THR,
+    )
+
+    print("saving somatic mutations (all)")
+    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
+    print("done")
+
+    svs = aggregateSV(
+        wm,
+        sampleset=sampleset,
+        sv_colname=sv_col,
+        save_output=save_output,
+        save_filename=sv_filename,
+        sv_renaming=sv_renaming,
+    )
+    print("saving svs (all)")
+    svs.to_csv(save_output + "svs_all.csv", index=None)
+
+    return mutations, svs
+
+
+def mapBed(file, vcfdir, guide_df):
+    """map mutations in one vcf file to regions in the guide bed file"""
 
     bed = pd.read_csv(
         vcfdir + file,
@@ -287,7 +332,7 @@ def mapBed(file, vcfdir, bed_location):
     name = file.split("/")[-1].split(".")[0].split("_")[1]
     if len(bed) == 0:
         return (name, None)
-    val = chip.putInBed(guides_bed, bed, mergetype="sum")
+    val = chip.putInBed(guide_df, bed, mergetype="sum")
 
     return (name, val)
 
@@ -297,7 +342,7 @@ def generateGermlineMatrix(
     vcfdir,
     savedir=WORKING_DIR + SAMPLESETNAME + "/",
     filename="binary_mutguides.tsv.gz",
-    bed_location=GUIDESBED,
+    bed_locations=GUIDESBED,
     cores=16,
 ):
     """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
@@ -327,64 +372,78 @@ def generateGermlineMatrix(
     h.createFoldersFor(savedir)
     # load vcfs from workspace using dalmatian
     h.createFoldersFor(vcfdir)
-    guides_bed = pd.read_csv(
-        bed_location,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
+
     # save vcfs from workspace locally,
     # and run bcftools query to transform vcfs into format needed for subsequent steps
     # only including regions in the guide bed file
-    cmd = [
-        "gsutil cp "
-        + sam
-        + " "
-        + vcfdir
-        + sam.split("/")[-1]
-        + " && gsutil cp "
-        + sam
-        + ".tbi"
-        + " "
-        + vcfdir
-        + sam.split("/")[-1]
-        + ".tbi"
-        + " && bcftools query\
-  --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
-  --regions-file "
-        + bed_location
-        + " \
-  --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-        + sam
-        + " >\
- "
-        + vcfdir
-        + "loc_"
-        + sam.split("/")[-1].split(".")[0]
-        + ".bed &&\
- rm "
-        + vcfdir
-        + sam.split("/")[-1]
-        + "*"
-        for sam in vcfs
-    ]
+
+    cmds = []
+    for lib, _ in bed_locations.items():
+        h.createFoldersFor(vcfdir + lib + "/")
+    for sam in vcfs:
+        cmd = (
+            "gsutil cp "
+            + sam
+            + " "
+            + vcfdir
+            + sam.split("/")[-1]
+            + " && gsutil cp "
+            + sam
+            + ".tbi"
+            + " "
+            + vcfdir
+            + sam.split("/")[-1]
+            + ".tbi && "
+        )
+        for lib, fn in bed_locations.items():
+            cmd += (
+                "bcftools query\
+                    --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
+                    --regions-file "
+                + fn
+                + " \
+                    --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
+                + vcfdir
+                + sam.split("/")[-1]
+                + " > "
+                + vcfdir
+                + lib
+                + "/"
+                + "loc_"
+                + sam.split("/")[-1].split(".")[0]
+                + ".bed && "
+            )
+        cmd += "rm " + vcfdir + sam.split("/")[-1] + "*"
+        cmds.append(cmd)
 
     print("running bcftools index and query")
-    h.parrun(cmd, cores=cores)
+    h.parrun(cmds, cores=cores)
 
     pool = multiprocessing.Pool(cores)
-    print("mapping ")
-    res = pool.starmap(
-        mapBed, zip(os.listdir(vcfdir), repeat(vcfdir), repeat(bed_location))
-    )
-    sorted_guides_bed = guides_bed.sort_values(
-        by=["chrom", "start", "end"]
-    ).reset_index(drop=True)
-    print("done pooling")
-    for name, val in res:
-        if val is not None:
-            sorted_guides_bed[name] = val
-    print("saving matrix")
-    sorted_guides_bed.to_csv(savedir + filename)
+    binary_matrices = dict()
+    for lib, fn in bed_locations.items():
+        print("mapping to library: ", lib)
+        guides_bed = pd.read_csv(
+            fn, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"],
+        )
+        res = pool.starmap(
+            mapBed,
+            zip(
+                os.listdir(vcfdir + lib + "/"),
+                repeat(vcfdir + lib + "/"),
+                repeat(guides_bed),
+            ),
+        )
+        sorted_guides_bed = guides_bed.sort_values(
+            by=["chrom", "start", "end"]
+        ).reset_index(drop=True)
+        print("done pooling")
+        for name, val in res:
+            if val is not None:
+                sorted_guides_bed[name] = val
+        sorted_guides_bed = sorted_guides_bed.rename(columns={"foldchange": "sgRNA"})
+        print("saving binary matrix for library: ", lib)
+        sorted_guides_bed.to_csv(savedir + lib + "_" + filename)
+        binary_matrices[lib] = sorted_guides_bed
 
-    return sorted_guides_bed
+    return binary_matrices

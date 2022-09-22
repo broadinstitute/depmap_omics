@@ -55,51 +55,23 @@ VIRTUAL_RELEASES = {
         "dmc": taiga_latest_path("dmc-22q2-5e51"),
         "public": taiga_latest_path("public-22q2-de04"),
     },
+    "22Q2dryrun": {
+        "internal": taiga_latest_path("internal-22q2dryrun-5ffb"),
+        "ibm": taiga_latest_path("ibm-22q2dryrun-ddbe"),
+        "dmc": taiga_latest_path("dmc-22q2dryrun-0f8d"),
+        "public": taiga_latest_path("public-22q2dryrun-e259"),
+    },
 }  # release ids on taiga
 
 PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PORTAL = "dmc"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "22Q1"
-NEW_QUARTER = "22Q2"
+PORTAL = "internal"  # used for 'not bookkeeping' markers
+PREV_QUARTER = "22Q2"
+NEW_QUARTER = "22Q2dryrun"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
 # NEW_RELEASE = TENTATIVE_VIRTUAL
 PORTALS = [PORTAL]
-
-
-LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011", "ACH-001092"}
-LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
-LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {"ACH-002778", "ACH-002745"}
-LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
-
-
-# original
-# LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit?usp=sharing"
-
-# copy of original with 21Q4v2 and 22Q1 combined into 22Q1
-LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1IO9GqeU8m3S_PJb4U2VCKbePVrxBA-k-7jp4A3bhxd8/edit?usp=sharing"
-
-sheets_obj = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
-sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET)
-# LINES_TO_RELEASE = sheets.sheets[0]
-LINES_TO_RELEASE_DF = sheets.find(NEW_QUARTER)
-LINES_TO_RELEASE_DF = LINES_TO_RELEASE_DF.to_frame(header=0, index_col=None)
-LINES_TO_RELEASE_DF.columns = LINES_TO_RELEASE_DF.columns.str.lower()
-
-
-LINES_TO_RELEASE = {}
-LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"].dropna())
-LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(
-    LINES_TO_RELEASE_DF["dmc"].dropna()
-)
-LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(
-    LINES_TO_RELEASE_DF["ibm"].dropna()
-)
-LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
-    LINES_TO_RELEASE_DF["internal"].dropna()
-)
-IGNORE_FAILED_TO_RELEASE = False
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
@@ -146,6 +118,7 @@ PLOTS_OUTPUT_FILENAME_PREFIX = "/tmp/plots_"  # location/prefix for saving outpu
 
 # all the file attributes
 FILE_ATTRIBUTES = [
+    # all model level
     {
         "file": "CCLE_expression",
         "ismatrix": True,
@@ -270,6 +243,7 @@ FILE_ATTRIBUTES = [
 #     for x in FILE_ATTRIBUTES
 #     if (x["file"] in ["CCLE_fusions", "CCLE_fusions_unfiltered"])
 # ]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "CCLE_expression")]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = "mutations-latest-ed72"
