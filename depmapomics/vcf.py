@@ -421,8 +421,6 @@ def improve(
     vcf = vcf.replace(replace_empty)
 
     print("re-annotating CIVIC using static dataframe:")
-    print("vcf columns: ")
-    print(vcf.columns.tolist())
     vcf = civic_df.merge(vcf, on=['chrom','pos', 'ref', 'alt'], how='right')
     vcf = vcf.drop(columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]).rename(columns={"description": "oc_civic__description", "civic_actionability_score": "oc_civic__clinical_a_score", "civic_id": "oc_civic__id"})
 
