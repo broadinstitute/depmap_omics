@@ -52,7 +52,7 @@ def _fetch_civic_table():
 
             row["description"] = variant.get('description','')
             row["civic_actionability_score"] = variant['civic_actionability_score']
-            row["id"] = variant['id']
+            row["civic_id"] = variant['id']
 
             rows.append(row)
 
