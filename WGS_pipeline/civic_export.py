@@ -42,7 +42,7 @@ def _fetch_civic_table():
 
             new_coords = lifter.convert_coordinate("chr" + chrom_37, pos_37)
             if len(new_coords) > 0:
-                row['chr'] = new_coords[0][0]#.replace('chr','')
+                row['chrom'] = new_coords[0][0]#.replace('chr','')
                 row['pos'] = new_coords[0][1]
             else:
                 continue
