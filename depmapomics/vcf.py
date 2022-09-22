@@ -562,7 +562,7 @@ def improve(
     if "oc_civic__clinical_a_score" in vcf.columns.tolist():
         if "driver" not in vcf.columns.tolist():
             vcf["driver"] = ""
-        loc = (vcf["oc_civic__clinical_a_score"] != "") & (vcf["multiallelic"] != "Y")
+        loc = (~vcf["oc_civic__clinical_a_score"].isnull()) & (vcf["multiallelic"] != "Y")
         subvcf = vcf.loc[loc][["oc_civic__clinical_a_score"]]
         vcf.loc[
             subvcf[subvcf["oc_civic__clinical_a_score"].astype(float) >= 8].index,
@@ -571,7 +571,7 @@ def improve(
 
         if "likely_driver" not in vcf.columns.tolist():
             vcf["likely_driver"] = ""
-        loc = vcf["oc_civic__clinical_a_score"] != ""
+        loc = (~vcf["oc_civic__clinical_a_score"].isnull())
         vcf.loc[loc, "likely_driver"] = "Y"
 
     # lof more
