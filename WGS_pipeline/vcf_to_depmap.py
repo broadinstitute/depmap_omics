@@ -38,7 +38,7 @@ oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
 tumor_suppressor_list = h.fileToList(
     loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 )
-civic_df = pd.read_csv("civic.csv").drop(columns=['chromosome_37', 'start_37'])
+civic_df = pd.read_csv(loc + "civic.csv").drop(columns=['chromosome_37', 'start_37'])
 
 """
 we are running through these likely very large files by loading a chunk at a time
