@@ -1,8 +1,7 @@
 import numpy as np
 
 
-LINES_TO_RELEASE = []
-SAMPLESETNAME = "CCLF"
+SAMPLESETNAME = "22Q2test"
 RELEASE = SAMPLESETNAME.lower()
 
 ### GCP credentials
@@ -22,7 +21,7 @@ ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 ############## TERRA
 
 HG38BAMCOL = ["internal_bam_filepath", "internal_bai_filepath"]
-LEGACY_BAM_COLNAMES = ["legacy_bam_filepath", "legacy_bai_filepath"]
+LEGACY_BAM_COLNAMES = ["hg19_bam_filepath", "hg19_bai_filepath"]
 
 ############## LOADING
 
@@ -93,7 +92,7 @@ EXTRACT_DEFAULTS = {
     "root_sample_id": "root_sample_id",
     "sm_id": "SM-ID",
     "profile_id": "ProfileID",
-    "expected_type": "ExpectedType",
+    "expected_type": "expected_type",
 }
 
 # minimum bam file size in bytes for each sequencing type
@@ -222,24 +221,6 @@ PREV_VIRTUAL["internal"] = "internal-22q1-1778"
 
 ############## DNAseq
 
-WGS_methods = [
-    "gatk/PreProcessingForVariantDiscovery_GATK4/8",
-    "GP-TAG/Manta_SomaticSV/9",
-    "gkugener/ArrayOfFilesToTxt/1",
-    "vdauwera/BamToUnmappedRGBams/4",
-    "gatk/CNV_Somatic_Pair_Workflow/9",
-    "gkugener/Aggregate_CN_seg_files/2",
-]
-
-CNWES_methods = [
-    "gatk/PreProcessingForVariantDiscovery_GATK4/8",
-    "GP-TAG/Manta_SomaticSV/9",
-    "gkugener/ArrayOfFilesToTxt/1",
-    "vdauwera/BamToUnmappedRGBams/4",
-    "gatk/CNV_Somatic_Pair_Workflow/9",
-    "gkugener/Aggregate_CN_seg_files/2",
-]
-
 PROCQC = [
     "allelic_counts_tumor",
     "delta_MAD_tumor",
@@ -273,11 +254,13 @@ BAMQC = [
     "tumor_bam_quality_yield_metrics",
 ]
 
-KNOWN_DROP = ["CDS-R22IHj", "CDS-xMnTwN", "CDS-2FC7DW", "CDS-ToOF9G"]
-
 # germline matrix
 VCFDIR = "/tmp/vcfs/"
-GUIDESBED = "../data/avana_guides.bed"
+GUIDESBED = {
+    "avana": "data/avana_guides.bed",
+    "humagne": "data/humagne_guides.bed",
+    "ky": "data/ky_score_guides.bed",
+}
 VCFCOLNAME = "cnn_filtered_vcf"
 
 ############## CN
@@ -287,29 +270,31 @@ SEGMENTSTHR = 1500
 MAXYCHROM = 150
 
 COLRENAMING = {
-    "CONTIG": "chromosome",
-    "START": "start",
-    "END": "end",
-    "seqnames": "chromosome",
-    "start": "start",
+    "CONTIG": "Chromosome",
+    "START": "Start",
+    "END": "End",
+    "end": "End",
+    "seqnames": "Chromosome",
+    "start": "Start",
     "Sample": SAMPLEID,
-    "NUM_POINTS_COPY_RATIO": "numProbes",
-    "MEAN_LOG2_COPY_RATIO": "segmentMean",
-    "CALL": "status",
+    "NUM_POINTS_COPY_RATIO": "NumProbes",
+    "MEAN_LOG2_COPY_RATIO": "SegmentMean",
+    "CALL": "Status",
 }
 
 PURECN_COLRENAMING = {
-    "start": "start",
-    "end": "end",
-    "chr": "chromosome",
+    "start": "Start",
+    "end": "End",
+    "chr": "Chromosome",
     "Sampleid": SAMPLEID,
-    "type": "lohStatus",
-    "C": "majorAlleleAbsoluteCN",
-    "M": "monirAlleleAbsoluteCN",
+    "type": "LoHStatus",
+    "C": "MajorAlleleAbsoluteCN",
+    "M": "MinorAlleleAbsoluteCN",
 }
 
 PURECN_LOH_COLNAME = "PureCN_loh_merged"
 PURECN_FAILED_COLNAME = "PureCN_failed"
+PURECN_SAMPLESET = "PureCN"
 
 # if the loh function outputs one of these, record as 1 in the loh bool matrix
 PURECN_LOHVALUES = [
@@ -323,22 +308,20 @@ SIGTABLE_TERRACOLS = {
     "PureCN_ploidy",
     "PureCN_wgd",
     "PureCN_loh_fraction",
-    "PureCN_curated",
-    "PureCN_curated_solution",
     "PureCN_cin_allele_specific_ploidy_robust",
 }
 MISC_SIG_TERRACOLS = {"msisensor2_score"}
 PURECN_FAILED_COLNAME = "PureCN_failed"
 SIGTABLE_BINARYCOLS = [
     "PureCN_wgd",
-    "PureCN_curated",
 ]
 
 SIGTABLE_RENAMING = {
-    "PureCN_loh_fraction": "loh_fraction",
-    "PureCN_wgd": "wgd",
-    "PureCN_cin_allele_specific_ploidy_robust": "cin",
-    "PureCN_ploidy": "ploidy",
+    "PureCN_loh_fraction": "LoHFraction",
+    "PureCN_wgd": "WGD",
+    "PureCN_cin_allele_specific_ploidy_robust": "CIN",
+    "PureCN_ploidy": "Ploidy",
+    "msisensor2_score": "MSIScore",
 }
 
 SOURCE_RENAME = {
@@ -361,39 +344,39 @@ SV_COLNAME = "somatic_annotated_sv"
 SV_FILENAME = "all_sv.csv"
 
 SV_COLRENAME = {
-    "CHROM_A": "chromA",
-    "START_A": "startA",
-    "END_A": "endA",
-    "CHROM_B": "chromB",
-    "START_B": "startB",
-    "END_B": "endB",
-    "ID": "id",
-    "QUAL": "qual",
-    "STRAND_A": "strandA",
-    "STRAND_B": "strandB",
-    "TYPE": "type",
-    "FILTER": "filter",
-    "NAME_A": "nameA",
-    "REF_A": "refA",
-    "ALT_A": "altA",
-    "NAME_B": "nameB",
-    "REF_B": "refB",
-    "ALT_B": "altB",
-    "INFO_A": "infoA",
-    "INFO_B": "infoB",
-    "FORMAT": "format",
-    "SPAN": "span",
-    "HOMSEQ": "homSeq",
-    "HOMLEN": "homLen",
-    "BREAK_A_Ensembl_Gene": "breakAEnsemblGene",
-    "BREAK_A_Gene_Name": "breakAGeneName",
-    "BREAK_B_Ensembl_Gene": "breakBEnsemblGene",
-    "BREAK_B_Gene_Name": "breakBGeneName",
-    "BREAK_A_Ensembl_Exon": "breakAEnsemblExon",
-    "BREAK_B_Ensembl_Exon": "breakBEnsemblExon",
-    "Filter": "filter",
+    "CHROM_A": "ChromA",
+    "START_A": "StartA",
+    "END_A": "EndA",
+    "CHROM_B": "ChromB",
+    "START_B": "StartB",
+    "END_B": "EndB",
+    "ID": "ID",
+    "QUAL": "Qual",
+    "STRAND_A": "StrandA",
+    "STRAND_B": "StrandB",
+    "TYPE": "Type",
+    "FILTER": "Filter",
+    "NAME_A": "NameA",
+    "REF_A": "RefA",
+    "ALT_A": "AltA",
+    "NAME_B": "NameB",
+    "REF_B": "RefB",
+    "ALT_B": "AltB",
+    "INFO_A": "InfoA",
+    "INFO_B": "InfoB",
+    "FORMAT": "Format",
+    "SPAN": "Span",
+    "HOMSEQ": "HomSeq",
+    "HOMLEN": "HomLen",
+    "BREAK_A_Ensembl_Gene": "BreakAEnsemblGene",
+    "BREAK_A_Gene_Name": "BreakAGeneName",
+    "BREAK_B_Ensembl_Gene": "BreakBEnsemblGene",
+    "BREAK_B_Gene_Name": "BreakBGeneName",
+    "BREAK_A_Ensembl_Exon": "BreakAEnsemblExon",
+    "BREAK_B_Ensembl_Exon": "BreakBEnsemblExon",
+    "Filter": "Filter",
     # temporary
-    "OCILY12": "sample",
+    "OCILY12": "Sample",
 }
 
 
@@ -420,56 +403,106 @@ MUTATION_GROUPS = {
     ],
 }
 
-MUTCOL_DEPMAP = [
-    "Hugo_Symbol",
-    "Entrez_Gene_Id",
-    "NCBI_Build",
-    "Chromosome",
-    "Start_position",
-    "End_position",
-    "Strand",
-    "Variant_Classification",
-    "Variant_Type",
-    "Reference_Allele",
-    "Tumor_Allele",
-    "dbSNP_RS",
-    "dbSNP_Val_Status",
-    "Genome_Change",
-    "Annotation_Transcript",
-    SAMPLEID,
-    "cDNA_Change",
-    "Codon_Change",
-    "Protein_Change",
-    "isDeleterious",
-    "isTCGAhotspot",
-    "TCGAhsCnt",
-    "isCOSMIChotspot",
-    "COSMIChsCnt",
-    "ExAC_AF",
-    "Variant_annotation",
-    "CGA_WES_AC",
-]
+MAF_COL = "depmap_maf"
+# The following mapping table is used in mapping gene names in mutation postprocessing
+# In order to generate the table, go to https://biomart.genenames.org/
+# select "Gene"
+# under "attributes: HGNC data", only check "Approved Symbol" and "Previous Symbol"
+# click "Go"
+# click "download data"
+HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
+
+DNA_CHANGE_COL = "DNAChange"
+CHROM_COL = "Chrom"
+POS_COL = "Pos"
+HOTSPOT_COL = "CosmicHotspot"
+IMMORTALIZED_THR = 0.05
+HUGO_COL = "HugoSymbol"
+LIKELY_LOF_COL = "LikelyLoF"
+CCLE_DELETERIOUS_COL = "CCLEDeleterious"
+CIVIC_SCORE_COL = "CivicScore"
+HESS_COL = "HessDriver"
+
+MUTCOL_DEPMAP = {
+    "chrom": "Chrom",
+    "pos": "Pos",
+    "ref": "Ref",
+    "alt": "Alt",
+    "af": "AF",
+    "ref_count": "RefCount",
+    "alt_count": "AltCount",
+    "gt": "GT",
+    "ps": "PS",
+    "variant_type": "VariantType",
+    "variant_info": "VariantInfo",
+    "dna_change": "DNAChange",
+    "protein_change": "ProteinChange",
+    "hugo_symbol": "HugoSymbol",
+    "hgnc_name": "HgncName",
+    "hgnc_family": "HgncFamily",
+    "transcript": "Transcript",
+    "transcript_exon": "TranscriptExon",
+    "transcript_strand": "TranscriptStrand",
+    "uniprot_id": "UniprotID",
+    "str": "Str",
+    "dbsnp_id": "DbsnpID",
+    "dbsnp_filter": "DbsnpFilter",
+    "issues": "Issues",
+    "gc_content": "GcContent",
+    "lineage_association": "LineageAssociation",
+    "achilles_top_genes": "AchillesTopGenes",
+    "cancer_molecular_genetics": "CancerMolecularGenetics",
+    "ccle_deleterious": "CCLEDeleterious",
+    "structural_relation": "StructuralRelation",
+    "cosmic_hotspot": "CosmicHotspot",
+    "cosmic_overlapping_mutations": "CosmicOverlappingMutations",
+    "associated_with": "AssociatedWith",
+    "lof": "LoF",
+    "driver": "Driver",
+    "likely_driver": "LikelyDriver",
+    "transcript_likely_lof": "TranscriptLikelyLoF",
+    "civic_id": "CivicID",
+    "civic_description": "CivicDescription",
+    "civic_score": "CivicScore",
+    "popaf": "Popaf",
+    "likely_gof": "LikelyGoF",
+    "likely_lof": "LikelyLoF",
+    "hess_driver": "HessDriver",
+    "hess_signture": "HessSignature",
+    "hess_signature": "HessSignature",
+    "cscape_score": "CscapeScore",
+    "dann_score": "DannScore",
+    "revel_score": "RevelScore",
+    "funseq2_score": "Funseq2Score",
+    "pharmgkb_id": "PharmgkbID",
+    "dida_id": "DidaID",
+    "dida_name": "DidaName",
+    "gwas_disease": "GwasDisease",
+    "gwas_pmid": "GwasPmID",
+    "gtex_gene": "GTexGene",
+    SAMPLEID: SAMPLEID,
+}
 
 
 ############## FUSION
 
-FUSION_COLNAME = {
-    "FusionName": "fusionName",
-    "JunctionReadCount": "junctionReadCount",
-    "SpanningFragCount": "spanningFragCount",
-    "SpliceType": "spliceType",
-    "LeftGene": "leftGene",
-    "LeftBreakpoint": "leftBreakpoint",
-    "RightGene": "rightGene",
-    "RightBreakpoint": "rightBreakpoint",
-    "LargeAnchorSupport": "largeAnchorSupport",
-    "FFPM": "ffpm",
-    "LeftBreakDinuc": "leftBreakDinuc",
-    "LeftBreakEntropy": "leftBreakEntropy",
-    "RightBreakDinuc": "rightBreakDinuc",
-    "RightBreakEntropy": "rightBreakEntropy",
-    "annots": "annots",
-}
+FUSION_COLNAME = [
+    "FusionName",
+    "JunctionReadCount",
+    "SpanningFragCount",
+    "SpliceType",
+    "LeftGene",
+    "LeftBreakpoint",
+    "RightGene",
+    "RightBreakpoint",
+    "LargeAnchorSupport",
+    "FFPM",
+    "LeftBreakDinuc",
+    "LeftBreakEntropy",
+    "RightBreakDinuc",
+    "RightBreakEntropy",
+    "annots",
+]
 
 FUSION_RED_HERRING = [
     "GTEx_recurrent",
@@ -703,7 +736,6 @@ GUMBO_CLIENT_USERNAME = "szhang"
 
 DATE_COL_DICT = {
     "internal": "InternalReleaseDate",
-    "ibm": "IBMReleaseDate",
     "dmc": "ConsortiumReleaseDate",
     "public": "PublicReleaseDate",
 }
@@ -723,51 +755,75 @@ DEFAULT_TABLE_COLS = ["ModelID", "ProfileID", "ProfileType"]
 DEFAULT_TABLE_NAME = "default_model_table"
 
 # dictionaries mapping names of pr-level matrices on latest to names on virtual
+###### Model-level ##########
 # NumericMatrixCSV matrices:
-VIRTUAL_FILENAMES_NUMMAT_EXP = {
-    "genes_expectedCount_profile": "Omics_expression_genes_expectedCount",
-    "genes_tpm_logp1_profile": "Omics_expression_genes_tpm_logp1",
-    "transcripts_expectedCount_profile": "Omics_expression_transcripts_expectedCount",
-    "transcripts_tpm_logp1_profile": "Omics_expression_transcripts_tpm_logp1",
-    "proteinCoding_genes_expectedCount_profile": "Omics_expression_proteinCoding_genes_expectedCount",
-    "proteinCoding_genes_tpm_logp1_profile": "Omics_expression_proteinCoding_genes_tpm_logp1",
+VIRTUAL_FILENAMES_NUMMAT_EXP_MODEL = {
+    "proteinCoding_genes_tpm_logp1_profile": "OmicsExpressionProteinCodingGenesTPMLogp1",
+    "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichment",
 }
 
-VIRTUAL_FILENAMES_NUMMAT_EXP_INTERNAL = {
-    "gene_set_enrichment_profile": "Omics_gene_set_enrichment",
+VIRTUAL_FILENAMES_NUMMAT_CN_MODEL = {
+    "merged_gene_cn_profile": "OmicsCNGene",
+    "merged_absolute_gene_cn_profile": "OmicsAbsoluteCNGene",
+    "merged_loh_profile": "OmicsLoH",
+    "globalGenomicFeatures_profile": "OmicsSignatures",
 }
 
-VIRTUAL_FILENAMES_NUMMAT_CN = {
-    "merged_gene_cn_profile": "Omics_cn_gene",
-    "merged_absolute_gene_cn_profile": "Omics_absoluteCN_gene",
-    "merged_loh_profile": "Omics_loh",
-    "globalGenomicFeatures_profile": "Omics_signatures",
+VIRTUAL_FILENAMES_NUMMAT_MUT_MODEL = {
+    "somaticMutations_genotypedMatrix_hotspot_profile": "OmicsSomaticMutationsMatrixHotspot",
+    "somaticMutations_genotypedMatrix_damaging_profile": "OmicsSomaticMutationsMatrixDamaging",
+    "somaticMutations_genotypedMatrix_driver_profile": "OmicsSomaticMutationsMatrixDriver",
 }
 
-VIRTUAL_FILENAMES_NUMMAT_MUT = {
-    "somaticMutations_boolMatrix_hotspot_profile": "Omics_somaticMutations_boolMatrix_hotspot",
-    "somaticMutations_boolMatrix_otherNonconserving_profile": "Omics_somaticMutations_boolMatrix_otherNonconserving",
-    "somaticMutations_boolMatrix_damaging_profile": "Omics_somaticMutations_boolMatrix_damaging",
-    "somaticMutations_boolMatrix_otherConserving_profile": "Omics_somaticMutations_boolMatrix_otherConserving",
-}
-
-VIRTUAL_FILENAMES_GERMLINE = {
-    "binary_germline_mutation": "Omics_binary_germline_mutation",
+VIRTUAL_FILENAMES_GERMLINE_MODEL = {
+    "binary_germline_mutation": "OmicsGuideMutationsBinaryAvana",
 }
 
 # TableCSV matrices:
-VIRTUAL_FILENAMES_TABLE_FUSION = {
-    "fusions_filtered_profile": "Omics_fusions_filtered",
-    "fusions_unfiltered_profile": "Omics_fusions_unfiltered",
+VIRTUAL_FILENAMES_TABLE_FUSION_MODEL = {
+    "fusions_filtered_profile": "OmicsFusionFiltered",
 }
 
-VIRTUAL_FILENAMES_TABLE_CN = {
-    "merged_segments_profile": "Omics_cn_segments",
-    "merged_absolute_segments_profile": "Omics_absoluteCN_segments",
+VIRTUAL_FILENAMES_TABLE_CN_MODEL = {}
+
+VIRTUAL_FILENAMES_TABLE_MUT_MODEL = {
+    "somaticMutations_profile": "OmicsSomaticMutations",
+    # "structuralVariants_profile": "OmicsStructuralVariants",
 }
 
-VIRTUAL_FILENAMES_TABLE_MUT = {
-    "somaticMutations_profile": "Omics_somaticMutations",
-    "structuralVariants_profile": "Omics_structuralVariants",
+VIRTUAL_FILENAMES_GUIDEMUT = {
+    "binary_mutation_avana": "OmicsGuideMutationsBinaryAvana",
+    "binary_mutation_ky": "OmicsGuideMutationsBinaryKY",
+    "binary_mutation_humagne": "OmicsGuideMutationsBinaryHumagne",
 }
 
+###### Profile-level ##########
+# NumericMatrixCSV matrices:
+VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
+    "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
+    "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
+    # "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
+}
+
+VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
+    "globalGenomicFeatures_profile": "OmicsSignaturesProfile",
+}
+
+VIRTUAL_FILENAMES_NUMMAT_MUT_PR = {}
+
+VIRTUAL_FILENAMES_GERMLINE_PR = {}
+
+# TableCSV matrices:
+VIRTUAL_FILENAMES_TABLE_FUSION_PR = {
+    "fusions_unfiltered_profile": "OmicsFusionUnfilteredProfile",
+}
+
+VIRTUAL_FILENAMES_TABLE_CN_PR = {
+    "merged_segments_profile": "OmicsCNSegmentsProfile",
+    "merged_absolute_segments_profile": "OmicsAbsoluteCNSegmentsProfile",
+}
+
+VIRTUAL_FILENAMES_TABLE_MUT_PR = {
+    "somaticMutations_profile": "OmicsSomaticMutationsProfile",
+    # "structuralVariants_profile": "OmicsStructuralVariantsProfile",
+}

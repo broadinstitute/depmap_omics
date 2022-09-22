@@ -82,12 +82,12 @@ def loadFromGATKAggregation(
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
-    segments.Segment_Mean = 2 ** segments.Segment_Mean
+    segments.SegmentMean = 2 ** segments.SegmentMean
     segments.Start = segments.Start.astype(int)
     segments.End = segments.End.astype(int)
     segments.loc[
-        segments[segments.Chromosome.isin(["X", "Y"])].index, "Segment_Mean"
-    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["Segment_Mean"] / 2)
+        segments[segments.Chromosome.isin(["X", "Y"])].index, "SegmentMean"
+    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2)
     segments = segments.sort_values(by=sortby)
 
     print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
@@ -144,15 +144,13 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
 
 def pureCNpostprocess(
     refworkspace,
-    setEntity="sample_set",
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     lohcolname=PURECN_LOH_COLNAME,
     failedcolname=PURECN_FAILED_COLNAME,
-    sampleset="all",
+    sampleset=PURECN_SAMPLESET,
     colRenaming=PURECN_COLRENAMING,
     lohvals=PURECN_LOHVALUES,
-    terracols=SIGTABLE_TERRACOLS,
     save_output="",
     mappingdf=None,
 ):
@@ -177,7 +175,7 @@ def pureCNpostprocess(
     print("loading PureCN merged LOH file")
     wm = dm.WorkspaceManager(refworkspace)
     segments = pd.read_csv(
-        wm.get_entities(setEntity).loc[sampleset, lohcolname]
+        wm.get_entities("sample_set").loc[sampleset, lohcolname]
     ).rename(columns=colRenaming)
     samples = wm.get_samples()
     failed = samples[samples[failedcolname] == "TRUE"].index
@@ -200,7 +198,7 @@ def pureCNpostprocess(
         mut.manageGapsInSegments(segments),
         mappingdf,
         style="closest",
-        value_colname="Absolute_CN",
+        value_colname="MajorAlleleAbsoluteCN",
     )
 
     segments = segments[
@@ -224,18 +222,20 @@ def pureCNpostprocess(
 
     # Generate gene-level LOH status matrix
     segments_binarized = segments.copy()
-    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].replace(
+    segments_binarized["LoHStatus"] = segments_binarized["LoHStatus"].replace(
         lohvals, 1
     )
-    segments_binarized["LOH_status"] = segments_binarized["LOH_status"].fillna(0)
+    segments_binarized["LoHStatus"] = segments_binarized["LoHStatus"].fillna(0)
 
     loh_status = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments_binarized),
         mappingdf,
-        value_colname="LOH_status",
+        style="closest",
+        value_colname="LoHStatus",
     )
 
     loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
+    loh_status = (loh_status > 0).astype(int)
 
     print("PureCN: saving LOH matrix")
     loh_status.to_csv(save_output + "purecn_loh_all.csv")
@@ -260,7 +260,7 @@ def generateSigTable(
     samples = samples[samples.index != "nan"]
 
     # discard lines that have failed PureCN for the PureCN columns
-    purecn_passed = samples[samples[purecn_failed_col] == "FALSE"]
+    purecn_passed = samples[samples[purecn_failed_col] != "TRUE"]
     purecn_table = purecn_passed[purecncols]
     purecn_table = purecn_table[~purecn_table.index.isin(set(todrop))]
 
@@ -289,6 +289,7 @@ def postProcess(
     refworkspace,
     setEntity="sample_set",
     sampleset="all",
+    purecnsampleset=PURECN_SAMPLESET,
     save_output="",
     doCleanup=True,
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
@@ -370,7 +371,9 @@ def postProcess(
     segments = segments[
         ~((segments[SAMPLEID].isin(countYdrop)) & (segments.Chromosome == "Y"))
     ]
-    genecn = mut.toGeneMatrix(mut.manageGapsInSegments(segments), mybiomart)
+    genecn = mut.toGeneMatrix(
+        mut.manageGapsInSegments(segments), mybiomart, value_colname="SegmentMean"
+    )
     # validation step
     print("summary of the gene cn data:")
     print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
@@ -396,8 +399,7 @@ def postProcess(
     print("done")
     purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
         refworkspace,
-        setEntity=setEntity,
-        sampleset=sampleset,
+        sampleset=purecnsampleset,
         mappingdf=mybiomart,
         sortby=sortby,
         todrop=todrop,
