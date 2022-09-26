@@ -119,14 +119,22 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                 i,
                 ":",
                 tuple(
-                    ref.loc[i, ["ModelID", "version", "datatype", "PatientID"]].values
+                    ref.loc[
+                        i, ["ModelID", "version", "ExpectedType", "PatientID"]
+                    ].values
                 ),
                 j,
                 ":",
                 tuple(
                     ref.loc[
                         j,
-                        ["ModelID", "version", "datatype", "PatientID", "blacklist",],
+                        [
+                            "ModelID",
+                            "version",
+                            "ExpectedType",
+                            "PatientID",
+                            "blacklist",
+                        ],
                     ]
                 ),
             )
@@ -137,7 +145,7 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                     + str(
                         tuple(
                             ref.loc[
-                                i, ["ModelID", "version", "datatype", "PatientID"],
+                                i, ["ModelID", "version", "ExpectedType", "PatientID"],
                             ].values
                         )
                     )
@@ -149,7 +157,7 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                                 [
                                     "ModelID",
                                     "version",
-                                    "datatype",
+                                    "ExpectedType",
                                     "PatientID",
                                     "blacklist",
                                 ],
@@ -204,9 +212,8 @@ def checkMatches(lod_mat, ref, thr=500):
                                     [
                                         "ModelID",
                                         "version",
-                                        "datatype",
+                                        "ExpectedType",
                                         "PatientID",
-                                        "stripped_cell_line_name",
                                     ],
                                 ]
                                 .astype(str)
@@ -217,14 +224,7 @@ def checkMatches(lod_mat, ref, thr=500):
                 matched_samples = [
                     tuple(
                         ref.loc[
-                            j,
-                            [
-                                "ModelID",
-                                "version",
-                                "datatype",
-                                "PatientID",
-                                "stripped_cell_line_name",
-                            ],
+                            j, ["ModelID", "version", "ExpectedType", "PatientID",],
                         ].values
                     )
                 ]
@@ -232,14 +232,7 @@ def checkMatches(lod_mat, ref, thr=500):
                 matched_samples.append(
                     tuple(
                         ref.loc[
-                            j,
-                            [
-                                "ModelID",
-                                "version",
-                                "datatype",
-                                "PatientID",
-                                "stripped_cell_line_name",
-                            ],
+                            j, ["ModelID", "version", "datatype", "PatientID",],
                         ].values
                     )
                 )
@@ -418,8 +411,14 @@ async def fingerPrint(
     if use_gumbo:
         mytracker = track.SampleTracker()
         ref = mytracker.add_model_cols_to_seqtable(["PatientID", "ModelID"])
+        # add model and participant info to new samples that are not in the sequencing table yet
+        samples["ModelID"] = samples["ProfileID"].apply(
+            lambda x: mytracker.lookup_model_from_pr(x, "ModelID")
+        )
+        samples["PatientID"] = samples["ProfileID"].apply(
+            lambda x: mytracker.lookup_model_from_pr(x, "PatientID")
+        )
 
-    samples = samples.rename(columns={"participant_id": "PatientID"})
     ref = ref.append(samples)
 
     # find samples that should match but don't
