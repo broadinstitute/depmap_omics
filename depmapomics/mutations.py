@@ -143,6 +143,9 @@ def makeMatrices(
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
     lof_mat = lof_mat.dropna(axis="columns", how="all")
     driver_mat = driver_mat.dropna(axis="columns", how="all")
+    hotspot_mat = hotspot_mat.fillna(0)
+    lof_mat = lof_mat.fillna(0)
+    driver_mat = driver_mat.fillna(0)
 
     return hotspot_mat, lof_mat, driver_mat
 
