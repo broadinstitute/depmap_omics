@@ -1,0 +1,1694 @@
+chromosome_37,start_37,chrom,pos,ref,alt,description,civic_actionability_score,civic_id
+22,23522397,chr22,23180210,,,"The BCR-ABL fusion protein, commonly referred to as the Philadelphia chromosome, is one of the most studied fusion genes in cancer. It has widely been considered the initiating event in chronic myelogenous leukemia (CML). However, despite its ability to initiate disease in mice, its status as an initiating mutation is in dispute. In what is commonly used as the poster-child for targeted therapeutics, the development and use of imatinib in the clinic has led to profound improvements in the prognosis of the disease. However, imatinib resistance is still seen in patients with mutations in the ABL kinase domain of the fusion, most notably the T315I variant. In patients resistant to imatinib, either acquired or otherwise, second generation BCR-ABL TKI's (dasatinib and nilotinib) have seen some success in delivering a tumor response. Third generation ABL1 inhibitor ponatinib is the only FDA approved drug with activity against T315I . However due to risk of life-threatening blood clots and severe narrowing of blood vessels ponatinib is ONLY approved for T315I-positive CML or T315I-positive Ph+ ALL or in cases of CML, Ph+ ALL with resistance or intolerance to other approved ABL1 inhibitors.",255.5,1
+9,133748283,chr9,130872896,C,T,"While the efficacy of imatinib has revolutionized chronic myelogenous leukemia (CML) treatment, it is still not a cure-all. Both initial resistance and acquired resistance as a result of selection have been seen in a small subset of CML patients. The ABL kinase domain mutation T315I (aka T334I) has been shown to be one such mutation that confers resistance to imatinib. Second generation TKI's (dasatinib and ponatinib) specific to BCR-ABL have shown efficacy in treating resistant cases.",146.0,2
+9,133738363,chr9,130862976,G,A,"While the efficacy of imatinib has revolutionized chronic myelogenous leukemia (CML) treatment, it is still not a cure-all. Both initial resistance and acquired resistance as a result of selection have been seen in a small subset of CML patients. The ABL kinase domain mutation E255K has been shown to be one such mutation that confers resistance to imatinib. Second generation TKI's (dasatinib and nilotinib) specific to BCR-ABL have shown efficacy in treating resistant cases.",83.0,3
+14,105246551,chr14,104780214,C,T,"AKT1 E17K is a recurrent mutation that has been observed in breast, colorectal, lung, and ovarian cancer. It has been convincingly shown to be an activating mutation resulting in PI3K/AKT/mTOR pathway activity. It has been suggested that this mutation decreases the cell's sensitivity to AKT1 allosteric kinase inhibitors. This, and other AKT1 mutations, are the subject of much research and development for therapeutics.",33.5,4
+2,42396490,chr2,42169350,,,"The EML4-ALK fusion variant 1 consisting of ALK kinase domain (exons 20-29) fused to EML4 exons 1-13 is the most common EML4-ALK variant, and was discovered in non-small cell lung cancer. Multiple EML4 breakpoint shave been described with differential sensitivity to inhibitors with variant 1 showing greater sensitivity than 3a in cell lines. EML4-ALK is crizotinib sensitive; however, several mutations that confer resistance mutations have been described in case studies. In the only clinical trial for crizotinib that included determination of EML4-ALK variant type in a subset of its participants, a very high response rate was observed, although the numbers were insufficient to validate correlation of variant type to outcome. Preclinical studies with this variant have indicated sensitivity to Hsp90 inhibitors.",38.0,5
+2,29445258,chr2,29222392,C,T,"In patients with non-small cell lung cancer exhibiting EML4-ALK fusion, C1156Y has been shown to confer resistance to crizotinib. Case reports indicate that secondary mutations can modulate drug sensitivity. EML4-ALK C1156Y/L1196M maintained crizotinib resistance while the lorlatinib resistant combination EML4-ALK C1156Y/L1198F re-sensitized the tumor to crizotinib treatment.",29.0,6
+2,29443631,chr2,29220765,G,T,"In patients with non-small cell lung cancer exhibiting EML4-ALK fusion, L1196M has been shown to confer resistance to crizotinib. This was also true in a patient with both EML4-ALK C1156Y & L1196M.",21.0,7
+2,29443695,chr2,29220829,G,T,"ALK F1174L has been observed as recurrent in neuroblastoma, non-small cell lung cancer (NSCLC), and other cancer types. Neuroblastoma cells containing this mutation have shown resistance to low doses of criztonib. However, increased dosage can overcome this resistance in cell lines studies. TAE684 has also proven effective in both NSCLC and neuroblastoma F1174L containing cells.",33.5,8
+2,29432664,chr2,29209798,C,T,"ALK R1275Q has been observed as a recurrent mutation in  neuroblastoma, non-small cell lung cancer (NSCLC), as well as other cancer types. Neuroblastoma cells with this mutation have shown sensitivity to the ALK-inhibitor TAE684. This and the geldanamycin deriviative 17-DMAG have been shown to be effective in NSCLC cell lines.",23.0,9
+X,47426121,chrX,47566722,C,G,"ARAF S214C has been found to be a recurrent oncogenic mutation in non-small cell lung cancer. It has been shown to confer sensitivity to sorafenib and trametenib in cell lines. In a case study of advanced stage lung adenocarcinoma harboring this mutation, sorafenib also acheived near-complete clinical remission. This case has brought more interest to the variant from a research and clinical perspective.",11.0,10
+7,140453135,chr7,140753335,CA,AT,"Patients harboring mutations in valine 600 residue of BRAF have been shown to be sensitive to dabrafenib. For more information on the V600 locus, see the V600E entry.",47.0,11
+7,140453136,chr7,140753336,A,T,"BRAF V600E has been shown to be recurrent in many cancer types. It is one of the most widely studied variants in cancer. This variant is correlated with poor prognosis in certain cancer types, including colorectal cancer and papillary thyroid cancer. The targeted therapeutic dabrafenib has been shown to be effective in clinical trials with an array of BRAF mutations and cancer types. Dabrafenib has also shown to be effective when combined with the MEK inhibitor trametinib in colorectal cancer and melanoma. However, in patients with TP53, CDKN2A and KRAS mutations, dabrafenib resistance has been reported. Ipilimumab, regorafenib, vemurafenib, and a number of combination therapies have been successful in treating V600E mutations. However, cetuximab and panitumumab have been largely shown to be ineffective without supplementary treatment.",1353.5,12
+7,140453135,chr7,140753335,,,"A case study of a single patient harboring both a V600E and a V600M mutation, dabrafenib was shown to acheive clinical response.",2.5,13
+7,140434279,chr7,140734479,,,"Amplification of BRAF V600E has been shown to confer resistance to MEK inhibitors. For more information on the V600 locus, see the V600E entry.",1.0,14
+7,140453136,chr7,140753336,,,"BRAF mutations of the valine 600 residue have been shown to be recurrent in many cancer types. Of the V600 mutations, V600E is the most widely researched. V600 mutations as a whole have been correlated to poorer prognosis in colorectal and papilarry thyroid cancers. V600 mutations have also been shown to confer sensitivity to the BRAF inhibitor dabrafenib. For a more detailed summary, click the individual mutations.",460.0,17
+11,69455855,chr11,69641087,,,CCND1 amplification has been implicated in poorer prognosis in non-small cell lung cancer.,47.0,18
+11,69455855,chr11,69641087,,,"CCND1 expression, and its prognositc impact, is still in dispute. Three experiments in non-small cell lung cancer have shown it to have no impact on survival, but three additional studies have shown it results in poorer prognosis. There is also some ambiguity in how the boundaries between expression and overexpression are defined.",30.0,19
+11,69455855,chr11,69641087,,,"Cyclin D has been shown in many cancer types to be misregulated. Well established for their oncogenic properties, the cyclins and the cyclin-dependent kinases (CDK's) they activate have been the focus of major research and development efforts over the past decade. The methods by which the cyclins are misregulated are widely variable, and range from genomic amplification to promoter methylation changes. While Cyclin D2 has only been found to be significantly misregulated in glioma, Cyclin D1 in particular seems to be a pan-cancer actor. Cyclin D misregulation has been shown to lead to poorer outcomes in a number of studies, and currently there are no FDA-approved targeted therapies.",116.0,20
+12,4382938,chr12,4273772,,,"Cyclin D has been shown in many cancer types to be misregulated. Well established for their oncogenic properties, the cyclins and the cyclin-dependent kinases (CDK's) they activate have been the focus of major research and development efforts over the past decade. The methods by which the cyclins are misregulated are widely variable, and range from genomic amplification to promoter methylation changes. While Cyclin D2 has only been found to be significantly misregulated in glioma, Cyclin D1 in particular seems to be a pan-cancer actor. Cyclin D misregulation has been shown to lead to poorer outcomes in a number of studies, and currently there are no FDA-approved targeted therapies.",16.0,21
+12,4381437,chr12,4272271,,,"Cyclin D has been shown in many cancer types to be misregulated. Well established for their oncogenic properties, the cyclins and the cyclin-dependent kinases (CDK's) they activate have been the focus of major research and development efforts over the past decade. The methods by which the cyclins are misregulated are widely variable, and range from genomic amplification to promoter methylation changes. While Cyclin D2 has only been found to be significantly misregulated in glioma, Cyclin D1 in particular seems to be a pan-cancer actor. Cyclin D misregulation has been shown to lead to poorer outcomes in a number of studies, and currently there are no FDA-approved targeted therapies.",3.0,22
+6,41902671,chr6,41934933,,,"Cyclin D has been shown in many cancer types to be misregulated. Well established for their oncogenic properties, the cyclins and the cyclin-dependent kinases (CDK's) they activate have been the focus of major research and development efforts over the past decade. The methods by which the cyclins are deregulated are widely variable, and range from genomic amplification to promoter methylation changes. Cyclin D3 loss has been reported in T-cell acute lymphoblastic leukemia (T-ALL), a seemingly unique trend when compared to the amplifcations and overexpressions of the other cyclin D's. Treating cyclin D3 knockout mice with the targeted therapeutic palbociclib significantly increased the median survival of a Notch-driven model of T-ALL.",3.0,23
+19,30302805,chr19,29811898,,,"Cyclin E, while currenly not as widely implicated as its counterpart, cyclin D, has been implicated in various carcinomas, including breast, gastric, stomach and colorectal. High levels of cyclin E, either by gene amplification or overexpression, are correlated with later stage disease and have been shown to lead to poorer prognosis in gastic carcinoma. It has also been shown, in lung cancer specifically, that neoplastic cells with higher levels of the cyclin E/CDK2 complex are more radiosensitive than their lowly expressed counterparts.",62.0,24
+12,58141510,chr12,57747727,,,"CDK4, along with its partner CDK6, are key players in cell cycle progression. The complex has been implicated in a number of cancer types, and is the focus of therapeutic research and development. One targeted therapy for CDK inhibition is palbociclib, which may slow the growth of advanced stage breast cancers. It has also been shown, in mouse, that CDK inhibition may sensitize mutant PIK3CA tumors to PI3K inhibitors.",8.0,25
+9,21974827,chr9,21974828,,,"CDKN2A loss has been shown to be a significant event in a number of cancer types. One mechanism by which this can occur is by hypermethylation of the CDKN2A promoter region. While no targeted therapeutic has been engaged in clinical trials, the prognostic impact has been studied by a number of meta-analyses. The prognostic impact of promoter hypermethylation has been relatively ambiguous. Many studies have shown significant p-values suggesting poorer prognostic outcomes for patients with hypermethylation in colorectal, liver, and younger lung cancer patients. This being said, there is still research to be done before this becomes a widely-accepted prognostic indicator.",15.0,27
+19,33792961,chr19,33302055,,,"CEBPA N-terminal frame shift mutations that result in a premature stop codon are associated with cytogenetically normal acute myeloid leukemia (CN-AML). CEBPA mutations are associated with a favorable prognosis; however, NPM1 and FLT3 mutations should also be assessed in CN-AML patients as concurrent mutations may have prognostic implications. N-terminal frame shift mutations within amino acids 1-120 have been shown to disrupt expression of the full-length 42kDa isoform while maintaining expression of a 30kDa isoform (translated from the AUG at full-length protein isoform amino acid M120). This 30kDa isoform exhibits dominant negative activity.",3.0,28
+19,33790840,chr19,33299934,,,"CEBPA mutations are associated with cytogenetically normal acute myeloid leukemia (CN-AML) and a favorable prognosis. However, NPM1 and FLT3 mutations should also be assessed in CN-AML patients as concurrent mutations may have prognostic implications.",105.0,29
+1,156446804,chr1,156477012,,,"MEF2D-CSF1R is a fusion that has been observed in acute lymphocytic leukemia. In cell lines harboring this event, treatment with imatinib has shown notable sensitivity.",10.5,30
+19,14628951,chr19,14518139,,,"This fusion has been found to be very recurrent in the rare form of adolescent liver cancer, fibrolamellar hepatocellular carcinoma. In one study, this fusion was observed in 15/15 FL-HCC cases examined and functional studies found that the fusion retained kinase activity. The presence of this fusion may be used as a diagnostic marker for this rare tumor type.",75.0,31
+2,25457241,chr2,25234372,,,"DNMT3A R882 mutations are associated with cytogenetically normal acute myeloid leukemia (CN-AML) with R882H as the most common form. Mutations in DNMT3A have largely been associated with poorer prognosis, however this is not consistent across all studies. This may be a result of patient age or combining R882 and non-R882 mutations during analysis as studies have indicated independent mechanisms of action and differential prognostic implications for these mutation types. One study that independently analyzed R882 and non-R882 mutations showed R882 mutations were associated with poorer prognosis than patients with wildtype and non-R882 mutations, but only in older patients with AML.",510.0,32
+7,55259515,chr7,55191822,T,G,"EGFR L858R has long been recognized as a functionally significant mutation in cancer, and is one of the most prevalent single mutations in lung cancer. Best described in non-small cell lung cancer (NSCLC), the mutation seems to confer sensitivity to first and second generation TKI's like gefitinib and neratinib. NSCLC patients with this mutation treated with TKI's show increased overall and progression-free survival, as compared to chemotherapy alone. Third generation TKI's are currently in clinical trials that specifically focus on mutant forms of EGFR, a few of which have shown efficacy in treating patients that failed to respond to earlier generation TKI therapies.",375.0,33
+7,55249071,chr7,55181378,C,T,"EGFR T790M was one of the very first mutations recognized to confer resistance to targeted therapies in non-small cell lung cancer. While successful in amplified EGFR, the efficacy of the first and second generation TKI's (erlotinib, gefitinib, neratinib) in treating patients harboring this mutation before treatment is notably lower. This lack of efficacy can likely be to blame for the poorer prognosis for patients with this mutation as compared to patients with wildtype EGFR or other types of EGFR mutations. Approximately half of EGFR mutant tumors with acquired resistance to TKI inhibition have been shown to harbor this mutation, implicating it as a mechanism of acquired therapy resistence. A third generation TKI (osimertinib) has been approved for the treatment of EGFR T790M mutant NSCLC. Patients positive for T790M in a plasma-based test have similar outcomes like those with tumor biopsy testing.",386.25,34
+17,37880261,chr17,39724008,G,C,"ERBB2 D769H was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines were shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 activating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",4.0,35
+17,37880261,chr17,39724008,G,T,"ERBB2 D769Y was one of the first ERBB2 variants to be functionally classified (Bose et al., 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",4.0,36
+17,37880219,chr17,39723966,TTGAGGGAAAACACA,,"ERBB2 in-frame deletion of 755-759 was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",5.0,37
+17,37868205,chr17,39711952,G,C,"ERBB2 G309A was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",5.0,38
+17,37880220,chr17,39723967,T,C,"ERBB2 L755S was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was not shown to be an activating mutation, unlike many of the other variants queried. This mutation was also shown to confer resistance to the tyrosine kinase inhibitor lapatinib in MCF10A cell lines.",21.5,39
+17,37880220,chr17,39723967,T,G,"ERBB2 L755W was one of the first ERBB2 variants to be functionally classified (Bose et al., 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",5.0,40
+17,37881011,chr17,39724758,,GGCTCCCCA,"ERBB2 P780 insertion was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 activating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",12.5,41
+17,37879658,chr17,39723405,G,A,"ERBB2 R678Q was shown to have NO functional effect in tissue culture assay (Bose et al 2013). This conclusion was confirmed by a second, independent lab.",5.0,42
+17,37881616,chr17,39725363,C,T,"ERBB2 R896C was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",5.0,43
+17,37881000,chr17,39724747,G,T,"ERBB2 V777L was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",9.0,44
+17,37881332,chr17,39725079,G,A,"ERBB2 V842I was one of the first ERBB2 variants to be functionally classified (Bose et al. 2013). This mutation was shown to be an activating mutation in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in MCF10A breast cancer cell lines have been shown to be sensitive to the kinase inhibitor neratinib. More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",9.0,45
+6,152419920,chr6,152098785,TC,AG,"ESR1 biology has become a central focus in breast cancer therapy. In ER+ tumors, mutations in the ESR1 ligand binding domain have been shown to confer resistance to hormone therapy. This evidence has led to an increased use of targeted sequencing of the estrogen receptor in breast and ovarian cancer. Y536Q is one of these ligand binding domain mutations, and is commonly implicated in this hormone resistance. Preliminary data suggests ER-degrading agents, such as fulvestrant, may be beneficial in treating ESR1 mutant, hormone resistant breast cancers.",8.0,46
+6,152419926,chr6,152098791,A,G,"ESR1 biology has become a central focus in breast cancer therapy. In ER+ tumors, mutations in the ESR1 ligand binding domain have been shown to confer resistance to hormone therapy. This evidence has led to an increased use of targeted sequencing of the estrogen receptor in breast and ovarian cancer. D538G is one of these ligand binding domain mutations, and is commonly implicated in this hormone resistance. Preliminary data suggests ER-degrading agents, such as fulvestrant, may be beneficial in treating ESR1 mutant, hormone resistant breast cancers.",18.0,47
+6,152419923,chr6,152098788,A,G,"ESR1 biology has become a central focus in breast cancer therapy. In ER+ tumors, mutations in the ESR1 ligand binding domain have been shown to confer resistance to hormone therapy. This evidence has led to an increased use of targeted sequencing of the estrogen receptor in breast and ovarian cancer. Y537C is one of these ligand binding domain mutations, and is commonly implicated in this hormone resistance. Preliminary data suggests ER-degrading agents, such as fulvestrant, may be beneficial in treating ESR1 mutant, hormone resistant breast cancers.",8.0,48
+6,152419922,chr6,152098787,T,A,"ESR1 biology has become a central focus in breast cancer therapy. In ER+ tumors, mutations in the ESR1 ligand binding domain have been shown to confer resistance to hormone therapy. This evidence has led to an increased use of targeted sequencing of the estrogen receptor in breast and ovarian cancer. Y537N is one of these ligand binding domain mutations, and is commonly implicated in this hormone resistance. Preliminary data suggests ER-degrading agents, such as fulvestrant, may be beneficial in treating ESR1 mutant, hormone resistant breast cancers.",8.0,49
+6,152419923,chr6,152098788,A,C,"ESR1 biology has become a central focus in breast cancer therapy. In ER+ tumors, mutations in the ESR1 ligand binding domain have been shown to confer resistance to hormone therapy. This evidence has led to an increased use of targeted sequencing of the estrogen receptor in breast and ovarian cancer. Y537S is one of these ligand binding domain mutations, and is commonly implicated in this hormone resistance. Preliminary data suggests ER-degrading agents, such as fulvestrant, may be beneficial in treating ESR1 mutant, hormone resistant breast cancers.",8.0,50
+10,123243212,chr10,121483698,,,"In a clinical sequencing program for advanced stage cancers, Wu et al (2013, Cancer Discovery) has idenified a number of FGFR fusions in patients with many different cancer types. These fusions were also found to retain oligomerization capability, and result in enhanced cell proliferation. Cell lines harboring these fusions were shown to respond to pazopanib. Additionally, tumor size reduction was achieved by both ponatinib and pazopanib treatments administered separately in a single patient with intrahepatic cholangiocarcinoma and this fusion. The authors use these cases to highlight the need for enhanced clinical sequencing efforts.",5.0,52
+4,1795039,chr4,1793312,,,"In a clinical sequencing program for advanced stage cancers, Wu et al (2013, Cancer Discovery) has identified a number of FGFR fusions in patients with many different cancer types. These fusions were also found to retain oligomerization capability, and result in enhanced cell proliferation. These fusions were shown to respond to pazopanib. The authors use these cases to highlight the need for enhanced clinical sequencing efforts.",3.0,53
+4,123243212,chr4,122322057,,,"In a clinical sequencing program for advanced stage cancers, Wu et al has identified a number of FGFR fusions in patients with many different cancer types. These fusions were also found to retain oligomerization capability, and result in enhanced cell proliferation. These fusions were shown to respond to pazopanib. The authors use these cases to highlight the need for enhanced clinical sequencing efforts.",7.5,54
+13,28608219,chr13,28034082,,,"FLT3-ITD (internal tandem duplications) frequently occur in patients with hematologic malignancies such as chronic myelogenous leukemia, acute myeloid leukemia (AML) and myelodysplastic syndrome, but particularly in cytogenetically normal AML (CN-AML). These duplication events disrupt the juxtamembrane domain of FLT3 and can be the result of a duplication of internal FLT3 sequence or other unrelated sequence resulting in an in-frame duplication event. The length of these duplications can vary widely which may have prognostic consequences, but this has not been conclusively determined. FLT3-ITD mutations overall have generally been associated with poor prognosis. Additional genes associated with CN-AML such as NPM1 may modulate the prognosis associated with this variant.",445.5,55
+13,28592642,chr13,28018505,C,A,"FLT3 tyrosine kinase domain mutations (FLT3-TKD) are much less common than FLT3-ITD (internal tandem duplication) mutations and may not confer the same prognostic impact. Although the majority of mutations are point mutations effecting D835 (most frequently D835Y), a small proportion involve an in-frame deletion of I836. These mutations are within the activation loop of the second tyrosine kinase domain of FLT3 and thought to result in constitutive activation of the receptor.",120.0,56
+3,128198270,chr3,128479427,,,"GATA2 misregulation has been observed in a number of hematologic malignancies, as well as non-small cell lung cancer. Treatment of over-active GATA2 pathways using the proteasome inhibitor bortezomib has shown dramatic tumor regression in lung cancer.",4.0,57
+2,209113111,chr2,208248387,,,"IDH1 R132 mutations have been observed in a number of cancer types, and appear to behave quite differently in different environments. In myelodysplastic syndromes, IDH1 R132 mutations have been shown to be associated with worse outcome and shorter overall survival. They have also been linked to cytogenetically normal AML, an intermediate risk subtype of the disease. However, in glioblastoma and astrocytoma, patients with IDH1 mutations have shown better overall survival than patients with wild-type IDH1. Also in contrast to AML, in glioblastoma, IDH1 mutations have been associated with the specific cytogenetic abnormalities, 1p and 19q deletions.",159.0,58
+2,209113113,chr2,208248389,G,A,"IDH1 R132 mutations have been observed in a number of cancer types, and appear to behave quite differently in different environments. In myelodysplastic syndromes and acute myeloid leukemia (AML), IDH1 R132 mutations have been shown to be associated with worse outcome and shorter overall survival. They have also been linked to cytogenetically normal AML, an intermediate risk subtype of the disease. However, in glioblastoma and astrocytoma, patients with IDH1 mutations have shown better overall survival than patients with wild-type IDH1. Also in contrast to AML, in glioblastoma, IDH1 mutations have been associated with the specific cytogenetic abnormalities, 1p and 19q deletions.",53.0,59
+15,90631934,chr15,90088702,,,"IDH2 mutations have been observed in a number of hematologic malignancies. In acute myeloid leukemia, the R140 mutants show mixed results affecting overall survival as compared to their wild-type counterparts. In myelodysplastic syndromes, however, no prognostic link was discovered between IDH2 mutation status and overall survival.",60.0,62
+15,90631838,chr15,90088606,C,T,"IDH2 mutations have been observed in a number of hematologic malignancies. In acute myeloid leukemia, the R172K mutation has been linked with poorer prognosis and worse overall survival than IDH2 wild-type patients. However, in myelodisplastic syndromes, studies did not find a prognostic association between this variant and patient outcomes.",35.0,63
+9,5073770,chr9,5073770,G,T,"JAK2 V617F is a highly recurrent mutation in myeloproliferative diseases. It is found in around 98% of patients with polycythemia vera, and just over half of the patients with essential thrombocythemia and primary myelofibrosis. While less associated with cancer, when it is seen, it is more likely to be in myeloid leukemias than lymphoid leukemias. The V617F mutation is an activating mutation, resulting in increased kinase activity. The mutation seems to be restricted to hematologic malignancies. Treatment of JAK mutant diseases with ruxolitinib has seen some clinical success.",83.0,64
+4,55599321,chr4,54733155,A,T,KIT D816V is a mutation observed in acute myeloid leukemia (AML). This variant has been linked to poorer prognosis and worse outcome in AML patients.,67.0,65
+4,55593582,chr4,54727416,,,"c-KIT mutations in exon 11 lie within the juxtamembrane domain, and are very recurrent in gastrointestinal stromal tumors, often bearing a poorer prognosis than other KIT mutations. Cells harboring exon 11 mutations have shown sensitivity to the tyrosine kinase inhibitor imatinib, offering a better prognosis to patients treated with the drug in the first year. Small cohorts of melanoma patients harboring exon 11 KIT mutations have shown response to imatinib and sunitinib.",177.5,66
+4,55593582,chr4,54727416,,,"c-KIT internal duplications have been observed in exon 11, within the juxtamembrane domain. In a case study of an anal melanoma patient harboring this event, imatinib confered marked response. Also, cells harboring exon 11 mutations have shown sensitivity to the tyrosine kinase inhibitor imatinib, offering a better prognosis to patients treated with the drug in the first year.",7.5,67
+4,55595501,chr4,54729335,,,"c-KIT exon 14 mutations lie within the tyrosine kinase domain of the protein. While relatively rare in primary gastrointestinal tumors, they are notably more prevalent in refractory disease, suggesting a role in imatinib resistance. Unlike mutations in other KIT exons, exon 14 mutations seem relatively rare in melanoma.",15.0,69
+4,55593661,chr4,54727495,T,C,"KIT L576P is an exon 11 mutation that lies within the juxtamembrane domain. It is one of the most recurrent KIT mutations in melanoma, and both in vitro and in vivo studies have shown sensitivity to imatinib.",16.0,72
+4,55594258,chr4,54728092,T,C,"KIT V654A is an exon 13 mutation that lies within the tyrosine kinase 1 domain of the protein. It has been shown to be an activating mutation by in vitro studies. This mutation is associated with imatinib resistance in melanoma patients. However, second generation TKI's such as sunitinib and midostaurin (PKC 412) have seen success in acheiving tumor response.",18.0,73
+12,25398208,chr12,25245274,,,Exon 2 mutations have been associated with reduced response rates or resistance to EGFR inhibitors in non-small cell lung and colorectal cancer. The NCCN guidelines for colorectal cancer contain recommendations that the targeted therapies cetuximab and panitumumab should only be used in the context of wild type KRAS.,168.0,75
+12,25398284,chr12,25245350,,,"While the KRAS G12 region is a widely studied recurrent region in cancer, its impact on clinical action is still debated. Often associated with tumors that are wild-type for other drivers (EGFR and ALK specifically), the prognosis for patients with this mutation seems to be worse than the KRAS wild-type cohort in patients with colorectal and pancreatic cancer, however this hypothesis is in need of further validation. This mutation, along with the mutations affecting the neighboring G13 position, may result in a less responsive tumor when treated with first-generation TKI's like gefitinib. However, cetuximab treatment was shown to extend survival in a cohort of colorectal patients.",115.0,76
+12,25398280,chr12,25245346,,,"While the KRAS G12 region is a widely studied recurrent region in cancer, its impact on clinical action is still debated. Often associated with tumors that are wild-type for other drivers (EGFR and ALK specifically), the prognosis for patients with this mutation seems to be worse than the KRAS wild-type cohort in patients with colorectal and pancreatic cancer, however this hypothesis is in need of further validation. This mutation, along with the mutations affecting the neighboring G13 position, may result in a less responsive tumor when treated with first-generation TKI's like gefitinib. However, cetuximab treatment was shown to extend survival in a cohort of colorectal patients.",191.0,77
+12,25398285,chr12,25245351,C,A,"While the KRAS G12 region is a widely studied recurrent region in cancer, its impact on clinical action is still debated. Often associated with tumors that are wild-type for other drivers (EGFR and ALK specifically), the prognosis for patients with this mutation seems to be worse than the KRAS wild-type cohort in patients with colorectal and pancreatic cancer, however this hypothesis is in need of further validation. This mutation, along with the mutations affecting the neighboring G13 position, may result in a less responsive tumor when treated with first-generation TKI's like gefitinib. However, cetuximab treatment was shown to extend survival in a cohort of colorectal patients.",86.0,78
+12,25398284,chr12,25245350,C,T,"While the KRAS G12 region is a widely studied recurrent region in cancer, its impact on clinical action is still actively debated. Often associated with tumors that are wild-type for other drivers (EGFR and ALK specifically), the prognosis for patients with this mutation seems to be worse than the KRAS wild-type cohort in patients with colorectal and pancreatic cancer, however this hypothesis is in need of further validation. This mutation, along with the mutations affecting the neighboring G13 position, may result in a less responsive tumor when treated with first-generation TKI's like gefitinib. The NCCN guidelines for colorectal cancer contain recommendations that the targeted therapies cetuximab and panitumumab should only be used in the context of wild type KRAS. However, cetuximab treatment was shown to extend survival in a single cohort of colorectal patients with G12D mutations. Overall, the interpretation for KRAS mutations in most clinical scenarios is still undecided.",162.0,79
+12,25398281,chr12,25245347,,,"While the KRAS G13 region is a widely studied recurrent region in cancer, its impact on clinical action is still debated. Often associated with tumors that are wild-type for other drivers (EGFR and ALK specifically), the prognosis for patients with this mutation seems to be worse than the KRAS wild-type cohort in patients with colorectal and pancreatic cancer, however this hypothesis is in need of further validation. This mutation, along with the mutations affecting the neighboring G12 position, may result in a less responsive tumor when treated with first-generation TKI's like gefitinib. However, cetuximab treatment was shown to extend survival in a cohort of colorectal patients.",20.0,80
+12,25398281,chr12,25245347,C,T,"While the KRAS G13 region is a widely studied recurrent region in cancer, its impact on clinical action is still debated. Often associated with tumors that are wild-type for other drivers (EGFR and ALK specifically), the prognosis for patients with this mutation seems to be worse than the KRAS wild-type cohort. This mutation, along with the mutations affecting the neighboring G12 position, may result in a less responsive tumor when treated with first-generation TKI's like gefitinib. However, results are conflicting with retrospective analyses suggesting a better response to EGFR-Inhibition. A recent prospective phase-II study (12 patients, Schirripa et. al. 2015) could not reproduce this finding and another prospective phase II trial is currently ongoing.",104.5,81
+15,66729162,chr15,66436824,C,T,"MAP2K1 P124S is a recurrent mutation in melanoma, and is seen in bladder and colon cancer to a lesser degree. The P124S mutation has been shown to contribute to AZD6244 resistance in melanoma cell lines, but considerably less so than its Q56P counterpart.",3.0,82
+15,66727451,chr15,66435113,A,C,MAP2K1 Q56P is a recurrent mutation in melanoma and gastric cancer. This mutation has been shown to confer considerable resistance to AZD6244 treatment of melanoma cell lines.,3.0,83
+10,131264495,chr10,129466231,,,"MGMT promoter methylation has been observed to impact tumor progression in glioblastoma multiforme. In patients exhibiting promoter methylation, the akylating agent carmustine has shown efficacy. In patients lacking methylation, combining carmustine with the MGMT inhibitor O(6)-benzylguanine may be effective, but more experiments are required. Clinical trials have also shown selective sensitivity of promoter methylation-positive patients to temozolomide, making a case for wider methylation screening in GBM patients.",136.0,85
+5,170837531,chr5,171410527,,,"NPM1 exon 12 mutations are frequently identified in patients with cytogenetically normal acute myeloid leukemia (AML) and often co-occur with FLT3-ITD. FLT3 status should also be evaluated as co-occurence with FLT3-ITD may impact prognosis. Exon 12 mutations have been identified as a predictor of good prognostic outcomes in the absence of FLT3-ITD. Due to their high frequency, NPM1 mutations have been retrospectively analyzed in the context of a number of therapies including variable results following ATRA treatment as well as improved response to high-dose daunorubicin or valproic acid. Additionally, multiple groups have shown increased surface expression of CD33 associated with NPM1 mutation, suggesting these patients may respond to anti-CD33 therapy. Cytoplasmic sequestration of NPM1 (NPM1c) is associated with a good response to induction therapy.",454.0,86
+5,170837547,chr5,171410543,,TCTG,"NPM1 W288fs (aka NPM1-A) is located in exon 12 of NPM1 and is the most common NPM1 mutation identified in acute myeloid leukemia. This mutation results in cytoplasmic localization of NPM1 (NPM1c) which is associated with a good response to induction therapy. Although it is the most extensively studied NPM1 exon 12 mutation, it is generally grouped with other exon 12 mutations for patient analysis (see NPM1 Exon 12 variants for more information).",43.75,87
+1,115258747,chr1,114716126,,,"While the NRAS G12 region is a widely studied recurrent region in cancer, its impact on clinical action is still debated.",15.0,92
+1,115258744,chr1,114716123,C,T,"While the NRAS G12 region is a widely studied recurrent region in cancer, its impact on clinical action is still debated.",5.0,93
+1,115256528,chr1,114713907,,,"NRAS Q61 mutations have been found in multiple myeloma, gastrointestinal stromal tumors, melanoma, and others. Two melanoma patients, each harboring mutations at this locus (Q61L and Q61R), responded to treatment with the akylating agent temozolomide. However, in colorectal cancer patients, mutations at this locus have been shown to confer resistance to cetuximab. The prognostic impact of mutations at this locus is currently under study.",100.0,94
+1,115256529,chr1,114713908,T,A,"NRAS Q61 mutations have been found in multiple myeloma, gastrointestinal stromal tumors, melanoma, and others. A melanoma patient harboring a mutation at this locus responded to treatment with the akylating agent temozolomide. However, in colorectal cancer patients, mutations at this locus have been shown to confer resistance to cetuximab. The prognostic impact of mutations at this locus is currently under study.",12.5,95
+1,115256529,chr1,114713908,T,C,"NRAS Q61 mutations have been found in multiple myeloma, gastrointestinal stromal tumors, melanoma, and others. A melanoma patient harboring a mutation at this locus responded to treatment with the akylating agent temozolomide. However, in colorectal cancer patients, mutations at this locus have been shown to confer resistance to cetuximab. The prognostic impact of mutations at this locus is currently under study.",5.0,96
+4,55152092,chr4,54285925,GA,AT,"PDGFRA D842 mutations are characterized broadly as imatinib resistance mutations. This is most well characterized in gastrointestinal stromal tumors, but other cell lines containing these mutations have been shown to be resistant as well. In imatinib resistant cell lines, a number of other therapeutics have demonstrated efficacy. These include; crenolanib, sirolimus, and midostaurin (PKC412).",4.0,98
+4,55152093,chr4,54285926,A,T,"PDGFRA D842 mutations are characterized broadly as imatinib resistance mutations. This is most well characterized in gastrointestinal stromal tumors, but other cell lines containing these mutations have been shown to be resistant as well. Exogenous expression of the A842V mutation resulted in constitutive tyrosine phosphorylation of PDGFRA in the absence of ligand in 293T cells and cytokine-independent proliferation of the IL-3-dependent Ba/F3 cell line, both evidence that this is an activating mutation. In imatinib resistant cell lines, a number of other therapeutics have demonstrated efficacy. These include; crenolanib, sirolimus, and midostaurin (PKC412).",100.5,99
+4,55152092,chr4,54285925,G,T,"PDGFRA D842 mutations are characterized broadly as imatinib resistance mutations. This is most well characterized in gastrointestinal stromal tumors, but other cell lines containing these mutations have been shown to be resistant as well. In imatinib resistant cell lines, a number of other therapeutics have demonstrated efficacy. These include; crenolanib, sirolimus, and midostaurin (PKC412).",4.0,100
+4,55152095,chr4,54285928,ATC,,"PDGFRA D842 mutations are characterized broadly as imatinib resistance mutations. This is most well characterized in gastrointestinal stromal tumors, but other cell lines containing these mutations have been shown to be resistant as well. In imatinib resistant cell lines, a number of other therapeutics have demonstrated efficacy. These include; crenolanib, sirolimus, and midostaurin (PKC412).",5.0,101
+4,55152093,chr4,54285926,ACATC,TCATG,"PDGFRA D842 mutations are characterized broadly as imatinib resistance mutations. The DI842-843VM variant is the result of a double point mutation. This is most well characterized in gastrointestinal stromal tumors, but other cell lines containing these mutations have been shown to be resistant as well. In imatinib resistant cell lines, a number of other therapeutics have demonstrated efficacy. These include; crenolanib, sirolimus, and midostaurin (PKC412).",4.0,102
+3,178936082,chr3,179218294,G,A,"PIK3CA E545K/E542K variants are the second most recurrent PIK3CA mutations in breast cancer and are highly recurrent mutations in many other cancer types. Colorectal cancer patients with the PIK3CA E545K variant, and possibly other variants in the E545 region, may indicate poor prognosis relative to patients with other PIK3CA variants or wild-type PIK3CA. The literature also suggests that E545/E542 variants may confer resistance to EGFR inhibitors (e.g., cetuximab). An FDA approved treatment regimen including a targeted PIK3CA inhibitor is available for specific subtypes of breast cancer. While PIK3CA variants are highly prevalent in many other cancer types, targeted therapies for PIK3CA variants are still in early clinical trial phases in other cancer types.",74.5,103
+3,178936091,chr3,179218303,G,A,"PIK3CA E545K/E542K are the second most recurrent PIK3CA mutations in breast cancer, and are highly recurrent mutations in many other cancer types. E545K, and possibly the other mutations in the E545 region, may present patients with a poorer prognosis than patients with either patients with other PIK3CA variant or wild-type PIK3CA. There is also data to suggest that E545/542 mutations may confer resistance to EGFR inhibitors like cetuximab. While very prevalent, targeted therapies for variants in PIK3CA are still in early clinical trial phases.",76.5,104
+3,178951882,chr3,179234094,,,"PIK3CA Exon 21 Mutations (e.g., H1047R; often referred to as Exon 20 mutations if counting only coding exons) are among the most recurrent mutations in cancer, especially breast cancer. Of PIK3CA mutant breast cancers, over half harbor this mutation. Meta-analyses have shown that patients harboring this mutation may have worse overall survival, but other studies have shown no difference between Exon 21 and other PIK3CA mutants from a prognostic standpoint. While very prevalent, targeted therapies for this particular mutation are still in early clinical trial phases.",45.0,105
+3,178935998,chr3,179218210,,,"PIK3CA Exon 10 Mutations (e.g. E545K/E542K; often referred to as Exon 9 mutations if counting only coding exons) are the second most recurrent PIK3CA mutations in breast cancer, and highly recurrent mutations in many other cancer types. E545K, and possibly the other mutations in the E545 region, may present patients with a poorer prognosis than patients with either patients with other PIK3CA variant or wild-type PIK3CA. There is also data to suggest that exon 10 mutations may confer resistance to EGFR inhibitors like cetuximab. While very prevalent, targeted therapies for variants in PIK3CA are still in early clinical trial phases.",45.0,106
+3,178952085,chr3,179234297,A,G,"PIK3CA H1047R is one of the most recurrent single nucleotide variants in cancer, especially breast cancer. Of PIK3CA-mutant breast cancers, over half harbor this mutation. Meta-analyses have shown that patients harboring this mutation may have worse overall survival, but other studies have shown no difference between H1047R and other PIK3CA mutants from a prognostic standpoint. While very prevalent, targeted therapies for this particular mutation are still in early clinical trial phases.",96.5,107
+15,74287058,chr15,73994717,,,"The PML-RARA fusion is seen as a diagnostic event in acute promyelocytic leukemia (APL). Both in vitro and in vivo studies have shown sensitivity to ATRA in APL patients harboring the PML-RARa fusion. Recent interest has been shown in combining ATRA and arsenic trioxide for treating these patients, and early results seem promising.",132.5,108
+10,89717672,chr10,87957915,C,T,"PTEN R233* has been shown to be a loss of function mutation, and PTEN loss has been the subject of considerable research in breast cancer. PTEN loss may sensitize cells to PI3K-mTOR inhibition. While still being debated, there is data to support that PTEN loss is both associated with poorer prognosis, and no change in prognosis.",19.0,110
+10,43609950,chr10,43114502,C,G,"RET C634W has been implicated as an alternate mechanism of activating RET in medullary thyroid cancer. While there currently are no RET-specific inhibiting agents, promiscuous kinase inhibitors have seen some success in treating RET overactivity. Data suggests however, that the C634W mutation may lead to drug resistance, especially against the VEGFR-inhibitor motesanib.",3.0,112
+10,43617416,chr10,43121968,T,C,"RET M819T is the most common somatically acquired mutation in medullary thyroid cancer (MTC). While there currently are no RET-specific inhibiting agents, promiscuous kinase inhibitors have seen some success in treating RET overactivity. Data suggests however, that the M918T mutation may lead to drug resistance, especially against the VEGFR-inhibitor motesanib. It has also been suggested that RET M819T leads to more aggressive MTC with a poorer prognosis.",86.0,113
+2,198267359,chr2,197402635,C,A,"SF3B1 K666N is a variant found in myelodysplastic syndromes, chronic leukemias, and more recently, breast cancer. This somatic mutation has been linked to better overall outcome and event-free survival in MDS patients.",2.0,114
+17,7578406,chr17,7675088,C,T,"While loss-of-function events in TP53 are very common in cancer, the R175H variant seems not only to result in loss of tumor-suppression, but also acts as a gain-of-function mutation that promotes tumorigenesis in mouse models. Cell lines harboring this mutant is also more responsive to treatment with doxorubicin than its wild-type counterparts. While the prognostic impact of individual TP53 mutations is influenced by the cohort being studied, it has been shown that the R175H mutation is correlated with worse overall survival than wild-type TP53, but is not as detrimental as the R248W variant. This variant is rare in population databases (ACMG code: PM2; 0.000003980 total exome AF gnomAD v2.1.1).",22.0,116
+17,7577538,chr17,7674220,C,T,"While loss-of-function events in TP53 are very common in cancer, the R248 variants seem not only to result in loss of tumor-suppression, but also act as a gain-of-function mutation that can promote tumorigenesis in mouse models. This mutant is also more responsive to treatment with doxorubicin than its wild-type counterparts. While the prognostic impact of individual TP53 mutations is influenced by the cohort being studied, R248 mutations have been shown to confer worse overall survival. The R248Q mutation has also shown an increased invasive behavior in cell lines. This is specific to the 248Q variant.",46.0,117
+17,7577539,chr17,7674221,G,A,"While loss-of-function events in TP53 are very common in cancer, the R248 variants seem not only to result in loss of tumor-suppression, but also act as a gain-of-function mutation that can promote tumorigenesis in mouse models. This mutant is also more responsive to treatment with doxorubicin than its wild-type counterparts. While the prognostic impact of individual TP53 mutations is influenced by the cohort being studied, R248 mutations have been shown to confer worse overall survival.",19.0,118
+17,7577535,chr17,7674217,C,G,"This mutant is also more responsive to treatment with doxorubicin than its wild-type counterparts. While the prognostic impact of individual TP53 mutations is influenced by the cohort being studied, it has been suggested that the R249 mutants have been correlated with worse overall survival in breast cancer patients when compared to wild-type.",30.0,119
+17,7577121,chr17,7673803,G,A,"While loss-of-function events in TP53 are very common in cancer, the R273 variants seem not only to result in loss of tumor-suppression, but also act as a gain-of-function mutation that can promote tumorigenesis in mouse models. This mutant is also more responsive to treatment with doxorubicin than its wild-type counterparts. While the prognostic impact of individual TP53 mutations is influenced by the cohort being studied, it has been suggested that the R273 mutants have been correlated with worse overall survival in breast cancer patients when compared to wild-type.",41.5,121
+17,7577120,chr17,7673802,C,T,"While loss-of-function events in TP53 are very common in cancer, the R273 variants seem not only to result in loss of tumor-suppression, but also act as a gain-of-function mutation that can promote tumorigenesis in mouse models. This mutant is also more responsive to treatment with doxorubicin than its wild-type counterparts. While the prognostic impact of individual TP53 mutations is influenced by the cohort being studied, it has been suggested that the R273 mutants have been correlated with worse overall survival in breast cancer patients when compared to wild-type.",41.0,122
+9,135766735,chr9,132891348,,,"In a small cohort study of bladder cancer, patients with TSC1 mutations showed better responses to and increased treatment duration tolerance with the mTOR inhibitor everolimus. Additionally, patient-derived bladder cancer cell lines with TSC1 or TSC2 mutations are much more sensitive to everolimus treatment than TSC1/TSC2 wildtype cells.",18.0,124
+9,135766735,chr9,132891348,,,"In a small cohort study of bladder cancer, patients with TSC1 mutations showed better responses to and increased treatment duration tolerance with the mTOR inhibitor everolimus. Additionally, patient-derived bladder cancer cell lines with TSC1 or TSC2 mutations are much more sensitive to everolimus treatment than TSC1/TSC2 wildtype cells.",15.0,125
+21,44514777,chr21,43094667,T,G,"U2AF1 Q157P/R has been shown to be a recurrent mutation in acute myeloid leukemia (AML), myelodysplastic syndromes (MDS) and lung adenocarcinomas. This mutation is less common than the S34F mutation, occurs in the second zinc finger domain of U2AF1 and has been demonstrated to alter splicing. The impact of U2AF1 mutations on overall survival in MDS has been debated, however, patients with U2AF1 mutations were shown to be at an increased risk of transformation to secondary AML. The presence of this mutation was not associated with a specific prognostic outcome in AML when compared to U2AF1 wildtype patients.",50.0,127
+21,44524456,chr21,43104346,G,A,"U2AF1 S34Y/F has been shown to be a recurrent mutation in acute myeloid leukemia (AML), myelodysplastic syndromes (MDS) and lung adenocarcinomas. This mutation is the most commonly identified variant in MDS, occurs in the first zinc finger domain of U2AF1 and has been demonstrated to alter splicing. The impact of U2AF1 mutations on overall survival in MDS has been debated, however, patients with U2AF1 mutations were shown to be at an increased risk of transformation to secondary AML. The presence of this mutation was not associated with a specific prognostic outcome in AML when compared to U2AF1 wildtype patients.",40.0,128
+11,32417803,chr11,32396257,,,"WT1 exon 7 mutations have been shown to be recurrent in acute myeloid leukemia. Many sources have examined the prognostic impact of these, agreeing that the mutant exon 7 cohort is correlated with worse overall survival and a number of poor prognistic outcomes. This may be the result of an overall poor response to chemotherapy from WT1 mutant tumors.",130.0,129
+11,32413518,chr11,32391972,,,"WT1 exon 9 mutations have been shown to be recurrent in acute myeloid leukemia, although at a less frequent rate than their exon 7 counterparts. Many sources have examined the prognostic impact of these, agreeing that the mutant exon 9 cohort is correlated with worse overall survival and a number of poor prognistic outcomes. This may be the result of an overall poor response to chemotherapy from WT1 mutant tumors.",35.0,130
+17,41197646,chr17,43045629,,,BRCA1 loss of function mutations have been shown to increase risk of breast and ovarian cancer in those carrying the allele in their germline. Treating BRCA mutant patients with PARP inhibitors such as Olaparib has led to significant response.,104.0,131
+13,32889611,chr13,32315474,,,BRCA2 loss of function mutations have been shown to increase risk of breast and ovarian cancer in those carrying the allele in their germline. Treating BRCA mutant patients with PARP inhibitors such as Olaparib has led to significant response.,126.0,132
+7,55242415,chr7,55174722,,,"Deletions within exon 19 of EGFR are most common in lung cancer. These deletions, in non-small cell lung cancer, have been shown to be sensitive to the EGFR tyrosine kinase inhibitors gefitinib, afatinib, and erlotinib. There is also data to suggest that this event is a good prognostic marker in lung adenocarcinoma. Examples of exon 19 deletions include: p.746_A750delELREA, p.747_753delinsS, p.747_752delLREATS, and p.747_751delLREAT.",278.0,133
+7,55241707,chr7,55174014,G,A,"While not as recurrent as the L858R mutation, EGFR G719S has also been shown to be an activating mutation. In lung cancer cell lines, it also confers sensitivity to the tyrosine kinase inhibitors gefitinib and erlotinib.",23.0,134
+9,139399219,chr9,136504767,C,G,"Activating mutations in NOTCH1, including D1642H, have been shown to be poor prognostic markers in lung cancer.",20.0,135
+9,139391212,chr9,136496760,G,A,"Activating mutations in NOTCH1, including R2327W, have been shown to be poor prognostic markers in lung cancer.",20.0,136
+9,139390861,chr9,136496409,G,TGT,"Activating mutations in NOTCH1, including a frameshift insertion at V2444, have been shown to be poor prognostic markers in lung cancer.",20.0,137
+9,139391369,chr9,136496917,,A,"Activating mutations in NOTCH1, including a frameshift insertion at S2275, have been shown to be poor prognostic markers in lung cancer.",20.0,138
+1,162724415,chr1,162754625,C,G,"Activating mutations in DDR2, including L63V, has been shown to be sensitive to dasatinib in cell lines.",4.0,139
+1,162729630,chr1,162759840,T,G,"Activating mutations in DDR2, including L239R, has been shown to be sensitive to dasatinib in cell lines.",4.0,140
+1,162729671,chr1,162759881,G,T,"Activating mutations in DDR2, including G253C, has been shown to be sensitive to dasatinib in cell lines.",4.0,141
+1,162741822,chr1,162772032,G,A,"Activating mutations in DDR2, including G505S, has been shown to be sensitive to dasatinib in cell lines.",4.0,142
+1,162745497,chr1,162775707,A,T,"DDR2 I638F has been shown to be a loss of function mutation, but also confers sensitivity to dasatinib in cell lines.",4.0,143
+1,162748407,chr1,162778617,G,T,"Activating mutations in DDR2, including G774V, has been shown to be sensitive to dasatinib in cell lines.",4.0,144
+1,162748390,chr1,162778600,T,A,"Activating mutations in DDR2, including S768R, has been shown to be sensitive to dasatinib in cell lines.",7.5,145
+12,25398284,chr12,25245350,C,G,"KRAS G12A, like EGFR T790M, has been shown to be capable of driving acquired resistance to tyrosine kinase inhibitors in lung adenocarcinoma.",63.0,148
+14,106032614,chr14,105566277,,,"The typically reciprocal t(14;18)(q32;q21) translocation involves rearrangement between the immunoglobulin heavy chain locus on chromosome 14 and the 3' UTR of BCL2 on chromosome 18, leading to the overexpression of BCL2. This rearrangment is observed in >80% of patients with follicular lymphoma.",20.0,151
+18,60790579,chr18,63123346,,,,40.0,152
+3,71003844,chr3,70954693,,,Amplication in FOXP1 has been shown to be associated with the ABC subtype of DLBCL.,15.0,153
+2,61108709,chr2,60881574,,,,20.0,154
+21,36160098,chr21,34787801,,,"RUNX1 mutations are associated with poor prognosis in patients with acute myeloid leukemia or adult T-cell acute lymphocytic leukemia. In younger (<60 years old) AML patients, allogeneic stem cell transplant at complete remission led to much better relapse-free survival than repetitive cycles of high-dose cytarabine.",110.0,155
+11,2150348,chr11,2129118,,,,6.0,156
+4,106067450,chr4,105146293,,,"TET2 mutations are commonly found in acute myeloid leukemia occurring in 9-23% of cases with many occurring in the elderly. Generally these mutations are loss-of-function which have been shown in mouse models to impair hematopoietic stem cell differentiation and cause aberrant hematopoiesis. These mutations have been found to be mutually exclusive with MLL and IDH1/2 mutations and have been associated with shortened event-free-survival and disease-free-survival when co-occurring with NPM1+/FLT3- genotypes. Overall Survival has been found to be shorter when occurring with NPM1+/FLT3+ genotypes. Studies involving ""CN AML"" and ""de novo AML"" however have been unable to elucidate a clinical impact.",120.0,157
+20,54944446,chr20,56369390,,,,30.0,158
+3,10182692,chr3,10141008,,,,15.0,159
+3,10182692,chr3,10141008,,,,105.0,160
+3,52581857,chr3,52547841,,,,30.0,161
+7,148504477,chr7,148807385,,,,35.0,163
+22,29664007,chr22,29268018,,,"Although multiple fusion transcripts have been described, type 1 consists of EWSR1 exon 7 fused to FLI1 exon 6, the most common arrangement in Ewings Sarcoma.",20.0,164
+7,148508726,chr7,148811634,,,"Mutations of Y646 are associated with a diagnosis of Germinal Center B type DLBCL and Follicular non-Hodgkin Lymphoma. In vitro experimental findings suggest that this may be due to reduced methyltransferase activity of EZH2 on protein H3K27 (Morin et al., 2010).",45.0,165
+12,49412758,chr12,49018975,,,,15.0,167
+X,100611165,chrX,101356177,A,T,,40.0,168
+14,105243048,chr14,104776711,G,T,,16.0,169
+2,42396490,chr2,42169350,,,,15.5,170
+2,29443613,chr2,29220747,C,T,"ALK fusion with G1202R mutation in the ALK kinase domain was first identified in a lung adenocarcinoma patient who had progressed after 10 months of responding to crizotinib. Further characterization of this variant verified crizotinib resistance and additionally demonstrated resistance to multiple next generation ALK inhibitors including ceritinib, alectinib and brigatinib. Experiments using the HSP90 inhibitor 17-AAG have indicated potential sensitivity of EML4-ALK G1202R to this drug, suggesting this variant may be an HSP90 client protein.",23.5,171
+2,29443600,chr2,29220734,G,T,,6.0,172
+2,29445271,chr2,29222405,,CGT,"The ALK fusion variant with insertion of T at amino acid 1151 was found in an ALK rearranged lung adenocarcinoma which had progressed after responding to crizotinib treatment. The mutation was absent in tumor sample taken before crizotinib treatment. Characterization of the variant using cell lines expressing EML4-ALK with 1151 T insert found the variant to be highly crizotinib resistant, and other work demonstrated resistance to next generation inhibitor alectinib, while resistance to tool compound TAE684 indicates potential resistance to the next generation ALK inhibitor ceritinib which is derived from TAE684. Other experiments suggest theraputic potential for HSP90 inhibitors, as EML4-ALK T1151 Tins sensitivity to 17-AAG has been observed.",18.0,173
+5,112043218,chr5,112707521,,,,7.0,174
+X,66943549,chrX,67723707,T,C,,4.0,175
+X,66937370,chrX,67717528,,,,4.0,176
+20,30946155,chr20,32358352,,,ASXL1 mutations are most frequently observed in the absence of FLT3-ITD and NPM1 mutations in acute myeloid leukemia (AML) patients and seem to be enriched in older patients (>60 years). These mutations are associated with poor prognosis with respect to both survival and compete remission rates.,100.0,177
+11,108093559,chr11,108222832,,,,90.5,178
+11,108093559,chr11,108222832,,,,39.0,179
+20,54944446,chr20,56369390,,,,0.75,180
+20,54944446,chr20,56369390,,,,38.0,181
+3,52435029,chr3,52401013,,,,15.0,182
+3,52435029,chr3,52401013,,,"BAP1 is a tumor suppressor gene, mutations in this gene have been observed in a number of cancers including melanoma, and renal cancers. These mutations generally lead to loss-of-function and mutations in the UHC domain of BAP1 have been shown to lead to structural instability and β-amyloid aggregation in models. Germline mutations are associated with an increased risk of tumorgenesis and can lead to the development of ""atypical Spitz tumours (ASTs), cutaneous melanoma (CM), epithelioid malignant mesothelioma (MM) and clear cell RCC"".",73.5,183
+7,91570181,chr7,91940867,,,,20.0,184
+17,41197646,chr17,43045629,,,,275.0,185
+13,32889611,chr13,32315474,,,,282.5,186
+19,30302805,chr19,29811898,,,,27.0,187
+2,25455845,chr2,25232976,,,"DNMT3A mutations occur in a variety of myeloid malignancies. These mutations are associated with adverse prognosis in acute myeloid leukemia (AML), particularly in the context of NPM1 and FLT3-ITD mutations, which often co-occur. Early results indicate AML patients with DNMT3A mutations may respond better to decitabine than those with wild-type. Shorter survival has been indicated in patients with T-cell acute lymphoblastic leukemia and myelodysplastic syndrome, however, larger cohorts are required to verify this finding. DNMT3A mutations have been suggested as a pre-leukemic lesion and found in older individuals with clonal hematopoiesis but no overt malignancy.",115.0,189
+7,55086794,chr7,55019101,,,,133.0,190
+7,55086794,chr7,55019101,,,,60.0,191
+7,55086794,chr7,55019101,,,,145.0,193
+22,29664007,chr22,29268018,,,"EWSR1-ERG is found in 5% of patients with Ewing Sarcoma and considered to be diagnostic of this disease, a small tumor more often found in bone, but less frequently in soft tissue. To better identify EWSR1-ERG in patients, conventional cytogenetics methods were analyzed: FISH and RT-PCR. Ultimately concluding that more than one method is needed to accurately diagnose patients due to the strengths and weaknesses of each individual method.",25.0,194
+21,42879877,chr21,41507950,,,"TMPRSS2 fusions are prevalent in Prostate Cancer. TMPRSS2 fusion with ETS family members such as ERG are among the most common. Fusion of TMPRSS2 with ERG may result in overexpression of ERG driven by the TMPRSS2 androgen-responsive promoter elements. Due to the high prevalence of this fusion, it may have diagnostic utility for prostate cancer, especially ERG expression positive prostate cancer.",15.0,195
+4,1806099,chr4,1804372,A,G,,15.0,196
+22,29664007,chr22,29268018,,,,25.0,197
+3,138665163,chr3,138946321,G,C,"The variant C134W on the FOXL2 gene was revealed to have a high frequency (95-97%) in the adult form of granulosa cell tumors that comprises 5% of ovarian cancers. Due to the mutation's high frequency, future therapeutics might target for this single apparent mechanism. However, the consequence of this mutation remain unknown.",70.0,198
+15,90631837,chr15,90088605,,,"IDH2 R172 is a gain-of-function mutation commonly observed in acute myeloid leukemia and is enriched in those patients which are cytogenetically normal. R172 is analogous to IDH1 R132 mutations and leads to neomorphic enzymatic activity. Specifically this mutation ""catalyzes the conversion of alpha ketoglurarate to beta-hydrozyglutarate"" leading to increased levels of beta-hydrozyglutarate. This in turn leads to hypermethylation of target genes and an inhibition of cellular differentiation. R172 mutations generally lead to worse overall survival and higher rates of relapse compared to the most common IDH2 mutations in AML (R140).",105.0,199
+7,50344378,chr7,50304782,,,"IKZF1 deletions have been reported in a variety of cancer types including pediatric B-cell precursor acute lymphoblastic leukemia (BCP ALL), Chronic Myeloid Leukemia, diffuse large B-cell lymphoma, myelodysplastic syndrome, T-cell ALL as well as solid tumors of the large intestine, lung, and liver. The clinical impact of these deletions is unknown for many cancer types however a poor outcome has been observed in leukemia based disease. This gene has been strongly implicated as a regulator for ""normal  hematopoiesis"". In regards to BCP ALL, mouse models have shown that mutations in IKZF1 are not sufficient in and of themselves to cause disease.  Haploinsuffeciency in combination with BCR-ABL1 however, will accelerate leukemiagenesis possibly indicating that at least in regards to BCP ALL these are secondary events that may be necessary for the development of leukaemic clones.",120.0,200
+4,55593464,chr4,54727298,A,C,,25.0,201
+4,55593612,chr4,54727446,GTT,,V560 Resides within the Juxtamembrane domain on exon 11 of KIT. In melanoma this region is one 4 hotspots and is the 3rd highest recurrently mutated region. Mouse models have shown that mutations in this hotspot lead to  constitutive phosphorylation of KIT which will induce a stronger activation of the PI3K pathway however it is currently unknown if deletions follow the same model. Case studies in Gastrointestinal Stromal Tumors with V560DEL have reported a sensitivity when treated with imatinib and regorafenib.,14.5,202
+12,25380275,chr12,25227341,,,,40.0,203
+20,46130646,chr20,47501902,,,,15.0,204
+20,46130646,chr20,47501902,,,,15.0,205
+9,139388896,chr9,136494444,,,,100.0,206
+9,139390649,chr9,136496197,,,"This mutation disrupts the C-terminal PEST domain that in normal conditions promotes degradation,  resulting in accumulation of an active NOTCH1 isoform sustaining deregulated signaling.",35.0,207
+1,115247090,chr1,114704469,,,,213.0,208
+2,113992971,chr2,113235394,,,PAX8-PPAR gamma is a oncogene caused by a translocation between 2q13 and 3p25 resulting in an in-frame fusion between the two genes. It has been observed in Follicular Thyroid Cancer (FTC) and is one of two known fusion products involving PPAR gamma in FTC indicating this region may be a breakpoint hotspot. Studies have indicated that the fusion product increases cell viability and proliferation and decreases apoptosis.,15.0,209
+11,100900355,chr11,101029624,,,,60.0,210
+3,178866311,chr3,179148523,,,,45.0,212
+10,89622870,chr10,87863113,,,,55.0,213
+10,89622870,chr10,87863113,,,,291.0,214
+2,198254508,chr2,197389784,,,,130.0,215
+18,48556583,chr18,51030213,,,,25.0,216
+19,11071598,chr19,10960922,,,,25.0,217
+19,11071598,chr19,10960922,,,,20.0,218
+5,1253282,chr5,1253167,,,,15.0,219
+5,1295161,chr5,1295046,,,"TERT promoter mutations are activating and commonly found at two hotspots within the TERT promoter region which occur 124 and 146 base pairs (hg19) upstream of the translation start site. These hotspots, termed C228T and C250T are observed in many cancer types and have a particularly high prevalence in glioblastoma (83%), melanoma (71%), bladder cancer (66%) and hepatocelluar carcinoma (HCC) (47%). The two mutations are usually heterozygous and mutually exclusive and result in an increased similarity to an ETS binding domain and may act as a binding site to an ETS transcription factor. These mutations are thought to be early events in tumorgenesis and aid in cellular immortality. Decreased overall survival in patients with these mutations have been observed in medulloblastoma, thyroid cancer, urogenital cancer, melanoma, and laryngeal tumors. The presence of these mutations has also been shown to be predictive of malignant/premalignant nodules in HCC and meningiomas.",105.0,220
+17,7571720,chr17,7668402,,,Deleterious mutations are mutations of TP53 with prior characterization demonstrating significant deleterious effect on TP53 protein function. Inactivating TP53 mutations prevent on target activity and efficacy of MDM2-TP53 interaction inhibitors.,78.0,221
+17,7571720,chr17,7668402,,,,400.0,222
+17,7573998,chr17,7670680,,,,40.0,223
+9,135251008,chr9,132375621,,,,15.0,224
+22,29083732,chr22,28687744,,,,25.0,230
+17,37618292,chr17,39462039,,,,4.0,236
+10,104852955,chr10,103093198,C,T,,17.0,238
+10,104852980,chr10,103093223,T,G,,28.0,239
+10,104850745,chr10,103090988,T,G,,8.0,240
+9,133748288,chr9,130872901,T,C,"BCR-ABL F317L, like the similar BCR-ABL T315I mutation, is becoming a common clinical marker for resistance to front-line therapies in CML. It has been shown to confer resistance to dasatinib, but responds well to ponatinib and other second generation inhibitors.",114.5,241
+17,7577149,chr17,7673831,,,,35.0,242
+11,108196840,chr11,108326113,TC,,A frameshift mutation at the DNA level predicted to cause truncation before the C-terminal phosphoinositide 3-kinase (PI3K) catalytic domain at amino acid 2289.,7.5,243
+11,108218044,chr11,108347317,A,C,A missense mutation within the C-terminal phosphoinositide 3-kinase (PI3K) catalytic domain,7.5,244
+22,30051593,chr22,29655604,,T,,7.5,245
+4,55141036,chr4,54274869,T,C,,3.0,247
+5,1295228,chr5,1295113,G,A,,40.0,248
+19,44057574,chr19,43553422,G,A,,20.0,249
+11,67351066,chr11,67583595,,,,4.0,250
+20,61867235,chr20,63235883,,,,4.0,251
+7,55214299,chr7,55146606,,,,4.0,252
+12,25360224,chr12,25207290,A,C,Germline variant in the 3' UTR of KRAS that predicts resistance to platinum-based therapy.,30.0,254
+13,103498198,chr13,102845848,A,G,,15.0,255
+4,55604940,chr4,54738774,G,A,,15.0,256
+7,148524752,chr7,148827660,C,C,,20.0,257
+1,11856378,chr1,11796321,G,A,,55.0,258
+11,67352689,chr11,67585218,A,G,,20.0,259
+4,89052323,chr4,88131171,G,T,,15.0,260
+19,44055726,chr19,43551574,T,C,XRCC1 Q399R germline polymorphism (NM_006297.2:c.1196A>G) is associated with better outcome for patients with NSCLC and increased response to chemotherapy for patients with cervical cancer.,40.0,261
+7,87160618,chr7,87531302,A,T,,15.0,262
+7,87138645,chr7,87509329,A,G,"ABCB1 I1145I is a germline polymorphism that has improved responses in cancer. Specifically, it can indicate sensitivity to platinum-based chemotherapies for patients with NSCLC or better outcome for HER2-positive metastatic breast cancer patients.",25.0,263
+19,45854919,chr19,45351661,T,G,,35.0,264
+18,657604,chr18,657604,,,,15.0,265
+2,141665446,chr2,140907877,,,,3.0,266
+8,38268656,chr8,38411138,,,"FGFR1 amplifications are the most common aberrations of the FGFR family in cancer. One study reports FGFR1 aberrations in 3.5% of 4,853 patients of which most are FGFR1 amplifications (Helsten et. al., 2016). Preclinically, FGFR1 amplifications have also been shown to confer sensitivity to FGFR1 inhibitors (Weiss et. al., 2010). Clinical studies are currently ongoing (e.g. NCT01004224).",170.5,267
+8,38268656,chr8,38411138,,,"FGFR1 high expression has been reported in 11.8% (178 patients) of oral squamous cell carcinoma patients, and was enriched in early stages (Freier et. al., 2007). Another study reports FGFR1 expression in 35% of primary HNSSC (353 patients) (Göke et. al., 2015). In both studies, FGFR1 gene amplification and expression do not correlate well with about 35% of samples with FGFR1 amplification overexpressing FGFR1 (Göke et. al., 2015). FGFR1 expression also correlated with sensitivity to FGFR1 inhibitors in preclinical models of lung cancer (Wynes et. al., 2014), HNSSC (Göke et. al., 2015) and urothelial carcinoma (Lamont et. al., 2011).",46.0,268
+6,117609463,chr6,117288300,,,"ROS1 is a receptor tyrosine kinase that frequently forms gene fusions in several cancer types. Approximately 2% of NSCLC patients harbor a ROS1 gene fusion. Several fusion partners have been described with a constant ROS1-breakpoint, maintaining the kinase domain (Solomon B, 2015). Following case-studies and retrospective analyses, an expansion cohort of a phase-1 study showed clinical benefit of crizotinib in ROS1 rearranged NSCLC. The benefit was independent of the type of ROS1-rearrangement (Shaw et. al.,2014).",108.0,269
+7,116312459,chr7,116672405,,,,81.5,270
+3,142274740,chr3,142555898,,,"Single A insertion or deletion in the 10 A mononucleotide run in exon 10 of ATR results in a frameshift of codon I774. In patients with endometrial cancer, this mutation has only been observed in patients with microsatellite instability.",20.0,271
+9,21968055,chr9,21968056,,,"CDKN2A (p16) expression is a surrogate marker of HPV infection in oropharyngeal squamous cell carcinoma. CDKN2A and p53 are inactivated through HPV proteins E6 and E7 and therefore not altered in expression level in HPV-associated carcinomas. However, there is no perfect overlap between p16 expression and HPV status with some 10-12.5% of HPV-negative tumors expressing p16. (Seiwert, T JCO, 2014). p16 positivity is a well-established positive prognostic factor in squamous cell cancer of the head and neck in the primary and, as increasing evidence suggests, recurrent/metastatic disease settings. Predictive information from HPV status have not been established to date. A lack of benefit from EGFR-inhibitors has been proposed by some studies. Other studies were not able to reproduce this finding.",180.0,272
+10,32306071,chr10,32017143,,,"In a study by Takeuchi et. al. a fusion screen was performed in 1529 lung cancer samples. 14 adenocarcinomas with KIF5B-RET and CCDC6-RET fusions were identified. (Takeuchi K et. al., 2012)",10.0,273
+11,534285,chr11,534285,C,T,,7.5,274
+11,533873,chr11,533873,,,,3.0,275
+9,5450525,chr9,5450525,,,,330.0,276
+1,11166592,chr1,11106535,,,,22.5,277
+19,40736224,chr19,40230317,,,,15.0,278
+22,30050674,chr22,29654685,A,,,7.5,279
+4,153245446,chr4,152324294,,,,20.0,281
+18,48556583,chr18,51030213,,,,3.0,282
+1,11188519,chr1,11128462,G,A,,3.0,283
+1,11184580,chr1,11124523,G,A,,3.0,284
+7,141250989,chr7,141551189,,,,7.0,285
+4,108603171,chr4,107682015,,,,6.0,286
+7,138145079,chr7,138460334,,,,6.0,287
+7,140453145,chr7,140753345,A,C,,12.0,288
+12,56473645,chr12,56079861,,,,37.0,289
+6,86159809,chr6,85450091,,,,15.0,290
+7,148504477,chr7,148807385,,,,20.0,291
+3,38179969,chr3,38138478,,,,2.0,292
+3,178928226,chr3,179210438,C,T,,7.5,294
+1,155870065,chr1,155900274,,,,15.0,296
+1,155870065,chr1,155900274,,,,3.0,297
+2,16080686,chr2,15940564,,,,46.0,298
+7,128849189,chr7,129209348,G,C,,13.5,299
+7,128828713,chr7,129188872,,,,44.0,300
+9,98205262,chr9,95442980,,,,25.0,301
+9,98205262,chr9,95442980,,,,10.0,302
+19,1205740,chr19,1205741,,,,20.0,303
+19,1205740,chr19,1205741,,,,2.0,304
+9,93564069,chr9,90801787,,,,3.0,305
+17,37856333,chr17,39700080,,,"Her2 (ERBB2) amplifications are seen in up to 20% of breast cancers and were associated with aggressive disease and poor prognosis when discovered. Trastuzumab first found considerable success, and was approved for treatment, in HER2 positive metastatic breast cancer (MBC) which had progressed under chemotherapy. These metastatic cancers nonetheless progressed under trastuzumab, and other forms of therapy were studied for next line treatments, including tyrosine kinase inhibitors. Lapatinib, a reversible inhibitor of tyrosine kinase activity in ErbB1 and ErbB2, and afatinib, an irreversible inhibitor of all 4 ErbB forms were shown to have activity in trastuzumab-progressed HER2 MBC. Interestingly trastuzumab itself also turned out to remain effective in treatment of trastuzumab-progressed HER2 MBC. The LUX-Breast 1 trial compared a TKI-based treatment (afatinib) to a trastuzumab-based treatment of trastuzumab-progressed HER2 MBC, and the LUX-Breast 3 trial addressed TKI application in the context of HER2 MBC with difficult to treat brain metastases. In neither of these cases was the TKI more effective, making successful future replacement of trastuzumab-based therapy with a TKI in trastuzumab-progressed HER2 MBC seem unlikely. Instead, a potential role for TKIs in this disease context is revealed in preclinical work suggesting synergism between TKI and trastuzumab action, and clinical trials with lapatinib or afatinib combined with trastuzumab indicate that dual HER2 blockade may be an effective therapy. Dual antibody HER2 blockade with pertuzumab instead of TKI in HER2 MBC has also recently shown strong results in the CLEOPATRA trial. HER2 overexpression is targeted in neoadjuvant breast cancer treatment, and has also been successfully targeted in gastric cancer.",883.0,306
+2,29445270,chr2,29222404,A,C,,10.0,307
+2,29432682,chr2,29209816,C,G,The EML4-ALK G1269A mutation has been identified in non-small cell lung cancer patients resistant to crizotinib. Cell line data from multiple groups have shown this mutation enhances resistance to crizotinib treatment in vitro.,17.5,308
+7,55086794,chr7,55019101,,,,0.0,309
+2,212295697,chr2,211430972,,,"ERBB4 mutations have been identified in melanoma, lung adenocarcinoma and medulloblastoma. In-vitro studies suggest that melanoma cell lines harboring an ERBB4 mutation are sensitive to ERBB4 inhibition with lapatinib.",4.0,310
+3,178866311,chr3,179148523,,,"PIK3CA mutations are observed in many cancers among the most prevalent are breast cancer, colorectal cancer, and head and neck squamous cell carcinoma. These mutations have been observed in up to 40%, 20%, and 21% respectively for each of these cancer types with mutations commonly occurring within the helical exon 9 and kinase domain of exon 20. In breast cancer PIK3CA mutations have been associated with better prognosis, and a greater survival outcome, however the PI3K pathway is also associated with increased drug resistance (trastuzumab/lapatinib). PIK3CA mutations in both HNSCC and CRC have been associated with resistance to anti-EGFR therapeutic agents and mutations in exon 9 and 20 are associated with a poorer prognosis in CRC. Interestingly PIK3CA mutations in HNSCC have been observed to be absent from a number of ethnic groups including greek, german, and vietnamese populations.",454.0,311
+7,55087058,chr7,55019365,,,"The EGFRvIII variant is an oncogenic mutation that has been reported in several cancers including glioblastoma multiforme, breast, lung, head and neck, ovarian and prostate. In high-grade gliomas, EGFRvIII has been reported in about 30% of cases with EGFR amplification. The EGFRvIII mutation leads to deletion of the receptor ectodomain exons 2-7. The presence of this variant has been linked with clinical response to EGFR TKI. (Arteaga and Engelmann, 2014)",69.0,312
+10,89622870,chr10,87863113,,,,54.5,313
+8,31497942,chr8,31640426,,,,37.0,314
+4,75310851,chr4,74445134,,,,58.0,315
+2,70674412,chr2,70447280,,,,15.0,316
+7,55241722,chr7,55174029,G,A,,4.0,317
+4,75230860,chr4,74365143,,,,35.5,318
+19,1286153,chr19,1286154,,,,0.0,319
+22,22127164,chr22,21772875,C,T,,10.0,320
+22,22108789,chr22,21754500,,,,4.0,321
+12,25378561,chr12,25225627,G,A,,8.0,322
+7,116312459,chr7,116672405,,,,15.0,323
+7,116411903,chr7,116771849,,,"Exon 14 mutations have been observed in ~3% of patients with NSCLC (28/933 reported by Awad et al J Clin Onc 2016), confirmed to cause exon skipping when available, and associated with concurrent MET amplification. Responses to the c-MET inhibitor crizotinib have been reported in preclinical models and in individual case reports as well as a small-scale clinical trial (17 patients treated, Drilon et al., 2016 (suppl; abstr 108; ASCO ID 167889-176)). Larger studies are needed but enrollment of patients with MET exon 14 skipping mutation in trials with MET inhibitors or off-label treatment is encouraged (Paik et al., 2015 (suppl; abstr 8021)).",65.5,324
+4,1795039,chr4,1793312,,,,3.0,325
+19,45281126,chr19,44777869,,,,2.0,326
+9,8314246,chr9,8314246,,,,3.0,327
+8,6835172,chr8,6977650,,,,10.0,328
+19,45916692,chr19,45413434,,,,30.0,329
+9,139388896,chr9,136494444,,,,12.0,330
+11,9599943,chr11,9578396,A,G,,15.0,331
+14,65453063,chr14,64986345,G,C,,10.0,332
+6,43738444,chr6,43770707,,,,10.0,334
+19,10244022,chr19,10133346,,,,18.0,335
+12,25362365,chr12,25209431,,,,545.5,336
+10,112631596,chr10,110871838,,,"A new study, a retrospective analysis of 77 patients, has implicated PDCD4 expression in the sensitivity to paclitaxel. However, this finding came from a large proteome screen and has not yet been replicated in independent patient sets.",20.0,337
+10,131265545,chr10,129467281,C,T,,15.0,338
+21,43731777,chr21,42311667,,,,15.0,339
+10,54074056,chr10,52314296,,,,15.0,340
+11,35160728,chr11,35139181,,,,3.0,341
+4,110834047,chr4,109912891,,,,3.0,342
+12,69201956,chr12,68808176,,,,20.0,343
+22,35776828,chr22,35380835,,,,15.0,344
+17,74380731,chr17,76384650,,,,10.0,345
+2,202122759,chr2,201258036,,,,3.0,346
+18,657604,chr18,657604,,,,40.0,347
+8,27667137,chr8,27809620,,,,3.0,348
+19,11071598,chr19,10960922,,,,30.0,349
+18,42531877,chr18,44951912,,,,15.0,350
+18,42531913,chr18,44951948,G,A,,3.0,351
+2,29443625,chr2,29220759,,,EML4-ALK C1156Y alone is resistant to crizotinib in non-small cell lung cancer (NSCLC) which has been shown to be modulated (both increased sensitivity and resistance) by additional ALK mutations. A case report showed that an NSCLC harboring EML4-ALK C1156Y-L1198F was resistant to lorlatinib but this second mutation re-sensitized this tumor to crizotinib.,20.0,352
+7,55086794,chr7,55019101,,,,60.0,354
+6,36646487,chr6,36678710,,,,15.0,355
+3,105085753,chr3,105366909,,,,15.0,356
+1,26211931,chr1,25885440,,,,15.0,357
+11,77371041,chr11,77659996,,,,10.0,358
+X,66764465,chrX,67544623,,,,3.0,359
+12,12870058,chr12,12717124,,,,3.0,360
+12,56473645,chr12,56079861,,,,6.0,361
+X,66764662,chrX,67544820,,,,15.0,362
+2,234526291,chr2,233617645,,,,3.0,363
+2,212240446,chr2,211375721,,,,2.0,364
+2,212240446,chr2,211375721,,,,5.0,365
+17,33677324,chr17,35350305,,,,2.0,366
+7,6426892,chr7,6387261,C,T,,4.0,367
+17,76210267,chr17,78214186,,,,15.0,368
+17,7571720,chr17,7668402,,,,68.0,369
+11,94152895,chr11,94419729,,,,2.0,370
+20,39657458,chr20,41028818,,,,5.0,371
+12,12870058,chr12,12717124,,,,10.0,372
+7,16831435,chr7,16791811,,,,5.0,373
+7,55237999,chr7,55170306,,,,10.0,375
+10,31608101,chr10,31319172,,,,5.0,376
+X,47441712,chrX,47582313,,,,12.0,377
+8,142402093,chr8,141391993,,,,3.0,378
+18,657604,chr18,657604,,,,15.0,379
+15,99192200,chr15,98648971,,,,2.0,380
+7,100400187,chr7,100802565,,,,10.0,381
+18,657604,chr18,657604,,,,20.0,382
+17,38544768,chr17,40388516,,,,10.0,383
+20,39657458,chr20,41028818,,,,25.0,384
+1,57159476,chr1,56693803,,,,0.5,385
+9,127997132,chr9,125234853,,,,20.0,386
+8,37888200,chr8,38030682,,,,4.0,387
+4,55524085,chr4,54657918,,,,17.0,388
+16,89989687,chr16,89923279,,,,12.0,389
+7,55272951,chr7,55205258,,,"Although referred to as Y1068 in the literature, based on the recognition peptide described, this tyrosine occurs at Y1039 (ENST00000454757.2 v75) or Y1092 (ENST00000275493.2 v75).",15.0,390
+15,99192200,chr15,98648971,,,,10.0,391
+2,201980827,chr2,201116104,,,,3.0,392
+4,15969857,chr4,15968234,,,,10.0,393
+X,49106897,chrX,49250436,,,,20.0,394
+9,19376309,chr9,19376311,,,,2.0,395
+1,65298912,chr1,64833229,,,,4.0,396
+17,41197646,chr17,43045629,,,,2.0,397
+12,89741009,chr12,89347232,,,,3.0,398
+7,140453136,chr7,140753336,,,,151.0,399
+7,75931861,chr7,76302544,,,,2.0,400
+16,69743304,chr16,69709401,,,,2.0,401
+16,69745145,chr16,69711242,G,A,,2.0,402
+17,41197646,chr17,43045629,,,,15.0,403
+2,136871919,chr2,136114349,,,,10.0,405
+X,55478538,chrX,55452105,,,,2.0,406
+17,48712218,chr17,50634857,,,,3.0,407
+6,43395292,chr6,43427554,,,,3.0,408
+7,97481430,chr7,97852118,,,,2.0,409
+13,28536274,chr13,27962137,,,,20.0,410
+17,40465342,chr17,42313324,,,,20.0,411
+6,31132120,chr6,31164343,,,,2.0,412
+17,37879863,chr17,39723610,,,,17.5,413
+17,37880996,chr17,39724743,,TACGTGATGGCT,"Mutations in the HER2 kinase domain occur at a 2-4% frequency in lung adenocarcinomas, the majority of which are in exon 20 as in-frame duplications or insertions in a small 8 codon region (774-781 or 775-782). These are analogous to the exon 20 alterations found in EGFR TK domain. The M774 insertion, M774insAYVM, represents 62.5% of all HER2 kinase domain mutations identified (when combined with the A775insYVMA mutations as they translate to the identical amino acid sequence changes). As demonstrated in mouse models (Perrera et al., PNAS 2009) and subsequent clinical trials in human lung adenocarcinoma with these insertions, HER2 YVMA mutants predict response to several targeted HER2 agonists such as afatinib, trastuzumab, neratinib and TDM-1 (trastuzumab emtansine) as monotherapy or combined with specific chemotherapies.",36.0,414
+7,55249091,chr7,55181398,T,A,,17.5,415
+17,37856333,chr17,39700080,,,,35.0,416
+6,169615875,chr6,169215780,,,,15.0,417
+1,156844175,chr1,156874383,,,,72.5,419
+2,209113112,chr2,208248388,C,T,"IDH1 R132 mutations have been observed in a number of cancer types, and appear to behave quite differently in different environments. In myelodysplastic syndromes and acute myeloid leukemia (AML), IDH1 R132 mutations have been shown to be associated with worse outcome and shorter overall survival. They have also been linked to cytogenetically normal AML, an intermediate risk subtype of the disease. However, in glioblastoma and astrocytoma, patients with IDH1 mutations have shown better overall survival than patients with wild-type IDH1. Also in contrast to AML, in glioblastoma, IDH1 mutations have been associated with the specific cytogenetic abnormalities, 1p and 19q deletions.",9.0,420
+5,1286516,chr5,1286401,C,A,,10.0,421
+X,123095568,chrX,123961718,,,,14.0,422
+6,32407619,chr6,32439842,,,,15.0,423
+3,38182641,chr3,38141150,T,C,,31.0,424
+12,25398284,chr12,25245350,C,A,KRAS mutations are the most common mutations in pancreatic cancer occurring in > 90% of cases. Of these the G12D activating mutation is the most prevalent and results in a loss of GTPase activity which in turn leads to a constitutively active form of KRAS. This is enough to cause pre-cancerous pancreatic intraepithelial lesions,67.5,425
+7,140434279,chr7,140734479,,,,10.0,426
+1,115256530,chr1,114713909,G,T,,24.5,427
+11,94152895,chr11,94419729,,,,10.0,428
+4,55524085,chr4,54657918,,,,20.0,429
+16,67063148,chr16,67029245,,,"CBFB-MYH11 is the result of inv(16)(p13q22) or t(16;16)(p13;q22) and is sufficient for the diagnosis of acute myeloid leukemia (in the correct setting) according to WHO criteria, even when blast counts are <20% (Vardiman et al, Blood 2008). This fusion is typically associated with favorable prognosis relative to other AML subtypes (including cytogenetically normal); however, the impact of additional mutations in the context of this fusion is incompletely understood. AMLs with this fusion are often grouped with other rearrangements affecting genes encoding core binding factor subunits, referred to as CBF AMLs.",20.0,431
+14,62213848,chr14,61747130,T,C,,10.0,433
+14,62162258,chr14,61695540,,,,25.0,434
+2,46524541,chr2,46297402,,,,25.0,435
+3,10182692,chr3,10141008,,,,23.0,436
+13,28592642,chr13,28018505,C,A,,46.0,437
+6,32808494,chr6,32840717,,,,10.0,438
+8,27667137,chr8,27809620,,,,10.0,439
+5,159848829,chr5,160421822,,,,10.0,440
+1,65886335,chr1,65420652,,,,10.0,441
+7,55086794,chr7,55019101,,,,280.0,442
+7,55227926,chr7,55160233,G,A,,20.0,443
+6,11185051,chr6,11184818,,,,15.0,444
+21,40191638,chr21,38819714,A,G,,10.0,445
+12,53342655,chr12,52948871,,,,2.0,446
+X,137715011,chrX,138632850,,,,15.0,447
+18,23612363,chr18,26032399,,,,5.0,450
+7,87160618,chr7,87531302,A,C,"Refer to 
+https://www.pharmgkb.org/rsid/rs2032582 
+for more information.",15.0,451
+7,55228009,chr7,55160316,C,A,,23.0,453
+7,55227884,chr7,55160191,C,T,,2.0,454
+7,55227933,chr7,55160240,A,C,,6.0,455
+1,161479745,chr1,161509955,A,G,,35.0,456
+1,161514542,chr1,161544752,A,C,,35.0,457
+1,161643798,chr1,161674008,T,C,,20.0,458
+7,55242487,chr7,55174794,C,T,,7.5,460
+15,74315213,chr15,74022872,,,The B2 domain in PML is the binding site for ATRA. Point mutations in this region have been associated with ATRA resistance in patients with APL.,20.0,461
+15,74315213,chr15,74022872,C,T,A216V in the B2 domain of PML is one of the variants found in a patient with ATRA-resistant APL.,30.0,462
+15,74315219,chr15,74022878,T,C,L218P in the B2 domain of PML is one of the variants found in a patient with ATRA-resistant APL.,7.5,463
+7,116312459,chr7,116672405,,,,7.5,464
+6,117638347,chr6,117317184,C,T,"The G2032R missense mutation has been observed in patients with crizotinib-resistant non-small cell lung cancer harboring CD74-ROS1 rearrangement. Independent in vitro studies have confirmed that this mutation confers marked resistance to crizotinib cells over CD74-ROS1 alone. Multiple groups have indicated CD74-ROS1 G2032R expressing cell lines are sensitive to both cabozantinib and foretinib individually administered in vitro. One group additionally showed this mutation conferred relative resistance to alectinib, brigatinib, ceritinib, and AZD3463 in vitro.",31.5,465
+4,55955969,chr4,55089802,C,T,,3.0,467
+4,55968180,chr4,55102013,T,A,,3.0,468
+16,2130300,chr16,2080299,C,T,,12.5,469
+1,11187094,chr1,11127037,G,T,,16.5,470
+17,33433425,chr17,35106406,G,A,,5.0,471
+15,58245622,chr15,57953424,,,,30.0,472
+15,58245622,chr15,57953424,,,,2.0,473
+3,108268716,chr3,108549869,,,,15.0,474
+3,108268716,chr3,108549869,,,,3.0,475
+4,20529898,chr4,20528275,,,,15.0,476
+17,41244645,chr17,43092628,,GA,,20.0,477
+12,25398255,chr12,25245321,G,A,,5.0,479
+2,25457176,chr2,25234307,G,A,,0.0,480
+6,74104471,chr6,73394748,,,,4.0,481
+4,55602765,chr4,54736599,G,C,,5.0,482
+12,64845660,chr12,64451880,,,,2.0,483
+19,1205740,chr19,1205741,,,,23.0,485
+5,156512843,chr5,157085832,,,,10.5,486
+16,55512883,chr16,55478971,,,,25.0,487
+20,44637547,chr20,46008908,,,,15.0,488
+13,31710765,chr13,31136628,,,,11.0,490
+13,31722621,chr13,31148484,,,,10.0,491
+11,124753587,chr11,124883691,,,,5.0,493
+6,37137979,chr6,37170203,,,,10.0,494
+12,69202580,chr12,68808800,T,G,,10.0,495
+17,37881404,chr17,39725151,C,A,This mutation was shown to be an activating mutation and conferred sensitivity to a combination of trastuzumab with neratinib or lapatinib in colorectal cancer patient-derived xenografts.,4.0,496
+17,37868208,chr17,39711955,,,"ERBB2 S310F/Y was one of the first ERBB2 variants to be functionally classified (Greulich et al. 2012). This mutation was shown to be an activating mutation (through hyperphosphorylation) in an in vitro assay. In the same paper, this mutation (along with other ERBB2 activating mutations) in murine Ba/F3 cells have been shown to be sensitive to the ERBB2 inhibitors (afatinib, lapatinib and neratinib). More recent evidence may show that HER2 acitivating mutations confer sensitivity to a host of tyrosine kinase inhibitors, which is the topic of current clinical trials and research.",4.0,497
+4,20529898,chr4,20528275,,,,3.0,498
+2,29415640,chr2,29192774,,,"Following the initial discovery and characterization of NPM-ALK fusion mutation in anaplastic large cell lymphoma (ALCL), EML4-ALK fusions were found to be driver mutations in a subset of lung adenocarcinomas. ALK fusions bring the C-terminal ALK kinase domain together with the N terminal region of the fusion partner, and have since been found in a range of cancers including inflammatory myofibroblastic tumor, renal cell carcinoma, diffuse large B cell lymphoma and colorectal cancer. In a Phase I trial for crizotinib, a 92% response rate was seen in the subset of patients with a specific EML4-ALK variant, which was higher than the 57% rate in the overall ALK-rearranged population, but the subpopulation numbers were insufficient to correlate variant type with patient response. Due to restricted wild-type ALK expression, and also mild phenotypes seen in ALK knockout mice, ALK fusions are desirable targets. ALK inhibitor TAE684 was used in initial characterizations of ALK fusion cancer drivers, and crizotinib – a small molecule ATP-competitor RTK inhibitor which is highly selective for ALK and MET - has been approved as first line therapy in ALK-rearranged NSCLC. ALK-rearrangement defines an NSCLC subtype that makes up 3-5% of NSCLC cases, and is characterized by higher proportions of younger patients and never smokers. EML4-ALK variant 1 is the most common ALK fusion in NSCLC and was the first to be discovered and demonstrate cancer driver properties in vitro and in mouse models. A Phase I study of crizotinib in ALK-rearranged NSCLC demonstrated an increase in overall survival when compared to standard chemotherapy. These and other initial results prompted accelerated approval for crizotinib in NSCLC. Continued clinical work demonstrated benefit with crizotinib over chemotherapy in multi-armed studies, and as first line therapy. Crizotinib was also found to remain beneficial to NSCLC patients who had progressed on crizotinib. Additionally, crizotinib was shown to increase intracranial disease control in brain metastasis occurring from ALK-rearranged NSCLC.",648.0,499
+2,42396490,chr2,42169350,,,"EML4-ALK variant 2 consists of a fusion of the ALK kinase domain (exons 20-29) with EML4 exons 1-20. Variant 2 has cytoplasmic distribution and makes up ~10% of EML4-ALK fusions found in NSCLC,. Although the specific variant is not consistently reported, single cases demonstrating response to crizotinib treatment in NSCLC and a differentiated malignant neoplasm of unknown origin have been reported. In vitro, this variant has shown greater sensitivity to ALK inhibition with TAE684 and crizotinib than the EML4-ALK variants 1 (E13;A20), 3a (E6;A20) and 3b (E6ins33;A20). The variant was reported to be less stable in cells than other variants, and may be a client protein of Hsp90. Along these lines the variant has shown preclinical sensitivity to Hsp90 inhibition.",16.5,500
+2,42396490,chr2,42169350,,,,1.75,501
+4,55961059,chr4,55094892,G,A,,2.5,502
+2,42396490,chr2,42169350,,,"The EML4-ALK variant 3a consists of the ALK kinase domain fused to EML4 exons 1-6, while the 3b variant has an additional 33bp of intronic EML4 sequence between EML4 and ALK regions. The two variants were found to originate from a single genomic rearrangement, and 3a/3b is found in ~ 30% of EML4-ALK positive NSCLC. Variant 3a has cytoplasmic and nuclear distribution. In vitro, these variants have shown sensitivity to ALK inhibitors TAE684 and crizotinib but less sensitive than other EML4-ALK variants. The H2228 cell line contains 3a and 3b variants and is described as having cyctostatic response to ALK inhibition as opposed to apoptotic. In a study of 31 NSCLC patients with EML4-ALK rearrangements, 4/5 patients with the 3a variant showed a partial response while 1 showed progressive disease (the only PD observed). In cells the 3a variant was reported to be more stable than other variants, less sensitive to crizotinib and not to respond to Hsp90 inhibition.",25.0,503
+17,7579548,chr17,7676230,G,A,,0.5,504
+9,80331003,chr9,77716087,,,,26.0,505
+19,3094408,chr19,3094410,,,,24.0,506
+9,80409487,chr9,77794571,,,,20.0,507
+7,6022512,chr7,5982881,,,,10.0,508
+4,55592023,chr4,54725857,,,"In patients with gastrointestinal stromal tumors (GIST), imatinib has improved outcomes for patients with KIT mutations. However, acquired resistance to imatinib is common. Patients harboring exon 9 KIT mutations may benefit from higher imatinib doses (800mg/daily). Similarly, imatinib-refractory tumors showed sensitivity to sunitinib treatment. Improved responses to either treatment were not observed in patients with exon 11 mutations.",102.5,509
+10,89622870,chr10,87863113,,,,31.0,510
+10,123239371,chr10,121479857,,,,8.0,511
+2,29415640,chr2,29192774,,,,20.0,512
+5,170814120,chr5,171387116,,,,27.0,513
+2,109335937,chr2,108719481,,,,10.0,514
+8,38274849,chr8,38417331,G,T,,0.5,515
+6,117638365,chr6,117317202,G,T,"The L2026M mutation is considered a gatekeeper mutation located in the inhibitor binding pocket of ROS1 and corresponding to L1196M in ALK and T790M in EGFR. This mutation has not been reportedly observed in a patient but inferred as a variant likely to emerge in crizotinib-resistant tumors. In vitro kinase activity, structural predictions and growth inhibition assays indicate the L2026M mutation in the CD74-ROS1 fusion provides crizotinib resistance. Additional preclinical assays have indicated that crizotinib resistant cells harboring this mutation are sensitive to PF-06463922 and foretinib.",9.0,516
+6,117630062,chr6,117308899,A,G,,3.0,517
+6,117631376,chr6,117310213,C,G,,4.0,518
+13,28577411,chr13,28003274,,,,85.0,519
+17,57697219,chr17,59619858,,,"The t(2;17)(p23;q23) translocation results in the CLTC-ALK fusion protein, the most common ALK fusion observed in diffuse large B cell lymphoma (DLBCL). ALK-rearranged DLBCL is less responsive to CHOP chemotherapy. Preclinical work indicates that CLTC-ALK DLBCL is responsive to ALK inhibition in cell lines and mouse models, and two case studies show short response followed by progression when heavily pretreated and advanced ALK-positive DLBCL is treated with crizotinib (one case CLTC-ALK, one case an unknown ALK fusion).",19.0,520
+21,44513066,chr21,43092956,,,,20.0,521
+7,140477838,chr7,140778038,AGGTGCTGTCACATTCAA,,,3.0,522
+9,33110635,chr9,33110637,,,,15.0,525
+2,111883195,chr2,111125618,,,,40.0,526
+2,29445213,chr2,29222347,A,G,Multiple case reports indicate that the I1171T missense mutation in ALK-rearranged non-small cell lung cancer (NSCLC) confers resistance to crizotinib and alectinib but is sensitive to ceritinib treatment. These results have been validated in vitro. In vitro evidence indicates this mutation interferes with alectinib binding the active site of ALK and may explain the sensitivity to the structurally distinct ALK inhibitor ceritinib.,42.5,527
+2,29443679,chr2,29220813,C,G,"The V1180L missense mutation was identified in a mutagenesis screen to find mutations that conferred resistance to alectinib in a non-small cell lung cancer cell line. This mutation shows resistance to crizotinib and alectinib but sensitivity to TAE684, ceritinib and more mild sensitivity to brigatinib. Similar to I1171T, it resides in the ATP pocket of ALK and likely interferes with alectinib and crizotinib binding as a mechanism of resistance.",13.0,528
+10,69644427,chr10,67884669,,,,16.0,529
+12,25398285,chr12,25245351,C,G,,32.5,530
+17,7579472,chr17,7676154,G,C,"This polymorphism is relatively widely studied across cancer types, but meta-analyses in breast, lung and cervical cancer cohorts have so far been inconclusive as to the significance of a patient's genotype at this locus as it relates to cancer susceptibility and prognosis.",45.0,531
+16,23614491,chr16,23603170,,,,17.5,532
+18,48556583,chr18,51030213,,,,15.0,533
+9,97861336,chr9,95099054,,,,3.0,534
+5,158134987,chr5,158707979,,,EBF1-PDGFRB fusions are associated with Ph-like acute lymphoblastic leukemia lacking the BCR-ABL fusion. Case reports have shown positive responses to imatinib treatment.,32.5,535
+13,48877911,chr13,48303775,,,,10.0,537
+12,112856718,chr12,112418914,,,,10.0,539
+13,28624294,chr13,28050157,G,A,"FLT3 T227M (rs1933437) is a common polymorphism with a GMAF around .60 based on the Exome Aggregation Consortium (ExAC) data. Its role in cancer predisposition is still unknown, however it may be associated with the development of leukopenia in patients treated with sunitinib.",15.0,540
+16,23646276,chr16,23634955,,,,15.0,541
+1,11184573,chr1,11124516,G,T,,2.0,542
+1,11217230,chr1,11157173,C,T,,2.0,543
+1,11190804,chr1,11130747,C,T,,2.0,544
+10,123258034,chr10,121498520,A,T,,3.0,545
+1,229566992,chr1,229431245,,,,10.0,546
+13,48877911,chr13,48303775,,,,2.0,547
+19,49377242,chr19,48873985,G,C,,5.0,548
+2,29436859,chr2,29213993,A,C,,10.5,549
+2,29474528,chr2,29251662,,,,3.0,550
+2,29436859,chr2,29213993,A,C,"In neuroblastoma, F1245 is one of three hotspot ALK mutations found at a high frequency. In a case study, a pretreated non-small cell lung cancer (NSCLC) patient with EML4-ALK F1245C mutation responded well to ceritinib after slow disease progression during crizotinib treatment. Crizotinib resistance was attributed to the F1245C mutation, although the ALK-rearrangement was not sequenced prior to crizotinib treatment. The patient's slow onset of disease progression during crizotinib treatment mirrors preclinical findings that indicate ALK-fusion with F1245C has moderate resistance to crizotinib compared to the fusion alone.",14.5,551
+2,29432682,chr2,29209816,C,G,,10.0,552
+12,58141510,chr12,57747727,,,,30.0,553
+9,21967752,chr9,21967753,,,,42.5,554
+9,22002902,chr9,22002903,,,,5.0,555
+12,58145431,chr12,57751648,G,A,,1.0,556
+20,31021087,chr20,32433284,,,,20.0,557
+19,3118942,chr19,3118944,,,,15.0,558
+19,13054527,chr19,12943713,,,"Exon 9 insertions and deletions have become part of the WHO diagnostic criteria for essential thrombocythemia (ET) and primary myelofibrosis (PMF) (Arber et al, 2016). These mutations are typically heterozygous and in the absence of JAK2 and MPL mutations. Approximately 80% of observed mutations are type 1 (p.L367fs*46), the result of a 52 bp deletion, or type 2 (p.K385fs*47), the result of a 5-bp TTGTC insertion, and studies have suggested phenotypic and prognostic differences between them. In PMF patients, CALR exon 9 mutations have been associated with improved median survival.",80.0,559
+1,36932096,chr1,36466495,,,,30.0,560
+7,55249005,chr7,55181312,G,T,,20.5,562
+7,140453136,chr7,140753336,AC,TT,,107.5,563
+18,48556583,chr18,51030213,,,,15.0,564
+2,198266834,chr2,197402110,T,C,,2.0,565
+19,7975157,chr19,7910272,G,A,,25.0,566
+8,38268656,chr8,38411138,,,,103.0,569
+15,90626277,chr15,90083045,,,,94.0,570
+1,11174420,chr1,11114363,,,,5.0,572
+5,38938021,chr5,38937919,,,,12.5,573
+4,54243812,chr4,53377645,,,"Prospective trials of patients with hypereosinophilic syndrome harboring the FIP1L1-PDGFRA fusion identified marked response to imatinib treatment (Gotlib and Cool, Leukemia 2008). Imatinib is FDA approved for the treatment of &quot;adult patients with hypereosinophilic syndrome (HES) and/or chronic eosinophilic leukemia (CEL) who have the FIP1L1-PDGFRα fusion kinase&quot; (NDA021588).",63.5,574
+3,100428269,chr3,100709425,,,,7.5,576
+4,55144547,chr4,54278380,C,T,A case study of relapsed myeloproliferative hypereosinophilic syndrome suggests that a T674I mutation in the PDGFRA split kinase domain of FIP1L1-PDGFRA fusions may confer resistance to imatinib.,15.5,577
+17,76210267,chr17,78214186,,,,20.0,578
+7,140453154,chr7,140753354,T,G,,0.75,579
+7,140453154,chr7,140753354,T,A,,0.75,580
+7,140477859,chr7,140778059,TT,CA,The K483M variant is a kinase dead loss-of-function variant in the catalytic site of BRAF. This engineered variant is often used as a control when evaluating other BRAF variants.,0.75,581
+7,140453145,chr7,140753345,AG,GA,,9.5,582
+7,140453145,chr7,140753345,A,T,,14.5,583
+7,140453134,chr7,140753334,T,C,,3.0,584
+7,140453146,chr7,140753346,G,C,,7.5,585
+4,55524085,chr4,54657918,,,,15.0,586
+17,29421945,chr17,31094927,,,,32.0,587
+2,29445213,chr2,29222347,A,T,,5.0,588
+2,29445213,chr2,29222347,A,C,,5.0,589
+11,102201730,chr11,102330999,,,,10.0,590
+3,12625100,chr3,12583601,,,,10.0,591
+12,25362365,chr12,25209431,,,,27.0,592
+19,33790840,chr19,33299934,,,,25.0,594
+17,74732402,chr17,76736320,,,,25.0,595
+1,115258744,chr1,114716123,,,,20.0,596
+10,43572475,chr10,43077027,,,,7.5,597
+2,204732509,chr2,203867786,,,"A survey of 115 T-cell lymphoma samples of diverse subtypes identified this fusion in 26 of 45 cases of angioimmunoblastic T-cell lymphomas (58%), nine of 39 peripheral T-cell lymphomas, not otherwise specified (23%), and nine of 31 extranodal NK/T cell lymphomas (29%).",5.0,599
+X,66764465,chrX,67544623,,,,20.0,600
+9,139388896,chr9,136494444,,,,2.0,601
+7,92234235,chr7,92604921,,,,24.0,602
+13,28577411,chr13,28003274,,,,7.5,603
+9,80409488,chr9,77794572,T,G,,8.0,604
+10,89720799,chr10,87961042,TACT,,,3.0,605
+13,48877911,chr13,48303775,,,,6.0,606
+6,152128686,chr6,151807551,,,,20.0,607
+1,11177096,chr1,11117039,C,A,,7.0,609
+1,11187796,chr1,11127739,G,A,,8.0,610
+7,140453154,chr7,140753354,T,C,This BRAF mutation has a markedly reduced kinase activity and leads to paradoxical MEK-pathway activation via CRAF binding.,43.5,611
+13,28592642,chr13,28018505,C,G,,9.5,612
+13,28592642,chr13,28018505,C,G/A,,1.0,613
+1,65321333,chr1,64855650,G,A,,10.0,614
+9,5070053,chr9,5070053,,G,,10.0,615
+15,45003786,chr15,44711588,TCTT,,,7.5,616
+11,7535001,chr11,7513770,,,,5.0,617
+7,138545885,chr7,138861139,,,,105.5,618
+1,186640923,chr1,186671791,,,,15.0,619
+7,116312459,chr7,116672405,,,,64.0,621
+7,124462440,chr7,124822386,,,,15.0,623
+10,129894923,chr10,128096659,,,,35.0,624
+9,110045560,chr9,107283279,,,,2.0,625
+15,66729154,chr15,66436816,G,C,,10.0,627
+4,1803568,chr4,1801841,C,G,,11.0,628
+10,123239371,chr10,121479857,,,,25.0,629
+11,69624992,chr11,69810224,,,,10.0,630
+3,10191605,chr3,10149921,C,T,,10.0,631
+13,48877911,chr13,48303775,,,,15.0,632
+5,67511548,chr5,68215720,,,,2.0,633
+19,1220489,chr19,1220490,C,A,,5.0,634
+19,40736224,chr19,40230317,,,,2.5,635
+10,89692904,chr10,87933147,C,T,,2.0,636
+4,153242410,chr4,152321258,,,,4.5,637
+13,49033946,chr13,48459810,,A,,2.0,638
+1,59246465,chr1,58780793,,,,5.0,639
+14,75745477,chr14,75278774,,,,5.0,640
+9,21975017,chr9,21975018,C,T,,15.0,641
+12,69234988,chr12,68841208,A,,,10.0,642
+3,105439026,chr3,105720182,G,A,,10.0,643
+6,106534195,chr6,106086320,,,,20.0,644
+2,209101803,chr2,208237079,,,,83.0,645
+18,48556583,chr18,51030213,,,,15.0,646
+2,140988992,chr2,140231423,,,,20.0,647
+X,76760356,chrX,77504878,,,,39.0,648
+7,116423407,chr7,116783353,G,A,,5.0,649
+2,202149589,chr2,201284866,G,C,,15.0,650
+19,41725108,chr19,41219203,,,,20.0,651
+13,114523524,chr13,113820551,,,,23.0,652
+17,41605212,chr17,43527844,,,,15.0,653
+7,99775186,chr7,100177563,,,,4.0,654
+15,66727449,chr15,66435111,CCAGAAGCAGAAGGT,,,10.0,655
+7,140434279,chr7,140734479,,,,5.0,656
+7,99613222,chr7,100015599,,,,7.5,657
+7,140477794,chr7,140777994,A,T,,19.0,658
+22,29999547,chr22,29603558,,,,15.0,659
+14,62164340,chr14,61697622,,,,10.0,660
+13,32968854,chr13,32394717,C,A,,7.5,661
+3,37034823,chr3,36993332,,,,15.0,662
+X,39910501,chrX,40051248,,,,15.0,663
+16,68771128,chr16,68737225,,,,0.5,664
+3,49396578,chr3,49359145,,,,0.5,665
+17,37868196,chr17,39711943,,,,37.5,666
+11,64572092,chr11,64804620,C,,,5.0,667
+7,151832010,chr7,152134925,,,,15.0,668
+X,123176418,chrX,124042568,,,,20.0,669
+1,40361098,chr1,39895426,,,,1.0,670
+7,81328322,chr7,81699006,,,,2.0,671
+22,38368307,chr22,37972300,,,,4.0,672
+4,123747863,chr4,122826708,,,,4.0,673
+X,20156713,chrX,20138595,,,,10.0,674
+2,113973574,chr2,113215997,,,,40.0,683
+1,8073509,chr1,8013449,C,A,,5.0,691
+6,152415537,chr6,152094402,T,C,,2.0,692
+6,134490384,chr6,134169246,,,,24.0,693
+7,140453149,chr7,140753349,C,A,,0.0,694
+22,24129150,chr22,23786963,,,,2.0,695
+22,24129150,chr22,23786963,,,,3.0,696
+22,29999547,chr22,29603558,,,,4.0,697
+17,29421945,chr17,31094927,,,,3.0,698
+12,111884608,chr12,111446804,T,C,,10.0,699
+15,69706688,chr15,69414349,,,,15.0,700
+12,56478854,chr12,56085070,G,A,,15.0,701
+12,56478851,chr12,56085067,C,G,,15.0,702
+12,56481922,chr12,56088138,G,A,,15.0,703
+1,68152388,chr1,67686705,T,C,,15.0,705
+22,29664307,chr22,29268318,,,"In approximately 90% of Ewing sarcoma/primitive neuroectodermal tumor (ES/PNET) a translocation t(11;22)(q24; q12) is identified, fusing the 5’ exons (containing the transactivatin domain, at least exon 1-7) of EWSR1, with the 3’ exons (from exon 9, coding the DNA binding domain) of FLI1.",45.0,706
+21,42879877,chr21,41507950,,,,0.0,707
+7,55242511,chr7,55174818,G,T,,7.5,712
+3,3191695,chr3,3150011,,,,7.5,713
+9,135771933,chr9,132896546,G,A,,8.0,714
+19,1205740,chr19,1205741,,,,40.0,715
+4,55095264,chr4,54229097,,,,3.0,716
+22,29664307,chr22,29268318,,,,7.5,717
+7,55241707,chr7,55174014,,,"This is a ""bucket"" variant for evidence that refers generically to missense variants happening at this position such as: G719A, G719D, G719S.",25.0,718
+7,55241710,chr7,55174017,,,,7.5,720
+22,42522501,chr22,42126499,,,,20.0,721
+7,55242500,chr7,55174807,A,G,,7.5,723
+7,55242467,chr7,55174774,A,G,,2.5,724
+3,37035075,chr3,36993584,G,,,2.5,725
+7,55248991,chr7,55181298,,,,15.0,726
+2,47656951,chr2,47429812,C,T,,0.5,727
+3,37081718,chr3,37040227,GT,AG,,2.5,728
+2,234668881,chr2,233760235,,TATATATATATATA,,50.0,729
+3,37089094,chr3,37047603,GG,,,2.5,730
+3,37056036,chr3,37014545,G,A,,2.5,731
+3,37089130,chr3,37047639,AAG,,,2.5,733
+3,37090464,chr3,37048973,C,,,2.5,735
+7,55249009,chr7,55181316,,GCCAGCGTG,,7.5,736
+1,97915614,chr1,97450058,C,T,,50.0,737
+1,97981343,chr1,97515787,A,C,,50.0,738
+14,75745477,chr14,75278774,,,,7.5,739
+3,37042536,chr3,37001045,C,T,,2.5,741
+3,149235022,chr3,149517235,,,,20.0,742
+3,37045935,chr3,37004444,C,T,,2.5,743
+3,37067365,chr3,37025874,C,,,2.5,744
+3,37038139,chr3,36996648,T,C,,2.5,745
+3,37090406,chr3,37048915,C,,,2.5,746
+3,37035039,chr3,36993548,A,T,,2.5,747
+3,37092143,chr3,37050652,A,T,,2.5,748
+3,37058999,chr3,37017508,C,G,,2.5,749
+3,37053551,chr3,37012060,T,,,2.5,750
+3,37081770,chr3,37040279,A,C,,2.5,751
+3,37067359,chr3,37025868,G,A,,2.5,752
+3,37048546,chr3,37007055,C,T,,2.5,753
+3,37053589,chr3,37012098,C,T,,2.5,754
+2,48028036,chr2,47800897,A,T,,0.0,755
+3,37081726,chr3,37040235,T,,,2.5,756
+3,37038192,chr3,36996701,G,A,,2.5,757
+3,37038196,chr3,36996705,T,G,,2.5,758
+3,37038187,chr3,36996696,G,A,,2.5,759
+3,37090447,chr3,37048956,C,T,,2.5,760
+2,48018217,chr2,47791078,C,A,,2.5,761
+2,47641433,chr2,47414294,T,,,2.5,762
+2,47630413,chr2,47403274,,G,,2.5,763
+3,10183694,chr3,10142010,GA,,,2.5,764
+2,48027794,chr2,47800655,TC,,,2.5,765
+3,10183694,chr3,10142010,G,,,7.5,766
+2,48033421,chr2,47806282,G,A,,2.5,767
+7,6031649,chr7,5992018,G,A,,0.0,768
+3,37070334,chr3,37028843,T,C,,2.5,769
+2,47637380,chr2,47410241,A,T,,2.5,770
+3,10183695,chr3,10142011,,G,,7.5,771
+17,46805705,chr17,48728343,C,T,,40.0,772
+2,47690231,chr2,47463092,A,G,,2.5,773
+10,93558069,chr10,91798312,,,,7.5,774
+2,48026176,chr2,47799037,G,A,,2.5,775
+2,48033420,chr2,47806281,C,T,,2.5,776
+12,21331549,chr12,21178615,T,C,,15.0,777
+12,21329738,chr12,21176804,A,G,,15.0,778
+18,657646,chr18,657646,C,T,,15.0,779
+12,56491672,chr12,56097888,T,C,,2.0,781
+10,123239371,chr10,121479857,,,,38.0,782
+10,123239371,chr10,121479857,,,,23.0,783
+9,22009121,chr9,22009122,,,,20.0,784
+22,29091857,chr22,28695869,G,,,15.0,785
+22,29121087,chr22,28725099,A,G,,15.0,787
+9,8521481,chr9,8521481,C,T,,10.0,792
+3,10183695,chr3,10142011,,A,,5.0,793
+3,10183696,chr3,10142012,G,A,,5.0,794
+11,4116039,chr11,4094809,,,,2.0,795
+2,10262455,chr2,10122328,,,,2.0,796
+12,133202900,chr12,132626314,,,,15.0,797
+7,116423408,chr7,116783354,A,T,,20.0,798
+13,48877911,chr13,48303775,,,,10.0,799
+12,11802788,chr12,11649854,,,,149.0,801
+21,36259163,chr21,34886866,T,C,,10.0,802
+21,36171704,chr21,34799407,G,T,,7.5,803
+15,88476265,chr15,87933034,C,T,,10.0,805
+21,36231792,chr21,34859495,C,A,"D198Y was observed in a pedigree with a history of Familial platelet disorder with predisposition to acute myeloid leukemia. It occurs within the Runt domain of RUNX1, known to be associated with the disease.",7.5,806
+21,36252962,chr21,34880665,C,G,,12.5,807
+2,47630108,chr2,47402969,,,,7.5,808
+2,48010221,chr2,47783082,,,,7.5,809
+21,36252913,chr21,34880616,GCTGCGGT,,,5.0,810
+12,12038902,chr12,11885968,C,T,,0.0,811
+12,12037475,chr12,11884541,G,A,,0.0,812
+12,12022535,chr12,11869601,C,T,,0.0,813
+5,176942767,chr5,177515766,G,A,,7.5,814
+17,37880997,chr17,39724744,GG,CT,,7.5,816
+17,37881011,chr17,39724758,,GGCTCCCCA,,15.0,817
+17,37880991,chr17,39724738,A,TGGCTGG,,7.5,818
+12,70910630,chr12,70516850,,,,3.0,819
+3,10188302,chr3,10146618,G,T,,17.5,820
+1,65311203,chr1,64845520,C,A,,4.0,822
+2,47612305,chr2,47385166,,,,20.0,823
+15,66727454,chr15,66435116,A,C,,0.0,824
+X,47429340,chrX,47569941,T,A,,2.5,825
+20,57484420,chr20,58909365,C,T,,5.0,826
+4,1795039,chr4,1793312,,,,70.0,827
+3,10183693,chr3,10142009,GGAGG,,,2.5,829
+4,1795039,chr4,1793312,,,,22.5,830
+7,128850341,chr7,129210500,G,T,,0.0,837
+10,89711899,chr10,87952142,C,T,,13.0,838
+7,140481403,chr7,140781603,C,G,,0.0,840
+7,140481402,chr7,140781602,C,A,,0.0,841
+3,10183532,chr3,10141848,,,,17.5,843
+3,10183532,chr3,10141848,,,,20.0,844
+3,10183532,chr3,10141848,,,,7.5,845
+3,10183532,chr3,10141848,ATGCCCCGGAGGGCGGA,,,2.5,846
+3,10183531,chr3,10141847,AATGCCCCGGAGGGCGGAGAA,,,2.5,847
+3,10183534,chr3,10141850,G,A,,2.5,848
+3,10183550,chr3,10141866,A,G,,2.5,849
+3,10183605,chr3,10141921,C,T,,7.5,850
+3,10183704,chr3,10142020,,C,,7.5,851
+3,10183822,chr3,10142138,CTACCCAACGCTGCCGCCTG,,,2.5,852
+8,90945564,chr8,89933336,,,,0.0,853
+11,533874,chr11,533874,T,A,,0.0,854
+4,55589773,chr4,54723607,GAC,,,0.0,855
+15,88418230,chr15,87874999,,,,0.0,857
+1,110453255,chr1,109910633,,,,0.0,858
+6,117609463,chr6,117288300,,,,0.0,859
+1,156830686,chr1,156860894,,,,20.0,860
+7,55241726,chr7,55174033,C,T,,0.0,861
+4,55141083,chr4,54274916,C,T,,3.0,862
+4,55152090,chr4,54285923,G,A,,3.0,863
+4,55152101,chr4,54285934,C,T,,3.0,864
+4,55152126,chr4,54285959,G,A,,3.0,865
+3,69788586,chr3,69739435,,,,0.0,866
+8,17104080,chr8,17246571,,,,3.0,868
+11,101981192,chr11,102110461,,,,0.0,869
+X,100613633,chrX,101358645,T,C,,10.0,870
+17,37881392,chr17,39725139,A,G,,3.0,871
+17,37880989,chr17,39724736,T,C,,1.0,872
+17,37881378,chr17,39725125,A,G,,1.0,873
+17,37881440,chr17,39725187,C,T,,1.0,874
+20,57428713,chr20,58853658,T,C,,165.0,877
+1,115258747,chr1,114716126,C,T,,7.5,878
+17,7577548,chr17,7674230,C,T,,4.0,879
+2,209113112,chr2,208248388,C,A,,10.0,880
+3,178936091,chr3,179218303,G,C,,7.5,881
+3,178936092,chr3,179218304,A,G,,2.0,883
+3,178936094,chr3,179218306,C,A,,5.0,885
+3,178936095,chr3,179218307,A,C,,0.0,887
+3,178936095,chr3,179218307,A,G,,0.0,888
+7,55242469,chr7,55174776,TTAAGAGAAGCAACATCT,,,0.0,890
+9,133748414,chr9,130873027,T,G,,54.0,892
+1,115256528,chr1,114713907,T,G,,0.0,893
+1,115258745,chr1,114716124,C,A,,0.0,895
+1,115258745,chr1,114716124,C,G,,2.5,896
+1,115258748,chr1,114716127,C,A,,0.0,897
+1,115258748,chr1,114716127,C,T,,7.5,898
+11,108204681,chr11,108333954,A,G,,3.0,901
+11,108236086,chr11,108365359,C,T,,3.0,903
+12,25378562,chr12,25225628,C,G,,7.5,905
+12,25378562,chr12,25225628,C,T,,21.0,906
+12,25380275,chr12,25227341,T,G,,10.5,907
+12,25380276,chr12,25227342,T,A,,7.5,908
+12,25380276,chr12,25227342,T,C,,7.5,909
+12,25380277,chr12,25227343,G,T,,7.5,910
+12,25398282,chr12,25245348,C,A,,0.0,911
+12,25398285,chr12,25245351,C,T,,38.0,913
+17,7577120,chr17,7673802,C,A,,0.0,918
+17,7578190,chr17,7674872,T,C,,15.5,922
+2,209113113,chr2,208248389,G,C,,0.0,927
+2,209113113,chr2,208248389,G,T,,10.0,928
+3,178916876,chr3,179199088,G,A,,0.0,929
+3,178921553,chr3,179203765,T,A,,0.0,930
+3,178927980,chr3,179210192,T,C,,12.5,931
+3,178952090,chr3,179234302,G,C,,0.0,940
+4,55141036,chr4,54274869,T,A,,8.5,941
+4,55592185,chr4,54726019,,GCCTAT,,2.0,946
+4,55593582,chr4,54727416,AAACCCATGTATGAAGTACAGTGG,,,2.0,948
+4,55593582,chr4,54727416,AAACCCATGTATGAAGTACAGTGGAAG,,,5.0,949
+4,55593586,chr4,54727420,C,T,,0.0,950
+4,55593588,chr4,54727422,ATGTATGAAGTACAGTGG,,,0.0,951
+4,55593591,chr4,54727425,T,G,,0.0,952
+4,55593591,chr4,54727425,,,,0.0,953
+4,55593594,chr4,54727428,GAAGTACAGTGGAAG,,,0.0,954
+4,55593596,chr4,54727430,A,C,,0.0,955
+4,55593597,chr4,54727431,GTACAG,,,0.0,956
+4,55593597,chr4,54727431,GTACAGTGGAAGGTTGTTGAGGAGATAAATGGAAACAATTATGTTTACATAGACCCA,,,0.0,957
+4,55593603,chr4,54727437,T,C,,0.0,958
+4,55593603,chr4,54727437,T,G,,0.0,959
+4,55593603,chr4,54727437,TG,AC,,0.0,960
+4,55593603,chr4,54727437,TGGAAG,,,14.5,961
+4,55593603,chr4,54727437,TGGAAGGTTGTTGAG,,,0.0,962
+4,55593606,chr4,54727440,A,C,,0.0,963
+4,55593606,chr4,54727440,AAGGTT,,,5.0,964
+4,55593607,chr4,54727441,A,G,,2.0,965
+4,55593609,chr4,54727443,GTT,,,2.0,966
+4,55593609,chr4,54727443,GTTGTT,,,2.0,967
+4,55593610,chr4,54727444,T,A,,11.5,968
+4,55593610,chr4,54727444,T,C,,0.0,969
+4,55593610,chr4,54727444,T,G,,2.0,970
+4,55593613,chr4,54727447,T,A,,14.5,971
+4,55593613,chr4,54727447,T,G,,5.0,972
+4,55593654,chr4,54727488,A,G,,0.0,974
+4,55593658,chr4,54727492,A,T,,5.0,975
+4,55593664,chr4,54727498,C,T,,0.0,976
+4,55593669,chr4,54727503,GAT,,,12.5,977
+4,55594221,chr4,54728055,A,G,,10.0,978
+4,55594279,chr4,54728113,C,T,,0.0,979
+4,55595585,chr4,54729419,C,T,,0.0,980
+4,55595590,chr4,54729424,C,A,,0.0,981
+4,55599320,chr4,54733154,G,C,,7.5,983
+4,55599320,chr4,54733154,G,T,,0.0,984
+4,55599332,chr4,54733166,G,T,,14.5,986
+4,55599338,chr4,54733172,A,C,,0.0,987
+4,55599341,chr4,54733175,T,G,,7.5,989
+4,55602664,chr4,54736498,G,C,,8.0,990
+7,140453136,chr7,140753336,AC,CT,,0.0,991
+7,140481402,chr7,140781602,C,G,,5.0,992
+7,140481402,chr7,140781602,C,T,The BRAF G469E mutation has a markedly reduced kinase activity and thus activates the MEK pathway through CRAF binding.,6.0,993
+7,55211080,chr7,55143387,G,A,,3.0,994
+7,55221743,chr7,55154050,A,C,,3.0,995
+7,55221822,chr7,55154129,C,T,,3.0,996
+7,55233043,chr7,55165350,G,T,,0.0,997
+7,55241708,chr7,55174015,G,C,,5.0,999
+7,55242455,chr7,55174762,T,C,,0.0,1001
+7,55242465,chr7,55174772,GGAATTAAGAGAAGC,,,17.5,1002
+7,55242467,chr7,55174774,AATTAAGAGAAGCAA,,,0.0,1004
+7,55242468,chr7,55174775,,GC,,0.0,1006
+7,55242468,chr7,55174775,,,,0.0,1007
+7,55242468,chr7,55174775,ATTAAGAGAAGCAAC,GCA,,0.0,1008
+7,55242468,chr7,55174775,,,,0.0,1009
+7,55242469,chr7,55174776,TTAAGAGAAGCAA,C,,0.0,1010
+7,55242469,chr7,55174776,,CA,,0.0,1011
+7,55242470,chr7,55174777,TAAGAGAAGCAACATCTC,,,0.0,1012
+7,55242511,chr7,55174818,G,A,,0.0,1013
+7,55249130,chr7,55181437,G,A,,0.0,1016
+7,55259434,chr7,55191741,G,A,,0.0,1017
+7,55259454,chr7,55191761,C,G,,2.0,1018
+7,55259524,chr7,55191831,T,A,,10.5,1020
+9,133738330,chr9,130862943,A,G,,60.0,1021
+9,133738342,chr9,130862955,C,G,,33.0,1022
+9,133738349,chr9,130862962,G,A,,62.0,1023
+9,133738356,chr9,130862969,G,C,,28.0,1024
+9,133738357,chr9,130862970,T,C,,74.5,1025
+9,133738358,chr9,130862971,A,T,,6.5,1026
+9,133747520,chr9,130872133,A,G,,18.0,1027
+9,133748391,chr9,130873004,T,C,,60.5,1029
+9,133750356,chr9,130874969,A,G,,36.0,1030
+9,139399344,chr9,136504892,A,G,,0.0,1031
+9,139399422,chr9,136504970,A,G,,0.0,1032
+9,139397768,chr9,136503316,A,G,,0.0,1034
+17,7577111,chr17,7673793,G,A,,0.0,1050
+17,7577556,chr17,7674238,C,A,,0.0,1062
+17,7577556,chr17,7674238,C,T,,0.0,1064
+17,7577570,chr17,7674252,C,A,,7.0,1066
+17,7577580,chr17,7674262,T,C,,0.0,1068
+17,7578461,chr17,7675143,C,A,,4.0,1092
+12,25380276,chr12,25227342,T,G,,0.0,1103
+12,25380277,chr12,25227343,G,C,,0.0,1104
+7,140481417,chr7,140781617,C,A,,5.0,1106
+7,140453155,chr7,140753355,C,T,,0.0,1107
+17,7577093,chr17,7673775,C,A,,0.0,1108
+17,7578211,chr17,7674893,C,G,,0.0,1109
+17,7578449,chr17,7675131,C,T,,3.0,1114
+12,25378647,chr12,25225713,T,A,,0.0,1120
+7,140453150,chr7,140753350,A,C,,0.0,1121
+9,139399368,chr9,136504916,A,G,,0.0,1127
+9,139399344,chr9,136504892,A,T,,0.0,1140
+9,139399389,chr9,136504937,A,C,,0.0,1142
+9,139399413,chr9,136504961,A,G,,0.0,1143
+9,139399413,chr9,136504961,A,T,,0.0,1144
+9,139399422,chr9,136504970,A,T,,0.0,1145
+3,178952085,chr3,179234297,A,T,,12.5,1151
+9,133755488,chr9,130880101,T,C,,25.0,1152
+11,108115729,chr11,108245002,A,T,,3.0,1155
+11,108201008,chr11,108330281,C,T,,0.0,1156
+11,108142006,chr11,108271279,C,G,,0.0,1157
+11,108142131,chr11,108271404,T,G,,3.0,1158
+11,108143545,chr11,108272818,C,T,,0.0,1159
+11,108180913,chr11,108310186,A,T,,2.0,1160
+11,108186743,chr11,108316016,G,C,,0.0,1161
+11,108192134,chr11,108321407,G,T,,3.0,1162
+11,108199938,chr11,108329211,T,C,,3.0,1163
+11,108206614,chr11,108335887,T,G,,3.0,1164
+11,108128286,chr11,108257559,AGAA,,,0.0,1165
+11,108121594,chr11,108250867,AA,,,2.0,1166
+11,108170479,chr11,108299752,G,C,,3.0,1168
+11,108186827,chr11,108316100,C,T,,3.0,1169
+11,108164152,chr11,108293425,G,A,,0.0,1170
+11,108196797,chr11,108326070,G,A,,0.0,1171
+11,108201096,chr11,108330369,G,A,,3.0,1172
+9,133738364,chr9,130862977,A,T,,47.0,1173
+9,139399368,chr9,136504916,A,C,,0.0,1174
+1,115258747,chr1,114716126,C,A,,0.0,1175
+3,178916890,chr3,179199102,C,T,,0.0,1178
+7,55249028,chr7,55181335,C,T,,0.0,1181
+7,55249053,chr7,55181360,C,T,,0.0,1182
+9,133747568,chr9,130872181,A,T,,2.0,1183
+9,133748415,chr9,130873028,T,G,,41.5,1184
+7,140453193,chr7,140753393,T,C,,5.0,1186
+7,55259532,chr7,55191839,G,A,,0.0,1187
+7,55259419,chr7,55191726,A,G,,0.0,1188
+7,140481411,chr7,140781611,C,G,,0.0,1196
+7,140434515,chr7,140734715,G,A,,2.0,1198
+4,55592179,chr4,54726013,,GCCTAT,,0.0,1206
+12,25368454,chr12,25215520,C,T,,3.0,1207
+7,55242467,chr7,55174774,AATTAAGAGAAGCAACA,TTGCT,,0.0,1214
+12,56481857,chr12,56088073,C,A,,0.0,1218
+1,243859016,chr1,243695714,C,T,,3.0,1227
+9,133750319,chr9,130874932,C,A,,5.5,1230
+9,133747588,chr9,130872201,G,C,,22.0,1231
+9,133750330,chr9,130874943,G,C,,7.0,1232
+9,133750361,chr9,130874974,G,C,,5.0,1233
+3,178916946,chr3,179199158,G,C,,12.0,1234
+3,178927410,chr3,179209622,A,G,,3.0,1235
+17,41228590,chr17,43076573,G,A,,0.0,1246
+13,32890599,chr13,32316462,T,G,,0.0,1247
+13,32890600,chr13,32316463,G,T,,0.0,1248
+13,32900287,chr13,32326150,G,A,,0.0,1249
+13,32900751,chr13,32326614,G,C,,0.0,1250
+13,32900751,chr13,32326614,G,A,,0.0,1251
+13,32921033,chr13,32346896,G,C,,0.0,1252
+17,7578502,chr17,7675184,A,G,,0.0,1254
+10,131265448,chr10,129467184,,,,65.0,1255
+5,1253282,chr5,1253167,,,,0.0,1256
+11,4116039,chr11,4094809,,,,100.0,1257
+1,43996547,chr1,43530876,,,,0.0,1258
+7,44143960,chr7,44104361,,,,0.0,1259
+10,43609070,chr10,43113622,G,A,"There is some functional evidence that this variant leads to reduced RET activity (PMID: 9230192) and increased cell proliferation and resistance to apoptosis (PMID: 16715139). It has been widely reported in both familial and sporadic cases of multiple endocrine neoplasia type 2 with medullary thyroid cancers. Despite extensive WGS and Exome coverage for a combined total of ~150k alleles in the GNOMAD browser, this variant has never been observed.",20.0,1260
+4,55599340,chr4,54733174,T,A,,24.5,1263
+4,55599299,chr4,54733133,T,G,,7.5,1264
+4,55599333,chr4,54733167,A,C,,7.5,1265
+4,55599333,chr4,54733167,A,G,,7.5,1266
+4,55595519,chr4,54729353,C,T,,21.5,1267
+1,204485511,chr1,204516383,,,,0.0,1268
+7,140434279,chr7,140734479,,,,17.5,1269
+15,66727441,chr15,66435103,T,C,,0.0,1270
+6,117638347,chr6,117317184,C,T,,2.5,1271
+15,66727455,chr15,66435117,G,T,,17.0,1272
+X,153845865,chrX,154617609,,,,15.0,1273
+X,153880246,chrX,154651972,,,,15.0,1274
+2,29443625,chr2,29220759,G,A,,0.0,1275
+1,156084498,chr1,156114707,,,,20.0,1278
+19,15347647,chr19,15236836,,,,0.0,1279
+1,156830686,chr1,156860894,,,,5.0,1280
+15,88418230,chr15,87874999,,,,5.0,1281
+1,156846342,chr1,156876550,,,,10.0,1282
+12,56360553,chr12,55966769,,,,0.0,1283
+3,41266124,chr3,41224633,A,G,,55.0,1285
+3,41266137,chr3,41224646,C,T,,60.0,1286
+3,41266136,chr3,41224645,T,C,,35.0,1287
+19,17949108,chr19,17838299,C,T,,0.0,1288
+19,17945696,chr19,17834887,C,T,,0.0,1289
+19,17955046,chr19,17844237,T,A,,0.0,1290
+1,65325837,chr1,64860154,G,A,,0.0,1291
+1,65311242,chr1,64845559,C,T,,0.0,1292
+1,27022524,chr1,26696033,,,,7.0,1293
+3,10183555,chr3,10141871,G,A,,0.0,1294
+2,29436860,chr2,29213994,A,C,,7.5,1295
+3,41240930,chr3,41199439,,,,4.0,1296
+7,140453140,chr7,140753340,,TGT,,0.0,1298
+2,112656056,chr2,111898479,,,,3.0,1299
+17,7577062,chr17,7673744,,,"This conserved domain mutation variant covers mutations in regions of p53 reported to be highly conserved during evolution. These regions span codons 117-143 (region II), 171-181 (region III), 234-258 (region (IV), and 270-286 (region V). Region I covers approximately codons 10 through 25 but does not appear in all studies on conserved domain mutations. There is overlap with these regions and reported regions of hotspot p53 mutations, where it is observed that hotspots for detrimental mutation correspond to more highly evolutionary conserved regions. While there is agreement and overlap between different reports, the literature does not seem to indicate an exact consensus on these regions of human p53 at this time, but the four highly conserved regions are part of the DNA binding domain, and are reported to exist within codons 97 to 292.",15.0,1300
+13,28592641,chr13,28018504,T,A,,19.0,1302
+17,37880219,chr17,39723966,TT,CC,,0.0,1304
+17,37881064,chr17,39724811,CA,TG,,0.0,1305
+17,7571720,chr17,7668402,,,,65.0,1306
+17,7571720,chr17,7668402,,,P53 ALTERATION is a bucket type variant used in studies which is constructed by combining all cases of p53 mutation together with p53 overexpression. This includes cases which have p53 mutation or overexpression alone or as well as cases where both occur in combination.,60.0,1307
+17,37880259,chr17,39724006,T,C,,0.0,1308
+17,37880988,chr17,39724735,G,C,,0.0,1311
+17,37880213,chr17,39723960,A,G,,0.0,1312
+7,55260483,chr7,55192790,G,A,,0.0,1390
+12,25398282,chr12,25245348,C,G,,0.0,1395
+12,25398282,chr12,25245348,C,T,,0.0,1396
+13,28592640,chr13,28018503,A,T,,0.0,1397
+19,4117550,chr19,4117552,A,C,,0.0,1398
+4,1807889,chr4,1806162,A,G,,0.0,1400
+4,55599321,chr4,54733155,A,G,,0.0,1402
+7,55241677,chr7,55173984,G,A,,0.0,1412
+7,55241677,chr7,55173984,G,C,,0.0,1413
+7,55241708,chr7,55174015,G,A,,7.5,1420
+7,55242466,chr7,55174773,G,A,,0.0,1431
+7,55249005,chr7,55181312,G,A,,0.0,1443
+7,55249013,chr7,55181320,,GCGTGGACA,,0.0,1445
+7,55249021,chr7,55181328,-,CAC,,0.0,1446
+7,55259455,chr7,55191762,T,C,,7.5,1457
+7,55259482,chr7,55191789,C,T,,5.0,1463
+7,55259485,chr7,55191792,C,T,,0.0,1465
+7,55259493,chr7,55191800,G,A,,5.0,1466
+7,55259502,chr7,55191809,A,G,,0.0,1467
+7,55259515,chr7,55191822,T,A,,0.0,1473
+7,55259517,chr7,55191824,G,A,,0.0,1474
+7,55259524,chr7,55191831,T,G,,7.5,1477
+7,55259545,chr7,55191852,A,G,,0.0,1482
+9,133748403,chr9,130873016,A,G,,34.5,1487
+9,133750328,chr9,130874941,T,A,,7.5,1488
+2,29443696,chr2,29220830,A,C,,0.0,1492
+2,29445273,chr2,29222407,G,A,,0.0,1493
+9,133753844,chr9,130878457,C,G,,0.0,1495
+9,133753880,chr9,130878493,A,G,,0.0,1496
+4,55593585,chr4,54727419,,,,6.0,1497
+3,178917598,chr3,179199810,C,T,,0.0,1499
+3,178916854,chr3,179199066,G,A,,5.0,1500
+2,29443697,chr2,29220831,A,C,,0.0,1505
+9,133747585,chr9,130872198,C,G,,2.5,1506
+9,133748270,chr9,130872883,T,A,,5.0,1507
+9,133753888,chr9,130878501,G,C,,5.0,1509
+1,27057658,chr1,26731167,C,T,,0.0,1510
+7,55249012,chr7,55181319,,GGT,,0.0,1512
+7,55249012,chr7,55181319,,AACCCCCAC,,7.5,1513
+7,55249012,chr7,55181319,,GGGTTA,,10.0,1514
+7,55248992,chr7,55181299,,TCCAGGAAGCCT,,0.0,1515
+12,25398280,chr12,25245346,GC,AA,,5.0,1517
+4,55152092,chr4,54285925,GACATCATG,,,0.0,1518
+9,21971028,chr9,21971029,C,T,,0.0,1521
+9,21974769,chr9,21974770,C,G,,0.0,1522
+9,133748414,chr9,130873027,T,A,,29.5,1523
+9,133748367,chr9,130872980,T,C,,2.0,1524
+9,133748288,chr9,130872901,T,G,,10.0,1525
+9,133747528,chr9,130872141,G,A,,7.5,1526
+9,133747592,chr9,130872205,A,G,,5.0,1527
+9,133748270,chr9,130872883,T,C,,7.0,1528
+9,133748331,chr9,130872944,A,G,,2.5,1529
+9,133750260,chr9,130874873,T,C,,2.5,1530
+9,133750356,chr9,130874969,A,C,,15.0,1531
+9,133750431,chr9,130875044,A,G,,2.5,1532
+9,133753826,chr9,130878439,T,C,,0.0,1533
+9,133753880,chr9,130878493,A,T,,5.0,1534
+9,133753888,chr9,130878501,G,A,,2.5,1535
+9,133753889,chr9,130878502,A,C,,5.0,1536
+9,133755469,chr9,130880082,C,G,,2.5,1537
+9,133755488,chr9,130880101,T,A,,0.0,1538
+4,55141029,chr4,54274862,TGGAGG,,,0.0,1539
+4,55152023,chr4,54285856,C,A,,0.0,1540
+4,55593600,chr4,54727434,,,,0.0,1541
+4,55593590,chr4,54727424,,,,0.0,1542
+4,55593597,chr4,54727431,,,,0.0,1543
+4,55593671,chr4,54727505,,,,0.0,1547
+4,55593642,chr4,54727476,,,,0.0,1548
+4,55593608,chr4,54727442,G,TCCT,,3.0,1549
+4,55593612,chr4,54727446,,,,6.0,1550
+4,55593639,chr4,54727473,,,,15.0,1551
+22,22127162,chr22,21772873,C,T,,0.0,1552
+2,29443630,chr2,29220764,A,T,,0.0,1553
+2,29445270,chr2,29222404,A,G,,0.0,1554
+17,41199682,chr17,43047665,C,T,,2.0,1555
+2,29443624,chr2,29220758,A,G,,0.0,1556
+17,37880999,chr17,39724746,,TGT,,0.0,1557
+4,55592182,chr4,54726016,,GCCTAT,,7.0,1558
+4,55599322,chr4,54733156,C,G,,8.0,1559
+7,55249012,chr7,55181319,,GGCACA,,0.0,1566
+7,55249024,chr7,55181331,,CATGTT,,0.0,1567
+7,55249012,chr7,55181319,,AACCCCGGC,,0.0,1569
+7,128846398,chr7,129206557,C,T,,0.0,1570
+7,55242422,chr7,55174729,G,T,,3.0,1571
+7,55242430,chr7,55174737,G,C,,0.0,1572
+7,55249055,chr7,55181362,A,G,,0.0,1573
+7,55249092,chr7,55181399,G,A,,0.0,1574
+7,55249103,chr7,55181410,T,C,,3.0,1575
+7,55249008,chr7,55181315,T,C,,0.0,1578
+7,55249000,chr7,55181307,,GCCAGCGTG,,0.0,1579
+7,55242469,chr7,55174776,TTAAGAGAAGCAACATCT,CAA,,7.5,1580
+7,55231430,chr7,55163737,C,T,,0.0,1582
+9,133738202,chr9,130862815,A,T,,0.0,1595
+9,133738295,chr9,130862908,A,C,,0.0,1596
+9,133738309,chr9,130862922,A,G,,0.0,1597
+9,133738325,chr9,130862938,T,C,,0.0,1598
+9,133738349,chr9,130862962,G,T,,0.0,1599
+9,133738355,chr9,130862968,A,G,,0.0,1600
+9,133738374,chr9,130862987,G,T,,0.0,1601
+9,133738417,chr9,130863030,T,A,,0.0,1602
+9,133747534,chr9,130872147,G,A,,0.0,1603
+9,133747558,chr9,130872171,G,A,,0.0,1604
+9,133748363,chr9,130872976,T,C,,0.0,1605
+9,133750256,chr9,130874869,G,T,,0.0,1606
+9,133750263,chr9,130874876,C,T,,0.0,1607
+9,133750266,chr9,130874879,C,G,,0.0,1608
+9,133750304,chr9,130874917,G,A,,19.5,1609
+9,133750331,chr9,130874944,A,T,,0.0,1610
+9,133750347,chr9,130874960,A,G,,0.0,1611
+9,133750358,chr9,130874971,G,C,,5.0,1612
+9,133750419,chr9,130875032,C,A,,0.0,1613
+9,133750421,chr9,130875034,A,G,,0.0,1614
+9,133750422,chr9,130875035,T,G,,0.0,1615
+9,133753853,chr9,130878466,C,T,,0.0,1616
+9,133753879,chr9,130878492,G,A,,0.0,1617
+9,133753880,chr9,130878493,A,C,,0.0,1619
+9,133753889,chr9,130878502,A,T,,0.0,1620
+9,133753907,chr9,130878520,A,G,,0.0,1621
+9,133753947,chr9,130878560,G,A,,0.0,1622
+9,133755470,chr9,130880083,C,T,,0.0,1623
+9,133755913,chr9,130880526,G,A,,0.0,1624
+9,133748288,chr9,130872901,T,A,,3.0,1625
+15,66774131,chr15,66481793,G,A,,0.0,1626
+7,140453149,chr7,140753349,C,G,,5.0,1627
+7,55242463,chr7,55174770,AAGGAATTAAGAGAA,-,,0.0,1638
+9,133748346,chr9,130872959,A,G,,5.0,1640
+7,140453148,chr7,140753348,C,A,,0.0,1650
+3,178921567,chr3,179203779,A,G,,2.0,1653
+9,133748333,chr9,130872946,C,T,,9.0,1656
+9,133748300,chr9,130872913,GG,CT,,3.0,1657
+7,140453132,chr7,140753332,TTTCA,AT,,0.0,1658
+4,55594180,chr4,54728014,G,A,,9.5,1659
+2,29443642,chr2,29220776,C,G,,0.0,1661
+7,55249013,chr7,55181320,A,GTCC,,0.0,1662
+7,140477838,chr7,140778038,,,,0.0,1663
+7,55249000,chr7,55181307,-,GCCATA,,0.0,1664
+7,55248994,chr7,55181301,-,CACCAC,,0.0,1665
+7,55249018,chr7,55181325,,TATAATCCC,,7.5,1667
+7,55210093,chr7,55142400,C,,,0.0,1672
+2,212251734,chr2,211387009,C,A,,0.0,1673
+9,5070054,chr9,5070054,T,G,,7.5,1681
+2,30142885,chr2,29920019,C,T,,0.0,1683
+7,92234235,chr7,92604921,,,,0.0,1685
+2,158622516,chr2,157766004,C,A,,30.0,1686
+10,43572475,chr10,43077027,,,,0.0,1690
+4,1808313,chr4,1806586,G,A,,0.0,1692
+3,10183567,chr3,10141883,G,C,,0.0,1694
+17,7578457,chr17,7675139,C,T,,3.0,1695
+17,7578457,chr17,7675139,C,A,,4.0,1699
+3,10183667,chr3,10141983,G,T,,10.0,1733
+3,10183685,chr3,10142001,G,A,,5.0,1734
+3,10183694,chr3,10142010,G,T,,7.5,1736
+3,10183645,chr3,10141961,C,,,0.0,1737
+3,10191480,chr3,10149796,T,C,,22.5,1738
+3,10191507,chr3,10149823,G,A,R167Q is the most common point mutation in hereditary Von Hippel-Lindau (VHL) disease and disrupts the VHL genes binding to elongin C reducing the levels of the VHL-elongin B-elongin C (VBC) E3 ligase complex and inhibiting the ability of VHL to regulate HIF2α. This partial function in turn leads to an increased risk of tumorgenesis. VHL derived clear cell renal cell carcinoma models however have shown the proteasome inhibitors bortezomib and carfilzomib can act to stabilize mutant VHL-R167Q leading to downregulation of HIF2α and suprressed tumorgenesis.,95.0,1739
+3,10183823,chr3,10142139,T,C,,67.5,1741
+3,10188202,chr3,10146518,C,A,,5.0,1742
+3,10188214,chr3,10146530,C,G,,22.5,1743
+3,10188302,chr3,10146618,G,A,,5.0,1744
+3,10191477,chr3,10149793,C,T,,32.5,1745
+3,10191489,chr3,10149805,G,A,,65.0,1746
+3,10191506,chr3,10149822,C,T,,105.0,1747
+3,10191540,chr3,10149856,T,C,,42.5,1748
+3,10183757,chr3,10142073,T,A,,0.0,1749
+3,10183711,chr3,10142027,G,,,10.0,1750
+3,10183748,chr3,10142064,C,T,,27.5,1752
+3,10183763,chr3,10142079,A,C,,32.5,1754
+3,10183764,chr3,10142080,A,G,,65.0,1755
+3,10183764,chr3,10142080,A,C,,5.0,1756
+3,10183770,chr3,10142086,G,T,,15.0,1757
+3,10183785,chr3,10142101,,C,,10.0,1758
+3,10183787,chr3,10142103,C,G,,5.0,1759
+3,10183788,chr3,10142104,C,T,,27.5,1760
+3,10183793,chr3,10142109,T,A,,10.0,1761
+3,10183862,chr3,10142178,A,,,10.0,1762
+3,10183863,chr3,10142179,G,A,,12.5,1763
+3,10183864,chr3,10142180,C,G,,15.0,1764
+3,10183867,chr3,10142183,C,A,,10.0,1766
+3,10188208,chr3,10146524,G,T,,25.0,1767
+3,10188261,chr3,10146577,T,A,,10.0,1769
+3,10188319,chr3,10146635,A,,,7.5,1771
+3,10191491,chr3,10149807,T,C,,22.5,1772
+3,10191492,chr3,10149808,G,T,,22.5,1773
+3,10191493,chr3,10149809,C,G,,32.5,1774
+3,10191504,chr3,10149820,T,A,,10.0,1775
+3,10191558,chr3,10149874,T,C,,32.5,1776
+3,10191563,chr3,10149879,G,T,,15.0,1777
+3,10191563,chr3,10149879,G,A,,5.0,1778
+3,10191533,chr3,10149849,A,,,10.0,1780
+3,10188292,chr3,10146608,GC,,,0.0,1781
+3,10188318,chr3,10146634,C,T,,25.0,1782
+3,10191478,chr3,10149794,,T,,5.0,1783
+3,10191555,chr3,10149871,C,A,,15.0,1784
+3,10183697,chr3,10142013,,A,,5.0,1785
+3,10183725,chr3,10142041,C,G,,105.0,1787
+3,10183725,chr3,10142041,C,T,,72.5,1788
+3,10183727,chr3,10142043,G,,,0.0,1789
+3,10183767,chr3,10142083,G,C,,7.5,1791
+3,10183771,chr3,10142087,T,G,,12.5,1792
+3,10183797,chr3,10142113,T,C,,27.5,1793
+3,10183811,chr3,10142127,G,T,,40.0,1794
+3,10183840,chr3,10142156,TG,,,7.5,1795
+3,10183868,chr3,10142184,C,T,,37.5,1796
+3,10183871,chr3,10142187,G,T,,12.5,1797
+3,10188210,chr3,10146526,T,C,,42.5,1798
+3,10188247,chr3,10146563,TA,,,15.0,1800
+3,10188264,chr3,10146580,T,C,,47.5,1801
+3,10188317,chr3,10146633,C,,There are two similar variants in ClinVar at this exact genomic location with ClinVar IDs: 526670 and 486714.,17.5,1802
+3,10191479,chr3,10149795,C,G,,22.5,1803
+3,10191488,chr3,10149804,C,T,,77.5,1804
+3,10191506,chr3,10149822,C,G,,0.0,1805
+3,10191515,chr3,10149831,G,T,,7.5,1806
+3,10191545,chr3,10149861,A,G,,7.5,1807
+3,10191558,chr3,10149874,T,G,,7.5,1808
+3,10191562,chr3,10149878,C,G,,15.0,1809
+3,10191590,chr3,10149906,C,T,,60.0,1810
+3,10183725,chr3,10142041,C,A,,15.0,1811
+3,10183808,chr3,10142124,G,,,0.0,1812
+3,10188219,chr3,10146535,A,G,,10.0,1813
+3,10188264,chr3,10146580,T,G,,12.5,1814
+3,10183781,chr3,10142097,G,T,,10.0,1815
+3,10183745,chr3,10142061,T,,,10.0,1816
+3,10183818,chr3,10142134,A,C,,0.0,1818
+3,10188203,chr3,10146519,C,G,,10.0,1820
+3,10188208,chr3,10146524,G,A,,0.0,1821
+3,10188210,chr3,10146526,T,G,,0.0,1822
+3,10188279,chr3,10146595,A,,,0.0,1823
+3,10191492,chr3,10149808,G,A,,20.0,1824
+3,10191503,chr3,10149819,G,T,,7.5,1825
+3,10191516,chr3,10149832,T,A,,40.0,1826
+3,10191536,chr3,10149852,A,T,,7.5,1827
+3,10191570,chr3,10149886,T,,,0.0,1828
+3,10191565,chr3,10149881,AGA,,,0.0,1829
+3,10183739,chr3,10142055,G,T,,27.5,1834
+3,10183758,chr3,10142074,T,C,,7.5,1835
+3,10191569,chr3,10149885,C,G,,15.0,1836
+3,10183772,chr3,10142088,C,T,,20.0,1837
+3,10183832,chr3,10142148,CT,GG,Note that there is a different variant reported at this amino acid position of VHL in ClinVar: NM_000551.3(VHL):c.302T>C (p.Leu101Pro; L101P) (https://www.ncbi.nlm.nih.gov/clinvar/variation/480963/),5.0,1838
+3,10183844,chr3,10142160,A,C,,12.5,1839
+3,10183851,chr3,10142167,G,C,,7.5,1840
+3,10188209,chr3,10146525,,A,,7.5,1841
+3,10188252,chr3,10146568,A,,,7.5,1843
+3,10191497,chr3,10149813,C,T,,30.0,1845
+3,10191530,chr3,10149846,T,G,,7.5,1846
+3,10191547,chr3,10149863,CGTC,,,7.5,1847
+3,10183817,chr3,10142133,C,T,,22.5,1848
+3,10183788,chr3,10142104,C,G,,17.5,1849
+3,10188287,chr3,10146603,G,T,,7.5,1850
+3,10188238,chr3,10146554,GC,TT,,5.0,1851
+3,10191570,chr3,10149886,T,C,,15.0,1852
+3,10183861,chr3,10142177,CA,TT,Note that there is a different variant reported at this amino acid position of VHL in ClinVar. Clinvar ID: 565557,7.5,1853
+3,10191489,chr3,10149805,G,C,,7.5,1855
+3,10191498,chr3,10149814,A,G,,10.0,1856
+3,10183871,chr3,10142187,G,C,,12.5,1857
+3,10183809,chr3,10142125,G,A,,0.0,1858
+3,10183808,chr3,10142124,G,A,,22.5,1859
+3,10183833,chr3,10142149,T,G,,0.0,1860
+3,10191570,chr3,10149886,T,A,,10.0,1861
+3,10191482,chr3,10149798,A,G,,0.0,1862
+7,55241614,chr7,55173921,,,"Rare exon 18-21 mutations in EGFR consist of all EGFR mutations excluding sensitizing L858R substitutions and exon 19 deletions, as well as resistance mutation T790M.",30.0,1863
+3,10191582,chr3,10149898,C,,,0.0,1864
+3,10183865,chr3,10142181,T,C,,5.0,1865
+3,10183722,chr3,10142038,G,C,,7.5,1867
+3,10188250,chr3,10146566,CC,A,,0.0,1868
+3,10191572,chr3,10149888,G,,,15.0,1869
+3,10188309,chr3,10146625,T,C,,17.5,1871
+3,10191480,chr3,10149796,,T,,7.5,1872
+3,10183733,chr3,10142049,T,C,,7.5,1873
+3,10183770,chr3,10142086,G,A,,25.0,1874
+3,10188245,chr3,10146561,G,T,,0.0,1875
+3,10188290,chr3,10146606,C,T,,10.0,1883
+3,10188257,chr3,10146573,G,T,,0.0,1884
+3,10188201,chr3,10146517,A,C,,7.5,1885
+3,10188240,chr3,10146556,T,G,,10.0,1886
+3,10191513,chr3,10149829,T,C,,17.5,1887
+3,10191540,chr3,10149856,T,G,,15.0,1888
+3,10183691,chr3,10142007,T,,,10.0,1889
+7,55242469,chr7,55174776,TT,CC,,5.0,1891
+7,55249023,chr7,55181330,T,C,,7.5,1892
+7,55249022,chr7,55181329,G,A,,5.0,1894
+7,55249118,chr7,55181425,A,G,,5.0,1895
+7,55259418,chr7,55191725,A,T,,5.0,1896
+7,55259467,chr7,55191774,A,G,,5.0,1899
+3,10183787,chr3,10142103,C,T,,42.5,1902
+3,10183724,chr3,10142040,T,C,,10.0,1903
+3,10183745,chr3,10142061,T,C,,10.0,1904
+3,10188224,chr3,10146540,G,,,7.5,1905
+3,10188260,chr3,10146576,T,,,7.5,1906
+3,10191535,chr3,10149851,G,,,15.0,1907
+3,10183795,chr3,10142111,G,A,,7.5,1908
+3,10191471,chr3,10149787,T,A,,10.0,1909
+3,10191516,chr3,10149832,T,C,,10.0,1910
+3,10183754,chr3,10142070,,T,,7.5,1912
+3,10191593,chr3,10149909,A,T,,5.0,1913
+3,10188215,chr3,10146531,A,G,,22.5,1914
+3,10191488,chr3,10149804,C,G,,7.5,1915
+3,10191507,chr3,10149823,G,T,,7.5,1916
+3,10188279,chr3,10146595,ATGTTGACGGACAGCCTAT,,,0.0,1917
+3,10188232,chr3,10146548,,C,,5.0,1918
+3,10191486,chr3,10149802,AG,,,5.0,1919
+3,10183808,chr3,10142124,G,C,,10.0,1920
+3,10188200,chr3,10146516,C,T,,10.0,1921
+3,10183857,chr3,10142173,T,,,0.0,1922
+3,10188315,chr3,10146631,T,C,,7.5,1923
+3,10191570,chr3,10149886,T,G,,7.5,1924
+3,10183838,chr3,10142154,C,G,,0.0,1927
+3,10188269,chr3,10146585,C,A,,10.0,1928
+3,10183707,chr3,10142023,C,,,0.0,1929
+3,10183706,chr3,10142022,C,T,,0.0,1930
+3,10183714,chr3,10142030,C,G,,0.0,1931
+3,10191532,chr3,10149848,C,A,"Note that there is a different variant reported at this amino acid position of VHL in ClinVar, which produces the same protein change. NM_000551.3(VHL):c.525C>G (p.Tyr175Ter), https://www-ncbi-nlm-nih-gov/clinvar/variation/182974/",5.0,1932
+3,10183824,chr3,10142140,A,G,,5.0,1933
+3,10191471,chr3,10149787,T,G,,2.5,1934
+3,10191516,chr3,10149832,T,G,,15.0,1935
+3,10183728,chr3,10142044,T,G,,0.0,1936
+3,10183781,chr3,10142097,G,C,,0.0,1937
+3,10191471,chr3,10149787,,,,25.0,1939
+3,10191510,chr3,10149826,G,C,,0.0,1941
+3,10191499,chr3,10149815,G,C,,0.0,1943
+3,10183719,chr3,10142035,T,C,,0.0,1944
+3,10188209,chr3,10146525,CT,,,0.0,1945
+3,10191474,chr3,10149790,A,G,,27.5,1946
+3,10188250,chr3,10146566,C,A,,10.0,1953
+3,10183739,chr3,10142055,G,A,"The VHL gene has a low rate of benign missense variation and is known to be definitively associated with VHL disease. The E70K missense mutation, located in the Beta-domain of VHL, is rare in open-source genome databases (0.00001489 allele frequency in ExAC, 4.365e-6 allele frequency in gnomAD) and was identified in several individuals with VHL disease symptoms (see evidence statements). Thus, this variant could be assigned ACMG code 'PP2' - Missense mutation in a gene with a low rate of benign missense variation where missense variants are a common mechanism of disease. Although this variant is registered once in ExAC and gnomAD, 'PM2' could be applied (Absent from controls in ESP, 1000 Genomes or ExAC) because VHL manifestations sometimes emerge later in adulthood. Thus, the allele may have been detected in a proband who was not yet affected by symptoms.",45.0,1956
+3,10188202,chr3,10146518,C,G,,12.5,1957
+3,10191578,chr3,10149894,C,,,7.5,1958
+3,10188319,chr3,10146635,A,C,Note that there is a different variant reported at this amino acid position of VHL in ClinVar: NM_000551.3(VHL):c.462A>G (p.Pro154=).(https://www.ncbi.nlm.nih.gov/clinvar/variation/411977/),15.0,1962
+3,10183769,chr3,10142085,A,C,,22.5,1963
+3,10183710,chr3,10142026,G,,,7.5,1964
+3,10183857,chr3,10142173,T,,,0.0,1965
+3,10183794,chr3,10142110,G,C,,5.0,1966
+3,10191473,chr3,10149789,T,G,,7.5,1967
+3,10191475,chr3,10149791,T,G,,7.5,1968
+3,10191532,chr3,10149848,C,G,,15.0,1969
+3,10188245,chr3,10146561,G,C,,12.5,1970
+3,10188321,chr3,10146637,G,A,,0.0,1972
+3,10191470,chr3,10149786,G,A,,5.0,1974
+3,10191506,chr3,10149822,CGGAGC,T,,0.0,1975
+3,10191524,chr3,10149840,G,T,,0.0,1976
+3,10191587,chr3,10149903,TG,,,0.0,1977
+3,10183776,chr3,10142092,G,C,,7.5,1980
+3,10191648,chr3,10149964,G,T,,10.0,1986
+3,10191649,chr3,10149965,A,G,,5.0,1987
+3,10191649,chr3,10149965,A,T,,5.0,1988
+3,10191470,chr3,10149786,G,T,"There are three similar variants in ClinVar with this exact genomic position with ClinVar IDs: 223221, 223220, and 43603 of which only 223221 is an exact match (NM_000551.3:c.464-1G>T).",12.5,1990
+3,10191469,chr3,10149785,A,T,,5.0,1992
+3,10188251,chr3,10146567,C,T,,10.0,1994
+3,10188241,chr3,10146557,T,,,7.5,1996
+3,10191540,chr3,10149856,T,A,,12.5,1997
+3,10188321,chr3,10146637,G,C,,5.0,1998
+3,10183752,chr3,10142068,T,G,,15.0,1999
+3,10188201,chr3,10146517,A,G,,10.0,2000
+3,10188249,chr3,10146565,A,G,,0.0,2001
+3,10183746,chr3,10142062,C,,,0.0,2002
+3,10183864,chr3,10142180,C,A,,0.0,2003
+3,10191510,chr3,10149826,G,,,0.0,2004
+3,10191523,chr3,10149839,T,,,0.0,2005
+3,10183865,chr3,10142181,T,A,,0.0,2006
+3,10183850,chr3,10142166,C,G,,7.5,2007
+3,10183808,chr3,10142124,G,T,,7.5,2008
+3,10183809,chr3,10142125,G,T,,7.5,2009
+3,10191600,chr3,10149916,T,A,,12.5,2010
+3,10183724,chr3,10142040,T,G,,7.5,2011
+3,10183734,chr3,10142050,C,G,One similar submission at this exact genomic location has been entered into ClinVar (ClinVar ID: 625222 C>T).,7.5,2012
+3,10191473,chr3,10149789,T,A,,7.5,2013
+3,10188197,chr3,10146513,G,A,,0.0,2017
+3,10183785,chr3,10142101,T,C,,5.0,2020
+3,10183849,chr3,10142165,,CGC,,5.0,2021
+3,10191656,chr3,10149972,C,G,,5.0,2024
+3,10183871,chr3,10142187,G,A,,5.0,2026
+3,10188206,chr3,10146522,,T,,5.0,2027
+3,10188221,chr3,10146537,GC,AT,,12.5,2028
+3,10188302,chr3,10146618,GCCAATATCACACT,,,5.0,2029
+3,10188310,chr3,10146626,C,G,,5.0,2030
+3,10191495,chr3,10149811,T,A,,5.0,2033
+3,10191490,chr3,10149806,A,,,5.0,2035
+3,10183764,chr3,10142080,A,T,,5.0,2037
+3,10188296,chr3,10146612,A,G,,0.0,2038
+3,10183794,chr3,10142110,GGC,TT,,5.0,2039
+3,10191484,chr3,10149800,,CA,,5.0,2040
+3,10183748,chr3,10142064,C,,,5.0,2041
+3,10188302,chr3,10146618,G,,,5.0,2042
+3,10183842,chr3,10142158,G,C,,5.0,2043
+3,10183851,chr3,10142167,G,A,,0.0,2044
+3,10183862,chr3,10142178,A,T,,7.5,2045
+3,41266017,chr3,41224526,,,,0.0,2047
+3,10188321,chr3,10146637,G,T,Two similar variants at this exact genomic location are reported in ClinVar (ClinVar ID 526679 G>A and ClinVar ID 223217 G>C).,0.0,2048
+14,95560476,chr14,95094139,C,T,,20.0,2050
+14,95557630,chr14,95091293,C,G,,25.0,2052
+3,10188233,chr3,10146549,G,T,,0.0,2053
+3,10188228,chr3,10146544,C,T,,0.0,2054
+3,10188293,chr3,10146609,C,,,7.5,2055
+3,10183793,chr3,10142109,T,C,,7.5,2056
+3,10188201,chr3,10146517,A,,,7.5,2057
+3,10183836,chr3,10142152,C,,,7.5,2058
+3,10188287,chr3,10146603,G,A,,0.0,2059
+3,10188231,chr3,10146547,A,C,,0.0,2060
+19,1223125,chr19,1223126,C,G,,0.0,2063
+3,10191581,chr3,10149897,C,T,,0.0,2064
+3,10188323,chr3,10146639,A,G,There is an identical variant match in ClinVar at this exact genomic position with ClinVar ID: 428796 (A>G).,0.0,2065
+3,10191530,chr3,10149846,T,A,,7.5,2066
+3,10191531,chr3,10149847,A,G,,0.0,2067
+3,10183791,chr3,10142107,T,C,,0.0,2068
+3,10183821,chr3,10142137,C,T,,0.0,2069
+3,10191558,chr3,10149874,T,A,,0.0,2070
+3,10183872,chr3,10142188,G,T,"Two very similar variants are reported in ClinVar at this exact genomic position: (ClinVar ID 223190, G>A) and (ClinVar ID 182973 G>C).",0.0,2074
+3,10188322,chr3,10146638,T,C,,27.5,2075
+3,10188320,chr3,10146636,G,A,,0.0,2076
+3,10191470,chr3,10149786,G,C,"There are three variants in ClinVar at this exact position: (ClinVar ID: 223220, ClinVar ID:223221, and ClinVar ID:43603). ClinVar ID: 223220 is an exact match.",5.0,2077
+3,10191469,chr3,10149785,A,G,,15.0,2078
+3,10191498,chr3,10149814,A,T,,7.5,2079
+3,10183773,chr3,10142089,C,T,,0.0,2084
+3,10188312,chr3,10146628,C,T,,0.0,2085
+3,10188245,chr3,10146561,,,,0.0,2086
+3,10183755,chr3,10142071,TCT,,Note that this variant occurs within a short TCT repeat and there are several variant notations that resolve to the same sequence when they are shifted or justified. Each results in the same in-frame single amino acid deletion (Phe76del aka F76del).,120.0,2088
+3,10183774,chr3,10142090,GCGCGTCGT,,,17.5,2089
+3,10191469,chr3,10149785,A,C,,0.0,2093
+3,10183806,chr3,10142122,ACGGCGAGCCGCAGCCC,,,7.5,2097
+3,10191482,chr3,10149798,A,,,7.5,2098
+3,10183728,chr3,10142044,TGAACTCGCGCGAGC,,,5.0,2099
+3,10191555,chr3,10149871,C,,,0.0,2100
+3,10183781,chr3,10142097,G,A,,0.0,2101
+3,10183876,chr3,10142192,G,C,,5.0,2104
+3,10191596,chr3,10149912,G,A,,0.0,2105
+3,10183769,chr3,10142085,A,G,,0.0,2106
+3,10183759,chr3,10142075,C,G,,0.0,2107
+1,27022524,chr1,26696033,,,,34.0,2108
+3,10183776,chr3,10142092,G,T,,0.0,2110
+3,10183763,chr3,10142079,A,G,,0.0,2112
+3,10183763,chr3,10142079,A,T,,0.0,2113
+3,10183872,chr3,10142188,G,A,,50.0,2114
+3,10191562,chr3,10149878,C,A,,0.0,2115
+3,10183815,chr3,10142131,C,G,,0.0,2117
+3,10183839,chr3,10142155,C,T,,0.0,2118
+3,10188213,chr3,10146529,T,C,,0.0,2119
+3,10188270,chr3,10146586,C,T,,0.0,2120
+3,10183734,chr3,10142050,C,A,,0.0,2122
+3,10183760,chr3,10142076,TGC,,,0.0,2123
+3,10183795,chr3,10142111,G,C,,0.0,2124
+3,10188252,chr3,10146568,A,C,,17.5,2125
+3,10191599,chr3,10149915,CT,,,0.0,2126
+3,10183810,chr3,10142126,C,,,0.0,2127
+3,10183822,chr3,10142138,C,G,,0.0,2128
+3,10183725,chr3,10142041,C,,,7.5,2130
+3,10183758,chr3,10142074,,C,,17.5,2132
+3,10188196,chr3,10146512,A,C,,12.5,2133
+3,10188226,chr3,10146542,GACACAC,,,0.0,2135
+3,10191481,chr3,10149797,GAA,C,,7.5,2137
+3,10191532,chr3,10149848,C,,,7.5,2138
+3,10191569,chr3,10149885,C,,,10.0,2139
+3,10191591,chr3,10149907,AG,,,10.0,2140
+3,10191596,chr3,10149912,G,,,7.5,2141
+3,10183868,chr3,10142184,C,,,7.5,2143
+3,10183696,chr3,10142012,,G,,7.5,2144
+3,10183713,chr3,10142029,CCGT,,,10.0,2145
+3,10188323,chr3,10146639,A,T,One similar variant at this exact genomic location has been entered into ClinVar (ClinVar ID: 428796 A>G).,0.0,2146
+3,10191593,chr3,10149909,A,G,,0.0,2147
+3,10191488,chr3,10149804,C,A,,5.0,2148
+3,10183800,chr3,10142116,A,T,,0.0,2149
+3,10188308,chr3,10146624,A,T,,5.0,2150
+3,10183794,chr3,10142110,G,A,,7.5,2151
+3,10191719,chr3,10150035,C,A,,5.0,2152
+3,10188218,chr3,10146534,G,C,,0.0,2154
+3,10188289,chr3,10146605,,A,,0.0,2155
+3,10183862,chr3,10142178,A,C,,0.0,2156
+3,10188240,chr3,10146556,T,C,,0.0,2157
+3,10183752,chr3,10142068,,CATC,,0.0,2158
+3,10183822,chr3,10142138,C,,,10.0,2160
+3,10191555,chr3,10149871,C,T,,0.0,2161
+3,10188306,chr3,10146622,A,G,,5.0,2162
+2,204732509,chr2,203867786,,,,0.0,2163
+16,89815152,chr16,89748744,G,A,,0.0,2165
+5,176513887,chr5,177086886,,,,0.0,2167
+3,10183811,chr3,10142127,G,A,,0.0,2173
+7,55086794,chr7,55019101,,,,20.0,2174
+3,10183766,chr3,10142082,C,T,,0.0,2175
+3,10183693,chr3,10142009,G,C,,0.0,2177
+6,116600810,chr6,116279647,G,A,,0.0,2180
+14,95557639,chr14,95091302,C,G,,0.0,2197
+14,95557639,chr14,95091302,C,A,,0.0,2198
+14,95557639,chr14,95091302,C,T,,0.0,2199
+14,95557629,chr14,95091292,T,C,,0.0,2200
+14,95557630,chr14,95091293,C,T,,0.0,2201
+7,140481411,chr7,140781611,C,A,,14.0,2222
+7,140453118,chr7,140753318,C,T,,5.0,2223
+7,140434507,chr7,140734707,G,T,,5.0,2224
+18,60790579,chr18,63123346,,,,15.0,2233
+3,10183775,chr3,10142091,C,T,,0.0,2241
+3,10183794,chr3,10142110,G,T,,0.0,2242
+3,10183862,chr3,10142178,A,G,,0.0,2243
+3,10191485,chr3,10149801,G,T,,0.0,2245
+3,10191546,chr3,10149862,T,A,,0.0,2246
+3,10191600,chr3,10149916,T,G,,0.0,2247
+3,10183829,chr3,10142145,A,G,,0.0,2248
+3,10188207,chr3,10146523,G,A,,0.0,2249
+3,10188309,chr3,10146625,T,G,,0.0,2250
+3,10183816,chr3,10142132,,T,,0.0,2251
+7,55241656,chr7,55173963,G,T,,0.0,2255
+3,10183775,chr3,10142091,CGCGTCGTG,,,10.0,2264
+3,10183744,chr3,10142060,CTCCCAGGTCATCTTCTGCA,,,0.0,2270
+2,158626898,chr2,157770386,T,C,,0.0,2275
+2,158622517,chr2,157766005,C,A,,0.0,2280
+3,10188288,chr3,10146604,G,A,,5.0,2290
+3,10188297,chr3,10146613,T,C,,0.0,2291
+3,10188328,chr3,10146644,C,T,,5.0,2292
+3,10183843,chr3,10142159,C,G,Note that there is a different variant reported at this amino acid position of VHL in ClinVar: NM_000551.3(VHL):c.312C>T (p.Gly104=; G104=) https://www-ncbi-nlm-nih-gov/clinvar/variation/456582/,0.0,2293
+3,10183804,chr3,10142120,C,G,Note that there is a different variant reported at this amino acid position of VHL in ClinVar: NM_000551.3(VHL):c.273C>A (p.Phe91Leu; F91L) (https://www-ncbi-nlm-nih-gov/clinvar/variation/411978/),5.0,2294
+3,10183791,chr3,10142107,,A,,7.5,2299
+3,10183707,chr3,10142023,CG,,,0.0,2302
+3,10183788,chr3,10142104,C,A,,0.0,2307
+3,10183797,chr3,10142113,T,A,,0.0,2308
+3,10188204,chr3,10146520,T,,,0.0,2312
+3,10188277,chr3,10146593,C,,,0.0,2317
+3,10188278,chr3,10146594,AATGTTG,,,0.0,2318
+3,10191476,chr3,10149792,A,,,0.0,2323
+3,10191511,chr3,10149827,CCTAGT,,,0.0,2326
+3,10191622,chr3,10149938,C,AA,,0.0,2329
+17,37881414,chr17,39725161,T,G,,0.0,2330
+17,37881064,chr17,39724811,C,T,,0.0,2331
+7,55242478,chr7,55174785,G,A,,0.0,2332
+7,55241666,chr7,55173973,G,A,,5.0,2333
+7,55086794,chr7,55019101,,,This subset of EGFR mutations consists of mutations other than L858R and exon 19 deletion. Reports of responsiveness to tyrosine kinase inhibitors in this EGFR mutation subgroup do not differ widely from those reported for known common sensitizing EGFR mutations.,5.0,2334
+9,133748282,chr9,130872895,A,G,,8.0,2335
+9,133738343,chr9,130862956,T,G,,7.0,2340
+9,133748289,chr9,130872902,T,C,,1.0,2343
+9,133748289,chr9,130872902,T,G,,2.0,2359
+8,68939530,chr8,68027295,G,T,,10.0,2364
+9,133753906,chr9,130878519,G,A,,20.0,2370
+3,10188245,chr3,10146561,G,A,"Two clinvar entries at this same genomic location with 2 different nucleotide changes result in 2 different amino acid changes at aa130. (Clinvar ID: 496061 (V130F, c.388G>T); 2229 (V130L, c.388G>C)",0.0,2380
+1,36933434,chr1,36467833,G,A,,14.0,2387
+4,1803564,chr4,1801837,C,T,,0.0,2403
+4,1806099,chr4,1804372,A,G,,0.0,2404
+4,1806119,chr4,1804392,G,C,,0.0,2405
+4,1806089,chr4,1804362,G,T,,0.0,2406
+4,1806131,chr4,1804404,T,C,This variant was not activating and unable to transform NIH3T3 cells compared to activating mutations in FGFR3.,0.0,2407
+19,45916692,chr19,45413434,,,,15.0,2409
+19,45916692,chr19,45413434,,,,0.0,2410
+1,17350521,chr1,17024026,,GCAGCTGGTGCT,ClinGen Canonical Allele Identifier: CA658820851,5.0,2411
+1,226064434,chr1,225876734,A,T,"K28M is a highly recurrent mutation in this gene in multiple cancer types but particularly well known in brain cancers. In amino acid position 27 of H3F3A there is an arginine (R). The medically relevant Lysine (K) is in position 28. Also UNIPROT records the lysine in position 28. However, K27M is common in the literature so is included as a synonym.",50.0,2416
+3,10191578,chr3,10149894,C,G,,0.0,2425
+3,10188317,chr3,10146633,C,T,,0.0,2427
+3,10183842,chr3,10142158,G,T,,7.5,2428
+3,10183650,chr3,10141966,C,G,,0.0,2430
+3,10183790,chr3,10142106,,A,,7.5,2432
+3,10191504,chr3,10149820,T,C,,0.0,2437
+3,10188270,chr3,10146586,C,G,,2.5,2440
+3,10188218,chr3,10146534,G,,,0.0,2446
+3,10183806,chr3,10142122,A,G,,5.0,2449
+3,10191472,chr3,10149788,GTATAC,,,0.0,2453
+3,10188197,chr3,10146513,G,T,There is a similar but non identical variant to this one in ClinVar (Clinvar ID: 823743; NM_000551.4(VHL):c.341-1G>A).,0.0,2454
+3,10191507,chr3,10149823,G,C,,7.5,2458
+3,10188250,chr3,10146566,C,G,,0.0,2460
+3,10188323,chr3,10146639,A,C,One similar submission at this exact genomic location has been entered into ClinVar (ClinVar ID: 428796 A>G).,0.0,2461
+3,10183747,chr3,10142063,C,,,0.0,2462
+3,10183860,chr3,10142176,A,C,,0.0,2463
+3,10183685,chr3,10142001,G,T,,0.0,2466
+3,10191480,chr3,10149796,T,A,At same genomic location a clinvar entry with a different base change and amino acid substitution (Clinvar ID 182980; L158P c.473T>C),0.0,2467
+3,10188212,chr3,10146528,T,C,,0.0,2475
+3,10188309,chr3,10146625,T,A,,0.0,2476
+3,10191495,chr3,10149811,T,C,,0.0,2478
+3,10183824,chr3,10142140,A,C,,0.0,2480
+3,10183823,chr3,10142139,T,A,,0.0,2484
+3,10191647,chr3,10149963,T,G,,5.0,2488
+3,10191648,chr3,10149964,,C,,5.0,2489
+3,10188198,chr3,10146514,G,T,Note that this variant occurs at the first base of the second exon of VHL. This exon is known to be skipped in some transcripts. RNA splicing effect should be considered in the interpretation.,0.0,2491
+3,10191588,chr3,10149904,T,G,,0.0,2493
+3,10188216,chr3,10146532,G,C,,0.0,2494
+3,10188266,chr3,10146582,,T,,0.0,2495
+3,10191600,chr3,10149916,T,C,,0.0,2501
+3,10191486,chr3,10149802,A,T,,0.0,2502
+3,10191555,chr3,10149871,C,G,,0.0,2503
+3,10188196,chr3,10146512,A,G,,0.0,2504
+3,10191494,chr3,10149810,C,T,,0.0,2505
+3,10188243,chr3,10146559,T,C,,0.0,2508
+3,10183735,chr3,10142051,,G,,0.0,2510
+3,10183770,chr3,10142086,G,,,7.5,2511
+3,10183770,chr3,10142086,GTCCGCG,,,0.0,2512
+3,10183791,chr3,10142107,T,A,,0.0,2513
+3,10183806,chr3,10142122,A,CC,,0.0,2514
+3,10183860,chr3,10142176,A,,,0.0,2516
+3,10183863,chr3,10142179,G,,,0.0,2517
+3,10188200,chr3,10146516,C,,,0.0,2520
+3,10188206,chr3,10146522,T,G,,0.0,2521
+3,10188206,chr3,10146522,T,A,,0.0,2522
+3,10188207,chr3,10146523,G,C,,0.0,2523
+3,10188259,chr3,10146575,ATTATTTGTGCCATCTCTCAATGTTGA,,,0.0,2524
+3,10191487,chr3,10149803,G,,,0.0,2527
+3,10191493,chr3,10149809,C,A,,0.0,2528
+3,10183775,chr3,10142091,C,G,"Note that while there is no exact match for this variant in ClinVar there are two close matches that affect the same amino acid position:
+
+- NM_000551.3(VHL):c.245G>T (p.Arg82Leu). https://www.ncbi.nlm.nih.gov/clinvar/variation/526675/
+- NM_000551.3(VHL):c.245G>C (p.Arg82Pro). https://www.ncbi.nlm.nih.gov/clinvar/variation/193118/",0.0,2532
+3,10188233,chr3,10146549,G,A,,0.0,2533
+3,10183874,chr3,10142190,ACGGGCCC,CG,"There are no identical variants in ClinVar with this exact genomic location. However, there are several variants in ClinVar involving disruption of this donor site by deletion or substitution of bases.",0.0,2534
+3,10188273,chr3,10146589,C,T,,0.0,2541
+3,10191598,chr3,10149914,C,,,0.0,2543
+3,10183797,chr3,10142113,T,G,,0.0,2549
+3,10188234,chr3,10146550,A,G,,0.0,2554
+3,10188238,chr3,10146554,G,,,0.0,2555
+3,10188254,chr3,10146570,ACTG,,,0.0,2556
+3,10188276,chr3,10146592,T,,,0.0,2559
+3,10188288,chr3,10146604,G,,,0.0,2560
+3,10188303,chr3,10146619,C,,,0.0,2561
+3,10191495,chr3,10149811,T,,,0.0,2563
+12,112888165,chr12,112450361,G,T,,0.0,2573
+7,50450370,chr7,50382672,G,,,0.0,2579
+3,10188249,chr3,10146565,A,C,A similar but distinct variant the same position has been reported in ClinVar (c.392A>G (p.Asn131Ser); https://www.ncbi.nlm.nih.gov/clinvar/variation/496062/). It involves the same base position but a different nucleotide change leading to a different amino acid change.,7.5,2580
+3,178866311,chr3,179148523,,,,15.0,2590
+7,55227918,chr7,55160225,T,A,,0.0,2599
+7,55227918,chr7,55160225,T,G,,0.0,2600
+7,55227924,chr7,55160231,C,T,,0.0,2601
+7,55227923,chr7,55160230,T,A,,0.0,2602
+7,55227927,chr7,55160234,G,A,,0.0,2603
+7,55227927,chr7,55160234,G,T,,0.0,2604
+7,55227998,chr7,55160305,A,C,,0.0,2606
+7,55227998,chr7,55160305,A,G,,0.0,2607
+7,55228005,chr7,55160312,T,A,,0.0,2608
+7,55228005,chr7,55160312,T,G,,0.0,2609
+7,55228007,chr7,55160314,A,T,,0.0,2610
+7,55227855,chr7,55160162,T,G,,0.0,2611
+7,55227855,chr7,55160162,T,A,,0.0,2612
+7,55227854,chr7,55160161,G,T,,0.0,2613
+7,55227857,chr7,55160164,A,C,,0.0,2614
+7,55227858,chr7,55160165,G,T,,0.0,2615
+7,55225358,chr7,55157665,T,A,,0.0,2616
+7,55225358,chr7,55157665,T,G,,0.0,2617
+4,55592192,chr4,54726026,-,TTTGCATTT,,2.5,2621
+2,29415640,chr2,29192774,,,,0.0,2635
+12,112856718,chr12,112418914,,,,0.0,2642
+4,55594177,chr4,54728011,-,-,,5.0,2643
+17,7577568,chr17,7674250,C,T,,0.75,2648
+4,55524085,chr4,54657918,,,,10.0,2651
+9,134000948,chr9,131125561,,,"The NUP214 -ABL1 fusion is composed of part of the NUP214 (Nucleoporin 214) gene at the 5’ end (N-terminus of the fusion protein), and part of the ABL1 (ABL proto-oncogene 1, non-receptor tyrosine kinase) gene at the 3’ end (C-terminus of the fusion protein). ABL1 is considered as the key partner that defines the functional/oncogenic effects of the fusion protein. The published breakpoint joins exon 34 of NUP214 to exon 2 of ABL1 (NUP214-ABL1 34-2). In T-ALL, the fusion is typically expressed from amplified extrachromosomal bodies (episomes) that arise when the genomic region from ABL1 to NUP214 circularizes to generate the NUP214-ABL1 fusion. In B-ALL, the fusion commonly results from an intrachromosomal duplication involving chromosome 9, with breakpoints within the NUP214 and ABL1 genes. The fusion has been identified in 6% of cases of T-lymphoblastic leukemia and rare cases of B-lymphoblastic leukemia by multiplex ligation-dependent probe amplification, single nucleotide polymorphism array, real-time polymerase chain reaction, and fluorescence in situ hybridization targeting the ABL1 gene. The fusion is in-frame and results in production of an abnormal hybrid protein, containing the WD40 repeat and coiled-coil domains of NUP214 and the SH2, tyrosine kinase, and F actin binding domains of ABL1, which is thought to upregulate the mitogen-activate protein kinase (MAPK) and MAPK and phosphoinositide 3-kinase (PI3K) pathways. Specifically, the inclusion of the tyrosine kinase domain may affect functionality and offer a target for therapeutic inhibition. Clinical significance: The case report that illustrates the clinical significance of the NUP214-ABL1 fusion describes a 6-year-old boy and a 15-year-old girl with BCR-ABL1-like B-lymphoblastic leukemia with normal karyotype. Both patients demonstrated minimal residual disease after induction chemotherapy, and later experienced relapse after either consolidation therapy or bone marrow transplant. Dasatinib was then prescribed and follow-up information is available for the older child, who successfully achieved a complete response for three months before succumbing to the disease. The clinical details of this case could predict response to treatment with tyrosine kinase inhibitors and is the focus of an ongoing prospective clinical trial evaluating the efficacy of these drugs when treating young patients with high-risk and BCR-ABL1-like B-lymphoblastic leukemia (Clinicaltrials.gov Identifier: NCT02883049).",27.0,2660
+17,37879585,chr17,39723332,A,G,,0.0,2677
+5,122110691,chr5,122774996,,,"The SNX2-ABL1 fusion is composed of part of the SNX2 (Sorting Nexin 2) gene at the 5’ end (N-terminus of the fusion protein), and part of the ABL1 (ABL proto-oncogene 1, non-receptor tyrosine kinase) gene at the 3’ end (C-terminus of the fusion protein). ABL1 is considered as the key partner that defines the functional/oncogenic effects of the fusion protein. The published breakpoint joins exon 3 of SNX2 to exon 4 of ABL1 (SNX2-ABL1 3-4). The fusion is the result of a reciprocal translocation t(5;9)(p23.2;q34.12) and has been identified by RT-PCR, Sanger sequencing, and RNA sequencing. The fusion is in-frame and results in production of an abnormal hybrid protein, containing the sorting nexin, N-terminal domain of SNX2 and the SH2, tyrosine kinase, and F actin binding domains of ABL1, which is thought to upregulate the mitogen-activate protein kinase (MAPK) and phosphoinositide 3-kinase (PI3K) pathways. Specifically, the inclusion of the tyrosine kinase domain may affect functionality and offer a target for therapeutic inhibition. Clinical significance: The SNX2-ABL1 fusion has been documented in six young men between the ages of 7 and 29 years with B-lymphoblastic leukemia, some of which were further diagnosed with BCR-ABL1 (Ph)-like subtype. Two patients had tyrosine kinase inhibitors (imatinib and dasatinib + imatinib) added to their chemotherapy regimens that, while producing initially encouraging results, ultimately did not prevent these individuals from succumbing to their disease. The clinical details of these cases may predict response to treatment with tyrosine kinase inhibitors and is the focus of an ongoing prospective clinical trial evaluating the efficacy of these drugs when treating young patients with high-risk and BCR-ABL1-like B-lymphoblastic leukemia (Clinicaltrials.gov Identifier: NCT02883049).",30.5,2678
+4,55593582,chr4,54727416,AAACCCATGTATGAAGTACAGTGGAAGGTT,,,5.0,2696
+9,21968055,chr9,21968056,,,,40.0,2704
+17,7578212,chr17,7674894,G,A,,0.0,2711
+7,55259437,chr7,55191744,G,T,,0.0,2741
+1,43803478,chr1,43337807,,,,0.0,2760
+X,15808595,chrX,15790472,,,,0.0,2761
+3,178922319,chr3,179204531,G,C,,0.0,2788
+3,178948139,chr3,179230351,T,C,,0.0,2789
+3,178948153,chr3,179230365,A,T,,0.0,2790
+3,10183866,chr3,10142182,A,G,,0.0,2818
+7,140453142,chr7,140753342,G,A,,7.5,2826
+3,10188271,chr3,10146587,A,G,,0.0,2866
+3,10191638,chr3,10149954,A,C,,0.0,2868
+3,10188215,chr3,10146531,A,T,,0.0,2877
+3,10183799,chr3,10142115,A,C,One similar submission at this exact genomic location has been entered into ClinVar (ClinVar ID: 633017 A>T).,0.0,2878
+3,10191499,chr3,10149815,G,T,,0.0,2880
+3,41266017,chr3,41224526,,,,55.0,2892
+1,97700408,chr1,97234852,,,,10.0,2893
+10,104857107,chr10,103097350,G,A,,13.0,2896
+10,104850483,chr10,103090726,G,A,,9.0,2897
+2,29415640,chr2,29192774,,,,0.0,2914
+18,60985598,chr18,63318365,C,A,,3.0,2960
+10,131265448,chr10,129467184,,,,0.0,2966
+3,178948091,chr3,179230303,G,A,,10.0,3001
+7,55249091,chr7,55181398,T,G,,0.0,3003
+7,55249077,chr7,55181384,T,A,,0.0,3004
+17,7577106,chr17,7673788,G,C,,0.0,3005
+3,10191546,chr3,10149862,T,C,"An entry at the same genomic location causing a different amino acid substitution (Clinvar ID: 625262; c.539T>G, I180S)",0.0,3012
+3,10191943,chr3,10150259,G,A,,0.0,3022
+18,60985545,chr18,63318312,G,C,,0.0,3031
+11,17741694,chr11,17720147,T,G,,65.0,3032
+3,10188286,chr3,10146602,C,T,,0.0,3040
+3,10183724,chr3,10142040,T,A,"Two clinvar entries at this same genomic location (Clinvar ID: 547829, 223160) with different base changes result in different amino acid changes (T>G = S65A) and T>C = S65P)",0.0,3048
+13,28602340,chr13,28028203,G,T,,0.0,3053
+18,60985514,chr18,63318281,C,A,,0.0,3060
+4,1806153,chr4,1804426,C,A,,0.0,3063
+3,10188239,chr3,10146555,C,T,,0.0,3066
+3,10188238,chr3,10146554,G,,,0.0,3068
+3,128198270,chr3,128479427,,,,0.0,3072
+18,60985590,chr18,63318357,A,T,,8.0,3082
+3,10183761,chr3,10142077,,TCT,,0.0,3096
+3,10191512,chr3,10149828,C,T,"Note that there is a different variant reported at this amino acid position of VHL in ClinVar: NM_000551.3(VHL):c.507A>C (p.Leu169=, L169L)(https://www.ncbi.nlm.nih.gov/clinvar/variation/238110/)",0.0,3097
+3,10188230,chr3,10146546,C,T,,0.0,3122
+3,10191542,chr3,10149858,G,A,,0.0,3123
+3,10183825,chr3,10142141,C,G,,0.0,3125
+3,10188311,chr3,10146627,A,C,,0.0,3130
+3,10188218,chr3,10146534,G,A,,0.0,3133
+3,10183643,chr3,10141959,T,C,,0.0,3135
+3,10183755,chr3,10142071,T,G,,0.0,3146
+3,10183878,chr3,10142194,G,A,,0.0,3161
+3,10183681,chr3,10141997,C,G,Note that there is a different variant reported at this amino acid position of VHL in ClinVar: NM_000551.3(VHL):c.150C>A (p.Ala50=; A50=)(https://www.ncbi.nlm.nih.gov/clinvar/variation/238101/),0.0,3173
+3,10191473,chr3,10149789,T,C,,0.0,3182
+3,10191474,chr3,10149790,A,C,Clinvar entry at same genomic location with different base and amino acid change (Clinvar ID 43600; Y156C c.467A>G),0.0,3193
+3,10188222,chr3,10146538,C,T,,0.0,3194
+3,10188296,chr3,10146612,,T,,0.0,3195
+3,10188287,chr3,10146603,G,C,,0.0,3197
+3,10191494,chr3,10149810,C,A,Clinvar entry at same genomic location with different amino acid change (Clinvar ID 480772; c.487C>T L163F),0.0,3198
+12,25362365,chr12,25209431,,,,2.0,3200
+X,76760356,chrX,77504878,,,,15.0,3203
+3,178866311,chr3,179148523,,,,0.0,3222
+1,156084498,chr1,156114707,,,,18.5,3225
+3,10188215,chr3,10146531,,AC,,7.5,3244
+3,10183819,chr3,10142135,GCC,,,7.5,3246
+3,10188285,chr3,10146601,ACGGACAGCCT,,,7.5,3247
+2,109336063,chr2,108719607,,,"The RANBP2-ABL1 fusion is composed of part of the RANBP2 (RAN Binding Protein 2) gene at the 5’ end (N-terminus of the fusion protein), and part of the ABL1 (ABL proto-oncogene 1, non-receptor tyrosine kinase) gene at the 3’ end (C-terminus of the fusion protein). ABL1 is considered as the key partner that defines the functional/oncogenic effects of the fusion protein. The published breakpoint joins exon 18 of RANBP2 to exon 2 of ABL1 (RANBP2-ABL1 18-2). The fusion is the result of a reciprocal translocation t(2;9)(p12.3;q34.12) and has been identified by FISH/karyotype and RNA sequencing. The fusion is in-frame and results in production of an abnormal hybrid protein, includes the leucine zipper of RANBP2 and the tyrosine kinase of ABL1, which is thought to upregulate the mitogen-activate protein kinase (MAPK) and phosphoinositide 3-kinase (PI3K) pathways. Specifically, the inclusion of the tyrosine kinase domain may affect functionality and offer a target for therapeutic inhibition. Clinical significance: The RANBP2-ABL1 fusion has been documented in several juvenile and young adult patients with B-lymphoblastic leukemia, some of which were further classified as BCR-ABL1 (Ph)-like subtype. Most of the documented patients were treated with a tyrosine kinase inhibitor (specifically dasatinib) added to their chemotherapy regimens, but they eventually experienced relapse and succumbed to their disease. The use of tyrosine kinase inhibitors is the focus of an ongoing prospective clinical trial evaluating the efficacy of these drugs when treating young patients with high-risk and BCR-ABL1-like B-lymphoblastic leukemia (Clinicaltrials.gov Identifier: NCT02883049).",10.0,3268
+10,80828792,chr10,79069035,,,"The ZMIZ1-ABL1 fusion is composed of part of the ZMIZ1 (Zinc Finger MIZ-Type Containing 1) gene at the 5’ end (N-terminus of the fusion protein), and part of the ABL1 (ABL proto-oncogene 1, non-receptor tyrosine kinase) gene at the 3’ end (C-terminus of the fusion protein). ABL1 is considered as the key partner that defines the functional/oncogenic effects of the fusion protein. The most commonly published breakpoint joins exon 18 of ZMIZ1 to exon 2 of ABL1 (ZMIZ1-ABL1 18-2). The fusion is the result of a reciprocal translocation t(9;10)(q34.12;q22.3) and has been identified by FISH/karyotype, RT-PCR, and RNA sequencing. The fusion is in-frame and results in production of an abnormal hybrid protein, which contains one of the proline-rich domains of ZMIZ1 and the ABL1 tyrosine kinase domain. Similar to other oncogenic fusion proteins, the proline-rich domain of ZMIZ1 is involved in protein-protein interactions, and therefore the fusion may encode a constitutively activated tyrosine kinase that upregulates the mitogen-activate protein kinase (MAPK) and phosphoinositide 3-kinase (PI3K) pathways. Patients harboring the ZMIZ1-ABL1 fusion are hypothesized to be eligible for imatinib therapy.",32.5,3269
+17,29562747,chr17,31235729,G,A,,0.0,3292
+3,178948044,chr3,179230256,A,G,,0.0,3293
+X,76760356,chrX,77504878,,,,0.0,3309
+7,55220274,chr7,55152581,C,T,,0.0,3344
+7,55211097,chr7,55143404,G,A,,0.0,3464
+7,55214368,chr7,55146675,G,A,,0.0,3470
+7,55210077,chr7,55142384,G,A,,0.0,3488
+7,55233037,chr7,55165344,C,T,,0.0,3489
+7,55241675,chr7,55173982,A,G,,0.0,3490
+17,17119708,chr17,17216394,,G,,2.5,3727

@@ -338,6 +338,7 @@ def improve(
     min_count_hotspot=5,
     oncogene_list=[],
     tumor_suppressor_list=[],
+    civic_df=None,
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
@@ -353,6 +354,7 @@ def improve(
         replace_empty: dict(str: str) values representing empty fields to replace with something else
         split_multiallelic: bool if True, will split multiallelic variants into separate rows
         min_count_hotspot: int minimum number of mutations in cosmic to consider the loci a hotspot
+        civic_df (pd.DataFrame): dataframe containing civic annotations
     
     Returns:
         the imrpoved vcf
@@ -417,6 +419,10 @@ def improve(
     # replace empty characters:
     print("replacing empty characters:")
     vcf = vcf.replace(replace_empty)
+
+    print("re-annotating CIVIC using static dataframe:")
+    vcf = civic_df.merge(vcf, on=['chrom','pos', 'ref', 'alt'], how='right')
+    vcf = vcf.drop(columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]).rename(columns={"description": "oc_civic__description", "civic_actionability_score": "oc_civic__clinical_a_score", "civic_id": "oc_civic__id"})
 
     print("making new annotations")
     # creating merged annotations
@@ -556,7 +562,7 @@ def improve(
     if "oc_civic__clinical_a_score" in vcf.columns.tolist():
         if "driver" not in vcf.columns.tolist():
             vcf["driver"] = ""
-        loc = (vcf["oc_civic__clinical_a_score"] != "") & (vcf["multiallelic"] != "Y")
+        loc = (~vcf["oc_civic__clinical_a_score"].isnull()) & (vcf["multiallelic"] != "Y")
         subvcf = vcf.loc[loc][["oc_civic__clinical_a_score"]]
         vcf.loc[
             subvcf[subvcf["oc_civic__clinical_a_score"].astype(float) >= 8].index,
@@ -565,7 +571,7 @@ def improve(
 
         if "likely_driver" not in vcf.columns.tolist():
             vcf["likely_driver"] = ""
-        loc = vcf["oc_civic__clinical_a_score"] != ""
+        loc = (~vcf["oc_civic__clinical_a_score"].isnull())
         vcf.loc[loc, "likely_driver"] = "Y"
 
     # lof more
