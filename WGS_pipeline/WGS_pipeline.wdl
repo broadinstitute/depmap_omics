@@ -1,7 +1,7 @@
 version 1.0
 
 import "cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample
-import "Manta_SomaticSV.wdl" as Manta_SomaticSV
+import "Manta_SomaticSV_v1_0.wdl" as Manta_SomaticSV
 import "manta_annot.wdl" as manta_annot
 import "mutect2_v4.2.6.1.wdl" as mutect2
 import "bcftools.wdl" as setGT
