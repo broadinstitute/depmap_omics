@@ -67,9 +67,9 @@ class CravatAnnotator(BaseAnnotator):
         pos = input_data["pos"]
         alt = input_data["alt_base"]
 
-        if "coding" in input_data:
-            if input_data["coding"] != "Y":
-                return out
+#         if "coding" in input_data:
+#             if input_data["coding"] != "Y":
+#                 return out
         key = str(chrom) + ":" + str(pos) + ":" + alt
         # print(self.driverset.get(key, 0))
         if key in self.driverset:
