@@ -1,6 +1,6 @@
 import "BamToUnmappedRGBams.wdl" as BamToUnmappedRGBams
 import "PreProcessingForVariantDiscovery_GATK4.wdl" as PreProcessingForVariantDiscovery_GATK4
-#import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
+import "CNV_Somatic_Workflow_on_Sample.wdl" as CNV_Somatic_Workflow_on_Sample
 # import "cnn-variant-filter.wdl" as cnn_variant_filter
 # import "Manta_SomaticSV.wdl" as Manta_SomaticSV
 # import "../mutation_pipeline/CGA_WES_CCLE_Characterization_Pipeline_v0.1_Jul2019_copy.wdl" as CGA_WES_CCLE_Characterization_Pipeline_v0
@@ -96,16 +96,16 @@ workflow WGS_pipeline {
 			preemptible_tries=preemptible_tries
 	}
 
-	# call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
-	# 	input:
-	# 		common_sites=common_sites,
-	# 		intervals=intervals,
-	# 		ref_fasta=ref_fasta,
-	# 		ref_fasta_dict=ref_dict,
-	# 		ref_fasta_fai=ref_fasta_index,
-	# 		tumor_bam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
-	# 		tumor_bam_idx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
-	# }
+	call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
+		input:
+			common_sites=common_sites,
+			intervals=intervals,
+			ref_fasta=ref_fasta,
+			ref_fasta_dict=ref_dict,
+			ref_fasta_fai=ref_fasta_index,
+			tumor_bam=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam,
+			tumor_bam_idx=PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
+	}
 
 	#call cnn_variant_filter.Cram2FilteredVcf as Cram2FilteredVcf {
 	#	input:
@@ -159,39 +159,39 @@ workflow WGS_pipeline {
 		File analysis_ready_bam_index = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_index
 		File analysis_ready_bam_md5 = PreProcessingForVariantDiscovery_GATK4.analysis_ready_bam_md5
 		#CNVSomaticPairWorkflow
-		# File preprocessed_intervals = CNVSomaticPairWorkflow.preprocessed_intervals
-		# File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor
-		# File read_counts_tumor = CNVSomaticPairWorkflow.read_counts_tumor
-		# File allelic_counts_entity_id_tumor = CNVSomaticPairWorkflow.allelic_counts_entity_id_tumor
-		# File allelic_counts_tumor = CNVSomaticPairWorkflow.allelic_counts_tumor
-		# File denoised_copy_ratios_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_tumor
-		# File standardized_copy_ratios_tumor = CNVSomaticPairWorkflow.standardized_copy_ratios_tumor
-		# File het_allelic_counts_tumor = CNVSomaticPairWorkflow.het_allelic_counts_tumor
-		# File normal_het_allelic_counts_tumor = CNVSomaticPairWorkflow.normal_het_allelic_counts_tumor
-		# File copy_ratio_only_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_only_segments_tumor
-		# File copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_legacy_segments_tumor
-		# File allele_fraction_legacy_segments_tumor = CNVSomaticPairWorkflow.allele_fraction_legacy_segments_tumor
-		# File modeled_segments_begin_tumor = CNVSomaticPairWorkflow.modeled_segments_begin_tumor
-		# File copy_ratio_parameters_begin_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_begin_tumor
-		# File allele_fraction_parameters_begin_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_begin_tumor
-		# File modeled_segments_tumor = CNVSomaticPairWorkflow.modeled_segments_tumor
-		# File copy_ratio_parameters_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_tumor
-		# File allele_fraction_parameters_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_tumor
-		# File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
-		# File called_copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_legacy_segments_tumor
-		# File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
-		# File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
-		# File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
-		# Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
-		# File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
-		# Float denoised_MAD_value_tumor = CNVSomaticPairWorkflow.denoised_MAD_value_tumor
-		# File delta_MAD_tumor = CNVSomaticPairWorkflow.delta_MAD_tumor
-		# Float delta_MAD_value_tumor = CNVSomaticPairWorkflow.delta_MAD_value_tumor
-		# File scaled_delta_MAD_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_tumor
-		# Float scaled_delta_MAD_value_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_value_tumor
-		# File modeled_segments_plot_tumor = CNVSomaticPairWorkflow.modeled_segments_plot_tumor
-		# File oncotated_called_file_tumor = CNVSomaticPairWorkflow.oncotated_called_file_tumor
-		# File oncotated_called_gene_list_file_tumor = CNVSomaticPairWorkflow.oncotated_called_gene_list_file_tumor
+		File preprocessed_intervals = CNVSomaticPairWorkflow.preprocessed_intervals
+		File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor
+		File read_counts_tumor = CNVSomaticPairWorkflow.read_counts_tumor
+		File allelic_counts_entity_id_tumor = CNVSomaticPairWorkflow.allelic_counts_entity_id_tumor
+		File allelic_counts_tumor = CNVSomaticPairWorkflow.allelic_counts_tumor
+		File denoised_copy_ratios_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_tumor
+		File standardized_copy_ratios_tumor = CNVSomaticPairWorkflow.standardized_copy_ratios_tumor
+		File het_allelic_counts_tumor = CNVSomaticPairWorkflow.het_allelic_counts_tumor
+		File normal_het_allelic_counts_tumor = CNVSomaticPairWorkflow.normal_het_allelic_counts_tumor
+		File copy_ratio_only_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_only_segments_tumor
+		File copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_legacy_segments_tumor
+		File allele_fraction_legacy_segments_tumor = CNVSomaticPairWorkflow.allele_fraction_legacy_segments_tumor
+		File modeled_segments_begin_tumor = CNVSomaticPairWorkflow.modeled_segments_begin_tumor
+		File copy_ratio_parameters_begin_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_begin_tumor
+		File allele_fraction_parameters_begin_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_begin_tumor
+		File modeled_segments_tumor = CNVSomaticPairWorkflow.modeled_segments_tumor
+		File copy_ratio_parameters_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_tumor
+		File allele_fraction_parameters_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_tumor
+		File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
+		File called_copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_legacy_segments_tumor
+		File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
+		File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
+		File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
+		Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
+		File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
+		Float denoised_MAD_value_tumor = CNVSomaticPairWorkflow.denoised_MAD_value_tumor
+		File delta_MAD_tumor = CNVSomaticPairWorkflow.delta_MAD_tumor
+		Float delta_MAD_value_tumor = CNVSomaticPairWorkflow.delta_MAD_value_tumor
+		File scaled_delta_MAD_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_tumor
+		Float scaled_delta_MAD_value_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_value_tumor
+		File modeled_segments_plot_tumor = CNVSomaticPairWorkflow.modeled_segments_plot_tumor
+		File oncotated_called_file_tumor = CNVSomaticPairWorkflow.oncotated_called_file_tumor
+		File oncotated_called_gene_list_file_tumor = CNVSomaticPairWorkflow.oncotated_called_gene_list_file_tumor
 		# #cnn-variant-filter
 		# #File cnn_filtered_vcf = Cram2FilteredVcf.cnn_filtered_vcf
 		# #File cnn_filtered_vcf_index= Cram2FilteredVcf.cnn_filtered_vcf_index
