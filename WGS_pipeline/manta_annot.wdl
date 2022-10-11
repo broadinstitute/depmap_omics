@@ -24,8 +24,8 @@ task manta_annotator {
         File sv
         File exon_annot
 
-        Int mem_size = 2
-        Int disk_size = 20
+        Int mem_size = 4
+        Int disk_size = 30
         Int cores = 8
         String docker_image="jkobject/manta_annot"
         Int preemptible_tries = 3
