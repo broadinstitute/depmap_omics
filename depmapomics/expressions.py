@@ -132,10 +132,10 @@ def loadFromRSEMaggregate(
         todrop (list[str], optional): list of samples to drop. Defaults to [].
         filenames (list[str], optional): the filenames to load. Defaults to RSEMFILENAME.
         sampleset (str, optional): the sample set to load. Defaults to 'all'.
-        renamingFunc (function, optional): the function to rename the samples 
+        renamingFunc (function, optional): the function to rename the samples
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (no interaction with terra)
-    
+
     Returns:
         dict(str: pd.df): the loaded dataframes
         dict: the renaming dict used to rename the dfs columns
@@ -241,9 +241,9 @@ def extractProtCod(
 
     Args:
         files (dict(str: pd.dfs)): the rsem transcripts dfs to subset samples x genes
-        mybiomart (pd.df): the biomart dataframe should contain the following columns: 
+        mybiomart (pd.df): the biomart dataframe should contain the following columns:
         'ensembl_gene_id', 'entrezgene_id', 'gene_biotype'
-        protcod_rename (dict(str, str)): the protein coding gene renaming dict 
+        protcod_rename (dict(str, str)): the protein coding gene renaming dict
         (here we expect a dict of ensembl transcript ids: gene names)
         filenames (list[str], optional): the dict dfs to look at. Defaults to RSEMFILENAME_GENE.
         rep (tuple, optional): how to rename the protein gene subseted df copies in the dict. Defaults to ('genes', 'proteincoding_genes').
@@ -401,9 +401,9 @@ async def postProcess(
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level 
+        geneLevelCols (list, optional): the columns that contain the gene level
         expression data in the workspace. Defaults to RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript 
+        trancriptLevelCols (list, optional): the columns that contain the transcript
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
@@ -412,7 +412,7 @@ async def postProcess(
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes 
+        dropNonMatching (bool, optional): whether to drop the non matching genes
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
     """

@@ -53,7 +53,7 @@ def data_stack(request):
 
 @pytest.fixture(scope="function")
 def CCLE_gene_cn_with_source_change():
-    CCLE_gene_cn_12, cols = get_data_stack("CCLE_gene_cn")
+    CCLE_gene_cn_12, cols = get_data_stack("OmicsCNGene")
 
     names = [PREV_RELEASE["name"], NEW_RELEASE["name"]]
 
@@ -83,7 +83,7 @@ def CCLE_gene_cn_with_source_change():
 
 
 @pytest.mark.skipif(
-    [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "CCLE_gene_cn"] == [],
+    [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "OmicsCNGene"] == [],
     reason="skipped by user",
 )
 @pytest.mark.plot

@@ -61,17 +61,33 @@ VIRTUAL_RELEASES = {
         "dmc": taiga_latest_path("dmc-22q2dryrun-0f8d"),
         "public": taiga_latest_path("public-22q2dryrun-e259"),
     },
+    "22Q2renamed": {
+        "internal": taiga_latest_path("internal-22q2-08ee"),
+    },
+    "22Q4": {
+        "internal": taiga_latest_path("internal-22q4-56d4"),
+        "dmc": taiga_latest_path("dmc-22q4-a73a"),
+        "public": taiga_latest_path("public-22q4-6837"),
+    },
 }  # release ids on taiga
 
-PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
+PORTALS = ["dmc", "public", "internal"]  # used for 'bookkeeping' markers
 PORTAL = "internal"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "22Q2"
-NEW_QUARTER = "22Q2dryrun"
+PREV_QUARTER = "22Q2renamed"
+NEW_QUARTER = "22Q4"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
 # NEW_RELEASE = TENTATIVE_VIRTUAL
 PORTALS = [PORTAL]
+
+LINES_TO_DROP = {"DNA": set([]), "RNA": set([])}
+LINES_TO_RELEASE = {}
+LINES_TO_RELEASE["public"] = set([])
+LINES_TO_RELEASE["dmc"] = set([])
+LINES_TO_RELEASE["internal"] = set([])
+IGNORE_FAILED_TO_RELEASE = []
+
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
@@ -94,21 +110,21 @@ MUTATIONS_MERGE_COLS = [
 
 # if there are new files that were added in the previous release, add them here
 FILES_RELEASED_BEFORE = [
-    "CCLE_expression",
+    "OmicsExpressionProteinCodingGenesTPMLogp1",
     "CCLE_expression_proteincoding_genes_expected_count",
     "CCLE_RNAseq_transcripts",
     "CCLE_expression_transcripts_expected_count",
     "CCLE_expression_full",
     "CCLE_RNAseq_reads",
-    "CCLE_fusions",
+    "OmicsFusionFiltered",
     "CCLE_fusions_unfiltered",
-    "CCLE_gene_cn",
+    "OmicsCNGene",
     "CCLE_segment_cn",
     "CCLE_mutations",
 ]
 
 # correlation thresholds above which we consider two releases as 'similar'
-CORRELATION_THRESHOLDS = {"CCLE_gene_cn": 0.99, "all_expressions": 0.98}
+CORRELATION_THRESHOLDS = {"OmicsCNGene": 0.99, "all_expressions": 0.98}
 
 SKIP_ARXSPAN_COMPARISON = (
     True  # set to False if you want to test whether some arxspans were added/removed
@@ -120,111 +136,111 @@ PLOTS_OUTPUT_FILENAME_PREFIX = "/tmp/plots_"  # location/prefix for saving outpu
 FILE_ATTRIBUTES = [
     # all model level
     {
-        "file": "CCLE_expression",
+        "file": "OmicsExpressionProteinCodingGenesTPMLogp1",
         "ismatrix": True,
         "hasNA": False,
         "gene_id": "entrez",
         "omicssource": "RNA",
     },
+    # {
+    #     "file": "CCLE_expression_proteincoding_genes_expected_count",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "entrez",
+    #     "omicssource": "RNA",
+    # },
+    # {
+    #     "file": "CCLE_RNAseq_transcripts",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "enst",
+    #     "omicssource": "RNA",
+    # },
+    # {
+    #     "file": "CCLE_expression_transcripts_expected_count",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "enst",
+    #     "omicssource": "RNA",
+    # },
+    # {
+    #     "file": "CCLE_expression_full",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "ensg",
+    #     "omicssource": "RNA",
+    # },
+    # {
+    #     "file": "CCLE_RNAseq_reads",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "ensg",
+    #     "omicssource": "RNA",
+    # },
     {
-        "file": "CCLE_expression_proteincoding_genes_expected_count",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_RNAseq_transcripts",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "enst",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_expression_transcripts_expected_count",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "enst",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_expression_full",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "ensg",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_RNAseq_reads",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "ensg",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_fusions",
+        "file": "OmicsFusionFiltered",
         "ismatrix": False,
         "omicssource": "RNA",
         "merge_cols": FUSIONS_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
     },
-    {
-        "file": "CCLE_fusions_unfiltered",
-        "ismatrix": False,
-        "omicssource": "RNA",
-        "merge_cols": FUSIONS_MERGE_COLS,
-        "expected_changed_cols": ["CCLE_count"],
-    },
+    # {
+    #     "file": "CCLE_fusions_unfiltered",
+    #     "ismatrix": False,
+    #     "omicssource": "RNA",
+    #     "merge_cols": FUSIONS_MERGE_COLS,
+    #     "expected_changed_cols": ["CCLE_count"],
+    # },
     # {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'hasNA': False,'omicssource':'RNA', 'gene_id': None},
     {
-        "file": "CCLE_gene_cn",
+        "file": "OmicsCNGene",
         "ismatrix": True,
         "hasNA": True,
         "gene_id": "entrez",
         "omicssource": "DNA",
     },
-    {
-        "file": "CCLE_segment_cn",
-        "ismatrix": False,
-        "omicssource": "DNA",
-        "merge_cols": SEGMENT_CN_MERGE_COLS,
-        "expected_changed_cols": [],
-    },
-    {
-        "file": "CCLE_mutations",
-        "ismatrix": False,
-        "omicssource": "DNA",
-        "merge_cols": MUTATIONS_MERGE_COLS,
-        "expected_changed_cols": [],
-    },
-    {
-        "file": "CCLE_mutations_bool_damaging",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "DNA",
-    },
-    {
-        "file": "CCLE_mutations_bool_hotspot",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "DNA",
-    },
-    {
-        "file": "CCLE_mutations_bool_otherconserving",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "DNA",
-    },
-    {
-        "file": "CCLE_mutations_bool_nonconserving",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "DNA",
-    },
+    # {
+    #     "file": "CCLE_segment_cn",
+    #     "ismatrix": False,
+    #     "omicssource": "DNA",
+    #     "merge_cols": SEGMENT_CN_MERGE_COLS,
+    #     "expected_changed_cols": [],
+    # },
+    # {
+    #     "file": "CCLE_mutations",
+    #     "ismatrix": False,
+    #     "omicssource": "DNA",
+    #     "merge_cols": MUTATIONS_MERGE_COLS,
+    #     "expected_changed_cols": [],
+    # },
+    # {
+    #     "file": "CCLE_mutations_bool_damaging",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "entrez",
+    #     "omicssource": "DNA",
+    # },
+    # {
+    #     "file": "CCLE_mutations_bool_hotspot",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "entrez",
+    #     "omicssource": "DNA",
+    # },
+    # {
+    #     "file": "CCLE_mutations_bool_otherconserving",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "entrez",
+    #     "omicssource": "DNA",
+    # },
+    # {
+    #     "file": "CCLE_mutations_bool_nonconserving",
+    #     "ismatrix": True,
+    #     "hasNA": False,
+    #     "gene_id": "entrez",
+    #     "omicssource": "DNA",
+    # },
 ]
 
 # comment/uncomment to use all/subset of files for testing
@@ -243,7 +259,7 @@ FILE_ATTRIBUTES = [
 #     for x in FILE_ATTRIBUTES
 #     if (x["file"] in ["CCLE_fusions", "CCLE_fusions_unfiltered"])
 # ]
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "CCLE_expression")]
+FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "OmicsFusionFiltered")]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = "mutations-latest-ed72"

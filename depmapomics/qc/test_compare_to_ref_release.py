@@ -107,8 +107,8 @@ def test_compare_column_names(data):
 PARAMS_matrix_correlations = [
     (
         x["file"],
-        CORRELATION_THRESHOLDS["CCLE_gene_cn"]
-        if (x["file"] == "CCLE_gene_cn")
+        CORRELATION_THRESHOLDS["OmicsCNGene"]
+        if (x["file"] == "OmicsCNGene")
         else CORRELATION_THRESHOLDS["all_expressions"],
     )
     for x in FILE_ATTRIBUTES_PAIRED
