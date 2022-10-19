@@ -91,7 +91,7 @@ def makeMatrices(
     civic_col=CIVIC_SCORE_COL,
     hess_col=HESS_COL,
 ):
-    """ generates genotyped hotspot, driver and damaging mutation matrices
+    """generates genotyped hotspot, driver and damaging mutation matrices
 
     Returns:
         hotspot_mat (pd.DataFrame): genotyped hotspot mutation matrix. 0 == not damaging, 1 == heterozygous, 2 == homozygous
@@ -110,7 +110,7 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[subset_maf[hotspot_col] == "Y"]
+        hotspot = subset_maf[subset_maf[hess_col] == "Y"]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
@@ -120,7 +120,7 @@ def makeMatrices(
         hotspot_mat.loc[sample, hethotspot] = "1"
         # damaging
         lof = subset_maf[
-            (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col])
+            (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col] == "Y")
         ]
         homlof = set(lof[lof["GT"] == "1|1"][hugo_col])
         for dup in h.dups(lof[hugo_col]):
@@ -131,7 +131,8 @@ def makeMatrices(
         lof_mat.loc[sample, hetlof] = "1"
         # driver
         driver = subset_maf[
-            (subset_maf[civic_col] != "") | (subset_maf[hess_col] == "Y")
+            ((~subset_maf[civic_col].isnull()) & (subset_maf[civic_col] != 0))
+            | (subset_maf[hess_col] == "Y")
         ]
         homdriv = set(driver[driver["GT"] == "1|1"][hugo_col])
         for dup in h.dups(driver[hugo_col]):
@@ -143,17 +144,17 @@ def makeMatrices(
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
     lof_mat = lof_mat.dropna(axis="columns", how="all")
     driver_mat = driver_mat.dropna(axis="columns", how="all")
-    hotspot_mat = hotspot_mat.fillna(0)
-    lof_mat = lof_mat.fillna(0)
-    driver_mat = driver_mat.fillna(0)
+    hotspot_mat = hotspot_mat.fillna(0).astype(int)
+    lof_mat = lof_mat.fillna(0).astype(int)
+    driver_mat = driver_mat.fillna(0).astype(int)
 
     return hotspot_mat, lof_mat, driver_mat
 
 
 def managingDuplicates(samples, failed, datatype, tracker):
     """
-    managingDuplicates manages the duplicates in the samples 
-    
+    managingDuplicates manages the duplicates in the samples
+
     by only keeping the ones that are not old and did not fail QC
 
     Args:
@@ -189,7 +190,10 @@ def managingDuplicates(samples, failed, datatype, tracker):
 
 
 def aggregateMAFs(
-    wm, sampleset="all", mafcol=MAF_COL, keep_cols=MUTCOL_DEPMAP,
+    wm,
+    sampleset="all",
+    mafcol=MAF_COL,
+    keep_cols=MUTCOL_DEPMAP,
 ):
     """aggregate MAF files from terra
 
@@ -198,7 +202,7 @@ def aggregateMAFs(
         sampleset (str, optional): the sample set to use. Defaults to 'all'.
         mutCol (str, optional): the MAF column name. Defaults to "somatic_maf".
         keep_cols (list, optional): which columns to keep in the aggregate MAF file. Defaults to MUTCOL_DEPMAP
-        
+
     Returns:
         aggregated_maf (df.DataFrame): aggregated MAF
     """
@@ -244,7 +248,7 @@ def aggregateSV(
         save_output (str, optional): whether to save our data. Defaults to "".
 
     Returns:
-        
+
     """
     print("aggregating SVs")
     sample_table = wm.get_samples()
@@ -254,7 +258,7 @@ def aggregateSV(
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding sv: ", na_samples)
     all_svs = []
-    for name, row in sample_table.iterrows():
+    for name, row in sample_table_valid.iterrows():
         sv = pd.read_csv(row[sv_colname], sep="\t")
         sv[SAMPLEID] = name
         all_svs.append(sv)
@@ -274,7 +278,7 @@ def postProcess(
     sv_filename=SV_FILENAME,
     sv_renaming=SV_COLRENAME,
 ):
-    """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations, 
+    """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
     and aggregate structural variants (SVs)
 
     Args:
@@ -284,7 +288,7 @@ def postProcess(
         save_output (str, optional): the output file name to save results into. Defaults to "".
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
         rename_cols (dict, optional): the rename dict for the columns.
-            Defaults to {"i_ExAC_AF": "ExAC_AF", 
+            Defaults to {"i_ExAC_AF": "ExAC_AF",
                         "Tumor_Sample_Barcode": SAMPLEID,
                         "Tumor_Seq_Allele2": "Tumor_Allele"}.
 
@@ -296,13 +300,16 @@ def postProcess(
     # if save_output:
     # terra.saveConfigs(refworkspace, save_output + 'config/')
     mutations = aggregateMAFs(
-        wm, sampleset=sampleset, mafcol=mafcol, keep_cols=MUTCOL_DEPMAP,
+        wm,
+        sampleset=sampleset,
+        mafcol=mafcol,
+        keep_cols=MUTCOL_DEPMAP,
     )
 
-    print("annotating likely immortalized status")
-    mutations = annotateLikelyImmortalized(
-        mutations, hotspotcol="cosmic_hotspot", max_recurrence=IMMORTALIZED_THR,
-    )
+    # print("annotating likely immortalized status")
+    # mutations = annotateLikelyImmortalized(
+    #     mutations, hotspotcol="cosmic_hotspot", max_recurrence=IMMORTALIZED_THR,
+    # )
 
     print("saving somatic mutations (all)")
     mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
@@ -358,7 +365,7 @@ def generateGermlineMatrix(
         bed_location (str, optional): location of the guides bed file.
         vcf_colname (str, optional): vcf column name on terra.
         cores (int, optional): number of cores in parallel processing.
-    
+
     Returns:
         sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
     """
@@ -421,13 +428,17 @@ def generateGermlineMatrix(
 
     print("running bcftools index and query")
     h.parrun(cmds, cores=cores)
+    print("finished running bcftools index and query")
 
     pool = multiprocessing.Pool(cores)
     binary_matrices = dict()
     for lib, fn in bed_locations.items():
         print("mapping to library: ", lib)
         guides_bed = pd.read_csv(
-            fn, sep="\t", header=None, names=["chrom", "start", "end", "foldchange"],
+            fn,
+            sep="\t",
+            header=None,
+            names=["chrom", "start", "end", "foldchange"],
         )
         res = pool.starmap(
             mapBed,
@@ -446,7 +457,7 @@ def generateGermlineMatrix(
                 sorted_guides_bed[name] = val
         sorted_guides_bed = sorted_guides_bed.rename(columns={"foldchange": "sgRNA"})
         print("saving binary matrix for library: ", lib)
-        sorted_guides_bed.to_csv(savedir + lib + "_" + filename)
+        sorted_guides_bed.to_csv(savedir + lib + "_" + filename, index=False)
         binary_matrices[lib] = sorted_guides_bed
 
     return binary_matrices

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-SAMPLESETNAME = "22Q2test"
+SAMPLESETNAME = "22Q4"
 RELEASE = SAMPLESETNAME.lower()
 
 ### GCP credentials
@@ -74,7 +74,7 @@ EXTRACT_DEFAULTS = {
     "from_arxspan_id": "individual_alias",
     "ref_id": "sample_id",
     "PDO_id_terra": "PDO",
-    "PDO_id_gumbo": "PDO-ID",
+    "PDO_id_gumbo": "PdoId",
     "update_time": "update_time",
     "from_patient_id": "individual_alias",
     "patient_id": "participant_id",
@@ -90,7 +90,7 @@ EXTRACT_DEFAULTS = {
     "legacy_hash": "legacy_crc32c_hash",
     "mean_depth": "mean_depth",
     "root_sample_id": "root_sample_id",
-    "sm_id": "SM-ID",
+    "sm_id": "SmId",
     "profile_id": "ProfileID",
     "expected_type": "expected_type",
 }
@@ -99,7 +99,7 @@ EXTRACT_DEFAULTS = {
 MINSIZES = {
     "rna": 2_000_000_000,
     "wes": 3_000_000_000,
-    "wgs": 50_000_000_000,
+    "wgs": 10_000_000_000,
 }
 
 # known cell lines that are from the same patient (not called?)
@@ -167,7 +167,7 @@ WORKING_DIR = "output/"
 
 PREV_VIRTUAL = {}
 
-DATASETS = ["internal", "ibm", "dmc", "public"]
+DATASETS = ["internal", "dmc", "public"]
 RUN_NOTEBOOKS = ["WGS_CCLE.ipynb", "RNA_CCLE.ipynb"]
 # 20Q3
 # PREV_VIRTUAL={}
@@ -261,7 +261,7 @@ GUIDESBED = {
     "humagne": "data/humagne_guides.bed",
     "ky": "data/ky_score_guides.bed",
 }
-VCFCOLNAME = "cnn_filtered_vcf"
+VCFCOLNAME = "mutect2_filtered_vcf"
 
 ############## CN
 
@@ -450,7 +450,7 @@ MUTCOL_DEPMAP = {
     "issues": "Issues",
     "gc_content": "GcContent",
     "lineage_association": "LineageAssociation",
-    "achilles_top_genes": "AchillesTopGenes",
+    # "achilles_top_genes": "AchillesTopGenes",
     "cancer_molecular_genetics": "CancerMolecularGenetics",
     "ccle_deleterious": "CCLEDeleterious",
     "structural_relation": "StructuralRelation",
@@ -788,7 +788,7 @@ VIRTUAL_FILENAMES_TABLE_CN_MODEL = {}
 
 VIRTUAL_FILENAMES_TABLE_MUT_MODEL = {
     "somaticMutations_profile": "OmicsSomaticMutations",
-    # "structuralVariants_profile": "OmicsStructuralVariants",
+    "structuralVariants_profile": "OmicsStructuralVariants",
 }
 
 VIRTUAL_FILENAMES_GUIDEMUT = {
@@ -802,7 +802,7 @@ VIRTUAL_FILENAMES_GUIDEMUT = {
 VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
     "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
     "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
-    # "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
+    "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
@@ -825,5 +825,5 @@ VIRTUAL_FILENAMES_TABLE_CN_PR = {
 
 VIRTUAL_FILENAMES_TABLE_MUT_PR = {
     "somaticMutations_profile": "OmicsSomaticMutationsProfile",
-    # "structuralVariants_profile": "OmicsStructuralVariantsProfile",
+    "structuralVariants_profile": "OmicsStructuralVariantsProfile",
 }

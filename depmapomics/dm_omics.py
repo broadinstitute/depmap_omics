@@ -1,6 +1,7 @@
 import os.path
 import dalmatian as dm
 import pandas as pd
+import numpy as np
 
 from genepy.utils import helper as h
 from genepy import mutations as mut
@@ -45,15 +46,15 @@ async def expressionPostProcessing(
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level 
+        geneLevelCols (list, optional): the columns that contain the gene level
         expression data in the workspace. Defaults to RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript 
+        trancriptLevelCols (list, optional): the columns that contain the transcript
         level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes 
+        dropNonMatching (bool, optional): whether to drop the non matching genes
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
         taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
@@ -101,7 +102,6 @@ async def expressionPostProcessing(
     print("updating the tracker")
 
     track.updateTrackerRNA(
-        set(renaming.keys()) - set(["transcript_id(s)"]),
         failed,
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
@@ -109,12 +109,12 @@ async def expressionPostProcessing(
         refworkspace,
         samplesinset=samplesinset,
         starlogs=starlogs,
-        dry_run=True,
+        dry_run=dry_run,
         newgs=None,
     )
 
     # subset and rename, include all PRs that have associated CDS-ids
-    pr_table = mytracker.update_pr_from_seq()
+    pr_table = mytracker.update_pr_from_seq(["rna"])
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
@@ -146,6 +146,12 @@ async def expressionPostProcessing(
                 {
                     "path": folder + "genes_expected_count.csv",
                     "name": "genes_expectedCount_withReplicates",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_tpm_logp1.csv",
+                    "name": "proteinCoding_genes_tpm_logp1_withReplicates",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
@@ -235,7 +241,7 @@ async def fusionPostProcessing(
         fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
         taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
         dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
-    
+
     Returns:
         (pd.df): fusion dataframe
         (pd.df): filtered fusion dataframe
@@ -255,7 +261,10 @@ async def fusionPostProcessing(
     folder = folder + sampleset + "/"
 
     fusions, fusions_filtered = fusion.postProcess(
-        refworkspace, todrop=previousQCfail, save_output=folder, **kwargs,
+        refworkspace,
+        todrop=previousQCfail,
+        save_output=folder,
+        **kwargs,
     )
 
     # subset, rename from seqid to prid, and save pr-indexed matrices
@@ -333,6 +342,7 @@ def cnPostProcessing(
     genechangethresh=GENECHANGETHR,
     segmentsthresh=SEGMENTSTHR,
     maxYchrom=MAXYCHROM,
+    dryrun=False,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -449,20 +459,16 @@ def cnPostProcessing(
         **kwargs,
     )
 
-    # with gumbo, no need to mark this selected field
-    selected = []
-
     try:
         track.updateTrackerWGS(
             tracker,
-            selected,
             samplesetname,
             wgsfailed,
             datatype=["wgs", "wes"],
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wgsrefworkspace,
-            dry_run=True,
+            dry_run=dryrun,
         )
     except:
         print("no wgs for this sampleset")
@@ -470,14 +476,13 @@ def cnPostProcessing(
     try:
         track.updateTrackerWGS(
             tracker,
-            selected,
             samplesetname,
             list(wesfailed),
             datatype=["wes", "wgs"],
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wesrefworkspace,
-            dry_run=True,
+            dry_run=dryrun,
         )
     except:
         print("no wes for this sampleset")
@@ -554,7 +559,7 @@ def cnPostProcessing(
     folder = save_dir
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
     mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
-    mergedcn = wgsgenecn.append(wesgenecn)
+    mergedcn = (wgsgenecn.append(wesgenecn)).apply(lambda x: np.log2(1 + x))
     mergedcn.to_csv(folder + "merged_genecn.csv")
     merged_purecn_segments = wgs_purecn_segments.append(
         wes_purecn_segments
@@ -569,7 +574,9 @@ def cnPostProcessing(
 
     # profile-ID level
     mergedsegments_pr.to_csv(folder + "merged_segments_profile.csv", index=False)
-    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
+    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr).apply(
+        lambda x: np.log2(1 + x)
+    )
     mergedgenecn_pr.to_csv(folder + "merged_genecn_profile.csv")
     merged_purecn_segments_pr.to_csv(
         folder + "merged_absolute_segments_profile.csv", index=False
@@ -699,7 +706,7 @@ async def mutationPostProcessing(
         mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
         tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
         tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
-        prev (pd.df, optional): the previous release dataset (to do QC). 
+        prev (pd.df, optional): the previous release dataset (to do QC).
             Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
     """
     from taigapy import TaigaClient
@@ -785,6 +792,7 @@ async def mutationPostProcessing(
     mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
         symbol_to_entrez_dict
     )
+    mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     print("saving merged somatic mutations")
@@ -800,6 +808,7 @@ async def mutationPostProcessing(
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
+    merged = merged.drop(columns=["achilles_top_genes"])
     merged = merged.rename(columns=mutcol)
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
 
@@ -922,4 +931,3 @@ async def mutationPostProcessing(
         upload_async=False,
         dataset_description=taiga_description,
     )
-
