@@ -753,6 +753,8 @@ ACH_CHOICE_TABLE_COLS = ["ModelConditionID", "ProfileID", "ProfileType"]
 ACH_CHOICE_TABLE_NAME = "achilles_choice_table"
 DEFAULT_TABLE_COLS = ["ModelID", "ProfileID", "ProfileType"]
 DEFAULT_TABLE_NAME = "default_model_table"
+PROFILE_TABLE_COLS = ["ModelCondition", "ModelID", "Datatype"]
+RELEASE_PR_TABLE_NAME = "OmicsProfiles"
 
 # dictionaries mapping names of pr-level matrices on latest to names on virtual
 ###### Model-level ##########
