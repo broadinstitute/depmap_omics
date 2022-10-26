@@ -1,0 +1,1 @@
+{"run_PureCN.vcf": "this.mutect2_filtered_vcf", "run_PureCN.segFile": "this.modeled_segments_tumor", "run_PureCN.sampleID": "this.sample_id", "run_PureCN.genome": "\"hg38\"", "run_PureCN.intervals": "\"gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt\""}

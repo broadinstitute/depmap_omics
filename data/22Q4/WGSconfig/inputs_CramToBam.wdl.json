@@ -1,0 +1,1 @@
+{"CramToBam.requester_pays": "", "CramToBam.cram_file": "this.hg19_bam_filepath", "CramToBam.reference_index": "", "CramToBam.samtools_docker": "\"biocontainers/samtools:v1.9-4-deb_cv1\"", "CramToBam.reference_fasta": "workspace.ref_fasta", "CramToBam.runtime_attr_override": ""}
