@@ -1,0 +1,17 @@
+,name,namespace,rootEntityType,methodUri,sourceRepo,methodPath,methodVersion,methodName,methodNamespace
+0,rnaseq_mutect2_tumor_only,broad-firecloud-ccle,sample,dockstore://github.com%2Fbroadinstitute%2Fdepmap_omics%2Frnaseq_mutect2_tumor_only/dev,dockstore,github.com/broadinstitute/depmap_omics/rnaseq_mutect2_tumor_only,dev,,
+1,RNA_aggregate,broad-firecloud-ccle,sample_set,dockstore://github.com%2Fbroadinstitute%2Fdepmap_omics%2FRNA_aggregate/master,dockstore,github.com/broadinstitute/depmap_omics/RNA_aggregate,master,,
+2,RNA_pipeline,broad-firecloud-ccle,sample,dockstore://github.com%2Fbroadinstitute%2Fdepmap_omics%2FRNA_pipeline/master,dockstore,github.com/broadinstitute/depmap_omics/RNA_pipeline,master,,
+3,rsem_depmap,broad-firecloud-ccle,sample,dockstore://github.com%2Fbroadinstitute%2Fdepmap_omics%2Frsem_depmap/rsem_confidence_interval_calculation,dockstore,github.com/broadinstitute/depmap_omics/rsem_depmap,rsem_confidence_interval_calculation,,
+4,rnaseqc2_v1-0_BETA_cfg,broadinstitute_gtex,sample,agora://broadinstitute_gtex/rnaseqc2_v1-0_BETA/4,agora,,4,rnaseqc2_v1-0_BETA,broadinstitute_gtex
+5,rsem_v1-0_BETA_cfg,broadinstitute_gtex,sample,agora://broadinstitute_gtex/rsem_v1-0_BETA/6,agora,,6,rsem_v1-0_BETA,broadinstitute_gtex
+6,samtofastq_v1-0_BETA_cfg,broadinstitute_gtex,sample,agora://broadinstitute_gtex/samtofastq_v1-0_BETA/7,agora,,7,samtofastq_v1-0_BETA,broadinstitute_gtex
+7,star_v1-0_BETA_cfg,broadinstitute_gtex,sample,agora://broadinstitute_gtex/star_v1-0_BETA/8,agora,,8,star_v1-0_BETA,broadinstitute_gtex
+8,rmats_turbo,dwu,sample,agora://dwu/rmats_turbo/10,agora,,10,rmats_turbo,dwu
+9,Aggregate_Fusion_Calls,gkugener,sample_set,agora://gkugener/Aggregate_files_set/2,agora,,2,Aggregate_files_set,gkugener
+10,ExonUsage_hg38_fixed,gkugener,sample,agora://gkugener/ExonUsage_fixed/1,agora,,1,ExonUsage_fixed,gkugener
+11,hg38_STAR_fusion,gkugener,sample,agora://gkugener/STAR_fusion/17,agora,,17,STAR_fusion,gkugener
+12,STAR_Fusion_after_STAR,gkugener,sample,agora://gkugener/STAR_Fusion_after_STAR/6,agora,,6,STAR_Fusion_after_STAR,gkugener
+13,aggregate_vcfs,jkobject,sample_set,agora://jkobject/aggregate_vcfs/22,agora,,22,aggregate_vcfs,jkobject
+14,rnaseq-germline-snps-indels,jkobject,sample,agora://jkobject/rnaseq-germline-snps-indels/7,agora,,7,rnaseq-germline-snps-indels,jkobject
+15,rsem_aggregate_results,jkobject,sample_set,agora://jkobject/rsem_aggregate_results/5,agora,,5,rsem_aggregate_results,jkobject
