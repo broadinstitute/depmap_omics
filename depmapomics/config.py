@@ -1,4 +1,5 @@
 import os
+from depmapomics.config_global import *
 
 
 def fileToList(filename):
@@ -18,5 +19,3 @@ if (
     from depmapomics.config_prod import *
 else:
     from depmapomics.config_dev import *
-
-from depmapomics.config_global import *

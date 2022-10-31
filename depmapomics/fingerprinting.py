@@ -208,10 +208,12 @@ def checkMatches(lod_mat, ref, thr=500):
                     matches.update(
                         {
                             "_".join(
-                                ref.loc[
+                                [previ]
+                                + ref.loc[
                                     previ,
                                     [
                                         "ModelID",
+                                        "ProfileID",
                                         "version",
                                         "expected_type",
                                         "PatientID",
@@ -228,6 +230,7 @@ def checkMatches(lod_mat, ref, thr=500):
                             j,
                             [
                                 "ModelID",
+                                "ProfileID",
                                 "version",
                                 "expected_type",
                                 "PatientID",
@@ -242,6 +245,7 @@ def checkMatches(lod_mat, ref, thr=500):
                             j,
                             [
                                 "ModelID",
+                                "ProfileID",
                                 "version",
                                 "expected_type",
                                 "PatientID",
