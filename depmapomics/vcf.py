@@ -1,5 +1,6 @@
 import re
 import numpy as np
+import pandas as pd
 
 DROPCOMMA = [
     "gencode_34_hugosymbol",
@@ -342,10 +343,10 @@ def improve(
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
-    
+
 
     Args:
-    ----- 
+    -----
         revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
         vcf: a df from geney.mutations.vcf_to_df(): the input vcf annotated with opencravat
         force_list: list of elements we know have ',' separated values.
@@ -355,7 +356,7 @@ def improve(
         split_multiallelic: bool if True, will split multiallelic variants into separate rows
         min_count_hotspot: int minimum number of mutations in cosmic to consider the loci a hotspot
         civic_df (pd.DataFrame): dataframe containing civic annotations
-    
+
     Returns:
         the imrpoved vcf
     """
@@ -384,9 +385,10 @@ def improve(
             vcf.loc[loc, val] = li
 
     # solving multi allelic sites
-    if split_multiallelic:
-        for k, row in vcf[vcf.multiallelic].iterrows():
-            row.split
+    # NOT FINISHED!! Pipeline currently excludes multiallelic mutations
+    # if split_multiallelic:
+    #     for k, row in vcf[vcf.multiallelic].iterrows():
+    #         row.split
 
     else:
         for val in vcf.columns[9:]:
@@ -421,8 +423,16 @@ def improve(
     vcf = vcf.replace(replace_empty)
 
     print("re-annotating CIVIC using static dataframe:")
-    vcf = civic_df.merge(vcf, on=['chrom','pos', 'ref', 'alt'], how='right')
-    vcf = vcf.drop(columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]).rename(columns={"description": "oc_civic__description", "civic_actionability_score": "oc_civic__clinical_a_score", "civic_id": "oc_civic__id"})
+    vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
+    vcf = vcf.drop(
+        columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]
+    ).rename(
+        columns={
+            "description": "oc_civic__description",
+            "civic_actionability_score": "oc_civic__clinical_a_score",
+            "civic_id": "oc_civic__id",
+        }
+    )
 
     print("making new annotations")
     # creating merged annotations
@@ -476,7 +486,10 @@ def improve(
             "NONSENSE",
         ]
     )
-    vcf.loc[loc, "ccle_deleterious",] = "Y"
+    vcf.loc[
+        loc,
+        "ccle_deleterious",
+    ] = "Y"
     vcf["likely_lof"] = ""
     vcf.loc[loc, "likely_lof"] = "Y"
 
@@ -562,7 +575,9 @@ def improve(
     if "oc_civic__clinical_a_score" in vcf.columns.tolist():
         if "driver" not in vcf.columns.tolist():
             vcf["driver"] = ""
-        loc = (~vcf["oc_civic__clinical_a_score"].isnull()) & (vcf["multiallelic"] != "Y")
+        loc = (~vcf["oc_civic__clinical_a_score"].isnull()) & (
+            vcf["multiallelic"] != "Y"
+        )
         subvcf = vcf.loc[loc][["oc_civic__clinical_a_score"]]
         vcf.loc[
             subvcf[subvcf["oc_civic__clinical_a_score"].astype(float) >= 8].index,
@@ -571,7 +586,7 @@ def improve(
 
         if "likely_driver" not in vcf.columns.tolist():
             vcf["likely_driver"] = ""
-        loc = (~vcf["oc_civic__clinical_a_score"].isnull())
+        loc = ~vcf["oc_civic__clinical_a_score"].isnull()
         vcf.loc[loc, "likely_driver"] = "Y"
 
     # lof more
@@ -751,7 +766,7 @@ def to_maf(
     tumor_suppressor_list=[],
     **kwargs
 ):
-    """to_maf 
+    """to_maf
 
     Args:
         vcf (_type_): _description_
@@ -876,5 +891,4 @@ def read_parquet(link):
         link (str): gs link to the parquet files
     """
     print("tofinish")
-    return pq.read_parquet("tmp/depmapomics/")
-
+    return pd.read_parquet("tmp/depmapomics/")
