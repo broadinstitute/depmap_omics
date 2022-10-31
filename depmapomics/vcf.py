@@ -390,7 +390,7 @@ def improve(
     #     for k, row in vcf[vcf.multiallelic].iterrows():
     #         row.split
 
-    else:
+    if not split_multiallelic:
         for val in vcf.columns[9:]:
             try:
                 loc = vcf[val].str.contains(",")
@@ -462,10 +462,8 @@ def improve(
     ):
         # finding the number in " p.I517T(13)", " p.I517T(13), p.G202G(15), p.?(56)"
         res = sum(
-            [
-                int(val.group(0)[1:-1])
-                for val in re.finditer(r"([(])\d+([)])", cosmic_over)
-            ]
+            int(val.group(0)[1:-1])
+            for val in re.finditer(r"([(])\d+([)])", cosmic_over)
         )
         if res > min_count_hotspot:
             hotspot_l.append(cosmic_over)
