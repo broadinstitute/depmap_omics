@@ -282,6 +282,10 @@ COLRENAMING = {
     "CALL": "Status",
 }
 
+PURECN_MIN_GOF = 70
+
+PURECN_MAX_PLOIDY = 5
+
 PURECN_COLRENAMING = {
     "start": "Start",
     "end": "End",
