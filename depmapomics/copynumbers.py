@@ -198,6 +198,7 @@ def pureCNpostprocess(
         samples[
             ((samples.PureCN_gof < min_gof) & ~samples.Non_aberrant)
             | (samples.PureCN_ploidy.astype(float) > max_ploidy)
+            | (samples.PureCN_curated == "TRUE")
         ].index
     )
     failed.update(to_curate_idx)
