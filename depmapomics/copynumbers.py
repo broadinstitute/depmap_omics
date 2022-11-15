@@ -37,7 +37,9 @@ def loadFromGATKAggregation(
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
     tempFolder=WORKING_DIR,
-    toremove=["readgroup_ubams",],
+    toremove=[
+        "readgroup_ubams",
+    ],
     sampleset="all",
     colRenaming=COLRENAMING,
 ):
@@ -82,7 +84,7 @@ def loadFromGATKAggregation(
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
-    segments.SegmentMean = 2 ** segments.SegmentMean
+    segments.SegmentMean = 2**segments.SegmentMean
     segments.Start = segments.Start.astype(int)
     segments.End = segments.End.astype(int)
     segments.loc[
@@ -153,6 +155,8 @@ def pureCNpostprocess(
     lohvals=PURECN_LOHVALUES,
     save_output="",
     mappingdf=None,
+    min_gof=PURECN_MIN_GOF,
+    max_ploidy=PURECN_MAX_PLOIDY,
 ):
     """fetching PureCN data from Terra, generate one matrix for absolute copy number, one matrix for LOH,
     and one cell line signature table
@@ -178,7 +182,25 @@ def pureCNpostprocess(
         wm.get_entities("sample_set").loc[sampleset, lohcolname]
     ).rename(columns=colRenaming)
     samples = wm.get_samples()
-    failed = samples[samples[failedcolname] == "TRUE"].index
+    failed = set(samples[samples[failedcolname] == "TRUE"].index)
+
+    # filter out lines with low GOF (would require manual curation)
+    samples["PureCN_gof"] = (
+        samples.PureCN_comment.str.extract(r"([0-9]+)", expand=True)
+        .fillna(100)
+        .astype(int)
+    )
+    samples["Non_aberrant"] = samples.PureCN_comment.str.contains(
+        "NON-ABERRANT"
+    ).astype(bool)
+    samples = samples[samples.PureCN_ploidy != "NA"]
+    to_curate_idx = set(
+        samples[
+            ((samples.PureCN_gof < min_gof) & ~samples.Non_aberrant)
+            | (samples.PureCN_ploidy.astype(float) > max_ploidy)
+        ].index
+    )
+    failed.update(to_curate_idx)
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -248,7 +270,7 @@ def pureCNpostprocess(
     loh_status.to_csv(save_output + "purecn_loh_all.csv")
     print("done")
 
-    return segments, absolute_genecn, loh_status
+    return segments, absolute_genecn, loh_status, failed
 
 
 def generateSigTable(
@@ -404,7 +426,7 @@ def postProcess(
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-    purecn_segments, purecn_genecn, loh_status = pureCNpostprocess(
+    purecn_segments, purecn_genecn, loh_status, failed = pureCNpostprocess(
         refworkspace,
         sampleset=purecnsampleset,
         mappingdf=mybiomart,
@@ -412,7 +434,9 @@ def postProcess(
         todrop=todrop,
         save_output=save_output,
     )
-    feature_table = generateSigTable(refworkspace, save_output=save_output)
+    feature_table = generateSigTable(
+        refworkspace, todrop=failed, save_output=save_output
+    )
     return (
         segments,
         genecn,
