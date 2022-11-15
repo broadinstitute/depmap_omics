@@ -217,8 +217,8 @@ def pureCNpostprocess(
     print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
 
     # combining major- and minor-allele seg counts for CN matrix conversion
-    segments["totalCount"] = (
-        segments["MajorAlleleAbsoluteCN"] + segments["MinorAlleleAbsoluteCN"]
+    segments["totalCount"] = segments["MajorAlleleAbsoluteCN"].add(
+        segments["MinorAlleleAbsoluteCN"], fill_value=0
     )
 
     # Generate gene-level absolute cn matrix
