@@ -110,10 +110,10 @@ workflow WGS_pipeline {
             manta_docker=manta_docker
     }
 
-    # call manta_annot.run_manta_annotator as manta_annotator{
-    #     input:
-    #         sv = MantaSomaticSV.somatic_sv_vcf
-    # }
+    call manta_annot.run_manta_annotator as manta_annotator{
+        input:
+            sv = MantaSomaticSV.somatic_sv_vcf
+    }
 
     call mutect2.Mutect2 as mutect2 {
         input:
@@ -233,9 +233,9 @@ workflow WGS_pipeline {
         File somatic_sv_vcf= MantaSomaticSV.somatic_sv_vcf
         File somatic_sv_vcf_index= MantaSomaticSV.somatic_sv_vcf_index
         #manta_annot
-        # File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
-        # File filtered_annotated_sv = manta_annotator.filtered_annotated_sv 
-        # File dropped_sv = manta_annotator.dropped 
+        File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
+        File filtered_annotated_sv = manta_annotator.filtered_annotated_sv 
+        File dropped_sv = manta_annotator.dropped 
         # omics_mutect2
         File omics_mutect2_out_vcf=fix_mutect2.vcf_fixed
         File mutect2_base_vcf = mutect2.base_vcf
