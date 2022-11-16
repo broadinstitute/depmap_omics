@@ -42,7 +42,7 @@ task fix_mutect2 {
         Int num_preempt = 5
         Int disk_space = 50
         Int size_tocheck = 100
-        String docker = "python"
+        String docker = "python:3.10.7-bullseye"
     }
 
     command {
