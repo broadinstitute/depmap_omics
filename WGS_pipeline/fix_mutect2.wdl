@@ -47,6 +47,7 @@ task fix_mutect2 {
 
     command {
         git clone https://github.com/broadinstitute/depmap_omics.git
+        pip install wheel
         pip install bgzip
 
         python depmap_omics/WGS_pipeline/fix_mutect2.py ${vcf_file} ${sample_id}_fixed.vcf.gz ${size_tocheck}
