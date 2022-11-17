@@ -379,6 +379,7 @@ SV_COLRENAME = {
     "BREAK_A_Ensembl_Exon": "BreakAEnsemblExon",
     "BREAK_B_Ensembl_Exon": "BreakBEnsemblExon",
     "Filter": "Filter",
+    "SAMPLE": "Sample",
     # temporary
     "OCILY12": "Sample",
 }
