@@ -567,7 +567,7 @@ def cnPostProcessing(
     merged_purecn_segments.to_csv(folder + "merged_absolute_segments.csv", index=False)
     merged_purecn_genecn = wgs_purecn_genecn.append(wes_purecn_genecn)
     merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn.csv")
-    merged_loh = wgs_loh.append(wgs_loh)
+    merged_loh = wgs_loh.append(wes_loh)
     merged_loh.to_csv(folder + "merged_loh.csv")
     merged_feature_table = wgs_feature_table.append(wes_feature_table)
     merged_feature_table.to_csv(folder + "merged_feature_table.csv")
