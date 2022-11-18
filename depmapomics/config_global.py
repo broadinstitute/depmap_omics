@@ -61,9 +61,13 @@ EXTRACT_DEFAULTS = {
     "name": "sample_alias",
     "bai": "crai_or_bai_path",
     "bam": "cram_or_bam_path",
+    "cram": "cram_path",
+    "crai": "crai_path",
     "ref_bam": "hg19_bam_filepath",
     "ref_type": "Datatype",
     "ref_bai": "hg19_bai_filepath",
+    "ref_cram": "hg38_cram_filepath",
+    "ref_crai": "hg38_crai_filepath",
     "version": "version",
     "primary_disease": "primary_disease",
     "ref_arxspan_id": "arxspan_id",
@@ -96,9 +100,13 @@ EXTRACT_DEFAULTS = {
 }
 
 # minimum bam file size in bytes for each sequencing type
-MINSIZES = {
+MINSIZES_BAM = {
     "rna": 2_000_000_000,
     "wes": 3_000_000_000,
+    "wgs": 50_000_000_000,
+}
+
+MINSIZES_CRAM = {
     "wgs": 10_000_000_000,
 }
 
@@ -138,8 +146,8 @@ rnasource6 = "DEPMAP"
 rnasource7 = "IBM"
 
 RNAWORKSPACES = [
-    ("DEPMAP", "terra-broad-cancer-prod/CCLE_DepMap_RNAseq"),
-    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData"),
+    ("DEPMAP", "terra-broad-cancer-prod/CCLE_DepMap_RNAseq", "bam"),
+    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData", "bam"),
 ]
 
 ## curent WGS GP buckets
@@ -151,8 +159,9 @@ wgssource1 = "DEPMAP"
 wgssource2 = "IBM"
 
 WGSWORKSPACES = [
-    ("DEPMAP", "terra-broad-cancer-prod/DepMap_WGS"),
-    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"),
+    ("DEPMAP", "terra-broad-cancer-prod/DepMap_WGS", "bam"),
+    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS", "bam"),
+    ("DEPMAP", "broad-genomics-data/DepMap_WGS", "cram"),
 ]
 
 WGSSETENTITY = "sample_set"
