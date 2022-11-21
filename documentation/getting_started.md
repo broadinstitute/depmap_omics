@@ -24,6 +24,7 @@ The current owners of these workspaces should give you access.
   - __RNA__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_RNAseq)
   - __WGS__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_WGS)
   - __WGS__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/DepMap_WGS)
+  - __WGS__ [Broad hg38 cram](https://app.terra.bio/#workspaces/broad-genomics-data/DepMap_WGS)
 6. Request access to the data bucket `gs://cclebams/`
 
 
