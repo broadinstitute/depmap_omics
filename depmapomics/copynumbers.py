@@ -169,7 +169,6 @@ def pureCNpostprocess(
         colname (str, optional): the column in Terra where the file is saved in sampleset. Defaults to "combined_seg_file".
         sampleset (str, optional): sample set to load in terra. Defaults to "all".
         colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
-        genechangethresh (float, optional): above this threshold of variance of gene CN, the sample is considered failed. Defaults to 0.025.
         segmentsthresh (int, optional): above this threshold of number of segments the WGS sample is considered failed. Defaults to 2000.
 
     Returns:
@@ -325,7 +324,6 @@ def postProcess(
     sortby=[SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     priority=[],
-    genechangethresh=GENECHANGETHR,
     segmentsthresh=SEGMENTSTHR,
     ensemblserver=ENSEMBL_SERVER_V,
     source_rename={},
