@@ -795,7 +795,7 @@ def to_maf(
 
     NPM1loc = (vcf["pos"] == 171410539) & (vcf["chrom"] == "chr5")
     print("pre-whitelisting:")
-    print(vcf.loc[(loc & NPM1loc)]
+    print(vcf.loc[(loc & NPM1loc)])
     
     # creating count columns
     vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
@@ -837,7 +837,7 @@ def to_maf(
                 & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list)
             )
         )
-        print(vcf.loc[(important & NPM1loc)]
+        print(vcf.loc[(important & NPM1loc)])
     else:
         important = vcf["is_coding"].isna()
     if only_coding:
@@ -848,7 +848,7 @@ def to_maf(
             | (vcf["variant_info"] == "SPLICE_SITE")
             | important
         )
-        print(vcf.loc[(loc & NPM1loc)]
+        print(vcf.loc[(loc & NPM1loc)])
 
     # we will drop 99.993% of the variants and 90% of the columns
     vcf = vcf[loc]
@@ -861,7 +861,7 @@ def to_maf(
             ~((vcf["germline"] == "Y") | (vcf["pon"] == "Y"))
             & (vcf["popaf"].astype(float) > max_log_pop_af)
         ) | important
-        print(vcf.loc[(loc & NPM1loc)]
+        print(vcf.loc[(loc & NPM1loc)])
         vcf = vcf[loc]
     print(
         "new size: "
