@@ -822,6 +822,7 @@ def to_maf(
                 "missing columns to perform whitelisting",
                 set(tokeep) - set(vcf.columns),
             )
+        print("performing whitelisting")
         important = (
             (vcf["driver"] == "Y")
             # | (vcf["gof"] == "Y")
