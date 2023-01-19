@@ -9,7 +9,7 @@ This document summarizes how to set up Terra and get access to services that are
   - [WES](https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WES_CN_hg38)
   - [WGS (including the mutation pipeline)](https://app.terra.bio/#workspaces/broad-firecloud-ccle/DepMap_WGS_CN)
 
-The current owners of these workspaces should give you access.
+Members of the DepMap Omics team should give you access once you request it on Terra.
 
 2. For the mutation pipeline you will also need to request dbGaP access (required for TCGA workflows). *See CCLE/new hiree section on Asana for details*.
 3. Acquire access to required billing projects (e.g. broad-firecloud-ccle). *See CCLE/new hiree section on Asana for details*.

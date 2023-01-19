@@ -51,7 +51,7 @@ We are generating both expression and fusion datasets with RNAseq data. Specific
   - aligns RNAseq bam files for downstream processing
   - [https://www.ncbi.nlm.nih.gov/pubmed/23104886](https://www.ncbi.nlm.nih.gov/pubmed/23104886)
   - [https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
-  - STAR and RSEM indices are generated using GENCODE's "comprehensive gene annotations" GTF and the GRCh38 reference genome for RNA-seq alignment provided in [GTEx's pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md), which includes ERCC spike-in and excludes ALT, HLA, and Decoy contigs. The STAR index is generated with flag `--sjdbOverhang 100`.
+  - STAR and RSEM indices are generated using GENCODE (v38)'s "comprehensive gene annotations" GTF and the GRCh38 reference genome for RNA-seq alignment provided in [GTEx's pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md), which includes ERCC spike-in and excludes ALT, HLA, and Decoy contigs. The STAR index is generated with flag `--sjdbOverhang 100`.
 - __rsem (from docker image `gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10`)__: 
   - quantifies gene and isoform abundances from RNAseq data
   - [https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323)
