@@ -17,15 +17,11 @@ Members of the DepMap Omics team should give you access once you request it on T
   - depmap_ccle_data
   - depmap-pipelines
   - ccle-pipeline
-5. If you need to get access to the data delivered by Genomics Platform (GP) at the Broad, use the following links:
-  - __WES__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_Exomes)
-  - __WES__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_WES)
-  - __RNA__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData)
+1. If you need to get access to the data delivered by Genomics Platform (GP) at the Broad, use the following links:
   - __RNA__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/CCLE_DepMap_RNAseq)
-  - __WGS__ [IBM](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/Getz_IBM_CellLines_WGS)
   - __WGS__ [Broad](https://app.terra.bio/#workspaces/terra-broad-cancer-prod/DepMap_WGS)
   - __WGS__ [Broad hg38 cram](https://app.terra.bio/#workspaces/broad-genomics-data/DepMap_WGS)
-6. Request access to the data bucket `gs://cclebams/`
+1. Request access to the data bucket `gs://cclebams/`
 
 
 ### Additional python dependencies:
