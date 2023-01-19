@@ -12,7 +12,7 @@ This repository contains code that processes data for the biannual [DepMap](http
   - [Uploading and Preprocessing](#upload-preprocess)
   - [Running Terra Pipelines](#running-terra-pipelines)
   - [Downloading and Postprocessing](#downloading-postprocessing)
-  - [QC, Groupding and Uploading](#qc-grouping-uploading)
+  - [QC, Grouping and Uploading](#qc-grouping-uploading)
 
 ## Getting Started <a name="quickstart"></a>
 
@@ -103,7 +103,7 @@ The main postprocessing steps for each pipeline are as followed:
 
 `copynumbers.py` contains the main postprocessing function `postProcess()` responsible for postprocessing segments and creating gene-level (relative and absolute) CN files and genomic feature table. Gene mapping information is retrieved from BioMart version `nov2020`. The function also applies the following filters to segment and CN data:
 
-* Remove chrY segments from lines where their chrY segment count is bigger than 150
+* Remove chrY segments from cell lines where their chrY segment count is bigger than 150
 * Mark samples that have more than 1500 segments as QC fails and remove them
 * Remove genes whose Entrez ID is NaN in BioMart in the gene-level matrices
 
@@ -147,7 +147,6 @@ Once the CN files are saved, we load them back in python and do some validations
 - mean, max, var...
 - to previous release: same mean, max, var...
 - checkAmountOfSegments: flag any samples with a very high number of segments
-- checkGeneChangeAccrossAll: flag any genes which stay at a similar value across all samples
 
 #### Mutation
 

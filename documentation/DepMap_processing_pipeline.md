@@ -6,7 +6,7 @@ Note that input references, indices, and parameters used in the WDL workflows fo
 
 We are currently running the following workflows to generate datasets from WGS data:
 
-[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) runs the following sub-processes to generate relative and absolute copy number segments, mutation MAF file, structural variant (SV) calls, and various genomic features including loss of heterozygosity (LoH), LoH fraction, ploidy estimate, Whole Genome Doubling (WGD), Chromasomal Instability (CIN), and MSI score. This workflow runs the following subtasks:
+[WGS_pipeline](https://dockstore.org/workflows/github.com/broadinstitute/depmap_omics/WGS_pipeline:master?tab=info) runs the following sub-processes to generate relative and absolute copy number segments, mutation MAF file, structural variant (SV) calls, and various genomic features including loss of heterozygosity (LoH), LoH fraction, ploidy estimate, Whole Genome Doubling (WGD), Chromosomal Instability (CIN), and Microsatellite Instability (MSI) score. This workflow runs the following subtasks:
 - __gatk cnv__:
   - outputs relative segment and copy number from WES/WGS data
   - [https://software.broadinstitute.org/gatk/documentation/article?id=11682](https://software.broadinstitute.org/gatk/documentation/article?id=11682)
@@ -17,7 +17,7 @@ We are currently running the following workflows to generate datasets from WGS d
 - __PureCN__:
   - [https://github.com/lima1/PureCN](https://github.com/lima1/PureCN)
   - computes absolute copy number, as well as features including loss of heterozygosity (LoH), LoH fraction, ploidy estimate, Whole Genome Doubling (WGD), Chromasomal Instability (CIN) from WES/WGS data
-  - We are filtering out calls for lines with ploidy > 5 or if non-aberrant, goodness of fit < 70%, since PureCN is not able to produce confidence predictions for them.
+  - We are filtering out calls for cell lines with ploidy > 5 or if non-aberrant, goodness of fit < 70%, since PureCN is not able to produce confident predictions for them.
   - [Details on how PureCN is run for DepMap data](../WGS_pipeline/PureCN_pipeline/README.md)
 - __MSIsensor2__:
   - [https://github.com/niu-lab/msisensor2](https://github.com/niu-lab/msisensor2)
@@ -53,7 +53,7 @@ We are generating both expression and fusion datasets with RNAseq data. Specific
   - [https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf)
   - STAR and RSEM indices are generated using GENCODE's "comprehensive gene annotations" GTF and the GRCh38 reference genome for RNA-seq alignment provided in [GTEx's pipeline](https://github.com/broadinstitute/gtex-pipeline/blob/master/TOPMed_RNAseq_pipeline.md), which includes ERCC spike-in and excludes ALT, HLA, and Decoy contigs. The STAR index is generated with flag `--sjdbOverhang 100`.
 - __rsem (from docker image `gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10`)__: 
-  - quantifes gene and isoform abundances from RNAseq data
+  - quantifies gene and isoform abundances from RNAseq data
   - [https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323)
 - __star fusion (from docker image `trinityctat/starfusion:1.7.0`)__: 
   - generates fusion prediction from RNAseq data
@@ -66,4 +66,4 @@ We are generating both expression and fusion datasets with RNAseq data. Specific
 __Finally, we save the workflow configurations used in the pipeline runs__
 
 **Remarks:**
-- for the copy number pipeline we have parametrized both an XX version and an XY version, we recommend using the XY version as it covers the entire genome
+- for the copy number pipeline we have parametrized both a Chromosome XX version and a Chromosome XY version, we recommend using the XY version as it covers the entire genome
