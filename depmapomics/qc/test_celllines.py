@@ -11,7 +11,6 @@ from depmapomics.qc.config import (
     PORTALS,
 )
 from depmapomics.qc.test_compare_to_ref_release import get_both_release_lists_from_taiga
-from gsheets.api import Sheets
 from taigapy import TaigaClient
 
 tc = TaigaClient()
