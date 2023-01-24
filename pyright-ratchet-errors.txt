@@ -1,10 +1,7 @@
-copynumbers.py: error: Import "depmap_omics_upload" could not be resolved (reportMissingImports)
 copynumbers.py: error: "Image" is not exported from module "IPython.display"
 copynumbers.py: error: Object of type "None" is not subscriptable (reportOptionalSubscript)
 copynumbers.py: error: Object of type "None" is not subscriptable (reportOptionalSubscript)
-dm_omics.py: error: Import "depmap_omics_upload" could not be resolved (reportMissingImports)
 expressions.py: error: "enrichments" is possibly unbound (reportUnboundVariable)
-fingerprinting.py: error: Import "depmap_omics_upload" could not be resolved (reportMissingImports)
 fusions.py: error: "keys" is not a known member of "None" (reportOptionalMemberAccess)
 vcf.py: error: "merge" is not a known member of "None" (reportOptionalMemberAccess)
 utils.py: error: Cannot access member "items" for type "str"
