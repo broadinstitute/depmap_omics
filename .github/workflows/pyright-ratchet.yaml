@@ -23,4 +23,4 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Run pyratchet
-        run: poetry run pyright-ratchet run pyright
+        run: poetry run pyright-ratchet run pyright depmapomics
