@@ -1,0 +1,123 @@
+aggregate_rsem_results.py: error: Cannot access member "to_hdf" for type "list[Unknown]"
+bam2coverage.py: error: Argument of type "LiteralString" cannot be assigned to parameter "data" of type "ReadableBuffer" in function "write"
+bam2coverage.py: error: Argument of type "str" cannot be assigned to parameter "data" of type "ReadableBuffer" in function "write"
+combine_GCTs.py: error: Argument of type "Literal['#1.2\n']" cannot be assigned to parameter "data" of type "ReadableBuffer" in function "write"
+combine_GCTs.py: error: Argument of type "str" cannot be assigned to parameter "data" of type "ReadableBuffer" in function "write"
+mpileup.py: error: Argument of type "str" cannot be assigned to parameter "data" of type "ReadableBuffer" in function "write"
+mpileup.py: error: Argument of type "Literal['\t']" cannot be assigned to parameter "sep" of type "ReadableBuffer | None" in function "split"
+mpileup.py: error: Argument of type "bytes | str" cannot be assigned to parameter "string" of type "str" in function "sub"
+mpileup.py: error: Argument of type "int | str" cannot be assigned to parameter "__c" of type "str | bytes | bytearray" in function "ord"
+mpileup.py: error: Argument of type "int | str" cannot be assigned to parameter "__c" of type "str | bytes | bytearray" in function "ord"
+mpileup.py: error: Argument of type "LiteralString" cannot be assigned to parameter "data" of type "ReadableBuffer" in function "write"
+mpileup.py: error: "n" is possibly unbound (reportUnboundVariable)
+mpileup.py: error: Argument of type "str" cannot be assigned to parameter "data" of type "ReadableBuffer" in function "write"
+mpileup.py: error: Argument of type "Literal['\t']" cannot be assigned to parameter "sep" of type "ReadableBuffer | None" in function "split"
+mpileup.py: error: Argument of type "Literal[',']" cannot be assigned to parameter "sep" of type "ReadableBuffer | None" in function "split"
+mpileup.py: error: Argument of type "bytes | str" cannot be assigned to parameter "string" of type "str" in function "sub"
+mpileup.py: error: Argument of type "int | str" cannot be assigned to parameter "__c" of type "str | bytes | bytearray" in function "ord"
+mpileup.py: error: Argument of type "int | str" cannot be assigned to parameter "__c" of type "str | bytes | bytearray" in function "ord"
+mpileup.py: error: Argument of type "list[bytes | str | Unknown]" cannot be assigned to parameter "__iterable" of type "Iterable[str]" in function "join"
+run_RSEM.py: error: "getcwd" is not a known member of module (reportGeneralTypeIssues)
+run_RSEM.py: error: "chdir" is not a known member of module (reportGeneralTypeIssues)
+run_RSEM.py: error: "chdir" is not a known member of module (reportGeneralTypeIssues)
+run_RSEM_david.py: error: "getcwd" is not a known member of module (reportGeneralTypeIssues)
+run_RSEM_david.py: error: "chdir" is not a known member of module (reportGeneralTypeIssues)
+run_RSEM_david.py: error: "chdir" is not a known member of module (reportGeneralTypeIssues)
+civic_export.py: error: Import "cravat" could not be resolved (reportMissingImports)
+civic_export.py: error: Import "pyliftover" could not be resolved (reportMissingImports)
+create_merged_sample.py: error: Import "bgzip" could not be resolved (reportMissingImports)
+create_merged_sample.py: error: Import "torch" could not be resolved (reportMissingImports)
+create_merged_sample.py: error: Cannot access member "decode" for type "str"
+create_merged_sample.py: error: "cols" is possibly unbound (reportUnboundVariable)
+create_merged_sample.py: error: "cols" is possibly unbound (reportUnboundVariable)
+create_merged_sample.py: error: "i" is possibly unbound (reportUnboundVariable)
+create_merged_sample.py: error: "i" is possibly unbound (reportUnboundVariable)
+create_merged_sample.py: error: "i" is possibly unbound (reportUnboundVariable)
+create_merged_sample.py: error: "i" is possibly unbound (reportUnboundVariable)
+create_merged_sample.py: error: "i" is possibly unbound (reportUnboundVariable)
+fix_mutect2.py: error: Import "bgzip" could not be resolved (reportMissingImports)
+fix_mutect2.py: error: Cannot access member "decode" for type "str"
+vcf_to_depmap.py: error: "i" is possibly unbound (reportUnboundVariable)
+vcf_to_depmap.py: error: "filen" is possibly unbound (reportUnboundVariable)
+enformer.py: error: Import "cravat" could not be resolved (reportMissingImports)
+enformer.py: error: Import "cravat" could not be resolved (reportMissingImports)
+enformer.py: error: Import "tensorflow" could not be resolved (reportMissingImports)
+enformer.py: error: Import "tensorflow_hub" could not be resolved (reportMissingImports)
+enformer.py: error: Import "kipoi_interpret.importance_scores.ism" could not be resolved (reportMissingImports)
+enformer.py: error: Import "kipoiseq" could not be resolved (reportMissingImports)
+enformer.py: error: Import "tensorflow" could not be resolved (reportMissingImports)
+enformer.py: error: Import "tensorflow_hub" could not be resolved (reportMissingImports)
+enformer.py: error: Import "kipoi_interpret.importance_scores.ism" could not be resolved (reportMissingImports)
+enformer.py: error: Import "kipoiseq" could not be resolved (reportMissingImports)
+enformer.py: error: "pyfaidx" is not defined (reportUndefinedVariable)
+enformer.py: error: "fasta_file" is not defined (reportUndefinedVariable)
+enformer.py: error: "kipoiseq" is not defined (reportUndefinedVariable)
+enformer.py: error: "sequence" is not defined (reportUndefinedVariable)
+enformer.py: error: "np" is not defined (reportUndefinedVariable)
+enformer.py: error: "where_to_look" is not defined (reportUndefinedVariable)
+enformer.py: error: "kipoiseq" is not defined (reportUndefinedVariable)
+enformer.py: error: "kipoiseq" is not defined (reportUndefinedVariable)
+enformer.py: error: "chrom" is not defined (reportUndefinedVariable)
+enformer.py: error: "pos" is not defined (reportUndefinedVariable)
+enformer.py: error: "ref" is not defined (reportUndefinedVariable)
+enformer.py: error: "alt" is not defined (reportUndefinedVariable)
+enformer_utils.py: error: Import "tensorflow" could not be resolved (reportMissingImports)
+enformer_utils.py: error: Import "tensorflow_hub" could not be resolved (reportMissingImports)
+hess_drivers.py: error: Import "cravat" could not be resolved (reportMissingImports)
+hess_drivers.py: error: Import "cravat" could not be resolved (reportMissingImports)
+oncokb_dm.py: error: Import "cravat" could not be resolved (reportMissingImports)
+oncokb_dm.py: error: Import "cravat" could not be resolved (reportMissingImports)
+oncokb_dm.py: error: Argument of type "Literal['highestSensitiveLevel']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['highestResistanceLevel']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['highestDiagnosticImplicationLevel']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['highestPrognosticImplicationLevel']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['diagnosticImplications']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['treatments']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['levelOfEvidence']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['prognosticImplications']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['levelOfEvidence']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['variantSummary']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['oncogenic']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['mutationEffect']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['knownEffect']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['citations']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['pmids']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['pmids']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['hotspot']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorTypeSummary']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['mainType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['name']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['mainType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorForm']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['pmids']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['drugs']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['ncitCode']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['drugName']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['approvedIndications']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['pmids']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['levelAssociatedCancerType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['level']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['name']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tissue']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorForm']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['mainType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['name']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['mainType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorForm']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tumorType']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['tissue']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+oncokb_dm.py: error: Argument of type "Literal['pmids']" cannot be assigned to parameter "__i" of type "SupportsIndex | slice" in function "__getitem__"
+copynumbers.py: error: Import "depmap_omics_upload" could not be resolved (reportMissingImports)
+copynumbers.py: error: "Image" is not exported from module "IPython.display"
+copynumbers.py: error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+copynumbers.py: error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+dm_omics.py: error: Import "depmap_omics_upload" could not be resolved (reportMissingImports)
+expressions.py: error: "enrichments" is possibly unbound (reportUnboundVariable)
+fingerprinting.py: error: Import "depmap_omics_upload" could not be resolved (reportMissingImports)
+fusions.py: error: "keys" is not a known member of "None" (reportOptionalMemberAccess)
+vcf.py: error: "merge" is not a known member of "None" (reportOptionalMemberAccess)
+utils.py: error: Cannot access member "items" for type "str"
