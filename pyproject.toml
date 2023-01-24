@@ -16,6 +16,7 @@ firecloud-dalmatian = "^0.0.18"
 taigapy = {git = "https://github.com/broadinstitute/taigapy.git", rev = "0b67741f18fe6e3c2f508ee84b06ca3bed853b82"}
 seaborn = "^0.12.2"
 genepy = {git = "https://github.com/broadinstitute/genepy.git", branch = "poetry"}
+depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch = "main"}
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
