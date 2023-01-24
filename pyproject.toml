@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "depmap_omics"}]
+packages = [{include = "depmapomics"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -15,12 +15,14 @@ google-cloud-storage = "^2.7.0"
 firecloud-dalmatian = "^0.0.18"
 taigapy = {git = "https://github.com/broadinstitute/taigapy.git", rev = "0b67741f18fe6e3c2f508ee84b06ca3bed853b82"}
 seaborn = "^0.12.2"
+genepy = {git = "https://github.com/broadinstitute/genepy.git", branch = "poetry"}
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
 notebook = "^6.5.2"
 pyright = "^1.1.290"
 pytest = "^7.2.1"
+pyright-ratchet = {git = "https://github.com/pgm/pyright-ratchet.git"}
 
 [build-system]
 requires = ["poetry-core"]
