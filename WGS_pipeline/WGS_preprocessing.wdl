@@ -43,7 +43,7 @@ workflow WGS_preprocessing {
 
     call CramToBam.CramToBam as CramToBam{
         input:
-            cram_file = input_bam,
+            cram_file = input_cram,
             reference_fasta = ref_fasta,
             samtools_docker = samtools_docker,
             requester_pays = requester_pays,
