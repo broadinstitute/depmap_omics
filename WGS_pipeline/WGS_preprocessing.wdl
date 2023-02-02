@@ -11,7 +11,7 @@ workflow WGS_preprocessing {
         #cramtobam
         File input_cram
         File input_cram_index
-        String samtools_cloud_docker = "biocontainers/samtools:v1.9-4-deb_cv1"
+        String samtools_docker = "biocontainers/samtools:v1.9-4-deb_cv1"
         Boolean requester_pays = false
         #BamToUnmappedRGBams
 
@@ -45,7 +45,7 @@ workflow WGS_preprocessing {
         input:
             cram_file = input_cram,
             reference_fasta = ref_fasta,
-            samtools_cloud_docker = samtools_cloud_docker,
+            samtools_docker = samtools_docker,
             requester_pays = requester_pays,
     }
 
