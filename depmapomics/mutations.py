@@ -277,6 +277,7 @@ def postProcess(
     sv_col=SV_COLNAME,
     sv_filename=SV_FILENAME,
     sv_renaming=SV_COLRENAME,
+    run_sv=True,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
     and aggregate structural variants (SVs)
@@ -315,16 +316,18 @@ def postProcess(
     mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
     print("done")
 
-    svs = aggregateSV(
-        wm,
-        sampleset=sampleset,
-        sv_colname=sv_col,
-        save_output=save_output,
-        save_filename=sv_filename,
-        sv_renaming=sv_renaming,
-    )
-    print("saving svs (all)")
-    svs.to_csv(save_output + "svs_all.csv", index=None)
+    svs = None
+    if run_sv:
+        svs = aggregateSV(
+            wm,
+            sampleset=sampleset,
+            sv_colname=sv_col,
+            save_output=save_output,
+            save_filename=sv_filename,
+            sv_renaming=sv_renaming,
+        )
+        print("saving svs (all)")
+        svs.to_csv(save_output + "svs_all.csv", index=None)
 
     return mutations, svs
 

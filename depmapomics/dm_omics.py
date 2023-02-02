@@ -688,6 +688,9 @@ async def mutationPostProcessing(
     sv_col=SV_COLNAME,
     sv_filename=SV_FILENAME,
     mutcol=MUTCOL_DEPMAP,
+    mafcol=MAF_COL,
+    run_sv=True,
+    run_guidemat=True,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -723,6 +726,8 @@ async def mutationPostProcessing(
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
+        mafcol=mafcol,
+        run_sv=run_sv,
         **kwargs,
     )
 
@@ -745,6 +750,8 @@ async def mutationPostProcessing(
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
+        mafcol=mafcol,
+        run_sv=run_sv,
         **kwargs,
     )
 
@@ -795,13 +802,14 @@ async def mutationPostProcessing(
     print("saving merged somatic mutations")
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
-    mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
-    mergedsvs.to_csv(folder + "svs.csv", index=False)
-    mergedsvs_pr = mergedsvs[mergedsvs[SAMPLEID].isin(renaming_dict.keys())].replace(
-        {SAMPLEID: renaming_dict}
-    )
-    print("saving somatic svs")
-    mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
+    if run_sv:
+        mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
+        mergedsvs.to_csv(folder + "svs.csv", index=False)
+        mergedsvs_pr = mergedsvs[
+            mergedsvs[SAMPLEID].isin(renaming_dict.keys())
+        ].replace({SAMPLEID: renaming_dict})
+        print("saving somatic svs")
+        mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
@@ -826,39 +834,40 @@ async def mutationPostProcessing(
     lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
     driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
 
-    # generate germline binary matrix
-    wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
-    wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
-    wgs_vcfs = wgs_samples[vcf_colname]
-    wes_vcfs = wes_samples[vcf_colname]
-    vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
-    vcflist = [v for v in vcflist if v.startswith("gs://")]
+    if run_guidemat:
+        # generate germline binary matrix
+        wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
+        wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
+        wgs_vcfs = wgs_samples[vcf_colname]
+        wes_vcfs = wes_samples[vcf_colname]
+        vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        vcflist = [v for v in vcflist if v.startswith("gs://")]
 
-    print("generating germline binary matrix")
-    germline_mats = mut.generateGermlineMatrix(
-        vcflist,
-        vcfdir=vcfdir,
-        savedir=WORKING_DIR + samplesetname + "/",
-        filename="binary_mutguides.tsv.gz",
-        bed_locations=bed_locations,
-    )
-    for lib, mat in germline_mats.items():
-        # merging wes and wgs
-        print("renaming merged wes and wgs germline matrix for library: ", lib)
-        germline_mat_noguides = mat.iloc[:, 4:]
+        print("generating germline binary matrix")
+        germline_mats = mut.generateGermlineMatrix(
+            vcflist,
+            vcfdir=vcfdir,
+            savedir=WORKING_DIR + samplesetname + "/",
+            filename="binary_mutguides.tsv.gz",
+            bed_locations=bed_locations,
+        )
+        for lib, mat in germline_mats.items():
+            # merging wes and wgs
+            print("renaming merged wes and wgs germline matrix for library: ", lib)
+            germline_mat_noguides = mat.iloc[:, 4:]
 
-        # transform from CDSID-level to PR-level
-        whitelist_cols = [
-            x for x in germline_mat_noguides.columns if x in renaming_dict
-        ]
-        whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
-        mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
+            # transform from CDSID-level to PR-level
+            whitelist_cols = [
+                x for x in germline_mat_noguides.columns if x in renaming_dict
+            ]
+            whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
+            mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
 
-        mergedmat = mergedmat.astype(bool).astype(int)
-        sorted_mat = mat.iloc[:, :4].join(mergedmat)
-        sorted_mat["end"] = sorted_mat["end"].astype(int)
-        print("saving merged binary matrix for library: ", lib)
-        sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
+            mergedmat = mergedmat.astype(bool).astype(int)
+            sorted_mat = mat.iloc[:, :4].join(mergedmat)
+            sorted_mat["end"] = sorted_mat["end"].astype(int)
+            print("saving merged binary matrix for library: ", lib)
+            sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
     # uploading to taiga
     tc.update_dataset(
         changes_description="new " + samplesetname + " release!",

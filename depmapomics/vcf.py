@@ -829,6 +829,7 @@ def to_maf(
                 "missing columns to perform whitelisting",
                 set(tokeep) - set(vcf.columns),
             )
+        print("performing whitelisting")
         important = (
             (vcf["driver"] == "Y")
             # | (vcf["gof"] == "Y")
@@ -845,6 +846,7 @@ def to_maf(
             )
         )
     else:
+        print("not whitelisting")
         important = vcf["is_coding"].isna()
     if only_coding:
         # drops 99.5% of the variants
