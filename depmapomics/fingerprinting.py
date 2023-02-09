@@ -341,8 +341,8 @@ async def fingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES + HG38_CRAM_COLNAMES,
-    terrabamcolname=["bam_filepath", "bai_filepath"] + HG38_CRAM_COLNAMES,
+    bamcolname=LEGACY_BAM_COLNAMES + HG38BAMCOL,
+    terrabamcolname=["bam_filepath", "bai_filepath"] + HG38BAMCOL,
     prev_mat_df=None,
     updated_mat_filename="",
 ):
@@ -393,7 +393,7 @@ async def fingerPrint(
     # and one for only hg38
     wm.update_sample_set(
         sampleset + "_hg38subset",
-        samples_df[~samples_df[HG38_CRAM_COLNAMES[0]].isna()].index,
+        samples_df[~samples_df[HG38BAMCOL[0]].isna()].index,
     )
     add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
@@ -478,7 +478,7 @@ async def _CCLEFingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES,
+    bamcolname=LEGACY_BAM_COLNAMES + HG38BAMCOL,,
     taiga_dataset=TAIGA_FP,
     updated_mat_filename=TAIGA_FP_FILENAME,
     upload_to_taiga=True,
@@ -486,12 +486,12 @@ async def _CCLEFingerPrint(
     """CCLE fingerprinting function
 
     Args:
-        samples ([type]): [description]
-        sampleset ([type]): [description]
-        sid ([type]): [description]
-        working_dir ([type]): [description]
-        bamcolname ([type]): [description]
-        workspace ([type], optional): [description]. Defaults to WORKSPACE.
+        samples ([str]): list of sample ids to check SNP fingerprints for
+        sampleset (str): name of this new sample set to be added to the SNP fingerprinting terra workspce
+        sid (str): [description]
+        working_dir (str): location where intermediate outputs are stored
+        bamcolname ([str]): columns in gumbo where bam file locations are stored
+        workspace (str, optional): name of the SNP fingerprinting workspace on terra. Defaults to FPWORKSPACE.
 
     Returns:
         updated_lod_mat (pd.DataFrame): updated lod matrix
