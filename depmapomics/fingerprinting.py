@@ -398,13 +398,20 @@ async def fingerPrint(
     add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
     # Submit fingerprinting jobs, generate vcf files for all lines
-    submission_id = wm.create_submission(
+    submission_id_hg19 = wm.create_submission(
         "fingerprint_bam_with_liftover",
-        sampleset,
+        sampleset + "_hg19subset",
         "sample_set",
         expression="this.samples",
     )
-    await terra.waitForSubmission(workspace, submission_id)
+    submission_id_hg38 = wm.create_submission(
+        "fingerprint_bam",
+        sampleset + "_hg38subset",
+        "sample_set",
+        expression="this.samples",
+    )
+    await terra.waitForSubmission(workspace, submission_id_hg19)
+    await terra.waitForSubmission(workspace, submission_id_hg38)
 
     # 1.2  Crosscheck Fingerprint VCFs
     # Here we use Dalmation to run the crosscheck_vcfs workflow on Terra.
@@ -491,8 +498,10 @@ async def _CCLEFingerPrint(
         mismatches (dict): dict representing the mismatches
         matches (dict): dict representing the matches
     """
+    mytracker = track.SampleTracker()
+    seq_table = mytracker.read_seq_table()
 
-    samples = pd.concat([rnasamples, wgssamples])
+    samples = seq_table.loc[rnasamples + wgssamples]
 
     from taigapy import TaigaClient
 
