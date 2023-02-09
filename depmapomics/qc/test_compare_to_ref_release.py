@@ -247,7 +247,7 @@ def test_compare_nan_fractions(data, arxspans, atol=1e-2):
         data1 = data1[data1["DepMap_ID"].isin(arxspans_ids)]
         data2 = data2[data2["DepMap_ID"].isin(arxspans_ids)]
     elif arxspans != "allcells":
-        raise Exception("unknown value for arxspans")
+        raise RuntimeError("unknown value for arxspans")
 
     nan_fractions = pd.concat(
         [data1.isnull().mean(), data2.isnull().mean()],
@@ -279,13 +279,13 @@ def test_compare_column_dtypes(data, method):
             lambda df: df.dtypes  # pylint: disable=unnecessary-lambda-assignment
         )
     elif method == "map_type":  # per element type
-        get_dtypes = lambda df: df.apply(  # pylint: disable=unnecessary-lambda-assignment
-            lambda x: x.dropna().map(type).unique()
-        ).T[
-            0
-        ]
+        get_dtypes = (
+            lambda df: df.apply(  # pylint: disable=unnecessary-lambda-assignment
+                lambda x: x.dropna().map(type).unique()
+            ).T[0]
+        )
     else:
-        raise Exception("bad values for dtype method")
+        raise RuntimeError("bad values for dtype method")
 
     dtypes_compare = pd.concat(
         [get_dtypes(data1), get_dtypes(data2)], axis=1, keys=["reference", "virtual"]
@@ -323,7 +323,7 @@ def test_compare_cell_lines_released(data, arxspan_col):
         arxspans1 = set(data1["DepMap_ID"])
         arxspans2 = set(data2["DepMap_ID"])
     else:
-        raise Exception("unknown value provided for arxspan_col")
+        raise RuntimeError("unknown value provided for arxspan_col")
     assert (
         arxspans1 == arxspans2
     )  # , 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
