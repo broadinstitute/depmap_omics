@@ -380,7 +380,7 @@ def generateGermlineMatrix(
     try:
         subprocess.call(["bcftools"])
     except FileNotFoundError:
-        raise Exception("bcftools not installed!")
+        raise RuntimeError("bcftools not installed!")
 
     h.createFoldersFor(savedir)
     # load vcfs from workspace using dalmatian
