@@ -266,6 +266,8 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
 
     """
     all_sample_sets = wm.get_entities("sample_set").index
+    # only create sample set pairs between merged (hg19 + hg38) sets
+    all_sample_sets = [i for i in all_sample_sets if not i.endswith("subset")]
     sample_set_a_list = []
     sample_set_b_list = []
     pair_ids = []
@@ -339,7 +341,8 @@ async def fingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES,
+    bamcolname=LEGACY_BAM_COLNAMES + HG38_CRAM_COLNAMES,
+    terrabamcolname=["bam_filepath", "bai_filepath"] + HG38_CRAM_COLNAMES,
     prev_mat_df=None,
     updated_mat_filename="",
 ):
@@ -375,12 +378,23 @@ async def fingerPrint(
     # Upload sample sheet
     samples_df = pd.DataFrame(
         bams[bamcolname + [sid, sid]].values,
-        columns=["bam_filepath", "bai_filepath", "sample_id", "participant_id"],
+        columns=terrabamcolname + ["sample_id", "participant_id"],
     )
     samples_df = samples_df.set_index("sample_id")
     print("adding " + str(len(bams)) + " new samples to the fingerprinting workspace")
     wm.upload_samples(samples_df, add_participant_samples=True)
+    # create a sample set containing both hg19 and hg38 samples
     wm.update_sample_set(sampleset, samples_df.index)
+    # and one for only hg19
+    wm.update_sample_set(
+        sampleset + "_hg19subset",
+        samples_df[~samples_df[LEGACY_BAM_COLNAMES[0]].isna()].index,
+    )
+    # and one for only hg38
+    wm.update_sample_set(
+        sampleset + "_hg38subset",
+        samples_df[~samples_df[HG38_CRAM_COLNAMES[0]].isna()].index,
+    )
     add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
     # Submit fingerprinting jobs, generate vcf files for all lines

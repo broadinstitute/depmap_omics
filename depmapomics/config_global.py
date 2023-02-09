@@ -22,6 +22,7 @@ ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
 HG38BAMCOL = ["internal_bam_filepath", "internal_bai_filepath"]
 LEGACY_BAM_COLNAMES = ["hg19_bam_filepath", "hg19_bai_filepath"]
+HG38_CRAM_COLNAMES = ["hg38_cram_filepath", "hg38_crai_filepath"]
 
 ############## LOADING
 
