@@ -803,13 +803,14 @@ async def mutationPostProcessing(
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
     if run_sv:
-        mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
-        mergedsvs.to_csv(folder + "svs.csv", index=False)
-        mergedsvs_pr = mergedsvs[
-            mergedsvs[SAMPLEID].isin(renaming_dict.keys())
-        ].replace({SAMPLEID: renaming_dict})
-        print("saving somatic svs")
-        mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
+        if wgssvs is not None:
+            mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
+            mergedsvs.to_csv(folder + "svs.csv", index=False)
+            mergedsvs_pr = mergedsvs[
+                mergedsvs[SAMPLEID].isin(renaming_dict.keys())
+            ].replace({SAMPLEID: renaming_dict})
+            print("saving somatic svs")
+            mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
