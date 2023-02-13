@@ -266,8 +266,6 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
 
     """
     all_sample_sets = wm.get_entities("sample_set").index
-    # only create sample set pairs between merged (hg19 + hg38) sets
-    all_sample_sets = [i for i in all_sample_sets if not i.endswith("subset")]
     sample_set_a_list = []
     sample_set_b_list = []
     pair_ids = []
@@ -293,7 +291,9 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
         # in case it does not work
         pair_df.to_csv(working_dir + "sample_batch_pairs.tsv", sep="\t")
         if h.askif(
-            "Please upload the file ../sample_batch_pairs.tsv to the terra workspace as a new data table, and type yes once \
+            "Please upload the file "
+            + working_dir
+            + "sample_batch_pairs.tsv to the terra workspace as a new data table, and type yes once \
       finished, else write no to quit and they will not be added"
         ):
             print("sample_batch_pair manually updated")
@@ -325,7 +325,9 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
             working_dir + "sample_batch_pair_set.tsv", sep="\t"
         )
         if h.askif(
-            "Please upload the file ../sample_batch_pair_set.tsv to the terra workspace as a new data table, and type yes once \
+            "Please upload the file "
+            + working_dir
+            + "sample_batch_pair_set.tsv to the terra workspace as a new data table, and type yes once \
       finished, else write no to quit and they will not be added"
         ):
             print("sample_batch_pair_set manually updated")
@@ -341,8 +343,8 @@ async def fingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES + HG38BAMCOL,
-    terrabamcolname=["bam_filepath", "bai_filepath"] + HG38BAMCOL,
+    bamcolname=HG38BAMCOL,
+    terrabamcolname=["bam_filepath", "bai_filepath"],
     prev_mat_df=None,
     updated_mat_filename="",
 ):
@@ -383,34 +385,17 @@ async def fingerPrint(
     samples_df = samples_df.set_index("sample_id")
     print("adding " + str(len(bams)) + " new samples to the fingerprinting workspace")
     wm.upload_samples(samples_df, add_participant_samples=True)
-    # create a sample set containing both hg19 and hg38 samples
+    # create a sample set containing both rna and wgs data
     wm.update_sample_set(sampleset, samples_df.index)
-    # and one for only hg19
-    wm.update_sample_set(
-        sampleset + "_hg19subset",
-        samples_df[~samples_df[LEGACY_BAM_COLNAMES[0]].isna()].index,
-    )
-    # and one for only hg38
-    wm.update_sample_set(
-        sampleset + "_hg38subset",
-        samples_df[~samples_df[HG38BAMCOL[0]].isna()].index,
-    )
     add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
     # Submit fingerprinting jobs, generate vcf files for all lines
-    submission_id_hg19 = wm.create_submission(
-        "fingerprint_bam_with_liftover",
-        sampleset + "_hg19subset",
-        "sample_set",
-        expression="this.samples",
-    )
     submission_id_hg38 = wm.create_submission(
         "fingerprint_bam",
-        sampleset + "_hg38subset",
+        sampleset,
         "sample_set",
         expression="this.samples",
     )
-    await terra.waitForSubmission(workspace, submission_id_hg19)
     await terra.waitForSubmission(workspace, submission_id_hg38)
 
     # 1.2  Crosscheck Fingerprint VCFs
@@ -478,7 +463,7 @@ async def _CCLEFingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES + HG38BAMCOL,,
+    bamcolname=HG38BAMCOL,
     taiga_dataset=TAIGA_FP,
     updated_mat_filename=TAIGA_FP_FILENAME,
     upload_to_taiga=True,
