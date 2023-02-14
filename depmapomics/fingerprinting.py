@@ -291,7 +291,9 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
         # in case it does not work
         pair_df.to_csv(working_dir + "sample_batch_pairs.tsv", sep="\t")
         if h.askif(
-            "Please upload the file ../sample_batch_pairs.tsv to the terra workspace as a new data table, and type yes once \
+            "Please upload the file "
+            + working_dir
+            + "sample_batch_pairs.tsv to the terra workspace as a new data table, and type yes once \
       finished, else write no to quit and they will not be added"
         ):
             print("sample_batch_pair manually updated")
@@ -323,7 +325,9 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
             working_dir + "sample_batch_pair_set.tsv", sep="\t"
         )
         if h.askif(
-            "Please upload the file ../sample_batch_pair_set.tsv to the terra workspace as a new data table, and type yes once \
+            "Please upload the file "
+            + working_dir
+            + "sample_batch_pair_set.tsv to the terra workspace as a new data table, and type yes once \
       finished, else write no to quit and they will not be added"
         ):
             print("sample_batch_pair_set manually updated")
@@ -339,7 +343,8 @@ async def fingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES,
+    bamcolname=HG38BAMCOL,
+    terrabamcolname=["bam_filepath", "bai_filepath"],
     prev_mat_df=None,
     updated_mat_filename="",
 ):
@@ -375,22 +380,23 @@ async def fingerPrint(
     # Upload sample sheet
     samples_df = pd.DataFrame(
         bams[bamcolname + [sid, sid]].values,
-        columns=["bam_filepath", "bai_filepath", "sample_id", "participant_id"],
+        columns=terrabamcolname + ["sample_id", "participant_id"],
     )
     samples_df = samples_df.set_index("sample_id")
     print("adding " + str(len(bams)) + " new samples to the fingerprinting workspace")
     wm.upload_samples(samples_df, add_participant_samples=True)
+    # create a sample set containing both rna and wgs data
     wm.update_sample_set(sampleset, samples_df.index)
     add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
     # Submit fingerprinting jobs, generate vcf files for all lines
-    submission_id = wm.create_submission(
-        "fingerprint_bam_with_liftover",
+    submission_id_hg38 = wm.create_submission(
+        "fingerprint_bam",
         sampleset,
         "sample_set",
         expression="this.samples",
     )
-    await terra.waitForSubmission(workspace, submission_id)
+    await terra.waitForSubmission(workspace, submission_id_hg38)
 
     # 1.2  Crosscheck Fingerprint VCFs
     # Here we use Dalmation to run the crosscheck_vcfs workflow on Terra.
@@ -457,7 +463,7 @@ async def _CCLEFingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES,
+    bamcolname=HG38BAMCOL,
     taiga_dataset=TAIGA_FP,
     updated_mat_filename=TAIGA_FP_FILENAME,
     upload_to_taiga=True,
@@ -465,20 +471,22 @@ async def _CCLEFingerPrint(
     """CCLE fingerprinting function
 
     Args:
-        samples ([type]): [description]
-        sampleset ([type]): [description]
-        sid ([type]): [description]
-        working_dir ([type]): [description]
-        bamcolname ([type]): [description]
-        workspace ([type], optional): [description]. Defaults to WORKSPACE.
+        samples ([str]): list of sample ids to check SNP fingerprints for
+        sampleset (str): name of this new sample set to be added to the SNP fingerprinting terra workspce
+        sid (str): [description]
+        working_dir (str): location where intermediate outputs are stored
+        bamcolname ([str]): columns in gumbo where bam file locations are stored
+        workspace (str, optional): name of the SNP fingerprinting workspace on terra. Defaults to FPWORKSPACE.
 
     Returns:
         updated_lod_mat (pd.DataFrame): updated lod matrix
         mismatches (dict): dict representing the mismatches
         matches (dict): dict representing the matches
     """
+    mytracker = track.SampleTracker()
+    seq_table = mytracker.read_seq_table()
 
-    samples = pd.concat([rnasamples, wgssamples])
+    samples = seq_table.loc[rnasamples + wgssamples]
 
     from taigapy import TaigaClient
 
