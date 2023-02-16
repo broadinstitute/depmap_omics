@@ -345,7 +345,7 @@ async def fingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=HG38BAMCOL + HG38_CRAM_COLNAMES,
+    bamcolname=LEGACY_BAM_COLNAMES + HG38_CRAM_COLNAMES,
     terrabamcolname=["bam_filepath", "bai_filepath"] + HG38_CRAM_COLNAMES,
     prev_mat_df=None,
     updated_mat_filename="",
