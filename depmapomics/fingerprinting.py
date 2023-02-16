@@ -266,6 +266,8 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
 
     """
     all_sample_sets = wm.get_entities("sample_set").index
+    # only create sample set pairs between merged (hg19 + hg38) sets
+    all_sample_sets = [i for i in all_sample_sets if not i.endswith("subset")]
     sample_set_a_list = []
     sample_set_b_list = []
     pair_ids = []
@@ -343,8 +345,8 @@ async def fingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=HG38BAMCOL,
-    terrabamcolname=["bam_filepath", "bai_filepath"],
+    bamcolname=LEGACY_BAM_COLNAMES + HG38_CRAM_COLNAMES,
+    terrabamcolname=["bam_filepath", "bai_filepath"] + HG38_CRAM_COLNAMES,
     prev_mat_df=None,
     updated_mat_filename="",
 ):
@@ -387,15 +389,32 @@ async def fingerPrint(
     wm.upload_samples(samples_df, add_participant_samples=True)
     # create a sample set containing both rna and wgs data
     wm.update_sample_set(sampleset, samples_df.index)
+    # and one for only hg19
+    wm.update_sample_set(
+        sampleset + "_hg19subset",
+        samples_df[~samples_df[terrabamcolname[0]].isna()].index,
+    )
+    # and one for only hg38
+    wm.update_sample_set(
+        sampleset + "_hg38subset",
+        samples_df[~samples_df[HG38_CRAM_COLNAMES[0]].isna()].index,
+    )
     add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
 
     # Submit fingerprinting jobs, generate vcf files for all lines
-    submission_id_hg38 = wm.create_submission(
-        "fingerprint_bam",
-        sampleset,
+    submission_id_hg19 = wm.create_submission(
+        "fingerprint_bam_with_liftover",
+        sampleset + "_hg19subset",
         "sample_set",
         expression="this.samples",
     )
+    submission_id_hg38 = wm.create_submission(
+        "fingerprint_cram_hg38",
+        sampleset + "_hg38subset",
+        "sample_set",
+        expression="this.samples",
+    )
+    await terra.waitForSubmission(workspace, submission_id_hg19)
     await terra.waitForSubmission(workspace, submission_id_hg38)
 
     # 1.2  Crosscheck Fingerprint VCFs
@@ -463,7 +482,7 @@ async def _CCLEFingerPrint(
     allbatchpairset=FPALLBATCHPAIRSETS,
     workspace=FPWORKSPACE,
     working_dir=WORKING_DIR,
-    bamcolname=HG38BAMCOL,
+    bamcolname=LEGACY_BAM_COLNAMES + HG38_CRAM_COLNAMES,
     taiga_dataset=TAIGA_FP,
     updated_mat_filename=TAIGA_FP_FILENAME,
     upload_to_taiga=True,
