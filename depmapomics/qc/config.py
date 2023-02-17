@@ -1,4 +1,3 @@
-from gsheets.api import Sheets
 from taigapy import TaigaClient
 
 # there are some issues in the older versions of omics data on virtual that this flag deals with
@@ -142,41 +141,20 @@ FILE_ATTRIBUTES = [
         "gene_id": "entrez",
         "omicssource": "RNA",
     },
-    # {
-    #     "file": "CCLE_expression_proteincoding_genes_expected_count",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "entrez",
-    #     "omicssource": "RNA",
-    # },
-    # {
-    #     "file": "CCLE_RNAseq_transcripts",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "enst",
-    #     "omicssource": "RNA",
-    # },
-    # {
-    #     "file": "CCLE_expression_transcripts_expected_count",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "enst",
-    #     "omicssource": "RNA",
-    # },
-    # {
-    #     "file": "CCLE_expression_full",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "ensg",
-    #     "omicssource": "RNA",
-    # },
-    # {
-    #     "file": "CCLE_RNAseq_reads",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "ensg",
-    #     "omicssource": "RNA",
-    # },
+    {
+        "file": "OmicsExpressionGenesExpectedCountProfile",
+        "ismatrix": True,
+        "hasNA": False,
+        "gene_id": "ensg",
+        "omicssource": "RNA",
+    },
+    {
+        "file": "OmicsExpressionTranscriptsExpectedCountProfile",
+        "ismatrix": True,
+        "hasNA": False,
+        "gene_id": "enst",
+        "omicssource": "RNA",
+    },
     {
         "file": "OmicsFusionFiltered",
         "ismatrix": False,
@@ -184,14 +162,27 @@ FILE_ATTRIBUTES = [
         "merge_cols": FUSIONS_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
     },
-    # {
-    #     "file": "CCLE_fusions_unfiltered",
-    #     "ismatrix": False,
-    #     "omicssource": "RNA",
-    #     "merge_cols": FUSIONS_MERGE_COLS,
-    #     "expected_changed_cols": ["CCLE_count"],
-    # },
-    # {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'hasNA': False,'omicssource':'RNA', 'gene_id': None},
+    {
+        "file": "OmicsFusionUnfilteredProfile",
+        "ismatrix": False,
+        "omicssource": "RNA",
+        "merge_cols": FUSIONS_MERGE_COLS,
+        "expected_changed_cols": ["CCLE_count"],
+    },
+    {
+        "file": "OmicsExpressionGeneSetEnrichment",
+        "ismatrix": True,
+        "hasNA": False,
+        "omicssource": "RNA",
+        "gene_id": None,
+    },
+    {
+        "file": "OmicsExpressionGeneSetEnrichmentProfile",
+        "ismatrix": True,
+        "hasNA": False,
+        "omicssource": "RNA",
+        "gene_id": None,
+    },
     {
         "file": "OmicsCNGene",
         "ismatrix": True,
@@ -199,48 +190,34 @@ FILE_ATTRIBUTES = [
         "gene_id": "entrez",
         "omicssource": "DNA",
     },
-    # {
-    #     "file": "CCLE_segment_cn",
-    #     "ismatrix": False,
-    #     "omicssource": "DNA",
-    #     "merge_cols": SEGMENT_CN_MERGE_COLS,
-    #     "expected_changed_cols": [],
-    # },
-    # {
-    #     "file": "CCLE_mutations",
-    #     "ismatrix": False,
-    #     "omicssource": "DNA",
-    #     "merge_cols": MUTATIONS_MERGE_COLS,
-    #     "expected_changed_cols": [],
-    # },
-    # {
-    #     "file": "CCLE_mutations_bool_damaging",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "entrez",
-    #     "omicssource": "DNA",
-    # },
-    # {
-    #     "file": "CCLE_mutations_bool_hotspot",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "entrez",
-    #     "omicssource": "DNA",
-    # },
-    # {
-    #     "file": "CCLE_mutations_bool_otherconserving",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "entrez",
-    #     "omicssource": "DNA",
-    # },
-    # {
-    #     "file": "CCLE_mutations_bool_nonconserving",
-    #     "ismatrix": True,
-    #     "hasNA": False,
-    #     "gene_id": "entrez",
-    #     "omicssource": "DNA",
-    # },
+    {
+        "file": "OmicsCNSegmentsProfile",
+        "ismatrix": False,
+        "omicssource": "DNA",
+        "merge_cols": SEGMENT_CN_MERGE_COLS,
+        "expected_changed_cols": [],
+    },
+    {
+        "file": "OmicsSomaticMutations",
+        "ismatrix": False,
+        "omicssource": "DNA",
+        "merge_cols": MUTATIONS_MERGE_COLS,
+        "expected_changed_cols": [],
+    },
+    {
+        "file": "OmicsSomaticMutationsMatrixDamaging",
+        "ismatrix": True,
+        "hasNA": False,
+        "gene_id": "entrez",
+        "omicssource": "DNA",
+    },
+    {
+        "file": "OmicsSomaticMutationsMatrixHotspot",
+        "ismatrix": True,
+        "hasNA": False,
+        "gene_id": "entrez",
+        "omicssource": "DNA",
+    },
 ]
 
 # comment/uncomment to use all/subset of files for testing
