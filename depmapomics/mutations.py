@@ -190,8 +190,7 @@ def managingDuplicates(samples, failed, datatype, tracker):
 
 
 def aggregateMAFs(
-    wm,
-    sampleset="all",
+    sample_table,
     mafcol=MAF_COL,
     keep_cols=MUTCOL_DEPMAP,
 ):
@@ -207,9 +206,6 @@ def aggregateMAFs(
         aggregated_maf (df.DataFrame): aggregated MAF
     """
     print("aggregating MAF files")
-    sample_table = wm.get_samples()
-    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
-    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
     sample_table_valid = sample_table[~sample_table[mafcol].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
@@ -232,8 +228,7 @@ def aggregateMAFs(
 
 
 def aggregateSV(
-    wm,
-    sampleset="all",
+    sample_table,
     sv_colname=SV_COLNAME,
     sv_renaming=SV_COLRENAME,
     save_output="",
@@ -251,9 +246,6 @@ def aggregateSV(
 
     """
     print("aggregating SVs")
-    sample_table = wm.get_samples()
-    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
-    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
     sample_table_valid = sample_table[~sample_table[sv_colname].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding sv: ", na_samples)
@@ -270,7 +262,7 @@ def aggregateSV(
 
 
 def postProcess(
-    wm,
+    workspacename,
     sampleset="all",
     mafcol=MAF_COL,
     save_output=WORKING_DIR,
@@ -278,6 +270,7 @@ def postProcess(
     sv_filename=SV_FILENAME,
     sv_renaming=SV_COLRENAME,
     run_sv=True,
+    dm_max_retries=10,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
     and aggregate structural variants (SVs)
@@ -300,9 +293,22 @@ def postProcess(
     print("loading from Terra")
     # if save_output:
     # terra.saveConfigs(refworkspace, save_output + 'config/')
+
+    for i in range(0, dm_max_retries):
+        while True:
+            try:
+                wm = dm.WorkspaceManager(workspacename)
+                sample_table = wm.get_samples()
+                samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+            except ConnectionResetError:
+                print("encountered ConnectionResetError, retry")
+                continue
+            break
+
+    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+
     mutations = aggregateMAFs(
-        wm,
-        sampleset=sampleset,
+        sample_table,
         mafcol=mafcol,
         keep_cols=MUTCOL_DEPMAP,
     )
@@ -319,8 +325,7 @@ def postProcess(
     svs = None
     if run_sv:
         svs = aggregateSV(
-            wm,
-            sampleset=sampleset,
+            sample_table,
             sv_colname=sv_col,
             save_output=save_output,
             save_filename=sv_filename,

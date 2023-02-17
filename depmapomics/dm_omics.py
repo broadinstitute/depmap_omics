@@ -691,6 +691,7 @@ async def mutationPostProcessing(
     mafcol=MAF_COL,
     run_sv=True,
     run_guidemat=True,
+    dm_max_retries=10,
     **kwargs,
 ):
     """the full CCLE mutations post processing pipeline (used only by CCLE)
@@ -713,15 +714,12 @@ async def mutationPostProcessing(
 
     tc = TaigaClient()
 
-    wes_wm = dm.WorkspaceManager(wesrefworkspace)
-    wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
-
     # doing wes
     print("DOING WES")
     folder = WORKING_DIR + samplesetname + "/wes_"
 
     wesmutations, wessvs = mutations.postProcess(
-        wes_wm,
+        wesrefworkspace,
         AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
@@ -745,7 +743,7 @@ async def mutationPostProcessing(
     folder = WORKING_DIR + samplesetname + "/wgs_"
 
     wgsmutations, wgssvs = mutations.postProcess(
-        wgs_wm,
+        wgsrefworkspace,
         sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
@@ -836,8 +834,15 @@ async def mutationPostProcessing(
 
     if run_guidemat:
         # generate germline binary matrix
-        wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
-        wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
+        for i in range(0, dm_max_retries):
+            while True:
+                try:
+                    wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
+                    wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
+                except ConnectionResetError:
+                    print("encountered ConnectionResetError, retry")
+                    continue
+                break
         wgs_vcfs = wgs_samples[vcf_colname]
         wes_vcfs = wes_samples[vcf_colname]
         vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
