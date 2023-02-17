@@ -72,7 +72,7 @@ VIRTUAL_RELEASES = {
 
 PORTALS = ["dmc", "public", "internal"]  # used for 'bookkeeping' markers
 PORTAL = "internal"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "22Q2renamed"
+PREV_QUARTER = "22Q4"
 NEW_QUARTER = "22Q4"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
@@ -140,6 +140,7 @@ FILE_ATTRIBUTES = [
         "hasNA": False,
         "gene_id": "entrez",
         "omicssource": "RNA",
+        "id": "ModelID",
     },
     {
         "file": "OmicsExpressionGenesExpectedCountProfile",
@@ -147,6 +148,7 @@ FILE_ATTRIBUTES = [
         "hasNA": False,
         "gene_id": "ensg",
         "omicssource": "RNA",
+        "id": "ProfileID",
     },
     {
         "file": "OmicsExpressionTranscriptsExpectedCountProfile",
@@ -154,6 +156,7 @@ FILE_ATTRIBUTES = [
         "hasNA": False,
         "gene_id": "enst",
         "omicssource": "RNA",
+        "id": "ProfileID",
     },
     {
         "file": "OmicsFusionFiltered",
@@ -161,6 +164,7 @@ FILE_ATTRIBUTES = [
         "omicssource": "RNA",
         "merge_cols": FUSIONS_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
+        "id": "ModelID",
     },
     {
         "file": "OmicsFusionUnfilteredProfile",
@@ -168,6 +172,7 @@ FILE_ATTRIBUTES = [
         "omicssource": "RNA",
         "merge_cols": FUSIONS_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
+        "id": "ProfileID",
     },
     {
         "file": "OmicsExpressionGeneSetEnrichment",
@@ -175,6 +180,7 @@ FILE_ATTRIBUTES = [
         "hasNA": False,
         "omicssource": "RNA",
         "gene_id": None,
+        "id": "ModelID",
     },
     {
         "file": "OmicsExpressionGeneSetEnrichmentProfile",
@@ -182,6 +188,7 @@ FILE_ATTRIBUTES = [
         "hasNA": False,
         "omicssource": "RNA",
         "gene_id": None,
+        "id": "ProfileID",
     },
     {
         "file": "OmicsCNGene",
@@ -189,6 +196,7 @@ FILE_ATTRIBUTES = [
         "hasNA": True,
         "gene_id": "entrez",
         "omicssource": "DNA",
+        "id": "ModelID",
     },
     {
         "file": "OmicsCNSegmentsProfile",
@@ -196,6 +204,7 @@ FILE_ATTRIBUTES = [
         "omicssource": "DNA",
         "merge_cols": SEGMENT_CN_MERGE_COLS,
         "expected_changed_cols": [],
+        "id": "ProfileID",
     },
     {
         "file": "OmicsSomaticMutations",
@@ -203,6 +212,15 @@ FILE_ATTRIBUTES = [
         "omicssource": "DNA",
         "merge_cols": MUTATIONS_MERGE_COLS,
         "expected_changed_cols": [],
+        "id": "ModelID",
+    },
+    {
+        "file": "OmicsSomaticMutationsProfile",
+        "ismatrix": False,
+        "omicssource": "DNA",
+        "merge_cols": MUTATIONS_MERGE_COLS,
+        "expected_changed_cols": [],
+        "id": "ProfileID",
     },
     {
         "file": "OmicsSomaticMutationsMatrixDamaging",
@@ -210,6 +228,7 @@ FILE_ATTRIBUTES = [
         "hasNA": False,
         "gene_id": "entrez",
         "omicssource": "DNA",
+        "id": "ModelID",
     },
     {
         "file": "OmicsSomaticMutationsMatrixHotspot",
@@ -217,6 +236,7 @@ FILE_ATTRIBUTES = [
         "hasNA": False,
         "gene_id": "entrez",
         "omicssource": "DNA",
+        "id": "ModelID",
     },
 ]
 
@@ -225,18 +245,15 @@ FILE_ATTRIBUTES = [
 # x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
 # ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-# FILE_ATTRIBUTES = [
-# x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
-# ]
-# FILE_ATTRIBUTES = [
-#     x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
-# ]
+FILE_ATTRIBUTES = [
+    x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
+]
 # FILE_ATTRIBUTES = [
 #     x
 #     for x in FILE_ATTRIBUTES
 #     if (x["file"] in ["CCLE_fusions", "CCLE_fusions_unfiltered"])
 # ]
-FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "OmicsFusionFiltered")]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "OmicsFusionFiltered")]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = "mutations-latest-ed72"
