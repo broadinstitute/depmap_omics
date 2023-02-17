@@ -98,12 +98,32 @@ def test_symbol_and_ensgid_in_column(data):
     )
 
 
-PARAMS_test_arxspan_ids = [x["file"] for x in FILE_ATTRIBUTES if not x["ismatrix"]]
+PARAMS_test_profile_ids = [
+    x["file"] for x in FILE_ATTRIBUTES if not x["ismatrix"] and x["id"] == "ProfileID"
+]
 
 
-@pytest.mark.parametrize("data", PARAMS_test_arxspan_ids, indirect=True)
+@pytest.mark.parametrize("data", PARAMS_test_profile_ids, indirect=True)
 @pytest.mark.format
-def test_arxspan_ids(data):
+def test_profile_ids(data):
+    assert "Profile_ID" in data.columns
+    column = data["Profile_ID"]
+    matches = column.map(lambda x: re.match(r"PR-[\d]{6}$", x))
+    assert (
+        matches.notnull().all()
+    ), "some rows do not follow the PR-xxxxxx format. The first few are: \n{}".format(
+        column.index[matches.isnull()][:20]
+    )
+
+
+PARAMS_test_model_ids = [
+    x["file"] for x in FILE_ATTRIBUTES if not x["ismatrix"] and x["id"] == "ModelID"
+]
+
+
+@pytest.mark.parametrize("data", PARAMS_test_model_ids, indirect=True)
+@pytest.mark.format
+def test_model_ids(data):
     assert "DepMap_ID" in data.columns
     column = data["DepMap_ID"]
     matches = column.map(lambda x: re.match(r"ACH-[\d]{6}$", x))
