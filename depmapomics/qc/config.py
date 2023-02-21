@@ -110,16 +110,18 @@ MUTATIONS_MERGE_COLS = [
 # if there are new files that were added in the previous release, add them here
 FILES_RELEASED_BEFORE = [
     "OmicsExpressionProteinCodingGenesTPMLogp1",
-    "CCLE_expression_proteincoding_genes_expected_count",
-    "CCLE_RNAseq_transcripts",
-    "CCLE_expression_transcripts_expected_count",
-    "CCLE_expression_full",
-    "CCLE_RNAseq_reads",
+    "OmicsExpressionGenesExpectedCountProfile"
+    "OmicsExpressionTranscriptsExpectedCountProfile",
+    "OmicsExpressionGeneSetEnrichment",
+    "OmicsExpressionGeneSetEnrichmentProfile",
     "OmicsFusionFiltered",
-    "CCLE_fusions_unfiltered",
+    "OmicsFusionUnfilteredProfile",
     "OmicsCNGene",
-    "CCLE_segment_cn",
-    "CCLE_mutations",
+    "OmicsCNSegmentsProfile",
+    "OmicsSomaticMutations",
+    "OmicsSomaticMutationsProfile",
+    "OmicsSomaticMutationsMatrixDamaging",
+    "OmicsSomaticMutationsMatrixHotspot",
 ]
 
 # correlation thresholds above which we consider two releases as 'similar'
@@ -242,7 +244,7 @@ FILE_ATTRIBUTES = [
 
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [
-# x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
+# x for x in FILE_ATTRIBUTES if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
 # ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 FILE_ATTRIBUTES = [
@@ -251,7 +253,7 @@ FILE_ATTRIBUTES = [
 # FILE_ATTRIBUTES = [
 #     x
 #     for x in FILE_ATTRIBUTES
-#     if (x["file"] in ["CCLE_fusions", "CCLE_fusions_unfiltered"])
+#     if (x["file"] in ["OmicsFusionFiltered", "OmicsFusionUnfilteredProfile"])
 # ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "OmicsFusionFiltered")]
 
@@ -287,15 +289,12 @@ TAIGA_IDS_LATEST = {
         ("CCLE_fusions", "filteredfusions_latest"),
     ],
     EXPRESSION_TAIGA_ID: [
-        ("CCLE_expression_full", "genes_tpm_logp1"),
-        ("CCLE_RNAseq_transcripts", "transcripts_tpm_logp1"),
-        ("CCLE_RNAseq_reads", "genes_expected_count"),
-        ("CCLE_expression", "proteincoding_genes_tpm_logp1"),
+        ("OmicsExpressionGenesExpectedCountProfile", "genes_expected_count"),
+        ("OmicsExpressionProteinCodingGenesTPMLogp1", "proteincoding_genes_tpm_logp1"),
         (
-            "CCLE_expression_proteincoding_genes_expected_count",
-            "proteincoding_genes_expected_count",
+            "OmicsExpressionTranscriptsExpectedCountProfile",
+            "transcripts_expected_count",
         ),
-        ("CCLE_expression_transcripts_expected_count", "transcripts_expected_count"),
         # ('CCLE_ssGSEA', 'gene_sets_all')
     ],
     CN_TAIGA_ID: [

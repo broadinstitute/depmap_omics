@@ -160,7 +160,9 @@ def test_matrix_datatypes(data):
     assert list(datatypes)[0] == np.dtype("float64")
 
 
-@pytest.mark.parametrize("data", ["CCLE_expression_full"], indirect=True)
+@pytest.mark.parametrize(
+    "data", ["OmicsExpressionProteinCodingGenesTPMLogp1"], indirect=True
+)
 @pytest.mark.format
 def test_expression_logtransform(data):
     assert data.min().min() == 0
@@ -169,11 +171,22 @@ def test_expression_logtransform(data):
     ), "expression data is not log-transformed"
 
 
-@pytest.mark.parametrize("data", ["CCLE_segment_cn", "CCLE_mutations"], indirect=True)
+@pytest.mark.parametrize("data", ["OmicsCNSegmentsProfile"], indirect=True)
 @pytest.mark.format
-def test_chromosome_names(data):
+def test_chromosome_names_cn(data):
     matches = (
         data["Chromosome"].drop_duplicates().map(lambda x: re.match(r"^\d+|X|Y|M$", x))
+    )
+    assert matches.notnull().all()
+
+
+@pytest.mark.parametrize("data", ["OmicsSomaticMutations"], indirect=True)
+@pytest.mark.format
+def test_chromosome_names_mut(data):
+    matches = (
+        data["Chrom"]
+        .drop_duplicates()
+        .map(lambda x: re.match(r"chr([\d]{1,2}|[XYM])$", x))
     )
     assert matches.notnull().all()
 
