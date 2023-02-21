@@ -65,9 +65,9 @@ def get_pr_ids(data, isMatrix):
     if isMatrix:
         arxspans = set(data.index)
     else:
-        assert "Profile_ID" in data.columns
-        if "Profile_ID" in data.columns:
-            arxspans = set(data["Profile_ID"])
+        assert "ProfileID" in data.columns
+        if "ProfileID" in data.columns:
+            arxspans = set(data["ProfileID"])
 
     matches = [re.match(r"PR-[A-Za-z0-9]{6}$", x) for x in arxspans]
     assert all(
@@ -82,8 +82,8 @@ def get_both_release_lists_from_taiga(file):
     data1, data2 = get_both_releases_from_taiga(file)
 
     if file.endswith("Profile"):
-        ids1 = get_pr_ids(data1, "Profile_ID" not in data1.columns)
-        ids2 = get_pr_ids(data2, "Profile_ID" not in data1.columns)
+        ids1 = get_pr_ids(data1, "ProfileID" not in data1.columns)
+        ids2 = get_pr_ids(data2, "ProfileID" not in data1.columns)
     else:
         ids1 = get_arxspan_ids(data1, "DepMap_ID" not in data1.columns)
         ids2 = get_arxspan_ids(data2, "DepMap_ID" not in data2.columns)
@@ -176,21 +176,21 @@ def test_matrix_correlations(data, threshold, axisname, method):
 
 
 PARAMS_fraction_of_unequl_columns_from_merged_file = [
-    ((x["file"], x["merge_cols"]), x["expected_changed_cols"])
+    ((x["file"], x["merge_cols"]), x["expected_changed_cols"], x["id"])
     for x in FILE_ATTRIBUTES_PAIRED
     if "merge_cols" in x
 ]
 
 
 @pytest.mark.parametrize(
-    "dataframes_merged, expected_changed_cols",
+    "dataframes_merged, expected_changed_cols, expected_id",
     PARAMS_fraction_of_unequl_columns_from_merged_file,
     indirect=["dataframes_merged"],
     ids=[x[0][0] for x in PARAMS_fraction_of_unequl_columns_from_merged_file],
 )
 @pytest.mark.compare
 def test_fraction_of_unequal_columns_from_merged_file(
-    dataframes_merged, expected_changed_cols
+    dataframes_merged, expected_changed_cols, expected_id
 ):
     dataframes_merged.drop(
         [x + "_x" for x in expected_changed_cols], inplace=True, axis=1
@@ -208,7 +208,7 @@ def test_fraction_of_unequal_columns_from_merged_file(
         )
     )
     dataframe_merge_both = dataframes_merged[dataframes_merged["_merge"] == "both"]
-    dataframe_merge_both.set_index("DepMap_ID", inplace=True)
+    dataframe_merge_both.set_index(expected_id, inplace=True)
     unequal_values = pd.DataFrame(index=dataframe_merge_both.index, columns=cols)
     cols_dtype = dataframe_merge_both[[col + "_x" for col in cols]].dtypes
 
@@ -241,7 +241,7 @@ def test_fraction_of_unequal_columns_from_merged_file(
     unequal_columns = unequal_columns[unequal_columns["sum"] > 0]
     unequal_columns.rename(columns={"mean": "freq", "sum": "count"}, inplace=True)
 
-    unequal_values_sum = unequal_values.groupby("DepMap_ID").sum()
+    unequal_values_sum = unequal_values.groupby(expected_id).sum()
     unequal_values_sum = unequal_values_sum[(unequal_values_sum > 0).any(axis=1)]
     unequal_values_sum = unequal_values_sum.loc[:, (unequal_values_sum > 0).all()]
 
@@ -265,9 +265,16 @@ def test_compare_nan_fractions(data, arxspans, atol=1e-2):
     data1, data2 = data
     if arxspans == "sharedcells":
         # subset data1 and data2 by shared arxspan IDs
-        arxspans_ids = set(data1["DepMap_ID"]) & set(data2["DepMap_ID"])
-        data1 = data1[data1["DepMap_ID"].isin(arxspans_ids)]
-        data2 = data2[data2["DepMap_ID"].isin(arxspans_ids)]
+        if "DepMap_ID" in data1.columns:
+            assert "DepMap_ID" in data2.columns
+            arxspans_ids = set(data1["DepMap_ID"]) & set(data2["DepMap_ID"])
+            data1 = data1[data1["DepMap_ID"].isin(arxspans_ids)]
+            data2 = data2[data2["DepMap_ID"].isin(arxspans_ids)]
+        elif "ProfileID" in data1.columns:
+            assert "ProfileID" in data2.columns
+            arxspans_ids = set(data1["ProfileID"]) & set(data2["ProfileID"])
+            data1 = data1[data1["ProfileID"].isin(arxspans_ids)]
+            data2 = data2[data2["ProfileID"].isin(arxspans_ids)]
     elif arxspans != "allcells":
         raise RuntimeError("unknown value for arxspans")
 
@@ -351,132 +358,132 @@ def test_compare_cell_lines_released(data, arxspan_col):
     )  # , 'lines added:\n{}\nlines removed:\n {}'.format(', '.join(arxspans2-arxspans1), ', '.join(arxspans1-arxspans2))
 
 
-@pytest.mark.skipif(
-    [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "CCLE_segment_cn"] == [],
-    reason="skipped by user",
-)
-@pytest.mark.parametrize("data", ["CCLE_segment_cn"], indirect=["data"])
-@pytest.mark.compare
-def test_source_changes(data):
-    data1, data2 = data
-    source1 = data1.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
-    source2 = data2.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
-    source_changes = pd.concat(
-        [source1, source2], axis=1, join="inner", keys=["old", "new"]
-    )
-    source_changes.fillna("NA", inplace=True)
-    source_changes_matrix = (
-        source_changes.groupby(["old", "new"]).size().unstack(fill_value=0)
-    )
-    source_changes = source_changes[source_changes["old"] != source_changes["new"]]
+# @pytest.mark.skipif(
+#     [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "OmicsCNSegmentsProfile"] == [],
+#     reason="skipped by user",
+# )
+# @pytest.mark.parametrize("data", ["CCLE_segment_cn"], indirect=["data"])
+# @pytest.mark.compare
+# def test_source_changes(data):
+#     data1, data2 = data
+#     source1 = data1.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
+#     source2 = data2.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
+#     source_changes = pd.concat(
+#         [source1, source2], axis=1, join="inner", keys=["old", "new"]
+#     )
+#     source_changes.fillna("NA", inplace=True)
+#     source_changes_matrix = (
+#         source_changes.groupby(["old", "new"]).size().unstack(fill_value=0)
+#     )
+#     source_changes = source_changes[source_changes["old"] != source_changes["new"]]
 
-    assert (
-        source_changes.empty
-    ), "the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}".format(
-        source_changes, source_changes_matrix
-    )
-
-
-def calculate_source_changes(data1, data2):
-    source1 = data1.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
-    source2 = data2.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
-
-    name_changes = {
-        "Broad WGS": "BG",
-        "Broad WES": "BX",
-        "Sanger WGS": "SG",
-        "Sanger WES": "SX",
-        "Chordoma WGS": "CG",
-        "Chordoma WES": "CX",
-        "Broad SNP": "BS",
-    }
-    source1.replace(name_changes, inplace=True)
-    source2.replace(name_changes, inplace=True)
-
-    source_changes = pd.concat(
-        [source1, source2], axis=1, join="inner", keys=["old", "new"]
-    )
-    source_changes.fillna("NA", inplace=True)
-
-    source_changes = source_changes.apply(lambda x: ">".join(x), axis=1)
-    source_changes = source_changes.to_frame().rename(columns={0: "CNV"})
-    # source1 = source1.to_frame()
-    # source1['release'] = 0
-    # source2 = source2.to_frame()
-    # source2['release'] = 1
-
-    # sources = pd.concat([source1, source2])
-
-    # source_changes = sources.groupby(['DepMap_ID', 'Source'])['release'].apply(
-    #     lambda x: '{}{}'.format(int(0 in set(x)), int(1 in set(x))))
-    # source_changes = source_changes.unstack(fill_value='00')
-    return source_changes
+#     assert (
+#         source_changes.empty
+#     ), "the following cell lines have had a source change in CCLE_segment_cn:\n{}\n\nSource change matrix (counting cell lines):\n {}".format(
+#         source_changes, source_changes_matrix
+#     )
 
 
-@pytest.mark.skipif(
-    [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "CCLE_mutations"] == [],
-    reason="skipped by user",
-)
-@pytest.mark.parametrize("data", ["CCLE_mutations"], indirect=["data"])
-@pytest.mark.compare
-def test_mutation_legacy_data(data):
-    data1, data2 = data
-    AC_cols = ["CGA_WES_AC", "HC_AC", "RD_AC", "RNAseq_AC", "SangerWES_AC", "WGS_AC"]
-    mut_notnull1 = data1.groupby("DepMap_ID")[AC_cols].apply(
-        lambda x: x.notnull().any()
-    )
-    mut_notnull2 = data2.groupby("DepMap_ID")[AC_cols].apply(
-        lambda x: x.notnull().any()
-    )
-    shared_lines = set(mut_notnull1.index) & set(mut_notnull2.index)
-    mut_notnull_diff = mut_notnull2.loc[shared_lines].astype(
-        int
-    ) + 2 * mut_notnull1.loc[shared_lines].astype(int)
-    mut_notnull_diff.replace({0: "00", 1: "01", 2: "10", 3: "11"}, inplace=True)
+# def calculate_source_changes(data1, data2):
+#     source1 = data1.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
+#     source2 = data2.groupby("DepMap_ID")["Source"].apply(lambda x: x.iloc[0])
 
-    # add expression changes
-    expression_file = "CCLE_expression"
-    expression_col = "RNA"
-    arxspans1, arxspans2 = get_both_release_lists_from_taiga(expression_file)
-    mut_notnull_diff[expression_col] = mut_notnull_diff.index.map(
-        lambda x: "{}{}".format(int(x in arxspans1), int(x in arxspans2))
-    )
-    mut_notnull_diff = mut_notnull_diff[
-        (
-            (mut_notnull_diff[AC_cols] == "10")
-            | (mut_notnull_diff[AC_cols] == "01")
-            | (
-                mut_notnull_diff["RNAseq_AC"].isin(["01", "11"])
-                & mut_notnull_diff[  # available in the new rna mutation
-                    expression_col
-                ].isin(["10", "00"])
-            )  # available in the new expression data
-        ).any(axis=1)
-    ]
-    rna_change_mismatch = mut_notnull_diff["RNAseq_AC"].isin(
-        ["01", "11"]
-    ) & mut_notnull_diff[expression_col].isin(["10", "00"])
-    rna_change_mismatch = rna_change_mismatch.map(lambda x: "*" if x else "")
-    # rna_change_mismatch = mut_notnull_diff.apply(lambda x: '' if x['RNAseq_AC']==x['CCLE_expression'] else '*', axis=1)
-    mut_notnull_diff["RNAseq_AC"] = rna_change_mismatch + mut_notnull_diff["RNAseq_AC"]
+#     name_changes = {
+#         "Broad WGS": "BG",
+#         "Broad WES": "BX",
+#         "Sanger WGS": "SG",
+#         "Sanger WES": "SX",
+#         "Chordoma WGS": "CG",
+#         "Chordoma WES": "CX",
+#         "Broad SNP": "BS",
+#     }
+#     source1.replace(name_changes, inplace=True)
+#     source2.replace(name_changes, inplace=True)
 
-    # add CN changes
-    segment_data = "CCLE_segment_cn"
-    data1, data2 = get_both_releases_from_taiga(segment_data)
-    source_changes = calculate_source_changes(data1, data2)
+#     source_changes = pd.concat(
+#         [source1, source2], axis=1, join="inner", keys=["old", "new"]
+#     )
+#     source_changes.fillna("NA", inplace=True)
 
-    mut_notnull_diff = pd.merge(
-        mut_notnull_diff, source_changes, left_index=True, right_index=True, how="left"
-    )
+#     source_changes = source_changes.apply(lambda x: ">".join(x), axis=1)
+#     source_changes = source_changes.to_frame().rename(columns={0: "CNV"})
+#     # source1 = source1.to_frame()
+#     # source1['release'] = 0
+#     # source2 = source2.to_frame()
+#     # source2['release'] = 1
 
-    assert mut_notnull_diff.empty, """For shared cell lines between the two releases, the following data
-sources have changed in the mutation data
-(00:still absent, 01:added, 10:dropped, 11:still present,
-*:expression drop has not propagated to RNAseq_AC,
-BG: Broad WGS, BX: Broad WES, SG: Sanger WGS, SX: Sanger WES,
-CG: Chordoma WGS, CX: Chordoma WES, BS: Broad SNP)\n{}""".format(
-        mut_notnull_diff
-    )
+#     # sources = pd.concat([source1, source2])
+
+#     # source_changes = sources.groupby(['DepMap_ID', 'Source'])['release'].apply(
+#     #     lambda x: '{}{}'.format(int(0 in set(x)), int(1 in set(x))))
+#     # source_changes = source_changes.unstack(fill_value='00')
+#     return source_changes
+
+
+# @pytest.mark.skipif(
+#     [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "CCLE_mutations"] == [],
+#     reason="skipped by user",
+# )
+# @pytest.mark.parametrize("data", ["CCLE_mutations"], indirect=["data"])
+# @pytest.mark.compare
+# def test_mutation_legacy_data(data):
+#     data1, data2 = data
+#     AC_cols = ["CGA_WES_AC", "HC_AC", "RD_AC", "RNAseq_AC", "SangerWES_AC", "WGS_AC"]
+#     mut_notnull1 = data1.groupby("DepMap_ID")[AC_cols].apply(
+#         lambda x: x.notnull().any()
+#     )
+#     mut_notnull2 = data2.groupby("DepMap_ID")[AC_cols].apply(
+#         lambda x: x.notnull().any()
+#     )
+#     shared_lines = set(mut_notnull1.index) & set(mut_notnull2.index)
+#     mut_notnull_diff = mut_notnull2.loc[shared_lines].astype(
+#         int
+#     ) + 2 * mut_notnull1.loc[shared_lines].astype(int)
+#     mut_notnull_diff.replace({0: "00", 1: "01", 2: "10", 3: "11"}, inplace=True)
+
+#     # add expression changes
+#     expression_file = "CCLE_expression"
+#     expression_col = "RNA"
+#     arxspans1, arxspans2 = get_both_release_lists_from_taiga(expression_file)
+#     mut_notnull_diff[expression_col] = mut_notnull_diff.index.map(
+#         lambda x: "{}{}".format(int(x in arxspans1), int(x in arxspans2))
+#     )
+#     mut_notnull_diff = mut_notnull_diff[
+#         (
+#             (mut_notnull_diff[AC_cols] == "10")
+#             | (mut_notnull_diff[AC_cols] == "01")
+#             | (
+#                 mut_notnull_diff["RNAseq_AC"].isin(["01", "11"])
+#                 & mut_notnull_diff[  # available in the new rna mutation
+#                     expression_col
+#                 ].isin(["10", "00"])
+#             )  # available in the new expression data
+#         ).any(axis=1)
+#     ]
+#     rna_change_mismatch = mut_notnull_diff["RNAseq_AC"].isin(
+#         ["01", "11"]
+#     ) & mut_notnull_diff[expression_col].isin(["10", "00"])
+#     rna_change_mismatch = rna_change_mismatch.map(lambda x: "*" if x else "")
+#     # rna_change_mismatch = mut_notnull_diff.apply(lambda x: '' if x['RNAseq_AC']==x['CCLE_expression'] else '*', axis=1)
+#     mut_notnull_diff["RNAseq_AC"] = rna_change_mismatch + mut_notnull_diff["RNAseq_AC"]
+
+#     # add CN changes
+#     segment_data = "CCLE_segment_cn"
+#     data1, data2 = get_both_releases_from_taiga(segment_data)
+#     source_changes = calculate_source_changes(data1, data2)
+
+#     mut_notnull_diff = pd.merge(
+#         mut_notnull_diff, source_changes, left_index=True, right_index=True, how="left"
+#     )
+
+#     assert mut_notnull_diff.empty, """For shared cell lines between the two releases, the following data
+# sources have changed in the mutation data
+# (00:still absent, 01:added, 10:dropped, 11:still present,
+# *:expression drop has not propagated to RNAseq_AC,
+# BG: Broad WGS, BX: Broad WES, SG: Sanger WGS, SX: Sanger WES,
+# CG: Chordoma WGS, CX: Chordoma WES, BS: Broad SNP)\n{}""".format(
+#         mut_notnull_diff
+#     )
 
 
 # TODO: implement the assert almost equal version of the tests

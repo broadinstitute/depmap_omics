@@ -90,7 +90,7 @@ IGNORE_FAILED_TO_RELEASE = []
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
-FUSIONS_MERGE_COLS = [
+FUSIONS_FILTERED_MERGE_COLS = [
     "DepMap_ID",
     "LeftGene",
     "RightGene",
@@ -98,7 +98,15 @@ FUSIONS_MERGE_COLS = [
     "RightBreakpoint",
     "SpliceType",
 ]
-SEGMENT_CN_MERGE_COLS = ["DepMap_ID", "Chromosome", "Start", "End"]
+FUSIONS_UNFILTERED_MERGE_COLS = [
+    "ProfileID",
+    "LeftGene",
+    "RightGene",
+    "LeftBreakpoint",
+    "RightBreakpoint",
+    "SpliceType",
+]
+SEGMENT_CN_MERGE_COLS = ["ProfileID", "Chromosome", "Start", "End"]
 MUTATIONS_MERGE_COLS = [
     "DepMap_ID",
     "Chromosome",
@@ -164,15 +172,15 @@ FILE_ATTRIBUTES = [
         "file": "OmicsFusionFiltered",
         "ismatrix": False,
         "omicssource": "RNA",
-        "merge_cols": FUSIONS_MERGE_COLS,
+        "merge_cols": FUSIONS_FILTERED_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
-        "id": "ModelID",
+        "id": "DepMap_ID",
     },
     {
         "file": "OmicsFusionUnfilteredProfile",
         "ismatrix": False,
         "omicssource": "RNA",
-        "merge_cols": FUSIONS_MERGE_COLS,
+        "merge_cols": FUSIONS_UNFILTERED_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
         "id": "ProfileID",
     },
@@ -244,17 +252,19 @@ FILE_ATTRIBUTES = [
 
 # comment/uncomment to use all/subset of files for testing
 # FILE_ATTRIBUTES = [
-# x for x in FILE_ATTRIBUTES if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
-# ]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-FILE_ATTRIBUTES = [
-    x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
-]
-# FILE_ATTRIBUTES = [
 #     x
 #     for x in FILE_ATTRIBUTES
-#     if (x["file"] in ["OmicsFusionFiltered", "OmicsFusionUnfilteredProfile"])
+#     if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
 # ]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
+# FILE_ATTRIBUTES = [
+#     x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
+# ]
+FILE_ATTRIBUTES = [
+    x
+    for x in FILE_ATTRIBUTES
+    if (x["file"] in ["OmicsFusionFiltered", "OmicsFusionUnfilteredProfile"])
+]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "OmicsFusionFiltered")]
 
 # the following information is used to create a tentative virtual
@@ -266,41 +276,20 @@ CN_TAIGA_ID = "cn-achilles-version-06ca"
 
 TAIGA_IDS_LATEST = {
     MUTATIONS_TAIGA_ID: [
-        ("CCLE_mutations", "merged_somatic_mutations_withlegacy"),
-        (
-            "CCLE_mutations_bool_damaging",
-            "merged_somatic_mutations_boolmatrix_fordepmap_damaging",
-        ),
-        (
-            "CCLE_mutations_bool_nonconserving",
-            "merged_somatic_mutations_boolmatrix_fordepmap_othernoncons",
-        ),
-        (
-            "CCLE_mutations_bool_otherconserving",
-            "merged_somatic_mutations_boolmatrix_fordepmap_othercons",
-        ),
-        (
-            "CCLE_mutations_bool_hotspot",
-            "merged_somatic_mutations_boolmatrix_fordepmap_hotspot",
-        ),
+        ("OmicsSomaticMutationsProfile", "somaticMutations_profile"),
     ],
     FUSIONS_TAIGA_ID: [
-        ("CCLE_fusions_unfiltered", "fusions_latest"),
-        ("CCLE_fusions", "filteredfusions_latest"),
+        ("OmicsFusionUnfilteredProfile", "fusions_unfiltered_profile"),
     ],
     EXPRESSION_TAIGA_ID: [
-        ("OmicsExpressionGenesExpectedCountProfile", "genes_expected_count"),
-        ("OmicsExpressionProteinCodingGenesTPMLogp1", "proteincoding_genes_tpm_logp1"),
+        ("OmicsExpressionGenesExpectedCountProfile", "genes_expectedCount_profile"),
         (
             "OmicsExpressionTranscriptsExpectedCountProfile",
-            "transcripts_expected_count",
+            "transcripts_expectedCount_profile",
         ),
-        # ('CCLE_ssGSEA', 'gene_sets_all')
+        ("OmicsExpressionGeneSetEnrichmentProfile", "gene_set_enrichment_profile"),
     ],
     CN_TAIGA_ID: [
-        ("CCLE_gene_cn", "achilles_gene_cn"),
-        ("CCLE_segment_cn", "achilles_segment")
-        # ('CCLE_gene_cn', 'merged_genecn_all'),
-        # ('CCLE_segment_cn', 'merged_segments_all')
+        ("OmicsCNSegmentsProfile", "merged_segments_profile"),
     ],
 }
