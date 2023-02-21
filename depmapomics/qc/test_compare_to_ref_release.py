@@ -49,7 +49,8 @@ def get_arxspan_ids(data, isMatrix):
         arxspans = set(data.index)
     else:
         assert "DepMap_ID" in data.columns
-        arxspans = set(data["DepMap_ID"])
+        if "DepMap_ID" in data.columns:
+            arxspans = set(data["DepMap_ID"])
 
     matches = [re.match(r"ACH-[\d]{6}$", x) for x in arxspans]
     assert all(
@@ -60,13 +61,34 @@ def get_arxspan_ids(data, isMatrix):
     return arxspans
 
 
+def get_pr_ids(data, isMatrix):
+    if isMatrix:
+        arxspans = set(data.index)
+    else:
+        assert "Profile_ID" in data.columns
+        if "Profile_ID" in data.columns:
+            arxspans = set(data["Profile_ID"])
+
+    matches = [re.match(r"PR-[A-Za-z0-9]{6}$", x) for x in arxspans]
+    assert all(
+        [x is not None for x in matches]
+    ), "At least some profile IDs do not match the PR-#### format. Here are a few examples:\n {}".format(
+        list(arxspans)[:5]
+    )
+    return arxspans
+
+
 def get_both_release_lists_from_taiga(file):
     data1, data2 = get_both_releases_from_taiga(file)
 
-    arxspans1 = get_arxspan_ids(data1, "DepMap_ID" not in data1.columns)
-    arxspans2 = get_arxspan_ids(data2, "DepMap_ID" not in data2.columns)
+    if file.endswith("Profile"):
+        ids1 = get_pr_ids(data1, "Profile_ID" not in data1.columns)
+        ids2 = get_pr_ids(data2, "Profile_ID" not in data1.columns)
+    else:
+        ids1 = get_arxspan_ids(data1, "DepMap_ID" not in data1.columns)
+        ids2 = get_arxspan_ids(data2, "DepMap_ID" not in data2.columns)
 
-    return arxspans1, arxspans2
+    return ids1, ids2
 
 
 def merge_dataframes(file, merge_columns):
