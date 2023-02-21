@@ -106,9 +106,9 @@ PARAMS_test_profile_ids = [
 @pytest.mark.parametrize("data", PARAMS_test_profile_ids, indirect=True)
 @pytest.mark.format
 def test_profile_ids(data):
-    assert "Profile_ID" in data.columns
-    column = data["Profile_ID"]
-    matches = column.map(lambda x: re.match(r"PR-[\d]{6}$", x))
+    assert "ProfileID" in data.columns
+    column = data["ProfileID"]
+    matches = column.map(lambda x: re.match(r"PR-[A-Za-z0-9]{6}$", x))
     assert (
         matches.notnull().all()
     ), "some rows do not follow the PR-xxxxxx format. The first few are: \n{}".format(
