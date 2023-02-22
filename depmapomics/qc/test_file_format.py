@@ -12,7 +12,7 @@ tc = TaigaClient()
 def data(request):
     return tc.get(
         name=NEW_RELEASE["name"], file=request.param, version=NEW_RELEASE["version"]
-    )
+    ).rename(columns={"DepMap_ID": "ModelID"})
 
 
 PARAMS_wrong_columns = [x["file"] for x in FILE_ATTRIBUTES]
@@ -124,8 +124,8 @@ PARAMS_test_model_ids = [
 @pytest.mark.parametrize("data", PARAMS_test_model_ids, indirect=True)
 @pytest.mark.format
 def test_model_ids(data):
-    assert "DepMap_ID" in data.columns
-    column = data["DepMap_ID"]
+    assert "ModelID" in data.columns
+    column = data["ModelID"]
     matches = column.map(lambda x: re.match(r"ACH-[\d]{6}$", x))
     assert (
         matches.notnull().all()

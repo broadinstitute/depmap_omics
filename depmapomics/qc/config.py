@@ -91,7 +91,7 @@ IGNORE_FAILED_TO_RELEASE = []
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
 FUSIONS_FILTERED_MERGE_COLS = [
-    "DepMap_ID",
+    "ModelID",
     "LeftGene",
     "RightGene",
     "LeftBreakpoint",
@@ -108,7 +108,7 @@ FUSIONS_UNFILTERED_MERGE_COLS = [
 ]
 SEGMENT_CN_MERGE_COLS = ["ProfileID", "Chromosome", "Start", "End"]
 MUTATIONS_MERGE_COLS = [
-    "DepMap_ID",
+    "ModelID",
     "Chromosome",
     "Start_position",
     "End_position",
@@ -174,7 +174,7 @@ FILE_ATTRIBUTES = [
         "omicssource": "RNA",
         "merge_cols": FUSIONS_FILTERED_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
-        "id": "DepMap_ID",
+        "id": "ModelID",
     },
     {
         "file": "OmicsFusionUnfilteredProfile",
@@ -251,20 +251,20 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [
-#     x
-#     for x in FILE_ATTRIBUTES
-#     if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
-# ]
+FILE_ATTRIBUTES = [
+    x
+    for x in FILE_ATTRIBUTES
+    if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
+]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
 # FILE_ATTRIBUTES = [
 #     x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
 # ]
-FILE_ATTRIBUTES = [
-    x
-    for x in FILE_ATTRIBUTES
-    if (x["file"] in ["OmicsFusionFiltered", "OmicsFusionUnfilteredProfile"])
-]
+# FILE_ATTRIBUTES = [
+#     x
+#     for x in FILE_ATTRIBUTES
+#     if (x["file"] in ["OmicsFusionFiltered", "OmicsFusionUnfilteredProfile"])
+# ]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "OmicsFusionFiltered")]
 
 # the following information is used to create a tentative virtual
