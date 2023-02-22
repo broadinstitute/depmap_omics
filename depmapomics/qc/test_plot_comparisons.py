@@ -41,7 +41,7 @@ def get_data_stack(file, number_of_points=1000000, random_state=0):
     ]
     data_stack.columns = cols
     data_stack.reset_index(inplace=True)
-    data_stack.rename(columns={"level_0": "DepMap_ID", "level_1": "gene"}, inplace=True)
+    data_stack.rename(columns={"level_0": "ModelID", "level_1": "gene"}, inplace=True)
     return data_stack, cols
 
 

@@ -34,6 +34,9 @@ def get_both_releases_from_taiga(file, portal=PORTAL):
         name=PREV_RELEASE["name"], file=file, version=PREV_RELEASE["version"]
     )
     data2 = tc.get(name=NEW_RELEASE["name"], file=file, version=NEW_RELEASE["version"])
+    # 23Q2 only: rename DepMap_ID -> ModelID
+    data1 = data1.rename(columns={"DepMap_ID": "ModelID"})
+    data2 = data2.rename(columns={"DepMap_ID": "ModelID"})
     if LEGACY_PATCH_FLAGS["tsv2csv"]:
         # some older taiga data formats (probably 20q1 and older) are tsv and deprecated
         data1 = tsv2csv(data1)
@@ -48,9 +51,9 @@ def get_arxspan_ids(data, isMatrix):
     if isMatrix:
         arxspans = set(data.index)
     else:
-        assert "DepMap_ID" in data.columns
-        if "DepMap_ID" in data.columns:
-            arxspans = set(data["DepMap_ID"])
+        assert "ModelID" in data.columns
+        if "ModelID" in data.columns:
+            arxspans = set(data["ModelID"])
 
     matches = [re.match(r"ACH-[\d]{6}$", x) for x in arxspans]
     assert all(
@@ -85,8 +88,8 @@ def get_both_release_lists_from_taiga(file):
         ids1 = get_pr_ids(data1, "ProfileID" not in data1.columns)
         ids2 = get_pr_ids(data2, "ProfileID" not in data1.columns)
     else:
-        ids1 = get_arxspan_ids(data1, "DepMap_ID" not in data1.columns)
-        ids2 = get_arxspan_ids(data2, "DepMap_ID" not in data2.columns)
+        ids1 = get_arxspan_ids(data1, "ModelID" not in data1.columns)
+        ids2 = get_arxspan_ids(data2, "ModelID" not in data2.columns)
 
     return ids1, ids2
 
@@ -265,11 +268,11 @@ def test_compare_nan_fractions(data, arxspans, atol=1e-2):
     data1, data2 = data
     if arxspans == "sharedcells":
         # subset data1 and data2 by shared arxspan IDs
-        if "DepMap_ID" in data1.columns:
-            assert "DepMap_ID" in data2.columns
-            arxspans_ids = set(data1["DepMap_ID"]) & set(data2["DepMap_ID"])
-            data1 = data1[data1["DepMap_ID"].isin(arxspans_ids)]
-            data2 = data2[data2["DepMap_ID"].isin(arxspans_ids)]
+        if "ModelID" in data1.columns:
+            assert "ModelID" in data2.columns
+            arxspans_ids = set(data1["ModelID"]) & set(data2["ModelID"])
+            data1 = data1[data1["ModelID"].isin(arxspans_ids)]
+            data2 = data2[data2["ModelID"].isin(arxspans_ids)]
         elif "ProfileID" in data1.columns:
             assert "ProfileID" in data2.columns
             arxspans_ids = set(data1["ProfileID"]) & set(data2["ProfileID"])
@@ -330,7 +333,7 @@ def test_compare_column_dtypes(data, method):
 
 
 PARAMS_compare_cell_lines = [
-    (x["file"], "index" if x["ismatrix"] else "DepMap_ID")
+    (x["file"], "index" if x["ismatrix"] else "ModelID")
     for x in FILE_ATTRIBUTES_PAIRED
 ]
 
@@ -348,9 +351,9 @@ def test_compare_cell_lines_released(data, arxspan_col):
     if arxspan_col == "index":
         arxspans1 = set(data1.index)
         arxspans2 = set(data2.index)
-    elif arxspan_col == "DepMap_ID":
-        arxspans1 = set(data1["DepMap_ID"])
-        arxspans2 = set(data2["DepMap_ID"])
+    elif arxspan_col == "ModelID":
+        arxspans1 = set(data1["ModelID"])
+        arxspans2 = set(data2["ModelID"])
     else:
         raise RuntimeError("unknown value provided for arxspan_col")
     assert (
