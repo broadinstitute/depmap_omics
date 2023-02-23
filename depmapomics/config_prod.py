@@ -1,9 +1,6 @@
-import numpy as np
 from depmapomics.config_global import *
 
 ########################## GENERIC PARAMS
-
-SHEETNAME = "ccle sample tracker"
 
 isCCLE = True
 doCleanup = True
@@ -16,14 +13,6 @@ RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
 WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
 WGS_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/wgs_hg38/"
 WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
-
-
-REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
-
-DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
-
-POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
-
 
 ## TAIGA specific
 
@@ -43,7 +32,6 @@ VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
 VIRTUAL = {
     "internal": "",
-    "ibm": "",
     "dmc": "",
     "public": "",
 }

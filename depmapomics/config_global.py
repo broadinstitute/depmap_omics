@@ -1,13 +1,7 @@
-import numpy as np
-
-
 SAMPLESETNAME = "22Q4"
 RELEASE = SAMPLESETNAME.lower()
 
 ### GCP credentials
-SHEETCREDS = "../../.credentials.json"
-MY_ID = "~/.client_secret.json"
-MYSTORAGE_ID = "~/.storage.json"
 GCS_PAYER_PROJECT = "broad-firecloud-ccle"
 
 SAMPLEID = "DepMap_ID"
@@ -17,152 +11,13 @@ SOURCE_PRIORITY = ["BROAD", "DEPMAP", "IBM", "CCLE2", "SANGER", "CHORDOMA", "PRI
 
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 
+# Local directory to save intermediate files to
+WORKING_DIR = "output/"
 
 ############## TERRA
 
 HG38BAMCOL = ["internal_bam_filepath", "internal_bai_filepath"]
 LEGACY_BAM_COLNAMES = ["hg19_bam_filepath", "hg19_bai_filepath"]
-
-############## LOADING
-
-TORAISE = (["ACH-001195"],)
-
-TO_UPDATE = {
-    "primary_disease": ["Primary Disease"],
-    "sex": ["CCLF Gender"],
-    "collection_site": ["Sample Collection Site"],
-    "subtype": ["lineage_subtype"],
-    "subsubtype": ["lineage_sub_subtype"],
-    "lineage": ["lineage"],
-    # 'source': ['Flagship'],
-    "parent_cell_line": ["Parental ID"],
-    "comments": ["Comments"],
-    # "mediatype": ["Culture Medium", "Culture Type"],
-    "stripped_cell_line_name": ["Stripped Cell Line Name"],
-    "cellosaurus_id": ["RRID"],
-    "age": ["CCLF Age"],
-}
-
-MAXAGE = "2021-01-01"
-
-EXTRACT_TO_CHANGE = {"from_arxspan_id": "participant"}
-
-REPLACE = {"T": "Tumor", "N": "Normal", "m": "Unknown", "L": "Unknown"}
-
-values = (["legacy_bam_filepath", "legacy_bai_filepath"],)
-
-filetypes = ["bam", "bai"]
-
-MATCH = ["ACH-", "CDS-"]
-
-# default values in the GP workspaces and our sample tracker (to change if you use another workspace/
-# sample tracker)
-EXTRACT_DEFAULTS = {
-    "name": "sample_alias",
-    "bai": "crai_or_bai_path",
-    "bam": "cram_or_bam_path",
-    "cram": "cram_path",
-    "crai": "crai_path",
-    "ref_bam": "hg19_bam_filepath",
-    "ref_type": "Datatype",
-    "ref_bai": "hg19_bai_filepath",
-    "ref_cram": "hg38_cram_filepath",
-    "ref_crai": "hg38_crai_filepath",
-    "version": "version",
-    "primary_disease": "primary_disease",
-    "ref_arxspan_id": "arxspan_id",
-    "ref_name": "stripped_cell_line_name",
-    "source": "source",
-    "size": "size",
-    "legacy_size": "legacy_size",
-    "from_arxspan_id": "individual_alias",
-    "ref_id": "sample_id",
-    "PDO_id_terra": "PDO",
-    "PDO_id_gumbo": "PdoId",
-    "update_time": "update_time",
-    "from_patient_id": "individual_alias",
-    "patient_id": "participant_id",
-    "ref_date": "date_sequenced",
-    "hs_hs_library_size": "hs_hs_library_size",
-    "hs_het_snp_sensitivity": "hs_het_snp_sensitivity",
-    "hs_mean_bait_coverage": "hs_mean_bait_coverage",
-    "hs_mean_target_coverage": "hs_mean_target_coverage",
-    "hs_on_target_bases": "hs_on_target_bases",
-    "total_reads": "total_reads",
-    "release_date": "sequencing_date",
-    "hash": "crc32c_hash",
-    "legacy_hash": "legacy_crc32c_hash",
-    "mean_depth": "mean_depth",
-    "root_sample_id": "root_sample_id",
-    "sm_id": "SmId",
-    "profile_id": "ProfileID",
-    "expected_type": "expected_type",
-}
-
-# minimum bam file size in bytes for each sequencing type
-MINSIZES_BAM = {
-    "rna": 2_000_000_000,
-    "wes": 3_000_000_000,
-    "wgs": 50_000_000_000,
-}
-
-MINSIZES_CRAM = {
-    "wgs": 10_000_000_000,
-}
-
-# known cell lines that are from the same patient (not called?)
-# samepatient = [
-#     ["ACH-000635", "ACH-000717", "ACH-000864", "ACH-001042", "ACH-001547"],
-#     ["ACH-002291", "ACH-001672"],
-#     ["ACH-001706", "ACH-001707"],
-# ]
-
-# known duplicate arxspan-ids
-DUP_ARXSPANS = {"ACH-001620": "ACH-001605", "ACH-001621": "ACH-001606"}
-
-# rename ccle_name TODO: ask becky what to do
-# (not called?)
-# rename = {"PEDS117": "CCLFPEDS0009T"}
-
-## old GP storage buckets
-# rnaworkspace2 = "broad-firecloud-ccle/CCLE_DepMap_RNAseq"
-# rnaworkspace4 = "broad-genomics-delivery/Cancer_Cell_Line_Factory_CCLF_RNAseq"
-# rnaworkspace5 = "nci-mimoun-bi-org/CCLF_RNA_2_0"
-# rnaworkspace3 = "broad-genomics-delivery/CCLE_DepMap_RNAseq"
-# rnaworkspace1 = "broad-genomics-delivery/Getz_IBM_CellLines_RNASeqData"
-
-## curent GP buckets
-rnaworkspace6 = "terra-broad-cancer-prod/CCLE_DepMap_RNAseq"
-rnaworkspace7 = "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData"
-
-## and their correesponding sample source
-# rnasource1 = "ibm"
-# rnasource2 = "ccle"
-# rnasource3 = "ccle"
-# rnasource4 = "cclf"
-# rnasource5 = "cclf"
-
-rnasource6 = "DEPMAP"
-rnasource7 = "IBM"
-
-RNAWORKSPACES = [
-    ("DEPMAP", "terra-broad-cancer-prod/CCLE_DepMap_RNAseq", "bam"),
-    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData", "bam"),
-]
-
-## curent WGS GP buckets
-wgsworkspace1 = "terra-broad-cancer-prod/DepMap_WGS"
-wgsworkspace2 = "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS"
-
-## and their corresponding sample source
-wgssource1 = "DEPMAP"
-wgssource2 = "IBM"
-
-WGSWORKSPACES = [
-    ("DEPMAP", "terra-broad-cancer-prod/DepMap_WGS", "bam"),
-    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS", "bam"),
-    ("DEPMAP", "broad-genomics-data/DepMap_WGS", "cram"),
-]
 
 WGSSETENTITY = "sample_set"
 WESSETENTITY = "pair_set"
@@ -171,13 +26,10 @@ WESSETENTITY = "pair_set"
 
 FPALLBATCHPAIRSETS = "all"
 
-# Local directory to save intermediate files to
-WORKING_DIR = "output/"
-
 PREV_VIRTUAL = {}
 
 DATASETS = ["internal", "dmc", "public"]
-RUN_NOTEBOOKS = ["WGS_CCLE.ipynb", "RNA_CCLE.ipynb"]
+
 # 20Q3
 # PREV_VIRTUAL={}
 # PREV_VIRTUAL['public'] = 'public-20q3-3d35'
@@ -337,18 +189,6 @@ SIGTABLE_RENAMING = {
     "msisensor2_score": "MSIScore",
 }
 
-SOURCE_RENAME = {
-    "CCLF": "Broad",
-    "CHORDOMA": "Chordoma",
-    "SANGER": "Sanger",
-    "IBM": "Broad",
-    "CCLE2": "Broad",
-    np.nan: "Broad",
-    "DEPMAP": "Broad",
-    "IBM WES": "Broad WES",
-    "Broad CCLF": "Broad WES",
-}
-
 ############## Mutations
 
 MINFREQTOCALL = 0.25
@@ -391,30 +231,6 @@ SV_COLRENAME = {
     "SAMPLE": "Sample",
     # temporary
     "OCILY12": "Sample",
-}
-
-
-MUTATION_GROUPS = {
-    "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
-    "other non-conserving": [
-        "In_Frame_Del",
-        "In_Frame_Ins",
-        "Stop_Codon_Del",
-        "Stop_Codon_Ins",
-        "Missense_Mutation",
-        "Nonstop_Mutation",
-    ],
-    "silent": ["Silent"],
-    "damaging": [
-        "De_novo_Start_OutOfFrame",
-        "Frame_Shift_Del",
-        "Frame_Shift_Ins",
-        "Splice_Site",
-        "Start_Codon_Del",
-        "Start_Codon_Ins",
-        "Start_Codon_SNP",
-        "Nonsense_Mutation",
-    ],
 }
 
 MAF_COL = "depmap_maf"
