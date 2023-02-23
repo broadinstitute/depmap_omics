@@ -16,7 +16,28 @@ SHARED_DATA_CORRELATION_THRESHOLD = 0.95
 MIN_SAMPLESIZE_FOR_CORR = 10
 
 
-def get_data_stack(file, number_of_points=1000000, random_state=0):
+def get_data_stack(
+    file: str, number_of_points: int = 100000, random_state: int = 0
+) -> tuple[pd.DataFrame, tuple[str, str]]:
+    """Return a stacked combined data frame from two consecutive versions
+    with a subsampled set of Model ID and gene pairs.
+
+    Parameters
+    -----------
+    file: str
+        taiga file name.
+    number_of_points: int
+        the subsampled number of points.
+    random_state: int
+        random sample seed.
+
+    Returns
+    --------
+    data_stack: pd.DataFrame
+        merged and stacked dataframe from two versions.
+    cols: tuple[str, str]
+        names of the file versions.
+    """
     data1, data2 = get_both_releases_from_taiga(file)
 
     row = set(data1.index) & set(data2.index)
@@ -177,8 +198,11 @@ PARAMS_plot_matrix_comparison = [
     "data_stack, file", PARAMS_plot_matrix_comparison, indirect=["data_stack"]
 )
 @pytest.mark.plot
-def test_plot_matrix_comparison(data_stack, file):
+def test_plot_matrix_comparison(data_stack: tuple, file: tuple):
     data_stack_df, cols = data_stack
+    cols = [f"{j}.{i}" for i, j in enumerate(cols)]
+    data_stack_df.columns = data_stack_df.columns.tolist()[:2] + cols
+
     corr = data_stack_df.corr().iloc[0, 1]
     sns.kdeplot(data=data_stack_df, x=cols[0], y=cols[1], fill=True)
     minmax = (data_stack_df[cols].min().min(), data_stack_df[cols].max().max())
