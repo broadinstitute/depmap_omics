@@ -1,7 +1,6 @@
 import dalmatian as dm
 import pandas as pd
 import os.path
-from genepy.utils import helper as h
 import seaborn as sns
 from depmapomics.config import *
 from genepy import terra
