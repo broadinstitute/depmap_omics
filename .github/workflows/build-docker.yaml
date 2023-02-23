@@ -2,6 +2,10 @@ name: build-docker
 
 on: [push]
 
+env:
+  DOCKER_REPO: us.gcr.io/cds-docker-containers/depmapomics
+  DOCKER_TAG: ga-build-${{ github.run_number }}
+
 jobs:
   build-docker:
     runs-on: ubuntu-latest
@@ -15,7 +19,7 @@ jobs:
         with:
           registry: us.gcr.io
           username: _json_key
-          password: ${{ secrets.DEPLOY_SVC_ACCT }}
+          password: "${{ secrets.DEPLOY_SVC_ACCT }}"
       - name: build docker image
         run: bash build-docker-image.sh ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
       - name: Push Docker image
