@@ -1,5 +1,4 @@
 from depmapomics import constants
-from depmapomics import env_config
 import matplotlib.pyplot as plt
 import pandas as pd
 import pytest

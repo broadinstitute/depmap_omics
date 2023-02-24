@@ -1,5 +1,4 @@
 from depmapomics import constants
-from depmapomics import env_config
 import sys
 
 import pandas as pd

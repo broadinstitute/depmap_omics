@@ -1,5 +1,4 @@
 from depmapomics import constants
-from depmapomics import env_config
 from genepy import terra
 from genepy.utils import helper as h
 from genepy import mutations as mut
@@ -364,7 +363,6 @@ def generateGermlineMatrix(
     using the CCLE pipeline on terra
     Args:
         vcfs (list): list of vcf file locations (gs links)
-        taiga_dataset (str, optional): taiga folder location. Defaults to env_config.TAIGA_CN.
         vcfdir (str, optional): directory where vcf files are saved.
         savedir (str, optional): directory where output germline matrices are saved.
         bed_location (str, optional): location of the guides bed file.

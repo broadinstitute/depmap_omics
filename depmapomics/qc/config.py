@@ -1,5 +1,4 @@
 from depmapomics import constants
-from depmapomics import env_config
 from taigapy import TaigaClient
 
 # there are some issues in the older versions of omics data on virtual that this flag deals with
