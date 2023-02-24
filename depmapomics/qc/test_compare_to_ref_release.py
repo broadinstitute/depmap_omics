@@ -9,18 +9,18 @@ from depmapomics.qc.config import (
     CORRELATION_THRESHOLDS,
     LEGACY_PATCH_FLAGS,
     FILE_ATTRIBUTES,
-    FILES_constants.RELEASED_BEFORE,
+    FILES_RELEASED_BEFORE,
     PORTAL,
-    PREV_constants.RELEASE,
+    PREV_RELEASE,
     SKIP_ARXSPAN_COMPARISON,
-    NEW_constants.RELEASE,
+    NEW_RELEASE,
 )
 from taigapy import TaigaClient
 
 tc = TaigaClient()
 
 FILE_ATTRIBUTES_PAIRED = [
-    x for x in FILE_ATTRIBUTES if x["file"] in FILES_constants.RELEASED_BEFORE
+    x for x in FILE_ATTRIBUTES if x["file"] in FILES_RELEASED_BEFORE
 ]
 
 
@@ -33,9 +33,9 @@ def tsv2csv(df):
 ####### FIXTURES ####
 def get_both_releases_from_taiga(file, portal=PORTAL):
     data1 = tc.get(
-        name=PREV_constants.RELEASE["name"], file=file, version=PREV_constants.RELEASE["version"]
+        name=PREV_RELEASE["name"], file=file, version=PREV_RELEASE["version"]
     )
-    data2 = tc.get(name=NEW_constants.RELEASE["name"], file=file, version=NEW_constants.RELEASE["version"])
+    data2 = tc.get(name=NEW_RELEASE["name"], file=file, version=NEW_RELEASE["version"])
     # 23Q2 only: rename DepMap_ID -> ModelID
     data1 = data1.rename(columns={"DepMap_ID": "ModelID"})
     data2 = data2.rename(columns={"DepMap_ID": "ModelID"})

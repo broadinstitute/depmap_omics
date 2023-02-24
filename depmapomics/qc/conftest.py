@@ -1,7 +1,7 @@
 from depmapomics import constants
 from depmapomics import env_config
-from depmapomics.qc.config import NEW_constants.RELEASE, PREV_constants.RELEASE
+from depmapomics.qc.config import NEW_RELEASE, PREV_RELEASE
 
 def pytest_sessionstart(session):
-    print('REFERENCE_constants.RELEASE: {}.{}'.format(PREV_constants.RELEASE['name'], PREV_constants.RELEASE['version']))
-    print('constants.VIRTUAL_constants.RELEASE: {}.{}'.format(NEW_constants.RELEASE['name'], NEW_constants.RELEASE['version']))
+    print('REFERENCE_RELEASE: {}.{}'.format(PREV_RELEASE['name'], PREV_RELEASE['version']))
+    print('constants.VIRTUAL_RELEASE: {}.{}'.format(NEW_RELEASE['name'], NEW_RELEASE['version']))
