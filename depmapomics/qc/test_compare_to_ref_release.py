@@ -1,3 +1,5 @@
+from depmapomics import constants
+from depmapomics import env_config
 import re
 import numpy as np
 import pandas as pd
@@ -7,18 +9,18 @@ from depmapomics.qc.config import (
     CORRELATION_THRESHOLDS,
     LEGACY_PATCH_FLAGS,
     FILE_ATTRIBUTES,
-    FILES_RELEASED_BEFORE,
+    FILES_constants.RELEASED_BEFORE,
     PORTAL,
-    PREV_RELEASE,
+    PREV_constants.RELEASE,
     SKIP_ARXSPAN_COMPARISON,
-    NEW_RELEASE,
+    NEW_constants.RELEASE,
 )
 from taigapy import TaigaClient
 
 tc = TaigaClient()
 
 FILE_ATTRIBUTES_PAIRED = [
-    x for x in FILE_ATTRIBUTES if x["file"] in FILES_RELEASED_BEFORE
+    x for x in FILE_ATTRIBUTES if x["file"] in FILES_constants.RELEASED_BEFORE
 ]
 
 
@@ -31,9 +33,9 @@ def tsv2csv(df):
 ####### FIXTURES ####
 def get_both_releases_from_taiga(file, portal=PORTAL):
     data1 = tc.get(
-        name=PREV_RELEASE["name"], file=file, version=PREV_RELEASE["version"]
+        name=PREV_constants.RELEASE["name"], file=file, version=PREV_constants.RELEASE["version"]
     )
-    data2 = tc.get(name=NEW_RELEASE["name"], file=file, version=NEW_RELEASE["version"])
+    data2 = tc.get(name=NEW_constants.RELEASE["name"], file=file, version=NEW_constants.RELEASE["version"])
     # 23Q2 only: rename DepMap_ID -> ModelID
     data1 = data1.rename(columns={"DepMap_ID": "ModelID"})
     data2 = data2.rename(columns={"DepMap_ID": "ModelID"})

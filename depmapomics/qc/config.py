@@ -1,3 +1,5 @@
+from depmapomics import constants
+from depmapomics import env_config
 from taigapy import TaigaClient
 
 # there are some issues in the older versions of omics data on virtual that this flag deals with
@@ -21,9 +23,9 @@ def taiga_latest_path(dataset_name):
 
 # from depmapomics.qc.create_dataset import update_tentative_virtual
 # update_tentative_virtual()
-TENTATIVE_VIRTUAL = taiga_latest_path("tentative-virtual-d84e")
+TENTATIVE_constants.VIRTUAL = taiga_latest_path("tentative-virtual-d84e")
 
-VIRTUAL_RELEASES = {
+constants.VIRTUAL_constants.RELEASES = {
     "21Q4v2": {
         "internal": taiga_latest_path("internal-21q4v2-403b"),
         "ibm": taiga_latest_path("ibm-21q4v2-2d92"),
@@ -75,17 +77,17 @@ PORTAL = "internal"  # used for 'not bookkeeping' markers
 PREV_QUARTER = "22Q4"
 NEW_QUARTER = "22Q4"
 
-PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
-NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
-# NEW_RELEASE = TENTATIVE_VIRTUAL
+PREV_constants.RELEASE = constants.VIRTUAL_constants.RELEASES[PREV_QUARTER][PORTAL]
+NEW_constants.RELEASE = constants.VIRTUAL_constants.RELEASES[NEW_QUARTER][PORTAL]
+# NEW_constants.RELEASE = TENTATIVE_constants.VIRTUAL
 PORTALS = [PORTAL]
 
 LINES_TO_DROP = {"DNA": set([]), "RNA": set([])}
-LINES_TO_RELEASE = {}
-LINES_TO_RELEASE["public"] = set([])
-LINES_TO_RELEASE["dmc"] = set([])
-LINES_TO_RELEASE["internal"] = set([])
-IGNORE_FAILED_TO_RELEASE = []
+LINES_TO_constants.RELEASE = {}
+LINES_TO_constants.RELEASE["public"] = set([])
+LINES_TO_constants.RELEASE["dmc"] = set([])
+LINES_TO_constants.RELEASE["internal"] = set([])
+IGNORE_FAILED_TO_constants.RELEASE = []
 
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
@@ -116,7 +118,7 @@ MUTATIONS_MERGE_COLS = [
 ]
 
 # if there are new files that were added in the previous release, add them here
-FILES_RELEASED_BEFORE = [
+FILES_constants.RELEASED_BEFORE = [
     "OmicsExpressionProteinCodingGenesTPMLogp1",
     "OmicsExpressionGenesExpectedCountProfile"
     "OmicsExpressionTranscriptsExpectedCountProfile",

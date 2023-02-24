@@ -1,10 +1,12 @@
+from depmapomics import constants
+from depmapomics import env_config
 import sys
 
 import pandas as pd
 from genepy import rna
 from depmapomics import terra
 import numpy as np
-from depmapomics.config import RNASEQC_THRESHOLDS_FAILED, RNASEQC_THRESHOLDS_LOWQUAL
+from depmapomics.config import constants.RNASEQC_THRESHOLDS_FAILED, constants.RNASEQC_THRESHOLDS_LOWQUAL
 
 
 def plot_rnaseqc_results(
@@ -41,7 +43,7 @@ def plot_rnaseqc_results(
 
     lowqual = rna.filterRNAfromQC(
         qcs,
-        thresholds=RNASEQC_THRESHOLDS_LOWQUAL,
+        thresholds=constants.RNASEQC_THRESHOLDS_LOWQUAL,
         folder="{}/lowqual/".format(output_path),
         plot=save,
         qant1=0.1,
@@ -51,7 +53,7 @@ def plot_rnaseqc_results(
     sys.stdout.flush()
     failed = rna.filterRNAfromQC(
         qcs,
-        thresholds=RNASEQC_THRESHOLDS_FAILED,
+        thresholds=constants.RNASEQC_THRESHOLDS_FAILED,
         folder="{}/failed/".format(output_path),
         plot=save,
         qant1=0.07,
