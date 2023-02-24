@@ -1,5 +1,4 @@
 from depmapomics import constants
-from depmapomics import env_config
 from depmapomics.qc.config import NEW_RELEASE, PREV_RELEASE
 
 def pytest_sessionstart(session):

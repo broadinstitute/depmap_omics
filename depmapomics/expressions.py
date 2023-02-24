@@ -1,5 +1,4 @@
 from depmapomics import constants
-from depmapomics import env_config
 import os.path
 
 import dalmatian as dm
