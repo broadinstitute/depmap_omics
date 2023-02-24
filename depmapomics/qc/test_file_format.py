@@ -4,7 +4,7 @@ import re
 
 import numpy as np
 import pytest
-from depmapomics.qc.config import FILE_ATTRIBUTES, NEW_constants.RELEASE
+from depmapomics.qc.config import FILE_ATTRIBUTES, NEW_RELEASE
 from taigapy import TaigaClient
 
 tc = TaigaClient()
@@ -13,7 +13,7 @@ tc = TaigaClient()
 @pytest.fixture(scope="module")
 def data(request):
     return tc.get(
-        name=NEW_constants.RELEASE["name"], file=request.param, version=NEW_constants.RELEASE["version"]
+        name=NEW_RELEASE["name"], file=request.param, version=NEW_RELEASE["version"]
     ).rename(columns={"DepMap_ID": "ModelID"})
 
 

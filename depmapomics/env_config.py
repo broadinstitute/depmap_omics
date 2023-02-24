@@ -1,3 +1,6 @@
+
+import os
+
 def _file_to_list(filename):
     """
     loads an input file with a\\n b\\n.. into a list [a,b,..]

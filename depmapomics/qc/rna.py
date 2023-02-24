@@ -6,7 +6,7 @@ import pandas as pd
 from genepy import rna
 from depmapomics import terra
 import numpy as np
-from depmapomics.config import constants.RNASEQC_THRESHOLDS_FAILED, constants.RNASEQC_THRESHOLDS_LOWQUAL
+from depmapomics import constants
 
 
 def plot_rnaseqc_results(

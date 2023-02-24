@@ -486,7 +486,7 @@ async def _CCLEFingerPrint(
     working_dir=constants.WORKING_DIR,
     bamcolname=constants.LEGACY_BAM_COLNAMES + constants.HG38_CRAM_COLNAMES,
     taiga_dataset=env_config.TAIGA_FP,
-    updated_mat_filename=constants.env_config.TAIGA_FP_FILENAME,
+    updated_mat_filename=constants.TAIGA_FP_FILENAME,
     upload_to_taiga=True,
 ):
     """CCLE fingerprinting function
