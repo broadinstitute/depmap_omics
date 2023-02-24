@@ -1,3 +1,5 @@
+from depmapomics import constants
+from depmapomics import env_config
 import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
@@ -5,8 +7,8 @@ import seaborn as sns
 from depmapomics.qc.config import PLOTS_OUTPUT_FILENAME_PREFIX
 from depmapomics.qc.test_compare_to_ref_release import (
     FILE_ATTRIBUTES_PAIRED,
-    PREV_RELEASE,
-    NEW_RELEASE,
+    PREV_constants.RELEASE,
+    NEW_constants.RELEASE,
     data,
     get_both_releases_from_taiga,
 )
@@ -36,8 +38,8 @@ def get_data_stack(file, number_of_points=1000000, random_state=0):
     data_stack = pd.concat([data1_stack, data2_stack], axis=1)
 
     cols = [
-        "{:s}.{:d}".format(PREV_RELEASE["name"], PREV_RELEASE["version"]),
-        "{:s}.{:d}".format(NEW_RELEASE["name"], NEW_RELEASE["version"]),
+        "{:s}.{:d}".format(PREV_constants.RELEASE["name"], PREV_constants.RELEASE["version"]),
+        "{:s}.{:d}".format(NEW_constants.RELEASE["name"], NEW_constants.RELEASE["version"]),
     ]
     data_stack.columns = cols
     data_stack.reset_index(inplace=True)
@@ -55,7 +57,7 @@ def data_stack(request):
 # def CCLE_gene_cn_with_source_change():
 #     CCLE_gene_cn_12, cols = get_data_stack("OmicsCNGene")
 
-#     names = [PREV_RELEASE["name"], NEW_RELEASE["name"]]
+#     names = [PREV_constants.RELEASE["name"], NEW_constants.RELEASE["name"]]
 
 #     CCLE_segment_cn_1, CCLE_segment_cn_2 = get_both_releases_from_taiga(
 #         "CCLE_segment_cn"
