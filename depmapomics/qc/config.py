@@ -256,10 +256,10 @@ FILE_ATTRIBUTES = [
 #     for x in FILE_ATTRIBUTES
 #     if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
 # ]
-# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-FILE_ATTRIBUTES = [
-    x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
-]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_mutations"])]
+# FILE_ATTRIBUTES = [
+#     x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
+# ]
 # FILE_ATTRIBUTES = [
 #     x
 #     for x in FILE_ATTRIBUTES
