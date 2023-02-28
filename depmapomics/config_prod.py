@@ -2,7 +2,6 @@ from depmapomics.config_global import *
 
 ########################## GENERIC PARAMS
 
-isCCLE = True
 doCleanup = True
 
 ## google storage

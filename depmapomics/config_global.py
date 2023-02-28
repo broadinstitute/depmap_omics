@@ -1,3 +1,4 @@
+isCCLE = True
 SAMPLESETNAME = "22Q4"
 RELEASE = SAMPLESETNAME.lower()
 
@@ -5,9 +6,6 @@ RELEASE = SAMPLESETNAME.lower()
 GCS_PAYER_PROJECT = "broad-firecloud-ccle"
 
 SAMPLEID = "DepMap_ID"
-
-# from most prioritized to least prioritized:
-SOURCE_PRIORITY = ["BROAD", "DEPMAP", "IBM", "CCLE2", "SANGER", "CHORDOMA", "PRISM"]
 
 ENSEMBL_SERVER_V = "http://nov2020.archive.ensembl.org/biomart"
 

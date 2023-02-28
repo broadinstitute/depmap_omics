@@ -2,8 +2,7 @@ from depmapomics.config_global import *
 
 ########################## GENERIC PARAMS
 
-isCCLE = True
-doCleanup = True
+doCleanup = False
 
 ## google storage
 BAM_GCS_BUCKET = "gs://cclebams-sandbox"
