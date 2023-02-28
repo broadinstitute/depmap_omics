@@ -5,7 +5,6 @@ import pandas as pd
 from genepy import rna
 from depmapomics import terra
 import numpy as np
-from depmapomics import constants
 
 
 def plot_rnaseqc_results(
