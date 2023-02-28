@@ -1,4 +1,3 @@
-
 import os
 
 def _file_to_list(filename):
