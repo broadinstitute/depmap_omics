@@ -1,5 +1,3 @@
-import numpy as np
-
 SAMPLESETNAME = "22Q4"
 
 RELEASE = "22q4"
