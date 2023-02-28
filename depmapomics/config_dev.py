@@ -1,103 +1,64 @@
-import numpy as np
-from depmapomics.config_global import *
+SHEETNAME = 'ccle sample tracker sandbox'
 
-########################## GENERIC PARAMS
+BAM_GCS_BUCKET = 'gs://cclebams-sandbox'
 
-SHEETNAME = "ccle sample tracker sandbox"
+RNA_GCS_PATH_HG38 = 'gs://cclebams-sandbox/rnasq_hg38/'
 
-isCCLE = True
-doCleanup = True
+RNA_GCS_PATH = 'gs://cclebams-sandbox/rna/'
 
-## google storage
-BAM_GCS_BUCKET = "gs://cclebams-sandbox"
+WGS_GCS_PATH = 'gs://cclebams-sandbox/wgs/'
 
-RNA_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/rnasq_hg38/"
-RNA_GCS_PATH = BAM_GCS_BUCKET + "/rna/"
-WGS_GCS_PATH = BAM_GCS_BUCKET + "/wgs/"
-WGS_GCS_PATH_HG38 = BAM_GCS_BUCKET + "/wgs_hg38/"
-WES_GCS_PATH = BAM_GCS_BUCKET + "/wes/"
+WGS_GCS_PATH_HG38 = 'gs://cclebams-sandbox/wgs_hg38/'
 
+WES_GCS_PATH = 'gs://cclebams-sandbox/wes/'
 
-REFSHEET_URL = "https://docs.google.com/spreadsheets/d/161mmmHF5nc3nFhgpp_7zub5Erod8xDbXnNZ-u-7BWKI"
+REFSHEET_URL = 'https://docs.google.com/spreadsheets/d/161mmmHF5nc3nFhgpp_7zub5Erod8xDbXnNZ-u-7BWKI'
 
-DEPMAP_PV = "https://docs.google.com/spreadsheets/d/1uqCOos-T9EMQU7y2ZUw4Nm84opU5fIT1y7jet1vnScE"
+SAMPLES_FOUND_NAME = 'depmap ALL samples found'
 
-POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE"
+SAMPLES_NOT_FOUND_NAME = 'depmap samples not found'
 
-SAMPLES_FOUND_NAME = "depmap ALL samples found"
+SAMPLES_NOT_FOUND_URL = 'https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg'
 
-SAMPLES_NOT_FOUND_NAME = "depmap samples not found"
+SAMPLES_MISSING_ARXSPAN_NAME = 'depmap samples missing arxspan'
 
-SAMPLES_NOT_FOUND_URL = "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
+SAMPLES_MISSING_ARXSPAN_URL = 'https://docs.google.com/spreadsheets/d/1htfgpXrMvXDlqbcZltpq6vOE_Vo2YZ3-3mdaXV-Irzk'
 
-SAMPLES_MISSING_ARXSPAN_NAME = "depmap samples missing arxspan"
+TAIGA_ETERNAL_UPLOAD = 'eternal-74b2'
 
-SAMPLES_MISSING_ARXSPAN_URL = "https://docs.google.com/spreadsheets/d/1htfgpXrMvXDlqbcZltpq6vOE_Vo2YZ3-3mdaXV-Irzk"
+TAIGA_MUTATION = 'mutations-latest-f263'
 
-## TAIGA specific
+TAIGA_CN = 'cn-latest-8bea'
 
-TAIGA_ETERNAL = "depmap-a0ab"
-TAIGA_ETERNAL_UPLOAD = "eternal-74b2"
+TAIGA_CN_ACHILLES = 'cn-achilles-version-43ea'
 
-DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
+TAIGA_EXPRESSION = 'expression-869e'
 
-TAIGA_MUTATION = "mutations-latest-f263"
-TAIGA_CN = "cn-latest-8bea"
-TAIGA_CN_ACHILLES = "cn-achilles-version-43ea"
-TAIGA_EXPRESSION = "expression-869e"
-TAIGA_FUSION = "fusions-64c4"
-TAIGA_LEGACY_CN = "copy-number-5f61"
+TAIGA_FUSION = 'fusions-64c4'
 
-VIRTUAL_FOLDER = "aee7ec053d434091a670bc64a9d7a3c1"
+VIRTUAL_FOLDER = 'aee7ec053d434091a670bc64a9d7a3c1'
 
-VIRTUAL = {
-    "internal": "",
-    "ibm": "",
-    "dmc": "",
-    "public": "",
-}
+RNAWORKSPACE = 'broad-firecloud-ccle/DEV_DepMap_hg38_RNAseq'
 
-## our working workspace (reference)
-RNAWORKSPACE = "broad-firecloud-ccle/DEV_DepMap_hg38_RNAseq"
+WGSWORKSPACE = 'broad-firecloud-ccle/DEV_DepMap_WGS_CN'
 
+WESCNWORKSPACE = 'broad-firecloud-ccle/DepMap_WES_CN_hg38-sandbox'
 
-WGSWORKSPACE = "broad-firecloud-ccle/DEV_DepMap_WGS_CN"
-WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38-sandbox"
-WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline-sandbox"
+WESMUTWORKSPACE = 'broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline-sandbox'
 
+FPWORKSPACE = 'broad-firecloud-ccle/CCLE_SNP_QC-copy'
 
-FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC-copy"
+TAIGA_FP = 'ccle-bam-fingerprints-4f4a'
 
-TAIGA_FP = "ccle-bam-fingerprints-4f4a"
-TAIGA_FP_FILENAME = "fingerprint_lod_matrix"
+GUMBO_SHEET = 'https://docs.google.com/spreadsheets/d/10Lg0xkT5OHLYgJ9VKpkh8VR64TXfxPVJXRVAckU8uBg'
 
+GUMBO_SHEETNAME = 'Backfilled profile IDs'
 
-########### Gumbo configs #############
-GUMBO_SHEET = "https://docs.google.com/spreadsheets/d/10Lg0xkT5OHLYgJ9VKpkh8VR64TXfxPVJXRVAckU8uBg"
-GUMBO_SHEETNAME = "Backfilled profile IDs"
+LATEST2FN_NUMMAT_MODEL = {'cn-latest-8bea': {'merged_gene_cn_profile': 'OmicsCNGene', 'merged_absolute_gene_cn_profile': 'OmicsAbsoluteCNGene', 'merged_loh_profile': 'OmicsLoH', 'globalGenomicFeatures_profile': 'OmicsSignatures'}, 'expression-869e': {'proteinCoding_genes_tpm_logp1_profile': 'OmicsExpressionProteinCodingGenesTPMLogp1', 'gene_set_enrichment_profile': 'OmicsExpressionGeneSetEnrichment'}, 'mutations-latest-f263': {'somaticMutations_genotypedMatrix_hotspot_profile': 'OmicsSomaticMutationsMatrixHotspot', 'somaticMutations_genotypedMatrix_damaging_profile': 'OmicsSomaticMutationsMatrixDamaging', 'somaticMutations_genotypedMatrix_driver_profile': 'OmicsSomaticMutationsMatrixDriver'}}
 
+LATEST2FN_TABLE_MODEL = {'cn-latest-8bea': {}, 'fusions-64c4': {'fusions_filtered_profile': 'OmicsFusionFiltered'}, 'mutations-latest-f263': {'somaticMutations_profile': 'OmicsSomaticMutations', 'structuralVariants_profile': 'OmicsStructuralVariants'}}
 
-# upload mapping, taiga latest to file name dicts
-LATEST2FN_NUMMAT_MODEL = {
-    TAIGA_CN: VIRTUAL_FILENAMES_NUMMAT_CN_MODEL,
-    TAIGA_EXPRESSION: VIRTUAL_FILENAMES_NUMMAT_EXP_MODEL,
-    TAIGA_MUTATION: VIRTUAL_FILENAMES_NUMMAT_MUT_MODEL,
-}
+LATEST2FN_NUMMAT_PR = {'cn-latest-8bea': {'globalGenomicFeatures_profile': 'OmicsSignaturesProfile'}, 'expression-869e': {'genes_expectedCount_profile': 'OmicsExpressionGenesExpectedCountProfile', 'transcripts_expectedCount_profile': 'OmicsExpressionTranscriptsExpectedCountProfile', 'gene_set_enrichment_profile': 'OmicsExpressionGeneSetEnrichmentProfile'}, 'mutations-latest-f263': {}}
 
-LATEST2FN_TABLE_MODEL = {
-    TAIGA_CN: VIRTUAL_FILENAMES_TABLE_CN_MODEL,
-    TAIGA_FUSION: VIRTUAL_FILENAMES_TABLE_FUSION_MODEL,
-    TAIGA_MUTATION: VIRTUAL_FILENAMES_TABLE_MUT_MODEL,
-}
+LATEST2FN_TABLE_PR = {'cn-latest-8bea': {'merged_segments_profile': 'OmicsCNSegmentsProfile', 'merged_absolute_segments_profile': 'OmicsAbsoluteCNSegmentsProfile'}, 'fusions-64c4': {'fusions_unfiltered_profile': 'OmicsFusionUnfilteredProfile'}, 'mutations-latest-f263': {'somaticMutations_profile': 'OmicsSomaticMutationsProfile', 'structuralVariants_profile': 'OmicsStructuralVariantsProfile'}}
 
-LATEST2FN_NUMMAT_PR = {
-    TAIGA_CN: VIRTUAL_FILENAMES_NUMMAT_CN_PR,
-    TAIGA_EXPRESSION: VIRTUAL_FILENAMES_NUMMAT_EXP_PR,
-    TAIGA_MUTATION: VIRTUAL_FILENAMES_NUMMAT_MUT_PR,
-}
-
-LATEST2FN_TABLE_PR = {
-    TAIGA_CN: VIRTUAL_FILENAMES_TABLE_CN_PR,
-    TAIGA_FUSION: VIRTUAL_FILENAMES_TABLE_FUSION_PR,
-    TAIGA_MUTATION: VIRTUAL_FILENAMES_TABLE_MUT_PR,
-}
