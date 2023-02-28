@@ -1,5 +1,3 @@
-SHEETNAME = "ccle sample tracker sandbox"
-
 BAM_GCS_BUCKET = "gs://cclebams-sandbox"
 
 RNA_GCS_PATH_HG38 = "gs://cclebams-sandbox/rnasq_hg38/"
@@ -11,18 +9,6 @@ WGS_GCS_PATH = "gs://cclebams-sandbox/wgs/"
 WGS_GCS_PATH_HG38 = "gs://cclebams-sandbox/wgs_hg38/"
 
 WES_GCS_PATH = "gs://cclebams-sandbox/wes/"
-
-REFSHEET_URL = "https://docs.google.com/spreadsheets/d/161mmmHF5nc3nFhgpp_7zub5Erod8xDbXnNZ-u-7BWKI"
-
-SAMPLES_FOUND_NAME = "depmap ALL samples found"
-
-SAMPLES_NOT_FOUND_NAME = "depmap samples not found"
-
-SAMPLES_NOT_FOUND_URL = "https://docs.google.com/spreadsheets/d/1yC3brpov3JELvzNoQe3eh0W196tfXzvpa0jUezMAxIg"
-
-SAMPLES_MISSING_ARXSPAN_NAME = "depmap samples missing arxspan"
-
-SAMPLES_MISSING_ARXSPAN_URL = "https://docs.google.com/spreadsheets/d/1htfgpXrMvXDlqbcZltpq6vOE_Vo2YZ3-3mdaXV-Irzk"
 
 TAIGA_ETERNAL_UPLOAD = "eternal-74b2"
 
@@ -44,15 +30,9 @@ WGSWORKSPACE = "broad-firecloud-ccle/DEV_DepMap_WGS_CN"
 
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38-sandbox"
 
-WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline-sandbox"
-
 FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC-copy"
 
 TAIGA_FP = "ccle-bam-fingerprints-4f4a"
-
-GUMBO_SHEET = "https://docs.google.com/spreadsheets/d/10Lg0xkT5OHLYgJ9VKpkh8VR64TXfxPVJXRVAckU8uBg"
-
-GUMBO_SHEETNAME = "Backfilled profile IDs"
 
 LATEST2FN_NUMMAT_MODEL = {
     "cn-latest-8bea": {

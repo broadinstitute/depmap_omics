@@ -1,5 +1,3 @@
-SHEETNAME = "ccle sample tracker"
-
 BAM_GCS_BUCKET = "gs://cclebams"
 
 RNA_GCS_PATH_HG38 = "gs://cclebams/rnasq_hg38/"
@@ -11,8 +9,6 @@ WGS_GCS_PATH = "gs://cclebams/wgs/"
 WGS_GCS_PATH_HG38 = "gs://cclebams/wgs_hg38/"
 
 WES_GCS_PATH = "gs://cclebams/wes/"
-
-REFSHEET_URL = "https://docs.google.com/spreadsheets/d/1Pgb5fIClGnErEqzxpU7qqX6ULpGTDjvzWwDN8XUJKIY"
 
 TAIGA_ETERNAL_UPLOAD = "depmap-a0ab"
 
@@ -33,8 +29,6 @@ RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
 WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
 
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
-
-WESMUTWORKSPACE = "broad-firecloud-ccle/DepMap_Mutation_Calling_CGA_pipeline"
 
 FPWORKSPACE = "broad-firecloud-ccle/CCLE_SNP_QC"
 

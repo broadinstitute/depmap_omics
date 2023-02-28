@@ -4,11 +4,7 @@ SAMPLESETNAME = "22Q4"
 
 RELEASE = "22q4"
 
-SHEETCREDS = "../../.credentials.json"
-
-MY_ID = "~/.client_secret.json"
-
-MYSTORAGE_ID = "~/.storage.json"
+WORKING_DIR = "output/"
 
 GCS_PAYER_PROJECT = "broad-firecloud-ccle"
 
@@ -24,96 +20,11 @@ LEGACY_BAM_COLNAMES = ["hg19_bam_filepath", "hg19_bai_filepath"]
 
 HG38_CRAM_COLNAMES = ["hg38_cram_filepath", "hg38_crai_filepath"]
 
-TORAISE = (["ACH-001195"],)
-
-TO_UPDATE = {
-    "primary_disease": ["Primary Disease"],
-    "sex": ["CCLF Gender"],
-    "collection_site": ["Sample Collection Site"],
-    "subtype": ["lineage_subtype"],
-    "subsubtype": ["lineage_sub_subtype"],
-    "lineage": ["lineage"],
-    "parent_cell_line": ["Parental ID"],
-    "comments": ["Comments"],
-    "stripped_cell_line_name": ["Stripped Cell Line Name"],
-    "cellosaurus_id": ["RRID"],
-    "age": ["CCLF Age"],
-}
-
-MAXAGE = "2021-01-01"
-
-EXTRACT_TO_CHANGE = {"from_arxspan_id": "participant"}
-
-REPLACE = {"T": "Tumor", "N": "Normal", "m": "Unknown", "L": "Unknown"}
-
-MATCH = ["ACH-", "CDS-"]
-
-EXTRACT_DEFAULTS = {
-    "name": "sample_alias",
-    "bai": "crai_or_bai_path",
-    "bam": "cram_or_bam_path",
-    "cram": "cram_path",
-    "crai": "crai_path",
-    "ref_bam": "hg19_bam_filepath",
-    "ref_type": "Datatype",
-    "ref_bai": "hg19_bai_filepath",
-    "ref_cram": "hg38_cram_filepath",
-    "ref_crai": "hg38_crai_filepath",
-    "version": "version",
-    "primary_disease": "primary_disease",
-    "ref_arxspan_id": "arxspan_id",
-    "ref_name": "stripped_cell_line_name",
-    "source": "source",
-    "size": "size",
-    "legacy_size": "legacy_size",
-    "from_arxspan_id": "individual_alias",
-    "ref_id": "sample_id",
-    "PDO_id_terra": "PDO",
-    "PDO_id_gumbo": "PdoId",
-    "update_time": "update_time",
-    "from_patient_id": "individual_alias",
-    "patient_id": "participant_id",
-    "ref_date": "date_sequenced",
-    "hs_hs_library_size": "hs_hs_library_size",
-    "hs_het_snp_sensitivity": "hs_het_snp_sensitivity",
-    "hs_mean_bait_coverage": "hs_mean_bait_coverage",
-    "hs_mean_target_coverage": "hs_mean_target_coverage",
-    "hs_on_target_bases": "hs_on_target_bases",
-    "total_reads": "total_reads",
-    "release_date": "sequencing_date",
-    "hash": "crc32c_hash",
-    "legacy_hash": "legacy_crc32c_hash",
-    "mean_depth": "mean_depth",
-    "root_sample_id": "root_sample_id",
-    "sm_id": "SmId",
-    "profile_id": "ProfileID",
-    "expected_type": "expected_type",
-}
-
-MINSIZES_BAM = {"rna": 2000000000, "wes": 3000000000, "wgs": 50000000000}
-
-MINSIZES_CRAM = {"wgs": 10000000000}
-
-DUP_ARXSPANS = {"ACH-001620": "ACH-001605", "ACH-001621": "ACH-001606"}
-
-RNAWORKSPACES = [
-    ("DEPMAP", "terra-broad-cancer-prod/CCLE_DepMap_RNAseq", "bam"),
-    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_RNASeqData", "bam"),
-]
-
-WGSWORKSPACES = [
-    ("DEPMAP", "terra-broad-cancer-prod/DepMap_WGS", "bam"),
-    ("IBM", "terra-broad-cancer-prod/Getz_IBM_CellLines_WGS", "bam"),
-    ("DEPMAP", "broad-genomics-data/DepMap_WGS", "cram"),
-]
-
 WGSSETENTITY = "sample_set"
 
 WESSETENTITY = "pair_set"
 
 FPALLBATCHPAIRSETS = "all"
-
-WORKING_DIR = "output/"
 
 PREV_VIRTUAL = {
     "public": "public-22q1-305b",
@@ -123,8 +34,6 @@ PREV_VIRTUAL = {
 }
 
 DATASETS = ["internal", "dmc", "public"]
-
-RUN_NOTEBOOKS = ["WGS_CCLE.ipynb", "RNA_CCLE.ipynb"]
 
 PROCQC = [
     "allelic_counts_tumor",
@@ -234,18 +143,6 @@ SIGTABLE_RENAMING = {
     "msisensor2_score": "MSIScore",
 }
 
-SOURCE_RENAME = {
-    "CCLF": "Broad",
-    "CHORDOMA": "Chordoma",
-    "SANGER": "Sanger",
-    "IBM": "Broad",
-    "CCLE2": "Broad",
-    np.nan: "Broad",
-    "DEPMAP": "Broad",
-    "IBM WES": "Broad WES",
-    "Broad CCLF": "Broad WES",
-}
-
 MINFREQTOCALL = 0.25
 
 SV_COLNAME = "somatic_annotated_sv"
@@ -286,29 +183,6 @@ SV_COLRENAME = {
     "Filter": "Filter",
     "SAMPLE": "Sample",
     "OCILY12": "Sample",
-}
-
-MUTATION_GROUPS = {
-    "other conserving": ["5'Flank", "Intron", "IGR", "3'UTR", "5'UTR"],
-    "other non-conserving": [
-        "In_Frame_Del",
-        "In_Frame_Ins",
-        "Stop_Codon_Del",
-        "Stop_Codon_Ins",
-        "Missense_Mutation",
-        "Nonstop_Mutation",
-    ],
-    "silent": ["Silent"],
-    "damaging": [
-        "De_novo_Start_OutOfFrame",
-        "Frame_Shift_Del",
-        "Frame_Shift_Ins",
-        "Splice_Site",
-        "Start_Codon_Del",
-        "Start_Codon_Ins",
-        "Start_Codon_SNP",
-        "Nonsense_Mutation",
-    ],
 }
 
 MAF_COL = "depmap_maf"
