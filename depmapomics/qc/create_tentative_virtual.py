@@ -1,4 +1,3 @@
-from depmapomics import constants
 from taigapy import TaigaClient
 from depmapomics.qc.config import TENTATIVE_VIRTUAL, TAIGA_IDS_LATEST
 

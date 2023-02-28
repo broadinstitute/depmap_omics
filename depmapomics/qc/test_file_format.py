@@ -1,4 +1,3 @@
-from depmapomics import constants
 import re
 
 import numpy as np
