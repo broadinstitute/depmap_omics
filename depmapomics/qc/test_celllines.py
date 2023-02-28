@@ -1,4 +1,3 @@
-from depmapomics import constants
 import pandas as pd
 import pytest
 from depmapomics.qc.config import (
