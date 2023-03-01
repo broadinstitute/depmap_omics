@@ -698,7 +698,7 @@ async def mutationPostProcessing(
     """the full CCLE mutations post processing pipeline (used only by CCLE)
     see postprocess() to reproduce our analysis
     Args:
-        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to env_config.WESMUTWORKSPACE.
+        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to env_config.WESCNWORKSPACE.
         wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to env_config.WGSWORKSPACE.
         samplesetname (str, optional): the sample set name to use (for the release). Defaults to constants.SAMPLESETNAME.
         AllSamplesetName (str, optional): the sample set to use for all samples. Defaults to 'all'.
