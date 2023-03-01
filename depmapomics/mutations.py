@@ -3,11 +3,11 @@ from genepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
-import pandas as pd
 from genepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
+import dalmatian as dm
 
 
 def annotateLikelyImmortalized(
@@ -286,16 +286,22 @@ def postProcess(
     # if save_output:
     # terra.saveConfigs(refworkspace, save_output + 'config/')
 
-    for i in range(0, dm_max_retries):
-        while True:
-            try:
-                wm = dm.WorkspaceManager(workspacename)
-                sample_table = wm.get_samples()
-                samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
-            except ConnectionResetError:
-                print("encountered ConnectionResetError, retry")
-                continue
-            break
+    sample_table = None
+    samples_in_set = None
+
+    while dm_max_retries > 0:
+        try:
+            wm = dm.WorkspaceManager(workspacename)
+            sample_table = wm.get_samples()
+            samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+            dm_max_retries -= 1
+        except ConnectionResetError:
+            print("encountered ConnectionResetError, retry")
+            continue
+        break
+
+    assert sample_table is not None, "dalmatian failed to initiate wm"
+    assert samples_in_set is not None, "dalmatian failed to initiate wm"
 
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
 

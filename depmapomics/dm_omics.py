@@ -13,7 +13,6 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 
-
 async def expressionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
     samplesetname=constants.SAMPLESETNAME,
@@ -839,15 +838,22 @@ async def mutationPostProcessing(
 
     if run_guidemat:
         # generate germline binary matrix
-        for i in range(0, dm_max_retries):
-            while True:
-                try:
-                    wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
-                    wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
-                except ConnectionResetError:
-                    print("encountered ConnectionResetError, retry")
-                    continue
-                break
+        wgs_samples = None
+        wes_samples = None
+
+        while dm_max_retries > 0:
+            try:
+                wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
+                wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
+                dm_max_retries -= 1
+            except ConnectionResetError:
+                print("encountered ConnectionResetError, retry")
+                continue
+            break
+
+        assert wgs_samples is not None, "dalmatian failed to initiate wm"
+        assert wes_samples is not None, "dalmatian failed to initiate wm"
+
         wgs_vcfs = wgs_samples[vcf_colname]
         wes_vcfs = wes_samples[vcf_colname]
         vcflist = (
