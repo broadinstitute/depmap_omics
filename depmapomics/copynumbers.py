@@ -63,17 +63,23 @@ def loadFromGATKAggregation(
     Returns:
         pd.dataframe: dataframe containing the segments concatenated in a bed like format
     """
-    for i in range(0, dm_max_retries):
-        while True:
-            try:
-                wm = dm.WorkspaceManager(refworkspace)
-                segments = pd.read_csv(
-                    wm.get_entities(setEntity).loc[sampleset, colname], sep="\t"
-                ).rename(columns=colRenaming)
-            except ConnectionResetError:
-                print("encountered ConnectionResetError, retry")
-                continue
-            break
+    wm = None
+    segments = None
+
+    while dm_max_retries > 0:
+        try:
+            wm = dm.WorkspaceManager(refworkspace)
+            segments = pd.read_csv(
+                wm.get_entities(setEntity).loc[sampleset, colname], sep="\t"
+            ).rename(columns=colRenaming)
+            dm_max_retries -= 1
+        except ConnectionResetError:
+            print("encountered ConnectionResetError, retry")
+            continue
+        break
+
+    assert wm is not None, "dalmatian failed to initiate wm"
+    assert segments is not None, "dalmatian failed to initiate wm"
 
     if save_output:
         terra.saveConfigs(refworkspace, os.path.join(save_output, "terra/"))
@@ -185,18 +191,27 @@ def pureCNpostprocess(
     """
 
     print("loading PureCN merged LOH file")
-    for i in range(0, dm_max_retries):
-        while True:
-            try:
-                wm = dm.WorkspaceManager(refworkspace)
-                segments = pd.read_csv(
-                    wm.get_entities("sample_set").loc[sampleset, lohcolname]
-                ).rename(columns=colRenaming)
-                samples = wm.get_samples()
-            except ConnectionResetError:
-                print("encountered ConnectionResetError, retry")
-                continue
-            break
+    wm = None
+    segments = None
+    samples = None
+
+    while dm_max_retries > 0:
+        try:
+            wm = dm.WorkspaceManager(refworkspace)
+            segments = pd.read_csv(
+                wm.get_entities("sample_set").loc[sampleset, lohcolname]
+            ).rename(columns=colRenaming)
+            samples = wm.get_samples()
+            dm_max_retries -= 1
+        except ConnectionResetError:
+            print("encountered ConnectionResetError, retry")
+            continue
+        break
+
+    assert wm is not None, "dalmatian failed to initiate wm"
+    assert segments is not None, "dalmatian failed to initiate wm"
+    assert samples is not None, "dalmatian failed to initiate wm"
+
     failed = set(samples[samples[failedcolname] == "TRUE"].index)
 
     # filter out lines with low GOF (would require manual curation)
@@ -301,15 +316,20 @@ def generateSigTable(
     dm_max_retries=10,
 ):
     print("generating global genomic feature table")
-    for i in range(0, dm_max_retries):
-        while True:
-            try:
-                wm = dm.WorkspaceManager(refworkspace)
-                samples = wm.get_samples()
-            except ConnectionResetError:
-                print("encountered ConnectionResetError, retry")
-                continue
-            break
+    samples = None
+
+    while dm_max_retries > 0:
+        try:
+            wm = dm.WorkspaceManager(refworkspace)
+            samples = wm.get_samples()
+            dm_max_retries -= 1
+        except ConnectionResetError:
+            print("encountered ConnectionResetError, retry")
+            continue
+        break
+
+    assert samples is not None, "dalmatian failed to initiate wm"
+
     samples = samples[samples.index != "nan"]
 
     # discard lines that have failed PureCN for the PureCN columns
