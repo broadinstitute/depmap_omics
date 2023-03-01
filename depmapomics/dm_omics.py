@@ -341,6 +341,7 @@ def cnPostProcessing(
     segmentsthresh=SEGMENTSTHR,
     maxYchrom=MAXYCHROM,
     dryrun=False,
+    dm_max_tries=10,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -391,6 +392,7 @@ def cnPostProcessing(
             segmentsthresh=segmentsthresh,
             maxYchrom=maxYchrom,
             purecnsampleset=purecnsampleset,
+            dm_max_tries=dm_max_tries,
             **kwargs,
         )
 
@@ -452,6 +454,7 @@ def cnPostProcessing(
         segmentsthresh=segmentsthresh,
         maxYchrom=maxYchrom,
         purecnsampleset=purecnsampleset,
+        dm_max_tries=dm_max_tries,
         **kwargs,
     )
 

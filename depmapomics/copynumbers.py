@@ -42,6 +42,7 @@ def loadFromGATKAggregation(
     ],
     sampleset="all",
     colRenaming=COLRENAMING,
+    dm_max_retries=10,
 ):
     """fetching the data from the Terra and loading it into a dataframe
 
@@ -62,7 +63,18 @@ def loadFromGATKAggregation(
     Returns:
         pd.dataframe: dataframe containing the segments concatenated in a bed like format
     """
-    wm = dm.WorkspaceManager(refworkspace)
+    for i in range(0, dm_max_retries):
+        while True:
+            try:
+                wm = dm.WorkspaceManager(refworkspace)
+                segments = pd.read_csv(
+                    wm.get_entities(setEntity).loc[sampleset, colname], sep="\t"
+                ).rename(columns=colRenaming)
+            except ConnectionResetError:
+                print("encountered ConnectionResetError, retry")
+                continue
+            break
+
     if save_output:
         terra.saveConfigs(refworkspace, os.path.join(save_output, "terra/"))
 
@@ -74,10 +86,6 @@ def loadFromGATKAggregation(
                 wm.disable_hound().delete_entity_attributes(
                     "sample", res[val], delete_files=True
                 )
-
-    segments = pd.read_csv(
-        wm.get_entities(setEntity).loc[sampleset, colname], sep="\t"
-    ).rename(columns=colRenaming)
 
     # removing the duplicates
     segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
@@ -157,6 +165,7 @@ def pureCNpostprocess(
     mappingdf=None,
     min_gof=PURECN_MIN_GOF,
     max_ploidy=PURECN_MAX_PLOIDY,
+    dm_max_retries=10,
 ):
     """fetching PureCN data from Terra, generate one matrix for absolute copy number, one matrix for LOH,
     and one cell line signature table
@@ -176,11 +185,18 @@ def pureCNpostprocess(
     """
 
     print("loading PureCN merged LOH file")
-    wm = dm.WorkspaceManager(refworkspace)
-    segments = pd.read_csv(
-        wm.get_entities("sample_set").loc[sampleset, lohcolname]
-    ).rename(columns=colRenaming)
-    samples = wm.get_samples()
+    for i in range(0, dm_max_retries):
+        while True:
+            try:
+                wm = dm.WorkspaceManager(refworkspace)
+                segments = pd.read_csv(
+                    wm.get_entities("sample_set").loc[sampleset, lohcolname]
+                ).rename(columns=colRenaming)
+                samples = wm.get_samples()
+            except ConnectionResetError:
+                print("encountered ConnectionResetError, retry")
+                continue
+            break
     failed = set(samples[samples[failedcolname] == "TRUE"].index)
 
     # filter out lines with low GOF (would require manual curation)
@@ -282,10 +298,18 @@ def generateSigTable(
     binary_cols=SIGTABLE_BINARYCOLS,
     colrenaming=SIGTABLE_RENAMING,
     save_output="",
+    dm_max_retries=10,
 ):
     print("generating global genomic feature table")
-    wm = dm.WorkspaceManager(refworkspace).disable_hound()
-    samples = wm.get_samples()
+    for i in range(0, dm_max_retries):
+        while True:
+            try:
+                wm = dm.WorkspaceManager(refworkspace)
+                samples = wm.get_samples()
+            except ConnectionResetError:
+                print("encountered ConnectionResetError, retry")
+                continue
+            break
     samples = samples[samples.index != "nan"]
 
     # discard lines that have failed PureCN for the PureCN columns
@@ -329,6 +353,7 @@ def postProcess(
     source_rename={},
     useCache=False,
     maxYchrom=MAXYCHROM,
+    dm_max_tries=10,
 ):
     """post process an aggregated CN segment file, the CCLE way
 
@@ -363,6 +388,7 @@ def postProcess(
         sortby=sortby,
         todrop=todrop,
         doCleanup=doCleanup,
+        dm_max_tries=dm_max_tries,
     )
     print("making gene level copy number")
 
@@ -432,9 +458,10 @@ def postProcess(
         sortby=sortby,
         todrop=todrop,
         save_output=save_output,
+        dm_max_tries=dm_max_tries,
     )
     feature_table = generateSigTable(
-        refworkspace, todrop=failed, save_output=save_output
+        refworkspace, todrop=failed, save_output=save_output, dm_max_tries=dm_max_tries
     )
     return (
         segments,
