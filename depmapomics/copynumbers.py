@@ -353,7 +353,7 @@ def postProcess(
     source_rename={},
     useCache=False,
     maxYchrom=MAXYCHROM,
-    dm_max_tries=10,
+    dm_max_retries=10,
 ):
     """post process an aggregated CN segment file, the CCLE way
 
@@ -388,7 +388,7 @@ def postProcess(
         sortby=sortby,
         todrop=todrop,
         doCleanup=doCleanup,
-        dm_max_tries=dm_max_tries,
+        dm_max_retries=dm_max_retries,
     )
     print("making gene level copy number")
 
@@ -458,10 +458,10 @@ def postProcess(
         sortby=sortby,
         todrop=todrop,
         save_output=save_output,
-        dm_max_tries=dm_max_tries,
+        dm_max_retries=dm_max_retries,
     )
     feature_table = generateSigTable(
-        refworkspace, todrop=failed, save_output=save_output, dm_max_tries=dm_max_tries
+        refworkspace, todrop=failed, save_output=save_output, dm_max_retries=dm_max_retries
     )
     return (
         segments,

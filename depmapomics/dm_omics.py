@@ -341,7 +341,7 @@ def cnPostProcessing(
     segmentsthresh=SEGMENTSTHR,
     maxYchrom=MAXYCHROM,
     dryrun=False,
-    dm_max_tries=10,
+    dm_max_retries=10,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -392,7 +392,7 @@ def cnPostProcessing(
             segmentsthresh=segmentsthresh,
             maxYchrom=maxYchrom,
             purecnsampleset=purecnsampleset,
-            dm_max_tries=dm_max_tries,
+            dm_max_retries=dm_max_retries,
             **kwargs,
         )
 
@@ -454,7 +454,7 @@ def cnPostProcessing(
         segmentsthresh=segmentsthresh,
         maxYchrom=maxYchrom,
         purecnsampleset=purecnsampleset,
-        dm_max_tries=dm_max_tries,
+        dm_max_retries=dm_max_retries,
         **kwargs,
     )
 
@@ -847,7 +847,9 @@ async def mutationPostProcessing(
                 break
         wgs_vcfs = wgs_samples[vcf_colname]
         wes_vcfs = wes_samples[vcf_colname]
-        vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        vcflist = (
+            wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        )
         vcflist = [v for v in vcflist if v.startswith("gs://")]
 
         print("generating germline binary matrix")
@@ -874,7 +876,9 @@ async def mutationPostProcessing(
             sorted_mat = mat.iloc[:, :4].join(mergedmat)
             sorted_mat["end"] = sorted_mat["end"].astype(int)
             print("saving merged binary matrix for library: ", lib)
-            sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
+            sorted_mat.to_csv(
+                folder + "binary_germline" + "_" + lib + ".csv", index=False
+            )
     # uploading to taiga
     tc.update_dataset(
         changes_description="new " + samplesetname + " release!",
