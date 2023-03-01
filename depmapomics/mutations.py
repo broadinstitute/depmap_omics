@@ -191,8 +191,8 @@ def managingDuplicates(samples, failed, datatype, tracker):
 
 def aggregateMAFs(
     sample_table,
-    mafcol=MAF_COL,
-    keep_cols=MUTCOL_DEPMAP,
+    mafcol=constants.MAF_COL,
+    keep_cols=constants.MUTCOL_DEPMAP,
 ):
     """aggregate MAF files from terra
 
@@ -229,8 +229,8 @@ def aggregateMAFs(
 
 def aggregateSV(
     sample_table,
-    sv_colname=SV_COLNAME,
-    sv_renaming=SV_COLRENAME,
+    sv_colname=constants.SV_COLNAME,
+    sv_renaming=constants.SV_COLRENAME,
     save_output="",
     save_filename="",
 ):

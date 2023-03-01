@@ -41,7 +41,7 @@ def loadFromGATKAggregation(
         "readgroup_ubams",
     ],
     sampleset="all",
-    colRenaming=COLRENAMING,
+    colRenaming=constants.COLRENAMING,
     dm_max_retries=10,
 ):
     """fetching the data from the Terra and loading it into a dataframe
@@ -163,8 +163,8 @@ def pureCNpostprocess(
     lohvals=PURECN_LOHVALUES,
     save_output="",
     mappingdf=None,
-    min_gof=PURECN_MIN_GOF,
-    max_ploidy=PURECN_MAX_PLOIDY,
+    min_gof=constants.PURECN_MIN_GOF,
+    max_ploidy=constants.PURECN_MAX_PLOIDY,
     dm_max_retries=10,
 ):
     """fetching PureCN data from Terra, generate one matrix for absolute copy number, one matrix for LOH,
@@ -352,7 +352,7 @@ def postProcess(
     ensemblserver=ENSEMBL_SERVER_V,
     source_rename={},
     useCache=False,
-    maxYchrom=MAXYCHROM,
+    maxYchrom=constants.MAXYCHROM,
     dm_max_retries=10,
 ):
     """post process an aggregated CN segment file, the CCLE way
@@ -461,7 +461,10 @@ def postProcess(
         dm_max_retries=dm_max_retries,
     )
     feature_table = generateSigTable(
-        refworkspace, todrop=failed, save_output=save_output, dm_max_retries=dm_max_retries
+        refworkspace,
+        todrop=failed,
+        save_output=save_output,
+        dm_max_retries=dm_max_retries,
     )
     return (
         segments,
