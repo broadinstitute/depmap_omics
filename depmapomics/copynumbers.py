@@ -1,7 +1,8 @@
 # cn.py
 
+from depmapomics import constants
 from depmap_omics_upload import tracker as track
-from depmapomics.config import *
+
 from IPython.display import Image, display
 import dalmatian as dm
 import pandas as pd
@@ -23,20 +24,20 @@ def renameColumns(df):
     ------
       df the renamed df
     """
-    return df.rename(columns=COLRENAMING)
+    return df.rename(columns=constants.COLRENAMING)
 
 
 def loadFromGATKAggregation(
     refworkspace,
     setEntity="sample_set",
-    sortby=[SAMPLEID, "Chromosome", "Start", "End"],
+    sortby=[constants.SAMPLEID, "Chromosome", "Start", "End"],
     save_output="",
     doCleanup=True,
     todrop=[],
     showPlots=False,
     colname="combined_seg_file",
     plotColname="modeled_segments_plot_tumor",
-    tempFolder=WORKING_DIR,
+    tempFolder=constants.WORKING_DIR,
     toremove=[
         "readgroup_ubams",
     ],
@@ -48,7 +49,7 @@ def loadFromGATKAggregation(
 
     Args:
         refworkspace (str): workspace path
-        sortby (list, optional): columns to sort df. Defaults to [SAMPLEID, 'Chromosome', "Start", "End"].
+        sortby (list, optional): columns to sort df. Defaults to [constants.SAMPLEID, 'Chromosome', "Start", "End"].
         save_output (str, optional): location to save output. Defaults to ''.
         doCleanup (bool, optional): if do cleanup of Terra workspace unused output and logs. Defaults to True.
         todrop (list, optional): [description]. Defaults to [].
@@ -58,7 +59,7 @@ def loadFromGATKAggregation(
         tempFolder (str, optional): where to put temp files. Defaults to "working/".
         toremove (list, optional): columns in Terra samples to remove (and delete corresponding data). Defaults to ["readgroup_ubams", ].
         sampleset (str, optional): sample set to load in terra. Defaults to "all".
-        colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
+        colRenaming (dict, optional): segment renaming dict. Defaults to constants.COLRENAMING.
 
     Returns:
         pd.dataframe: dataframe containing the segments concatenated in a bed like format
@@ -88,7 +89,7 @@ def loadFromGATKAggregation(
                 )
 
     # removing the duplicates
-    segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
+    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(drop=True)
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
@@ -100,7 +101,7 @@ def loadFromGATKAggregation(
     ] = (segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2)
     segments = segments.sort_values(by=sortby)
 
-    print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
+    print("loading " + str(len(set(segments[constants.SAMPLEID]))) + " rows")
     if showPlots:
         # plotting results of CN calls for this new sample set
         for i, (k, val) in enumerate(
@@ -154,13 +155,13 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
 
 def pureCNpostprocess(
     refworkspace,
-    sortby=[SAMPLEID, "Chromosome", "Start", "End"],
+    sortby=[constants.SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
-    lohcolname=PURECN_LOH_COLNAME,
-    failedcolname=PURECN_FAILED_COLNAME,
-    sampleset=PURECN_SAMPLESET,
-    colRenaming=PURECN_COLRENAMING,
-    lohvals=PURECN_LOHVALUES,
+    lohcolname=constants.PURECN_LOH_COLNAME,
+    failedcolname=constants.PURECN_FAILED_COLNAME,
+    sampleset=constants.PURECN_SAMPLESET,
+    colRenaming=constants.PURECN_COLRENAMING,
+    lohvals=constants.PURECN_LOHVALUES,
     save_output="",
     mappingdf=None,
     min_gof=constants.PURECN_MIN_GOF,
@@ -172,12 +173,12 @@ def pureCNpostprocess(
 
     Args:
         refworkspace (str): workspace path
-        sortby (list, optional): columns to sort df. Defaults to [SAMPLEID, 'Chromosome', "Start", "End"].
+        sortby (list, optional): columns to sort df. Defaults to [constants.SAMPLEID, 'Chromosome', "Start", "End"].
         save_output (str, optional): location to save output. Defaults to ''.
         todrop (list, optional): [description]. Defaults to [].
         colname (str, optional): the column in Terra where the file is saved in sampleset. Defaults to "combined_seg_file".
         sampleset (str, optional): sample set to load in terra. Defaults to "all".
-        colRenaming (dict, optional): segment renaming dict. Defaults to COLRENAMING.
+        colRenaming (dict, optional): segment renaming dict. Defaults to constants.COLRENAMING.
         segmentsthresh (int, optional): above this threshold of number of segments the WGS sample is considered failed. Defaults to 2000.
 
     Returns:
@@ -219,7 +220,7 @@ def pureCNpostprocess(
     failed.update(to_curate_idx)
 
     # removing the duplicates
-    segments = segments[~segments[SAMPLEID].isin(todrop)].reset_index(drop=True)
+    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(drop=True)
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
@@ -229,7 +230,7 @@ def pureCNpostprocess(
 
     mappingdf = mappingdf[mappingdf["Chromosome"].isin(set(segments["Chromosome"]))]
 
-    print("loading " + str(len(set(segments[SAMPLEID]))) + " rows")
+    print("loading " + str(len(set(segments[constants.SAMPLEID]))) + " rows")
 
     # combining major- and minor-allele seg counts for CN matrix conversion
     segments["totalCount"] = segments["MajorAlleleAbsoluteCN"].add(
@@ -247,7 +248,7 @@ def pureCNpostprocess(
     segments = segments.drop(columns=["totalCount"])
 
     segments = segments[
-        ~segments[SAMPLEID].isin(set(failed) | set(todrop))
+        ~segments[constants.SAMPLEID].isin(set(failed) | set(todrop))
     ].reset_index(drop=True)
     absolute_genecn = absolute_genecn[
         ~absolute_genecn.index.isin(set(failed) | set(todrop))
@@ -292,11 +293,11 @@ def pureCNpostprocess(
 def generateSigTable(
     refworkspace,
     todrop=[],
-    purecncols=SIGTABLE_TERRACOLS,
-    misccols=MISC_SIG_TERRACOLS,
-    purecn_failed_col=PURECN_FAILED_COLNAME,
-    binary_cols=SIGTABLE_BINARYCOLS,
-    colrenaming=SIGTABLE_RENAMING,
+    purecncols=constants.SIGTABLE_TERRACOLS,
+    misccols=constants.MISC_SIG_TERRACOLS,
+    purecn_failed_col=constants.PURECN_FAILED_COLNAME,
+    binary_cols=constants.SIGTABLE_BINARYCOLS,
+    colrenaming=constants.SIGTABLE_RENAMING,
     save_output="",
     dm_max_retries=10,
 ):
@@ -342,14 +343,14 @@ def postProcess(
     refworkspace,
     setEntity="sample_set",
     sampleset="all",
-    purecnsampleset=PURECN_SAMPLESET,
+    purecnsampleset=constants.PURECN_SAMPLESET,
     save_output="",
     doCleanup=True,
-    sortby=[SAMPLEID, "Chromosome", "Start", "End"],
+    sortby=[constants.SAMPLEID, "Chromosome", "Start", "End"],
     todrop=[],
     priority=[],
-    segmentsthresh=SEGMENTSTHR,
-    ensemblserver=ENSEMBL_SERVER_V,
+    segmentsthresh=constants.SEGMENTSTHR,
+    ensemblserver=constants.ENSEMBL_SERVER_V,
     source_rename={},
     useCache=False,
     maxYchrom=constants.MAXYCHROM,
@@ -365,12 +366,12 @@ def postProcess(
         sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
         save_output (str, optional): whether to save our data. Defaults to "".
         doCleanup (bool, optional): whether to clean the Terra workspaces from their unused output and lo. Defaults to True.
-        sortby (list, optional): columns to sort df. Defaults to [SAMPLEID, 'Chromosome', "Start", "End"].
+        sortby (list, optional): columns to sort df. Defaults to [constants.SAMPLEID, 'Chromosome', "Start", "End"].
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         genechangethresh (float, optional): above this threshold of variance of gene CN, the sample is considered failed. Defaults to 0.025.
         segmentsthresh (int, optional): above this threshold of number of segments the WGS sample is considered failed. Defaults to 1500.
-        ensemblserver (str, optional): ensembl server biomart version . Defaults to ENSEMBL_SERVER_V.
+        ensemblserver (str, optional): ensembl server biomart version . Defaults to constants.ENSEMBL_SERVER_V.
         source_rename (dict, optional): dict to rename the source column if needed. Defaults to {}.
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
 
@@ -419,11 +420,11 @@ def postProcess(
     ychrom = segments[segments.Chromosome.str.contains("Y")]
     countYdrop = [
         i
-        for i in set(ychrom[SAMPLEID])
-        if len(ychrom[ychrom[SAMPLEID] == i]) > maxYchrom
+        for i in set(ychrom[constants.SAMPLEID])
+        if len(ychrom[ychrom[constants.SAMPLEID] == i]) > maxYchrom
     ]
     segments = segments[
-        ~((segments[SAMPLEID].isin(countYdrop)) & (segments.Chromosome == "Y"))
+        ~((segments[constants.SAMPLEID].isin(countYdrop)) & (segments.Chromosome == "Y"))
     ]
     genecn = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments), mybiomart, value_colname="SegmentMean"
@@ -442,7 +443,7 @@ def postProcess(
         h.listToFile(failed, save_output + "failed.txt")
     # subsetting
     segments = segments[
-        ~segments[SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
+        ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
     ].reset_index(drop=True)
     genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
 
