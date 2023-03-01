@@ -14,7 +14,6 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 
-
 async def expressionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
     samplesetname=constants.SAMPLESETNAME,
@@ -798,6 +797,7 @@ async def mutationPostProcessing(
     mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
         symbol_to_entrez_dict
     )
+    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
     mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
@@ -816,6 +816,7 @@ async def mutationPostProcessing(
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
+    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
     merged = merged.drop(columns=["achilles_top_genes"])
     merged = merged.rename(columns=mutcol)
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
@@ -826,6 +827,8 @@ async def mutationPostProcessing(
     # add entrez ids to column names
     mybiomart["gene_name"] = [
         i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
+        if not pd.isna(i["entrezgene_id"])
+        else i["hgnc_symbol"] + " (Unknown)"
         for _, i in mybiomart.iterrows()
     ]
     symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
@@ -843,7 +846,9 @@ async def mutationPostProcessing(
         wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
         wgs_vcfs = wgs_samples[vcf_colname]
         wes_vcfs = wes_samples[vcf_colname]
-        vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        vcflist = (
+            wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        )
         vcflist = [v for v in vcflist if v.startswith("gs://")]
 
         print("generating germline binary matrix")
@@ -870,7 +875,9 @@ async def mutationPostProcessing(
             sorted_mat = mat.iloc[:, :4].join(mergedmat)
             sorted_mat["end"] = sorted_mat["end"].astype(int)
             print("saving merged binary matrix for library: ", lib)
-            sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
+            sorted_mat.to_csv(
+                folder + "binary_germline" + "_" + lib + ".csv", index=False
+            )
     # uploading to taiga
     tc.update_dataset(
         changes_description="new " + samplesetname + " release!",
