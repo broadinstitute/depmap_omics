@@ -1,0 +1,15 @@
+copynumbers.py: error: "Image" is not exported from module "IPython.display"
+copynumbers.py: error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+copynumbers.py: error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+expressions.py: error: "enrichments" is possibly unbound (reportUnboundVariable)
+fusions.py: error: "keys" is not a known member of "None" (reportOptionalMemberAccess)
+vcf.py: error: "merge" is not a known member of "None" (reportOptionalMemberAccess)
+test_compare_to_ref_release.py: error: "Unbound" is not iterable (reportGeneralTypeIssues)
+test_compare_to_ref_release.py: error: "arxspans" is possibly unbound (reportUnboundVariable)
+test_compare_to_ref_release.py: error: "arxspans" is possibly unbound (reportUnboundVariable)
+test_compare_to_ref_release.py: error: "arxspans" is possibly unbound (reportUnboundVariable)
+test_compare_to_ref_release.py: error: "Unbound" is not iterable (reportGeneralTypeIssues)
+test_compare_to_ref_release.py: error: "arxspans" is possibly unbound (reportUnboundVariable)
+test_compare_to_ref_release.py: error: "arxspans" is possibly unbound (reportUnboundVariable)
+test_compare_to_ref_release.py: error: "arxspans" is possibly unbound (reportUnboundVariable)
+utils.py: error: Cannot access member "items" for type "str"
