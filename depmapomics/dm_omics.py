@@ -1,3 +1,5 @@
+from depmapomics import constants
+from depmapomics import env_config
 import os.path
 import dalmatian as dm
 import pandas as pd
@@ -10,21 +12,21 @@ from depmap_omics_upload import tracker as track
 from depmapomics import expressions, mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
-from depmapomics.config import *
+
 
 
 async def expressionPostProcessing(
-    refworkspace=RNAWORKSPACE,
-    samplesetname=SAMPLESETNAME,
+    refworkspace=env_config.RNAWORKSPACE,
+    samplesetname=constants.SAMPLESETNAME,
     colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
-    ensemblserver=ENSEMBL_SERVER_V,
+    ensemblserver=constants.ENSEMBL_SERVER_V,
     doCleanup=True,
     samplesetToLoad="all",
-    taiga_dataset=TAIGA_EXPRESSION,
-    save_output=WORKING_DIR,
-    minsimi=RNAMINSIMI,
+    taiga_dataset=env_config.TAIGA_EXPRESSION,
+    save_output=constants.WORKING_DIR,
+    minsimi=constants.RNAMINSIMI,
     dropNonMatching=True,
-    dataset_description=RNAseqreadme,
+    dataset_description=constants.RNAseqreadme,
     dry_run=False,
     samplesinset=[],
     rsemfilelocs=None,
@@ -41,15 +43,15 @@ async def expressionPostProcessing(
         save_output (str, optional): whether to save our data. Defaults to "".
         doCleanup (bool, optional): whether to clean the Terra workspaces from their unused output and lo. Defaults to True.
         colstoclean (list, optional): the columns to clean in the terra workspace. Defaults to [].
-        ensemblserver (str, optional): ensembl server biomart version . Defaults to ENSEMBL_SERVER_V.
+        ensemblserver (str, optional): ensembl server biomart version . Defaults to constants.ENSEMBL_SERVER_V.
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
         geneLevelCols (list, optional): the columns that contain the gene level
-        expression data in the workspace. Defaults to RSEMFILENAME_GENE.
+        expression data in the workspace. Defaults to constants.RSEMFILENAME_GENE.
         trancriptLevelCols (list, optional): the columns that contain the transcript
-        level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
+        level expression data in the workspacce. Defaults to constants.RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
@@ -57,9 +59,9 @@ async def expressionPostProcessing(
         dropNonMatching (bool, optional): whether to drop the non matching genes
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
-        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
+        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to env_config.TAIGA_EXPRESSION.
         minsimi (float, optional): the minimum similarity to use for comparison to previous dataset. Defaults to 0.95.
-        dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
+        dataset_description (str, optional): the taiga dataset description to use. Defaults to constants.RNAseqreadme.
         tocompare (dict, optional): the columns to compare. Defaults to {"genes_expected_count": "CCLE_RNAseq_reads", "genes_tpm": "CCLE_expression_full", "proteincoding_genes_tpm": "CCLE_expression"}.
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
         samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
@@ -87,8 +89,8 @@ async def expressionPostProcessing(
         colstoclean=colstoclean,
         ensemblserver=ensemblserver,
         samplesetToLoad=samplesetToLoad,
-        geneLevelCols=RSEMFILENAME_GENE,
-        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,
+        geneLevelCols=constants.RSEMFILENAME_GENE,
+        trancriptLevelCols=constants.RSEMFILENAME_TRANSCRIPTS,
         ssGSEAcol="genes_tpm",
         dropNonMatching=dropNonMatching,
         dry_run=dry_run,
@@ -222,12 +224,12 @@ async def expressionPostProcessing(
 
 
 async def fusionPostProcessing(
-    refworkspace=RNAWORKSPACE,
-    sampleset=SAMPLESETNAME,
-    fusionSamplecol=SAMPLEID,
-    taiga_dataset=TAIGA_FUSION,
-    dataset_description=FUSIONreadme,
-    folder=WORKING_DIR,
+    refworkspace=env_config.RNAWORKSPACE,
+    sampleset=constants.SAMPLESETNAME,
+    fusionSamplecol=constants.SAMPLEID,
+    taiga_dataset=env_config.TAIGA_FUSION,
+    dataset_description=constants.FUSIONreadme,
+    folder=constants.WORKING_DIR,
     **kwargs,
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
@@ -238,9 +240,9 @@ async def fusionPostProcessing(
         save_output (str, optional): whether and where to save our data. Defaults to "".
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
-        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
-        dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
+        fusionSamplecol ([type], optional): [description]. Defaults to constants.SAMPLEID.
+        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to env_config.TAIGA_EXPRESSION.
+        dataset_description (str, optional): the taiga dataset description to use. Defaults to constants.RNAseqreadme.
 
     Returns:
         (pd.df): fusion dataframe
@@ -316,17 +318,17 @@ async def fusionPostProcessing(
 
 
 def cnPostProcessing(
-    wesrefworkspace=WESCNWORKSPACE,
-    wgsrefworkspace=WGSWORKSPACE,
-    wessetentity=WESSETENTITY,
-    wgssetentity=WGSSETENTITY,
-    samplesetname=SAMPLESETNAME,
-    purecnsampleset=PURECN_SAMPLESET,
+    wesrefworkspace=env_config.WESCNWORKSPACE,
+    wgsrefworkspace=env_config.WGSWORKSPACE,
+    wessetentity=constants.WESSETENTITY,
+    wgssetentity=constants.WGSSETENTITY,
+    samplesetname=constants.SAMPLESETNAME,
+    purecnsampleset=constants.PURECN_SAMPLESET,
     AllSamplesetName="all",
-    taiga_dataset=TAIGA_CN,
-    dataset_description=CNreadme,
+    taiga_dataset=env_config.TAIGA_CN,
+    dataset_description=constants.CNreadme,
     subsetsegs=[
-        SAMPLEID,
+        constants.SAMPLEID,
         "Chromosome",
         "Start",
         "End",
@@ -335,12 +337,12 @@ def cnPostProcessing(
         "Status",
         "Source",
     ],
-    bamqc=BAMQC,
-    procqc=PROCQC,
-    save_dir=WORKING_DIR,
+    bamqc=constants.BAMQC,
+    procqc=constants.PROCQC,
+    save_dir=constants.WORKING_DIR,
     wesfolder="",
-    segmentsthresh=SEGMENTSTHR,
-    maxYchrom=MAXYCHROM,
+    segmentsthresh=constants.SEGMENTSTHR,
+    maxYchrom=constants.MAXYCHROM,
     dryrun=False,
     **kwargs,
 ):
@@ -351,12 +353,12 @@ def cnPostProcessing(
         wgsrefworkspace (str): wgs terra workspace where the ref data is stored
         samplesetname (str): name of the current release
         AllSamplesetName (str, optional): name of the sample set to get the data from (should contain everything). Defaults to 'all'.
-        taiga_dataset (str, optional): where to save the output to on taiga. Defaults to TAIGA_CN.
-        dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to CNreadme.
-        subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
-        bamqc ([type], optional): @see updateTracker. Defaults to BAMQC.
-        procqc ([type], optional): @see updateTracker. Defaults to PROCQC.
-        source_rename ([type], optional): @see managing duplicates. Defaults to SOURCE_RENAME.
+        taiga_dataset (str, optional): where to save the output to on taiga. Defaults to env_config.TAIGA_CN.
+        dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to constants.CNreadme.
+        subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [constants.SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
+        bamqc ([type], optional): @see updateTracker. Defaults to constants.BAMQC.
+        procqc ([type], optional): @see updateTracker. Defaults to constants.PROCQC.
+        source_rename ([type], optional): @see managing duplicates. Defaults to constants.SOURCE_RENAME.
     """
     from taigapy import TaigaClient
 
@@ -410,15 +412,15 @@ def cnPostProcessing(
         )
     # subset and rename to PR-indexed matrices
     wessegments_pr = (
-        wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
-        .replace({SAMPLEID: renaming_dict})
+        wessegments[wessegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wes_purecn_segments_pr = (
         wes_purecn_segments[
-            wes_purecn_segments[SAMPLEID].isin(set(renaming_dict.keys()))
+            wes_purecn_segments[constants.SAMPLEID].isin(set(renaming_dict.keys()))
         ]
-        .replace({SAMPLEID: renaming_dict})
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wes_genecn_pr = wesgenecn[wesgenecn.index.isin(set(renaming_dict.keys()))].rename(
@@ -485,15 +487,15 @@ def cnPostProcessing(
         print("no wes for this sampleset")
 
     wgssegments_pr = (
-        wgssegments[wgssegments[SAMPLEID].isin(set(renaming_dict.keys()))]
-        .replace({SAMPLEID: renaming_dict})
+        wgssegments[wgssegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wgs_purecn_segments_pr = (
         wgs_purecn_segments[
-            wgs_purecn_segments[SAMPLEID].isin(set(renaming_dict.keys()))
+            wgs_purecn_segments[constants.SAMPLEID].isin(set(renaming_dict.keys()))
         ]
-        .replace({SAMPLEID: renaming_dict})
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wgs_genecn_pr = wgsgenecn[wgsgenecn.index.isin(set(renaming_dict.keys()))].rename(
@@ -514,7 +516,7 @@ def cnPostProcessing(
     mergedsegments_pr = (
         mergedsegments_pr[
             [
-                SAMPLEID,
+                constants.SAMPLEID,
                 "Chromosome",
                 "Start",
                 "End",
@@ -523,7 +525,7 @@ def cnPostProcessing(
                 "Status",
             ]
         ]
-        .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
+        .sort_values(by=[constants.SAMPLEID, "Chromosome", "Start", "End"])
         .reset_index(drop=True)
     )
     mergedsegments_pr.loc[
@@ -537,7 +539,7 @@ def cnPostProcessing(
     merged_purecn_segments_pr = (
         merged_purecn_segments_pr[
             [
-                SAMPLEID,
+                constants.SAMPLEID,
                 "Chromosome",
                 "Start",
                 "End",
@@ -546,7 +548,7 @@ def cnPostProcessing(
                 "LoHStatus",
             ]
         ]
-        .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
+        .sort_values(by=[constants.SAMPLEID, "Chromosome", "Start", "End"])
         .reset_index(drop=True)
     )
 
@@ -675,20 +677,20 @@ def cnPostProcessing(
 
 
 async def mutationPostProcessing(
-    wesrefworkspace=WESCNWORKSPACE,
-    wgsrefworkspace=WGSWORKSPACE,
-    vcfdir=VCFDIR,
-    vcf_colname=VCFCOLNAME,
-    samplesetname=SAMPLESETNAME,
+    wesrefworkspace=env_config.WESCNWORKSPACE,
+    wgsrefworkspace=env_config.WGSWORKSPACE,
+    vcfdir=constants.VCFDIR,
+    vcf_colname=constants.VCFCOLNAME,
+    samplesetname=constants.SAMPLESETNAME,
     AllSamplesetName="all",
     doCleanup=False,
-    taiga_description=Mutationsreadme,
-    taiga_dataset=TAIGA_MUTATION,
-    bed_locations=GUIDESBED,
-    sv_col=SV_COLNAME,
-    sv_filename=SV_FILENAME,
-    mutcol=MUTCOL_DEPMAP,
-    mafcol=MAF_COL,
+    taiga_description=constants.Mutationsreadme,
+    taiga_dataset=env_config.TAIGA_MUTATION,
+    bed_locations=constants.GUIDESBED,
+    sv_col=constants.SV_COLNAME,
+    sv_filename=constants.SV_FILENAME,
+    mutcol=constants.MUTCOL_DEPMAP,
+    mafcol=constants.MAF_COL,
     run_sv=True,
     run_guidemat=True,
     **kwargs,
@@ -696,18 +698,18 @@ async def mutationPostProcessing(
     """the full CCLE mutations post processing pipeline (used only by CCLE)
     see postprocess() to reproduce our analysis
     Args:
-        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
-        wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to WGSWORKSPACE.
-        samplesetname (str, optional): the sample set name to use (for the release). Defaults to SAMPLESETNAME.
+        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to env_config.WESCNWORKSPACE.
+        wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to env_config.WGSWORKSPACE.
+        samplesetname (str, optional): the sample set name to use (for the release). Defaults to constants.SAMPLESETNAME.
         AllSamplesetName (str, optional): the sample set to use for all samples. Defaults to 'all'.
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
-        taiga_description (str, optional): description of the dataset on taiga. Defaults to Mutationsreadme.
-        taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_MUTATION.
-        mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
+        taiga_description (str, optional): description of the dataset on taiga. Defaults to constants.Mutationsreadme.
+        taiga_dataset (str, optional): taiga folder location. Defaults to env_config.TAIGA_MUTATION.
+        mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to constants.MUTATION_GROUPS.
         tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
         tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
         prev (pd.df, optional): the previous release dataset (to do QC).
-            Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
+            Defaults to ccle =>(tc.get(name=constants.TAIGA_ETERNAL, file='CCLE_mutations')).
     """
     from taigapy import TaigaClient
 
@@ -718,7 +720,7 @@ async def mutationPostProcessing(
 
     # doing wes
     print("DOING WES")
-    folder = WORKING_DIR + samplesetname + "/wes_"
+    folder = constants.WORKING_DIR + samplesetname + "/wes_"
 
     wesmutations, wessvs = mutations.postProcess(
         wes_wm,
@@ -737,12 +739,12 @@ async def mutationPostProcessing(
     mytracker.close_gumbo_client()
 
     wesmutations_pr = wesmutations[
-        wesmutations[SAMPLEID].isin(renaming_dict.keys())
-    ].replace({SAMPLEID: renaming_dict})
+        wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
+    ].replace({constants.SAMPLEID: renaming_dict})
 
     # doing wgs
     print("DOING WGS")
-    folder = WORKING_DIR + samplesetname + "/wgs_"
+    folder = constants.WORKING_DIR + samplesetname + "/wgs_"
 
     wgsmutations, wgssvs = mutations.postProcess(
         wgs_wm,
@@ -756,16 +758,16 @@ async def mutationPostProcessing(
     )
 
     wgsmutations_pr = wgsmutations[
-        wgsmutations[SAMPLEID].isin(renaming_dict.keys())
-    ].replace({SAMPLEID: renaming_dict})
+        wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
+    ].replace({constants.SAMPLEID: renaming_dict})
 
     # merge
     print("merging WES and WGS")
-    folder = WORKING_DIR + samplesetname + "/merged_"
+    folder = constants.WORKING_DIR + samplesetname + "/merged_"
     mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
     # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
     print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
-    hugo_mapping = pd.read_csv(HGNC_MAPPING, sep="\t")
+    hugo_mapping = pd.read_csv(constants.HGNC_MAPPING, sep="\t")
     hugo_mapping = {
         b: a for a, b in hugo_mapping[~hugo_mapping["Previous symbol"].isna()].values
     }
@@ -807,8 +809,8 @@ async def mutationPostProcessing(
             mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
             mergedsvs.to_csv(folder + "svs.csv", index=False)
             mergedsvs_pr = mergedsvs[
-                mergedsvs[SAMPLEID].isin(renaming_dict.keys())
-            ].replace({SAMPLEID: renaming_dict})
+                mergedsvs[constants.SAMPLEID].isin(renaming_dict.keys())
+            ].replace({constants.SAMPLEID: renaming_dict})
             print("saving somatic svs")
             mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
@@ -848,7 +850,7 @@ async def mutationPostProcessing(
         germline_mats = mut.generateGermlineMatrix(
             vcflist,
             vcfdir=vcfdir,
-            savedir=WORKING_DIR + samplesetname + "/",
+            savedir=constants.WORKING_DIR + samplesetname + "/",
             filename="binary_mutguides.tsv.gz",
             bed_locations=bed_locations,
         )
