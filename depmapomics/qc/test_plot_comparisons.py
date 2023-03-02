@@ -7,7 +7,6 @@ from depmapomics.qc.test_compare_to_ref_release import (
     FILE_ATTRIBUTES_PAIRED,
     PREV_RELEASE,
     NEW_RELEASE,
-    data,
     get_both_releases_from_taiga,
 )
 
