@@ -1,6 +1,10 @@
 name: build-docker
 
-on: [push]
+on: 
+  workflow_run:
+    workflows: ["pyright-ratchet"]
+    types: 
+      - completed
 
 env:
   DOCKER_REPO: us.gcr.io/cds-docker-containers/depmapomics
