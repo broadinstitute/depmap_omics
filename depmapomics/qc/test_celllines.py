@@ -1,6 +1,3 @@
-import re
-
-import numpy as np
 import pandas as pd
 import pytest
 from depmapomics.qc.config import (
@@ -15,6 +12,7 @@ from taigapy import TaigaClient
 
 tc = TaigaClient()
 
+
 ####### FIXTURES ####
 def tsv2csv(df):
     df.to_csv("/tmp/data.tsv", index=False)
@@ -24,6 +22,7 @@ def tsv2csv(df):
 
 @pytest.fixture(scope="module")
 def arxspans(request):
+    print(request.param)
     return get_both_release_lists_from_taiga(request.param)
 
 

@@ -1,13 +1,13 @@
+from depmapomics import constants
 import dalmatian as dm
 import pandas as pd
 import os.path
-from genepy.utils import helper as h
 import seaborn as sns
-from depmapomics.config import *
+
 from genepy import terra
 
 
-def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
+def addToMainFusion(input_filenames, main_filename, sample_id=constants.SAMPLEID):
     """
     Given a tsv fusion files from RSEM algorithm, merge it to a tsv set of fusion data
 
@@ -40,11 +40,11 @@ def addToMainFusion(input_filenames, main_filename, sample_id=SAMPLEID):
 def filterFusions(
     fusions,
     sampleCol,
-    maxfreq=FUSION_MAXFREQ,
-    minffpm=FUSION_MINFFPM,
-    maxffpm=FUSION_MAXFFPM,
+    maxfreq=constants.FUSION_MAXFREQ,
+    minffpm=constants.FUSION_MINFFPM,
+    maxffpm=constants.FUSION_MAXFFPM,
     countCol="CCLE_count",
-    red_herring=FUSION_RED_HERRING,
+    red_herring=constants.FUSION_RED_HERRING,
     **kwargs
 ):
     """
@@ -63,7 +63,7 @@ def filterFusions(
         samplecol (str): colname for the sample ids. Should be in the fusions dataframe.
         countCol (str): colname where are stored counts of that fusion name across our samples. Default is "CCLE_count"
         minffpm (int): minimum ffpm freq to filter on. Default is 0.05
-        red_herring (list[str]): flags to filter on. default is FUSION_RED_HERRING
+        red_herring (list[str]): flags to filter on. default is constants.FUSION_RED_HERRING
 
     Returns:
         (pd.df): the filtered fusion dataframe
@@ -133,9 +133,9 @@ def standardizeGeneNames(fusions):
 
 def postProcess(
     refworkspace,
-    sampleCol=SAMPLEID,
+    sampleCol=constants.SAMPLEID,
     samplesetToLoad="all",
-    colnames=FUSION_COLNAME,
+    colnames=constants.FUSION_COLNAME,
     todrop=[],
     doplot=True,
     countCol="CCLE_count",
@@ -155,7 +155,7 @@ def postProcess(
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
         sampleCol (str, optional): column name for the sample id in the dataset. Defaults to "CCLE_sample_id".
-        colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to FUSION_COLNAME.
+        colnames (str, optional): column names where the fusion file is, on the workspace. Defaults to constants.FUSION_COLNAME.
         doplot (bool, optional): whether to plot the data. Defaults to True.
         countCol (str, optional): column name for the count of the fusion. Defaults to "CCLE_count".
         save_output (str, optional): whether and where to save our data. Defaults to "".
