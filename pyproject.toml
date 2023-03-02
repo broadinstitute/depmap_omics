@@ -14,6 +14,7 @@ taigapy = {git = "https://github.com/broadinstitute/taigapy.git", rev = "0b67741
 seaborn = "^0.12.2"
 depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch = "main"}
 pyright = "1.1.293"
+firecloud_dalmatian="^0.0.17"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
