@@ -7,9 +7,9 @@ from IPython.display import Image, display
 import dalmatian as dm
 import pandas as pd
 import os
-from genepy import mutations as mut
-from genepy.utils import helper as h
-from genepy import terra
+from mgenepy import mutations as mut
+from mgenepy.utils import helper as h
+from mgenepy import terra
 
 
 def renameColumns(df):
@@ -31,7 +31,6 @@ def loadFromGATKAggregation(
     refworkspace,
     setEntity="sample_set",
     sortby=[constants.SAMPLEID, "Chromosome", "Start", "End"],
-    save_output="",
     doCleanup=True,
     todrop=[],
     showPlots=False,
@@ -64,8 +63,6 @@ def loadFromGATKAggregation(
         pd.dataframe: dataframe containing the segments concatenated in a bed like format
     """
     wm = dm.WorkspaceManager(refworkspace)
-    if save_output:
-        terra.saveConfigs(refworkspace, os.path.join(save_output, "terra/"))
 
     if doCleanup:
         print("cleaning up")

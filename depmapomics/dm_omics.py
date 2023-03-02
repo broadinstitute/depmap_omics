@@ -5,8 +5,7 @@ import dalmatian as dm
 import pandas as pd
 import numpy as np
 
-from genepy.utils import helper as h
-from genepy import mutations as mut
+from mgenepy.utils import helper as h
 
 from depmap_omics_upload import tracker as track
 from depmapomics import expressions, mutations
@@ -847,7 +846,7 @@ async def mutationPostProcessing(
         vcflist = [v for v in vcflist if v.startswith("gs://")]
 
         print("generating germline binary matrix")
-        germline_mats = mut.generateGermlineMatrix(
+        germline_mats = mutations.generateGermlineMatrix(
             vcflist,
             vcfdir=vcfdir,
             savedir=constants.WORKING_DIR + samplesetname + "/",

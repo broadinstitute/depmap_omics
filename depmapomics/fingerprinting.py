@@ -5,8 +5,8 @@ from depmapomics import env_config
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from genepy import terra
-from genepy.utils import helper as h
+from mgenepy import terra
+from mgenepy.utils import helper as h
 from depmap_omics_upload import tracker as track
 
 from depmapomics import terra as myterra
