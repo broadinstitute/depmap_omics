@@ -1,7 +1,8 @@
 # cn.py
 
 from depmapomics import constants
-from depmap_omics_upload import tracker as track
+
+# from depmap_omics_upload import tracker as track
 
 from IPython.display import Image, display
 import dalmatian as dm
@@ -81,7 +82,9 @@ def loadFromGATKAggregation(
     ).rename(columns=colRenaming)
 
     # removing the duplicates
-    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(drop=True)
+    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(
+        drop=True
+    )
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
@@ -204,7 +207,9 @@ def pureCNpostprocess(
     failed.update(to_curate_idx)
 
     # removing the duplicates
-    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(drop=True)
+    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(
+        drop=True
+    )
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
@@ -398,7 +403,10 @@ def postProcess(
         if len(ychrom[ychrom[constants.SAMPLEID] == i]) > maxYchrom
     ]
     segments = segments[
-        ~((segments[constants.SAMPLEID].isin(countYdrop)) & (segments.Chromosome == "Y"))
+        ~(
+            (segments[constants.SAMPLEID].isin(countYdrop))
+            & (segments.Chromosome == "Y")
+        )
     ]
     genecn = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments), mybiomart, value_colname="SegmentMean"

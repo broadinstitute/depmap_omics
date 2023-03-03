@@ -1,13 +1,15 @@
+"""Mutation postprocessing module."""
 from depmapomics import constants
 from genepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
-import pandas as pd
 from genepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
+import pandera as pa
+from tqdm import tqdm
 
 
 def annotateLikelyImmortalized(
@@ -19,7 +21,7 @@ def annotateLikelyImmortalized(
     hotspotcol="cosmic_hotspot",
     max_recurrence=constants.IMMORTALIZED_THR,
 ):
-    """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
+    """Annotates the maf file with the likely immortalized mutations
 
     Based on occurence accross samples
 
@@ -187,7 +189,7 @@ def aggregateMAFs(
     mafcol=constants.MAF_COL,
     keep_cols=constants.MUTCOL_DEPMAP,
 ):
-    """aggregate MAF files from terra
+    """Aggregate MAF files from terra
 
     Args:
         refworkspace (str): the reference workspace
@@ -198,19 +200,20 @@ def aggregateMAFs(
     Returns:
         aggregated_maf (df.DataFrame): aggregated MAF
     """
-    print("aggregating MAF files")
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    for col in sample_table.columns:
+        print(col)
     sample_table_valid = sample_table[~sample_table[mafcol].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
     all_mafs = []
-    le = len(sample_table_valid)
+    print(sample_table_valid.shape)
     counter = 0
-    for name, row in sample_table_valid.iterrows():
+    for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
+        print(name, row, mafcol)
         # prints out progress bar
-        h.showcount(counter, le)
         counter += 1
         maf = pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
@@ -219,7 +222,10 @@ def aggregateMAFs(
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
         all_mafs.append(maf)
+        if counter > 2:
+            break
     all_mafs = pd.concat(all_mafs)
+    print(all_mafs.head())
     return all_mafs
 
 
@@ -272,6 +278,7 @@ def postProcess(
     run_sv=True,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
+
     and aggregate structural variants (SVs)
 
     Args:
