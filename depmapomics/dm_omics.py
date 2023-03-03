@@ -816,7 +816,7 @@ async def mutationPostProcessing(
 
     merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
-    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
+    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("Unknown")
     merged = merged.drop(columns=["achilles_top_genes"])
     merged = merged.rename(columns=mutcol)
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
