@@ -81,7 +81,9 @@ def loadFromGATKAggregation(
     ).rename(columns=colRenaming)
 
     # removing the duplicates
-    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(drop=True)
+    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(
+        drop=True
+    )
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
@@ -204,7 +206,9 @@ def pureCNpostprocess(
     failed.update(to_curate_idx)
 
     # removing the duplicates
-    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(drop=True)
+    segments = segments[~segments[constants.SAMPLEID].isin(todrop)].reset_index(
+        drop=True
+    )
     if "chr" in segments["Chromosome"][0]:
         segments["Chromosome"] = [i[3:] for i in segments["Chromosome"]]
     # tranforming the df
@@ -328,7 +332,7 @@ def postProcess(
     segmentsthresh=constants.SEGMENTSTHR,
     ensemblserver=constants.ENSEMBL_SERVER_V,
     source_rename={},
-    useCache=False,
+    useCache=True,
     maxYchrom=constants.MAXYCHROM,
 ):
     """post process an aggregated CN segment file, the CCLE way
@@ -398,7 +402,10 @@ def postProcess(
         if len(ychrom[ychrom[constants.SAMPLEID] == i]) > maxYchrom
     ]
     segments = segments[
-        ~((segments[constants.SAMPLEID].isin(countYdrop)) & (segments.Chromosome == "Y"))
+        ~(
+            (segments[constants.SAMPLEID].isin(countYdrop))
+            & (segments.Chromosome == "Y")
+        )
     ]
     genecn = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments), mybiomart, value_colname="SegmentMean"
