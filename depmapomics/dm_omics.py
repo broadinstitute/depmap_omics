@@ -4,15 +4,17 @@ import os.path
 import dalmatian as dm
 import pandas as pd
 import numpy as np
+from taigapy import TaigaClient
 
 from genepy.utils import helper as h
 from genepy import mutations as mut
 
 from depmap_omics_upload import tracker as track
-from depmapomics import expressions, mutations
+
+# from depmapomics import expressions
+from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
-
 
 
 async def expressionPostProcessing(
@@ -67,8 +69,6 @@ async def expressionPostProcessing(
         samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
         rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
@@ -248,8 +248,6 @@ async def fusionPostProcessing(
         (pd.df): fusion dataframe
         (pd.df): filtered fusion dataframe
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
@@ -360,8 +358,6 @@ def cnPostProcessing(
         procqc ([type], optional): @see updateTracker. Defaults to constants.PROCQC.
         source_rename ([type], optional): @see managing duplicates. Defaults to constants.SOURCE_RENAME.
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
@@ -677,42 +673,37 @@ def cnPostProcessing(
 
 
 async def mutationPostProcessing(
-    wesrefworkspace=env_config.WESCNWORKSPACE,
-    wgsrefworkspace=env_config.WGSWORKSPACE,
-    vcfdir=constants.VCFDIR,
-    vcf_colname=constants.VCFCOLNAME,
-    samplesetname=constants.SAMPLESETNAME,
-    AllSamplesetName="all",
-    doCleanup=False,
-    taiga_description=constants.Mutationsreadme,
-    taiga_dataset=env_config.TAIGA_MUTATION,
-    bed_locations=constants.GUIDESBED,
-    sv_col=constants.SV_COLNAME,
-    sv_filename=constants.SV_FILENAME,
-    mutcol=constants.MUTCOL_DEPMAP,
-    mafcol=constants.MAF_COL,
-    run_sv=True,
-    run_guidemat=True,
+    wesrefworkspace: str = env_config.WESCNWORKSPACE,
+    wgsrefworkspace: str = env_config.WGSWORKSPACE,
+    vcfdir: str = constants.VCFDIR,
+    vcf_colname: str = constants.VCFCOLNAME,
+    samplesetname: str = constants.SAMPLESETNAME,
+    AllSamplesetName: str = "all",
+    taiga_description: str = constants.Mutationsreadme,
+    taiga_dataset: str = env_config.TAIGA_MUTATION,
+    bed_locations: str = constants.GUIDESBED,
+    sv_col: str = constants.SV_COLNAME,
+    sv_filename: str = constants.SV_FILENAME,
+    mutcol: str = constants.MUTCOL_DEPMAP,
+    mafcol: str = constants.MAF_COL,
+    doCleanup: bool = False,
+    run_sv: bool = False,
+    run_guidemat: bool = False,
+    upload_taiga: bool = False,
     **kwargs,
 ):
-    """the full CCLE mutations post processing pipeline (used only by CCLE)
+    """The full CCLE mutations post processing pipeline (used only by CCLE)
+
     see postprocess() to reproduce our analysis
+
     Args:
         wesrefworkspace (str, optional): the reference workspace for WES. Defaults to env_config.WESCNWORKSPACE.
         wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to env_config.WGSWORKSPACE.
         samplesetname (str, optional): the sample set name to use (for the release). Defaults to constants.SAMPLESETNAME.
         AllSamplesetName (str, optional): the sample set to use for all samples. Defaults to 'all'.
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
-        taiga_description (str, optional): description of the dataset on taiga. Defaults to constants.Mutationsreadme.
-        taiga_dataset (str, optional): taiga folder location. Defaults to env_config.TAIGA_MUTATION.
-        mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to constants.MUTATION_GROUPS.
-        tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
-        tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
-        prev (pd.df, optional): the previous release dataset (to do QC).
-            Defaults to ccle =>(tc.get(name=constants.TAIGA_ETERNAL, file='CCLE_mutations')).
+        upload_taiga (bool, optional): whether to upload to taiga. Defaults to False.
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
@@ -801,7 +792,10 @@ async def mutationPostProcessing(
     mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
-    print("saving merged somatic mutations")
+    print("saving merged somatic mutations MAF")
+    # Minimal MAF columns
+    # [1] "Hugo_Symbol"            "NCBI_Build"             "Chromosome"             "Start_Position"         "End_Position"
+    # [6] "Variant_Classification" "Variant_Type"           "Reference_Allele"
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
     if run_sv:
@@ -843,7 +837,9 @@ async def mutationPostProcessing(
         wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
         wgs_vcfs = wgs_samples[vcf_colname]
         wes_vcfs = wes_samples[vcf_colname]
-        vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        vcflist = (
+            wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        )
         vcflist = [v for v in vcflist if v.startswith("gs://")]
 
         print("generating germline binary matrix")
@@ -870,73 +866,76 @@ async def mutationPostProcessing(
             sorted_mat = mat.iloc[:, :4].join(mergedmat)
             sorted_mat["end"] = sorted_mat["end"].astype(int)
             print("saving merged binary matrix for library: ", lib)
-            sorted_mat.to_csv(folder + "binary_germline" + "_" + lib + ".csv", index=False)
+            sorted_mat.to_csv(
+                folder + "binary_germline" + "_" + lib + ".csv", index=False
+            )
     # uploading to taiga
-    tc.update_dataset(
-        changes_description="new " + samplesetname + " release!",
-        dataset_permaname=taiga_dataset,
-        upload_files=[
-            {
-                "path": folder + "somatic_mutations_genotyped_driver_profile.csv",
-                "name": "somaticMutations_genotypedMatrix_driver_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_genotyped_hotspot_profile.csv",
-                "name": "somaticMutations_genotypedMatrix_hotspot_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_genotyped_damaging_profile.csv",
-                "name": "somaticMutations_genotypedMatrix_damaging_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_profile.csv",
-                "name": "somaticMutations_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations.csv",
-                "name": "somaticMutations_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_binary_germline_avana.csv",
-                "name": "binary_mutation_avana",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_binary_germline_ky.csv",
-                "name": "binary_mutation_ky",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_binary_germline_humagne.csv",
-                "name": "binary_mutation_humagne",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "svs.csv",
-                "name": "structuralVariants_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "svs_profile.csv",
-                "name": "structuralVariants_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-        ],
-        upload_async=False,
-        dataset_description=taiga_description,
-    )
+    if upload_taiga:
+        tc.update_dataset(
+            changes_description="new " + samplesetname + " release!",
+            dataset_permaname=taiga_dataset,
+            upload_files=[
+                {
+                    "path": folder + "somatic_mutations_genotyped_driver_profile.csv",
+                    "name": "somaticMutations_genotypedMatrix_driver_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_genotyped_hotspot_profile.csv",
+                    "name": "somaticMutations_genotypedMatrix_hotspot_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_genotyped_damaging_profile.csv",
+                    "name": "somaticMutations_genotypedMatrix_damaging_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_profile.csv",
+                    "name": "somaticMutations_profile",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations.csv",
+                    "name": "somaticMutations_withReplicates",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "merged_binary_germline_avana.csv",
+                    "name": "binary_mutation_avana",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "merged_binary_germline_ky.csv",
+                    "name": "binary_mutation_ky",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "merged_binary_germline_humagne.csv",
+                    "name": "binary_mutation_humagne",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "svs.csv",
+                    "name": "structuralVariants_withReplicates",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "svs_profile.csv",
+                    "name": "structuralVariants_profile",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+            ],
+            upload_async=False,
+            dataset_description=taiga_description,
+        )
