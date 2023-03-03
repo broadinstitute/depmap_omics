@@ -15,7 +15,7 @@ seaborn = "^0.12.2"
 depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch = "main"}
 pyright = "1.1.293"
 scipy="^1.0.0"
-firecloud_dalmatian="^0.0.17"
+firecloud_dalmatian= {git = "https://github.com/pgm/dalmatian", rev = "5f37ef9"}
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"

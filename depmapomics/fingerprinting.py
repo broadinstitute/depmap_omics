@@ -289,7 +289,7 @@ def add_sample_batch_pairs(wm, working_dir=constants.WORKING_DIR):
 
     # update sample_batch_pair
     try:
-        wm.upload_entities("sample_batch_pair", pair_df)
+        wm.upload_entities("sample_batch_pair", pair_df, model="flexible")
     except:
         print("still can't update sample_batch_pair")
         # in case it does not work
