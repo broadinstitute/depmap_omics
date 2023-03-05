@@ -222,7 +222,7 @@ def aggregateMAFs(
             print(name + " is missing columns")
         all_mafs.append(maf)
         counter += 1
-        if counter > 20:
+        if counter > 100:
             break
     all_mafs = pd.concat(all_mafs)
     print(all_mafs.head())
