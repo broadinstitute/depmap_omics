@@ -793,10 +793,115 @@ async def mutationPostProcessing(
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     print("saving merged somatic mutations MAF")
-    # Minimal MAF columns
-    # [1] "Hugo_Symbol"            "NCBI_Build"             "Chromosome"             "Start_Position"         "End_Position"
-    # [6] "Variant_Classification" "Variant_Type"           "Reference_Allele"
-    mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
+    mergedmutations.rename(
+        columns={
+            "HugoSymbol": "Hugo_Symbol",
+            "Chrom": "Chromosome",
+            "Pos": "Start_Position",
+            "VariantType": "Variant_Type",
+            "Ref": "Reference_Allele",
+            "Alt": "Alternate_Allele",
+            "DepMap_ID": "Tumor_Sample_Barcode",
+            "VariantInfo": "Variant_Classification",
+        },
+        inplace=True,
+    )
+
+    def assign_end_pos(
+        *,
+        Start_Position: int,
+        Variant_Type: str,
+        Reference_Allele: str,
+        Alternate_Allele: str,
+        **kwargs,
+    ) -> int:
+        """Assign End_Position to different Variant_Type
+
+        NOTE: MAF is 1-based coordinate, https://www.biostars.org/p/84686/
+        If SNP/DNP, end_pos = start_pos + len(ref)
+        If INS, end_pos = start_pos + 1
+        If DEL, end_pos = start_pos + len(alt) - 1
+
+        Ignore multiple alleles now
+
+        Parameter
+        ----------
+        Start_Position: int,
+        Variant_Type: str,
+        Reference_Allele: str,
+        Alternate_Allele: str,
+
+        Return
+        ---------
+        End_Position: int
+        """
+        end_pos = Start_Position
+        if Variant_Type in ["SNP", "DNP", "TNP"]:
+            end_pos = Start_Position + len(Reference_Allele)
+        if Variant_Type == "INS":
+            end_pos = Start_Position + 1
+        if Variant_Type == "DEL":
+            end_pos = Start_Position + len(Alternate_Allele) - 1
+        return end_pos
+
+    mergedmutations.loc[:, "End_Position"] = mergedmutations.apply(
+        lambda row: assign_end_pos(**row), axis=1
+    )
+
+    mergedmutations.loc[:, "NCBI_Build"] = "GRCh38"  # or 38?
+    mergedmutations.loc[:, "Strand"] = "+"  # TODO: need to check vcf2maf later
+    mergedmutations.loc[:, "Tumor_Seq_Allele1"] = mergedmutations.loc[
+        :, "Reference_Allele"
+    ]  # TODO: need to check vcf2maf later
+    mergedmutations.loc[:, "Tumor_Seq_Allele2"] = mergedmutations.loc[
+        :, "Alternate_Allele"
+    ]  # TODO: need to check vcf2maf later
+
+    mergedmutations = mergedmutations.loc[
+        :,
+        [
+            "Hugo_Symbol",
+            "NCBI_Build",
+            "Chromosome",
+            "Start_Position",
+            "End_Position",
+            "Variant_Type",
+            "Reference_Allele",
+            "Tumor_Seq_Allele1",
+            "Tumor_Seq_Allele2",
+            "Tumor_Sample_Barcode",
+            "Variant_Classification",
+        ],
+    ]
+
+    # DepMap 20Q1 mutation issues.. https://github.com/PoisonAlien/maftools/issues/644
+    # Mapping of variant classification https://github.com/PoisonAlien/maftools/blob/41ddaabbd824f24a99f66439366be98775edebb2/R/icgc_to_maf.R#L52
+    mergedmutations.loc[:, "Variant_Classification"] = mergedmutations.loc[
+        :, "Variant_Classification"
+    ].map(
+        {
+            "MISSENSE": "Missense_Mutation",
+            "SILENT": "Silent",
+            "IN_FRAME_INS": "In_Frame_Ins",
+            "IN_FRAME_DEL": "In_Frame_Del",
+            "SPLICE_SITE": "Splice_Site",
+            "NONSENSE": "Nonsense_Mutation",
+            "FRAME_SHIFT_DEL": "Frame_Shift_Del",
+            "FRAME_SHIFT_INS": "Frame_Shift_Ins",
+            "NONSTOP": "Nonstop_Mutation",
+            "START_CODON_SNP": "Silent",
+            "START_CODON_INS": "Silent",
+        }
+    )
+
+    # Convert "Y" to True/False
+    # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
+
+    # TODO: add function to convert all columns with "Y"
+
+    # TODO: add pandera type validation
+
+    mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False, sep="\t")
 
     if run_sv:
         if wgssvs is not None:
