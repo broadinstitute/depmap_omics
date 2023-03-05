@@ -218,11 +218,12 @@ def aggregateMAFs(
         maf[constants.SAMPLEID] = name
         # >1 because of the hess_signature typo in input mafs
         # can be 0 once the type is fixed upstream
+        # TODO: replace hess_signature later
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
         all_mafs.append(maf)
         counter += 1
-        if counter > 100:
+        if counter > 200:
             break
     all_mafs = pd.concat(all_mafs)
     print(all_mafs.head())
