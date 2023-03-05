@@ -755,7 +755,9 @@ async def mutationPostProcessing(
     # merge
     print("merging WES and WGS")
     folder = constants.WORKING_DIR + samplesetname + "/merged_"
-    mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
+    mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
+        drop=True
+    )
     # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
     print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
     hugo_mapping = pd.read_csv(constants.HGNC_MAPPING, sep="\t")
@@ -793,6 +795,8 @@ async def mutationPostProcessing(
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     print("saving merged somatic mutations MAF")
+    mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
+
     mergedmutations.rename(
         columns={
             "HugoSymbol": "Hugo_Symbol",
@@ -901,7 +905,7 @@ async def mutationPostProcessing(
 
     # TODO: add pandera type validation
 
-    mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False, sep="\t")
+    mergedmutations.to_csv(folder + "somatic_mutations.maf.txt", index=False, sep="\t")
 
     if run_sv:
         if wgssvs is not None:
@@ -913,7 +917,9 @@ async def mutationPostProcessing(
             print("saving somatic svs")
             mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
-    merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
+    merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
+        drop=True
+    )
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
     merged = merged.drop(columns=["achilles_top_genes"])
     merged = merged.rename(columns=mutcol)
