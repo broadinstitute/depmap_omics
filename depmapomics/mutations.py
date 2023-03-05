@@ -110,8 +110,8 @@ def makeMatrices(
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homhotspot.add(dup)
         hethotspot = set(hotspot[hugo_col]) - homhotspot
-        hotspot_mat.loc[sample, homhotspot] = "2"
-        hotspot_mat.loc[sample, hethotspot] = "1"
+        hotspot_mat.loc[sample, list(homhotspot)] = "2"
+        hotspot_mat.loc[sample, list(hethotspot)] = "1"
         # damaging
         lof = subset_maf[
             (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col] == "Y")
@@ -121,8 +121,8 @@ def makeMatrices(
             if lof[lof[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homlof.add(dup)
         hetlof = set(lof[hugo_col]) - homlof
-        lof_mat.loc[sample, homlof] = "2"
-        lof_mat.loc[sample, hetlof] = "1"
+        lof_mat.loc[sample, list(homlof)] = "2"
+        lof_mat.loc[sample, list(hetlof)] = "1"
         # driver
         driver = subset_maf[
             ((~subset_maf[civic_col].isnull()) & (subset_maf[civic_col] != 0))
@@ -133,8 +133,8 @@ def makeMatrices(
             if driver[driver[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homdriv.add(dup)
         hetdriv = set(driver[hugo_col]) - homdriv
-        driver_mat.loc[sample, homdriv] = "2"
-        driver_mat.loc[sample, hetdriv] = "1"
+        driver_mat.loc[sample, list(homdriv)] = "2"
+        driver_mat.loc[sample, list(hetdriv)] = "1"
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
     lof_mat = lof_mat.dropna(axis="columns", how="all")
     driver_mat = driver_mat.dropna(axis="columns", how="all")
@@ -214,7 +214,6 @@ def aggregateMAFs(
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         print(name, row, mafcol)
         # prints out progress bar
-        counter += 1
         maf = pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
         # >1 because of the hess_signature typo in input mafs
@@ -222,7 +221,8 @@ def aggregateMAFs(
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
         all_mafs.append(maf)
-        if counter > 2:
+        counter += 1
+        if counter > 20:
             break
     all_mafs = pd.concat(all_mafs)
     print(all_mafs.head())
