@@ -811,6 +811,7 @@ async def mutationPostProcessing(
             "Alt": "Alternate_Allele",
             "DepMap_ID": "Tumor_Sample_Barcode",
             "VariantInfo": "Variant_Classification",
+            "ProteinChange": "Protein_Change",
         },
         inplace=True,
     )
@@ -884,6 +885,7 @@ async def mutationPostProcessing(
             "Tumor_Seq_Allele2",
             "Tumor_Sample_Barcode",
             "Variant_Classification",
+            "Protein_Change",
         ],
     ]
 
