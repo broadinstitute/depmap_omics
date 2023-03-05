@@ -681,10 +681,10 @@ async def mutationPostProcessing(
     AllSamplesetName: str = "all",
     taiga_description: str = constants.Mutationsreadme,
     taiga_dataset: str = env_config.TAIGA_MUTATION,
-    bed_locations: str = constants.GUIDESBED,
+    bed_locations: dict[str, str] = constants.GUIDESBED,
     sv_col: str = constants.SV_COLNAME,
     sv_filename: str = constants.SV_FILENAME,
-    mutcol: str = constants.MUTCOL_DEPMAP,
+    mutcol: dict[str, str] = constants.MUTCOL_DEPMAP,
     mafcol: str = constants.MAF_COL,
     doCleanup: bool = False,
     run_sv: bool = False,
@@ -795,6 +795,10 @@ async def mutationPostProcessing(
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     print("saving merged somatic mutations MAF")
+    # Convert "Y" to True/False
+    # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
+    # TODO: add function to convert all columns with "Y"
+
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
     mergedmutations.rename(
@@ -810,6 +814,10 @@ async def mutationPostProcessing(
         },
         inplace=True,
     )
+
+    mergedmutations.loc[:, "Chromosome"] = mergedmutations.loc[
+        :, "Chromosome"
+    ].str.replace("chr", "")
 
     def assign_end_pos(
         *,
@@ -846,6 +854,7 @@ async def mutationPostProcessing(
             end_pos = Start_Position + 1
         if Variant_Type == "DEL":
             end_pos = Start_Position + len(Alternate_Allele) - 1
+        # TODO add SV types
         return end_pos
 
     mergedmutations.loc[:, "End_Position"] = mergedmutations.apply(
@@ -859,7 +868,7 @@ async def mutationPostProcessing(
     ]  # TODO: need to check vcf2maf later
     mergedmutations.loc[:, "Tumor_Seq_Allele2"] = mergedmutations.loc[
         :, "Alternate_Allele"
-    ]  # TODO: need to check vcf2maf later
+    ]
 
     mergedmutations = mergedmutations.loc[
         :,
@@ -897,11 +906,6 @@ async def mutationPostProcessing(
             "START_CODON_INS": "Silent",
         }
     )
-
-    # Convert "Y" to True/False
-    # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
-
-    # TODO: add function to convert all columns with "Y"
 
     # TODO: add pandera type validation
 
