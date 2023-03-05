@@ -758,6 +758,10 @@ async def mutationPostProcessing(
     mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
         drop=True
     )
+    mergedmutations.loc[:, "Technique"] = ["WGS"] * wgsmutations.shape[0] + [
+        "WES"
+    ] * wesmutations.shape[0]
+
     # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
     print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
     hugo_mapping = pd.read_csv(constants.HGNC_MAPPING, sep="\t")
@@ -886,6 +890,7 @@ async def mutationPostProcessing(
             "Tumor_Sample_Barcode",
             "Variant_Classification",
             "Protein_Change",
+            "Technique"
         ],
     ]
 

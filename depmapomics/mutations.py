@@ -212,7 +212,6 @@ def aggregateMAFs(
     print(sample_table_valid.shape)
     counter = 0
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
-        print(name, row, mafcol)
         # prints out progress bar
         maf = pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
@@ -222,9 +221,9 @@ def aggregateMAFs(
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
         all_mafs.append(maf)
-        counter += 1
-        if counter > 300:
-            break
+        # counter += 1
+        # if counter > 6:
+        #    break
     all_mafs = pd.concat(all_mafs)
     print(all_mafs.head())
     return all_mafs
