@@ -1,6 +1,7 @@
 import dalmatian as dm
 import time
 
+
 def removeSamples(workspace, samples):
     """
     removes a set of samples from a workspace (very usefull when we have linked pairs and pairsets)
@@ -22,6 +23,7 @@ def removeSamples(workspace, samples):
                 wm.update_pair_set(k, set(val.tolist()[0]) - set(pairid))
             wm.delete_pair(pairid)
         wm.delete_sample(samples)
+
 
 def saveWorkspace(workspace, folderpath):
     """
@@ -70,6 +72,7 @@ def saveWorkspace(workspace, folderpath):
             params[k]["outputs"], folderpath + "outputs_" + val["name"] + ".json"
         )
     h.dictToFile(params, folderpath + "all_configs.json")
+
 
 async def waitForSubmission(workspace, submissions, raise_errors=True):
     """
