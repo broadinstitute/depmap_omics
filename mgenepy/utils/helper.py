@@ -1,7 +1,12 @@
 import json
 import subprocess
+import os
+import pandas as pd
+from biomart import BiomartServer
+import io
 
 prevshowcount = 100
+
 
 def showcount(i, size):
     """
@@ -13,21 +18,23 @@ def showcount(i, size):
         print(str(a) + "%", end="\r")
         prevshowcount = a
 
-def fileToList(filename, strconv=lambda x: x):
+
+def fileToList(filename):
     """
     loads an input file with a\\n b\\n.. into a list [a,b,..]
     """
     with open(filename) as f:
-        return [strconv(val[:-1]) for val in f.readlines()]
+        return [val[:-1] for val in f.readlines()]
 
 
-def listToFile(l, filename, strconv=lambda x: str(x)):
+def listToFile(l, filename):
     """
     loads a list with [a,b,..] into an input file a\\n b\\n..
     """
     with open(filename, "w") as f:
         for item in l:
-            f.write("%s\n" % strconv(item))
+            f.write("%s\n" % item)
+
 
 def generateGeneNames(
     ensemble_server="http://nov2020.archive.ensembl.org/biomart",
@@ -78,6 +85,7 @@ def generateGeneNames(
 
     return res
 
+
 def _fetchFromServer(ensemble_server, attributes):
     server = BiomartServer(ensemble_server)
     ensmbl = server.datasets["hsapiens_gene_ensembl"]
@@ -89,6 +97,7 @@ def _fetchFromServer(ensemble_server, attributes):
     )
     return res
 
+
 def createFoldersFor(filepath):
     """
     will recursively create folders if needed until having all the folders required to save the file in this filepath
@@ -99,6 +108,7 @@ def createFoldersFor(filepath):
         if not os.path.exists(prevval):
             os.mkdir(prevval)
 
+
 def dups(lst):
     """
     shows the duplicates in a list
@@ -108,6 +118,7 @@ def dups(lst):
     seen_twice = set(x for x in lst if x in seen or seen.add(x))
     # turn the set into a list (as requested)
     return list(seen_twice)
+
 
 def dictToFile(d, filename):
     """
@@ -129,6 +140,7 @@ def askif(quest):
         return 0
     else:
         return askif("you need to answer by yes or no")
+
 
 def parrun(cmds, cores, add=[]):
     """
