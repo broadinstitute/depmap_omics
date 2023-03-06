@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import mgenepy.utils.helper as h
+from mgenepy.utils import helper as h
 
 
 def manageGapsInSegments(
