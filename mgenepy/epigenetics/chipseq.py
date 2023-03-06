@@ -2,22 +2,22 @@ import numpy as np
 
 
 # @jit(float32[:](float32[:, 3], float32[:, 4], int8, str))
-def putInBed(conscensus, value, window=10, mergetype="mean", columns=["foldchange"]):
+def putInBed(conscensus, value, window=10, mergetype="mean"):
     """
     given a conscensus bed-like dataframe and another one, will merge the second one into the first
 
     Args:
     -----
-            conscensus df[start,end,chrom] the conscensus (first one)
-            value df[start, end, chrom]+columns the value one (second one)
-            mergetype: flag: mean,first,last, on how to merge ttwo peaks that would fall on the same one
-            window: int on max distance of second df peaks' to the first ones, to still merge them
-                    re.g. 0 is hard overap, 10000000 is nearest peak)
+      conscensus df[start,end,chrom] the conscensus (first one)
+      value df[start, end, chrom,foldchange] the value one (second one)
+      mergetype: flag: mean,first,last, on how to merge ttwo peaks that would fall on the same one
+      window: int on max distance of second df peaks' to the first ones, to still merge them
+        re.g. 0 is hard overap, 10000000 is nearest peak)
 
     Returns:
     -------
-            np.array of values of the second dataframe to add to the first one
-            (e.g. can do df1[newcol] = returned_array)
+      np.array of values of the second dataframe to add to the first one
+      (e.g. can do df1[newcol] = returned_array)
     """
     conscensus = conscensus.sort_values(by=["chrom", "start", "end"]).reset_index(
         drop=True
@@ -27,19 +27,19 @@ def putInBed(conscensus, value, window=10, mergetype="mean", columns=["foldchang
     loc = 0
     tot = 0
     num = []
-    res = np.zeros((len(conscensus), len(columns)))
+    res = np.zeros(len(conscensus))
     not_end = True
 
     def add(res, num, not_end, loc):
         if len(num) > 0:
             if mergetype == "mean":
-                res[loc, :] = np.mean(num, 0)
+                res[loc] = np.mean(num)
             elif mergetype == "sum":
-                res[loc, :] = np.sum(num, 0)
+                res[loc] = np.sum(num)
             elif mergetype == "first":
-                res[loc, :] = num[0]
+                res[loc] = num[0]
             elif mergetype == "last":
-                res[loc, :] = num[-1]
+                res[loc] = num[-1]
             else:
                 raise ValueError("must be one of")
             num = []
@@ -49,44 +49,37 @@ def putInBed(conscensus, value, window=10, mergetype="mean", columns=["foldchang
         return res, num, not_end, loc
 
     while not_end:
-        print(loc / len(conscensus), end="\r")
-        try:
-            a = conscensus.iloc[loc]
-            b = value.iloc[locinvalue]
-            # we need to switch chromosome for b
-            if b.chrom < a.chrom:
-                locinvalue += 1
-                if locinvalue == len(value):
-                    not_end = False
-            # we need to switch chromosome for b
-            elif b.chrom > a.chrom:
-                loc += 1
-                if loc == len(conscensus):
-                    not_end = False
-            elif b.start < a.start:
-                if b.end + window > a.start:
-                    tot += 1
-                    num.append(b[columns])
-                    if b.end > a.end + window:
-                        res, num, not_end, loc = add(res, num, not_end, loc)
-                        continue
-                locinvalue += 1
-                if locinvalue == len(value):
-                    not_end = False
-            elif b.start < a.end + window:
+        # print(loc/len(conscensus),end="\r")
+        a = conscensus.iloc[loc]
+        b = value.iloc[locinvalue]
+        if b.chrom < a.chrom:
+            locinvalue += 1
+            if locinvalue == len(value):
+                not_end = False
+        elif b.chrom > a.chrom:
+            loc += 1
+            if loc == len(conscensus):
+                not_end = False
+        elif b.start < a.start:
+            if b.end + window > a.start:
                 tot += 1
-                num.append(b[columns])
+                num.append(b.foldchange)
                 if b.end > a.end + window:
                     res, num, not_end, loc = add(res, num, not_end, loc)
                     continue
-                locinvalue += 1
-                if locinvalue == len(value):
-                    not_end = False
-            else:
+            locinvalue += 1
+            if locinvalue == len(value):
+                not_end = False
+        elif b.start < a.end + window:
+            tot += 1
+            num.append(b.foldchange)
+            if b.end > a.end + window:
                 res, num, not_end, loc = add(res, num, not_end, loc)
-        except:
-            import pdb
-
-            pdb.set_trace()
-    print(str(tot) + " were merged into conscensus")
+                continue
+            locinvalue += 1
+            if locinvalue == len(value):
+                not_end = False
+        else:
+            res, num, not_end, loc = add(res, num, not_end, loc)
+    # print(str(tot) + " were merged into conscensus")
     return res

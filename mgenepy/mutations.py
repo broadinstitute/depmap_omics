@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import seaborn as sns
+import mgenepy.utils.helper as h
 
 
 def manageGapsInSegments(
@@ -66,6 +67,7 @@ def toGeneMatrix(
     style="weighted",
     missingchrom=["Y"],
     gene_names_col="gene_name",
+    value_colname="Segment_Mean",
 ):
     """
     makes a geneXsample matrix from segment level copy number (works with multiple sample file)
@@ -85,7 +87,7 @@ def toGeneMatrix(
     data = np.zeros((len(samples), len(gene_mapping)))
     for i, sample in enumerate(samples):
         segs = segments[segments.DepMap_ID == sample][
-            ["Chromosome", "Start", "End", "Segment_Mean"]
+            ["Chromosome", "Start", "End", value_colname]
         ].values
         hasmissing = set(missingchrom) - set(segs[:, 0])
         j = 0
