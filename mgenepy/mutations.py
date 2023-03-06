@@ -59,6 +59,7 @@ def manageGapsInSegments(
     segments[[Chromosome, Start, End]] = l
     return segments.reset_index(drop=True)
 
+
 def toGeneMatrix(
     segments,
     gene_mapping,
@@ -135,6 +136,7 @@ def toGeneMatrix(
                     coef = ncoef
                 data[i, k] = val if style == "weighted" else val / c
     return pd.DataFrame(data=data, index=samples, columns=gene_mapping[gene_names_col])
+
 
 def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
     """
