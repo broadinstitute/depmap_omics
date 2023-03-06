@@ -5,8 +5,8 @@ from depmapomics import env_config
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from genepy import terra
-from genepy.utils import helper as h
+from mgenepy import terra
+from mgenepy.utils import helper as h
 from depmap_omics_upload import tracker as track
 
 from depmapomics import terra as myterra
@@ -289,7 +289,7 @@ def add_sample_batch_pairs(wm, working_dir=constants.WORKING_DIR):
 
     # update sample_batch_pair
     try:
-        wm.upload_entities("sample_batch_pair", pair_df)
+        wm.upload_entities("sample_batch_pair", pair_df, model="flexible")
     except:
         print("still can't update sample_batch_pair")
         # in case it does not work
