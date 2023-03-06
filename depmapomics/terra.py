@@ -1,7 +1,7 @@
 # terra.py
 import pandas as pd
 import dalmatian as dm
-from genepy import terra
+from mgenepy import terra
 import numpy as np
 import traceback
 import firecloud.api

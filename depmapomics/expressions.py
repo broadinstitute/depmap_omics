@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 from scipy.stats import zscore
 
-from genepy.utils import helper as h
-from genepy import rna, terra
+from mgenepy.utils import helper as h
+from mgenepy import rna, terra
 from depmapomics.qc import rna as myQC
 
 

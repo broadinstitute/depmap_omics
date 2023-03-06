@@ -2,7 +2,7 @@ from depmapomics import constants
 import sys
 
 import pandas as pd
-from genepy import rna
+from mgenepy import rna
 from depmapomics import terra
 import numpy as np
 
