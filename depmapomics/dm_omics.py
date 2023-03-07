@@ -758,9 +758,6 @@ async def mutationPostProcessing(
     mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
         drop=True
     )
-    mergedmutations.loc[:, "Technique"] = ["WGS"] * wgsmutations.shape[0] + [
-        "WES"
-    ] * wesmutations.shape[0]
 
     # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
     print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
@@ -805,7 +802,42 @@ async def mutationPostProcessing(
 
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
-    mergedmutations.rename(
+    if run_sv:
+        if wgssvs is not None:
+            mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
+            mergedsvs.to_csv(folder + "svs.csv", index=False)
+            mergedsvs_pr = mergedsvs[
+                mergedsvs[constants.SAMPLEID].isin(renaming_dict.keys())
+            ].replace({constants.SAMPLEID: renaming_dict})
+            print("saving somatic svs")
+            mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
+
+    merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
+        drop=True
+    )
+    merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
+    merged = merged.drop(columns=["achilles_top_genes"])
+    merged = merged.rename(columns=mutcol)
+    merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
+
+    # making genotyped mutation matrices
+    print("creating mutation matrices")
+    hotspot_mat, lof_mat, driver_mat = mutations.makeMatrices(merged)
+    # add entrez ids to column names
+    mybiomart["gene_name"] = [
+        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
+        for _, i in mybiomart.iterrows()
+    ]
+    symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
+    hotspot_mat = hotspot_mat.rename(columns=symbol_to_symbolentrez_dict)
+    lof_mat = lof_mat.rename(columns=symbol_to_symbolentrez_dict)
+    driver_mat = driver_mat.rename(columns=symbol_to_symbolentrez_dict)
+
+    hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
+    lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
+    driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
+
+    merged.rename(
         columns={
             "HugoSymbol": "Hugo_Symbol",
             "Chrom": "Chromosome",
@@ -820,9 +852,7 @@ async def mutationPostProcessing(
         inplace=True,
     )
 
-    mergedmutations.loc[:, "Chromosome"] = mergedmutations.loc[
-        :, "Chromosome"
-    ].str.replace("chr", "")
+    merged.loc[:, "Chromosome"] = merged.loc[:, "Chromosome"].str.replace("chr", "")
 
     def assign_end_pos(
         *,
@@ -862,20 +892,18 @@ async def mutationPostProcessing(
         # TODO add SV types
         return end_pos
 
-    mergedmutations.loc[:, "End_Position"] = mergedmutations.apply(
+    merged.loc[:, "End_Position"] = merged.apply(
         lambda row: assign_end_pos(**row), axis=1
     )
 
-    mergedmutations.loc[:, "NCBI_Build"] = "GRCh38"  # or 38?
-    mergedmutations.loc[:, "Strand"] = "+"  # TODO: need to check vcf2maf later
-    mergedmutations.loc[:, "Tumor_Seq_Allele1"] = mergedmutations.loc[
+    merged.loc[:, "NCBI_Build"] = "GRCh38"  # or 38?
+    merged.loc[:, "Strand"] = "+"  # TODO: need to check vcf2maf later
+    merged.loc[:, "Tumor_Seq_Allele1"] = merged.loc[
         :, "Reference_Allele"
     ]  # TODO: need to check vcf2maf later
-    mergedmutations.loc[:, "Tumor_Seq_Allele2"] = mergedmutations.loc[
-        :, "Alternate_Allele"
-    ]
+    merged.loc[:, "Tumor_Seq_Allele2"] = merged.loc[:, "Alternate_Allele"]
 
-    mergedmutations = mergedmutations.loc[
+    merged = merged.loc[
         :,
         [
             "Hugo_Symbol",
@@ -890,13 +918,12 @@ async def mutationPostProcessing(
             "Tumor_Sample_Barcode",
             "Variant_Classification",
             "Protein_Change",
-            "Technique"
         ],
     ]
 
     # DepMap 20Q1 mutation issues.. https://github.com/PoisonAlien/maftools/issues/644
     # Mapping of variant classification https://github.com/PoisonAlien/maftools/blob/41ddaabbd824f24a99f66439366be98775edebb2/R/icgc_to_maf.R#L52
-    mergedmutations.loc[:, "Variant_Classification"] = mergedmutations.loc[
+    merged.loc[:, "Variant_Classification"] = merged.loc[
         :, "Variant_Classification"
     ].map(
         {
@@ -916,42 +943,7 @@ async def mutationPostProcessing(
 
     # TODO: add pandera type validation
 
-    mergedmutations.to_csv(folder + "somatic_mutations.maf.txt", index=False, sep="\t")
-
-    if run_sv:
-        if wgssvs is not None:
-            mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
-            mergedsvs.to_csv(folder + "svs.csv", index=False)
-            mergedsvs_pr = mergedsvs[
-                mergedsvs[constants.SAMPLEID].isin(renaming_dict.keys())
-            ].replace({constants.SAMPLEID: renaming_dict})
-            print("saving somatic svs")
-            mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
-
-    merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
-        drop=True
-    )
-    merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
-    merged = merged.drop(columns=["achilles_top_genes"])
-    merged = merged.rename(columns=mutcol)
-    merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
-
-    # making genotyped mutation matrices
-    print("creating mutation matrices")
-    hotspot_mat, lof_mat, driver_mat = mutations.makeMatrices(merged)
-    # add entrez ids to column names
-    mybiomart["gene_name"] = [
-        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
-        for _, i in mybiomart.iterrows()
-    ]
-    symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
-    hotspot_mat = hotspot_mat.rename(columns=symbol_to_symbolentrez_dict)
-    lof_mat = lof_mat.rename(columns=symbol_to_symbolentrez_dict)
-    driver_mat = driver_mat.rename(columns=symbol_to_symbolentrez_dict)
-
-    hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
-    lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
-    driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
+    merged.to_csv(folder + "somatic_mutations_profile.maf.txt", index=False, sep="\t")
 
     if run_guidemat:
         # generate germline binary matrix
@@ -1019,6 +1011,12 @@ async def mutationPostProcessing(
                     "path": folder + "somatic_mutations_profile.csv",
                     "name": "somaticMutations_profile",
                     "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_profile.maf.txt",
+                    "name": "somaticMutations_profile_maf",
+                    "format": "MAF",
                     "encoding": "utf-8",
                 },
                 {
