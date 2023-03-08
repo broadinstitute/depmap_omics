@@ -4,7 +4,7 @@ import pandas as pd
 import os.path
 import seaborn as sns
 
-from genepy import terra
+from mgenepy import terra
 
 
 def addToMainFusion(input_filenames, main_filename, sample_id=constants.SAMPLEID):

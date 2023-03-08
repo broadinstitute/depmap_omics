@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "CDS-omics pipelines"
 authors = ["CDS-omics <qqin@broadinstitute.org>"]
 readme = "README.md"
-packages = [{include = "depmapomics"}]
+packages = [{include = "depmapomics"}, {include="mgenepy"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -12,16 +12,13 @@ numpy = "^1.24.1"
 pandas = "^1.5.3"
 taigapy = {git = "https://github.com/broadinstitute/taigapy.git", rev = "0b67741f18fe6e3c2f508ee84b06ca3bed853b82"}
 seaborn = "^0.12.2"
-cds-genepy = {git = "https://github.com/qinqian/cds-genepy", branch = "poetry"}
 depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch = "main"}
 pyright = "1.1.293"
 pandera = "^0.13.4"
 fire = "^0.5.0"
-scikit-learn = "^1.2.1"
-fsspec = "^2023.1.0"
-gcsfs = "^2023.1.0"
 tqdm = "^4.64.1"
-psycopg2-binary = "^2.9.5"
+scipy="^1.0.0"
+firecloud_dalmatian= {git = "https://github.com/pgm/dalmatian", rev = "5f37ef9"}
 
 [tool.poetry.scripts]
 depmapomics = 'depmapomics.__main__:main'
