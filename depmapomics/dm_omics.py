@@ -795,10 +795,13 @@ async def mutationPostProcessing(
     mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
-    print("saving merged somatic mutations MAF")
-    # Convert "Y" to True/False
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
-    # TODO: add function to convert all columns with "Y"
+    # For all columns, convert "Y" to True/False
+    for col in mergedmutations.columns:
+        if "Y" in mergedmutations[col].values:
+            mergedmutations.loc[:, col] = np.where(
+                mergedmutations[col].values == "Y", True, False
+            )
 
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 

@@ -188,6 +188,7 @@ def aggregateMAFs(
     sampleset="all",
     mafcol=constants.MAF_COL,
     keep_cols=constants.MUTCOL_DEPMAP,
+    debug=False
 ):
     """Aggregate MAF files from terra
 
@@ -218,9 +219,10 @@ def aggregateMAFs(
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
         all_mafs.append(maf)
-        counter += 1
-        if counter > 6:
-            break
+        if debug:
+            counter += 1
+            if counter > 6:
+                break
     all_mafs = pd.concat(all_mafs)
     return all_mafs
 
