@@ -52,7 +52,7 @@ workflow WGS_pipeline {
         Float num_changepoints_penalty_factor = 5
         String funcotator_ref_version = "hg38"
         File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
-        File blacklist_intervals = "gs://gatk-best-practices/somatic-hg38/CNV_and_centromere_blacklist.hg38liftover.list"
+        File blacklist_intervals
 
         String manta_docker = "wwliao/manta:latest"
         String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
