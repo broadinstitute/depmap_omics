@@ -31,6 +31,7 @@ async def expressionPostProcessing(
     rnaqclocs={},
     starlogs={},
     compute_enrichment=False,
+    billing_proj=constants.GCS_PAYER_PROJECT,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -111,6 +112,7 @@ async def expressionPostProcessing(
         starlogs=starlogs,
         dry_run=dry_run,
         newgs=None,
+        billing_proj=billing_proj,
     )
 
     # subset and rename, include all PRs that have associated CDS-ids
@@ -341,6 +343,7 @@ def cnPostProcessing(
     wesfolder="",
     segmentsthresh=constants.SEGMENTSTHR,
     maxYchrom=constants.MAXYCHROM,
+    billing_proj=constants.GCS_PAYER_PROJECT,
     dryrun=False,
     **kwargs,
 ):
@@ -466,6 +469,7 @@ def cnPostProcessing(
             procqc=procqc,
             refworkspace=wgsrefworkspace,
             dry_run=dryrun,
+            billing_proj=billing_proj,
         )
     except:
         print("no wgs for this sampleset")
@@ -480,6 +484,7 @@ def cnPostProcessing(
             procqc=procqc,
             refworkspace=wesrefworkspace,
             dry_run=dryrun,
+            billing_proj=billing_proj,
         )
     except:
         print("no wes for this sampleset")

@@ -11,8 +11,6 @@ from mgenepy import rna, terra
 from depmapomics.qc import rna as myQC
 
 
-
-
 def addSamplesRSEMToMain(input_filenames, main_filename):
     """
     given a tsv RNA files from RSEM algorithm, merge it to a tsv set of RNA data
@@ -23,7 +21,8 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
     """
     genes_count = pd.read_csv(
-        constants.WORKING_DIR + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        constants.WORKING_DIR
+        + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
@@ -41,10 +40,12 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
     for input_filename in input_filenames:
         name = input_filename["rsem_genes"].split("/")[-1].split(".")[0].split("_")[-1]
         rsem_genes = pd.read_csv(
-            constants.WORKING_DIR + input_filename["rsem_genes"].split("/")[-1], sep="\t"
+            constants.WORKING_DIR + input_filename["rsem_genes"].split("/")[-1],
+            sep="\t",
         )
         rsem_transcripts = pd.read_csv(
-            constants.WORKING_DIR + input_filename["rsem_isoforms"].split("/")[-1], sep="\t"
+            constants.WORKING_DIR + input_filename["rsem_isoforms"].split("/")[-1],
+            sep="\t",
         )
         genes_count[name] = pd.Series(
             rsem_genes["expected_count"], index=rsem_genes.index
@@ -55,7 +56,8 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         genes_tpm[name] = pd.Series(rsem_genes["TPM"], index=rsem_genes.index)
 
     genes_count.to_csv(
-        constants.WORKING_DIR + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        constants.WORKING_DIR
+        + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
@@ -171,7 +173,11 @@ def loadFromRSEMaggregate(
 
 
 def subsetGenes(
-    files, gene_rename, filenames=constants.RSEM_TRANSCRIPTS, drop=[], index_id="transcript_id"
+    files,
+    gene_rename,
+    filenames=constants.RSEM_TRANSCRIPTS,
+    drop=[],
+    index_id="transcript_id",
 ):
     """
     Subset the rsem transcripts file to keep only the genes of interest
