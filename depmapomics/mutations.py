@@ -1,6 +1,6 @@
 """Mutation postprocessing module."""
 from depmapomics import constants
-from genepy.utils import helper as h
+from mgenepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
@@ -21,7 +21,7 @@ def annotateLikelyImmortalized(
     hotspotcol="cosmic_hotspot",
     max_recurrence=constants.IMMORTALIZED_THR,
 ):
-    """Annotates the maf file with the likely immortalized mutations
+    """Annotate the maf file with the likely immortalized mutations
 
     Based on occurence accross samples
 
@@ -207,7 +207,6 @@ def aggregateMAFs(
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
     all_mafs = []
-    print(sample_table_valid.shape)
     counter = 0
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
@@ -223,7 +222,6 @@ def aggregateMAFs(
         if counter > 6:
             break
     all_mafs = pd.concat(all_mafs)
-    print(all_mafs.head())
     return all_mafs
 
 

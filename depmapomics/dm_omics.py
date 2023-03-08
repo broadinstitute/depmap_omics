@@ -6,8 +6,7 @@ import pandas as pd
 import numpy as np
 from taigapy import TaigaClient
 
-from genepy.utils import helper as h
-from genepy import mutations as mut
+from mgenepy.utils import helper as h
 
 from depmap_omics_upload import tracker as track
 
@@ -792,6 +791,7 @@ async def mutationPostProcessing(
     mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
         symbol_to_entrez_dict
     )
+    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
     mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
@@ -816,6 +816,7 @@ async def mutationPostProcessing(
         drop=True
     )
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
+    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("Unknown")
     merged = merged.drop(columns=["achilles_top_genes"])
     merged = merged.rename(columns=mutcol)
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
@@ -826,6 +827,8 @@ async def mutationPostProcessing(
     # add entrez ids to column names
     mybiomart["gene_name"] = [
         i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
+        if not pd.isna(i["entrezgene_id"])
+        else i["hgnc_symbol"] + " (Unknown)"
         for _, i in mybiomart.iterrows()
     ]
     symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
@@ -957,7 +960,7 @@ async def mutationPostProcessing(
         vcflist = [v for v in vcflist if v.startswith("gs://")]
 
         print("generating germline binary matrix")
-        germline_mats = mut.generateGermlineMatrix(
+        germline_mats = mutations.generateGermlineMatrix(
             vcflist,
             vcfdir=vcfdir,
             savedir=constants.WORKING_DIR + samplesetname + "/",
