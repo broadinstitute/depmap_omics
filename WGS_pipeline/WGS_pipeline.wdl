@@ -210,15 +210,15 @@ workflow WGS_pipeline {
         # File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
         # File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
         # File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
-        File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
-        Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
-        File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
-        Float denoised_MAD_value_tumor = CNVSomaticPairWorkflow.denoised_MAD_value_tumor
-        File delta_MAD_tumor = CNVSomaticPairWorkflow.delta_MAD_tumor
-        Float delta_MAD_value_tumor = CNVSomaticPairWorkflow.delta_MAD_value_tumor
-        File scaled_delta_MAD_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_tumor
-        Float scaled_delta_MAD_value_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_value_tumor
-        File modeled_segments_plot_tumor = CNVSomaticPairWorkflow.modeled_segments_plot_tumor
+        # File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
+        # Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
+        # File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
+        # Float denoised_MAD_value_tumor = CNVSomaticPairWorkflow.denoised_MAD_value_tumor
+        # File delta_MAD_tumor = CNVSomaticPairWorkflow.delta_MAD_tumor
+        # Float delta_MAD_value_tumor = CNVSomaticPairWorkflow.delta_MAD_value_tumor
+        # File scaled_delta_MAD_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_tumor
+        # Float scaled_delta_MAD_value_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_value_tumor
+        # File modeled_segments_plot_tumor = CNVSomaticPairWorkflow.modeled_segments_plot_tumor
         #MantaSomaticSV
         File candidate_indel_vcf= MantaSomaticSV.candidate_indel_vcf
         File candidate_indel_vcf_index= MantaSomaticSV.candidate_indel_vcf_index
