@@ -142,13 +142,13 @@ workflow WGS_pipeline {
             run_orientation_bias_mixture_model_filter=true,
     }
 
-    call PureCN.PureCN as PureCN {
-        input:
-            sampleID=sample_name,
-            segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
-            vcf=mutect2.base_vcf,
-            intervals=purecn_intervals,
-    }
+    # call PureCN.PureCN as PureCN {
+    #     input:
+    #         sampleID=sample_name,
+    #         segFile=CNVSomaticPairWorkflow.modeled_segments_tumor,
+    #         vcf=mutect2.base_vcf,
+    #         intervals=purecn_intervals,
+    # }
 
     call msisensor2.msisensor2_workflow as msisensor2_workflow{
         input:
@@ -236,29 +236,29 @@ workflow WGS_pipeline {
         File omics_mutect2_out_vcf=fix_mutect2.vcf_fixed
         File full_vcf_idx=select_first([mutect2.funcotated_file_index, mutect2.base_vcf_idx])
         # PureCN
-        File PureCN_solutions_pdf = PureCN.solutions_pdf
-        File chromosomes_pdf = PureCN.chromosomes_pdf
-        File PureCN_rds = PureCN.rds
-        File PureCN_dnacopy = PureCN.dnacopy
-        File PureCN_variants = PureCN.variants
-        File PureCN_loh = PureCN.loh
-        File PureCN_genes = PureCN.genes
-        File PureCN_segmentation = PureCN.segmentation
-        File PureCN_log = PureCN.log
-        File PureCN_selected_solution = PureCN.selected_solution
-        File PureCN_local_optima_pdf = PureCN.local_optima_pdf
-        String PureCN_purity = PureCN.purity
-        String PureCN_ploidy = PureCN.ploidy
-        String PureCN_contamination = PureCN.contamination
-        String PureCN_flagged = PureCN.flagged
-        String PureCN_curated = PureCN.curated
-        String PureCN_comment = PureCN.comment
-        String PureCN_wgd = PureCN.wgd
-        String PureCN_loh_fraction = PureCN.loh_fraction
-        String PureCN_cin = PureCN.cin
-        String PureCN_cin_allele_specific = PureCN.cin_allele_specific
-        String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
-        String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
+        # File PureCN_solutions_pdf = PureCN.solutions_pdf
+        # File chromosomes_pdf = PureCN.chromosomes_pdf
+        # File PureCN_rds = PureCN.rds
+        # File PureCN_dnacopy = PureCN.dnacopy
+        # File PureCN_variants = PureCN.variants
+        # File PureCN_loh = PureCN.loh
+        # File PureCN_genes = PureCN.genes
+        # File PureCN_segmentation = PureCN.segmentation
+        # File PureCN_log = PureCN.log
+        # File PureCN_selected_solution = PureCN.selected_solution
+        # File PureCN_local_optima_pdf = PureCN.local_optima_pdf
+        # String PureCN_purity = PureCN.purity
+        # String PureCN_ploidy = PureCN.ploidy
+        # String PureCN_contamination = PureCN.contamination
+        # String PureCN_flagged = PureCN.flagged
+        # String PureCN_curated = PureCN.curated
+        # String PureCN_comment = PureCN.comment
+        # String PureCN_wgd = PureCN.wgd
+        # String PureCN_loh_fraction = PureCN.loh_fraction
+        # String PureCN_cin = PureCN.cin
+        # String PureCN_cin_allele_specific = PureCN.cin_allele_specific
+        # String PureCN_cin_ploidy_robust = PureCN.cin_ploidy_robust
+        # String PureCN_cin_allele_specific_ploidy_robust = PureCN.cin_allele_specific_ploidy_robust
         # msisensor2
         Float msisensor2_score=msisensor2_workflow.msisensor2_score
         File msisensor2_output=msisensor2_workflow.msisensor2_output
