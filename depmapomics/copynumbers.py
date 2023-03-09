@@ -9,7 +9,6 @@ import pandas as pd
 import os
 from mgenepy import mutations as mut
 from mgenepy.utils import helper as h
-from mgenepy import terra
 
 
 def renameColumns(df):
