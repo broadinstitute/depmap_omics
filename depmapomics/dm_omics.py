@@ -10,7 +10,7 @@ from mgenepy.utils import helper as h
 
 from depmap_omics_upload import tracker as track
 
-# from depmapomics import expressions
+from depmapomics import expressions
 from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
