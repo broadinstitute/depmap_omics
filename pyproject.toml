@@ -14,8 +14,14 @@ taigapy = {git = "https://github.com/broadinstitute/taigapy.git", rev = "0b67741
 seaborn = "^0.12.2"
 depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch = "main"}
 pyright = "1.1.293"
+pandera = "^0.13.4"
+fire = "^0.5.0"
+tqdm = "^4.64.1"
 scipy="^1.0.0"
 firecloud_dalmatian= {git = "https://github.com/pgm/dalmatian", rev = "5f37ef9"}
+
+[tool.poetry.scripts]
+depmapomics = 'depmapomics.__main__:main'
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"

@@ -1,13 +1,15 @@
+"""Mutation postprocessing module."""
 from depmapomics import constants
 from mgenepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
-import pandas as pd
-from mgenepy.epigenetics import chipseq as chip
+from genepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
+import pandera as pa
+from tqdm import tqdm
 
 
 def annotateLikelyImmortalized(
@@ -19,7 +21,7 @@ def annotateLikelyImmortalized(
     hotspotcol="cosmic_hotspot",
     max_recurrence=constants.IMMORTALIZED_THR,
 ):
-    """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
+    """Annotate the maf file with the likely immortalized mutations
 
     Based on occurence accross samples
 
@@ -108,8 +110,8 @@ def makeMatrices(
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homhotspot.add(dup)
         hethotspot = set(hotspot[hugo_col]) - homhotspot
-        hotspot_mat.loc[sample, homhotspot] = "2"
-        hotspot_mat.loc[sample, hethotspot] = "1"
+        hotspot_mat.loc[sample, list(homhotspot)] = "2"
+        hotspot_mat.loc[sample, list(hethotspot)] = "1"
         # damaging
         lof = subset_maf[
             (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col] == "Y")
@@ -119,8 +121,8 @@ def makeMatrices(
             if lof[lof[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homlof.add(dup)
         hetlof = set(lof[hugo_col]) - homlof
-        lof_mat.loc[sample, homlof] = "2"
-        lof_mat.loc[sample, hetlof] = "1"
+        lof_mat.loc[sample, list(homlof)] = "2"
+        lof_mat.loc[sample, list(hetlof)] = "1"
         # driver
         driver = subset_maf[
             ((~subset_maf[civic_col].isnull()) & (subset_maf[civic_col] != 0))
@@ -131,8 +133,8 @@ def makeMatrices(
             if driver[driver[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homdriv.add(dup)
         hetdriv = set(driver[hugo_col]) - homdriv
-        driver_mat.loc[sample, homdriv] = "2"
-        driver_mat.loc[sample, hetdriv] = "1"
+        driver_mat.loc[sample, list(homdriv)] = "2"
+        driver_mat.loc[sample, list(hetdriv)] = "1"
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
     lof_mat = lof_mat.dropna(axis="columns", how="all")
     driver_mat = driver_mat.dropna(axis="columns", how="all")
@@ -186,8 +188,9 @@ def aggregateMAFs(
     sampleset="all",
     mafcol=constants.MAF_COL,
     keep_cols=constants.MUTCOL_DEPMAP,
+    debug=False
 ):
-    """aggregate MAF files from terra
+    """Aggregate MAF files from terra
 
     Args:
         refworkspace (str): the reference workspace
@@ -198,7 +201,6 @@ def aggregateMAFs(
     Returns:
         aggregated_maf (df.DataFrame): aggregated MAF
     """
-    print("aggregating MAF files")
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
@@ -206,19 +208,21 @@ def aggregateMAFs(
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
     all_mafs = []
-    le = len(sample_table_valid)
     counter = 0
-    for name, row in sample_table_valid.iterrows():
+    for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
-        h.showcount(counter, le)
-        counter += 1
         maf = pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
         # >1 because of the hess_signature typo in input mafs
         # can be 0 once the type is fixed upstream
+        # TODO: replace hess_signature later
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
         all_mafs.append(maf)
+        if debug:
+            counter += 1
+            if counter > 6:
+                break
     all_mafs = pd.concat(all_mafs)
     return all_mafs
 
@@ -272,6 +276,7 @@ def postProcess(
     run_sv=True,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
+
     and aggregate structural variants (SVs)
 
     Args:
