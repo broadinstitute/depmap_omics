@@ -80,6 +80,11 @@ LATEST2FN_TABLE_PR = {
     "mutations-latest-ed72": {
         "somaticMutations_profile": "OmicsSomaticMutationsProfile",
         "structuralVariants_profile": "OmicsStructuralVariantsProfile",
-        "somatic_mutations_profile.maf": "OmicsSomaticMutationsMAFProfile",
     },
+}
+
+LATEST2FN_RAW_PR = {
+    "mutations-latest-ed72": {
+        "somatic_mutations_profile.maf": "OmicsSomaticMutationsMAFProfile"
+    }
 }
