@@ -4,7 +4,7 @@ from mgenepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
-from genepy.epigenetics import chipseq as chip
+from mgenepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
