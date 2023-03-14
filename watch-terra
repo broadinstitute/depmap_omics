@@ -165,8 +165,17 @@ def main(workspace):
     """
     Polls the supplied workspace for changes in submission status. When changes
     such as a new submission or a submission completes, or part of a submission fails, a
-    notification will be sent out on a slack channel. (Configure the slack channel by setting
-    the appropriate slack webhook URL in google secrets management)
+    notification will be sent out on a slack channel. 
+    
+    The slack channel notifications will be written is controlled by a secret stored in 
+    google secrets management (depmap-omics/terra-notifier-webhook-url). At this 
+    time this is hardcoded to "#terra-notification-test".
+    
+    Workspace should be of the form <namespace>/<name> (ie: broad-firecloud-ccle/DepMap_WES_CN_hg38)
+    
+    When run, expect to see a "." for each time it checks Terra and occasional a "c" when jobs are completed.
+    
+    The command will run indefinitely until killed.
     """
 
     m = re.match("([^/]+)/(.+)", workspace)
