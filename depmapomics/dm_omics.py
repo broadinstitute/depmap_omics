@@ -10,7 +10,7 @@ from mgenepy.utils import helper as h
 
 from depmap_omics_upload import tracker as track
 
-# from depmapomics import expressions
+from depmapomics import expressions
 from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
@@ -952,6 +952,11 @@ async def mutationPostProcessing(
         }
     )
 
+    # sort by chrom, start, and end columns for IGV import
+    merged["Chromosome"] = merged["Chromosome"].replace({"X": 23, "Y": 24, "M": 25})
+    merged = merged.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
+    merged["Chromosome"] = merged["Chromosome"].replace({23: "X", 24: "Y", 25: "M"})
+
     # TODO: add pandera type validation
 
     merged.to_csv(folder + "somatic_mutations_profile.maf.txt", index=False, sep="\t")
@@ -1025,7 +1030,7 @@ async def mutationPostProcessing(
                     "encoding": "utf-8",
                 },
                 {
-                    "path": folder + "somatic_mutations_profile.maf.txt",
+                    "path": folder + "somatic_mutations_profile.maf.csv",
                     "name": "somaticMutations_profile_maf",
                     "format": "MAF",
                     "encoding": "utf-8",
