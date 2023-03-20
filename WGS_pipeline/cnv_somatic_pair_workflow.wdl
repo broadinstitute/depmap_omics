@@ -136,7 +136,6 @@ workflow CNVSomaticPairWorkflow {
       #### optional arguments for plotting ####
       #########################################
       Int? minimum_contig_length
-      Float? point_size_allele_fraction
       Int? mem_gb_for_plotting
 
       ##################################################
@@ -312,7 +311,6 @@ workflow CNVSomaticPairWorkflow {
             modeled_segments = ModelSegmentsTumor.modeled_segments,
             ref_fasta_dict = ref_fasta_dict,
             minimum_contig_length = minimum_contig_length,
-            point_size_allele_fraction = point_size_allele_fraction,
             gatk4_jar_override = gatk4_jar_override,
             gatk_docker = gatk_docker,
             mem_gb = mem_gb_for_plotting,
@@ -444,7 +442,6 @@ workflow CNVSomaticPairWorkflow {
                 modeled_segments = ModelSegmentsNormal.modeled_segments,
                 ref_fasta_dict = ref_fasta_dict,
                 minimum_contig_length = minimum_contig_length,
-                point_size_allele_fraction = point_size_allele_fraction,
                 gatk4_jar_override = gatk4_jar_override,
                 gatk_docker = gatk_docker,
                 mem_gb = mem_gb_for_plotting,
@@ -818,7 +815,6 @@ task PlotModeledSegments {
       File modeled_segments
       File ref_fasta_dict
       Int? minimum_contig_length
-      Float? point_size_allele_fraction
       String? output_dir
       File? gatk4_jar_override
 
@@ -847,7 +843,6 @@ task PlotModeledSegments {
             --segments ~{modeled_segments} \
             --sequence-dictionary ~{ref_fasta_dict} \
             --minimum-contig-length ~{default="1000000" minimum_contig_length} \
-            --point-size-allele-fraction ~{default="0.4" point_size_allele_fraction} \
             --output ~{output_dir_} \
             --output-prefix ~{entity_id}
     >>>
