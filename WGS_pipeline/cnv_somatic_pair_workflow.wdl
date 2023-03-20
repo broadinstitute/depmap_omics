@@ -136,7 +136,6 @@ workflow CNVSomaticPairWorkflow {
       #### optional arguments for plotting ####
       #########################################
       Int? minimum_contig_length
-      Float? point_size_copy_ratio
       Float? point_size_allele_fraction
       Int? mem_gb_for_plotting
 
@@ -298,7 +297,6 @@ workflow CNVSomaticPairWorkflow {
             denoised_copy_ratios = DenoiseReadCountsTumor.denoised_copy_ratios,
             ref_fasta_dict = ref_fasta_dict,
             minimum_contig_length = minimum_contig_length,
-            point_size_copy_ratio = point_size_copy_ratio,
             gatk4_jar_override = gatk4_jar_override,
             gatk_docker = gatk_docker,
             mem_gb = mem_gb_for_plotting,
@@ -314,7 +312,6 @@ workflow CNVSomaticPairWorkflow {
             modeled_segments = ModelSegmentsTumor.modeled_segments,
             ref_fasta_dict = ref_fasta_dict,
             minimum_contig_length = minimum_contig_length,
-            point_size_copy_ratio = point_size_copy_ratio,
             point_size_allele_fraction = point_size_allele_fraction,
             gatk4_jar_override = gatk4_jar_override,
             gatk_docker = gatk_docker,
@@ -432,7 +429,6 @@ workflow CNVSomaticPairWorkflow {
                 denoised_copy_ratios = DenoiseReadCountsNormal.denoised_copy_ratios,
                 ref_fasta_dict = ref_fasta_dict,
                 minimum_contig_length = minimum_contig_length,
-                point_size_copy_ratio = point_size_copy_ratio,
                 gatk4_jar_override = gatk4_jar_override,
                 gatk_docker = gatk_docker,
                 mem_gb = mem_gb_for_plotting,
@@ -448,7 +444,6 @@ workflow CNVSomaticPairWorkflow {
                 modeled_segments = ModelSegmentsNormal.modeled_segments,
                 ref_fasta_dict = ref_fasta_dict,
                 minimum_contig_length = minimum_contig_length,
-                point_size_copy_ratio = point_size_copy_ratio,
                 point_size_allele_fraction = point_size_allele_fraction,
                 gatk4_jar_override = gatk4_jar_override,
                 gatk_docker = gatk_docker,
@@ -763,7 +758,6 @@ task PlotDenoisedCopyRatios {
       File denoised_copy_ratios
       File ref_fasta_dict
       Int? minimum_contig_length
-      Float? point_size_copy_ratio
       String? output_dir
       File? gatk4_jar_override
 
@@ -791,7 +785,6 @@ task PlotDenoisedCopyRatios {
             --denoised-copy-ratios ~{denoised_copy_ratios} \
             --sequence-dictionary ~{ref_fasta_dict} \
             --minimum-contig-length ~{default="1000000" minimum_contig_length} \
-            --point-size-copy-ratio ~{default="0.2" point_size_copy_ratio} \
             --output ~{output_dir_} \
             --output-prefix ~{entity_id}
     >>>
@@ -825,7 +818,6 @@ task PlotModeledSegments {
       File modeled_segments
       File ref_fasta_dict
       Int? minimum_contig_length
-      Float? point_size_copy_ratio
       Float? point_size_allele_fraction
       String? output_dir
       File? gatk4_jar_override
@@ -855,7 +847,6 @@ task PlotModeledSegments {
             --segments ~{modeled_segments} \
             --sequence-dictionary ~{ref_fasta_dict} \
             --minimum-contig-length ~{default="1000000" minimum_contig_length} \
-            --point-size-copy-ratio ~{default="0.2" point_size_copy_ratio} \
             --point-size-allele-fraction ~{default="0.4" point_size_allele_fraction} \
             --output ~{output_dir_} \
             --output-prefix ~{entity_id}
