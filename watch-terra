@@ -84,7 +84,7 @@ def diff(orig_submissions, latest_submissions):
             a = by_id[s["submissionId"]]
             changes = {}
             for status in set(a.keys()).union(b.keys()):
-                assert status in KNOWN_STATUSES
+                assert status in KNOWN_STATUSES, f"unknown status: {status}"
 
                 prev_value = a.get(status, 0)
                 value = b.get(status, 0)
