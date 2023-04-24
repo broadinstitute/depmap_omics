@@ -1,5 +1,6 @@
 from depmapomics import constants
 from depmapomics import env_config
+
 # fingerprinting.py
 
 import pandas as pd
@@ -122,7 +123,14 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                 ":",
                 tuple(
                     ref.loc[
-                        i, ["ModelID", "version", "expected_type", "PatientID"]
+                        i,
+                        [
+                            "ModelID",
+                            "ModelCondition",
+                            "version",
+                            "expected_type",
+                            "PatientID",
+                        ],
                     ].values
                 ),
                 j,
@@ -132,6 +140,7 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                         j,
                         [
                             "ModelID",
+                            "ModelCondition",
                             "version",
                             "expected_type",
                             "PatientID",
@@ -148,7 +157,13 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                         tuple(
                             ref.loc[
                                 i,
-                                ["ModelID", "version", "expected_type", "PatientID"],
+                                [
+                                    "ModelID",
+                                    "ModelCondition",
+                                    "version",
+                                    "expected_type",
+                                    "PatientID",
+                                ],
                             ].values
                         )
                     )
@@ -159,6 +174,7 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                                 j,
                                 [
                                     "ModelID",
+                                    "ModelCondition",
                                     "version",
                                     "expected_type",
                                     "PatientID",
@@ -456,12 +472,19 @@ async def fingerPrint(
     if use_gumbo:
         mytracker = track.SampleTracker()
         ref = mytracker.add_model_cols_to_seqtable(["PatientID", "ModelID"])
+        pr_table = mytracker.read_pr_table()
+        ref["ModelCondition"] = ref["ProfileID"].apply(
+            lambda x: pr_table.loc[x, "ModelCondition"]
+        )
         # add model and participant info to new samples that are not in the sequencing table yet
         samples["ModelID"] = samples["ProfileID"].apply(
             lambda x: mytracker.lookup_model_from_pr(x, "ModelID")
         )
         samples["PatientID"] = samples["ProfileID"].apply(
             lambda x: mytracker.lookup_model_from_pr(x, "PatientID")
+        )
+        samples["ModelCondition"] = samples["ProfileID"].apply(
+            lambda x: pr_table.loc[x, "ModelCondition"]
         )
 
     else:
