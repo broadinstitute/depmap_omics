@@ -962,7 +962,7 @@ async def mutationPostProcessing(
 
     # sort by chrom, start, and end columns for IGV import
     merged["Chromosome"] = merged["Chromosome"].replace({"X": 23, "Y": 24, "M": 25})
-    merged["Chromosome"] = merged["Chromosome"].astype('int')
+    merged["Chromosome"] = merged["Chromosome"].astype("int")
     merged = merged.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
     merged["Chromosome"] = merged["Chromosome"].replace({23: "X", 24: "Y", 25: "M"})
 
