@@ -66,6 +66,7 @@ LATEST2FN_NUMMAT_PR = {
     "expression-d035": {
         "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
         "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
+        "transcripts_tpm_logp1_profile": "OmicsExpressionTranscriptsTPMLogp1Profile",
         "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
     },
     "mutations-latest-ed72": {},

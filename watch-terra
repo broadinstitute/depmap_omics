@@ -124,61 +124,74 @@ def get_slack_webhook_url():
     return as_bytes.decode("utf8")
 
 
-def poll_workspace(namespace, workspace, notifier):
+def poll_workspace(workspaces, notifier):
     # submissions_by_id = {}
 
-    first = True
-    prev_submissions = None
+    prev_submissions_by_name = {}
 
     while True:
-        submissions = firecloud.api.list_submissions(namespace, workspace)
-        assert (
-            submissions.status_code == 200
-        ), f"expected 200 but got status={submissions.status_code}, body={submissions.content}"
-        submissions = submissions.json()
-        # add_submissions(submissions_by_id, submissions)
-        if first:
-            first = False
-        else:
-            for x in diff(prev_submissions, submissions):
-                if (
-                    isinstance(x, SubmissionStatusChange)
-                    and len(x.status_change) == 2
-                    and "Running" in x.status_change
-                    and "Succeeded" in x.status_change
-                ):
-                    # reporting that only the running count and the succeeded counts changed -- which implies
-                    # the very common case of just more jobs successfully completing. We don't need notification
-                    # of that.
-                    print("c", end="", flush=True)
-                else:
-                    notifier(f"Changes in {namespace}/{workspace}", str(x))
-        print(".", end="", flush=True)
-        prev_submissions = submissions
+        for workspace in workspaces:
+            prev_submissions = prev_submissions_by_name.get(workspace)
+            namespace, name = _split_workspace_name(workspace)
+            submissions = firecloud.api.list_submissions(namespace, name)
+            assert (
+                submissions.status_code == 200
+            ), f"expected 200 but got status={submissions.status_code}, body={submissions.content}"
+            submissions = submissions.json()
+            # add_submissions(submissions_by_id, submissions)
+            if prev_submissions is not None:
+                for x in diff(prev_submissions, submissions):
+                    if (
+                        isinstance(x, SubmissionStatusChange)
+                        and len(x.status_change) == 2
+                        and "Running" in x.status_change
+                        and "Succeeded" in x.status_change
+                    ):
+                        # reporting that only the running count and the succeeded counts changed -- which implies
+                        # the very common case of just more jobs successfully completing. We don't need notification
+                        # of that.
+                        print("c", end="", flush=True)
+                    else:
+                        notifier(f"Changes in {workspace}", str(x))
+            print(".", end="", flush=True)
+            prev_submissions_by_name[workspace] = submissions
 
         time.sleep(30)
 
 
-@click.command()
-@click.argument("workspace")
-def main(workspace):
-    """
-    Polls the supplied workspace for changes in submission status. When changes
-    such as a new submission or a submission completes, or part of a submission fails, a
-    notification will be sent out on a slack channel. (Configure the slack channel by setting
-    the appropriate slack webhook URL in google secrets management)
-    """
-
+def _split_workspace_name(workspace):
     m = re.match("([^/]+)/(.+)", workspace)
     assert (
         m
     ), f"Expected workspace name to be of the format 'namespace/name' but got: {workspace}"
     namespace, workspace = m.groups()
+    return namespace, workspace
+
+
+@click.command()
+@click.argument("workspaces", nargs=-1)
+def main(workspaces):
+    """
+    Polls the supplied workspace for changes in submission status. When changes
+    such as a new submission or a submission completes, or part of a submission fails, a
+    notification will be sent out on a slack channel.
+
+    The slack channel notifications will be written is controlled by a secret stored in
+    google secrets management (depmap-omics/terra-notifier-webhook-url). At this
+    time this is hardcoded to "#terra-notification-test".
+
+    Workspace should be of the form <namespace>/<name> (ie: broad-firecloud-ccle/DepMap_WES_CN_hg38)
+
+    When run, expect to see a "." for each time it checks Terra and occasional a "c" when jobs are completed.
+
+    The command will run indefinitely until killed.
+    """
 
     webhook_url = get_slack_webhook_url()
 
     def notify_slack(title, text):
         body = f"{title}\n{text}"
+        print(f"Sending notification: {body}")
         resp = requests.post(
             webhook_url,
             data=json.dumps({"text": body}),
@@ -188,7 +201,7 @@ def main(workspace):
             resp.status_code == 200
         ), f"status: {resp.status_code}, body={resp.content}"
 
-    poll_workspace(namespace, workspace, notify_slack)
+    poll_workspace(workspaces, notify_slack)
 
 
 if __name__ == "__main__":

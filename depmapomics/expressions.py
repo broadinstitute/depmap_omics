@@ -426,9 +426,9 @@ async def postProcess(
     if not samplesetToLoad:
         samplesetToLoad = samplesetname
     refwm = dm.WorkspaceManager(refworkspace)
-    if save_output:
-        terra.saveWorkspace(refworkspace, save_output + "terra/")
-    print("load QC and generate QC report")
+    # if save_output:
+    #     terra.saveWorkspace(refworkspace, save_output + "terra/")
+
     samplesinset = [
         i["entityName"]
         for i in refwm.get_entities("sample_set").loc[samplesetname].samples
@@ -444,6 +444,7 @@ async def postProcess(
             else:
                 print(val + " not in the workspace's data")
 
+    print("load QC and generate QC report")
     _, lowqual, failed = myQC.plot_rnaseqc_results(
         refworkspace,
         samplesinset,

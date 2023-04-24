@@ -329,7 +329,7 @@ def postProcess(
     segmentsthresh=constants.SEGMENTSTHR,
     ensemblserver=constants.ENSEMBL_SERVER_V,
     source_rename={},
-    useCache=True,
+    useCache=False,
     maxYchrom=constants.MAXYCHROM,
 ):
     """post process an aggregated CN segment file, the CCLE way
