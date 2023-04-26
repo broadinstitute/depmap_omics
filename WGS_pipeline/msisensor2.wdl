@@ -4,7 +4,6 @@
 version 1.0
 
 task msisensor2 {
-	
 	input {
 		String sample_id
 		File bam
