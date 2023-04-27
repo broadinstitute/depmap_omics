@@ -1,0 +1,19 @@
+{
+ "inputs": {
+  "msisensor2_workflow.run_msisensor2.bai": "this.internal_bai_filepath",
+  "msisensor2_workflow.run_msisensor2.bam": "this.internal_bam_filepath",
+  "msisensor2_workflow.run_msisensor2.disk_space": "100",
+  "msisensor2_workflow.run_msisensor2.memory": "6",
+  "msisensor2_workflow.run_msisensor2.num_preempt": "1",
+  "msisensor2_workflow.run_msisensor2.num_threads": "2",
+  "msisensor2_workflow.run_msisensor2.sample_id": "this.sample_id"
+ },
+ "outputs": {
+  "msisensor2_workflow.run_msisensor2.msisensor2_output": "this.msisensor2_output",
+  "msisensor2_workflow.run_msisensor2.msisensor2_output_dis": "this.msisensor2_output_dis",
+  "msisensor2_workflow.run_msisensor2.msisensor2_output_somatic": "this.msisensor2_output_somatic",
+  "msisensor2_workflow.run_msisensor2.msisensor2_score": "this.msisensor2_score"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}
