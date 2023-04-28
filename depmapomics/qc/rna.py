@@ -7,6 +7,29 @@ from depmapomics import terra
 import numpy as np
 
 
+def export_qc(
+    workspace, selected_samples=[], colname="rnaseqc2_metrics", allow_missing=False
+):
+    """
+    export qcs and aggregate them into one df
+    """
+    if workspace is not None:
+        rnaqc = terra.getQC(workspace=workspace, only=selected_samples, qcname=colname)
+    if allow_missing:
+        missing_qc = [k for k, v in rnaqc.items() if len(v) == 0]
+        print("The following samples don't have RNAseq QC in the workspace: ")
+        print(missing_qc)
+    else:
+        assert (
+            pd.Series(rnaqc).map(lambda x: x[0]).notnull().all()
+        ), "Some samples have no QC data"
+    qcs = pd.DataFrame()
+    for _, val in rnaqc.items():
+        if val[0] is not np.nan:
+            qcs = pd.concat([qcs, pd.read_csv(val[0], sep="\t", index_col=0)], axis=1)
+    return qcs
+
+
 def plot_rnaseqc_results(
     workspace,
     samplelist,
@@ -16,17 +39,10 @@ def plot_rnaseqc_results(
     save=True,
 ):
     """
-  TODO: to document
-  """
-    if workspace is not None:
-        rnaqc = terra.getQC(workspace=workspace, only=samplelist, qcname=qcname)
-    assert (
-        pd.Series(rnaqc).map(lambda x: x[0]).notnull().all()
-    ), "Some samples have no QC data"
-    qcs = pd.DataFrame()
-    for _, val in rnaqc.items():
-        if val[0] is not np.nan:
-            qcs = pd.concat([qcs, pd.read_csv(val[0], sep="\t", index_col=0)], axis=1)
+    TODO: to document
+    """
+    qcs = export_qc(workspace, selected_samples=samplelist, colname=qcname)
+
     qcs = qcs[~((qcs.mean(1) == 1.0) | (qcs.mean(1) == 0.0))]
 
     # pandas implementation
@@ -59,4 +75,3 @@ def plot_rnaseqc_results(
     )
 
     return qcs, lowqual, failed
-
