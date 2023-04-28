@@ -101,25 +101,24 @@ async def expressionPostProcessing(
         **kwargs,
     )
 
-    # print("updating the tracker")
+    print("updating the tracker")
 
-    # track.updateTrackerRNA(
-    #     failed,
-    #     lowqual[lowqual.sum(1) > 3].index.tolist(),
-    #     ccle_refsamples,
-    #     samplesetname,
-    #     refworkspace,
-    #     samplesinset=samplesinset,
-    #     starlogs=starlogs,
-    #     dry_run=dry_run,
-    #     newgs=None,
-    #     billing_proj=billing_proj,
-    # )
+    track.updateTrackerRNA(
+        failed,
+        lowqual[lowqual.sum(1) > 3].index.tolist(),
+        ccle_refsamples,
+        samplesetname,
+        refworkspace,
+        samplesinset=samplesinset,
+        starlogs=starlogs,
+        dry_run=dry_run,
+        billing_proj=billing_proj,
+    )
 
     pr_table = mytracker.read_pr_table()
 
     # subset and rename, include all PRs that have associated CDS-ids
-    # pr_table = mytracker.update_pr_from_seq(["rna"])
+    pr_table = mytracker.update_pr_from_seq(["rna"])
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
