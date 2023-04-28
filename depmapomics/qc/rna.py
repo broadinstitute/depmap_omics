@@ -13,8 +13,7 @@ def export_qc(
     """
     export qcs and aggregate them into one df
     """
-    if workspace is not None:
-        rnaqc = terra.getQC(workspace=workspace, only=selected_samples, qcname=colname)
+    rnaqc = terra.getQC(workspace=workspace, only=selected_samples, qcname=colname)
     if allow_missing:
         missing_qc = [k for k, v in rnaqc.items() if len(v) == 0]
         print("The following samples don't have RNAseq QC in the workspace: ")
