@@ -1,0 +1,4 @@
+{
+  "BamMetrics.bams": ["gs://cclebams/hg38_wes/CDS-1aJRXx.hg38.bam", "gs://cclebams/hg38_wes/CDS-1Kp9PS.hg38.bam"],
+  "BamMetrics.bamIndexes": ["gs://cclebams/hg38_wes/CDS-1aJRXx.hg38.bai", "gs://cclebams/hg38_wes/CDS-1Kp9PS.hg38.bai"]
+}
