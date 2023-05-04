@@ -217,20 +217,13 @@ def pureCNpostprocess(
 
     print("loading " + str(len(set(segments[constants.SAMPLEID]))) + " rows")
 
-    # combining major- and minor-allele seg counts for CN matrix conversion
-    segments["totalCount"] = segments["MajorAlleleAbsoluteCN"].add(
-        segments["MinorAlleleAbsoluteCN"], fill_value=0
-    )
-
     # Generate gene-level absolute cn matrix
     absolute_genecn = mut.toGeneMatrix(
         mut.manageGapsInSegments(segments),
         mappingdf,
         style="closest",
-        value_colname="totalCount",
+        value_colname="SegmentAbsoluteCN",
     )
-
-    segments = segments.drop(columns=["totalCount"])
 
     segments = segments[
         ~segments[constants.SAMPLEID].isin(set(failed) | set(todrop))
