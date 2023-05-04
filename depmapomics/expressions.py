@@ -7,7 +7,7 @@ import numpy as np
 from scipy.stats import zscore
 
 from mgenepy.utils import helper as h
-from mgenepy import rna, terra
+from mgenepy import rna
 from depmapomics.qc import rna as myQC
 
 
@@ -451,6 +451,9 @@ async def postProcess(
         save=bool(save_output),
         output_path=save_output + "rna_qcs/",
     )
+
+    all_qc_df = myQC.export_qc(refworkspace, selected_samples=[]).transpose()
+    all_qc_df.to_csv(save_output + "rna_qcs/all_qc.csv")
 
     failed = failed.index.tolist()
     print("those samples completely failed qc: ", failed)

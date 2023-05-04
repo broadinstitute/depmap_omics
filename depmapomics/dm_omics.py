@@ -195,6 +195,12 @@ async def expressionPostProcessing(
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
+                {
+                    "path": folder + "rna_qcs/all_qc.csv",
+                    "name": "all_samples_qc",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
             ],
             upload_async=False,
             dataset_description=dataset_description,
