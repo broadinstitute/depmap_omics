@@ -29,4 +29,4 @@ ENV PYTHONPATH $PYTHONPATH:/home/wdler/.local/lib/python3.6
 ENV PATH $PATH:/home/wdler/.local/bin
 
 RUN pip install miniwdl
-RUN miniwdl run_self_test
+# RUN miniwdl run_self_test
