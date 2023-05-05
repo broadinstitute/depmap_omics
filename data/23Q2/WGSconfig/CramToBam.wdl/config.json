@@ -1,0 +1,16 @@
+{
+ "inputs": {
+  "CramToBam.cram_file": "this.hg19_bam_filepath",
+  "CramToBam.reference_fasta": "workspace.ref_fasta",
+  "CramToBam.reference_index": "",
+  "CramToBam.requester_pays": "",
+  "CramToBam.runtime_attr_override": "",
+  "CramToBam.samtools_docker": "\"biocontainers/samtools:v1.9-4-deb_cv1\""
+ },
+ "outputs": {
+  "CramToBam.bam_file": "this.bam_from_cram",
+  "CramToBam.bam_index": "this.bai_from_cram"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}
