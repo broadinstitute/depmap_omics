@@ -10,6 +10,7 @@ from google.cloud import storage  # TODO: look for alternatives
 
 
 def read_vcf(path):
+    """reads in a vcf in google cloud storage and converts it into a df"""
     storage_client = storage.Client()
     bucket = storage_client.bucket(path.split("/")[2])
     blob = bucket.blob("/".join(path.split("/")[3:]))
@@ -48,6 +49,7 @@ def transformGB(row):
 
 
 def gb2str(row):
+    """transforms the GB field in hipstr's VCF to standard STR format"""
     if not isinstance(row["GB"], list):
         return "NA"
     else:
@@ -63,6 +65,7 @@ def gb2str(row):
 
 
 def altAllele2str(row):
+    """transforms the ALT field in gangstr's VCF to standard STR format"""
     if pd.isna(row["ALT"]) or row["ALT"] == ".":
         return "NA"
     else:
@@ -81,6 +84,22 @@ def altAllele2str(row):
 def generateSTRRow(
     paths_df, method, str_bed=constants.STR_BED, colname=constants.STR_COLNAME
 ):
+    """
+    given a dataframe containing VCF locations for multiple samples,
+    extract STR for all samples
+
+    inputs:
+        paths_df (pd.DataFrame): dataframe containing sample ids and their corresponding VCFs
+        method (str): STR inferrence method. "hipstr" or "gangstr"
+        str_bed (str): location of str bed file
+        colname (str): name of column in paths_df that contains VCFs
+
+    outputs:
+        df containing STR for all samples
+    """
+    assert colname in set(paths_df.columns), (
+        colname + " is not a column in input dataframe"
+    )
     hg38_sites = pd.read_csv(
         str_bed,
         sep="\t",
@@ -110,7 +129,7 @@ def generateSTRRow(
 
 
 def computeTanabe(df1, idx1, df2, idx2, colnames=constants.STR_LOCATIONS_13):
-    # compute tanabe similarity between two STR profiles
+    """compute tanabe similarity between two STR profiles"""
     match = 0
     total = 0
     for col in colnames:
@@ -124,6 +143,7 @@ def computeTanabe(df1, idx1, df2, idx2, colnames=constants.STR_LOCATIONS_13):
 
 
 def makeScoreMatrixDatabase(df_seqid, df_achid, colnames=constants.STR_LOCATIONS_13):
+    """compute a match score matrix between STR profiles in two dataframes"""
     mytracker = track.SampleTracker()
     seq_table = mytracker.add_model_cols_to_seqtable(cols=[constants.MODEL_TABLE_INDEX])
     valid_achids = list(set(df_achid.index) - set([np.nan]))
