@@ -52,7 +52,7 @@ workflow WGS_pipeline {
         Float num_changepoints_penalty_factor = 5
         String funcotator_ref_version = "hg38"
         File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
-        File blacklist_intervals = "gs://gatk-best-practices/somatic-hg38/CNV_and_centromere_blacklist.hg38liftover.list"
+        File? blacklist_intervals
 
         String manta_docker = "wwliao/manta:latest"
         String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
@@ -78,25 +78,25 @@ workflow WGS_pipeline {
         File oc_modules = "gs://ccleparams/oc_modules.tar"
     }
 
-    # call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
-    #     input:
-    #         common_sites=common_sites,
-    #         intervals=intervals,
-    #         ref_fasta=ref_fasta,
-    #         ref_fasta_dict=ref_dict,
-    #         ref_fasta_fai=ref_fasta_index,
-    #         tumor_bam=input_bam,
-    #         tumor_bam_idx=input_bam_index,
-    #         read_count_pon=read_count_pon,
-    #         gatk_docker=gatk_docker_cnv,
-    #         is_run_funcotator=is_run_funcotator_for_cnv,
-    #         funcotator_ref_version=funcotator_ref_version,
-    #         gcs_project_for_requester_pays=gcs_project_for_requester_pays,
-    #         funcotator_data_sources_tar_gz=funcotator_data_sources_tar_gz,
-    #         blacklist_intervals=blacklist_intervals,
-    #         preemptible_attempts = cnv_preemptible_attempts,
-    #         num_changepoints_penalty_factor = num_changepoints_penalty_factor
-    # }
+    call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
+        input:
+            common_sites=common_sites,
+            intervals=intervals,
+            ref_fasta=ref_fasta,
+            ref_fasta_dict=ref_dict,
+            ref_fasta_fai=ref_fasta_index,
+            tumor_bam=input_bam,
+            tumor_bam_idx=input_bam_index,
+            read_count_pon=read_count_pon,
+            gatk_docker=gatk_docker_cnv,
+            is_run_funcotator=is_run_funcotator_for_cnv,
+            funcotator_ref_version=funcotator_ref_version,
+            gcs_project_for_requester_pays=gcs_project_for_requester_pays,
+            funcotator_data_sources_tar_gz=funcotator_data_sources_tar_gz,
+            blacklist_intervals=blacklist_intervals,
+            preemptible_attempts = cnv_preemptible_attempts,
+            num_changepoints_penalty_factor = num_changepoints_penalty_factor
+    }
 
     call Manta_SomaticSV.MantaSomaticSV as MantaSomaticSV {
         input:
@@ -110,10 +110,10 @@ workflow WGS_pipeline {
             manta_docker=manta_docker
     }
 
-    # call manta_annot.run_manta_annotator as manta_annotator{
-    #     input:
-    #         sv = MantaSomaticSV.somatic_sv_vcf
-    # }
+    call manta_annot.run_manta_annotator as manta_annotator{
+        input:
+            sv = MantaSomaticSV.somatic_sv_vcf
+    }
 
     call mutect2.Mutect2 as mutect2 {
         input:
@@ -195,34 +195,34 @@ workflow WGS_pipeline {
 
     output {
         # #CNVSomaticPairWorkflow
-        # File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor
-        # File read_counts_tumor = CNVSomaticPairWorkflow.read_counts_tumor
-        # File allelic_counts_entity_id_tumor = CNVSomaticPairWorkflow.allelic_counts_entity_id_tumor
-        # File allelic_counts_tumor = CNVSomaticPairWorkflow.allelic_counts_tumor
-        # File denoised_copy_ratios_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_tumor
-        # File standardized_copy_ratios_tumor = CNVSomaticPairWorkflow.standardized_copy_ratios_tumor
-        # File het_allelic_counts_tumor = CNVSomaticPairWorkflow.het_allelic_counts_tumor
-        # File copy_ratio_only_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_only_segments_tumor
-        # File copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_legacy_segments_tumor
-        # File allele_fraction_legacy_segments_tumor = CNVSomaticPairWorkflow.allele_fraction_legacy_segments_tumor
-        # File modeled_segments_begin_tumor = CNVSomaticPairWorkflow.modeled_segments_begin_tumor
-        # File copy_ratio_parameters_begin_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_begin_tumor
-        # File allele_fraction_parameters_begin_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_begin_tumor
-        # File modeled_segments_tumor = CNVSomaticPairWorkflow.modeled_segments_tumor
-        # File copy_ratio_parameters_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_tumor
-        # File allele_fraction_parameters_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_tumor
-        # File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
-        # File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
-        # # File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
-        # File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
-        # Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
-        # File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
-        # Float denoised_MAD_value_tumor = CNVSomaticPairWorkflow.denoised_MAD_value_tumor
-        # File delta_MAD_tumor = CNVSomaticPairWorkflow.delta_MAD_tumor
-        # Float delta_MAD_value_tumor = CNVSomaticPairWorkflow.delta_MAD_value_tumor
-        # File scaled_delta_MAD_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_tumor
-        # Float scaled_delta_MAD_value_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_value_tumor
-        # File modeled_segments_plot_tumor = CNVSomaticPairWorkflow.modeled_segments_plot_tumor
+        File read_counts_entity_id_tumor = CNVSomaticPairWorkflow.read_counts_entity_id_tumor
+        File read_counts_tumor = CNVSomaticPairWorkflow.read_counts_tumor
+        File allelic_counts_entity_id_tumor = CNVSomaticPairWorkflow.allelic_counts_entity_id_tumor
+        File allelic_counts_tumor = CNVSomaticPairWorkflow.allelic_counts_tumor
+        File denoised_copy_ratios_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_tumor
+        File standardized_copy_ratios_tumor = CNVSomaticPairWorkflow.standardized_copy_ratios_tumor
+        File het_allelic_counts_tumor = CNVSomaticPairWorkflow.het_allelic_counts_tumor
+        File copy_ratio_only_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_only_segments_tumor
+        File copy_ratio_legacy_segments_tumor = CNVSomaticPairWorkflow.copy_ratio_legacy_segments_tumor
+        File allele_fraction_legacy_segments_tumor = CNVSomaticPairWorkflow.allele_fraction_legacy_segments_tumor
+        File modeled_segments_begin_tumor = CNVSomaticPairWorkflow.modeled_segments_begin_tumor
+        File copy_ratio_parameters_begin_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_begin_tumor
+        File allele_fraction_parameters_begin_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_begin_tumor
+        File modeled_segments_tumor = CNVSomaticPairWorkflow.modeled_segments_tumor
+        File copy_ratio_parameters_tumor = CNVSomaticPairWorkflow.copy_ratio_parameters_tumor
+        File allele_fraction_parameters_tumor = CNVSomaticPairWorkflow.allele_fraction_parameters_tumor
+        File called_copy_ratio_segments_tumor = CNVSomaticPairWorkflow.called_copy_ratio_segments_tumor
+        File denoised_copy_ratios_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_plot_tumor
+        # File denoised_copy_ratios_lim_4_plot_tumor = CNVSomaticPairWorkflow.denoised_copy_ratios_lim_4_plot_tumor
+        File standardized_MAD_tumor = CNVSomaticPairWorkflow.standardized_MAD_tumor
+        Float standardized_MAD_value_tumor = CNVSomaticPairWorkflow.standardized_MAD_value_tumor
+        File denoised_MAD_tumor = CNVSomaticPairWorkflow.denoised_MAD_tumor
+        Float denoised_MAD_value_tumor = CNVSomaticPairWorkflow.denoised_MAD_value_tumor
+        File delta_MAD_tumor = CNVSomaticPairWorkflow.delta_MAD_tumor
+        Float delta_MAD_value_tumor = CNVSomaticPairWorkflow.delta_MAD_value_tumor
+        File scaled_delta_MAD_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_tumor
+        Float scaled_delta_MAD_value_tumor = CNVSomaticPairWorkflow.scaled_delta_MAD_value_tumor
+        File modeled_segments_plot_tumor = CNVSomaticPairWorkflow.modeled_segments_plot_tumor
         #MantaSomaticSV
         File candidate_indel_vcf= MantaSomaticSV.candidate_indel_vcf
         File candidate_indel_vcf_index= MantaSomaticSV.candidate_indel_vcf_index
@@ -233,9 +233,9 @@ workflow WGS_pipeline {
         File somatic_sv_vcf= MantaSomaticSV.somatic_sv_vcf
         File somatic_sv_vcf_index= MantaSomaticSV.somatic_sv_vcf_index
         #manta_annot
-        # File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
-        # File filtered_annotated_sv = manta_annotator.filtered_annotated_sv 
-        # File dropped_sv = manta_annotator.dropped 
+        File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
+        File filtered_annotated_sv = manta_annotator.filtered_annotated_sv 
+        File dropped_sv = manta_annotator.dropped 
         # omics_mutect2
         File omics_mutect2_out_vcf=fix_mutect2.vcf_fixed
         File mutect2_base_vcf = mutect2.base_vcf

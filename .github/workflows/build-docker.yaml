@@ -1,0 +1,30 @@
+name: build-docker
+
+on: 
+  workflow_run:
+    workflows: ["pyright-ratchet"]
+    types: 
+      - completed
+
+env:
+  DOCKER_REPO: us.gcr.io/cds-docker-containers/depmapomics
+  DOCKER_TAG: ga-build-${{ github.run_number }}
+
+jobs:
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update build id
+        run: |
+          echo "SHA=\"${{ github.sha }}\"" > depmapomics/build.py
+      - name: Login to GCR
+        uses: docker/login-action@v2
+        with:
+          registry: us.gcr.io
+          username: _json_key
+          password: "${{ secrets.DEPLOY_SVC_ACCT }}"
+      - name: build docker image
+        run: bash build-docker-image.sh ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+      - name: Push Docker image
+        run: docker push ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}

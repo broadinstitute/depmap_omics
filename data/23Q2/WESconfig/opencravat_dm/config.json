@@ -1,0 +1,15 @@
+{
+ "inputs": {
+  "run_opencravat.opencravat.annotators_to_use": "[\"cscape_coding\", \"civic\", \"brca1_func_assay\", \"sift\", \"provean\", \"dann_coding\", \"revel\", \"spliceai\", \"gtex\", \"funseq2\", \"pharmgkb\", \"dida\", \"gwas_catalog\", \"mavedb\", \"alfa\", \"ccre_screen\"]",
+  "run_opencravat.opencravat.boot_disk_size": "500",
+  "run_opencravat.opencravat.disk_space": "40",
+  "run_opencravat.opencravat.memory": "16",
+  "run_opencravat.opencravat.num_threads": "4",
+  "run_opencravat.opencravat.oc_modules": "\"gs://ccleparams/oc_modules.tar\"",
+  "run_opencravat.opencravat.oncokb_api_key": "\"gs://jkobject/oncokb_key.txt\"",
+  "run_opencravat.vcf": "this.fixed_vcf"
+ },
+ "outputs": {},
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}
