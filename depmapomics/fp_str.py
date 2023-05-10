@@ -82,7 +82,10 @@ def altAllele2str(row):
 
 
 def generateSTRRow(
-    paths_df, method, str_bed=constants.STR_BED, colname=constants.STR_COLNAME
+    paths_df,
+    method=constants.STR_METHOD,
+    str_bed=constants.STR_BED,
+    colname=constants.STR_COLNAME,
 ):
     """
     given a dataframe containing VCF locations for multiple samples,
@@ -128,11 +131,11 @@ def generateSTRRow(
     return pd.concat(str_rows)
 
 
-def computeTanabe(df1, idx1, df2, idx2, colnames=constants.STR_LOCATIONS_13):
+def computeTanabe(df1, idx1, df2, idx2, loci=constants.STR_LOCI_13):
     """compute tanabe similarity between two STR profiles"""
     match = 0
     total = 0
-    for col in colnames:
+    for col in loci:
         # TODO: how to best handle NAs?
         a1 = set(df1.loc[idx1, col].split(", "))
         a2 = set(df2.loc[idx2, col].split(", "))
@@ -142,7 +145,7 @@ def computeTanabe(df1, idx1, df2, idx2, colnames=constants.STR_LOCATIONS_13):
     return 2 * match / total
 
 
-def makeScoreMatrixDatabase(df_seqid, df_achid, colnames=constants.STR_LOCATIONS_13):
+def makeScoreMatrixDatabase(df_seqid, df_achid, loci=constants.STR_LOCI_13):
     """compute a match score matrix between STR profiles in two dataframes"""
     mytracker = track.SampleTracker()
     seq_table = mytracker.add_model_cols_to_seqtable(cols=[constants.MODEL_TABLE_INDEX])
@@ -155,7 +158,23 @@ def makeScoreMatrixDatabase(df_seqid, df_achid, colnames=constants.STR_LOCATIONS
             i, constants.MODEL_TABLE_INDEX
         ]
         for j in valid_achids:
-            scoremat.loc[i, j] = computeTanabe(
-                df_seqid, i, df_achid, j, colnames=colnames
-            )
+            scoremat.loc[i, j] = computeTanabe(df_seqid, i, df_achid, j, loci=loci)
     return scoremat
+
+
+def strCheck(
+    paths_df,
+    ref_df,
+    method=constants.STR_METHOD,
+    str_bed=constants.STR_BED,
+    colname=constants.STR_COLNAME,
+    loci=constants.STR_LOCI_13,
+):
+    """given a df containing STR VCF locations and a df containing reference STR profiles,
+    generate a tanabe score matrix"""
+    inferred_str = generateSTRRow(
+        paths_df, method=method, str_bed=str_bed, colname=colname
+    )
+    score_table = makeScoreMatrixDatabase(inferred_str, ref_df, loci=loci)
+
+    return score_table

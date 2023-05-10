@@ -67,8 +67,10 @@ BAMQC = [
 ]
 
 STR_BED = "data/str_hg38.bed"
-STR_COLNAME "str"
-STR_LOCATIONS_14 = [
+STR_COLNAME = "str"
+STR_METHOD = "hipstr"
+
+STR_LOCI_14 = [
     "CSF1PO",
     "D13S317",
     "D16S539",
@@ -84,7 +86,7 @@ STR_LOCATIONS_14 = [
     "TH01",
     "TPOX",
 ]
-STR_LOCATIONS_13 = [
+STR_LOCI_13 = [
     "CSF1PO",
     "D13S317",
     "D16S539",
