@@ -210,6 +210,11 @@ TO_RENAME_OC = {
     "oc_funseq2__hot": "funseq2_hot",
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
+    "CLINVAR_CLNSIG": "clinvar_clnsig",
+    "CLINVAR_TRAIT": "clinvar_trait",
+    "MIN_SIFT_SCORE": "min_sift_score",
+    "MIN_SIFT_PRED": "min_sift_pred",
+    "MUTATION_SIGNIFICANCE_TIER": "cosmic_tier",
 }
 
 TOKEEP_BASE = {
@@ -339,6 +344,7 @@ def improve(
     oncogene_list=[],
     tumor_suppressor_list=[],
     civic_df=None,
+    cosmic_df=None,
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
@@ -431,6 +437,9 @@ def improve(
             "civic_id": "oc_civic__id",
         }
     )
+
+    print("annotating COSMIC tier 1 mutations")
+    vcf = cosmic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
 
     print("making new annotations")
     # creating merged annotations
@@ -819,6 +828,7 @@ def to_maf(
                         "lof",
                         "likely_lof",
                         "likely_driver",
+                        "cosmic_tier",
                     ]
                 )
                 - set(vcf.columns)
@@ -836,6 +846,7 @@ def to_maf(
             # TODO: could define it with civic if grabbdd drugs in addition to diseases
             # | (vcf["clinically_significant"] == "Y")
             | (vcf["lof"] == "Y")
+            | (~vcf["cosmic_tier"].isna())
             | (
                 (vcf["likely_lof"] == "Y")
                 & (vcf["hugo_symbol"].isin(tumor_suppressor_list))

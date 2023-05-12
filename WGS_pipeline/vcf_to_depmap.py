@@ -16,6 +16,14 @@ use_multi = "true" == sys.argv[4] if len(sys.argv) > 4 else False
 force_keep = sys.argv[6].split(",") if len(sys.argv) > 6 else []
 whitelist = "true" == sys.argv[7] if len(sys.argv) > 7 else False
 
+cosmic_cols_tokeep = [
+    "CLINVAR_CLNSIG",
+    "CLINVAR_TRAIT",
+    "MIN_SIFT_SCORE",
+    "MIN_SIFT_PRED",
+    "MUTATION_SIGNIFICANCE_TIER",
+]
+
 prev_cols = []
 
 print(
@@ -38,7 +46,10 @@ oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
 tumor_suppressor_list = h.fileToList(
     loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 )
-civic_df = pd.read_csv(loc + "/civic.csv").drop(columns=['chromosome_37', 'start_37'])
+civic_df = pd.read_csv(loc + "/civic.csv").drop(columns=["chromosome_37", "start_37"])
+
+cosmic_df = pd.read_csv("gs://cds-cosmic/cosmic_cmc_20230509_tier1.csv")
+cosmic_df = cosmic_df[["chrom", "pos", "ref", "alt"] + cosmic_cols_tokeep]
 
 """
 we are running through these likely very large files by loading a chunk at a time
@@ -94,6 +105,7 @@ for i in range(10_000):
         oncogene_list=oncogene,
         tumor_suppressor_list=tumor_suppressor_list,
         civic_df=civic_df,
+        cosmic_df=cosmic_df,
     )
 
     # checking we have the same set of columns
