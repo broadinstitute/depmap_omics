@@ -46,7 +46,9 @@ oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
 tumor_suppressor_list = h.fileToList(
     loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 )
-civic_df = pd.read_csv(loc + "/civic.csv").drop(columns=["chromosome_37", "start_37"])
+civic_df = pd.read_csv(loc + "/civic_export_09222022.csv").drop(
+    columns=["chromosome_37", "start_37"]
+)
 
 cosmic_df = pd.read_csv("gs://cds-cosmic/cosmic_cmc_20230509_tier1.csv")
 cosmic_df = cosmic_df[["chrom", "pos", "ref", "alt"] + cosmic_cols_tokeep]
