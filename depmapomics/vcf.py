@@ -284,6 +284,11 @@ TOKEEP_ADD = {
     "gwas_disease": "str",
     "gwas_pmid": "str",
     "gtex_gene": "str",
+    "clinvar_clnsig": "str",
+    "clinvar_trait": "str",
+    "min_sift_score": "float",
+    "min_sift_pred": "str",
+    "cosmic_tier": "int",
 }
 
 
