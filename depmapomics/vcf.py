@@ -286,9 +286,9 @@ TOKEEP_ADD = {
     "gtex_gene": "str",
     "clinvar_clnsig": "str",
     "clinvar_trait": "str",
-    "min_sift_score": "float64",
+    "min_sift_score": "str",
     "min_sift_pred": "str",
-    "cosmic_tier": "int64",
+    "cosmic_tier": "str",
 }
 
 
