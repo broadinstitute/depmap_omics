@@ -7,7 +7,7 @@ import numpy as np
 from taigapy import TaigaClient
 
 from mgenepy.utils import helper as h
-
+from mgenepy.utils import fetch_biomart as bm
 from depmap_omics_upload import tracker as track
 
 from depmapomics import expressions
@@ -771,7 +771,7 @@ async def mutationPostProcessing(
         b: a for a, b in hugo_mapping[~hugo_mapping["Previous symbol"].isna()].values
     }
 
-    mybiomart = h.generateGeneNames()
+    mybiomart = bm.generateGeneNames()
     mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
 
     genes_in_maf = set(mergedmutations.hugo_symbol)

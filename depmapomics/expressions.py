@@ -7,8 +7,9 @@ import numpy as np
 from scipy.stats import zscore
 
 from mgenepy.utils import helper as h
-from mgenepy import rna, terra
+from mgenepy import rna
 from depmapomics.qc import rna as myQC
+from mgenepy.utils import fetch_biomart as bm
 
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
@@ -460,7 +461,7 @@ async def postProcess(
 
     print("generating gene names")
 
-    mybiomart = h.generateGeneNames(ensemble_server=ensemblserver, useCache=useCache)
+    mybiomart = bm.generateGeneNames(ensemble_server=ensemblserver, useCache=useCache)
     # creating renaming index, keeping top name first
     gene_rename = {}
     for _, i in mybiomart.iterrows():

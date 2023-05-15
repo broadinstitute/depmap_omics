@@ -10,6 +10,7 @@ import pandas as pd
 import os
 from mgenepy import mutations as mut
 from mgenepy.utils import helper as h
+from mgenepy.utils import fetch_biomart as bm
 
 
 def renameColumns(df):
@@ -368,7 +369,7 @@ def postProcess(
     )
     print("making gene level copy number")
 
-    mybiomart = h.generateGeneNames(
+    mybiomart = bm.generateGeneNames(
         ensemble_server=ensemblserver,
         useCache=useCache,
         attributes=["start_position", "end_position", "chromosome_name"],
