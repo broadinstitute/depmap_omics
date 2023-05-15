@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 from mgenepy.utils import helper as h
+import gzip
 
 
 def manageGapsInSegments(
@@ -164,21 +165,49 @@ def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
     return failed
 
 
-def vcf_to_df(path, hasfilter=False, samples=["sample"], additional_cols=[]):
+def vcf_to_df(
+    path,
+    additional_cols=[],
+    additional_filters=[],
+    parse_filter=False,
+    drop_null=False,
+    force_keep=[],
+    cols_to_drop=[
+        "clinvar_vcf_mc",
+        "oreganno_build",
+        "gt",
+        "ad",
+        "af",
+        "dp",
+        "f1r2",
+        "f2r1",
+        "fad",
+        "sb",
+        "pid",
+    ],
+    **kwargs,
+):
     """
     transforms a vcf file into a dataframe file as best as it can
 
     Args:
     -----
-      path: str filepath to the vcf file
-      hasfilter: bool whether or not the vcf has a filter column
-      samples: list[str] colnames of the sample names.
-      additional_cols: list[str] of additional colnames in the vcf already looks for 'DB', 'SOMATIC', 'GERMLINE', "OVERLAP", "IN_PON", "STR", "ReverseComplementedAlleles"
+        path: str filepath to the vcf file
+        additional_filters: list[str] additional values added by the filtering tool looks for PASS, base_qual,
+            clustered_events, fragment, germline, haplotype, map_qual, multiallelic,
+            panel_of_normals, position, slippage, strand_bias, weak_evidence
+        additional_cols: list[str] of additional colnames in the vcf already looks for 'DB',
+            'SOMATIC', 'GERMLINE', "OVERLAP", "IN_PON", "STR", "ReverseComplementedAlleles"
+        parse_filter: bool if true, will parse the filter field and add it to the dataframe
+        drop_null: bool if a column appears to be fully empty, will drop it
+        force_keep: list[str] columns to force keep even if they are empty
+        cols_to_drop: list[str] columns to drop even if they are not empty
 
     Returns:
     --------
       a dataframe fo the vcf
       a dict associating each column with its description (gathered from the vcf header)
+      a list of the columns that have been dropped
     """
     uniqueargs = [
         "DB",
@@ -190,93 +219,189 @@ def vcf_to_df(path, hasfilter=False, samples=["sample"], additional_cols=[]):
         "ReverseComplementedAlleles",
     ] + additional_cols
 
+    filters = [
+        "PASS",
+        "base_qual",
+        "clustered_events",
+        "fragment",
+        "germline",
+        "haplotype",
+        "map_qual",
+        "multiallelic",
+        "panel_of_normals",
+        "position",
+        "slippage",
+        "strand_bias",
+        "weak_evidence",
+    ] + additional_filters
+
+    FUNCO_DESC = "Functional annotation from the Funcotator tool."
+
+    dropped_cols = []
+
     def read_comments(f):
-        fields = {}
         description = {}
-        c = 0
-        headerrow = 0
+        colnames = []
+        rows = 0
         for l in f:
             l = l.decode("utf-8") if type(l) is not str else l
             if l.startswith("##"):
+                rows += 1
                 if "FORMAT" in l[:20]:
                     res = l.split("ID=")[1].split(",")[0]
                     desc = l.split("Description=")[1][:-2]
                     description.update({res: desc})
                 if "INFO" in l[:20]:
                     res = l.split("ID=")[1].split(",")[0]
-                    desc = l.split("Description=")[1][:-2]
-                    description.update({res: desc})
-                    fields.update({res: []})
-                c += 1
-            elif l.startswith("#CHROM"):
-                headerrow = c + 1
+                    if res == "FUNCOTATION":
+                        print("parsing funcotator special")
+                        for val in l.split("Description=")[1][:-2].split("|"):
+                            val = val.split("Funcotation fields are: ")[-1]
+                            description.update({val: FUNCO_DESC})
+                    else:
+                        desc = l.split("Description=")[1][:-2]
+                        description.update({res: desc})
+            elif l.startswith("#"):
+                colnames = l[1:-1].split("\t")
+                rows += 1
             else:
-                c += 1
                 break
-        return fields, description, headerrow
+        return description, colnames, rows
 
     if path.endswith(".gz"):
         with gzip.open(path, "r") as f:
-            fields, description, headerrow = read_comments(f)
+            description, colnames, nrows_toskip = read_comments(f)
     else:
         with open(path, "r") as f:
-            fields, description, headerrow = read_comments(f)
-    names = ["chr", "pos", "id", "ref", "alt", "qual"]
-    names += ["filter"] if hasfilter else ["strand"]
-    names += ["data", "format"] + samples
-    a = pd.read_csv(
-        path, sep="\t", header=None, skiprows=headerrow, names=names, index_col=False
-    )
+            description, colnames, nrows_toskip = read_comments(f)
+    colnames = [i for i in colnames]
+    csvkwargs = {
+        "sep": "\t",
+        "index_col": False,
+        "header": None,
+        "names": colnames,
+        "skiprows": nrows_toskip + kwargs.get("skiprows", 0),
+    }
+    data = pd.read_csv(path, **{**kwargs, **csvkwargs})
     print(description)
+    funco_fields = [k for k, v in description.items() if FUNCO_DESC in v]
+    fields = {k: [] for k, _ in description.items()}
     try:
-        for j, val in enumerate(a.data.str.split(";").values.tolist()):
-            res = dict(
-                [
-                    (v, True)
-                    if v in uniqueargs
-                    else (v, np.nan)
-                    if "=" not in v
-                    else tuple(v.split("="))
-                    for v in val
-                ]
-            )
-            for k in fields.keys():
+        for j, info in enumerate(data["INFO"].str.split(";").values.tolist()):
+            res = {}
+            # show speed
+            if j % 10_000 == 0:
+                print(j, end="\r")
+            for annot in info:
+                if annot in uniqueargs:
+                    res.update({annot: True})
+                elif "=" in annot:
+                    # taking care of the funcotator special fields
+                    if "FUNCOTATION" in annot:
+                        # for multi allelic site:
+                        annot = annot.replace("FUNCOTATION=", "")[1:-1]
+                        res.update({name: [] for name in funco_fields})
+                        for site in annot.split("],["):
+                            if "]#[" in site:
+                                site = site.split("]#[")[0]
+                            site = (
+                                site.replace("_%7C_", " ")
+                                .replace("_%20_", " ")
+                                .replace("_%2C_", ",")
+                                .replace("_%3D_", "=")
+                                .split("|")
+                            )
+                            for i, sub_annot in enumerate(site):
+                                res[funco_fields[i]].append(sub_annot)
+                        for k in funco_fields:
+                            res[k] = ",".join(res[k])
+                    else:
+                        k, annot = annot.split("=")
+                        res.update({k: annot})
+                else:
+                    raise ValueError("unknown argument: " + annot)
+            for k in list(fields.keys()):
                 fields[k].append(res.get(k, None))
     except ValueError:
-        print(val)
+        print(annot)
         raise ValueError("unknown field")
-    a = pd.concat(
-        [a.drop(columns="data"), pd.DataFrame(data=fields, index=a.index)], axis=1
+
+    data = pd.concat(
+        [data.drop(columns="INFO"), pd.DataFrame(data=fields, index=data.index)], axis=1
     )
+    if drop_null:
+        to_drop = []
+        for f in funco_fields:
+            # drop columns that have the same value across all rows
+            uniq = data[f].unique()
+            if len(uniq) == 1 and f.lower() not in force_keep:
+                to_drop.append(f)
+                continue
+            elif len(uniq) < 10:
+                # checking multi allelic stuff
+                multi = []
+                for v in uniq:
+                    multi += v.split(",")
+                if len(set(multi)) == 1 and f.lower() not in force_keep:
+                    to_drop.append(f)
+        print("dropping uninformative columns:", to_drop)
+        data = data.drop(columns=to_drop)
+        dropped_cols += to_drop
+    data.columns = [i.lower() for i in data.columns]
+    samples = [i.lower() for i in colnames[9:]]
+    print("\nthe samples are:", samples)
+    sorting = data["format"][0].split(":")
     for sample in samples:
-        uniqformats = a.format.unique().tolist()
-        formatcols = set()
-        for i in uniqformats:
-            formatcols.update(i.split(":"))
-        sorting = list(formatcols)
-        print("sorting column names: ", sorting)
-
-        def make_format_list(row):
-            f = row.format.split(":")
-            v = row[sample].split(":")
-            assert len(f) == len(v)
-            l = []
-            for s in sorting:
-                if s in f:
-                    l.append(v[f.index(s)])
-                else:
-                    l.append(pd.NA)
-            return l
-
-        res = a.apply(make_format_list, axis=1).tolist()
-
+        res = data[sample].str.split(":").values.tolist()
+        maxcols = max([len(v) for v in res])
+        if maxcols - len(sorting) > 0:
+            for i in range(maxcols - len(sorting)):
+                sorting.append(sorting[-1] + "_" + str(i + 1))
         if len(samples) > 1:
             sorting = [sample + "_" + v for v in sorting]
-        a = pd.concat(
+        data = pd.concat(
             [
-                a.drop(columns=sample),
-                pd.DataFrame(data=res, columns=sorting, index=a.index),
+                data.drop(columns=sample),
+                pd.DataFrame(data=res, columns=sorting, index=data.index),
             ],
             axis=1,
         )
-    return a.drop(columns="format"), description
+
+    # subsetting filters
+    if parse_filter:
+        data[filters] = False
+        for f in filters:
+            data.loc[data["filter"].str.contains(f), f] = True
+        data = data.drop(columns="filter")
+        dropped_cols.append("filter")
+
+    # cleaning empty cols
+    data = data.drop(columns="format")
+    dropped_cols.append("format")
+
+    todrop = []
+    for val in cols_to_drop:
+        if val in data.columns.tolist():
+            todrop.append(val)
+    data = data.drop(columns=todrop)
+
+    if drop_null:
+        empty = data.columns[data.isna().sum() == len(data)].tolist()
+        empty = list(set(empty) - set(force_keep))
+        print("dropping empty columns:", empty)
+        data = data.drop(columns=empty)
+        dropped_cols += empty
+
+    # weird bug sometimes
+    if "SB_1" in data.columns.tolist():
+        loc = ~data.SB_1.isna()
+        data.loc[loc, "PGT"] = data.loc[loc, "SB"]
+        data.loc[loc, "SB"] = data.loc[loc, "SB_1_2_3"]
+        data = data.drop(columns=["SB_1", "SB_1_2_3"])
+        data = data.rename(columns={"SB_1_2": "PS", "SB_1": "PID"})
+    else:
+        loc = data.SB.isna()
+        data.loc[loc, "SB"] = data.loc[loc, "PGT"]
+        data.loc[loc, "PGT"] = ""
+    # sorting out issue with
+    return data, description, dropped_cols
