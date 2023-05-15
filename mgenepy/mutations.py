@@ -162,3 +162,121 @@ def checkAmountOfSegments(segmentcn, thresh=850, samplecol="DepMap_ID"):
             print(cellline, val)
     sns.kdeplot(amounts)
     return failed
+
+
+def vcf_to_df(path, hasfilter=False, samples=["sample"], additional_cols=[]):
+    """
+    transforms a vcf file into a dataframe file as best as it can
+
+    Args:
+    -----
+      path: str filepath to the vcf file
+      hasfilter: bool whether or not the vcf has a filter column
+      samples: list[str] colnames of the sample names.
+      additional_cols: list[str] of additional colnames in the vcf already looks for 'DB', 'SOMATIC', 'GERMLINE', "OVERLAP", "IN_PON", "STR", "ReverseComplementedAlleles"
+
+    Returns:
+    --------
+      a dataframe fo the vcf
+      a dict associating each column with its description (gathered from the vcf header)
+    """
+    uniqueargs = [
+        "DB",
+        "SOMATIC",
+        "GERMLINE",
+        "OVERLAP",
+        "IN_PON",
+        "STR",
+        "ReverseComplementedAlleles",
+    ] + additional_cols
+
+    def read_comments(f):
+        fields = {}
+        description = {}
+        c = 0
+        headerrow = 0
+        for l in f:
+            l = l.decode("utf-8") if type(l) is not str else l
+            if l.startswith("##"):
+                if "FORMAT" in l[:20]:
+                    res = l.split("ID=")[1].split(",")[0]
+                    desc = l.split("Description=")[1][:-2]
+                    description.update({res: desc})
+                if "INFO" in l[:20]:
+                    res = l.split("ID=")[1].split(",")[0]
+                    desc = l.split("Description=")[1][:-2]
+                    description.update({res: desc})
+                    fields.update({res: []})
+                c += 1
+            elif l.startswith("#CHROM"):
+                headerrow = c + 1
+            else:
+                c += 1
+                break
+        return fields, description, headerrow
+
+    if path.endswith(".gz"):
+        with gzip.open(path, "r") as f:
+            fields, description, headerrow = read_comments(f)
+    else:
+        with open(path, "r") as f:
+            fields, description, headerrow = read_comments(f)
+    names = ["chr", "pos", "id", "ref", "alt", "qual"]
+    names += ["filter"] if hasfilter else ["strand"]
+    names += ["data", "format"] + samples
+    a = pd.read_csv(
+        path, sep="\t", header=None, skiprows=headerrow, names=names, index_col=False
+    )
+    print(description)
+    try:
+        for j, val in enumerate(a.data.str.split(";").values.tolist()):
+            res = dict(
+                [
+                    (v, True)
+                    if v in uniqueargs
+                    else (v, np.nan)
+                    if "=" not in v
+                    else tuple(v.split("="))
+                    for v in val
+                ]
+            )
+            for k in fields.keys():
+                fields[k].append(res.get(k, None))
+    except ValueError:
+        print(val)
+        raise ValueError("unknown field")
+    a = pd.concat(
+        [a.drop(columns="data"), pd.DataFrame(data=fields, index=a.index)], axis=1
+    )
+    for sample in samples:
+        uniqformats = a.format.unique().tolist()
+        formatcols = set()
+        for i in uniqformats:
+            formatcols.update(i.split(":"))
+        sorting = list(formatcols)
+        print("sorting column names: ", sorting)
+
+        def make_format_list(row):
+            f = row.format.split(":")
+            v = row[sample].split(":")
+            assert len(f) == len(v)
+            l = []
+            for s in sorting:
+                if s in f:
+                    l.append(v[f.index(s)])
+                else:
+                    l.append(pd.NA)
+            return l
+
+        res = a.apply(make_format_list, axis=1).tolist()
+
+        if len(samples) > 1:
+            sorting = [sample + "_" + v for v in sorting]
+        a = pd.concat(
+            [
+                a.drop(columns=sample),
+                pd.DataFrame(data=res, columns=sorting, index=a.index),
+            ],
+            axis=1,
+        )
+    return a.drop(columns="format"), description

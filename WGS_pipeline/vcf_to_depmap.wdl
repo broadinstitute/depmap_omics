@@ -46,7 +46,6 @@ task vcf_to_depmap {
         pip install bioservices==1.10.1
         pip install fsspec
         pip install gcsfs
-        pip install broad-genepy
         git clone https://github.com/broadinstitute/depmap_omics.git
         cd depmap_omics && git checkout mutation-annotation-eval && pip install -e . && cd ..
         python depmap_omics/WGS_pipeline/vcf_to_depmap.py \

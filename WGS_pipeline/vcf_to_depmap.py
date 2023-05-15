@@ -1,9 +1,9 @@
 from depmapomics import vcf
-from genepy import mutations
+from mgenepy import mutations
 import sys
 import pyarrow.parquet as pq
 import pyarrow as pa
-from genepy.utils import helper as h
+from mgenepy.utils import helper as h
 import os
 import pandas as pd
 
