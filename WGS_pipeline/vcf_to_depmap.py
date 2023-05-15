@@ -13,8 +13,8 @@ sample_name = (
 )
 n_rows = int(sys.argv[3]) if len(sys.argv) > 3 else 500_000
 use_multi = "true" == sys.argv[4] if len(sys.argv) > 4 else False
-force_keep = sys.argv[6].split(",") if len(sys.argv) > 6 else []
-whitelist = "true" == sys.argv[7] if len(sys.argv) > 7 else False
+force_keep = sys.argv[5].split(",") if len(sys.argv) > 5 else []
+whitelist = "true" == sys.argv[6] if len(sys.argv) > 6 else False
 
 cosmic_cols_tokeep = [
     "CLINVAR_CLNSIG",
