@@ -288,7 +288,7 @@ TOKEEP_ADD = {
     "clinvar_trait": "str",
     "min_sift_score": "float",
     "min_sift_pred": "str",
-    "cosmic_tier": "int",
+    "cosmic_tier": "int64",
 }
 
 
