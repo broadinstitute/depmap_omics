@@ -15,7 +15,10 @@ def main(args=None):
     parser.add_argument("sample_name", nargs="?", default=None)
     parser.add_argument("n_rows", nargs="?", default=500_000, type=int)
     parser.add_argument("use_multi", nargs="?", default=False, type=bool)
-    parser.add_argument("force_keep", nargs="?", default=False, type=lambda x: x.split(","))
+    parser.add_argument("weird_unused_arg", nargs="?", default=None)
+    parser.add_argument(
+        "force_keep", nargs="?", default=False, type=lambda x: x.split(",")
+    )
     parser.add_argument("whitelist", nargs="?", default=False, type=bool)
     args = parser.parse_args()
 
@@ -24,8 +27,8 @@ def main(args=None):
     sample_name = args.sample_name
     if not sample_name:
         sample_name = vcf_filename.split("/")[-1].split(".")[0]
-    
-    n_rows = args.n_args
+
+    n_rows = args.n_rows
     use_multi = args.use_multi
     force_keep = args.force_keep
     whitelist = args.whitelist
@@ -52,7 +55,9 @@ def main(args=None):
     tumor_suppressor_list = h.fileToList(
         loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
     )
-    civic_df = pd.read_csv(loc + "/civic.csv").drop(columns=['chromosome_37', 'start_37'])
+    civic_df = pd.read_csv(loc + "/civic.csv").drop(
+        columns=["chromosome_37", "start_37"]
+    )
 
     """
     we are running through these likely very large files by loading a chunk at a time
@@ -166,6 +171,7 @@ def main(args=None):
         if tobreak:
             break
     print("finished, processed {} rows".format((n_rows * i) + filen))
+
 
 if __name__ == "__main__":
     main()
