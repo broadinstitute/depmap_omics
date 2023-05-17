@@ -1,12 +1,11 @@
 from depmapomics import vcf
 from mgenepy import mutations
-import sys
-import pyarrow.parquet as pq
 import pyarrow as pa
 from mgenepy.utils import helper as h
 import os
 import pandas as pd
 import argparse
+import pyarrow.parquet as pq
 
 
 def main(args=None):
@@ -67,6 +66,7 @@ def main(args=None):
 
     """
 
+    processed_count = 0
     for i in range(10_000):
         # read in vcf as a df
         vcf_file, _, _ = mutations.vcf_to_df(
@@ -101,6 +101,7 @@ def main(args=None):
         if "PID" not in vcf_file.columns.tolist():
             vcf_file["PID"] = ""
         filen = len(vcf_file)
+        processed_count += filen
         if filen < n_rows:
             # we have reached the end:
             tobreak = True
@@ -170,7 +171,8 @@ def main(args=None):
         del vcf_file
         if tobreak:
             break
-    print("finished, processed {} rows".format((n_rows * i) + filen))
+
+    print(f"finished, processed {processed_count} rows")
 
 
 if __name__ == "__main__":
