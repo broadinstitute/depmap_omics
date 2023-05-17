@@ -40,7 +40,9 @@ RUN mkdir -p /opt/miniwdl && \
 RUN ln -s /opt/miniwdl/bin/miniwdl /usr/local/bin/miniwdl
 
 # also install misc other useful utilities
-RUN apt-get install -y git
+# git because we'll need to checkout the code
+# npm because pyright uses it to install some of its dependencies
+RUN apt-get install -y git npm
 
 # install poetry. This is perhaps a strangely round about way, but it seems that the python3.9 install
 # above doesn't include pip, but if we create a virtualenv, we get pip in that environment
