@@ -8,17 +8,23 @@ import argparse
 import pyarrow.parquet as pq
 
 
+def to_bool(x):
+    "Like bool(x) but more paranoid about input values. ie: python's bool('false') is True"
+    x = x.lower()
+    if x == "true":
+        return True
+    assert x == "false"
+    return False
+
+
 def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("vcf_filename")
     parser.add_argument("sample_name", nargs="?", default=None)
-    parser.add_argument("n_rows", nargs="?", default=500_000, type=int)
-    parser.add_argument("use_multi", nargs="?", default=False, type=bool)
-    parser.add_argument("weird_unused_arg", nargs="?", default=None)
-    parser.add_argument(
-        "force_keep", nargs="?", default=False, type=lambda x: x.split(",")
-    )
-    parser.add_argument("whitelist", nargs="?", default=False, type=bool)
+    parser.add_argument("--n_rows", default=500_000, type=int)
+    parser.add_argument("--use_multi", default=False, type=to_bool)
+    parser.add_argument("--force_keep", default=[], type=lambda x: x.split(","))
+    parser.add_argument("--whitelist", default=False, type=to_bool)
     args = parser.parse_args()
 
     vcf_filename = args.vcf_filename
