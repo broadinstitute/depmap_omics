@@ -45,5 +45,7 @@ jobs:
           password: "${{ secrets.DEPLOY_SVC_ACCT }}"
       - name: build docker image
         run: bash build-docker-image.sh ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
-      - name: Push Docker image
-        run: docker push ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+      - name: Tag docker image with the current branch name
+        run: docker tag ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_REPO }}:${GITHUB_REF##*/}
+      - name: Push Docker image with both names
+        run: docker push ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} && docker push ${{ env.DOCKER_REPO }}:${GITHUB_REF##*/}
