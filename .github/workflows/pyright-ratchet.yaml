@@ -5,6 +5,7 @@ on: [push]
 env:
   DOCKER_REPO: us.gcr.io/cds-docker-containers/depmapomics
   DOCKER_TAG: ga-build-${{ github.run_number }}
+  BRANCH_NAME: ${{ GITHUB_REF##*/ }}
 
 jobs:
   check-pyright:
@@ -15,6 +16,8 @@ jobs:
         poetry-version: ["1.3.2"]
 
     steps:
+      - name: print branch
+        run: echo ${{ env.BRANCH_NAME }}
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -50,7 +53,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_REPO }}:${GITHUB_REF##*/}
+          tags: ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_REPO }}:${{ env.BRANCH_NAME }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 #      - name: build docker image
