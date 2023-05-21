@@ -1,7 +1,6 @@
 import os
 import subprocess
 import json
-from dataclasses import dataclass
 from typing import Dict
 import shutil
 import pandas as pd
@@ -12,14 +11,10 @@ from google.cloud.storage import Client
 import re
 
 
-@dataclass
-class WDLResult:
-    original_output: Dict
-    files: Dict[str, str]
-    properties: Dict[str, str]
-
-
 def run_wdl(tmpdir, wdl_path, inputs, destination):
+    """
+    Run a WDL script given the provided inputs, and write the result in the destination directory.
+    """
     dest_dir = str(tmpdir.join("work"))
 
     tmp_inputs = tmpdir.join("inputs.json")
@@ -44,10 +39,14 @@ def run_wdl(tmpdir, wdl_path, inputs, destination):
     with open(str(tmp_outputs), "rt") as fd:
         output = json.load(fd)
 
+    # rewrite the outputs file so that it the files it references all are relative to the output directory
+    # so that we can upload these to the cloud, and in general, move them around without worrying about
+    # the working directory that the paths are relative to, changing.
     write_outputs(output["dir"], output["outputs"], destination)
 
 
 def _file_sha256_hash(fd, bufsize=100_000):
+    "Return the sha256 hash of the given file"
     hasher = hashlib.sha256()
     while True:
         data = fd.read(bufsize)
@@ -58,6 +57,8 @@ def _file_sha256_hash(fd, bufsize=100_000):
 
 
 def assert_gziped_files_equal(expected_file, new_file):
+    "throw an assertion if the two ungziped files are different. (Compare the uncompressed versions because there is more than one compressed encoding of a file)"
+
     def get_ungzip_hash(path):
         with gzip.open(_localize(path), "rb") as fd:
             return _file_sha256_hash(fd)
@@ -74,6 +75,7 @@ def assert_parquet_files_equal(expected_file, new_file):
 
 
 def assert_output_files_match(expected_file, new_file):
+    "Compare two files and throw an assertion if they don't match. Based on the file extension, we may do different comparisions."
     # Open question: How much information do we want to provide if there's a mismatch
     if expected_file.endswith(".csv.gz"):
         assert_gziped_files_equal(expected_file, new_file)
@@ -97,6 +99,7 @@ def _get_client():
 
 
 def _localize(path):
+    "Given a path (local or GCS), return a path to a local file which we can read with those contents"
     m = re.match("gs://([^/]+)/(.+)", path)
     if m is None:
         return path
@@ -113,6 +116,7 @@ def _localize(path):
 
 
 def _exists_local_or_gs(path):
+    "Returns true if the path (local or GCS) exists"
     m = re.match("gs://([^/]+)/(.+)", path)
     if m is None:
         return os.path.exists(path)
@@ -126,6 +130,11 @@ def _exists_local_or_gs(path):
 
 
 def assert_output_dirs_match(expected_output_dir, new_output_dir):
+    """
+    Compare a directory (either local, or a in GCS) with expected results, with the results stored
+    in a local directory.
+    """
+
     def read_json(path):
         with open(_localize(os.path.join(path, "output.json")), "rt") as fd:
             return json.load(fd)
@@ -173,6 +182,7 @@ def assert_output_dirs_match(expected_output_dir, new_output_dir):
 
 
 def ensure_parent_dir_exists(path):
+    "Given a path of a file we want to write, creates the parent directory if it doesn't exist"
     parent_dir = os.path.dirname(path)
     if os.path.exists(parent_dir):
         assert os.path.isdir(parent_dir)
@@ -211,7 +221,6 @@ def write_outputs(output_dir: str, outputs: dict, dest_dir: str):
         new_outputs[name] = value
 
     dest_outputs = os.path.join(dest_dir, "output.json")
-    print("writing ", dest_outputs)
     ensure_parent_dir_exists(dest_outputs)
     with open(dest_outputs, "wt") as fd:
         fd.write(json.dumps(new_outputs))
