@@ -46,4 +46,6 @@ jobs:
       - name: build docker image
         run: bash build-docker-image.sh ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
       - name: Push Docker image
+        run: docker tag ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_REPO }}:${{ env.GITHUB--- }}
+      - name: Push Docker image
         run: docker push ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
