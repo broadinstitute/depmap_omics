@@ -2,7 +2,6 @@ import json
 import subprocess
 import os
 import pandas as pd
-from biomart import BiomartServer
 import io
 
 prevshowcount = 100
@@ -87,6 +86,10 @@ def generateGeneNames(
 
 
 def _fetchFromServer(ensemble_server, attributes):
+    # deferring the import until last possible moment because it's unclear
+    # to me whether we are actually fetching data from biomart. (I don't think we should)
+    from biomart import BiomartServer
+
     server = BiomartServer(ensemble_server)
     ensmbl = server.datasets["hsapiens_gene_ensembl"]
     res = pd.read_csv(
