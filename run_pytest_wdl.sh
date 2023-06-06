@@ -8,4 +8,4 @@
 #
 #docker build -t vcf2maf:test .
 
-pytest tests/depmapomics/tasks/test_vcf2maf.py
+pytest tests/depmapomics/tasks/test_vcf2maf.py -s
