@@ -1,0 +1,10 @@
+[
+  {
+    "field": "COSMIC_ID",
+    "alias": "COSMIC_ID"
+  },
+  {
+    "field": "TUMOR_TYPE",
+    "alias": "COSMIC_TUMOR_TYPE"
+  }
+]
