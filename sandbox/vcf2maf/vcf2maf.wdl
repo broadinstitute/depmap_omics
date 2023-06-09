@@ -33,7 +33,7 @@ task vcf2maf {
         File vep_data
         String sample_id
 
-        String docker_image="vcf2maf:test"
+        String docker_image="us.gcr.io/cds-docker-containers/vcf2maf:test"
         String assembly="GRCh38"
         Int preemptible=3
         Int boot_disk_size=10
