@@ -264,6 +264,11 @@ MUTCOL_DEPMAP = {
     "gwas_pmid": "GwasPmID",
     "gtex_gene": "GTexGene",
     "DepMap_ID": "DepMap_ID",
+    "clinvar_clnsig": "ClinVarClnSig",
+    "clinvar_trait": "ClinVarTrait",
+    "min_sift_score": "MinSiftScore",
+    "min_sift_pred": "MinSiftPred",
+    "cosmic_tier": "CosmicTier",
 }
 
 FUSION_COLNAME = [
