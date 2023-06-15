@@ -7,9 +7,14 @@ python3 process_cosmic_data.py CosmicCodingMuts.hg38.normal.vcf.gz CosmicMutantE
             cosmic.json \
             CosmicCodingMuts.hg38.normal_GRCh38_processed.vcf.gz
 
-bcftools norm -m- ~/vep_test/CDS-9ImTq5.hg38-unfiltered.vcf -w 10000 -f ~/vep_test/Homo_sapiens_assembly38.fasta.gz -O b -o ~/vep_test/CDS-9ImTq5.hg38-unfiltered.bcf
+bcftools norm -m- /home/ubuntu/depmap_omics/CDS-9ImTq5.filtered.vcf.gz -w 10000 -f /home/ubuntu/depmap_omics/Homo_sapiens_assembly38.fasta -O b -o ~/CDS-9ImTq5.hg38-unfiltered.bcf
 
-~/bin/echtvar anno -e gnomad.v3.1.2.echtvar.v2.zip ~/vep_test/CDS-9ImTq5.hg38-unfiltered.bcf test_out.bcf
+~/bin/echtvar anno -e gnomad.v3.1.2.echtvar.v2.zip ~/CDS-9ImTq5.hg38-unfiltered.bcf test_out.bcf
 
 ~/bin/echtvar anno -e ~/echtvar/gnomad.v3.1.2.echtvar.v2.zip CosmicCodingMuts.hg38.normal_GRCh38_processed.vcf.gz CosmicCodingMuts.hg38.normal_GRCh38_processed.bcf
 
+# 1. make a test subset of data
+# 2. make a docker file
+# 3. build a docker image
+# 4. make a wdl file that optionally uses this docker image
+# 5. write a test in the style of 
