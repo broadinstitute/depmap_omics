@@ -20,18 +20,24 @@ workflow run_echtvar_cosmic {
 
 task echtvar_cosmic {
     input {
-        File input_vcf
         String sample_id
+        File input_vcf
+        File ref_fasta="gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta"
+        File gnomad="gs://echtvar-dabases/gnomad.v3.1.2.echtvar.v2.zip"
 
         String docker_image="depmapomics:test"
         Int preemptible=3
         Int boot_disk_size=10
-        Int disk_space=40
+        Int disk_space=60
         Int cpu = 4
         Int mem = 32
     }
 
     command {
+        bcftools norm -m- ${input_vcf} -w 10000 -f ${ref_fasta} -O b -o ${sample_id}_bcftools_normalized.bcf
+
+        ~/bin/echtvar anno -e ${gnomad} ${sample_id}_echtvar_cosmic.bcf ${sample_id}_echtvar_cosmic.bcf
+
         
     }
 
@@ -45,6 +51,6 @@ task echtvar_cosmic {
     }
 
     output {
-        File annotated_vcf = ""        
+        File annotated_vcf = "${sample_id}_echtvar_cosmic.bcf"
     }
 }
