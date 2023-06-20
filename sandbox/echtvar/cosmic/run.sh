@@ -16,7 +16,7 @@ bcftools norm -m- /home/ubuntu/depmap_omics/CDS-9ImTq5.filtered.vcf.gz -w 10000 
 
 # 1. make a test subset of data
 # 2. make a docker file
-# 3. build a docker image
+# 3. build a docker image (docker build . -t depmapomics:test)
 # 4. make a wdl file that optionally uses this docker image
 # 5. write a test in the style of branch pgm-sample-test
 # 6. poetry install
