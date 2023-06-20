@@ -36,9 +36,9 @@ task vcf2maf {
         String docker_image="us.gcr.io/cds-docker-containers/vcf2maf:test"
         String assembly="GRCh38"
         Int preemptible=3
-        Int boot_disk_size=10
-        Int disk_space=40
-        Int cpu = 4
+        Int boot_disk_size=20
+        Int disk_space=20
+        Int cpu = 6
         Int mem = 32
     }
 
@@ -54,7 +54,7 @@ task vcf2maf {
          --ref ~{fasta} \
          --vep-path /opt/conda/envs/vep/bin/ \
          --vep-data /tmp \
-         --ncbi-build ~{assembly} \
+         --ncbi-build ~{assembly}
     }
 
     runtime {
