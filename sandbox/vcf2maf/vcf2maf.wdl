@@ -35,9 +35,9 @@ task vcf2maf {
 
         String docker_image="us.gcr.io/cds-docker-containers/vcf2maf:test"
         String assembly="GRCh38"
-        Int preemptible=3
-        Int boot_disk_size=20
-        Int disk_space=20
+        Int preemptible=2
+        Int boot_disk_size=50
+        Int disk_space=50
         Int cpu = 6
         Int mem = 32
     }
