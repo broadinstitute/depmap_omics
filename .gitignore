@@ -115,7 +115,6 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-test_*
 
 # Translations
 *.mo
