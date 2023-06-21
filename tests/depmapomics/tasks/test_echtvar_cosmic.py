@@ -20,7 +20,7 @@ VCS_TO_DEPMAP_EXPECTED_GCS_PATH = (
 )
 
 
-def test_vcs_to_depmap(tmpdir):
+def test_echtvar_cosmic_depmap(tmpdir):
     run_wdl(
         tmpdir,
         "sandbox/echtvar/echtvar_cosmic.wdl",
