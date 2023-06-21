@@ -47,10 +47,9 @@ task vcf2maf {
         chmod 777 /tmp/homo_sapiens
         ls /tmp/homo_sapiens
 
-	IS_GZ=`echo ~{input_vcf} | grep -Pic ".gz"`
-
+        IS_GZ=`echo ~{input_vcf} | grep -Pic ".gz"`
         if [ "$IS_GZ" -eq "1" ]; 
-	then
+        then
            zcat ~{input_vcf} > ~{input_vcf}.vcf
            perl /tmp/vcf2maf/vcf2maf.pl \
             --input-vcf ~{input_vcf}.vcf \
@@ -59,7 +58,7 @@ task vcf2maf {
             --vep-path /opt/conda/envs/vep/bin/ \
             --vep-data /tmp \
             --ncbi-build ~{assembly}
-	else
+        else
            perl /tmp/vcf2maf/vcf2maf.pl \
             --input-vcf ~{input_vcf} \
             --output-maf ~{sample_id}.maf \
