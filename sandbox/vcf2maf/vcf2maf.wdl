@@ -50,9 +50,9 @@ task vcf2maf {
         IS_GZ=`echo ~{input_vcf} | grep -Pic ".gz"`
         if [ "$IS_GZ" -eq "1" ]; 
         then
-           zcat ~{input_vcf} > ~{input_vcf}.vcf
+           zcat ~{input_vcf} > ~{sample_id}.vcf
            perl /tmp/vcf2maf/vcf2maf.pl \
-            --input-vcf ~{input_vcf}.vcf \
+            --input-vcf ~{sample_id}.vcf \
             --output-maf ~{sample_id}.maf \
             --ref ~{fasta} \
             --vep-path /opt/conda/envs/vep/bin/ \
