@@ -53,6 +53,7 @@ task vcf2maf {
         cp ~{fai} /tmp
         cp ~{fasta} /tmp
         cp ~{gzi} /tmp
+        du -sh /tmp/Homo_sapiens_assembly38.fasta.gz*
 
         IS_GZ=`echo ~{input_vcf} | grep -Pic ".gz"`
         if [ "$IS_GZ" -eq "1" ]; 
