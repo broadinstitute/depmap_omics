@@ -27,6 +27,7 @@ task opencravat {
         File vcf
         File? oc_modules # a tar ball of the entie oc module folder (must start with the module folder in the path)
         String format = "vcf"
+        File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier1.csv"
         Array[String] annotators_to_use = []
         #Int stripfolder = 0 
         String genome = "hg38"
