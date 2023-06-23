@@ -16,6 +16,8 @@ workflow run_vcf2maf {
             input_vcf=input_vcf,
             sample_id=sample_id,
             fasta=fasta,
+            fai=fai,
+            gzi=gzi,
             vep_data=vep_data
     }
 
@@ -29,6 +31,8 @@ task vcf2maf {
     input {
         File input_vcf
         File fasta
+        File fai
+        File gzi
         File vep_data
         String sample_id
 
@@ -46,6 +50,8 @@ task vcf2maf {
         ls /tmp
         chmod 777 /tmp/homo_sapiens
         ls /tmp/homo_sapiens
+        cp ~{fai} /tmp
+        cp ~{gzi} /tmp
 
         IS_GZ=`echo ~{input_vcf} | grep -Pic ".gz"`
         if [ "$IS_GZ" -eq "1" ]; 
@@ -54,7 +60,7 @@ task vcf2maf {
            perl /tmp/vcf2maf/vcf2maf.pl \
             --input-vcf ~{sample_id}.vcf \
             --output-maf ~{sample_id}.maf \
-            --ref ~{fasta} \
+            --ref /tmp/Homo_sapiens_assembly38.fasta.gz \
             --vep-path /opt/conda/envs/vep/bin/ \
             --vep-data /tmp \
             --ncbi-build ~{assembly}
@@ -62,7 +68,7 @@ task vcf2maf {
            perl /tmp/vcf2maf/vcf2maf.pl \
             --input-vcf ~{input_vcf} \
             --output-maf ~{sample_id}.maf \
-            --ref ~{fasta} \
+            --ref /tmp/Homo_sapiens_assembly38.fasta.gz \
             --vep-path /opt/conda/envs/vep/bin/ \
             --vep-data /tmp \
             --ncbi-build ~{assembly}
