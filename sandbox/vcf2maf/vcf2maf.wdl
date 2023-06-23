@@ -51,6 +51,7 @@ task vcf2maf {
         chmod 777 /tmp/homo_sapiens
         ls /tmp/homo_sapiens
         cp ~{fai} /tmp
+        cp ~{fasta} /tmp
         cp ~{gzi} /tmp
 
         IS_GZ=`echo ~{input_vcf} | grep -Pic ".gz"`
