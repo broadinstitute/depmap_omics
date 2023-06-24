@@ -73,10 +73,6 @@ def assert_parquet_files_equal(expected_file, new_file):
         pd.read_parquet(_localize(expected_file)), pd.read_parquet(new_file)
     )
 
-def assert_maf_files_equal(expected_file, new_file):
-    testing.assert_frame_equal(
-        pd.read_table(_localize(expected_file)), pd.read_table(new_file)
-    )
 
 def assert_output_files_match(expected_file, new_file):
     "Compare two files and throw an assertion if they don't match. Based on the file extension, we may do different comparisions."
@@ -85,8 +81,6 @@ def assert_output_files_match(expected_file, new_file):
         assert_gziped_files_equal(expected_file, new_file)
     elif expected_file.endswith(".parquet"):
         assert_parquet_files_equal(expected_file, new_file)
-    elif expected_file.endswith(".maf"):
-        assert_maf_files_equal(expected_file, new_file)
     else:
         raise Exception("Did not know how to compare {expected_file} and {new_file}")
 
