@@ -46,8 +46,13 @@ def filter_fields_query(fields=['PASS', 'multiallelic', 'af', 'dp', 'is_coding',
     return dfs
 
 
-def whitelisting_fields_query(fields=['civic_score', 'civic_score', 'brca1_func_score', 'dann_score', 'hess_driver', 'likely_driver', 'likely_lof'], 
-                              cutoffs=[1, 8, -1.328, 0.96, 'Y', 'Y', 'Y'],
+
+def combo_whitelisting():
+    return
+
+
+def whitelisting_fields_query(fields=['civic_score', 'civic_score', 'brca1_func_score', 'hess_driver', 'likely_driver', 'likely_lof'], 
+                              cutoffs=[1, 8, -1.328, 'Y', 'Y', 'Y'],
                               groupby=None):
     if groupby is not None:
         group_sql = " GROUP BY CDS_ID "
