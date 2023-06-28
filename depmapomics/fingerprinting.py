@@ -1,12 +1,15 @@
+from depmapomics import constants
+from depmapomics import env_config
+
 # fingerprinting.py
 
 import pandas as pd
 import numpy as np
 import dalmatian as dm
-from genepy import terra
-from genepy.utils import helper as h
+from mgenepy import terra
+from mgenepy.utils import helper as h
 from depmap_omics_upload import tracker as track
-from depmapomics.config import *
+
 from depmapomics import terra as myterra
 
 
@@ -120,7 +123,14 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                 ":",
                 tuple(
                     ref.loc[
-                        i, ["ModelID", "version", "expected_type", "PatientID"]
+                        i,
+                        [
+                            "ModelID",
+                            "ModelCondition",
+                            "version",
+                            "expected_type",
+                            "PatientID",
+                        ],
                     ].values
                 ),
                 j,
@@ -130,6 +140,7 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                         j,
                         [
                             "ModelID",
+                            "ModelCondition",
                             "version",
                             "expected_type",
                             "PatientID",
@@ -146,7 +157,13 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                         tuple(
                             ref.loc[
                                 i,
-                                ["ModelID", "version", "expected_type", "PatientID"],
+                                [
+                                    "ModelID",
+                                    "ModelCondition",
+                                    "version",
+                                    "expected_type",
+                                    "PatientID",
+                                ],
                             ].values
                         )
                     )
@@ -157,6 +174,7 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
                                 j,
                                 [
                                     "ModelID",
+                                    "ModelCondition",
                                     "version",
                                     "expected_type",
                                     "PatientID",
@@ -257,12 +275,12 @@ def checkMatches(lod_mat, ref, thr=500):
     return matches
 
 
-def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
+def add_sample_batch_pairs(wm, working_dir=constants.WORKING_DIR):
     """add and update sample_batch_pairs and sample_batch_pair_set in workspace
 
     Args:
         wm (dm.workspaceManager): dalmatian workspace manager for the terra workspace
-        working_dir (str): working directory where we store temp files. optional, defaults to WORKING_DIR
+        working_dir (str): working directory where we store temp files. optional, defaults to constants.WORKING_DIR
 
     """
     all_sample_sets = wm.get_entities("sample_set").index
@@ -287,7 +305,7 @@ def add_sample_batch_pairs(wm, working_dir=WORKING_DIR):
 
     # update sample_batch_pair
     try:
-        wm.upload_entities("sample_batch_pair", pair_df)
+        wm.upload_entities("sample_batch_pair", pair_df, model="flexible")
     except:
         print("still can't update sample_batch_pair")
         # in case it does not work
@@ -341,12 +359,12 @@ async def fingerPrint(
     samples,
     sid="id",
     use_gumbo=False,
-    sampleset=SAMPLESETNAME,
-    allbatchpairset=FPALLBATCHPAIRSETS,
-    workspace=FPWORKSPACE,
-    working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES + HG38_CRAM_COLNAMES,
-    terrabamcolname=["bam_filepath", "bai_filepath"] + HG38_CRAM_COLNAMES,
+    sampleset=constants.SAMPLESETNAME,
+    allbatchpairset=constants.FPALLBATCHPAIRSETS,
+    workspace=env_config.FPWORKSPACE,
+    working_dir=constants.WORKING_DIR,
+    bamcolname=constants.LEGACY_BAM_COLNAMES + constants.HG38_CRAM_COLNAMES,
+    terrabamcolname=["bam_filepath", "bai_filepath"] + constants.HG38_CRAM_COLNAMES,
     prev_mat_df=None,
     updated_mat_filename="",
 ):
@@ -363,7 +381,7 @@ async def fingerPrint(
         sid (str): column name for sample id
         working_dir (str): location for temp files to be saved in
         bamcolname (list[str], optional): column names for bam and bai files on terra
-        workspace (str, optional): terra workspace for fingerprinting. Defaults to FPWORKSPACE.
+        workspace (str, optional): terra workspace for fingerprinting. Defaults to env_config.FPWORKSPACE.
 
     Returns:
         updated_lod_mat (pd.DataFrame): updated lod matrix
@@ -397,9 +415,9 @@ async def fingerPrint(
     # and one for only hg38
     wm.update_sample_set(
         sampleset + "_hg38subset",
-        samples_df[~samples_df[HG38_CRAM_COLNAMES[0]].isna()].index,
+        samples_df[~samples_df[constants.HG38_CRAM_COLNAMES[0]].isna()].index,
     )
-    add_sample_batch_pairs(wm, working_dir=WORKING_DIR)
+    add_sample_batch_pairs(wm, working_dir=constants.WORKING_DIR)
 
     # Submit fingerprinting jobs, generate vcf files for all lines
     submission_id_hg19 = wm.create_submission(
@@ -454,12 +472,19 @@ async def fingerPrint(
     if use_gumbo:
         mytracker = track.SampleTracker()
         ref = mytracker.add_model_cols_to_seqtable(["PatientID", "ModelID"])
+        pr_table = mytracker.read_pr_table()
+        ref["ModelCondition"] = ref["ProfileID"].apply(
+            lambda x: pr_table.loc[x, "ModelCondition"]
+        )
         # add model and participant info to new samples that are not in the sequencing table yet
         samples["ModelID"] = samples["ProfileID"].apply(
             lambda x: mytracker.lookup_model_from_pr(x, "ModelID")
         )
         samples["PatientID"] = samples["ProfileID"].apply(
             lambda x: mytracker.lookup_model_from_pr(x, "PatientID")
+        )
+        samples["ModelCondition"] = samples["ProfileID"].apply(
+            lambda x: pr_table.loc[x, "ModelCondition"]
         )
 
     else:
@@ -478,13 +503,13 @@ async def _CCLEFingerPrint(
     rnasamples,
     wgssamples,
     sid="id",
-    sampleset=SAMPLESETNAME,
-    allbatchpairset=FPALLBATCHPAIRSETS,
-    workspace=FPWORKSPACE,
-    working_dir=WORKING_DIR,
-    bamcolname=LEGACY_BAM_COLNAMES + HG38_CRAM_COLNAMES,
-    taiga_dataset=TAIGA_FP,
-    updated_mat_filename=TAIGA_FP_FILENAME,
+    sampleset=constants.SAMPLESETNAME,
+    allbatchpairset=constants.FPALLBATCHPAIRSETS,
+    workspace=env_config.FPWORKSPACE,
+    working_dir=constants.WORKING_DIR,
+    bamcolname=constants.LEGACY_BAM_COLNAMES + constants.HG38_CRAM_COLNAMES,
+    taiga_dataset=env_config.TAIGA_FP,
+    updated_mat_filename=constants.TAIGA_FP_FILENAME,
     upload_to_taiga=True,
 ):
     """CCLE fingerprinting function
@@ -495,7 +520,7 @@ async def _CCLEFingerPrint(
         sid (str): [description]
         working_dir (str): location where intermediate outputs are stored
         bamcolname ([str]): columns in gumbo where bam file locations are stored
-        workspace (str, optional): name of the SNP fingerprinting workspace on terra. Defaults to FPWORKSPACE.
+        workspace (str, optional): name of the SNP fingerprinting workspace on terra. Defaults to env_config.FPWORKSPACE.
 
     Returns:
         updated_lod_mat (pd.DataFrame): updated lod matrix

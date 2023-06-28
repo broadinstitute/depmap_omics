@@ -1,0 +1,30 @@
+{
+ "inputs": {
+  "wes_vcf_cleanup.RemoveFiltered.bcftools_exclude_string": "",
+  "wes_vcf_cleanup.RemoveFiltered.boot_disk_size": "",
+  "wes_vcf_cleanup.RemoveFiltered.cpu": "",
+  "wes_vcf_cleanup.RemoveFiltered.docker_image": "",
+  "wes_vcf_cleanup.RemoveFiltered.mem": "",
+  "wes_vcf_cleanup.RemoveFiltered.preemptible": "",
+  "wes_vcf_cleanup.bcftools_fix_ploidy.boot_disk_size": "",
+  "wes_vcf_cleanup.bcftools_fix_ploidy.disk_space": "",
+  "wes_vcf_cleanup.bcftools_fix_ploidy.docker": "",
+  "wes_vcf_cleanup.bcftools_fix_ploidy.memory": "",
+  "wes_vcf_cleanup.bcftools_fix_ploidy.num_preempt": "",
+  "wes_vcf_cleanup.bcftools_fix_ploidy.num_threads": "",
+  "wes_vcf_cleanup.fix_mutect2.boot_disk_size": "",
+  "wes_vcf_cleanup.fix_mutect2.disk_space": "",
+  "wes_vcf_cleanup.fix_mutect2.docker": "",
+  "wes_vcf_cleanup.fix_mutect2.memory": "",
+  "wes_vcf_cleanup.fix_mutect2.num_preempt": "",
+  "wes_vcf_cleanup.fix_mutect2.num_threads": "",
+  "wes_vcf_cleanup.fix_mutect2.size_tocheck": "",
+  "wes_vcf_cleanup.sample_id": "this.sample_id",
+  "wes_vcf_cleanup.vcf": "this.mutect2_with_germline_funcotated_file"
+ },
+ "outputs": {
+  "wes_vcf_cleanup.out_vcf": "this.fixed_vcf"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

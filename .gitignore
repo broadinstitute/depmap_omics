@@ -207,3 +207,5 @@ ccle_tasks/cloud_sql_proxy
 ccle_tasks/output/*
 
 ccle_tasks/output/*
+.biomart.csv
+*.orig

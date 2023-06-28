@@ -1,0 +1,20 @@
+{
+ "inputs": {
+  "CNVSomaticPairWorkflow.bin_length": "0",
+  "CNVSomaticPairWorkflow.common_sites": "workspace.common_sites_hg38",
+  "CNVSomaticPairWorkflow.gatk_docker": "\"us.gcr.io/broad-gatk/gatk:4.2.0.0\"",
+  "CNVSomaticPairWorkflow.gcs_project_for_requester_pays": "\"broad-firecloud-ccle\"",
+  "CNVSomaticPairWorkflow.intervals": "workspace.ice_xy_intervals_no_pad",
+  "CNVSomaticPairWorkflow.is_run_funcotator": "true",
+  "CNVSomaticPairWorkflow.is_run_oncotator": "true",
+  "CNVSomaticPairWorkflow.read_count_pon": "workspace.ice_pon_xy",
+  "CNVSomaticPairWorkflow.ref_fasta": "workspace.ref_fasta",
+  "CNVSomaticPairWorkflow.ref_fasta_dict": "workspace.ref_dict",
+  "CNVSomaticPairWorkflow.ref_fasta_fai": "workspace.ref_fasta_fai",
+  "CNVSomaticPairWorkflow.tumor_bam": "this.hg38_analysis_ready_bam",
+  "CNVSomaticPairWorkflow.tumor_bam_idx": "this.hg38_analysis_ready_bam_index"
+ },
+ "outputs": {},
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

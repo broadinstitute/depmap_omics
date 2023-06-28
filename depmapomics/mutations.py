@@ -1,33 +1,27 @@
-from genepy import terra
-from genepy.utils import helper as h
-from genepy import mutations as mut
+"""Mutation postprocessing module."""
+from depmapomics import constants
+from mgenepy.utils import helper as h
 import os
-import dalmatian as dm
 import pandas as pd
-from genepy.google.gcp import cpFiles
-import numpy as np
 from collections import Counter
-
-from depmapomics.config import *
-
-import dalmatian as dm
-import pandas as pd
-from genepy.epigenetics import chipseq as chip
+from mgenepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
+import pandera as pa
+from tqdm import tqdm
 
 
 def annotateLikelyImmortalized(
     maf,
-    sample_col=SAMPLEID,
+    sample_col=constants.SAMPLEID,
     genome_change_col="dna_change",
     chrom_col="chrom",
     pos_col="pos",
     hotspotcol="cosmic_hotspot",
-    max_recurrence=IMMORTALIZED_THR,
+    max_recurrence=constants.IMMORTALIZED_THR,
 ):
-    """annotateLikelyImmortalized annotates the maf file with the likely immortalized mutations
+    """Annotate the maf file with the likely immortalized mutations
 
     Based on occurence accross samples
 
@@ -48,7 +42,7 @@ def annotateLikelyImmortalized(
     )
     leng = len(set(maf[sample_col]))
     maf[
-        (maf[hotspotcol] != "Y")
+        (maf[hotspotcol] != True)
         & (
             maf["combined_mut"].isin(
                 [
@@ -83,13 +77,13 @@ def addAnnotation(maf, NCBI_Build="37", Strand="+"):
 def makeMatrices(
     maf,
     homin=0.95,
-    id_col=SAMPLEID,
-    hotspot_col=HOTSPOT_COL,
-    hugo_col=HUGO_COL,
-    lof_col=LIKELY_LOF_COL,
-    ccle_deleterious_col=CCLE_DELETERIOUS_COL,
-    civic_col=CIVIC_SCORE_COL,
-    hess_col=HESS_COL,
+    id_col=constants.SAMPLEID,
+    hotspot_col=constants.HOTSPOT_COL,
+    hugo_col=constants.HUGO_COL,
+    lof_col=constants.LIKELY_LOF_COL,
+    ccle_deleterious_col=constants.CCLE_DELETERIOUS_COL,
+    civic_col=constants.CIVIC_SCORE_COL,
+    hess_col=constants.HESS_COL,
 ):
     """generates genotyped hotspot, driver and damaging mutation matrices
 
@@ -110,37 +104,37 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[subset_maf[hess_col] == "Y"]
+        hotspot = subset_maf[subset_maf[hess_col] == True]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homhotspot.add(dup)
         hethotspot = set(hotspot[hugo_col]) - homhotspot
-        hotspot_mat.loc[sample, homhotspot] = "2"
-        hotspot_mat.loc[sample, hethotspot] = "1"
+        hotspot_mat.loc[sample, list(homhotspot)] = "2"
+        hotspot_mat.loc[sample, list(hethotspot)] = "1"
         # damaging
         lof = subset_maf[
-            (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col] == "Y")
+            (subset_maf[lof_col] == True) | (subset_maf[ccle_deleterious_col] == True)
         ]
         homlof = set(lof[lof["GT"] == "1|1"][hugo_col])
         for dup in h.dups(lof[hugo_col]):
             if lof[lof[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homlof.add(dup)
         hetlof = set(lof[hugo_col]) - homlof
-        lof_mat.loc[sample, homlof] = "2"
-        lof_mat.loc[sample, hetlof] = "1"
+        lof_mat.loc[sample, list(homlof)] = "2"
+        lof_mat.loc[sample, list(hetlof)] = "1"
         # driver
         driver = subset_maf[
             ((~subset_maf[civic_col].isnull()) & (subset_maf[civic_col] != 0))
-            | (subset_maf[hess_col] == "Y")
+            | (subset_maf[hess_col] == True)
         ]
         homdriv = set(driver[driver["GT"] == "1|1"][hugo_col])
         for dup in h.dups(driver[hugo_col]):
             if driver[driver[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
                 homdriv.add(dup)
         hetdriv = set(driver[hugo_col]) - homdriv
-        driver_mat.loc[sample, homdriv] = "2"
-        driver_mat.loc[sample, hetdriv] = "1"
+        driver_mat.loc[sample, list(homdriv)] = "2"
+        driver_mat.loc[sample, list(hetdriv)] = "1"
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
     lof_mat = lof_mat.dropna(axis="columns", how="all")
     driver_mat = driver_mat.dropna(axis="columns", how="all")
@@ -192,21 +186,21 @@ def managingDuplicates(samples, failed, datatype, tracker):
 def aggregateMAFs(
     wm,
     sampleset="all",
-    mafcol=MAF_COL,
-    keep_cols=MUTCOL_DEPMAP,
+    mafcol=constants.MAF_COL,
+    keep_cols=constants.MUTCOL_DEPMAP,
+    debug=False,
 ):
-    """aggregate MAF files from terra
+    """Aggregate MAF files from terra
 
     Args:
         refworkspace (str): the reference workspace
         sampleset (str, optional): the sample set to use. Defaults to 'all'.
         mutCol (str, optional): the MAF column name. Defaults to "somatic_maf".
-        keep_cols (list, optional): which columns to keep in the aggregate MAF file. Defaults to MUTCOL_DEPMAP
+        keep_cols (list, optional): which columns to keep in the aggregate MAF file. Defaults to constants.MUTCOL_DEPMAP
 
     Returns:
         aggregated_maf (df.DataFrame): aggregated MAF
     """
-    print("aggregating MAF files")
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
@@ -214,19 +208,21 @@ def aggregateMAFs(
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
     all_mafs = []
-    le = len(sample_table_valid)
     counter = 0
-    for name, row in sample_table_valid.iterrows():
+    for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
-        h.showcount(counter, le)
-        counter += 1
         maf = pd.read_csv(row[mafcol])
-        maf[SAMPLEID] = name
+        maf[constants.SAMPLEID] = name
         # >1 because of the hess_signature typo in input mafs
         # can be 0 once the type is fixed upstream
+        # TODO: replace hess_signature later
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns")
         all_mafs.append(maf)
+        if debug:
+            counter += 1
+            if counter > 6:
+                break
     all_mafs = pd.concat(all_mafs)
     return all_mafs
 
@@ -234,8 +230,8 @@ def aggregateMAFs(
 def aggregateSV(
     wm,
     sampleset="all",
-    sv_colname=SV_COLNAME,
-    sv_renaming=SV_COLRENAME,
+    sv_colname=constants.SV_COLNAME,
+    sv_renaming=constants.SV_COLRENAME,
     save_output="",
     save_filename="",
 ):
@@ -260,7 +256,7 @@ def aggregateSV(
     all_svs = []
     for name, row in sample_table_valid.iterrows():
         sv = pd.read_csv(row[sv_colname], sep="\t")
-        sv[SAMPLEID] = name
+        sv[constants.SAMPLEID] = name
         sv = sv.rename(columns=sv_renaming)
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
@@ -272,14 +268,15 @@ def aggregateSV(
 def postProcess(
     wm,
     sampleset="all",
-    mafcol=MAF_COL,
-    save_output=WORKING_DIR,
-    sv_col=SV_COLNAME,
-    sv_filename=SV_FILENAME,
-    sv_renaming=SV_COLRENAME,
+    mafcol=constants.MAF_COL,
+    save_output=constants.WORKING_DIR,
+    sv_col=constants.SV_COLNAME,
+    sv_filename=constants.SV_FILENAME,
+    sv_renaming=constants.SV_COLRENAME,
     run_sv=True,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
+
     and aggregate structural variants (SVs)
 
     Args:
@@ -290,7 +287,7 @@ def postProcess(
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
         rename_cols (dict, optional): the rename dict for the columns.
             Defaults to {"i_ExAC_AF": "ExAC_AF",
-                        "Tumor_Sample_Barcode": SAMPLEID,
+                        "Tumor_Sample_Barcode": constants.SAMPLEID,
                         "Tumor_Seq_Allele2": "Tumor_Allele"}.
 
     Returns:
@@ -304,12 +301,12 @@ def postProcess(
         wm,
         sampleset=sampleset,
         mafcol=mafcol,
-        keep_cols=MUTCOL_DEPMAP,
+        keep_cols=constants.MUTCOL_DEPMAP,
     )
 
     # print("annotating likely immortalized status")
     # mutations = annotateLikelyImmortalized(
-    #     mutations, hotspotcol="cosmic_hotspot", max_recurrence=IMMORTALIZED_THR,
+    #     mutations, hotspotcol="cosmic_hotspot", max_recurrence=constants.IMMORTALIZED_THR,
     # )
 
     print("saving somatic mutations (all)")
@@ -353,16 +350,15 @@ def mapBed(file, vcfdir, guide_df):
 def generateGermlineMatrix(
     vcfs,
     vcfdir,
-    savedir=WORKING_DIR + SAMPLESETNAME + "/",
+    savedir=constants.WORKING_DIR + constants.SAMPLESETNAME + "/",
     filename="binary_mutguides.tsv.gz",
-    bed_locations=GUIDESBED,
+    bed_locations=constants.GUIDESBED,
     cores=16,
 ):
     """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
     using the CCLE pipeline on terra
     Args:
         vcfs (list): list of vcf file locations (gs links)
-        taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_CN.
         vcfdir (str, optional): directory where vcf files are saved.
         savedir (str, optional): directory where output germline matrices are saved.
         bed_location (str, optional): location of the guides bed file.
