@@ -7,8 +7,8 @@
 
   * `dbSNP_vcf` (File, **required**)
   * `dbSNP_vcf_index` (File, **required**)
-  * `input_bam` (File, **required**)
-  * `input_bam_index` (File, **required**)
+  * `input_cram` (File, **required**)
+  * `input_cram_index` (File, **required**)
   * `known_indels_sites_VCFs` (Array[File], **required**)
   * `known_indels_sites_indices` (Array[File], **required**)
   * `preemptible_tries` (Int, **required**)
@@ -26,9 +26,13 @@
 #### Optional
 
   * `ref_alt` (File?)
+  * `CramToBam.reference_index` (File?)
+  * `CramToBam.runtime_attr_override` (RuntimeAttr?)
 
 #### Defaults
 
+  * `requester_pays` (Boolean, default=false)
+  * `samtools_docker` (String, default="biocontainers/samtools:v1.9-4-deb_cv1")
   * `unmapped_bam_suffix` (String, default=".bam")
   * `BamToUnmappedBams.additional_disk_size` (Int, default=20)
   * `BamToUnmappedBams.gatk_docker` (String, default="broadinstitute/gatk:latest")
