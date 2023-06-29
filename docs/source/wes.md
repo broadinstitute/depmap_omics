@@ -1,2 +1,3 @@
-Whole genome sequencing pipeline for DepMap 
+Whole exome sequencing pipeline for DepMap 
 =============================================
+

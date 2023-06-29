@@ -4,6 +4,8 @@ This is the unifying documentation for recording omics pipelines implementations
 
 ```{toctree}
 wgs.md
+wes.md
+rna.md
 about.md
 ```
 
@@ -14,6 +16,9 @@ about.md
 workflows/PureCN.md
 workflows/vcf_to_depmap.md
 workflows/WGS_preprocessing.md
+workflows/star_wdl1-0.md
+workflows/rnaseqc2_wdl1-0.md
+workflows/samtofastq_wdl1-0.md
 ```
 
 Indices and tables
