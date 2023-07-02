@@ -14,6 +14,7 @@ about.md
 :caption: WDL API
 :hidden:
 workflows/PureCN.md
+workflows/PureCN_update_solution.md
 workflows/vcf_to_depmap.md
 workflows/WGS_preprocessing.md
 workflows/star_wdl1-0.md
