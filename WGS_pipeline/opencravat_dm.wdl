@@ -27,13 +27,11 @@ task opencravat {
         File vcf
         File? oc_modules # a tar ball of the entie oc module folder (must start with the module folder in the path)
         String format = "vcf"
-        File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier1.csv"
+        File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier123.csv"
         Array[String] annotators_to_use = []
         #Int stripfolder = 0 
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
-        # see https://github.com/rkimoakbioinformatics/oak-cravat-modules/tree/master/annotators/oncokb
-        File? oncokb_api_key
 
         Int memory = 16
         Int boot_disk_size = 100
@@ -53,19 +51,20 @@ task opencravat {
         
         # only the new version of opencravat actually works and it is not in this docker
         ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xvf "+oc_modules+" && cd -" else oc_install}
-
-        oc new annotator oncokb_dm
-        rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
         
         oc new annotator hess_drivers
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
 
+        oc new annotator cosmic
+
         git clone https://github.com/broadinstitute/depmap_omics.git
-        cd depmap_omics && git checkout dev && git pull && cd ..
+        cd depmap_omics && git checkout add-cosmic-to-oc && git pull && cd ..
         cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
         cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
+        
+        cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic/
+        cp -r depmap_omics/WGS_pipeline/cosmic  /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
 
-        ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm/data/token.txt" else ""}
         pip install bgzip pytabix scipy
         
         echo """
