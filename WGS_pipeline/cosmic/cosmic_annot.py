@@ -23,15 +23,15 @@ class CravatAnnotator(BaseAnnotator):
                 sys.exit(1)
             import pandas as pd
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        datafile_path = os.path.join(dir_path, "data", "hess_drivers.csv.gz")
-        self.drivers = pd.read_csv(datafile_path)
-        self.driverset = {
-            val["CHROM"]
+        datafile_path = os.path.join(dir_path, "data", "cosmic.csv")
+        self.cosmic = pd.read_csv(datafile_path)
+        self.cosmicset = {
+            val["chrom"]
             + ":"
-            + str(val["POS"])
+            + str(val["pos"])
             + ":"
-            + val["ALT"]: val["sig_assignments"]
-            for _, val in self.drivers.iterrows()
+            + val["alt"]: val["MUTATION_SIGNIFICANCE_TIER"]
+            for _, val in self.cosmic.iterrows()
         }
 
     def annotate(self, input_data, secondary_data=None):
@@ -60,22 +60,16 @@ class CravatAnnotator(BaseAnnotator):
         carefully to ensure that your data is ending up where you intend.
         """
         out = {}
-        out["is_driver"] = ""
-        out["signature"] = ""
+        out["cosmic_tier"] = ""
 
         chrom = input_data["chrom"]
         pos = input_data["pos"]
         alt = input_data["alt_base"]
 
-        if "coding" in input_data:
-            if input_data["coding"] != "Y":
-                return out
         key = str(chrom) + ":" + str(pos) + ":" + alt
-        # print(self.driverset.get(key, 0))
-        if key in self.driverset:
-            print("found driver:" + key)
-            out["is_driver"] = "Y"
-            out["signature"] = self.driverset[key]
+        if key in self.cosmicset:
+            print("found cosmic:" + key)
+            out["cosmic_tier"] = self.cosmicset[key]
         return out
 
     def cleanup(self):
