@@ -61,7 +61,7 @@ task opencravat {
         cd depmap_omics && git checkout add-cosmic-to-oc && git pull && cd ..
         cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
         
-        cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic/data/cosmic.csv
+        mkdir depmap_omics/WGS_pipeline/cosmic/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic/data/cosmic.csv
         cp -r depmap_omics/WGS_pipeline/cosmic /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
 
         pip install bgzip pytabix scipy
