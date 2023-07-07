@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import seaborn as sns
 
 import numpy as np
@@ -44,10 +45,12 @@ def filter_fields_query(fields=['PASS', 'multiallelic', 'af', 'dp', 'is_coding',
     dfs = []
     for field, cutoff in zip(fields, cutoffs):
         print(field,cutoff)
-        if isinstance(cutoff, str):
-            df = job_query_to_dataframe(f"""SELECT COUNTIF({field}='{cutoff}') AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
-        elif field in ['germline', 'pon']:
+        if field in ['multiallelic', 'germline', 'pon']:
             df = job_query_to_dataframe(f"""SELECT COUNTIF({field}!='{cutoff}') AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
+        elif isinstance(cutoff, str):
+            df = job_query_to_dataframe(f"""SELECT COUNTIF({field}='{cutoff}') AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
+        elif field == 'popaf':
+            df = job_query_to_dataframe(f"""SELECT COUNTIF(SAFE_CAST(SPLIT({field}, ',')[ORDINAL(1)] AS NUMERIC) < {cutoff}) AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
         else:
             df = job_query_to_dataframe(f"""SELECT COUNTIF(SAFE_CAST(SPLIT({field}, ',')[ORDINAL(1)] AS NUMERIC) >= {cutoff}) AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
         dfs.append([f"{field}:{cutoff}", df.values[0][0]])
@@ -55,16 +58,17 @@ def filter_fields_query(fields=['PASS', 'multiallelic', 'af', 'dp', 'is_coding',
 
 
 
+# NOTE: likely_lof contains DANN scores or condition
 def combo_evaluation(fields=['civic_score>=1', 'civic_score>=8', 
                              'SAFE_CAST(SPLIT(brca1_func_score, ",")[ORDINAL(1)] AS NUMERIC)>=-1.328', 
-                             "hess_driver='Y'", "likely_driver='Y'", "likely_lof='Y'"], 
-                    rename_fields = ['civic>=1', 'civic>=8', 'brca1_func_score>=-1.328', 'hess_driver=Y', 'likely_driver=Y', 'likely_lof=Y'], 
+                             "hess_driver='Y'", "likely_driver='Y'", "ccle_deleterious='Y'"],  
+                    rename_fields = ['civic>=1', 'civic>=8', 'brca1_func_score>=-1.328', 'hess_driver=Y', 'likely_driver=Y', 'ccle_deleterious=Y'], 
                     figname='test.pdf'):
     n = 0
     references = fields
     ref_bools = []
     metrics = []
-    for index,comb in enumerate([combinations(references, ii) for ii in range(1, 6)]): #, combinations(fields, 3)]):
+    for index,comb in enumerate([combinations(references, ii) for ii in range(1, 6)]):
         for co in comb:
             ref_bool = np.zeros(len(references))
             ref_bool[np.isin(np.array(fields), np.array(co))] = 1
@@ -88,16 +92,13 @@ def combo_evaluation(fields=['civic_score>=1', 'civic_score>=8',
     upset = UpSet(res, subset_size='sum', sum_over='count', show_counts=True, min_subset_size=15, intersection_plot_elements=3)
     upset.add_catplot(value='ratio', kind='strip', color='blue')
     upset.plot(fig=fig)
-
-    #plot(res, show_counts=True, min_subset_size=15, fig=fig)
     fig.set_size_inches(28, 5)
     fig.savefig(figname)
     print(res)
     print(n)
-    return
 
 
-def whitelisting_fields_query(fields=['civic_score', 'civic_score', 'brca1_func_score', 'hess_driver', 'likely_driver', 'likely_lof'], 
+def whitelisting_fields_query(fields=['civic_score', 'civic_score', 'brca1_func_score', 'hess_driver', 'likely_driver', 'ccle_deleterious'], 
                               cutoffs=[1, 8, -1.328, 'Y', 'Y', 'Y'],
                               groupby=None):
     if groupby is not None:
@@ -122,17 +123,16 @@ def whitelisting_fields_query(fields=['civic_score', 'civic_score', 'brca1_func_
 
 def main():
     #combo_evaluation(figname='whitelisting_combo.pdf')
-    #combo_evaluation(fields=["SAFE_CAST(SPLIT(af, ',')[ORDINAL(1)] AS NUMERIC)>=0.15", "SAFE_CAST(SPLIT(dp, ',')[ORDINAL(1)] AS NUMERIC)>=2", "is_coding='Y'", "germline!='Y'", "pon!='Y'", "SAFE_CAST(SPLIT(popaf, ',')[ORDINAL(1)] AS NUMERIC) >= 5"], rename_fields=['af>=0.15', 'dp>=2', 'coding=Y', 'germline!=Y', 'pon!=Y', 'gnomad>=5'], figname='filter_combo.pdf')
+    #combo_evaluation(fields=["SAFE_CAST(SPLIT(af, ',')[ORDINAL(1)] AS NUMERIC)>=0.15", "SAFE_CAST(SPLIT(dp, ',')[ORDINAL(1)] AS NUMERIC)>=2", "is_coding='Y'", "germline!='Y'", "pon!='Y'", "SAFE_CAST(SPLIT(popaf, ',')[ORDINAL(1)] AS NUMERIC) < 5"], rename_fields=['af>=0.15', 'dp>=2', 'coding=Y', 'germline!=Y', 'pon!=Y', 'gnomad<5'], figname='filter_combo.pdf')
     df_filter = pd.DataFrame(filter_fields_query())
     df_whitelist = pd.DataFrame(whitelisting_fields_query())
     df_all = query_all_variants()
-    print(df_filter)
     df_filter.columns = ['metric', 'count']
     df_whitelist.columns = ['metric', 'count']
     df_filter.loc[:, 'ratio'] = df_filter.iloc[:, 1] / df_all.row_count.values[0]
     df_whitelist.loc[:, 'ratio'] = df_whitelist.iloc[:, 1] / df_all.row_count.values[0]
 
-    fig, ax = plt.subplots(2, 1, figsize=(8, 6))
+    fig, ax = plt.subplots(2, 1, figsize=(8, 8))
     for index, data in zip(range(2), [df_filter, df_whitelist]):
         sns.barplot(x='metric', y='count', data=data, capsize=0.2, ax=ax[index])
         
@@ -143,7 +143,7 @@ def main():
             text = f'ratio:\n{t:0.2E}'
             ax[index].annotate(text=text, xy=xy, ha='center', va='center')
         ax[index].tick_params(axis='x', labelrotation=45)
-    fig.subplots_adjust(hspace=0.7)
+    fig.subplots_adjust(hspace=0.7, wspace=0.6, bottom=0.4)
     fig.savefig("individual_metrics.pdf")
 
 
