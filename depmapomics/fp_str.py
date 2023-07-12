@@ -8,6 +8,24 @@ from depmap_omics_upload import tracker as track
 
 from google.cloud import storage  # TODO: look for alternatives
 
+STR_COL_RENAME_OMICS = {
+    "D3S1358": "d3s1358",
+    "TH01": "th01",
+    "D21S11": "d21s11",
+    "D18S51": "d18s51",
+    "PentaE": "penta_e",
+    "D5S818": "d5s818",
+    "D13S317": "d13s317",
+    "D7S820": "d7s820",
+    "D16S539": "d16s539",
+    "CSF1PO": "csf1po",
+    "PentaD": "penta_d",
+    "vWA": "vwa",
+    "D8S1179": "d8s1179",
+    "TPOX": "tpox",
+    "FGA": "fga",
+}
+
 
 def read_vcf(path):
     """reads in a vcf in google cloud storage and converts it into a df"""
