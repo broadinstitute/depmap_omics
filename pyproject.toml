@@ -19,6 +19,10 @@ fire = "^0.5.0"
 tqdm = "^4.64.1"
 scipy="^1.0.0"
 firecloud_dalmatian= {git = "https://github.com/pgm/dalmatian", rev = "5f37ef9"}
+sphinx = "^7.0.1"
+myst-parser = "^2.0.0"
+furo = "^2023.5.20"
+wdldoc = "^1.7.1"
 
 [tool.poetry.scripts]
 depmapomics = 'depmapomics.__main__:main'
@@ -29,6 +33,7 @@ notebook = "^6.5.2"
 pyright = "^1.1.290"
 pytest = "^7.2.1"
 pyright-ratchet = {git = "https://github.com/pgm/pyright-ratchet.git"}
+flake8 = "^6.0.0"
 
 [build-system]
 requires = ["poetry-core"]

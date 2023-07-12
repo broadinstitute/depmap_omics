@@ -1,0 +1,5 @@
+sphinx==6
+sphinx_rtd_theme
+readthedocs-sphinx-search
+furo==2023.5.20
+myst-parser==2.0.0
