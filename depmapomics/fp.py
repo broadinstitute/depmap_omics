@@ -172,7 +172,7 @@ async def fingerPrint(
         expression="this.samples",
     )
     submission_id_hipstr = wm.create_submission(
-        "hipSTR",
+        "hipSTR_cram",
         sampleset + "_hg38subset",
         "sample_set",
         expression="this.samples",
