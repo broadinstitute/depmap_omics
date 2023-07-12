@@ -12,6 +12,7 @@ from depmap_omics_upload import tracker as track
 
 from depmapomics import terra as myterra
 from depmapomics.fp_snp import updateLOD, checkMismatches, checkMatches
+from depmapomics.fp_str import generateSTRRow, STR_COL_RENAME_OMICS
 
 
 def add_sample_batch_pairs(wm, working_dir=constants.WORKING_DIR):
@@ -245,6 +246,39 @@ async def fingerPrint(
     return updated_lod_mat, mismatches, matches
 
 
+async def processSTRforGumbo(workspace, samplesetname, seq_table, pr_table, **kwargs):
+    wm = dm.WorkspaceManager(workspace)
+    samples = wm.get_samples()
+    samples_in_set = wm.get_sample_sets().loc[samplesetname, "samples"]
+    wgs_str_hipstr = generateSTRRow(samples.loc[samples_in_set], method="hipstr")
+    # replace "NA" with nan
+    wgs_str_hipstr = wgs_str_hipstr.replace({"NA": np.nan})
+    # map ids
+    for i in wgs_str_hipstr.index:
+        pr_id = seq_table.loc[i, "ProfileID"]
+        wgs_str_hipstr.loc[i, "patient_id"] = pr_table.loc[pr_id, "PatientID"]
+        wgs_str_hipstr.loc[i, "model_condition_id"] = pr_table.loc[
+            pr_id, "ModelCondition"
+        ]
+    # rename columns into snake case
+    wgs_str_hipstr = wgs_str_hipstr.rename(columns=STR_COL_RENAME_OMICS)
+    # fill in source, source group and is_ref columns
+    wgs_str_hipstr["source"] = "Internal"
+    wgs_str_hipstr["source_group"] = "WGS Inferred"
+    wgs_str_hipstr["is_reference"] = False
+    # randomly generate STR-ids
+    wgs_str_hipstr["id"] = [
+        "STR-" + h.randomString(stringLength=6, stype="all", withdigits=True)
+        for _ in range(len(wgs_str_hipstr))
+    ]
+    for i in wgs_str_hipstr.index:
+        seq_table.loc[i, "str_profile"] = wgs_str_hipstr.loc[i, "id"]
+    wgs_str_hipstr = wgs_str_hipstr.reset_index()
+    wgs_str_hipstr = wgs_str_hipstr.drop(columns="sample_id")
+
+    return wgs_str_hipstr, seq_table
+
+
 async def _CCLEFingerPrint(
     rnasamples,
     wgssamples,
@@ -275,6 +309,7 @@ async def _CCLEFingerPrint(
     """
     mytracker = track.SampleTracker()
     seq_table = mytracker.read_seq_table()
+    pr_table = mytracker.add_model_cols_to_prtable(["ModelID", "PatientID"])
 
     samples = seq_table.loc[rnasamples + wgssamples]
 
