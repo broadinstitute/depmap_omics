@@ -273,8 +273,7 @@ async def processSTRforGumbo(workspace, samplesetname, seq_table, pr_table, **kw
     ]
     for i in wgs_str_hipstr.index:
         seq_table.loc[i, "str_profile"] = wgs_str_hipstr.loc[i, "id"]
-    wgs_str_hipstr = wgs_str_hipstr.reset_index()
-    wgs_str_hipstr = wgs_str_hipstr.drop(columns="sample_id")
+    wgs_str_hipstr = wgs_str_hipstr.set_index("id")
 
     return wgs_str_hipstr, seq_table
 
@@ -291,6 +290,7 @@ async def _CCLEFingerPrint(
     taiga_dataset=env_config.TAIGA_FP,
     updated_mat_filename=constants.TAIGA_FP_FILENAME,
     upload_to_taiga=True,
+    samplesetname_str=constants.SAMPLESETNAME + "_hg38subset",
 ):
     """CCLE fingerprinting function
 
@@ -348,5 +348,12 @@ async def _CCLEFingerPrint(
             ],
             add_all_existing_files=True,
         )
+
+    wgs_str_hipstr, seq_table = await processSTRforGumbo(
+        workspace, samplesetname_str, seq_table, pr_table
+    )
+
+    mytracker.insert_to_str_table(wgs_str_hipstr)
+    mytracker.write_seq_table(seq_table)
 
     return updated_lod_mat, mismatches, matches
