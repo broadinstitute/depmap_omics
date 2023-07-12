@@ -141,7 +141,7 @@ PURECN_COLRENAMING = {
     "chr": "Chromosome",
     "Sampleid": "DepMap_ID",
     "type": "LoHStatus",
-    "C": "MajorAlleleAbsoluteCN",
+    "C": "SegmentAbsoluteCN",
     "M": "MinorAlleleAbsoluteCN",
 }
 

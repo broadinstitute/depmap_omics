@@ -212,3 +212,13 @@ workflows:
       branches:
         - dev
         - master
+        - mutation-annotation-eval
+  - name: vcf2maf
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/vcf2maf/vcf2maf.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - qq-vcf2maf-test
