@@ -14,7 +14,7 @@ from .utils import run_wdl, assert_output_dirs_match
 #
 # put all GCS paths as constants at the top here with the suffix "GCS_PATH". If we ever need to go clean up the
 # bucket, it'll be easier if we can grep out all of the paths out of the code.
-SUBSET_VCF_GCS_PATH = "gs://fc-secure-bd7b8bc9-f665-4269-997e-5a402088a369/4b0d5819-84a3-4a55-a23b-cd169cc9caf9/Mutect2/d05388cc-7977-4191-80ac-8656a7d451f0/call-Filter/CDS-00Nrci.wgs_ccle-filtered.vcf.gz"
+SUBSET_VCF_GCS_PATH = "gs://cds-wdl-debug/test.vcf"
 VCS_TO_DEPMAP_EXPECTED_GCS_PATH = (
     "gs://depmapomics-testdata/outputs/230713/test_oc_cosmic/expected"
 )
