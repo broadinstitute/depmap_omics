@@ -70,7 +70,7 @@ task opencravat {
             --mp ${num_threads} \
             ${"--module-option "+modules_options} \
             -d out \
-            -a hess_drivers cosmic_sig
+            -a cosmic_sig
     }
 
     output {
