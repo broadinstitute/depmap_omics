@@ -1,7 +1,5 @@
 import sys
 from cravat import BaseAnnotator
-from cravat import InvalidData
-import sqlite3
 import os
 
 
@@ -25,6 +23,8 @@ class CravatAnnotator(BaseAnnotator):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         datafile_path = os.path.join(dir_path, "data", "cosmic.csv")
         self.cosmic = pd.read_csv(datafile_path)
+        self.cosmic["alt"] = self.cosmic["alt"].fillna("")
+        self.cosmic["MUTATION_SIGNIFICANCE_TIER"] = self.cosmic["MUTATION_SIGNIFICANCE_TIER"].astype(str)
         self.cosmicset = {
             val["chrom"]
             + ":"
@@ -68,7 +68,7 @@ class CravatAnnotator(BaseAnnotator):
 
         key = str(chrom) + ":" + str(pos) + ":" + alt
         if key in self.cosmicset:
-            print("found cosmic:" + key)
+            print("found cosmic significance:" + key)
             out["cosmic_tier"] = self.cosmicset[key]
         return out
 
