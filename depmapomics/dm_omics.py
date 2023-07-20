@@ -803,7 +803,6 @@ async def mutationPostProcessing(
     mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
         symbol_to_entrez_dict
     )
-    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
     mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
@@ -837,7 +836,6 @@ async def mutationPostProcessing(
             merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
 
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
-    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("Unknown")
     merged = merged.drop(columns=["achilles_top_genes"])
     merged = merged.rename(columns=mutcol)
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
