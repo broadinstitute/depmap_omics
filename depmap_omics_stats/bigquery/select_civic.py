@@ -47,13 +47,16 @@ def filter_fields_query(fields=['PASS', 'multiallelic', 'af', 'dp', 'is_coding',
         print(field,cutoff)
         if field in ['multiallelic', 'germline', 'pon']:
             df = job_query_to_dataframe(f"""SELECT COUNTIF({field}!='{cutoff}') AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
+            dfs.append([f"{field}!={cutoff}", df.values[0][0]])
         elif isinstance(cutoff, str):
             df = job_query_to_dataframe(f"""SELECT COUNTIF({field}='{cutoff}') AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
+            dfs.append([f"{field}={cutoff}", df.values[0][0]])
         elif field == 'popaf':
-            df = job_query_to_dataframe(f"""SELECT COUNTIF(SAFE_CAST(SPLIT({field}, ',')[ORDINAL(1)] AS NUMERIC) < {cutoff}) AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
+            df = job_query_to_dataframe(f"""SELECT COUNTIF(SAFE_CAST(SPLIT({field}, ',')[ORDINAL(1)] AS NUMERIC) <= {cutoff}) AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
+            dfs.append([f"{field}<={cutoff}", df.values[0][0]])
         else:
             df = job_query_to_dataframe(f"""SELECT COUNTIF(SAFE_CAST(SPLIT({field}, ',')[ORDINAL(1)] AS NUMERIC) >= {cutoff}) AS {field} FROM `depmap-omics.maf_staging.merged_maf` {group_sql}""")
-        dfs.append([f"{field}:{cutoff}", df.values[0][0]])
+            dfs.append([f"{field}>={cutoff}", df.values[0][0]])
     return dfs
 
 
@@ -132,10 +135,9 @@ def main():
     df_filter.loc[:, 'ratio'] = df_filter.iloc[:, 1] / df_all.row_count.values[0]
     df_whitelist.loc[:, 'ratio'] = df_whitelist.iloc[:, 1] / df_all.row_count.values[0]
 
-    fig, ax = plt.subplots(2, 1, figsize=(8, 8))
-    for index, data in zip(range(2), [df_filter, df_whitelist]):
+    fig, ax = plt.subplots(3, 1, figsize=(8, 12))
+    for index, data in zip(range(3), [df_filter.loc[df_filter.iloc[:, 0].str.contains('!'), :], df_filter.loc[~df_filter.iloc[:, 0].str.contains('!'), :], df_whitelist]):
         sns.barplot(x='metric', y='count', data=data, capsize=0.2, ax=ax[index])
-        
         # show the mean
         for p,t in zip(ax[index].patches, data.ratio.values):
             h, w, x = p.get_height(), p.get_width(), p.get_x()
