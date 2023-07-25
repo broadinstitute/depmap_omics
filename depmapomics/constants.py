@@ -66,6 +66,42 @@ BAMQC = [
     "tumor_bam_quality_yield_metrics",
 ]
 
+STR_BED = "data/str_hg38.bed"
+STR_COLNAME = "str"
+STR_METHOD = "hipstr"
+
+STR_LOCI_14 = [
+    "CSF1PO",
+    "D13S317",
+    "D16S539",
+    "D18S51",
+    "D21S11",
+    "D3S1358",
+    "D5S818",
+    "D7S820",
+    "D8S1179",
+    "FGA",
+    "PentaD",
+    "PentaE",
+    "TH01",
+    "TPOX",
+]
+STR_LOCI_13 = [
+    "CSF1PO",
+    "D13S317",
+    "D16S539",
+    "D18S51",
+    "D3S1358",
+    "D5S818",
+    "D7S820",
+    "D8S1179",
+    "FGA",
+    "PentaD",
+    "PentaE",
+    "TH01",
+    "TPOX",
+]
+
 VCFDIR = "/tmp/vcfs/"
 
 GUIDESBED = {
