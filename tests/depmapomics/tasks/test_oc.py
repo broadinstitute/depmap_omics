@@ -16,17 +16,25 @@ from .utils import run_wdl, assert_output_dirs_match
 # bucket, it'll be easier if we can grep out all of the paths out of the code.
 SUBSET_VCF_GCS_PATH = "gs://cds-wdl-debug/test1.vcf"
 VCS_TO_DEPMAP_EXPECTED_GCS_PATH = (
-    "gs://depmapomics-testdata/outputs/230713/test_oc_cosmic/expected"
+    "gs://depmapomics-testdata/outputs/230713/test_oc_oncokb/expected"
 )
 
 
-def test_oc_cosmic(tmpdir):
+# def test_oc_cosmic(tmpdir):
+#     run_wdl(
+#         tmpdir,
+#         "WGS_pipeline/opencravat_cosmic.wdl",
+#         {"vcf": SUBSET_VCF_GCS_PATH},
+#         "test_oc_cosmic/latest",
+#     )
+
+
+def test_oc_oncokb(tmpdir):
     run_wdl(
         tmpdir,
-        "WGS_pipeline/opencravat_cosmic.wdl",
+        "WGS_pipeline/opencravat_oncokb.wdl",
         {"vcf": SUBSET_VCF_GCS_PATH},
-        "test_oc_cosmic/latest",
-        
+        "test_oc_oncokb/latest",
     )
 
     # assert_output_dirs_match(
