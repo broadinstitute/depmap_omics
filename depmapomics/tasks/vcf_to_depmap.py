@@ -60,7 +60,7 @@ def main(args=None):
     tumor_suppressor_list = h.fileToList(
         loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
     )
-    civic_df = pd.read_csv(loc + "/civic.csv").drop(
+    civic_df = pd.read_csv(loc + "/civic_export_09212022.csv").drop(
         columns=["chromosome_37", "start_37"]
     )
 
