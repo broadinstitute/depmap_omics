@@ -28,6 +28,7 @@ task opencravat {
         File? oc_modules # a tar ball of the entie oc module folder (must start with the module folder in the path)
         String format = "vcf"
         File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier123.csv"
+        File oncokb_annotation = "gs://cds-oncokb-data/OncoKB_Annotated_Final_2023-07-25_05-44-42.csv"
         Array[String] annotators_to_use = []
         #Int stripfolder = 0 
         String genome = "hg38"
@@ -57,12 +58,17 @@ task opencravat {
 
         oc new annotator cosmic_sig
 
+        oc new annotator oncokb
+
         git clone https://github.com/broadinstitute/depmap_omics.git
         cd depmap_omics && git checkout add-cosmic-to-oc && git pull && cd ..
         cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
         
         mkdir depmap_omics/WGS_pipeline/cosmic_sig/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic_sig/data/cosmic.csv
         cp -r depmap_omics/WGS_pipeline/cosmic_sig /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
+
+        mkdir depmap_omics/WGS_pipeline/oncokb/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/oncokb/data/oncokb.csv
+        cp -r depmap_omics/WGS_pipeline/oncokb /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
 
         pip install bgzip pytabix scipy
         
@@ -96,7 +102,7 @@ with open(sys.argv[1],'rb') as f:
             --mp ${num_threads} \
             ${"--module-option "+modules_options} \
             -d out \
-            -a hess_drivers cosmic_sig ~{sep=" " annotators_to_use}
+            -a hess_drivers cosmic_sig oncokb ~{sep=" " annotators_to_use}
     
         python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf, '.vcf.gz')}.${format}.gz
     }

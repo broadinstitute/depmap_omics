@@ -1,0 +1,49 @@
+datasource: 11.29.21
+description:
+  OncoKB
+developer:
+  name: "Broad Institute"
+  organization: "Memorial Sloan Cancer Center"
+  email: "xiaomeng@broadinstitute.org"
+  website: "https://www.cancerdatascience.org/"
+  citation:
+    ''
+
+level: variant
+input_format: crx
+output_columns:
+  - name: protein_change
+    title: Protein Change
+    type: string
+    width: 50
+    hidden: false
+    desc: protein change according to oncoKB
+    category: single
+  - name: oncogenic
+    title: Oncogenic
+    type: string
+    width: 50
+    hidden: false
+    desc: oncogenic status according to oncoKB
+    category: single
+  - name: mutation_effect
+    title: Mutation Effect
+    type: string
+    width: 50
+    hidden: false
+    desc: mutation effect according to oncoKB
+    category: single
+  - name: hotspot
+    title: Hotspot
+    type: string
+    width: 50
+    hidden: false
+    desc: Hotspot status according to oncoKB
+    category: single
+
+title: OncoKB
+version: 1.0.1
+type: annotator
+requires_opencravat: ">=2.2.7"
+tags:
+  - cancer
