@@ -1,0 +1,28 @@
+datasource: 11.29.21
+description:
+  Cosmic actionability
+developer:
+  name: "Broad Institute"
+  organization: "Memorial Sloan Cancer Center"
+  email: "xiaomeng@broadinstitute.org"
+  website: "https://www.cancerdatascience.org/"
+  citation:
+    ''
+
+level: variant
+input_format: crx
+output_columns:
+  - name: cosmic_tier
+    title: COSMIC Tier
+    type: string
+    width: 50
+    hidden: false
+    desc: cosmic tier
+    category: single
+
+title: Cosmic
+version: 1.0.1
+type: annotator
+requires_opencravat: ">=2.2.7"
+tags:
+  - cancer
