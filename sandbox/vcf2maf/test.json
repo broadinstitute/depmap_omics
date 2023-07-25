@@ -1,4 +1,0 @@
-{
-    "run_vcf2maf.input_vcf": "test.vcf",
-    "run_vcf2maf.sample_id": "test"
-}
