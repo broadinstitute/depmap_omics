@@ -51,7 +51,7 @@ task opencravat {
         pip install open-cravat --upgrade
         
         # only the new version of opencravat actually works and it is not in this docker
-        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xvf "+oc_modules+" && cd -" else oc_install}
+        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xzvf "+oc_modules+" && cd -" else oc_install}
         
         oc new annotator hess_drivers
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
