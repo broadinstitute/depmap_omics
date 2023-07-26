@@ -61,7 +61,7 @@ task opencravat {
         oc new annotator oncokb
 
         git clone https://github.com/broadinstitute/depmap_omics.git
-        cd depmap_omics && git checkout add-cosmic-to-oc && git pull && cd ..
+        cd depmap_omics && git checkout add-oncokb-to-oc && git pull && cd ..
         cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
         
         mkdir depmap_omics/WGS_pipeline/cosmic_sig/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic_sig/data/cosmic.csv
