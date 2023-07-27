@@ -67,7 +67,7 @@ task opencravat {
         mkdir depmap_omics/WGS_pipeline/cosmic_sig/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic_sig/data/cosmic.csv
         cp -r depmap_omics/WGS_pipeline/cosmic_sig /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
 
-        mkdir depmap_omics/WGS_pipeline/oncokb/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/oncokb/data/oncokb.csv
+        mkdir depmap_omics/WGS_pipeline/oncokb/data && cp ${oncokb_annotation} depmap_omics/WGS_pipeline/oncokb/data/oncokb.csv
         cp -r depmap_omics/WGS_pipeline/oncokb /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
 
         pip install bgzip pytabix scipy
