@@ -116,20 +116,13 @@ TO_RENAME_OC = {
     "oc_gwas_catalog__pmid": "gwas_pmid",
     "oc_ccre_screen___group": "encode_group",
     "oc_ccre_screen__bound": "encode_bound",
-    "oc_cscape__score": "cscape_score",
-    "oc_cscape_coding__score": "cscape_score",
     "oc_brca1_func_assay__score": "brca1_func_score",
-    "oc_dann__score": "dann_score",
-    "oc_dann_coding__dann_coding_score": "dann_score",
     "oc_revel__score": "revel_score",
     "oc_spliceai__ds_ag": "spliceai_ds_ag",
     "oc_spliceai__ds_al": "spliceai_ds_al",
     "oc_spliceai__ds_dg": "spliceai_ds_dg",
     "oc_spliceai__ds_dl": "spliceai_ds_dl",
     "oc_gtex__gtex_gene": "gtex_gene",
-    "oc_funseq2__score": "funseq2_score",
-    "oc_funseq2__motif": "funseq2_motif",
-    "oc_funseq2__hot": "funseq2_hot",
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
 }
@@ -191,10 +184,7 @@ TOKEEP_ADD = {
     "likely_lof": "str",
     "hess_driver": "str",
     "hess_signture": "str",
-    "cscape_score": "str",
-    "dann_score": "str",
     "revel_score": "str",
-    "funseq2_score": "str",
     "pharmgkb_id": "str",
     "dida_id": "str",
     "dida_name": "str",
@@ -222,7 +212,7 @@ def improve(
 
     Args:
     -----
-        revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
+        revel, spliceai, gtex, pharmgkb, dida, gwas_catalog]
         vcf: a df from geney.mutations.vcf_to_df(): the input vcf annotated with opencravat
         force_list: list of elements we know have ',' separated values.
         torename: dict(str: str) renaming dict for columns
@@ -473,21 +463,6 @@ def improve(
         ].index
         vcf.loc[loc, "lof"] = "Y"
 
-    # likely lof in DANN
-    if (
-        "oc_dann__score" in vcf.columns.tolist()
-        or "oc_dann_coding__dann_coding_score" in vcf.columns.tolist()
-    ):
-        name_score = (
-            "oc_dann__score"
-            if "oc_dann__score" in vcf.columns.tolist()
-            else "oc_dann_coding__dann_coding_score"
-        )
-        # http://www.enlis.com/blog/2015/03/17/the-best-variant-prediction-method-that-no-one-is-using/
-        loc = (vcf[name_score] != "") & (vcf["multiallelic"] != "Y")
-        loc = vcf[loc][vcf[loc][name_score].astype(float) >= 0.96].index
-        vcf.loc[loc, "likely_lof"] = "Y"
-
     # lof revel
     if "oc_revel__score" in vcf.columns.tolist():
         # trancript lof
@@ -503,35 +478,6 @@ def improve(
 
         vcf.loc[loc, "transcript_likely_lof"] = trscs
 
-    # additional defining drivers --> TRAINED ON SOMATIC SO DOING NONSENSE
-    # if (
-    #    "oc_cscape__score" in vcf.columns.tolist()
-    #    or "oc_cscape_coding__score" in vcf.columns.tolist()
-    # ):
-    # score_name = (
-    #    "oc_cscape__score"
-    #    if "oc_cscape__score" in vcf.columns.tolist()
-    #    else "oc_cscape_coding__score"
-    # )
-    # if "likely_driver" not in vcf.columns.tolist():
-    #    vcf["likely_driver"] = ""
-    # subvcf = vcf[(vcf[score_name] != "") & (vcf["multiallelic"] != "Y")][
-    #    ["oc_base__coding", score_name]
-    # ]
-    # vcf.loc[
-    #    subvcf[
-    #        (
-    #            (subvcf["oc_base__coding"] != "")
-    #            & (subvcf[score_name].astype(float) >= 0.89)
-    #        )
-    #        | (
-    #            (subvcf["oc_base__coding"] == "")
-    #            & (subvcf[score_name].astype(float) >= 0.80)
-    #        )
-    #    ].index,
-    #    "likely_driver",
-    # ] = "Y"
-
     # generic annotation
     if "oc_spliceai__ds_ag" in vcf.columns.tolist():
         subvcf = vcf[(vcf["oc_spliceai__ds_ag"] != "") & (vcf["multiallelic"] != "Y")]
@@ -546,16 +492,6 @@ def improve(
     loc_e = []
     if "oc_gtex__gtex_gene" in vcf.columns.tolist():
         loc_e += vcf[vcf["oc_gtex__gtex_gene"] != ""].index.tolist()
-
-    if "oc_funseq2__score" in vcf.columns.tolist():
-        loc = (vcf["oc_funseq2__score"] != "") & (vcf["multiallelic"] != "Y")
-        loc_e += vcf[loc][
-            (vcf[loc].oc_funseq2__score.astype(float) >= 0.5)
-            & (
-                (vcf[loc]["oc_funseq2__motif"] != "")
-                | (vcf[loc]["oc_funseq2__hot"] != "")
-            )
-        ].index.tolist()
 
     vcf.loc[list(set(loc_e)), "associated_with"] += "expression;"
 
