@@ -98,9 +98,6 @@ TO_RENAME_OC = {
     "oc_oncokb__hotspot": "hotspot",
     "oc_oncokb__oncogenic": "oncokb_oncogenic",
     ## same
-    "oc_civic__description": "civic_description",
-    "oc_civic__clinical_a_score": "civic_score",
-    "oc_civic__id": "civic_id",
     "oc_pharmgkb__id": "pharmgkb_id",
     "oc_pharmgkb__chemicals": "pharmgkb_chemicals",
     "oc_pharmgkb__pheno_cat": "pharmgkb_pheno_cat",
@@ -125,6 +122,11 @@ TO_RENAME_OC = {
     "oc_gtex__gtex_gene": "gtex_gene",
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
+    "oc_cosmic_sig__cosmic_tier": "cosmic_tier",
+    "oc_oncokb__protein_change": "oncokb_protein_change",
+    "oc_oncokb__oncogenic": "oncokb_oncogenic",
+    "oc_oncokb__mutation_effect": "oncokb_mutation_effect",
+    "oc_oncokb__hotspot": "oncokb_hotspot",
 }
 
 TOKEEP_BASE = {
@@ -288,13 +290,11 @@ def improve(
 
     print("re-annotating CIVIC using static dataframe:")
     vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
-    vcf = vcf.drop(
-        columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]
-    ).rename(
+    vcf = vcf.rename(
         columns={
-            "description": "oc_civic__description",
-            "civic_actionability_score": "oc_civic__clinical_a_score",
-            "civic_id": "oc_civic__id",
+            "description": "civic_description",
+            "civic_actionability_score": "civic_clinical_a_score",
+            "civic_id": "civic_id",
         }
     )
 
