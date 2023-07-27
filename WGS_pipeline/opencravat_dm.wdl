@@ -29,7 +29,7 @@ task opencravat {
         String format = "vcf"
         File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier123.csv"
         File oncokb_annotation = "gs://cds-oncokb-data/OncoKB_Annotated_Final_2023-07-25_05-44-42.csv"
-        Array[String] annotators_to_use = []
+        Array[String] annotators_to_use = ["brca1_func_assay", "provean", "revel", "spliceai", "gtex", "pharmgkb", "dida", "gwas_catalog", "ccre_screen", "alfa"]
         #Int stripfolder = 0 
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
