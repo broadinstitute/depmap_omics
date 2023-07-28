@@ -1,0 +1,23 @@
+{
+ "inputs": {
+  "liftover_workflows.liftover.chain_file": "\"gs://ccle_default_params/nhg38ToHg19.over.chain\"",
+  "liftover_workflows.liftover.disk_space": "",
+  "liftover_workflows.liftover.docker": "",
+  "liftover_workflows.liftover.gatk_loc": "",
+  "liftover_workflows.liftover.input_vcf": "this.cnn_filtered_vcf",
+  "liftover_workflows.liftover.max_records_in_ram": "",
+  "liftover_workflows.liftover.memory": "",
+  "liftover_workflows.liftover.num_preempt": "",
+  "liftover_workflows.liftover.num_threads": "",
+  "liftover_workflows.liftover.ref_dict": "workspace.ref_dict_hg19",
+  "liftover_workflows.liftover.ref_fasta": "workspace.ref_fasta_hg19",
+  "liftover_workflows.liftover.ref_fasta_idx": "workspace.ref_fasta_fai_hg19",
+  "liftover_workflows.liftover.sample_name": "this.name"
+ },
+ "outputs": {
+  "liftover_workflows.liftover.lifted_vcf": "this.cnn_filtered_vcf_hg19",
+  "liftover_workflows.liftover.rejected_mutations_fromliftover": "this.cnn_filtered_vcf_h19_rejected"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

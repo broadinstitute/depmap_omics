@@ -27,12 +27,12 @@ task opencravat {
         File vcf
         File? oc_modules # a tar ball of the entie oc module folder (must start with the module folder in the path)
         String format = "vcf"
-        Array[String] annotators_to_use = []
+        File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier123.csv"
+        File oncokb_annotation = "gs://cds-oncokb-data/OncoKB_Annotated_Final_2023-07-25_05-44-42.csv"
+        Array[String] annotators_to_use = ["brca1_func_assay", "provean", "revel", "spliceai", "gtex", "pharmgkb", "dida", "gwas_catalog", "ccre_screen", "alfa"]
         #Int stripfolder = 0 
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
-        # see https://github.com/rkimoakbioinformatics/oak-cravat-modules/tree/master/annotators/oncokb
-        File? oncokb_api_key
 
         Int memory = 16
         Int boot_disk_size = 100
@@ -51,20 +51,25 @@ task opencravat {
         pip install open-cravat --upgrade
         
         # only the new version of opencravat actually works and it is not in this docker
-        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xvf "+oc_modules+" && cd -" else oc_install}
-
-        oc new annotator oncokb_dm
-        rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm
+        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xzvf "+oc_modules+" && cd -" else oc_install}
         
         oc new annotator hess_drivers
         rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
 
-        git clone https://github.com/broadinstitute/depmap_omics.git
-        cd depmap_omics && git checkout dev && git pull && cd ..
-        cp -r depmap_omics/WGS_pipeline/oncokb_dm /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
-        cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
+        oc new annotator cosmic_sig
 
-        ${if defined(oncokb_api_key) then "mv "+oncokb_api_key+" /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/oncokb_dm/data/token.txt" else ""}
+        oc new annotator oncokb
+
+        git clone https://github.com/broadinstitute/depmap_omics.git
+        cd depmap_omics && git checkout add-oncokb-to-oc && git pull && cd ..
+        cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
+        
+        mkdir depmap_omics/WGS_pipeline/cosmic_sig/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic_sig/data/cosmic.csv
+        cp -r depmap_omics/WGS_pipeline/cosmic_sig /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
+
+        mkdir depmap_omics/WGS_pipeline/oncokb/data && cp ${oncokb_annotation} depmap_omics/WGS_pipeline/oncokb/data/oncokb.csv
+        cp -r depmap_omics/WGS_pipeline/oncokb /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
+
         pip install bgzip pytabix scipy
         
         echo """
@@ -97,7 +102,7 @@ with open(sys.argv[1],'rb') as f:
             --mp ${num_threads} \
             ${"--module-option "+modules_options} \
             -d out \
-            -a hess_drivers ~{sep=" " annotators_to_use}
+            -a hess_drivers cosmic_sig oncokb ~{sep=" " annotators_to_use}
     
         python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf, '.vcf.gz')}.${format}.gz
     }

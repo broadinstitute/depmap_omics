@@ -1,6 +1,6 @@
-SAMPLESETNAME = "22Q4"
+SAMPLESETNAME = "23Q2"
 
-RELEASE = "22q4"
+RELEASE = "23q2"
 
 WORKING_DIR = "output/"
 
@@ -66,6 +66,42 @@ BAMQC = [
     "tumor_bam_quality_yield_metrics",
 ]
 
+STR_BED = "data/str_hg38.bed"
+STR_COLNAME = "str"
+STR_METHOD = "hipstr"
+
+STR_LOCI_14 = [
+    "CSF1PO",
+    "D13S317",
+    "D16S539",
+    "D18S51",
+    "D21S11",
+    "D3S1358",
+    "D5S818",
+    "D7S820",
+    "D8S1179",
+    "FGA",
+    "PentaD",
+    "PentaE",
+    "TH01",
+    "TPOX",
+]
+STR_LOCI_13 = [
+    "CSF1PO",
+    "D13S317",
+    "D16S539",
+    "D18S51",
+    "D3S1358",
+    "D5S818",
+    "D7S820",
+    "D8S1179",
+    "FGA",
+    "PentaD",
+    "PentaE",
+    "TH01",
+    "TPOX",
+]
+
 VCFDIR = "/tmp/vcfs/"
 
 GUIDESBED = {
@@ -105,7 +141,7 @@ PURECN_COLRENAMING = {
     "chr": "Chromosome",
     "Sampleid": "DepMap_ID",
     "type": "LoHStatus",
-    "C": "MajorAlleleAbsoluteCN",
+    "C": "SegmentAbsoluteCN",
     "M": "MinorAlleleAbsoluteCN",
 }
 
@@ -253,10 +289,7 @@ MUTCOL_DEPMAP = {
     "hess_driver": "HessDriver",
     "hess_signture": "HessSignature",
     "hess_signature": "HessSignature",
-    "cscape_score": "CscapeScore",
-    "dann_score": "DannScore",
     "revel_score": "RevelScore",
-    "funseq2_score": "Funseq2Score",
     "pharmgkb_id": "PharmgkbID",
     "dida_id": "DidaID",
     "dida_name": "DidaName",

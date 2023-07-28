@@ -68,12 +68,17 @@ VIRTUAL_RELEASES = {
         "dmc": taiga_latest_path("dmc-22q4-a73a"),
         "public": taiga_latest_path("public-22q4-6837"),
     },
+    "23Q2": {
+        "internal": taiga_latest_path("internal-23q2-1e49"),
+        "dmc": taiga_latest_path("dmc-23q2-d87c"),
+        "public": taiga_latest_path("public-23q2-19de"),
+    }
 }  # release ids on taiga
 
 PORTALS = ["dmc", "public", "internal"]  # used for 'bookkeeping' markers
 PORTAL = "internal"  # used for 'not bookkeeping' markers
 PREV_QUARTER = "22Q4"
-NEW_QUARTER = "22Q4"
+NEW_QUARTER = "23Q2"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]

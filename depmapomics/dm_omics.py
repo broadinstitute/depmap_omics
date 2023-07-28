@@ -10,7 +10,7 @@ from mgenepy.utils import helper as h
 
 from depmap_omics_upload import tracker as track
 
-# from depmapomics import expressions
+from depmapomics import expressions
 from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
@@ -34,6 +34,7 @@ async def expressionPostProcessing(
     rnaqclocs={},
     starlogs={},
     compute_enrichment=False,
+    billing_proj=constants.GCS_PAYER_PROJECT,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -111,8 +112,10 @@ async def expressionPostProcessing(
         samplesinset=samplesinset,
         starlogs=starlogs,
         dry_run=dry_run,
-        newgs=None,
+        billing_proj=billing_proj,
     )
+
+    pr_table = mytracker.read_pr_table()
 
     # subset and rename, include all PRs that have associated CDS-ids
     pr_table = mytracker.update_pr_from_seq(["rna"])
@@ -124,7 +127,7 @@ async def expressionPostProcessing(
         pr_files[k + "_profile"] = v[v.index.isin(set(renaming_dict.keys()))].rename(
             index=renaming_dict
         )
-    if enrichments != None:
+    if enrichments is not None:
         enrichments = enrichments[
             enrichments.index.isin(set(renaming_dict.keys()))
         ].rename(index=renaming_dict)
@@ -192,11 +195,17 @@ async def expressionPostProcessing(
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
+                {
+                    "path": folder + "rna_qcs/all_qc.csv",
+                    "name": "all_samples_qc",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
             ],
             upload_async=False,
             dataset_description=dataset_description,
         )
-        if enrichments != None:
+        if enrichments is not None:
             tc.update_dataset(
                 changes_description="adding enrichments for new "
                 + samplesetname
@@ -340,6 +349,7 @@ def cnPostProcessing(
     wesfolder="",
     segmentsthresh=constants.SEGMENTSTHR,
     maxYchrom=constants.MAXYCHROM,
+    billing_proj=constants.GCS_PAYER_PROJECT,
     dryrun=False,
     **kwargs,
 ):
@@ -365,8 +375,6 @@ def cnPostProcessing(
     assert len(tracker) != 0, "broken source for sample tracker"
     pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
-
-    mytracker.close_gumbo_client()
 
     save_dir = save_dir + samplesetname + "/"
     # doing wes
@@ -463,6 +471,7 @@ def cnPostProcessing(
             procqc=procqc,
             refworkspace=wgsrefworkspace,
             dry_run=dryrun,
+            billing_proj=billing_proj,
         )
     except:
         print("no wgs for this sampleset")
@@ -471,15 +480,18 @@ def cnPostProcessing(
         track.updateTrackerWGS(
             tracker,
             samplesetname,
-            list(wesfailed),
+            wesfailed,
             datatype=["wes", "wgs"],
-            bamqc=bamqc,
-            procqc=procqc,
-            refworkspace=wesrefworkspace,
             dry_run=dryrun,
+            billing_proj=billing_proj,
         )
     except:
         print("no wes for this sampleset")
+
+    pr_table = mytracker.update_pr_from_seq(["wgs"])
+    pr_table = mytracker.update_pr_from_seq(["wes"])
+
+    mytracker.close_gumbo_client()
 
     wgssegments_pr = (
         wgssegments[wgssegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]
@@ -680,15 +692,15 @@ async def mutationPostProcessing(
     AllSamplesetName: str = "all",
     taiga_description: str = constants.Mutationsreadme,
     taiga_dataset: str = env_config.TAIGA_MUTATION,
-    bed_locations: dict[str, str] = constants.GUIDESBED,
+    bed_locations: dict = constants.GUIDESBED,
     sv_col: str = constants.SV_COLNAME,
     sv_filename: str = constants.SV_FILENAME,
-    mutcol: dict[str, str] = constants.MUTCOL_DEPMAP,
+    mutcol: dict = constants.MUTCOL_DEPMAP,
     mafcol: str = constants.MAF_COL,
     doCleanup: bool = False,
-    run_sv: bool = False,
-    run_guidemat: bool = False,
-    upload_taiga: bool = False,
+    run_sv: bool = True,
+    run_guidemat: bool = True,
+    upload_taiga: bool = True,
     **kwargs,
 ):
     """The full CCLE mutations post processing pipeline (used only by CCLE)
@@ -818,6 +830,12 @@ async def mutationPostProcessing(
     merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
         drop=True
     )
+
+    # For all columns, convert "Y" to True/False
+    for col in merged.columns:
+        if "Y" in merged[col].values:
+            merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
+
     merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
     merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("Unknown")
     merged = merged.drop(columns=["achilles_top_genes"])
@@ -947,9 +965,15 @@ async def mutationPostProcessing(
         }
     )
 
+    # sort by chrom, start, and end columns for IGV import
+    merged["Chromosome"] = merged["Chromosome"].replace({"X": 23, "Y": 24, "M": 25})
+    merged["Chromosome"] = merged["Chromosome"].astype("int")
+    merged = merged.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
+    merged["Chromosome"] = merged["Chromosome"].replace({23: "X", 24: "Y", 25: "M"})
+
     # TODO: add pandera type validation
 
-    merged.to_csv(folder + "somatic_mutations_profile.maf.txt", index=False, sep="\t")
+    merged.to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
     if run_guidemat:
         # generate germline binary matrix
@@ -1020,9 +1044,9 @@ async def mutationPostProcessing(
                     "encoding": "utf-8",
                 },
                 {
-                    "path": folder + "somatic_mutations_profile.maf.txt",
+                    "path": folder + "somatic_mutations_profile.maf.csv",
                     "name": "somaticMutations_profile_maf",
-                    "format": "MAF",
+                    "format": "TableCSV",
                     "encoding": "utf-8",
                 },
                 {
@@ -1032,19 +1056,19 @@ async def mutationPostProcessing(
                     "encoding": "utf-8",
                 },
                 {
-                    "path": folder + "merged_binary_germline_avana.csv",
+                    "path": folder + "binary_germline_avana.csv",
                     "name": "binary_mutation_avana",
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
                 {
-                    "path": folder + "merged_binary_germline_ky.csv",
+                    "path": folder + "binary_germline_ky.csv",
                     "name": "binary_mutation_ky",
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
                 {
-                    "path": folder + "merged_binary_germline_humagne.csv",
+                    "path": folder + "binary_germline_humagne.csv",
                     "name": "binary_mutation_humagne",
                     "format": "TableCSV",
                     "encoding": "utf-8",
