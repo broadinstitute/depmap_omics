@@ -1,0 +1,17 @@
+{
+ "inputs": {
+  "aggregate_vcfs.aggregate.disk_space": "",
+  "aggregate_vcfs.aggregate.memory": "",
+  "aggregate_vcfs.aggregate.num_preempt": "",
+  "aggregate_vcfs.aggregate.num_threads": "",
+  "aggregate_vcfs.aggregate.option": "",
+  "aggregate_vcfs.aggregate.sample_set_id": "",
+  "aggregate_vcfs.aggregate.vcf_files": "",
+  "aggregate_vcfs.aggregate.vcf_indexes": ""
+ },
+ "outputs": {
+  "aggregate_vcfs.aggregate.merged_vcf": ""
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample_set"
+}

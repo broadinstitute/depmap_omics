@@ -1,0 +1,16 @@
+{
+ "inputs": {
+  "run_manta_annotator.manta_annotator.cores": "6",
+  "run_manta_annotator.manta_annotator.disk_size": "40",
+  "run_manta_annotator.manta_annotator.docker_image": "",
+  "run_manta_annotator.manta_annotator.mem_size": "12",
+  "run_manta_annotator.sv": "this.somatic_sv_vcf"
+ },
+ "outputs": {
+  "run_manta_annotator.dropped": "this.sv_dropped",
+  "run_manta_annotator.filtered_annotated_sv": "this.filtered_annotated_sv",
+  "run_manta_annotator.somatic_annotated_sv": "this.somatic_annotated_sv"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

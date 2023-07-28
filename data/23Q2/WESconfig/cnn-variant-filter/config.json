@@ -1,0 +1,32 @@
+{
+ "inputs": {
+  "Cram2FilteredVcf.CNNScoreVariants.default_disk_space_gb": "",
+  "Cram2FilteredVcf.CNNScoreVariants.default_ram_mb": "",
+  "Cram2FilteredVcf.calling_intervals": "workspace.ice_xy_intervals_no_pad",
+  "Cram2FilteredVcf.extra_args": "\"\"",
+  "Cram2FilteredVcf.gatk_docker": "\"broadinstitute/gatk:4.2.0.0\"",
+  "Cram2FilteredVcf.increase_disk_size": "",
+  "Cram2FilteredVcf.indel_tranches": "\"--indel-tranche 99.4 --indel-tranche 99.4 --indel-tranche 99.4 --indel-tranche 99.4\"",
+  "Cram2FilteredVcf.inference_batch_size": "64",
+  "Cram2FilteredVcf.info_key": "\"CNN_2D\"",
+  "Cram2FilteredVcf.input_file": "this.internal_bam_filepath",
+  "Cram2FilteredVcf.input_file_index": "this.internal_bai_filepath",
+  "Cram2FilteredVcf.output_prefix": "this.sample_id",
+  "Cram2FilteredVcf.preemptible_attempts": "2",
+  "Cram2FilteredVcf.reference_dict": "workspace.ref_dict",
+  "Cram2FilteredVcf.reference_fasta": "workspace.ref_fasta",
+  "Cram2FilteredVcf.reference_fasta_index": "workspace.ref_fasta_fai",
+  "Cram2FilteredVcf.resource_fofn": "workspace.knowns_vcfs",
+  "Cram2FilteredVcf.resource_fofn_index": "workspace.knowns_vcfs_idx",
+  "Cram2FilteredVcf.scatter_count": "10",
+  "Cram2FilteredVcf.snp_tranches": "\"--snp-tranche 99.95 --snp-tranche 99.95 --snp-tranche 99.95 --snp-tranche 99.95\"",
+  "Cram2FilteredVcf.tensor_type": "\"read_tensor\"",
+  "Cram2FilteredVcf.transfer_batch_size": "64"
+ },
+ "outputs": {
+  "Cram2FilteredVcf.cnn_filtered_vcf": "this.cnn_filtered_vcf",
+  "Cram2FilteredVcf.cnn_filtered_vcf_index": "this.cnn_filtered_vcf_index"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

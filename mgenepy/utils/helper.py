@@ -2,6 +2,8 @@ import json
 import subprocess
 import os
 import pandas as pd
+import random
+import string
 from biomart import BiomartServer
 import io
 
@@ -87,6 +89,10 @@ def generateGeneNames(
 
 
 def _fetchFromServer(ensemble_server, attributes):
+    # deferring the import until last possible moment because it's unclear
+    # to me whether we are actually fetching data from biomart. (I don't think we should)
+    from biomart import BiomartServer
+
     server = BiomartServer(ensemble_server)
     ensmbl = server.datasets["hsapiens_gene_ensembl"]
     res = pd.read_csv(
@@ -180,3 +186,28 @@ def parrun(cmds, cores, add=[]):
                 addexe = ""
             fullres.append(res.stdout.decode("utf-8"))
     return fullres
+
+
+def randomString(stringLength=6, stype="all", withdigits=True):
+    """
+    Generate a random string of letters and digits
+
+    Args:
+    -----
+      stringLength: the amount of char
+      stype: one of lowercase, uppercase, all
+      withdigits: digits allowed in the string?
+
+    Returns:
+    -------
+      the string
+    """
+    if stype == "lowercase":
+        lettersAndDigits = string.ascii_lowercase
+    elif stype == "uppercase":
+        lettersAndDigits = string.ascii_uppercase
+    else:
+        lettersAndDigits = string.ascii_letters
+    if withdigits:
+        lettersAndDigits += string.digits
+    return "".join(random.choice(lettersAndDigits) for i in range(stringLength))

@@ -4,7 +4,7 @@ from mgenepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
-from genepy.epigenetics import chipseq as chip
+from mgenepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
@@ -42,7 +42,7 @@ def annotateLikelyImmortalized(
     )
     leng = len(set(maf[sample_col]))
     maf[
-        (maf[hotspotcol] != "Y")
+        (maf[hotspotcol] != True)
         & (
             maf["combined_mut"].isin(
                 [
@@ -104,7 +104,7 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[subset_maf[hess_col] == "Y"]
+        hotspot = subset_maf[subset_maf[hess_col] == True]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
@@ -114,7 +114,7 @@ def makeMatrices(
         hotspot_mat.loc[sample, list(hethotspot)] = "1"
         # damaging
         lof = subset_maf[
-            (subset_maf[lof_col] == "Y") | (subset_maf[ccle_deleterious_col] == "Y")
+            (subset_maf[lof_col] == True) | (subset_maf[ccle_deleterious_col] == True)
         ]
         homlof = set(lof[lof["GT"] == "1|1"][hugo_col])
         for dup in h.dups(lof[hugo_col]):
@@ -126,7 +126,7 @@ def makeMatrices(
         # driver
         driver = subset_maf[
             ((~subset_maf[civic_col].isnull()) & (subset_maf[civic_col] != 0))
-            | (subset_maf[hess_col] == "Y")
+            | (subset_maf[hess_col] == True)
         ]
         homdriv = set(driver[driver["GT"] == "1|1"][hugo_col])
         for dup in h.dups(driver[hugo_col]):
@@ -188,7 +188,7 @@ def aggregateMAFs(
     sampleset="all",
     mafcol=constants.MAF_COL,
     keep_cols=constants.MUTCOL_DEPMAP,
-    debug=False
+    debug=False,
 ):
     """Aggregate MAF files from terra
 

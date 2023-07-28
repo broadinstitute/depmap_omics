@@ -64,14 +64,12 @@ def cleanup_uris(uris):
         result.extend([x.strip() for x in uri.split(",")])
     return list(set(result))
 
-
 @dataclass
 class Failure:
     transfer: Transfer
     exception: str
     query: str
     
-
 @dataclass
 class Success:
     transfer: Transfer

@@ -7,10 +7,8 @@ import numpy as np
 from scipy.stats import zscore
 
 from mgenepy.utils import helper as h
-from mgenepy import rna, terra
+from mgenepy import rna
 from depmapomics.qc import rna as myQC
-
-
 
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
@@ -23,7 +21,8 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         main_filename: a dict like file paths in Terra gs://, outputs from rsem aggregate
     """
     genes_count = pd.read_csv(
-        constants.WORKING_DIR + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        constants.WORKING_DIR
+        + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         compression="gzip",
     )
@@ -41,10 +40,12 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
     for input_filename in input_filenames:
         name = input_filename["rsem_genes"].split("/")[-1].split(".")[0].split("_")[-1]
         rsem_genes = pd.read_csv(
-            constants.WORKING_DIR + input_filename["rsem_genes"].split("/")[-1], sep="\t"
+            constants.WORKING_DIR + input_filename["rsem_genes"].split("/")[-1],
+            sep="\t",
         )
         rsem_transcripts = pd.read_csv(
-            constants.WORKING_DIR + input_filename["rsem_isoforms"].split("/")[-1], sep="\t"
+            constants.WORKING_DIR + input_filename["rsem_isoforms"].split("/")[-1],
+            sep="\t",
         )
         genes_count[name] = pd.Series(
             rsem_genes["expected_count"], index=rsem_genes.index
@@ -55,7 +56,8 @@ def addSamplesRSEMToMain(input_filenames, main_filename):
         genes_tpm[name] = pd.Series(rsem_genes["TPM"], index=rsem_genes.index)
 
     genes_count.to_csv(
-        constants.WORKING_DIR + main_filename["rsem_genes_expected_count"].split("/")[-1],
+        constants.WORKING_DIR
+        + main_filename["rsem_genes_expected_count"].split("/")[-1],
         sep="\t",
         index=False,
         index_label=False,
@@ -171,7 +173,11 @@ def loadFromRSEMaggregate(
 
 
 def subsetGenes(
-    files, gene_rename, filenames=constants.RSEM_TRANSCRIPTS, drop=[], index_id="transcript_id"
+    files,
+    gene_rename,
+    filenames=constants.RSEM_TRANSCRIPTS,
+    drop=[],
+    index_id="transcript_id",
 ):
     """
     Subset the rsem transcripts file to keep only the genes of interest
@@ -420,9 +426,9 @@ async def postProcess(
     if not samplesetToLoad:
         samplesetToLoad = samplesetname
     refwm = dm.WorkspaceManager(refworkspace)
-    if save_output:
-        terra.saveWorkspace(refworkspace, save_output + "terra/")
-    print("load QC and generate QC report")
+    # if save_output:
+    #     terra.saveWorkspace(refworkspace, save_output + "terra/")
+
     samplesinset = [
         i["entityName"]
         for i in refwm.get_entities("sample_set").loc[samplesetname].samples
@@ -438,12 +444,16 @@ async def postProcess(
             else:
                 print(val + " not in the workspace's data")
 
+    print("load QC and generate QC report")
     _, lowqual, failed = myQC.plot_rnaseqc_results(
         refworkspace,
         samplesinset,
         save=bool(save_output),
         output_path=save_output + "rna_qcs/",
     )
+
+    all_qc_df = myQC.export_qc(refworkspace, selected_samples=[]).transpose()
+    all_qc_df.to_csv(save_output + "rna_qcs/all_qc.csv")
 
     failed = failed.index.tolist()
     print("those samples completely failed qc: ", failed)

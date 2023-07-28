@@ -1,0 +1,6 @@
+,name,namespace,rootEntityType,methodName,methodVersion,methodNamespace,methodUri,sourceRepo
+0,fingerprint_bam_hg38,broad-firecloud-ccle,sample,fingerprint_bam,10,colganwi,agora://colganwi/fingerprint_bam/10,agora
+1,fingerprint_cram_hg38,broad-firecloud-ccle,sample,fingerprint_bam,10,colganwi,agora://colganwi/fingerprint_bam/10,agora
+2,crosscheck_vcfs,colganwi,sample_batch_pair,crosscheck_vcfs,15,colganwi,agora://colganwi/crosscheck_vcfs/15,agora
+3,fingerprint_bam,colganwi,sample,fingerprint_bam,10,colganwi,agora://colganwi/fingerprint_bam/10,agora
+4,fingerprint_bam_with_liftover,colganwi,sample,fingerprint_bam_with_liftover,7,colganwi,agora://colganwi/fingerprint_bam_with_liftover/7,agora

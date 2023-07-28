@@ -168,8 +168,6 @@ def postProcess(
         (pd.df): filtered fusion dataframe
     """
     refwm = dm.WorkspaceManager(refworkspace)
-    if save_output:
-        terra.saveWorkspace(refworkspace, save_output + "config/")
 
     print("loading fusions")
     aggregated = refwm.get_sample_sets().loc[samplesetToLoad]["fusions_star"]
