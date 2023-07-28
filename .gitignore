@@ -210,3 +210,6 @@ ccle_tasks/output/*
 .biomart.csv
 *.orig
 gcs_cache
+*maf
+*vcf
+*BamMetrics
