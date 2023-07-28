@@ -43,7 +43,7 @@ task vcf_to_depmap {
     }
 
     command {
-        python /install/depmapomics/tasks/vcf_to_depmap.py \
+        python -u /install/depmapomics/tasks/vcf_to_depmap.py \
               ~{input_vcf} \
               ~{sample_id} \
               --n_rows ~{n_rows} \

@@ -209,4 +209,8 @@ ccle_tasks/output/*
 ccle_tasks/output/*
 .biomart.csv
 *.orig
+gcs_cache
+*maf
+*vcf
+*BamMetrics
 modules/
