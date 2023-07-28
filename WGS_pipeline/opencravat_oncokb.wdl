@@ -14,10 +14,7 @@ workflow run_opencravat {
             vcf=vcf
     }
     output {
-        File oc_error_file=opencravat.oc_error_file
-        File oc_log_file=opencravat.oc_log_file
-        #File oc_sql_file=opencravat.oc_sql_file
-        File oc_main_file=opencravat.oc_main_file
+        File vcf_out=opencravat.vcf_out
     }
 }
 
@@ -27,9 +24,8 @@ task opencravat {
         File vcf
         File? oc_modules # a tar ball of the entie oc module folder (must start with the module folder in the path)
         String format = "vcf"
-        File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier123.csv"
         File oncokb_annotation = "gs://cds-oncokb-data/OncoKB_Annotated_Final_2023-07-25_05-44-42.csv"
-        Array[String] annotators_to_use = ["brca1_func_assay", "provean", "revel", "spliceai", "gtex", "pharmgkb", "dida", "gwas_catalog", "ccre_screen", "alfa"]
+        Array[String] annotators_to_use = []
         #Int stripfolder = 0 
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
@@ -40,7 +36,7 @@ task opencravat {
         Int disk_space = 20
         Int num_threads = 4
         Int num_preempt = 2
-        String docker = "karchinlab/opencravat"
+        String docker = "karchinlab/opencravat:2.2.6"
     }
     String oc_install = "oc module install-base && oc module install -y vcfreporter hg19 cscape_coding civic brca1_func_assay sift provean dann_coding revel spliceai gtex funseq2 pharmgkb dida gwas_catalog mavedb alfa ccre_screen"
     
@@ -49,69 +45,36 @@ task opencravat {
         
         # only the new version of opencravat actually works and it is not in this docker
         pip install open-cravat --upgrade
-        
-        # only the new version of opencravat actually works and it is not in this docker
-        ${if defined(oc_modules) then "cd /usr/local/lib/python3.6/site-packages/cravat/ && tar -xzvf "+oc_modules+" && cd -" else oc_install}
+
+        mkdir /usr/local/lib/python3.6/site-packages/cravat/modules/
+        mkdir /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
         
         oc new annotator hess_drivers
-        rm -r /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/hess_drivers
 
-        oc new annotator cosmic_sig
+        oc new annotator opencravat
 
-        oc new annotator oncokb
+        oc module install -y hg38 cravat-converter vcf-converter tagsampler varmeta vcfinfo casecontrol vcfreporter
 
         git clone https://github.com/broadinstitute/depmap_omics.git
         cd depmap_omics && git checkout add-oncokb-to-oc && git pull && cd ..
         cp -r depmap_omics/WGS_pipeline/hess_drivers /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/
         
-        mkdir depmap_omics/WGS_pipeline/cosmic_sig/data && cp ${cosmic_annotation} depmap_omics/WGS_pipeline/cosmic_sig/data/cosmic.csv
-        cp -r depmap_omics/WGS_pipeline/cosmic_sig /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
-
         mkdir depmap_omics/WGS_pipeline/oncokb/data && cp ${oncokb_annotation} depmap_omics/WGS_pipeline/oncokb/data/oncokb.csv
         cp -r depmap_omics/WGS_pipeline/oncokb /usr/local/lib/python3.6/site-packages/cravat/modules/annotators/ 
 
         pip install bgzip pytabix scipy
-        
-        echo """
-import re
-import sys
-import gzip
-import shutil
-print(sys.argv)
-
-done=False
-with open(sys.argv[1],'rb') as f:
-    with gzip.open(sys.argv[2],'wb') as fout:
-        for i, line in enumerate(f):
-            original_string = line.decode('utf-8')
-            if original_string[0] == '#':
-                if original_string.startswith('##INFO=<ID=OC_provean__prediction'):
-                    original_string = original_string.replace('\"D(amaging)\"', 'D(amaging)').replace('\"N(eutral)\"', 'N(eutral)')
-                    done = True
-                fout.write(original_string.encode())
-            else:
-                done = True
-            if done:
-                break
-        shutil.copyfileobj(f, fout)
-""" > fix_name.py
 
         oc run ${vcf} \
-            -l ${genome} \
+            -l hg38 \
             -t ${format} \
             --mp ${num_threads} \
             ${"--module-option "+modules_options} \
             -d out \
-            -a hess_drivers cosmic_sig oncokb ~{sep=" " annotators_to_use}
-    
-        python fix_name.py out/${basename(vcf)}.${format} out/${basename(vcf, '.vcf.gz')}.${format}.gz
+            -a oncokb
     }
 
     output {
-        File oc_error_file="out/${basename(vcf)}.err"
-        File oc_log_file="out/${basename(vcf)}.log"
-        #File oc_sql_file="out/${basename(vcf)}.sqlite"
-        File oc_main_file="out/${basename(vcf, '.vcf.gz')}.${format}.gz"
+        File vcf_out = "out/${basename(vcf)}.${format}"
     }
 
     runtime {
@@ -125,6 +88,6 @@ with open(sys.argv[1],'rb') as f:
     }
 
     meta {
-        author: "Jeremie Kalfon"
+        author: "Simone Zhang"
     }
 }
