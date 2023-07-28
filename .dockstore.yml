@@ -202,6 +202,7 @@ workflows:
       branches:
         - dev
         - master
+        - add-cosmic-to-oc
   - name: vcf_to_depmap
     subclass: WDL
     publish: True
@@ -213,3 +214,12 @@ workflows:
         - dev
         - master
         - mutation-annotation-eval
+  - name: vcf2maf
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/vcf2maf/vcf2maf.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - qq-vcf2maf-test
