@@ -1,6 +1,3 @@
-import re
-
-import numpy as np
 import pandas as pd
 import pytest
 from depmapomics.qc.config import (
@@ -11,10 +8,10 @@ from depmapomics.qc.config import (
     PORTALS,
 )
 from depmapomics.qc.test_compare_to_ref_release import get_both_release_lists_from_taiga
-from gsheets.api import Sheets
 from taigapy import TaigaClient
 
 tc = TaigaClient()
+
 
 ####### FIXTURES ####
 def tsv2csv(df):
@@ -25,6 +22,7 @@ def tsv2csv(df):
 
 @pytest.fixture(scope="module")
 def arxspans(request):
+    print(request.param)
     return get_both_release_lists_from_taiga(request.param)
 
 

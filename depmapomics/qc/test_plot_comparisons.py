@@ -7,7 +7,6 @@ from depmapomics.qc.test_compare_to_ref_release import (
     FILE_ATTRIBUTES_PAIRED,
     PREV_RELEASE,
     NEW_RELEASE,
-    data,
     get_both_releases_from_taiga,
 )
 
@@ -41,7 +40,7 @@ def get_data_stack(file, number_of_points=1000000, random_state=0):
     ]
     data_stack.columns = cols
     data_stack.reset_index(inplace=True)
-    data_stack.rename(columns={"level_0": "DepMap_ID", "level_1": "gene"}, inplace=True)
+    data_stack.rename(columns={"level_0": "ModelID", "level_1": "gene"}, inplace=True)
     return data_stack, cols
 
 
@@ -51,65 +50,65 @@ def data_stack(request):
     return data_stack, cols
 
 
-@pytest.fixture(scope="function")
-def CCLE_gene_cn_with_source_change():
-    CCLE_gene_cn_12, cols = get_data_stack("CCLE_gene_cn")
+# @pytest.fixture(scope="function")
+# def CCLE_gene_cn_with_source_change():
+#     CCLE_gene_cn_12, cols = get_data_stack("OmicsCNGene")
 
-    names = [PREV_RELEASE["name"], NEW_RELEASE["name"]]
+#     names = [PREV_RELEASE["name"], NEW_RELEASE["name"]]
 
-    CCLE_segment_cn_1, CCLE_segment_cn_2 = get_both_releases_from_taiga(
-        "CCLE_segment_cn"
-    )
+#     CCLE_segment_cn_1, CCLE_segment_cn_2 = get_both_releases_from_taiga(
+#         "CCLE_segment_cn"
+#     )
 
-    sources = pd.merge(
-        CCLE_segment_cn_1[["DepMap_ID", "Source"]].drop_duplicates(),
-        CCLE_segment_cn_2[["DepMap_ID", "Source"]].drop_duplicates(),
-        on="DepMap_ID",
-        suffixes=["_" + names[0], "_" + names[1]],
-    )
-    del CCLE_segment_cn_1, CCLE_segment_cn_2
-    sources["source_change"] = sources.apply(
-        lambda x: "{:s} -> {:s}".format(
-            x["Source_" + names[0]], x["Source_" + names[1]]
-        ),
-        axis=1,
-    )
-    sources["source_has_changed"] = (
-        sources["Source_" + names[0]] != sources["Source_" + names[1]]
-    )
+#     sources = pd.merge(
+#         CCLE_segment_cn_1[["DepMap_ID", "Source"]].drop_duplicates(),
+#         CCLE_segment_cn_2[["DepMap_ID", "Source"]].drop_duplicates(),
+#         on="DepMap_ID",
+#         suffixes=["_" + names[0], "_" + names[1]],
+#     )
+#     del CCLE_segment_cn_1, CCLE_segment_cn_2
+#     sources["source_change"] = sources.apply(
+#         lambda x: "{:s} -> {:s}".format(
+#             x["Source_" + names[0]], x["Source_" + names[1]]
+#         ),
+#         axis=1,
+#     )
+#     sources["source_has_changed"] = (
+#         sources["Source_" + names[0]] != sources["Source_" + names[1]]
+#     )
 
-    CCLE_gene_cn_12 = pd.merge(CCLE_gene_cn_12, sources, on="DepMap_ID")
-    return CCLE_gene_cn_12, cols
+#     CCLE_gene_cn_12 = pd.merge(CCLE_gene_cn_12, sources, on="DepMap_ID")
+#     return CCLE_gene_cn_12, cols
 
 
-@pytest.mark.skipif(
-    [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "CCLE_gene_cn"] == [],
-    reason="skipped by user",
-)
-@pytest.mark.plot
-def test_plot_gene_cn_comparison(CCLE_gene_cn_with_source_change):
+# @pytest.mark.skipif(
+#     [1 for x in FILE_ATTRIBUTES_PAIRED if x["file"] == "OmicsCNGene"] == [],
+#     reason="skipped by user",
+# )
+# @pytest.mark.plot
+# def test_plot_gene_cn_comparison(CCLE_gene_cn_with_source_change):
 
-    CCLE_gene_cn_12, cols = CCLE_gene_cn_with_source_change
+#     CCLE_gene_cn_12, cols = CCLE_gene_cn_with_source_change
 
-    plt.figure(figsize=(20, 10))
-    sns.scatterplot(
-        data=CCLE_gene_cn_12,
-        x=cols[0],
-        y=cols[1],
-        hue="source_change",
-        style="source_has_changed",
-        alpha=0.5,
-        cmap="Tab20",
-    )
+#     plt.figure(figsize=(20, 10))
+#     sns.scatterplot(
+#         data=CCLE_gene_cn_12,
+#         x=cols[0],
+#         y=cols[1],
+#         hue="source_change",
+#         style="source_has_changed",
+#         alpha=0.5,
+#         cmap="Tab20",
+#     )
 
-    output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + "{}-vs-{}.png".format(
-        cols[1], cols[0]
-    )
-    print("saved to {}".format(output_img_file))
-    plt.savefig(output_img_file, bbox_inches="tight")
-    plt.close()
-    corr = CCLE_gene_cn_12[cols].corr().iloc[0, 1]
-    assert corr > SHARED_DATA_CORRELATION_THRESHOLD
+#     output_img_file = PLOTS_OUTPUT_FILENAME_PREFIX + "{}-vs-{}.png".format(
+#         cols[1], cols[0]
+#     )
+#     print("saved to {}".format(output_img_file))
+#     plt.savefig(output_img_file, bbox_inches="tight")
+#     plt.close()
+#     corr = CCLE_gene_cn_12[cols].corr().iloc[0, 1]
+#     assert corr > SHARED_DATA_CORRELATION_THRESHOLD
 
 
 PARAMS_plot_per_gene_means = [

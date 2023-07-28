@@ -1,0 +1,1 @@
+{"run_vcf_to_depmap.sample_id": "this.sample_id", "run_vcf_to_depmap.input_vcf": "this.oc_main_files", "run_vcf_to_depmap.vcf_to_depmap.cpu": "4", "run_vcf_to_depmap.vcf_to_depmap.disk_space": "60", "run_vcf_to_depmap.vcf_to_depmap.mem": "64", "run_vcf_to_depmap.vcf_to_depmap.n_rows": "400000", "run_vcf_to_depmap.vcf_to_depmap.whitelist": "true"}

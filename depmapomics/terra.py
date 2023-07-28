@@ -1,67 +1,11 @@
 # terra.py
-from gsheets import Sheets
 import pandas as pd
 import dalmatian as dm
-from genepy import terra
+from mgenepy import terra
 import numpy as np
 import traceback
 import firecloud.api
 
-
-def compareToCuratedGS(
-    url,
-    sample,
-    samplesetname,
-    sample_id="DepMap ID",
-    clientsecret="~/.client_secret.json",
-    storagepath="~/.storage.json",
-    colname="CN New to internal",
-    value="no data yet",
-):
-    """
-    from a google spreadsheet, will check that we have all of the samples we should have in our sample
-    set name (will parse NAME_additional for sample_id)
-
-    Args:
-    -----
-        url: str the url of the gsheet
-        sample: list(str) the samples to check
-        samplesetname: str the name of the sampleset in the googlesheet
-        sample_id: str the name of the sample_id column in the google sheet
-        clientsecret: str path to your secret google api account file
-        storagepath: str path to your secret google api storage file
-        colname: str if we need not to include some rows from the spreadsheet that have the value value
-        value: str the value for which not to include the rows
-
-    @gmiller
-    """
-    sheets = Sheets.from_files(clientsecret, storagepath)
-    # Cell Line Profiling Status google sheet
-    gsheet = sheets.get(url).sheets[0].to_frame()
-    gsheet.index = gsheet[sample_id]
-    new_cn = gsheet[gsheet[colname] == samplesetname + "tent"]
-    if colname and value:
-        data_not_ready_cn = gsheet[gsheet[colname] == value]
-        print(data_not_ready_cn)
-    # these are the "new" samples discovered by our function, createDatasetsFromNewCellLines
-    sample_ids = [id.split("_")[0] for id in sample]
-    print("We found data for " + str(len(sorted(sample))) + " samples.\n")
-
-    print(
-        "Sanity check: Since we have the tacked on number, we should only have 1 each per sample ID:\n"
-    )
-
-    in_sheet_not_found = set(new_cn.index.tolist()) - set(sample_ids)
-    if len(in_sheet_not_found) > 0:
-        print(
-            "We have not found "
-            + str(len(in_sheet_not_found))
-            + " of the samples we're supposed to \
-            have this release:\n"
-            + str(sorted(list(in_sheet_not_found)))
-        )
-    else:
-        print("We aren't missing any samples that we're supposed to have this release!")
 
 
 def getQC(workspace, only=[], qcname=[], match=""):
@@ -166,26 +110,12 @@ def copyToWorkspace(
         "version",
         "datatype",
         "size",
-        "stripped_cell_line_name",
-        "participant_id",
-        "cellosaurus_id",
         "bam_public_sra_path",
         "internal_bam_filepath",
         "internal_bai_filepath",
-        "parent_cell_line",
-        "sex",
-        "matched_normal",
-        "age",
-        "collection_site",
-        "primary_disease",
-        "subtype",
-        "subsubtype",
-        "lineage",
-        "condition",
-        "baits",
         "source",
-        "legacy_bam_filepath",
-        "legacy_bai_filepath",
+        "hg19_bam_filepath",
+        "hg19_bai_filepath",
     ],
     rename={},
     deleteUnmatched=False,

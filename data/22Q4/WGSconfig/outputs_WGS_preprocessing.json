@@ -1,0 +1,1 @@
+{"WGS_preprocessing.analysis_ready_bam": "this.internal_bam_filepath", "WGS_preprocessing.duplication_metrics": "this.duplication_metrics", "WGS_preprocessing.analysis_ready_bam_index": "this.internal_bai_filepath", "WGS_preprocessing.analysis_ready_bam_md5": "this.analysis_ready_bam_md5", "WGS_preprocessing.bqsr_report": "this.bqsr_report"}

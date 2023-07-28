@@ -1,0 +1,19 @@
+{
+ "inputs": {
+  "run_vcf_to_depmap.input_vcf": "this.oc_main_files",
+  "run_vcf_to_depmap.sample_id": "this.sample_id",
+  "run_vcf_to_depmap.vcf_to_depmap.cpu": "4",
+  "run_vcf_to_depmap.vcf_to_depmap.disk_space": "60",
+  "run_vcf_to_depmap.vcf_to_depmap.docker_image": "\"python:3.10.7-bullseye\"",
+  "run_vcf_to_depmap.vcf_to_depmap.force_keep": "[\"true\"]",
+  "run_vcf_to_depmap.vcf_to_depmap.mem": "64",
+  "run_vcf_to_depmap.vcf_to_depmap.n_rows": "400000",
+  "run_vcf_to_depmap.vcf_to_depmap.whitelist": "false"
+ },
+ "outputs": {
+  "run_vcf_to_depmap.depmap_maf": "this.depmap_maf_whitelisted",
+  "run_vcf_to_depmap.full_file": "this.full_file_whitelisted"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

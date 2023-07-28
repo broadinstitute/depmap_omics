@@ -1,0 +1,25 @@
+{
+ "inputs": {
+  "rmats_turbo_workflow.rmats_turbo.bam": "this.internal_bam_filepath",
+  "rmats_turbo_workflow.rmats_turbo.disk_space": "500",
+  "rmats_turbo_workflow.rmats_turbo.memory": "48",
+  "rmats_turbo_workflow.rmats_turbo.num_preempt": "1",
+  "rmats_turbo_workflow.rmats_turbo.num_threads": "8",
+  "rmats_turbo_workflow.rmats_turbo.prefix": "this.name",
+  "rmats_turbo_workflow.rmats_turbo.star_index": "\"gs://ccleparams/star_index_hg38.tar.gz\""
+ },
+ "outputs": {
+  "rmats_turbo_workflow.rmats_turbo.A3SS_JCEC_output": "this.A3SS_JCEC_output",
+  "rmats_turbo_workflow.rmats_turbo.A3SS_JC_output": "this.A3SS_JC_output",
+  "rmats_turbo_workflow.rmats_turbo.A5SS_JCEC_output": "this.A5SS_JCEC_output",
+  "rmats_turbo_workflow.rmats_turbo.A5SS_JC_output": "this.A5SS_JC_output",
+  "rmats_turbo_workflow.rmats_turbo.MXE_JCEC_output": "this.MXE_JCEC_output",
+  "rmats_turbo_workflow.rmats_turbo.MXE_JC_output": "this.MXE_JC_output",
+  "rmats_turbo_workflow.rmats_turbo.RI_JCEC_output": "this.RI_JCEC_output",
+  "rmats_turbo_workflow.rmats_turbo.RI_JC_output": "this.RI_JC_output",
+  "rmats_turbo_workflow.rmats_turbo.SE_JCEC_output": "this.SE_JCEC_output",
+  "rmats_turbo_workflow.rmats_turbo.SE_JC_output": "this.SE_JC_output"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

@@ -1,0 +1,42 @@
+{
+ "inputs": {
+  "omics_mutect2.annotators": "[\"cscape\", \"civic\",  \"brca1_func_assay\", \"provean\", \"dann\", \"revel\", \"spliceai\", \"gtex\", \"funseq2\", \"pharmgkb\", \"dida\", \"gwas_catalog\", \"ccre_screen\", \"alfa\"]",
+  "omics_mutect2.gcs_project_for_requester_pays": "\"broad-firecloud-ccle\"",
+  "omics_mutect2.intervals": "workspace.ice_xy_intervals_no_pad_bed",
+  "omics_mutect2.m2_extra_args": "\"\"",
+  "omics_mutect2.mutect2.funco_default_output_format": "\"VCF\"",
+  "omics_mutect2.mutect2.sequencing_center": "this.source",
+  "omics_mutect2.mutect2.split_intervals_extra_args": "\"--interval-padding 100\"",
+  "omics_mutect2.my_vcf_to_depmap.cpu": "4",
+  "omics_mutect2.my_vcf_to_depmap.disk_space": "40",
+  "omics_mutect2.my_vcf_to_depmap.mem": "32",
+  "omics_mutect2.my_vcf_to_depmap.n_rows": "400000",
+  "omics_mutect2.my_vcf_to_depmap.opencravat": "true",
+  "omics_mutect2.my_vcf_to_depmap.use_multi": "false",
+  "omics_mutect2.my_vcf_to_depmap.whitelist": "true",
+  "omics_mutect2.open_cravat.boot_disk_size": "600",
+  "omics_mutect2.open_cravat.disk_space": "400",
+  "omics_mutect2.open_cravat.memory": "16",
+  "omics_mutect2.open_cravat.num_preempt": "0",
+  "omics_mutect2.open_cravat.num_threads": "4",
+  "omics_mutect2.open_cravat.oc_modules": "\"gs://ccleparams/oc_modules.tar\"",
+  "omics_mutect2.open_cravat.retries": "0",
+  "omics_mutect2.ref_dict": "workspace.ref_dict",
+  "omics_mutect2.ref_fai": "workspace.ref_fasta_fai",
+  "omics_mutect2.ref_fasta": "workspace.ref_fasta",
+  "omics_mutect2.run_open_cravat": "true",
+  "omics_mutect2.sample_id": "this.sample_id",
+  "omics_mutect2.tumor_reads": "this.internal_bam_filepath",
+  "omics_mutect2.tumor_reads_index": "this.internal_bai_filepath"
+ },
+ "outputs": {
+  "omics_mutect2.full_vcf": "this.full_vcf",
+  "omics_mutect2.full_vcf_idx": "this.full_vcf_idx",
+  "omics_mutect2.main_output": "this.main_output",
+  "omics_mutect2.oc_error_files": "this.oc_error_files",
+  "omics_mutect2.oc_log_files": "this.oc_log_files",
+  "omics_mutect2.somatic_maf": "this.somatic_maf"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

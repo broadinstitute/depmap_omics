@@ -1,0 +1,17 @@
+{
+ "inputs": {
+  "aggregate_vcfs.aggregate.disk_space": "200",
+  "aggregate_vcfs.aggregate.memory": "80",
+  "aggregate_vcfs.aggregate.num_preempt": "0",
+  "aggregate_vcfs.aggregate.num_threads": "8",
+  "aggregate_vcfs.aggregate.option": "\"both\"",
+  "aggregate_vcfs.aggregate.sample_set_id": "this.name",
+  "aggregate_vcfs.aggregate.vcf_files": "this.samples.candidate_sv_vcf",
+  "aggregate_vcfs.aggregate.vcf_indexes": "this.samples.candidate_sv_vcf_index"
+ },
+ "outputs": {
+  "aggregate_vcfs.aggregate.merged_vcf": "this.merged_vcf"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample_set"
+}

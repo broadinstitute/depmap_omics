@@ -12,7 +12,7 @@ tc = TaigaClient()
 def data(request):
     return tc.get(
         name=NEW_RELEASE["name"], file=request.param, version=NEW_RELEASE["version"]
-    )
+    ).rename(columns={"DepMap_ID": "ModelID"})
 
 
 PARAMS_wrong_columns = [x["file"] for x in FILE_ATTRIBUTES]
@@ -98,14 +98,34 @@ def test_symbol_and_ensgid_in_column(data):
     )
 
 
-PARAMS_test_arxspan_ids = [x["file"] for x in FILE_ATTRIBUTES if not x["ismatrix"]]
+PARAMS_test_profile_ids = [
+    x["file"] for x in FILE_ATTRIBUTES if not x["ismatrix"] and x["id"] == "ProfileID"
+]
 
 
-@pytest.mark.parametrize("data", PARAMS_test_arxspan_ids, indirect=True)
+@pytest.mark.parametrize("data", PARAMS_test_profile_ids, indirect=True)
 @pytest.mark.format
-def test_arxspan_ids(data):
-    assert "DepMap_ID" in data.columns
-    column = data["DepMap_ID"]
+def test_profile_ids(data):
+    assert "ProfileID" in data.columns
+    column = data["ProfileID"]
+    matches = column.map(lambda x: re.match(r"PR-[A-Za-z0-9]{6}$", x))
+    assert (
+        matches.notnull().all()
+    ), "some rows do not follow the PR-xxxxxx format. The first few are: \n{}".format(
+        column.index[matches.isnull()][:20]
+    )
+
+
+PARAMS_test_model_ids = [
+    x["file"] for x in FILE_ATTRIBUTES if not x["ismatrix"] and x["id"] == "ModelID"
+]
+
+
+@pytest.mark.parametrize("data", PARAMS_test_model_ids, indirect=True)
+@pytest.mark.format
+def test_model_ids(data):
+    assert "ModelID" in data.columns
+    column = data["ModelID"]
     matches = column.map(lambda x: re.match(r"ACH-[\d]{6}$", x))
     assert (
         matches.notnull().all()
@@ -140,7 +160,9 @@ def test_matrix_datatypes(data):
     assert list(datatypes)[0] == np.dtype("float64")
 
 
-@pytest.mark.parametrize("data", ["CCLE_expression_full"], indirect=True)
+@pytest.mark.parametrize(
+    "data", ["OmicsExpressionProteinCodingGenesTPMLogp1"], indirect=True
+)
 @pytest.mark.format
 def test_expression_logtransform(data):
     assert data.min().min() == 0
@@ -149,11 +171,22 @@ def test_expression_logtransform(data):
     ), "expression data is not log-transformed"
 
 
-@pytest.mark.parametrize("data", ["CCLE_segment_cn", "CCLE_mutations"], indirect=True)
+@pytest.mark.parametrize("data", ["OmicsCNSegmentsProfile"], indirect=True)
 @pytest.mark.format
-def test_chromosome_names(data):
+def test_chromosome_names_cn(data):
     matches = (
         data["Chromosome"].drop_duplicates().map(lambda x: re.match(r"^\d+|X|Y|M$", x))
+    )
+    assert matches.notnull().all()
+
+
+@pytest.mark.parametrize("data", ["OmicsSomaticMutations"], indirect=True)
+@pytest.mark.format
+def test_chromosome_names_mut(data):
+    matches = (
+        data["Chrom"]
+        .drop_duplicates()
+        .map(lambda x: re.match(r"chr([\d]{1,2}|[XYM])$", x))
     )
     assert matches.notnull().all()
 

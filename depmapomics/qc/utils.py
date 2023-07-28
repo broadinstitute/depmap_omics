@@ -1,4 +1,3 @@
-from gsheets import Sheets
 import pandas as pd
 from taigapy import TaigaClient
 import seaborn as sns
@@ -33,20 +32,6 @@ def applyfunc_to_json(json_dict, func,  verbose=False):
         return output_dict
     else:
         return func(json_dict)  
-
-def get_expected_lines(sheets_url, merge_ibm_dmc=True):
-    sheets_obj = Sheets.from_files('~/.client_secret.json', '~/.storage.json')
-    sheets = sheets_obj.get(sheets_url).sheets
-    release = sheets[0].to_frame(header=0, index_col=None)    
-    release.columns = release.columns.str.lower()
-    if merge_ibm_dmc:
-        cols = release.columns
-        ibm = pd.DataFrame(set(release[['dmc', 'ibm']].stack().values), columns=['ibm'])
-        # ibm = pd.concat([release['dmc'], release['ibm']]
-        #         ).dropna().drop_duplicates().to_frame('ibm')
-        release = pd.concat([release[['internal', 'dmc', 'public']], ibm], axis=1)
-        lines_to_release = release[cols]        
-    return release
 
 def get_release_diffs(arxspan_dict, lines_to_release, lines_to_remove=set(), quarters = ['20q3', '21q1']):
     release_diff = {}

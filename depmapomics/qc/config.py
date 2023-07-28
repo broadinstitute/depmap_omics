@@ -1,4 +1,3 @@
-from gsheets.api import Sheets
 from taigapy import TaigaClient
 
 # there are some issues in the older versions of omics data on virtual that this flag deals with
@@ -55,65 +54,66 @@ VIRTUAL_RELEASES = {
         "dmc": taiga_latest_path("dmc-22q2-5e51"),
         "public": taiga_latest_path("public-22q2-de04"),
     },
+    "22Q2dryrun": {
+        "internal": taiga_latest_path("internal-22q2dryrun-5ffb"),
+        "ibm": taiga_latest_path("ibm-22q2dryrun-ddbe"),
+        "dmc": taiga_latest_path("dmc-22q2dryrun-0f8d"),
+        "public": taiga_latest_path("public-22q2dryrun-e259"),
+    },
+    "22Q2renamed": {
+        "internal": taiga_latest_path("internal-22q2-08ee"),
+    },
+    "22Q4": {
+        "internal": taiga_latest_path("internal-22q4-56d4"),
+        "dmc": taiga_latest_path("dmc-22q4-a73a"),
+        "public": taiga_latest_path("public-22q4-6837"),
+    },
+    "23Q2": {
+        "internal": taiga_latest_path("internal-23q2-1e49"),
+        "dmc": taiga_latest_path("dmc-23q2-d87c"),
+        "public": taiga_latest_path("public-23q2-19de"),
+    }
 }  # release ids on taiga
 
-PORTALS = ["ibm", "dmc", "public", "internal"]  # used for 'bookkeeping' markers
-PORTAL = "dmc"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "22Q1"
-NEW_QUARTER = "22Q2"
+PORTALS = ["dmc", "public", "internal"]  # used for 'bookkeeping' markers
+PORTAL = "internal"  # used for 'not bookkeeping' markers
+PREV_QUARTER = "22Q4"
+NEW_QUARTER = "23Q2"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
 # NEW_RELEASE = TENTATIVE_VIRTUAL
 PORTALS = [PORTAL]
 
-
-LINES_TO_DROP_COMMON = {"ACH-001108", "ACH-001011", "ACH-001092"}
-LINES_TO_DROP_DNA = LINES_TO_DROP_COMMON
-LINES_TO_DROP_RNA = LINES_TO_DROP_COMMON | {"ACH-002778", "ACH-002745"}
-LINES_TO_DROP = {"DNA": LINES_TO_DROP_DNA, "RNA": LINES_TO_DROP_RNA}
-
-
-# original
-# LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y_BKToPlHP-oDB-0CAv3gE/edit?usp=sharing"
-
-# copy of original with 21Q4v2 and 22Q1 combined into 22Q1
-LINES_TO_RELEASE_SHEET = "https://docs.google.com/spreadsheets/d/1IO9GqeU8m3S_PJb4U2VCKbePVrxBA-k-7jp4A3bhxd8/edit?usp=sharing"
-
-sheets_obj = Sheets.from_files("~/.client_secret.json", "~/.storage.json")
-sheets = sheets_obj.get(LINES_TO_RELEASE_SHEET)
-# LINES_TO_RELEASE = sheets.sheets[0]
-LINES_TO_RELEASE_DF = sheets.find(NEW_QUARTER)
-LINES_TO_RELEASE_DF = LINES_TO_RELEASE_DF.to_frame(header=0, index_col=None)
-LINES_TO_RELEASE_DF.columns = LINES_TO_RELEASE_DF.columns.str.lower()
-
-
+LINES_TO_DROP = {"DNA": set([]), "RNA": set([])}
 LINES_TO_RELEASE = {}
-LINES_TO_RELEASE["public"] = set(LINES_TO_RELEASE_DF["public"].dropna())
-LINES_TO_RELEASE["dmc"] = LINES_TO_RELEASE["public"] | set(
-    LINES_TO_RELEASE_DF["dmc"].dropna()
-)
-LINES_TO_RELEASE["ibm"] = LINES_TO_RELEASE["dmc"] | set(
-    LINES_TO_RELEASE_DF["ibm"].dropna()
-)
-LINES_TO_RELEASE["internal"] = LINES_TO_RELEASE["ibm"] | set(
-    LINES_TO_RELEASE_DF["internal"].dropna()
-)
-IGNORE_FAILED_TO_RELEASE = False
+LINES_TO_RELEASE["public"] = set([])
+LINES_TO_RELEASE["dmc"] = set([])
+LINES_TO_RELEASE["internal"] = set([])
+IGNORE_FAILED_TO_RELEASE = []
+
 
 # these are the columns that if merged with an older release (assuming that old data was not altered),
 # should uniquely identify each row of the file to find equal values in each column
-FUSIONS_MERGE_COLS = [
-    "DepMap_ID",
+FUSIONS_FILTERED_MERGE_COLS = [
+    "ModelID",
     "LeftGene",
     "RightGene",
     "LeftBreakpoint",
     "RightBreakpoint",
     "SpliceType",
 ]
-SEGMENT_CN_MERGE_COLS = ["DepMap_ID", "Chromosome", "Start", "End"]
+FUSIONS_UNFILTERED_MERGE_COLS = [
+    "ProfileID",
+    "LeftGene",
+    "RightGene",
+    "LeftBreakpoint",
+    "RightBreakpoint",
+    "SpliceType",
+]
+SEGMENT_CN_MERGE_COLS = ["ProfileID", "Chromosome", "Start", "End"]
 MUTATIONS_MERGE_COLS = [
-    "DepMap_ID",
+    "ModelID",
     "Chromosome",
     "Start_position",
     "End_position",
@@ -122,21 +122,23 @@ MUTATIONS_MERGE_COLS = [
 
 # if there are new files that were added in the previous release, add them here
 FILES_RELEASED_BEFORE = [
-    "CCLE_expression",
-    "CCLE_expression_proteincoding_genes_expected_count",
-    "CCLE_RNAseq_transcripts",
-    "CCLE_expression_transcripts_expected_count",
-    "CCLE_expression_full",
-    "CCLE_RNAseq_reads",
-    "CCLE_fusions",
-    "CCLE_fusions_unfiltered",
-    "CCLE_gene_cn",
-    "CCLE_segment_cn",
-    "CCLE_mutations",
+    "OmicsExpressionProteinCodingGenesTPMLogp1",
+    "OmicsExpressionGenesExpectedCountProfile"
+    "OmicsExpressionTranscriptsExpectedCountProfile",
+    "OmicsExpressionGeneSetEnrichment",
+    "OmicsExpressionGeneSetEnrichmentProfile",
+    "OmicsFusionFiltered",
+    "OmicsFusionUnfilteredProfile",
+    "OmicsCNGene",
+    "OmicsCNSegmentsProfile",
+    "OmicsSomaticMutations",
+    "OmicsSomaticMutationsProfile",
+    "OmicsSomaticMutationsMatrixDamaging",
+    "OmicsSomaticMutationsMatrixHotspot",
 ]
 
 # correlation thresholds above which we consider two releases as 'similar'
-CORRELATION_THRESHOLDS = {"CCLE_gene_cn": 0.99, "all_expressions": 0.98}
+CORRELATION_THRESHOLDS = {"OmicsCNGene": 0.99, "all_expressions": 0.98}
 
 SKIP_ARXSPAN_COMPARISON = (
     True  # set to False if you want to test whether some arxspans were added/removed
@@ -146,130 +148,129 @@ PLOTS_OUTPUT_FILENAME_PREFIX = "/tmp/plots_"  # location/prefix for saving outpu
 
 # all the file attributes
 FILE_ATTRIBUTES = [
+    # all model level
     {
-        "file": "CCLE_expression",
+        "file": "OmicsExpressionProteinCodingGenesTPMLogp1",
         "ismatrix": True,
         "hasNA": False,
         "gene_id": "entrez",
         "omicssource": "RNA",
+        "id": "ModelID",
     },
     {
-        "file": "CCLE_expression_proteincoding_genes_expected_count",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_RNAseq_transcripts",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "enst",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_expression_transcripts_expected_count",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "enst",
-        "omicssource": "RNA",
-    },
-    {
-        "file": "CCLE_expression_full",
+        "file": "OmicsExpressionGenesExpectedCountProfile",
         "ismatrix": True,
         "hasNA": False,
         "gene_id": "ensg",
         "omicssource": "RNA",
+        "id": "ProfileID",
     },
     {
-        "file": "CCLE_RNAseq_reads",
+        "file": "OmicsExpressionTranscriptsExpectedCountProfile",
         "ismatrix": True,
         "hasNA": False,
-        "gene_id": "ensg",
+        "gene_id": "enst",
         "omicssource": "RNA",
+        "id": "ProfileID",
     },
     {
-        "file": "CCLE_fusions",
+        "file": "OmicsFusionFiltered",
         "ismatrix": False,
         "omicssource": "RNA",
-        "merge_cols": FUSIONS_MERGE_COLS,
+        "merge_cols": FUSIONS_FILTERED_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
+        "id": "ModelID",
     },
     {
-        "file": "CCLE_fusions_unfiltered",
+        "file": "OmicsFusionUnfilteredProfile",
         "ismatrix": False,
         "omicssource": "RNA",
-        "merge_cols": FUSIONS_MERGE_COLS,
+        "merge_cols": FUSIONS_UNFILTERED_MERGE_COLS,
         "expected_changed_cols": ["CCLE_count"],
+        "id": "ProfileID",
     },
-    # {'file': 'CCLE_ssGSEA', 'ismatrix': True, 'hasNA': False,'omicssource':'RNA', 'gene_id': None},
     {
-        "file": "CCLE_gene_cn",
+        "file": "OmicsExpressionGeneSetEnrichment",
+        "ismatrix": True,
+        "hasNA": False,
+        "omicssource": "RNA",
+        "gene_id": None,
+        "id": "ModelID",
+    },
+    {
+        "file": "OmicsExpressionGeneSetEnrichmentProfile",
+        "ismatrix": True,
+        "hasNA": False,
+        "omicssource": "RNA",
+        "gene_id": None,
+        "id": "ProfileID",
+    },
+    {
+        "file": "OmicsCNGene",
         "ismatrix": True,
         "hasNA": True,
         "gene_id": "entrez",
         "omicssource": "DNA",
+        "id": "ModelID",
     },
     {
-        "file": "CCLE_segment_cn",
+        "file": "OmicsCNSegmentsProfile",
         "ismatrix": False,
         "omicssource": "DNA",
         "merge_cols": SEGMENT_CN_MERGE_COLS,
         "expected_changed_cols": [],
+        "id": "ProfileID",
     },
     {
-        "file": "CCLE_mutations",
+        "file": "OmicsSomaticMutations",
         "ismatrix": False,
         "omicssource": "DNA",
         "merge_cols": MUTATIONS_MERGE_COLS,
         "expected_changed_cols": [],
+        "id": "ModelID",
     },
     {
-        "file": "CCLE_mutations_bool_damaging",
+        "file": "OmicsSomaticMutationsProfile",
+        "ismatrix": False,
+        "omicssource": "DNA",
+        "merge_cols": MUTATIONS_MERGE_COLS,
+        "expected_changed_cols": [],
+        "id": "ProfileID",
+    },
+    {
+        "file": "OmicsSomaticMutationsMatrixDamaging",
         "ismatrix": True,
         "hasNA": False,
         "gene_id": "entrez",
         "omicssource": "DNA",
+        "id": "ModelID",
     },
     {
-        "file": "CCLE_mutations_bool_hotspot",
+        "file": "OmicsSomaticMutationsMatrixHotspot",
         "ismatrix": True,
         "hasNA": False,
         "gene_id": "entrez",
         "omicssource": "DNA",
-    },
-    {
-        "file": "CCLE_mutations_bool_otherconserving",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "DNA",
-    },
-    {
-        "file": "CCLE_mutations_bool_nonconserving",
-        "ismatrix": True,
-        "hasNA": False,
-        "gene_id": "entrez",
-        "omicssource": "DNA",
+        "id": "ModelID",
     },
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [
-# x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_segment_cn", "CCLE_gene_cn"])
-# ]
+FILE_ATTRIBUTES = [
+    x
+    for x in FILE_ATTRIBUTES
+    if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
+]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x['file'] in ['CCLE_mutations'])]
-# FILE_ATTRIBUTES = [
-# x for x in FILE_ATTRIBUTES if (x["file"].startswith("CCLE_mutations"))
-# ]
 # FILE_ATTRIBUTES = [
 #     x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]
 # ]
 # FILE_ATTRIBUTES = [
 #     x
 #     for x in FILE_ATTRIBUTES
-#     if (x["file"] in ["CCLE_fusions", "CCLE_fusions_unfiltered"])
+#     if (x["file"] in ["OmicsFusionFiltered", "OmicsFusionUnfilteredProfile"])
 # ]
+# FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] == "OmicsFusionFiltered")]
 
 # the following information is used to create a tentative virtual
 MUTATIONS_TAIGA_ID = "mutations-latest-ed72"
@@ -280,44 +281,20 @@ CN_TAIGA_ID = "cn-achilles-version-06ca"
 
 TAIGA_IDS_LATEST = {
     MUTATIONS_TAIGA_ID: [
-        ("CCLE_mutations", "merged_somatic_mutations_withlegacy"),
-        (
-            "CCLE_mutations_bool_damaging",
-            "merged_somatic_mutations_boolmatrix_fordepmap_damaging",
-        ),
-        (
-            "CCLE_mutations_bool_nonconserving",
-            "merged_somatic_mutations_boolmatrix_fordepmap_othernoncons",
-        ),
-        (
-            "CCLE_mutations_bool_otherconserving",
-            "merged_somatic_mutations_boolmatrix_fordepmap_othercons",
-        ),
-        (
-            "CCLE_mutations_bool_hotspot",
-            "merged_somatic_mutations_boolmatrix_fordepmap_hotspot",
-        ),
+        ("OmicsSomaticMutationsProfile", "somaticMutations_profile"),
     ],
     FUSIONS_TAIGA_ID: [
-        ("CCLE_fusions_unfiltered", "fusions_latest"),
-        ("CCLE_fusions", "filteredfusions_latest"),
+        ("OmicsFusionUnfilteredProfile", "fusions_unfiltered_profile"),
     ],
     EXPRESSION_TAIGA_ID: [
-        ("CCLE_expression_full", "genes_tpm_logp1"),
-        ("CCLE_RNAseq_transcripts", "transcripts_tpm_logp1"),
-        ("CCLE_RNAseq_reads", "genes_expected_count"),
-        ("CCLE_expression", "proteincoding_genes_tpm_logp1"),
+        ("OmicsExpressionGenesExpectedCountProfile", "genes_expectedCount_profile"),
         (
-            "CCLE_expression_proteincoding_genes_expected_count",
-            "proteincoding_genes_expected_count",
+            "OmicsExpressionTranscriptsExpectedCountProfile",
+            "transcripts_expectedCount_profile",
         ),
-        ("CCLE_expression_transcripts_expected_count", "transcripts_expected_count"),
-        # ('CCLE_ssGSEA', 'gene_sets_all')
+        ("OmicsExpressionGeneSetEnrichmentProfile", "gene_set_enrichment_profile"),
     ],
     CN_TAIGA_ID: [
-        ("CCLE_gene_cn", "achilles_gene_cn"),
-        ("CCLE_segment_cn", "achilles_segment")
-        # ('CCLE_gene_cn', 'merged_genecn_all'),
-        # ('CCLE_segment_cn', 'merged_segments_all')
+        ("OmicsCNSegmentsProfile", "merged_segments_profile"),
     ],
 }

@@ -1,0 +1,20 @@
+{
+ "inputs": {
+  "mito_abundance_workflow.bam_file_path": "this.hg38_analysis_ready_bam",
+  "mito_abundance_workflow.disk_size": "4",
+  "mito_abundance_workflow.get_mito_abundance.docker_image": "",
+  "mito_abundance_workflow.memory_gb": "",
+  "mito_abundance_workflow.my_project_name": "\"nci-chip-su2c-gmail-com\"",
+  "mito_abundance_workflow.ploidy": "this.PureCN_ploidy",
+  "mito_abundance_workflow.sample_id": "this.sample_id"
+ },
+ "outputs": {
+  "mito_abundance_workflow.coverage_file": "this.coverage_file",
+  "mito_abundance_workflow.mean_corrected_auto_depth": "this.mean_corrected_auto_depth",
+  "mito_abundance_workflow.mean_haploid_depth": "this.mean_haploid_depth",
+  "mito_abundance_workflow.mean_mito_depth": "this.mean_mito_depth",
+  "mito_abundance_workflow.mito_ratio": "this.mito_ratio"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

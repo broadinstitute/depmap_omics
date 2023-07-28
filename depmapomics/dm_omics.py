@@ -1,44 +1,40 @@
+from depmapomics import constants
+from depmapomics import env_config
 import os.path
 import dalmatian as dm
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from itertools import repeat
+from taigapy import TaigaClient
 
-from genepy.utils import helper as h
-from genepy import rna
-from genepy import mutations as mut
+from mgenepy.utils import helper as h
 
 from depmap_omics_upload import tracker as track
-from depmapomics import expressions, mutations
+
+from depmapomics import expressions
+from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
-from depmapomics.config import *
 
 
 async def expressionPostProcessing(
-    refworkspace=RNAWORKSPACE,
-    samplesetname=SAMPLESETNAME,
+    refworkspace=env_config.RNAWORKSPACE,
+    samplesetname=constants.SAMPLESETNAME,
     colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
-    ensemblserver=ENSEMBL_SERVER_V,
+    ensemblserver=constants.ENSEMBL_SERVER_V,
     doCleanup=True,
     samplesetToLoad="all",
-    tocompare={
-        "genes_expected_count": "CCLE_RNAseq_reads",
-        "genes_tpm": "CCLE_expression_full",
-        "proteincoding_genes_tpm": "CCLE_expression",
-    },
-    todrop=KNOWN_DROP,
-    taiga_dataset=TAIGA_EXPRESSION,
-    save_output=WORKING_DIR,
-    minsimi=RNAMINSIMI,
+    taiga_dataset=env_config.TAIGA_EXPRESSION,
+    save_output=constants.WORKING_DIR,
+    minsimi=constants.RNAMINSIMI,
     dropNonMatching=True,
-    dataset_description=RNAseqreadme,
+    dataset_description=constants.RNAseqreadme,
     dry_run=False,
     samplesinset=[],
     rsemfilelocs=None,
     rnaqclocs={},
     starlogs={},
+    compute_enrichment=False,
+    billing_proj=constants.GCS_PAYER_PROJECT,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -49,44 +45,35 @@ async def expressionPostProcessing(
         save_output (str, optional): whether to save our data. Defaults to "".
         doCleanup (bool, optional): whether to clean the Terra workspaces from their unused output and lo. Defaults to True.
         colstoclean (list, optional): the columns to clean in the terra workspace. Defaults to [].
-        ensemblserver (str, optional): ensembl server biomart version . Defaults to ENSEMBL_SERVER_V.
+        ensemblserver (str, optional): ensembl server biomart version . Defaults to constants.ENSEMBL_SERVER_V.
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
         useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level 
-        expression data in the workspace. Defaults to RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript 
-        level expression data in the workspacce. Defaults to RSEMFILENAME_TRANSCRIPTS.
+        geneLevelCols (list, optional): the columns that contain the gene level
+        expression data in the workspace. Defaults to constants.RSEMFILENAME_GENE.
+        trancriptLevelCols (list, optional): the columns that contain the transcript
+        level expression data in the workspacce. Defaults to constants.RSEMFILENAME_TRANSCRIPTS.
         ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
         renamingFunc (function, optional): the function to use to rename the sample columns
         (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
         compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes 
+        dropNonMatching (bool, optional): whether to drop the non matching genes
         between entrez and ensembl. Defaults to False.
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
-        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
+        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to env_config.TAIGA_EXPRESSION.
         minsimi (float, optional): the minimum similarity to use for comparison to previous dataset. Defaults to 0.95.
-        dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
+        dataset_description (str, optional): the taiga dataset description to use. Defaults to constants.RNAseqreadme.
         tocompare (dict, optional): the columns to compare. Defaults to {"genes_expected_count": "CCLE_RNAseq_reads", "genes_tpm": "CCLE_expression_full", "proteincoding_genes_tpm": "CCLE_expression"}.
         rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
         samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
         rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
 
     ccle_refsamples = mytracker.read_seq_table()
-
-    todrop += ccle_refsamples[
-        (ccle_refsamples.blacklist == 1) & (ccle_refsamples.ExpectedType == "rna")
-    ].index.tolist()
-    priority = ccle_refsamples[
-        (ccle_refsamples.prioritized == 1) & (ccle_refsamples.ExpectedType == "rna")
-    ].index.tolist()
 
     folder = save_output + samplesetname + "/"
 
@@ -94,31 +81,29 @@ async def expressionPostProcessing(
         folder = save_output + "dryrun/"
 
     h.createFoldersFor(folder)
-    files, failed, _, renaming, lowqual, _ = await expressions.postProcess(
+    files, failed, _, renaming, lowqual, enrichments = await expressions.postProcess(
         refworkspace,
         samplesetname,
         save_output=folder,
         doCleanup=doCleanup,
-        priority=priority,
         colstoclean=colstoclean,
         ensemblserver=ensemblserver,
-        todrop=todrop,
         samplesetToLoad=samplesetToLoad,
-        geneLevelCols=RSEMFILENAME_GENE,
-        trancriptLevelCols=RSEMFILENAME_TRANSCRIPTS,  # compute_enrichment=False,
+        geneLevelCols=constants.RSEMFILENAME_GENE,
+        trancriptLevelCols=constants.RSEMFILENAME_TRANSCRIPTS,
         ssGSEAcol="genes_tpm",
         dropNonMatching=dropNonMatching,
         dry_run=dry_run,
         samplesinset=samplesinset,
         rsemfilelocs=rsemfilelocs,
         rnaqclocs=rnaqclocs,
+        compute_enrichment=compute_enrichment,
         **kwargs,
     )
 
     print("updating the tracker")
 
     track.updateTrackerRNA(
-        set(renaming.keys()) - set(["transcript_id(s)"]),
         failed,
         lowqual[lowqual.sum(1) > 3].index.tolist(),
         ccle_refsamples,
@@ -126,21 +111,29 @@ async def expressionPostProcessing(
         refworkspace,
         samplesinset=samplesinset,
         starlogs=starlogs,
-        todrop=todrop,
-        dry_run=True,
-        newgs=None,
+        dry_run=dry_run,
+        billing_proj=billing_proj,
     )
 
+    pr_table = mytracker.read_pr_table()
+
     # subset and rename, include all PRs that have associated CDS-ids
-    pr_table = track.update_pr_from_seq()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    pr_table = mytracker.update_pr_from_seq(["rna"])
+
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
     for k, v in files.items():
         pr_files[k + "_profile"] = v[v.index.isin(set(renaming_dict.keys()))].rename(
             index=renaming_dict
         )
+    if enrichments is not None:
+        enrichments = enrichments[
+            enrichments.index.isin(set(renaming_dict.keys()))
+        ].rename(index=renaming_dict)
+        enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
+    mytracker.close_gumbo_client()
 
     if not dry_run:
         print("uploading to taiga")
@@ -157,6 +150,12 @@ async def expressionPostProcessing(
                 {
                     "path": folder + "genes_expected_count.csv",
                     "name": "genes_expectedCount_withReplicates",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "proteincoding_genes_tpm_logp1.csv",
+                    "name": "proteinCoding_genes_tpm_logp1_withReplicates",
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
@@ -196,33 +195,49 @@ async def expressionPostProcessing(
                     "format": "NumericMatrixCSV",
                     "encoding": "utf-8",
                 },
-                # {
-                #     "path": folder+'gene_sets_all.csv',
-                #     "name": "gene_set_enrichment_withReplicates",
-                #     "format": "NumericMatrixCSV",
-                #     "encoding": "utf-8"
-                # },
-                # {
-                #     "path": folder+'gene_sets_profile.csv',
-                #     "name": "gene_set_enrichment_profile",
-                #     "format": "NumericMatrixCSV",
-                #     "encoding": "utf-8"
-                # },
+                {
+                    "path": folder + "rna_qcs/all_qc.csv",
+                    "name": "all_samples_qc",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
             ],
             upload_async=False,
             dataset_description=dataset_description,
         )
+        if enrichments is not None:
+            tc.update_dataset(
+                changes_description="adding enrichments for new "
+                + samplesetname
+                + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "gene_sets_all.csv",
+                        "name": "gene_set_enrichment_withReplicates",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "gene_sets_profile.csv",
+                        "name": "gene_set_enrichment_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                ],
+                upload_async=False,
+                dataset_description=dataset_description,
+            )
         print("done")
 
 
 async def fusionPostProcessing(
-    refworkspace=RNAWORKSPACE,
-    sampleset=SAMPLESETNAME,
-    fusionSamplecol=SAMPLEID,
-    todrop=KNOWN_DROP,
-    taiga_dataset=TAIGA_FUSION,
-    dataset_description=FUSIONreadme,
-    folder=WORKING_DIR,
+    refworkspace=env_config.RNAWORKSPACE,
+    sampleset=constants.SAMPLESETNAME,
+    fusionSamplecol=constants.SAMPLEID,
+    taiga_dataset=env_config.TAIGA_FUSION,
+    dataset_description=constants.FUSIONreadme,
+    folder=constants.WORKING_DIR,
     **kwargs,
 ):
     """the full CCLE Fusion post processing pipeline (used only by CCLE)
@@ -233,20 +248,14 @@ async def fusionPostProcessing(
         save_output (str, optional): whether and where to save our data. Defaults to "".
         todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
         samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        fusionSamplecol ([type], optional): [description]. Defaults to SAMPLEID.
-        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to TAIGA_EXPRESSION.
-        dataset_description (str, optional): the taiga dataset description to use. Defaults to RNAseqreadme.
-        sheetcreds (str, optional): path to the google sheet credentials file to use. Defaults to SHEETCREDS.
-        refsheet_url (str, optional): the url of the google sheet containing the data. Defaults to REFSHEET_URL.
-        my_id (str, optional): path to the id containing file for google sheet. Defaults to MY_ID.
-        mystorage_id (str, optional): path to the id containing file for google storage. Defaults to MYSTORAGE_ID.
-    
+        fusionSamplecol ([type], optional): [description]. Defaults to constants.SAMPLEID.
+        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to env_config.TAIGA_EXPRESSION.
+        dataset_description (str, optional): the taiga dataset description to use. Defaults to constants.RNAseqreadme.
+
     Returns:
         (pd.df): fusion dataframe
         (pd.df): filtered fusion dataframe
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
@@ -257,13 +266,18 @@ async def fusionPostProcessing(
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
+    folder = folder + sampleset + "/"
+
     fusions, fusions_filtered = fusion.postProcess(
-        refworkspace, todrop=previousQCfail, save_output=folder, **kwargs,
+        refworkspace,
+        todrop=previousQCfail,
+        save_output=folder,
+        **kwargs,
     )
 
     # subset, rename from seqid to prid, and save pr-indexed matrices
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     fusions_pr = fusions[
         fusions[fusionSamplecol].isin(set(renaming_dict.keys()))
     ].replace({fusionSamplecol: renaming_dict})
@@ -276,6 +290,8 @@ async def fusionPostProcessing(
         os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
     )
 
+    mytracker.close_gumbo_client()
+
     # taiga
     print("uploading to taiga")
     tc.update_dataset(
@@ -283,19 +299,19 @@ async def fusionPostProcessing(
         changes_description="new " + sampleset + " release!",
         upload_files=[
             {
-                "path": folder + sampleset + "/fusions_all.csv",
+                "path": folder + "/fusions_all.csv",
                 "name": "fusions_unfiltered_withReplicates",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + sampleset + "/filteredfusions_latest_profile.csv",
+                "path": folder + "/filteredfusions_latest_profile.csv",
                 "name": "fusions_filtered_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + sampleset + "/fusions_all_profile.csv",
+                "path": folder + "/fusions_all_profile.csv",
                 "name": "fusions_unfiltered_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
@@ -308,17 +324,17 @@ async def fusionPostProcessing(
 
 
 def cnPostProcessing(
-    wesrefworkspace=WESCNWORKSPACE,
-    wgsrefworkspace=WGSWORKSPACE,
-    wessetentity=WESSETENTITY,
-    wgssetentity=WGSSETENTITY,
-    samplesetname=SAMPLESETNAME,
+    wesrefworkspace=env_config.WESCNWORKSPACE,
+    wgsrefworkspace=env_config.WGSWORKSPACE,
+    wessetentity=constants.WESSETENTITY,
+    wgssetentity=constants.WGSSETENTITY,
+    samplesetname=constants.SAMPLESETNAME,
+    purecnsampleset=constants.PURECN_SAMPLESET,
     AllSamplesetName="all",
-    todrop=KNOWN_DROP,
-    taiga_dataset=TAIGA_CN,
-    dataset_description=CNreadme,
+    taiga_dataset=env_config.TAIGA_CN,
+    dataset_description=constants.CNreadme,
     subsetsegs=[
-        SAMPLEID,
+        constants.SAMPLEID,
         "Chromosome",
         "Start",
         "End",
@@ -327,13 +343,14 @@ def cnPostProcessing(
         "Status",
         "Source",
     ],
-    bamqc=BAMQC,
-    procqc=PROCQC,
-    save_dir=WORKING_DIR,
+    bamqc=constants.BAMQC,
+    procqc=constants.PROCQC,
+    save_dir=constants.WORKING_DIR,
     wesfolder="",
-    genechangethresh=GENECHANGETHR,
-    segmentsthresh=SEGMENTSTHR,
-    maxYchrom=MAXYCHROM,
+    segmentsthresh=constants.SEGMENTSTHR,
+    maxYchrom=constants.MAXYCHROM,
+    billing_proj=constants.GCS_PAYER_PROJECT,
+    dryrun=False,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -343,20 +360,13 @@ def cnPostProcessing(
         wgsrefworkspace (str): wgs terra workspace where the ref data is stored
         samplesetname (str): name of the current release
         AllSamplesetName (str, optional): name of the sample set to get the data from (should contain everything). Defaults to 'all'.
-        my_id (str, optional): google sheet user id to access the ref sheets . Defaults to MY_ID.
-        mystorage_id (str, optional): google sheet storage id to access the ref sheets . Defaults to MYSTORAGE_ID.
-        sheetcreds (str, optional): @see updateTracker. Defaults to SHEETCREDS.
-        sheetname (str, optional): @see updateTracker. Defaults to SHEETNAME.
-        refsheet_url (str, optional): @see updateTracker. Defaults to REFSHEET_URL.
-        taiga_dataset (str, optional): where to save the output to on taiga. Defaults to TAIGA_CN.
-        dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to CNreadme.
-        subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
-        bamqc ([type], optional): @see updateTracker. Defaults to BAMQC.
-        procqc ([type], optional): @see updateTracker. Defaults to PROCQC.
-        source_rename ([type], optional): @see managing duplicates. Defaults to SOURCE_RENAME.
+        taiga_dataset (str, optional): where to save the output to on taiga. Defaults to env_config.TAIGA_CN.
+        dataset_description (str, optional): A long string that will be pushed to taiga to explain the CN dataset. Defaults to constants.CNreadme.
+        subsetsegs (list[str], optional): what columns to keep for the segments. Defaults to [constants.SAMPLEID, 'Chromosome', 'Start', 'End', 'Segment_Mean', 'Num_Probes', 'Status', 'Source'].
+        bamqc ([type], optional): @see updateTracker. Defaults to constants.BAMQC.
+        procqc ([type], optional): @see updateTracker. Defaults to constants.PROCQC.
+        source_rename ([type], optional): @see managing duplicates. Defaults to constants.SOURCE_RENAME.
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
     mytracker = track.SampleTracker()
@@ -364,18 +374,13 @@ def cnPostProcessing(
 
     assert len(tracker) != 0, "broken source for sample tracker"
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
+    save_dir = save_dir + samplesetname + "/"
     # doing wes
     folder = save_dir + "wes_"
     if wesfolder == "":
         print("doing wes")
-        todropwes = (
-            todrop
-            + tracker[
-                (tracker.ExpectedType == "wes") & (tracker.blacklist == 1)
-            ].index.tolist()
-        )
         (
             wessegments,
             wesgenecn,
@@ -388,16 +393,13 @@ def cnPostProcessing(
             wesrefworkspace,
             setEntity=wessetentity,
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
-            todrop=todropwes,
             save_output=folder,
-            genechangethresh=genechangethresh,
             segmentsthresh=segmentsthresh,
             maxYchrom=maxYchrom,
+            purecnsampleset=purecnsampleset,
             **kwargs,
         )
 
-        # wessegments_pr.to_csv(folder + "segments_all_profile.csv", index=False)
-        # wescn_pr.to_csv(folder + "genecn_all_profile.csv")
     else:
         print("bypassing WES using folder: " + wesfolder)
         wesfailed = h.fileToList(wesfolder + "failed.txt")
@@ -413,15 +415,15 @@ def cnPostProcessing(
         )
     # subset and rename to PR-indexed matrices
     wessegments_pr = (
-        wessegments[wessegments[SAMPLEID].isin(set(renaming_dict.keys()))]
-        .replace({SAMPLEID: renaming_dict})
+        wessegments[wessegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wes_purecn_segments_pr = (
         wes_purecn_segments[
-            wes_purecn_segments[SAMPLEID].isin(set(renaming_dict.keys()))
+            wes_purecn_segments[constants.SAMPLEID].isin(set(renaming_dict.keys()))
         ]
-        .replace({SAMPLEID: renaming_dict})
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wes_genecn_pr = wesgenecn[wesgenecn.index.isin(set(renaming_dict.keys()))].rename(
@@ -453,26 +455,23 @@ def cnPostProcessing(
         setEntity=wgssetentity,
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
-        genechangethresh=genechangethresh,
         segmentsthresh=segmentsthresh,
         maxYchrom=maxYchrom,
+        purecnsampleset=purecnsampleset,
         **kwargs,
     )
-
-    # with gumbo, no need to mark this selected field
-    selected = []
 
     try:
         track.updateTrackerWGS(
             tracker,
-            selected,
             samplesetname,
             wgsfailed,
             datatype=["wgs", "wes"],
             bamqc=bamqc,
             procqc=procqc,
             refworkspace=wgsrefworkspace,
-            dry_run=True,
+            dry_run=dryrun,
+            billing_proj=billing_proj,
         )
     except:
         print("no wgs for this sampleset")
@@ -480,28 +479,30 @@ def cnPostProcessing(
     try:
         track.updateTrackerWGS(
             tracker,
-            selected,
             samplesetname,
-            list(wesfailed),
+            wesfailed,
             datatype=["wes", "wgs"],
-            bamqc=bamqc,
-            procqc=procqc,
-            refworkspace=wesrefworkspace,
-            dry_run=True,
+            dry_run=dryrun,
+            billing_proj=billing_proj,
         )
     except:
         print("no wes for this sampleset")
 
+    pr_table = mytracker.update_pr_from_seq(["wgs"])
+    pr_table = mytracker.update_pr_from_seq(["wes"])
+
+    mytracker.close_gumbo_client()
+
     wgssegments_pr = (
-        wgssegments[wgssegments[SAMPLEID].isin(set(renaming_dict.keys()))]
-        .replace({SAMPLEID: renaming_dict})
+        wgssegments[wgssegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wgs_purecn_segments_pr = (
         wgs_purecn_segments[
-            wgs_purecn_segments[SAMPLEID].isin(set(renaming_dict.keys()))
+            wgs_purecn_segments[constants.SAMPLEID].isin(set(renaming_dict.keys()))
         ]
-        .replace({SAMPLEID: renaming_dict})
+        .replace({constants.SAMPLEID: renaming_dict})
         .reset_index(drop=True)
     )
     wgs_genecn_pr = wgsgenecn[wgsgenecn.index.isin(set(renaming_dict.keys()))].rename(
@@ -522,17 +523,16 @@ def cnPostProcessing(
     mergedsegments_pr = (
         mergedsegments_pr[
             [
-                SAMPLEID,
+                constants.SAMPLEID,
                 "Chromosome",
                 "Start",
                 "End",
-                "Segment_Mean",
-                "Num_Probes",
+                "SegmentMean",
+                "NumProbes",
                 "Status",
-                "Source",
             ]
         ]
-        .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
+        .sort_values(by=[constants.SAMPLEID, "Chromosome", "Start", "End"])
         .reset_index(drop=True)
     )
     mergedsegments_pr.loc[
@@ -546,16 +546,16 @@ def cnPostProcessing(
     merged_purecn_segments_pr = (
         merged_purecn_segments_pr[
             [
-                SAMPLEID,
+                constants.SAMPLEID,
                 "Chromosome",
                 "Start",
                 "End",
-                "Absolute_CN",
-                "Minor_allele_absolute_CN",
-                "LOH_status",
+                "MajorAlleleAbsoluteCN",
+                "MinorAlleleAbsoluteCN",
+                "LoHStatus",
             ]
         ]
-        .sort_values(by=[SAMPLEID, "Chromosome", "Start", "End"])
+        .sort_values(by=[constants.SAMPLEID, "Chromosome", "Start", "End"])
         .reset_index(drop=True)
     )
 
@@ -565,7 +565,7 @@ def cnPostProcessing(
     folder = save_dir
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
     mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
-    mergedcn = wgsgenecn.append(wesgenecn)
+    mergedcn = (wgsgenecn.append(wesgenecn)).apply(lambda x: np.log2(1 + x))
     mergedcn.to_csv(folder + "merged_genecn.csv")
     merged_purecn_segments = wgs_purecn_segments.append(
         wes_purecn_segments
@@ -573,14 +573,16 @@ def cnPostProcessing(
     merged_purecn_segments.to_csv(folder + "merged_absolute_segments.csv", index=False)
     merged_purecn_genecn = wgs_purecn_genecn.append(wes_purecn_genecn)
     merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn.csv")
-    merged_loh = wgs_loh.append(wgs_loh)
+    merged_loh = wgs_loh.append(wes_loh)
     merged_loh.to_csv(folder + "merged_loh.csv")
     merged_feature_table = wgs_feature_table.append(wes_feature_table)
     merged_feature_table.to_csv(folder + "merged_feature_table.csv")
 
     # profile-ID level
     mergedsegments_pr.to_csv(folder + "merged_segments_profile.csv", index=False)
-    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
+    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr).apply(
+        lambda x: np.log2(1 + x)
+    )
     mergedgenecn_pr.to_csv(folder + "merged_genecn_profile.csv")
     merged_purecn_segments_pr.to_csv(
         folder + "merged_absolute_segments_profile.csv", index=False
@@ -613,13 +615,13 @@ def cnPostProcessing(
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "merged_segments_all_profile.csv",
+                "path": folder + "merged_segments_profile.csv",
                 "name": "merged_segments_profile",
                 "format": "TableCSV",
                 "encoding": "utf-8",
             },
             {
-                "path": folder + "merged_genecn_all_profile.csv",
+                "path": folder + "merged_genecn_profile.csv",
                 "name": "merged_gene_cn_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
@@ -675,260 +677,415 @@ def cnPostProcessing(
             },
         ],
         dataset_description=dataset_description,
+        upload_async=False,
     )
     print("done")
     return wessegments, wgssegments
 
 
 async def mutationPostProcessing(
-    wesrefworkspace=WESMUTWORKSPACE,
-    wescnworkspace=WESCNWORKSPACE,
-    wgsrefworkspace=WGSWORKSPACE,
-    vcfdir=VCFDIR,
-    vcf_colname=VCFCOLNAME,
-    samplesetname=SAMPLESETNAME,
-    AllSamplesetName="all",
-    doCleanup=False,
-    taiga_description=Mutationsreadme,
-    taiga_dataset=TAIGA_MUTATION,
-    mutation_groups=MUTATION_GROUPS,
-    bed_location=GUIDESBED,
-    minfreqtocall=MINFREQTOCALL,
-    sv_col=SV_COLNAME,
-    sv_filename=SV_FILENAME,
+    wesrefworkspace: str = env_config.WESCNWORKSPACE,
+    wgsrefworkspace: str = env_config.WGSWORKSPACE,
+    vcfdir: str = constants.VCFDIR,
+    vcf_colname: str = constants.VCFCOLNAME,
+    samplesetname: str = constants.SAMPLESETNAME,
+    AllSamplesetName: str = "all",
+    taiga_description: str = constants.Mutationsreadme,
+    taiga_dataset: str = env_config.TAIGA_MUTATION,
+    bed_locations: dict = constants.GUIDESBED,
+    sv_col: str = constants.SV_COLNAME,
+    sv_filename: str = constants.SV_FILENAME,
+    mutcol: dict = constants.MUTCOL_DEPMAP,
+    mafcol: str = constants.MAF_COL,
+    doCleanup: bool = False,
+    run_sv: bool = True,
+    run_guidemat: bool = True,
+    upload_taiga: bool = True,
     **kwargs,
 ):
-    """the full CCLE mutations post processing pipeline (used only by CCLE)
+    """The full CCLE mutations post processing pipeline (used only by CCLE)
+
     see postprocess() to reproduce our analysis
+
     Args:
-        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to WESMUTWORKSPACE.
-        wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to WGSWORKSPACE.
-        samplesetname (str, optional): the sample set name to use (for the release). Defaults to SAMPLESETNAME.
+        wesrefworkspace (str, optional): the reference workspace for WES. Defaults to env_config.WESCNWORKSPACE.
+        wgsrefworkspace (str, optional): the reference workspace for WGS. Defaults to env_config.WGSWORKSPACE.
+        samplesetname (str, optional): the sample set name to use (for the release). Defaults to constants.SAMPLESETNAME.
         AllSamplesetName (str, optional): the sample set to use for all samples. Defaults to 'all'.
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
-        my_id (str, optional): filepath for google cloud access id file. Defaults to MY_ID.
-        mystorage_id (str, optional): filepath to a google cloud storage access file. Defaults to MYSTORAGE_ID.
-        refsheet_url (str, optional): path to the sample tracker google sheet. Defaults to REFSHEET_URL.
-        taiga_description (str, optional): description of the dataset on taiga. Defaults to Mutationsreadme.
-        taiga_dataset (str, optional): taiga folder location. Defaults to TAIGA_MUTATION.
-        mutation_groups (dict, optional): a dict to group mutations annotations into bigger groups. Defaults to MUTATION_GROUPS.
-        tokeep_wes (dict, optional): a dict of wes lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WES.
-        tokeep_wgs (dict, optional): a dict of wgs lines that are blacklisted on the tracker due to CN qc but we want to keep their mutation data. Defaults to RESCUE_FOR_MUTATION_WGS.
-        prev (pd.df, optional): the previous release dataset (to do QC). 
-            Defaults to ccle =>(tc.get(name=TAIGA_ETERNAL, file='CCLE_mutations')).
-        minfreqtocall (float, optional): the minimum frequency to call a mutation. Defaults to 0.25.
+        upload_taiga (bool, optional): whether to upload to taiga. Defaults to False.
     """
-    from taigapy import TaigaClient
-
     tc = TaigaClient()
 
+    wes_wm = dm.WorkspaceManager(wesrefworkspace)
+    wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
+
     # doing wes
-    print("doing wes")
-    folder = WORKING_DIR + samplesetname + "/wes_"
+    print("DOING WES")
+    folder = constants.WORKING_DIR + samplesetname + "/wes_"
 
     wesmutations, wessvs = mutations.postProcess(
-        wesrefworkspace,
+        wes_wm,
         AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
-        doCleanup=True,
-        mutCol="CGA_WES_AC",
+        sv_col=sv_col,
+        sv_filename=sv_filename,
+        mafcol=mafcol,
+        run_sv=run_sv,
         **kwargs,
     )
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
+    mytracker.close_gumbo_client()
+
     wesmutations_pr = wesmutations[
-        wesmutations[SAMPLEID].isin(renaming_dict.keys())
-    ].replace({SAMPLEID: renaming_dict})
+        wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
+    ].replace({constants.SAMPLEID: renaming_dict})
 
     # doing wgs
-    print("doing wgs")
-    folder = WORKING_DIR + samplesetname + "/wgs_"
+    print("DOING WGS")
+    folder = constants.WORKING_DIR + samplesetname + "/wgs_"
 
     wgsmutations, wgssvs = mutations.postProcess(
-        wgsrefworkspace,
-        sampleset="allcurrent",  # AllSamplesetName if AllSamplesetName else samplesetname,
+        wgs_wm,
+        sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
-        doCleanup=True,
-        mutCol="CGA_WES_AC",
+        sv_col=sv_col,
+        sv_filename=sv_filename,
+        mafcol=mafcol,
+        run_sv=run_sv,
         **kwargs,
     )
 
     wgsmutations_pr = wgsmutations[
-        wgsmutations[SAMPLEID].isin(renaming_dict.keys())
-    ].replace({SAMPLEID: renaming_dict})
+        wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
+    ].replace({constants.SAMPLEID: renaming_dict})
 
     # merge
-    print("merging")
-    folder = WORKING_DIR + samplesetname + "/merged_"
-    mergedmutations = wgsmutations.append(wesmutations).reset_index(drop=True)
+    print("merging WES and WGS")
+    folder = constants.WORKING_DIR + samplesetname + "/merged_"
+    mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
+        drop=True
+    )
+
+    # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
+    print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
+    hugo_mapping = pd.read_csv(constants.HGNC_MAPPING, sep="\t")
+    hugo_mapping = {
+        b: a for a, b in hugo_mapping[~hugo_mapping["Previous symbol"].isna()].values
+    }
+
+    mybiomart = h.generateGeneNames()
+    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
+
+    genes_in_maf = set(mergedmutations.hugo_symbol)
+    genes_not_in_biomart = genes_in_maf - set(mybiomart.hgnc_symbol)
+    maf_gene_renaming = dict()
+    maf_genes_to_drop = []
+    for gene in genes_not_in_biomart:
+        # if the hugo symbol in maf is outdated, and the new name is in biomart,
+        # we will rename it to the new name in the maf
+        if gene in hugo_mapping and hugo_mapping[gene] in set(mybiomart.hgnc_symbol):
+            maf_gene_renaming[gene] = hugo_mapping[gene]
+        # if the hugo symbol can't be found in biomart with or without hugo_mapping,
+        # we will drop that gene from the maf
+        else:
+            maf_genes_to_drop.append(gene)
+    mergedmutations = mergedmutations[
+        ~mergedmutations.hugo_symbol.isin(maf_genes_to_drop)
+    ]
+    mergedmutations = mergedmutations.replace({"hugo_symbol": maf_gene_renaming})
+
+    # add entrez id column
+    symbol_to_entrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.entrezgene_id))
+    mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
+        symbol_to_entrez_dict
+    )
+    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
+    mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
+    mergedmutations = mergedmutations.rename(columns=mutcol)
+
+    # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
+    # For all columns, convert "Y" to True/False
+    for col in mergedmutations.columns:
+        if "Y" in mergedmutations[col].values:
+            mergedmutations.loc[:, col] = np.where(
+                mergedmutations[col].values == "Y", True, False
+            )
+
     mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
 
-    mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
-    mergedsvs.to_csv(folder + "svs.csv", index=False)
-    mergedsvs_pr = mergedsvs[mergedsvs[SAMPLEID].isin(renaming_dict.keys())].replace(
-        {SAMPLEID: renaming_dict}
+    if run_sv:
+        if wgssvs is not None:
+            mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
+            mergedsvs.to_csv(folder + "svs.csv", index=False)
+            mergedsvs_pr = mergedsvs[
+                mergedsvs[constants.SAMPLEID].isin(renaming_dict.keys())
+            ].replace({constants.SAMPLEID: renaming_dict})
+            print("saving somatic svs")
+            mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
+
+    merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
+        drop=True
     )
-    mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
-    merged = wgsmutations_pr.append(wesmutations_pr).reset_index(drop=True)
+    # For all columns, convert "Y" to True/False
+    for col in merged.columns:
+        if "Y" in merged[col].values:
+            merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
 
-    # making binary mutation matrices
+    merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
+    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("Unknown")
+    merged = merged.drop(columns=["achilles_top_genes"])
+    merged = merged.rename(columns=mutcol)
+    merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
+
+    # making genotyped mutation matrices
     print("creating mutation matrices")
-    print("changing variant annotations")
-    rename = {}
-    for k, v in mutation_groups.items():
-        for e in v:
-            rename[e] = k
-    merged["Variant_annotation"] = [
-        rename[i] for i in merged["Variant_Classification"].tolist()
+    hotspot_mat, lof_mat, driver_mat = mutations.makeMatrices(merged)
+    # add entrez ids to column names
+    mybiomart["gene_name"] = [
+        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
+        if not pd.isna(i["entrezgene_id"])
+        else i["hgnc_symbol"] + " (Unknown)"
+        for _, i in mybiomart.iterrows()
+    ]
+    symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
+    hotspot_mat = hotspot_mat.rename(columns=symbol_to_symbolentrez_dict)
+    lof_mat = lof_mat.rename(columns=symbol_to_symbolentrez_dict)
+    driver_mat = driver_mat.rename(columns=symbol_to_symbolentrez_dict)
+
+    hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
+    lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
+    driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
+
+    merged.rename(
+        columns={
+            "HugoSymbol": "Hugo_Symbol",
+            "Chrom": "Chromosome",
+            "Pos": "Start_Position",
+            "VariantType": "Variant_Type",
+            "Ref": "Reference_Allele",
+            "Alt": "Alternate_Allele",
+            "DepMap_ID": "Tumor_Sample_Barcode",
+            "VariantInfo": "Variant_Classification",
+            "ProteinChange": "Protein_Change",
+        },
+        inplace=True,
+    )
+
+    merged.loc[:, "Chromosome"] = merged.loc[:, "Chromosome"].str.replace("chr", "")
+
+    def assign_end_pos(
+        *,
+        Start_Position: int,
+        Variant_Type: str,
+        Reference_Allele: str,
+        Alternate_Allele: str,
+        **kwargs,
+    ) -> int:
+        """Assign End_Position to different Variant_Type
+
+        NOTE: MAF is 1-based coordinate, https://www.biostars.org/p/84686/
+        If SNP/DNP, end_pos = start_pos + len(ref)
+        If INS, end_pos = start_pos + 1
+        If DEL, end_pos = start_pos + len(alt) - 1
+
+        Ignore multiple alleles now
+
+        Parameter
+        ----------
+        Start_Position: int,
+        Variant_Type: str,
+        Reference_Allele: str,
+        Alternate_Allele: str,
+
+        Return
+        ---------
+        End_Position: int
+        """
+        end_pos = Start_Position
+        if Variant_Type in ["SNP", "DNP", "TNP"]:
+            end_pos = Start_Position + len(Reference_Allele)
+        if Variant_Type == "INS":
+            end_pos = Start_Position + 1
+        if Variant_Type == "DEL":
+            end_pos = Start_Position + len(Alternate_Allele) - 1
+        # TODO add SV types
+        return end_pos
+
+    merged.loc[:, "End_Position"] = merged.apply(
+        lambda row: assign_end_pos(**row), axis=1
+    )
+
+    merged.loc[:, "NCBI_Build"] = "GRCh38"  # or 38?
+    merged.loc[:, "Strand"] = "+"  # TODO: need to check vcf2maf later
+    merged.loc[:, "Tumor_Seq_Allele1"] = merged.loc[
+        :, "Reference_Allele"
+    ]  # TODO: need to check vcf2maf later
+    merged.loc[:, "Tumor_Seq_Allele2"] = merged.loc[:, "Alternate_Allele"]
+
+    merged = merged.loc[
+        :,
+        [
+            "Hugo_Symbol",
+            "NCBI_Build",
+            "Chromosome",
+            "Start_Position",
+            "End_Position",
+            "Variant_Type",
+            "Reference_Allele",
+            "Tumor_Seq_Allele1",
+            "Tumor_Seq_Allele2",
+            "Tumor_Sample_Barcode",
+            "Variant_Classification",
+            "Protein_Change",
+        ],
     ]
 
-    # making a depmap version
-    # removing immortalized ffor now
-    merged = merged[~merged["is_likely_immortalization"]]
-    # reverting to previous versions
-    merged_maf = merged[MUTCOL_DEPMAP].rename(
-        columns={"Tumor_Allele": "Alternate_Allele"}
-    )
-    merged_maf.to_csv(folder + "somatic_mutations_fordepmap_profile.csv", index=False)
-
-    # making binary matrices
-    merged = merged[merged["Entrez_Gene_Id"] != 0]
-    merged["mutname"] = (
-        merged["Hugo_Symbol"] + " (" + merged["Entrez_Gene_Id"].astype(str) + ")"
-    )
-    mut.mafToMat(
-        merged[(merged.Variant_annotation == "damaging")],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv"
-    )
-    mut.mafToMat(
-        merged[(merged.Variant_annotation == "other conserving")],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv"
-    )
-    mut.mafToMat(
-        merged[(merged.Variant_annotation == "other non-conserving")],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_othernoncons.csv"
-    )
-    mut.mafToMat(
-        merged[(merged.isCOSMIChotspot | merged.isTCGAhotspot)],
-        mode="bool",
-        mutNameCol="mutname",
-        minfreqtocall=minfreqtocall,
-    ).astype(int).T.to_csv(
-        folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv"
+    # DepMap 20Q1 mutation issues.. https://github.com/PoisonAlien/maftools/issues/644
+    # Mapping of variant classification https://github.com/PoisonAlien/maftools/blob/41ddaabbd824f24a99f66439366be98775edebb2/R/icgc_to_maf.R#L52
+    merged.loc[:, "Variant_Classification"] = merged.loc[
+        :, "Variant_Classification"
+    ].map(
+        {
+            "MISSENSE": "Missense_Mutation",
+            "SILENT": "Silent",
+            "IN_FRAME_INS": "In_Frame_Ins",
+            "IN_FRAME_DEL": "In_Frame_Del",
+            "SPLICE_SITE": "Splice_Site",
+            "NONSENSE": "Nonsense_Mutation",
+            "FRAME_SHIFT_DEL": "Frame_Shift_Del",
+            "FRAME_SHIFT_INS": "Frame_Shift_Ins",
+            "NONSTOP": "Nonstop_Mutation",
+            "START_CODON_SNP": "Silent",
+            "START_CODON_INS": "Silent",
+        }
     )
 
-    # generate germline binary matrix
-    wgswm = dm.WorkspaceManager(wgsrefworkspace)
-    weswm = dm.WorkspaceManager(wescnworkspace)
-    wgs_samples = wgswm.get_samples()
-    wes_samples = weswm.get_samples()
-    wgs_vcfs = wgs_samples[vcf_colname]
-    wes_vcfs = wes_samples[vcf_colname]
-    vcflist = wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+    # sort by chrom, start, and end columns for IGV import
+    merged["Chromosome"] = merged["Chromosome"].replace({"X": 23, "Y": 24, "M": 25})
+    merged["Chromosome"] = merged["Chromosome"].astype("int")
+    merged = merged.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
+    merged["Chromosome"] = merged["Chromosome"].replace({23: "X", 24: "Y", 25: "M"})
 
-    print("generate germline binary matrix")
-    germline_mat = mut.generateGermlineMatrix(
-        vcflist,
-        vcfdir=vcfdir,
-        savedir=WORKING_DIR + samplesetname + "/",
-        filename="binary_mutguides.tsv.gz",
-        bed_location=bed_location,
-    )
-    # merging wes and wgs
-    print("merging and renaming wes and wgs germline matrices")
-    germline_mat_noguides = germline_mat.iloc[:, 4:]
+    # TODO: add pandera type validation
 
-    pr_table = mytracker.read_pr_table()
-    # transform from CDSID-level to PR-level
-    renaming_dict = dict(list(zip(pr_table.CDSID, pr_table.index)))
+    merged.to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
-    whitelist_cols = [x for x in germline_mat_noguides.columns if x in renaming_dict]
-    whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
-    mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
+    if run_guidemat:
+        # generate germline binary matrix
+        wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
+        wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
+        wgs_vcfs = wgs_samples[vcf_colname]
+        wes_vcfs = wes_samples[vcf_colname]
+        vcflist = (
+            wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
+        )
+        vcflist = [v for v in vcflist if v.startswith("gs://")]
 
-    mergedmat = mergedmat.astype(bool).astype(int)
-    sorted_mat = germline_mat.iloc[:, :4].join(mergedmat)
-    sorted_mat["end"] = sorted_mat["end"].astype(int)
-    print("saving wes and wgs germline matrices")
-    sorted_mat.to_csv(folder + "binary_germline.csv", index=False)
+        print("generating germline binary matrix")
+        germline_mats = mutations.generateGermlineMatrix(
+            vcflist,
+            vcfdir=vcfdir,
+            savedir=constants.WORKING_DIR + samplesetname + "/",
+            filename="binary_mutguides.tsv.gz",
+            bed_locations=bed_locations,
+        )
+        for lib, mat in germline_mats.items():
+            # merging wes and wgs
+            print("renaming merged wes and wgs germline matrix for library: ", lib)
+            germline_mat_noguides = mat.iloc[:, 4:]
+
+            # transform from CDSID-level to PR-level
+            whitelist_cols = [
+                x for x in germline_mat_noguides.columns if x in renaming_dict
+            ]
+            whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
+            mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
+
+            mergedmat = mergedmat.astype(bool).astype(int)
+            sorted_mat = mat.iloc[:, :4].join(mergedmat)
+            sorted_mat["end"] = sorted_mat["end"].astype(int)
+            print("saving merged binary matrix for library: ", lib)
+            sorted_mat.to_csv(
+                folder + "binary_germline" + "_" + lib + ".csv", index=False
+            )
     # uploading to taiga
-    tc.update_dataset(
-        changes_description="new " + samplesetname + " release!",
-        dataset_permaname=taiga_dataset,
-        upload_files=[
-            # for depmap
-            {
-                "path": folder + "somatic_mutations_boolmatrix_fordepmap_hotspot.csv",
-                "name": "somaticMutations_boolMatrix_hotspot_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder
-                + "somatic_mutations_boolmatrix_fordepmap_othernoncons.csv",
-                "name": "somaticMutations_boolMatrix_otherNonconserving_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations_boolmatrix_fordepmap_damaging.csv",
-                "name": "somaticMutations_boolMatrix_damaging_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            # {
-            #     "path": folder + "somatic_mutations_boolmatrix_fordepmap_othercons.csv",
-            #     "name": "somaticMutations_boolMatrix_otherConserving_profile",
-            #     "format": "NumericMatrixCSV",
-            #     "encoding": "utf-8",
-            # },
-            {
-                "path": folder + "somatic_mutations_fordepmap_profile.csv",
-                "name": "somaticMutations_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "somatic_mutations.csv",
-                "name": "somaticMutations_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_binary_germline.csv",
-                "name": "binary_germline_mutation",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "svs.csv",
-                "name": "structuralVariants_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "svs_profile.csv",
-                "name": "structuralVariants_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-        ],
-        upload_async=False,
-        dataset_description=taiga_description,
-    )
-
+    if upload_taiga:
+        tc.update_dataset(
+            changes_description="new " + samplesetname + " release!",
+            dataset_permaname=taiga_dataset,
+            upload_files=[
+                {
+                    "path": folder + "somatic_mutations_genotyped_driver_profile.csv",
+                    "name": "somaticMutations_genotypedMatrix_driver_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_genotyped_hotspot_profile.csv",
+                    "name": "somaticMutations_genotypedMatrix_hotspot_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_genotyped_damaging_profile.csv",
+                    "name": "somaticMutations_genotypedMatrix_damaging_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_profile.csv",
+                    "name": "somaticMutations_profile",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_profile.maf.csv",
+                    "name": "somaticMutations_profile_maf",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations.csv",
+                    "name": "somaticMutations_withReplicates",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "binary_germline_avana.csv",
+                    "name": "binary_mutation_avana",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "binary_germline_ky.csv",
+                    "name": "binary_mutation_ky",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "binary_germline_humagne.csv",
+                    "name": "binary_mutation_humagne",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "svs.csv",
+                    "name": "structuralVariants_withReplicates",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "svs_profile.csv",
+                    "name": "structuralVariants_profile",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+            ],
+            upload_async=False,
+            dataset_description=taiga_description,
+        )
