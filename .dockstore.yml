@@ -203,6 +203,7 @@ workflows:
         - dev
         - master
         - add-cosmic-to-oc
+        - add-oncokb-to-oc
   - name: vcf_to_depmap
     subclass: WDL
     publish: True
