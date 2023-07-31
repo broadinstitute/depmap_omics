@@ -262,7 +262,7 @@ def vcf_to_df(
                             description.update({val: FUNCO_DESC})
                     elif res == "ANN":
                         print("parsing funcitonal annotation from SnpEff")
-                        for val in l.split("Description=")[1][:-3].split(" | "):
+                        for val in l.split("Description=")[1][:-5].split(" | "):
                             val = "snpeff_" + val.split("Functional annotations: '")[-1]
                             description.update({val: SNPEFF_ANN_DESC})
                     elif res == "CSQ":
@@ -336,7 +336,10 @@ def vcf_to_df(
                             for i, sub_annot in enumerate(site.split("|")):
                                 res[snpeff_fields[i]].append(sub_annot)
                         for k in snpeff_fields:
-                            res[k] = ",".join(res[k])
+                            if "".join(res[k]) != "":
+                                res[k] = ",".join(res[k])
+                            else:
+                                res[k] = ""
                     elif "CSQ" in annot:
                         annot = annot.replace("CSQ=", "")
                         res.update({name: [] for name in vep_fields})
@@ -344,7 +347,10 @@ def vcf_to_df(
                             for i, sub_annot in enumerate(site.split("|")):
                                 res[vep_fields[i]].append(sub_annot)
                         for k in vep_fields:
-                            res[k] = ",".join(res[k])
+                            if "".join(res[k]) != "":
+                                res[k] = ",".join(res[k])
+                            else:
+                                res[k] = ""
                     else:
                         k, annot = annot.split("=")
                         res.update({k: annot})
