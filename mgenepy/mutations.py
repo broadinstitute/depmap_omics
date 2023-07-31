@@ -238,6 +238,7 @@ def vcf_to_df(
     FUNCO_DESC = "Functional annotation from the Funcotator tool."
     VEP_CSQ_DESC = "Consequence annotations from Ensembl VEP."
     SNPEFF_ANN_DESC = "Functional annotations from SnpEff"
+    SNPEFF_LOF_DESC = "Predicted loss of function effects from SnpEff"
 
     dropped_cols = []
 
@@ -263,6 +264,11 @@ def vcf_to_df(
                     elif res == "ANN":
                         print("parsing funcitonal annotation from SnpEff")
                         for val in l.split("Description=")[1][:-5].split(" | "):
+                            val = "snpeff_" + val.split("Functional annotations: '")[-1]
+                            description.update({val: SNPEFF_ANN_DESC})
+                    elif res == "LOF":
+                        print("parsing predicted LOF status from SnpEff")
+                        for val in l.split("Description=")[1][:-4].split(" | "):
                             val = "snpeff_" + val.split("Functional annotations: '")[-1]
                             description.update({val: SNPEFF_ANN_DESC})
                     elif res == "CSQ":
