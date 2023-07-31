@@ -77,10 +77,47 @@ def main(args=None):
 
     processed_count = 0
     for i in range(10_000):
+        # boolean annotations in vcf
+        bool_cols = [
+            "PON",
+            "ASP",
+            "R3",
+            "R5",
+            "VLD",
+            "INT",
+            "SLO",
+            "KGPhase1",
+            "KGPhase3",
+            "GNO",
+            "HD",
+            "RV",
+            "G5",
+            "G5A",
+            "NSM",
+            "REF",
+            "NOV",
+            "SYN",
+            "S3D",
+            "LSD",
+            "PM",
+            "PMC",
+            "U3",
+            "U5",
+            "NSF",
+            "NSN",
+            "NOC",
+            "MTP",
+            "DSS",
+            "TPA",
+            "OTH",
+            "ASS",
+            "CFL",
+            "OM",
+        ]
         # read in vcf as a df
         vcf_file, _, _ = mutations.vcf_to_df(
             vcf_filename,
-            additional_cols=["PON"],
+            additional_cols=bool_cols,
             parse_filter=True,
             force_keep=force_keep
             + list(TO_RENAME_OC.keys())
