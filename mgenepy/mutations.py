@@ -4,6 +4,7 @@ import seaborn as sns
 from mgenepy.utils import helper as h
 import gzip
 
+
 def manageGapsInSegments(
     segtocp, Chromosome="Chromosome", End="End", Start="Start", cyto=None
 ):
@@ -235,6 +236,8 @@ def vcf_to_df(
     ] + additional_filters
 
     FUNCO_DESC = "Functional annotation from the Funcotator tool."
+    VEP_CSQ_DESC = "Consequence annotations from Ensembl VEP."
+    SNPEFF_ANN_DESC = "Functional annotations from SnpEff"
 
     dropped_cols = []
 
@@ -257,6 +260,16 @@ def vcf_to_df(
                         for val in l.split("Description=")[1][:-2].split("|"):
                             val = val.split("Funcotation fields are: ")[-1]
                             description.update({val: FUNCO_DESC})
+                    elif res == "ANN":
+                        print("parsing funcitonal annotation from SnpEff")
+                        for val in l.split("Description=")[1][:-3].split(" | "):
+                            val = "snpeff_" + val.split("Functional annotations: '")[-1]
+                            description.update({val: SNPEFF_ANN_DESC})
+                    elif res == "CSQ":
+                        print("parsing VEP CSQ")
+                        for val in l.split("Description=")[1][:-3].split("|"):
+                            val = "vep_" + val.split("Format: ")[-1]
+                            description.update({val: VEP_CSQ_DESC})
                     else:
                         desc = l.split("Description=")[1][:-2]
                         description.update({res: desc})
@@ -284,6 +297,8 @@ def vcf_to_df(
     data = pd.read_csv(path, **{**kwargs, **csvkwargs})
     print(description)
     funco_fields = [k for k, v in description.items() if FUNCO_DESC in v]
+    vep_fields = [k for k, v in description.items() if VEP_CSQ_DESC in v]
+    snpeff_fields = [k for k, v in description.items() if SNPEFF_ANN_DESC in v]
     fields = {k: [] for k, _ in description.items()}
     try:
         for j, info in enumerate(data["INFO"].str.split(";").values.tolist()):
@@ -313,6 +328,22 @@ def vcf_to_df(
                             for i, sub_annot in enumerate(site):
                                 res[funco_fields[i]].append(sub_annot)
                         for k in funco_fields:
+                            res[k] = ",".join(res[k])
+                    elif "ANN" in annot:
+                        annot = annot.replace("ANN=", "")
+                        res.update({name: [] for name in snpeff_fields})
+                        for site in annot.split(","):
+                            for i, sub_annot in enumerate(site.split("|")):
+                                res[snpeff_fields[i]].append(sub_annot)
+                        for k in snpeff_fields:
+                            res[k] = ",".join(res[k])
+                    elif "CSQ" in annot:
+                        annot = annot.replace("CSQ=", "")
+                        res.update({name: [] for name in vep_fields})
+                        for site in annot.split(","):
+                            for i, sub_annot in enumerate(site.split("|")):
+                                res[vep_fields[i]].append(sub_annot)
+                        for k in vep_fields:
                             res[k] = ",".join(res[k])
                     else:
                         k, annot = annot.split("=")
