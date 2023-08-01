@@ -263,14 +263,15 @@ def vcf_to_df(
                             description.update({val: FUNCO_DESC})
                     elif res == "ANN":
                         print("parsing funcitonal annotation from SnpEff")
+                        l = l.replace(" / ", "_")
                         for val in l.split("Description=")[1][:-5].split(" | "):
                             val = "snpeff_" + val.split("Functional annotations: '")[-1]
                             description.update({val: SNPEFF_ANN_DESC})
                     elif res == "LOF":
                         print("parsing predicted LOF status from SnpEff")
                         for val in l.split("Description=")[1][:-4].split(" | "):
-                            val = "snpeff_" + val.split("Functional annotations: '")[-1]
-                            description.update({val: SNPEFF_ANN_DESC})
+                            val = "lof_" + val.split("Format: '")[-1]
+                            description.update({val: SNPEFF_LOF_DESC})
                     elif res == "CSQ":
                         print("parsing VEP CSQ")
                         for val in l.split("Description=")[1][:-3].split("|"):
@@ -305,6 +306,7 @@ def vcf_to_df(
     funco_fields = [k for k, v in description.items() if FUNCO_DESC in v]
     vep_fields = [k for k, v in description.items() if VEP_CSQ_DESC in v]
     snpeff_fields = [k for k, v in description.items() if SNPEFF_ANN_DESC in v]
+    lof_fields = [k for k, v in description.items() if SNPEFF_LOF_DESC in v]
     fields = {k: [] for k, _ in description.items()}
     try:
         for j, info in enumerate(data["INFO"].str.split(";").values.tolist()):
@@ -317,7 +319,7 @@ def vcf_to_df(
                     res.update({annot: True})
                 elif "=" in annot:
                     # taking care of the funcotator special fields
-                    if "FUNCOTATION" in annot:
+                    if "FUNCOTATION=" in annot:
                         # for multi allelic site:
                         annot = annot.replace("FUNCOTATION=", "")[1:-1]
                         res.update({name: [] for name in funco_fields})
@@ -335,7 +337,7 @@ def vcf_to_df(
                                 res[funco_fields[i]].append(sub_annot)
                         for k in funco_fields:
                             res[k] = ",".join(res[k])
-                    elif "ANN" in annot:
+                    elif "ANN=" in annot:
                         annot = annot.replace("ANN=", "")
                         res.update({name: [] for name in snpeff_fields})
                         for site in annot.split(","):
@@ -346,7 +348,19 @@ def vcf_to_df(
                                 res[k] = ",".join(res[k])
                             else:
                                 res[k] = ""
-                    elif "CSQ" in annot:
+                    elif "LOF=" in annot:
+                        annot = annot.replace("LOF=(", "")
+                        annot = annot.replace(")", "")
+                        res.update({name: [] for name in lof_fields})
+                        for site in annot.split(","):
+                            for i, sub_annot in enumerate(site.split("|")):
+                                res[lof_fields[i]].append(sub_annot)
+                        for k in lof_fields:
+                            if "".join(res[k]) != "":
+                                res[k] = ",".join(res[k])
+                            else:
+                                res[k] = ""
+                    elif "CSQ=" in annot:
                         annot = annot.replace("CSQ=", "")
                         res.update({name: [] for name in vep_fields})
                         for site in annot.split(","):
