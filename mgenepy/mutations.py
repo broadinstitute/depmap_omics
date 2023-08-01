@@ -238,7 +238,7 @@ def vcf_to_df(
     FUNCO_DESC = "Functional annotation from the Funcotator tool."
     VEP_CSQ_DESC = "Consequence annotations from Ensembl VEP."
     SNPEFF_ANN_DESC = "Functional annotations from SnpEff"
-    SNPEFF_LOF_DESC = "Predicted loss of function effects from SnpEff"
+    LOF_DESC = "Predicted loss of function effects from VEP"
 
     dropped_cols = []
 
@@ -263,7 +263,7 @@ def vcf_to_df(
                             description.update({val: FUNCO_DESC})
                     elif res == "ANN":
                         print("parsing funcitonal annotation from SnpEff")
-                        l = l.replace(" / ", "_")
+                        l = l.replace(" / ", "_").replace(".", "_")
                         for val in l.split("Description=")[1][:-5].split(" | "):
                             val = "snpeff_" + val.split("Functional annotations: '")[-1]
                             description.update({val: SNPEFF_ANN_DESC})
@@ -271,7 +271,7 @@ def vcf_to_df(
                         print("parsing predicted LOF status from SnpEff")
                         for val in l.split("Description=")[1][:-4].split(" | "):
                             val = "lof_" + val.split("Format: '")[-1]
-                            description.update({val: SNPEFF_LOF_DESC})
+                            description.update({val: LOF_DESC})
                     elif res == "CSQ":
                         print("parsing VEP CSQ")
                         for val in l.split("Description=")[1][:-3].split("|"):
@@ -306,7 +306,7 @@ def vcf_to_df(
     funco_fields = [k for k, v in description.items() if FUNCO_DESC in v]
     vep_fields = [k for k, v in description.items() if VEP_CSQ_DESC in v]
     snpeff_fields = [k for k, v in description.items() if SNPEFF_ANN_DESC in v]
-    lof_fields = [k for k, v in description.items() if SNPEFF_LOF_DESC in v]
+    lof_fields = [k for k, v in description.items() if LOF_DESC in v]
     fields = {k: [] for k, _ in description.items()}
     try:
         for j, info in enumerate(data["INFO"].str.split(";").values.tolist()):
