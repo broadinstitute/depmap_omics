@@ -403,6 +403,8 @@ def vcf_to_df(
         print("dropping uninformative columns:", to_drop)
         data = data.drop(columns=to_drop)
         dropped_cols += to_drop
+
+    data = data.rename(columns={"REF": "REF_FLAG"})
     data.columns = [i.lower() for i in data.columns]
     samples = [i.lower() for i in colnames[9:]]
     print("\nthe samples are:", samples)
