@@ -277,6 +277,10 @@ def vcf_to_df(
                         for val in l.split("Description=")[1][:-3].split("|"):
                             val = "vep_" + val.split("Format: ")[-1]
                             description.update({val: VEP_CSQ_DESC})
+                    elif res == "REF":
+                        description.update(
+                            {"REF_FLAG": l.split("Description=")[1][:-2]}
+                        )
                     else:
                         desc = l.split("Description=")[1][:-2]
                         description.update({res: desc})
@@ -316,7 +320,10 @@ def vcf_to_df(
                 print(j, end="\r")
             for annot in info:
                 if annot in uniqueargs:
-                    res.update({annot: True})
+                    if annot == "REF":
+                        res.update({"REF_FLAG": True})
+                    else:
+                        res.update({annot: True})
                 elif "=" in annot:
                     # taking care of the funcotator special fields
                     if "FUNCOTATION=" in annot:
@@ -404,7 +411,6 @@ def vcf_to_df(
         data = data.drop(columns=to_drop)
         dropped_cols += to_drop
 
-    data = data.rename(columns={"REF": "REF_FLAG"})
     data.columns = [i.lower() for i in data.columns]
     samples = [i.lower() for i in colnames[9:]]
     print("\nthe samples are:", samples)
