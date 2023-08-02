@@ -224,3 +224,248 @@ workflows:
     filters: # All tags, no branches
       branches:
         - qq-vcf2maf-test
+  - name: vcf2maf
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/vcf2maf/vcf2maf.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - qq-vcf2maf-test
+  - name: hgvs
+version: 1.2
+workflows:
+  - name: cnn-variant-filter
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/cnn-variant-filter.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+  - name: RNA_aggregate
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /RNA_pipeline/RNA_aggregate.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+  - name: RNA_pipeline
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /RNA_pipeline/RNA_pipeline.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+  - name: WGS_pipeline
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/WGS_pipeline.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+  - name: WGS_aggregate
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/WGS_aggregate.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+  - name: rnaseq_mutect2_tumor_only
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /RNA_pipeline/rnaseq_mutect2_tumor_only.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+  - name: rsem_depmap
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /RNA_pipeline/rsem_depmap.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - rsem_confidence_interval_calculation
+  - name: opencravat
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/opencravat.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: bcftools_setGT
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/bcftools.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: fix_mutect2col
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/fix_mutect2col.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: omics_mutect2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/omics_mutect2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: manta_annot
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/manta_annot.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: Manta_SomaticSV
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/Manta_SomaticSV.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: fix_mutect2_clust
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/fix_mutect2_clust.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: merge_mutect2_replicates
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/merge_mutect2_replicates.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: filter_to_maf
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/filter_to_maf.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: merge_and_upload
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/merge_and_upload.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: omics_post_mutect2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/omics_post_mutect2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - finishing_mutation_pipeline
+  - name: opencravat_dm
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/opencravat_dm.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - add-cosmic-to-oc
+        - add-oncokb-to-oc
+  - name: vcf_to_depmap
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/vcf_to_depmap.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - mutation-annotation-eval
+  - name: vcf2maf
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/vcf2maf/vcf2maf.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - qq-vcf2maf-test
+  - name: hgvs
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/hgvs/hgvs.wdl
+    testParameterFiles:
+      - /sandbox/hgvs/test.json
+    filters: # All tags, no branches
+      branches:
+        - dev-hgvs
