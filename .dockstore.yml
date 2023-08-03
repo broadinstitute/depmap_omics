@@ -224,3 +224,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - qq-vcf2maf-test
+  - name: hgvs
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/hgvs/hgvs.wdl
+    testParameterFiles:
+      - /sandbox/hgvs/test.json
+    filters: # All tags, no branches
+      branches:
+        - dev-hgvs
