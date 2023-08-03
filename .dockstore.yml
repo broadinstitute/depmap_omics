@@ -233,3 +233,14 @@ workflows:
     filters: # All tags, no branches
       branches:
         - dev-hgvs
+        - master
+  - name: annotate_variants
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/hannotate_variantsgvs.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - merge-annotators
+        - master
