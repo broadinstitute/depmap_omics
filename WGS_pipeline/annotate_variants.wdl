@@ -24,3 +24,4 @@ workflow annotateVariants {
     output {
         hgvs_oc_vcf = open_cravat.oc_main_file
     }
+}
