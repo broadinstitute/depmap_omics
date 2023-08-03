@@ -298,9 +298,7 @@ def improve(
 
     print("re-annotating CIVIC using static dataframe:")
     vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
-    vcf = vcf.drop(
-        columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]
-    ).rename(
+    vcf = vcf.rename(
         columns={
             "description": "oc_civic__description",
             "civic_actionability_score": "oc_civic__clinical_a_score",
@@ -322,29 +320,6 @@ def improve(
             to_add.append("")
     vcf["issues"] = to_add
     todrop = ["dbsnp_asp", "dbsnp_cfl"]
-
-    # defining hotspot
-    vcf["cosmic_hotspot"] = ""
-
-    hotspot_l = []
-    for cosmic_over in list(
-        set(
-            vcf[vcf["cosmic_overlapping_mutations"] != ""][
-                "cosmic_overlapping_mutations"
-            ]
-        )
-    ):
-        # finding the number in " p.I517T(13)", " p.I517T(13), p.G202G(15), p.?(56)"
-        res = sum(
-            [
-                int(val.group(0)[1:-1])
-                for val in re.finditer(r"([(])\d+([)])", cosmic_over)
-            ]
-        )
-        if res > min_count_hotspot:
-            hotspot_l.append(cosmic_over)
-    loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
-    vcf.loc[loc, "cosmic_hotspot"] = "Y"
 
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
