@@ -1,0 +1,4 @@
+{
+    "HgvsWorkflow.input_vcf": "test.vcf",
+    "HgvsWorkflow.sample_id": "test"
+}
