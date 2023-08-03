@@ -86,10 +86,6 @@ task annotate_hgvs_task {
         mkdir -p ./db/GRCh38/clinvar/
         cp ~{clinvar_data} ~{clinvar_data_tbi} ./db/GRCh38/clinvar/
         java -jar ~{snpsift} Annotate -clinvar -db ~{clinvar_data} ~{sample_id}.norm.snpeff.vcf > ~{sample_id}.norm.snpeff.clinvar.vcf
-        
-        mkdir -p ./db/GRCh38/dbsnp
-        cp ~{dbsnp_data} ~{dbsnp_data_tbi} ./db/GRCh38/dbsnp/
-        java -jar ~{snpsift} Annotate -dbsnp -db ~{dbsnp_data} ~{sample_id}.norm.snpeff.clinvar.vcf > ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf
 
         tar -C /tmp -xvzf ~{vep_data} 
         ls /tmp
@@ -102,14 +98,14 @@ task annotate_hgvs_task {
        
         cp ~{pLi} ~{LoF} /tmp
 
-        vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf \
-            --output_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
+        vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.vcf \
+            --output_file ~{sample_id}.norm.snpeff.clinvar.vep.vcf \
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
             --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
             --pick 
 
         perl /vcf2maf/vcf2maf.pl \
-            --input-vcf ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
+            --input-vcf ~{sample_id}.norm.snpeff.clinvar.vep.vcf \
             --output-maf ~{sample_id}.maf \
             --ref /tmp/Homo_sapiens_assembly38.fasta.gz \
             --vep-path /opt/conda/envs/vep/bin/ \
@@ -128,7 +124,7 @@ task annotate_hgvs_task {
 
     output {
         File output_maf = "~{sample_id}.maf"        
-        File output_vep_vcf = "~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf"
+        File output_vep_vcf = "~{sample_id}.norm.snpeff.clinvar.vep.vcf"
     }
 }
 
