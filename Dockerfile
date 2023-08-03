@@ -23,3 +23,4 @@ COPY depmapomics /install/depmapomics
 COPY mgenepy /install/mgenepy
 RUN cd /install && poetry install
 
+RUN pip install biomart
