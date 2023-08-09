@@ -1,10 +1,14 @@
-"""bigquery demo from Phil."""
+""" BigQuery batch search script for DepMap mutation data
+"""
+
 import dalmatian
 from dataclasses import dataclass
 import pandas as pd
 import pickle
 import os
+import glob
 import multiprocessing as mp
+import argparse
 
 from google.cloud import bigquery
 from tqdm import tqdm
@@ -13,8 +17,9 @@ from google.api_core.exceptions import BadRequest
 import queue
 
 namespace = "broad-firecloud-ccle"
-workspaces = ["DepMap_WES_CN_hg38", "DepMap_WGS_CN"]
-dest_dataset = "depmap-omics.maf_staging"
+#workspaces = ["DepMap_WES_CN_hg38", "DepMap_WGS_CN"]
+workspaces = ["DEV_DepMap_WES_CN_hg38"]
+
 
 
 @dataclass
@@ -26,7 +31,7 @@ class Transfer:
     cds_id: str
 
 
-def get_transfers(workspace):
+def get_transfers(workspace, dest_dataset='', ids=None):
     """Get all transfers from Terra workspaces."""
     wm = dalmatian.WorkspaceManager(f"{namespace}/{workspace}")
 
@@ -36,9 +41,11 @@ def get_transfers(workspace):
     transfers = []
     for rec in sample.to_dict("records"):
         if isinstance(rec['full_file'], list):
-            dest_table = f"{dest_dataset}.stage_maf_{rec['sample_id'].replace('-', '_')}"
-            transfers.append(Transfer(rec['full_file'], dest_table, rec["sample_id"]))
-
+            dest_table = f"{dest_dataset}.{rec['sample_id'].replace('-', '_')}".lower()
+            if ids is None:
+                transfers.append(Transfer(rec['full_file'], dest_table, rec["sample_id"]))
+            elif isinstance(ids, list) and rec["sample_id"] in ids:
+                transfers.append(Transfer(rec['parquet_with_hgvs'], dest_table, rec["sample_id"]))
     return transfers
 
 
@@ -92,7 +99,7 @@ def do_transfer(client, transfer, dest_table, dest_column_names, expected_schema
         if "CDS_ID" not in column_names:
             selection = f"'{transfer.cds_id}' CDS_ID, {selection}"
 
-        append_stmt = f"insert into {dest_table} select {selection} from {transfer.dest_table} where hugo_symbol != '' and hugo_symbol is not NULL"
+        append_stmt = f"insert into {dest_table} select {selection} from {transfer.dest_table}" # where hugo_symbol != '' and hugo_symbol is not NULL"
         job = client.query(append_stmt)            
         try:
             job.result() # wait for completion
@@ -122,7 +129,7 @@ def copy_in_parallel(transfers, parallism, dest_table):
     failures = []
     q = mp.Queue()
     results = mp.Queue()
-    processes = [mp.Process(target=start_worker, args=(q,results, dest_table)) for i in range(parallism)]
+    processes = [mp.Process(target=start_worker, args=(q, results, dest_table)) for i in range(parallism)]
 
     # fill up the queue with transfers
     for transfer in transfers:
@@ -147,7 +154,7 @@ def create_batches(data, batch_size):
     return [data[x:x+batch_size] for x in range(0, len(data), batch_size)]
 
 # Concatenate table adding CDS_ID to the dest table
-def concatenate_tables(dest_table, transfers, parallelism):
+def concatenate_tables(dest_table, client, transfers, parallelism):
     # create table for first transfer to copy schema from that one
     parq_table = create_ext_table(client, transfers[0].srcs, transfers[0].dest_table)
 
@@ -157,20 +164,34 @@ def concatenate_tables(dest_table, transfers, parallelism):
     client.delete_table(parq_table)
 
     # figure out which cds_ids have already been loaded
-    already_loaded = set(pd.read_gbq(f"""select distinct cds_id from `{dest_dataset}.merged_maf` """)["cds_id"])
+    already_loaded = set(pd.read_gbq(f"""select distinct cds_id from `{dest_table}` """)["cds_id"])
     
     # drop transfers already loaded
     remaining_transfers = [x for x in transfers if x.cds_id not in already_loaded]
     # remaining_transfers = remaining_transfers[:2]
 
     print(f"{len(already_loaded)} CDS IDs already loaded. {len(remaining_transfers)} of {len(transfers)} tables need to be loaded")
+    print(already_loaded)
 
     failures = copy_in_parallel(remaining_transfers, parallism=parallelism, dest_table=dest_table)
+    print(failures)
 
     print(f"{len(failures)} failures")
 
 
-if __name__ == "__main__":
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ids", default='CDS-00rz9N,CDS-01bI6z', type=str, required=True, help="CDS IDs to constraint the data query")
+    parser.add_argument("--dest", default='depmap-omics.maf_staging', required=False, help="use workspace stored parquet file or local parquet file")
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    args = parse_arguments()
+    print(args)
+    ids = args.ids.split(',')
+
     pickled_transfers = "transfers.pickled"
     if os.path.exists(pickled_transfers):
         print(f"Reading cached transfers from {pickled_transfers}. Delete this file if you want to get a fresh snapshot of all files from Terra")
@@ -178,11 +199,14 @@ if __name__ == "__main__":
     else:
         transfers = []
         for workspace in workspaces:
-            transfers.extend(get_transfers(workspace))
+            transfers.extend(get_transfers(workspace, args.dest, ids))
         with open(pickled_transfers, "wb") as fd:
             pickle.dump(transfers, fd)
+    print(transfers)
 
-    # Construct a BigQuery client object.
+    #Construct a BigQuery client object.
     client = bigquery.Client()
+    concatenate_tables(f"{args.dest}.merged_maf_new", client, transfers, parallelism=8)
 
-    concatenate_tables(f"{dest_dataset}.merged_maf", transfers, parallelism=8)
+if __name__ == "__main__":
+    main()
