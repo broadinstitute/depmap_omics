@@ -257,23 +257,23 @@ def vcf_to_df(
                 if "INFO" in l[:20]:
                     res = l.split("ID=")[1].split(",")[0]
                     if res == "FUNCOTATION":
-                        print("parsing funcotator special")
+                        #print("parsing funcotator special")
                         for val in l.split("Description=")[1][:-2].split("|"):
                             val = val.split("Funcotation fields are: ")[-1]
                             description.update({val: FUNCO_DESC})
                     elif res == "ANN":
-                        print("parsing funcitonal annotation from SnpEff")
+                        #print("parsing funcitonal annotation from SnpEff")
                         l = l.replace(" / ", "_").replace(".", "_")
                         for val in l.split("Description=")[1][:-5].split(" | "):
                             val = "snpeff_" + val.split("Functional annotations: '")[-1]
                             description.update({val: SNPEFF_ANN_DESC})
                     elif res == "LOF":
-                        print("parsing predicted LOF status from SnpEff")
+                        #print("parsing predicted LOF status from SnpEff")
                         for val in l.split("Description=")[1][:-4].split(" | "):
                             val = "lof_" + val.split("Format: '")[-1]
                             description.update({val: LOF_DESC})
                     elif res == "CSQ":
-                        print("parsing VEP CSQ")
+                        #print("parsing VEP CSQ")
                         for val in l.split("Description=")[1][:-3].split("|"):
                             val = "vep_" + val.split("Format: ")[-1]
                             description.update({val: VEP_CSQ_DESC})
@@ -306,7 +306,7 @@ def vcf_to_df(
         "skiprows": nrows_toskip + kwargs.get("skiprows", 0),
     }
     data = pd.read_csv(path, **{**kwargs, **csvkwargs})
-    print(description)
+    #print(description)
     funco_fields = [k for k, v in description.items() if FUNCO_DESC in v]
     vep_fields = [k for k, v in description.items() if VEP_CSQ_DESC in v]
     snpeff_fields = [k for k, v in description.items() if SNPEFF_ANN_DESC in v]
@@ -386,7 +386,7 @@ def vcf_to_df(
             for k in list(fields.keys()):
                 fields[k].append(res.get(k, None))
     except ValueError:
-        print(annot)
+        #print(annot)
         raise ValueError("unknown field")
 
     data = pd.concat(
@@ -413,7 +413,7 @@ def vcf_to_df(
 
     data.columns = [i.lower() for i in data.columns]
     samples = [i.lower() for i in colnames[9:]]
-    print("\nthe samples are:", samples)
+    #print("\nthe samples are:", samples)
     sorting = data["format"][0].split(":")
     for sample in samples:
         res = data[sample].str.split(":").values.tolist()
