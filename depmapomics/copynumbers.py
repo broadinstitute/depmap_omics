@@ -144,6 +144,93 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
     return renaming
 
 
+def arm_call(
+    df,
+    cn_colname="SegmentAbsoluteCN",
+    width_colname="seg_width",
+    ploidy_colname="Ploidy",
+):
+    """determines arm-level CNA. Outputs can be 1 (gain), 0 (neutral), or -1 (loss)"""
+    df = df[~df.arm.isna()]
+    df.sort_values(cn_colname, inplace=True)
+    cumsum = df[width_colname].cumsum()
+    cutoff = df[width_colname].sum() / 2.0
+    median = df[cn_colname][cumsum >= cutoff].iloc[0].round().astype(int)
+
+    ploidy = df[ploidy_colname].iloc[0].round().astype(int)
+    status = 0
+    if median > ploidy:
+        status = 1
+    elif median < ploidy:
+        status = -1
+    return status
+
+
+def get_which_arm(df, start_colname="Start", end_colname="End"):
+    """given a segment, determine which chromosome arm it is on"""
+    df["seg_cent"] = 0.5 * (df[start_colname] + df[end_colname])
+    df["arm"] = None
+    df.loc[df["seg_cent"] < df["cent_start"], "arm"] = "p"
+    df.loc[df["seg_cent"] > df["cent_end"], "arm"] = "q"
+    return df
+
+
+def get_cna_and_aneuploidy(
+    seg,
+    sig_table,
+    cent_filename=constants.HG38_CENTROMERE,
+    id_col=constants.SAMPLEID,
+    ploidy_col="Ploidy",
+    save_output="",
+):
+    """Arm-level CNA matrix and add aneuploidy scores to signature table"""
+    print("generating arm-level CNA and aneuploidy score")
+    # parse centromere file
+    cent = pd.read_csv(cent_filename, sep="\t", index_col=False)
+    cent = (
+        cent[
+            ~(cent["#region_name"].str.startswith("HET"))
+            & (~cent["chr"].isin(["X", "Y"]))
+        ]
+        .drop(columns=["#region_name"])
+        .rename(
+            columns={"chr": "Chromosome", "start": "cent_start", "stop": "cent_end"}
+        )
+    )
+    cent["cent_mid"] = (
+        (0.5 * (cent["cent_start"] + cent["cent_end"])).round().astype(int)
+    )
+    cent["Chromosome"] = cent["Chromosome"].astype(int)
+
+    seg["Chromosome"] = seg["Chromosome"].astype(int)
+    seg["seg_width"] = seg["End"] - seg["Start"]
+    merged_seg = seg.merge(cent, on=["Chromosome"], how="left")
+    sig_table = sig_table.reset_index().rename(columns={"index": id_col})
+    merged_seg = merged_seg.merge(
+        sig_table[[id_col, ploidy_col]], on=[id_col], how="left"
+    )
+
+    seg_with_arm = get_which_arm(merged_seg)
+    seg_with_arm["chrom_arm"] = (
+        seg_with_arm["Chromosome"].astype(str) + seg_with_arm["arm"]
+    )
+
+    cna_table = (
+        seg_with_arm.groupby([id_col, "chrom_arm"]).apply(arm_call).unstack(level=1)
+    )
+    cna_table = cna_table.drop(columns=["21p", "22p"])
+
+    aneuploidy = cna_table.abs().sum(axis=1).to_dict()
+    sig_table["Aneuploidy"] = sig_table[id_col].map(aneuploidy)
+
+    print("Saving arm-level CNA matrix and signature table with aneuploidy score")
+    sig_table.to_csv(save_output + "globalGenomicFeaturesWithAneuploidy_all.csv")
+    cna_table.to_csv(save_output + "arm_cna_all.csv")
+    print("done")
+
+    return cna_table, sig_table
+
+
 def pureCNpostprocess(
     refworkspace,
     sortby=[constants.SAMPLEID, "Chromosome", "Start", "End"],
@@ -434,6 +521,12 @@ def postProcess(
     feature_table = generateSigTable(
         refworkspace, todrop=failed, save_output=save_output
     )
+    cna_table, feature_table = get_cna_and_aneuploidy(
+        purecn_segments,
+        feature_table,
+        id_col=constants.SAMPLEID,
+        save_output=save_output,
+    )
     return (
         segments,
         genecn,
@@ -442,4 +535,5 @@ def postProcess(
         purecn_genecn,
         loh_status,
         feature_table,
+        cna_table,
     )
