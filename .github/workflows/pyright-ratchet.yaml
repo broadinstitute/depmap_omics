@@ -5,7 +5,7 @@ on: [push]
 env:
   DOCKER_REPO: us.gcr.io/cds-docker-containers/depmapomics
   DOCKER_TAG: ga-build-${{ github.run_number }}
-  BRANCH_NAME: ${{ GITHUB_REF##*/ }}
+  BRANCH_NAME: ${{ GITHUB_REF#refs/heads/ }}
 
 jobs:
   check-pyright:
