@@ -179,7 +179,6 @@ def main(args=None):
 
         # save full
         # need pyarrows
-        print("to parquet")
         pq.write_to_dataset(
             pa.Table.from_pandas(vcf_file), root_path=sample_name + "-maf-full.parquet"
         )
@@ -473,7 +472,7 @@ def improve(
         if loc.sum() > 0:
             loc[loc.isna()] = False
             li = vcf.loc[loc, val]
-            print("replacing: ", val)
+            #print("replacing: ", val)
             for k, v in special_rep.items():  # "%23": "#",
                 li = li.str.replace(k, v)
             vcf.loc[loc, val] = li
@@ -832,6 +831,8 @@ def improve(
 
     vcf["is_coding"] = ""
     vcf.loc[vcf["gencode_34_proteinchange"] != "", "is_coding"] = "Y"
+    # parse clndisdbincl and correct None values
+    vcf.loc[vcf.clndisdbincl.isnull(), 'clndisdbincl'] = ''
     # else it is an oncokb value
 
     # somatic_score

@@ -5,7 +5,7 @@ on: [push]
 env:
   DOCKER_REPO: us.gcr.io/cds-docker-containers/depmapomics
   DOCKER_TAG: ga-build-${{ github.run_number }}
-  BRANCH_NAME: "master"
+  BRANCH_NAME: master
 
 jobs:
   check-pyright:
@@ -56,9 +56,3 @@ jobs:
           tags: ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_REPO }}:${{ env.BRANCH_NAME }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-#      - name: build docker image
-#        run: bash build-docker-image.sh ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
-#      - name: Tag docker image with the current branch name
-#        run: docker tag ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_REPO }}:${GITHUB_REF##*/}
-#      - name: Push Docker image with both names
-#        run: docker push ${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }} && docker push ${{ env.DOCKER_REPO }}:${GITHUB_REF##*/}
