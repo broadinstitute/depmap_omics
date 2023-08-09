@@ -1,224 +1,5 @@
-from mgenepy import mutations
-import pyarrow as pa
-from mgenepy.utils import helper as h
-import os
-import pandas as pd
-import argparse
-import pyarrow.parquet as pq
-
-
 import re
 import numpy as np
-
-
-def to_bool(x):
-    "Like bool(x) but more paranoid about input values. ie: python's bool('false') is True"
-    x = x.lower()
-    if x == "true":
-        return True
-    assert x == "false"
-    return False
-
-
-def main(args=None):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("vcf_filename")
-    parser.add_argument("sample_name", nargs="?", default=None)
-    parser.add_argument("--n_rows", default=500_000, type=int)
-    parser.add_argument("--use_multi", default=False, type=to_bool)
-    parser.add_argument("--force_keep", default=[], type=lambda x: x.split(","))
-    parser.add_argument("--whitelist", default=False, type=to_bool)
-    args = parser.parse_args()
-
-    vcf_filename = args.vcf_filename
-
-    sample_name = args.sample_name
-    if not sample_name:
-        sample_name = vcf_filename.split("/")[-1].split(".")[0]
-
-    n_rows = args.n_rows
-    use_multi = args.use_multi
-    force_keep = args.force_keep
-    whitelist = args.whitelist
-
-    prev_cols = []
-
-    print(
-        "inputs: vcf_filename:",
-        vcf_filename,
-        ", sample_name:",
-        sample_name,
-        ", n_rows:",
-        n_rows,
-        ", use_multi:",
-        use_multi,
-        ", force_keep:",
-        force_keep,
-    )
-
-    tobreak = False
-
-    loc = os.path.dirname(os.path.abspath(__file__))
-    oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
-    tumor_suppressor_list = h.fileToList(
-        loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
-    )
-    civic_df = pd.read_csv(loc + "/civic_export_09212022.csv").drop(
-        columns=["chromosome_37", "start_37"]
-    )
-
-    """
-    we are running through these likely very large files by loading a chunk at a time
-
-    the issue is to make sure that each chunk is the same as the previous chunk (we don't remove differ
-    set of columns etc..) 
-
-    """
-
-    processed_count = 0
-    for i in range(10_000):
-        # boolean annotations in vcf
-        bool_cols = [
-            "PON",
-            "ASP",
-            "R3",
-            "R5",
-            "VLD",
-            "INT",
-            "SLO",
-            "KGPhase1",
-            "KGPhase3",
-            "GNO",
-            "HD",
-            "RV",
-            "G5",
-            "G5A",
-            "NSM",
-            "REF",
-            "NOV",
-            "SYN",
-            "S3D",
-            "LSD",
-            "PM",
-            "PMC",
-            "U3",
-            "U5",
-            "NSF",
-            "NSN",
-            "NOC",
-            "MTP",
-            "DSS",
-            "TPA",
-            "OTH",
-            "ASS",
-            "CFL",
-            "OM",
-        ]
-        # read in vcf as a df
-        vcf_file, _, _ = mutations.vcf_to_df(
-            vcf_filename,
-            additional_cols=bool_cols,
-            parse_filter=True,
-            force_keep=force_keep
-            + list(TO_RENAME_OC.keys())
-            + list(TO_RENAME_BASE.keys()),
-            drop_null=False,
-            cols_to_drop=[
-                "clinvar_vcf_mc",
-                "oreganno_build",
-                "gt",
-                "ad",
-                "af",
-                "dp",
-                "f1r2",
-                "f2r1",
-                "fad",
-                "sb",
-                "pid",
-                "pl",
-                "ps",
-                "gq",
-                "pgt",
-                "gencode_34_chromosome",
-            ],
-            nrows=n_rows,
-            skiprows=n_rows * i,
-        )
-        if "PID" not in vcf_file.columns.tolist():
-            vcf_file["PID"] = ""
-        filen = len(vcf_file)
-        processed_count += filen
-        if filen < n_rows:
-            # we have reached the end:
-            tobreak = True
-
-        # improve
-        # vcf_file = improve(
-        #     vcf_file,
-        #     force_list=["oc_genehancer__feature_name"],
-        #     split_multiallelic=use_multi,
-        #     oncogene_list=oncogene,
-        #     tumor_suppressor_list=tumor_suppressor_list,
-        #     civic_df=civic_df,
-        # )
-
-        # checking we have the same set of columns
-        cols = vcf_file.columns.tolist()
-        if i == 0:
-            prev_cols = cols
-        elif set(cols) != set(prev_cols):
-            raise ValueError(
-                "we are removing different sets of columns",
-                cols,
-                list(set(cols) ^ set(prev_cols)),
-            )
-        elif len(cols) != len(prev_cols):
-            raise ValueError("some columns have duplicate values", prev_cols, cols)
-        elif cols != prev_cols:
-            vcf_file = vcf_file[prev_cols]
-
-        # save full
-        # need pyarrows
-        print("to parquet")
-        pq.write_to_dataset(
-            pa.Table.from_pandas(vcf_file), root_path=sample_name + "-maf-full.parquet"
-        )
-
-        # # save maf
-        # print("saving maf")
-        # if i == 0:
-        #     to_maf(
-        #         vcf_file,
-        #         sample_name,
-        #         only_somatic=True,
-        #         only_coding=True,
-        #         whitelist=whitelist,
-        #         drop_multi=True,
-        #         oncogenic_list=oncogene,
-        #         tumor_suppressor_list=tumor_suppressor_list,
-        #         tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
-        #         index=False,
-        #     )
-        # else:
-        #     to_maf(
-        #         vcf_file,
-        #         sample_name,
-        #         only_somatic=True,
-        #         only_coding=True,
-        #         whitelist=whitelist,
-        #         drop_multi=True,
-        #         mode="a",
-        #         header=False,
-        #         oncogenic_list=oncogene,
-        #         tumor_suppressor_list=tumor_suppressor_list,
-        #         tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
-        #         index=False,
-        #     )
-        del vcf_file
-        if tobreak:
-            break
-
-    print(f"finished, processed {processed_count} rows")
 
 
 REPLACE_EMPTY = {
@@ -517,9 +298,7 @@ def improve(
 
     print("re-annotating CIVIC using static dataframe:")
     vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
-    vcf = vcf.drop(
-        columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]
-    ).rename(
+    vcf = vcf.rename(
         columns={
             "description": "oc_civic__description",
             "civic_actionability_score": "oc_civic__clinical_a_score",
@@ -541,29 +320,6 @@ def improve(
             to_add.append("")
     vcf["issues"] = to_add
     todrop = ["dbsnp_asp", "dbsnp_cfl"]
-
-    # defining hotspot
-    vcf["cosmic_hotspot"] = ""
-
-    hotspot_l = []
-    for cosmic_over in list(
-        set(
-            vcf[vcf["cosmic_overlapping_mutations"] != ""][
-                "cosmic_overlapping_mutations"
-            ]
-        )
-    ):
-        # finding the number in " p.I517T(13)", " p.I517T(13), p.G202G(15), p.?(56)"
-        res = sum(
-            [
-                int(val.group(0)[1:-1])
-                for val in re.finditer(r"([(])\d+([)])", cosmic_over)
-            ]
-        )
-        if res > min_count_hotspot:
-            hotspot_l.append(cosmic_over)
-    loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
-    vcf.loc[loc, "cosmic_hotspot"] = "Y"
 
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
@@ -857,7 +613,7 @@ def to_maf(
     only_somatic=True,
     oncogenic_list=[],
     tumor_suppressor_list=[],
-    **kwargs,
+    **kwargs
 ):
     """to_maf
 
@@ -978,7 +734,3 @@ def to_maf(
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%2C")
     vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
-
-
-if __name__ == "__main__":
-    main()
