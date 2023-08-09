@@ -177,6 +177,8 @@ SIGTABLE_RENAMING = {
     "msisensor2_score": "MSIScore",
 }
 
+HG38_CENTROMERE = "data/Modeled_regions_for_GRCh38.tsv"
+
 MINFREQTOCALL = 0.25
 
 SV_COLNAME = "somatic_annotated_sv"
