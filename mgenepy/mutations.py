@@ -4,6 +4,7 @@ import seaborn as sns
 from mgenepy.utils import helper as h
 import gzip
 
+
 def manageGapsInSegments(
     segtocp, Chromosome="Chromosome", End="End", Start="Start", cyto=None
 ):
@@ -235,6 +236,9 @@ def vcf_to_df(
     ] + additional_filters
 
     FUNCO_DESC = "Functional annotation from the Funcotator tool."
+    VEP_CSQ_DESC = "Consequence annotations from Ensembl VEP."
+    SNPEFF_ANN_DESC = "Functional annotations from SnpEff"
+    LOF_DESC = "Predicted loss of function effects from VEP"
 
     dropped_cols = []
 
@@ -253,10 +257,30 @@ def vcf_to_df(
                 if "INFO" in l[:20]:
                     res = l.split("ID=")[1].split(",")[0]
                     if res == "FUNCOTATION":
-                        print("parsing funcotator special")
+                        #print("parsing funcotator special")
                         for val in l.split("Description=")[1][:-2].split("|"):
                             val = val.split("Funcotation fields are: ")[-1]
                             description.update({val: FUNCO_DESC})
+                    elif res == "ANN":
+                        #print("parsing funcitonal annotation from SnpEff")
+                        l = l.replace(" / ", "_").replace(".", "_")
+                        for val in l.split("Description=")[1][:-5].split(" | "):
+                            val = "snpeff_" + val.split("Functional annotations: '")[-1]
+                            description.update({val: SNPEFF_ANN_DESC})
+                    elif res == "LOF":
+                        #print("parsing predicted LOF status from SnpEff")
+                        for val in l.split("Description=")[1][:-4].split(" | "):
+                            val = "lof_" + val.split("Format: '")[-1]
+                            description.update({val: LOF_DESC})
+                    elif res == "CSQ":
+                        #print("parsing VEP CSQ")
+                        for val in l.split("Description=")[1][:-3].split("|"):
+                            val = "vep_" + val.split("Format: ")[-1]
+                            description.update({val: VEP_CSQ_DESC})
+                    elif res == "REF":
+                        description.update(
+                            {"REF_FLAG": l.split("Description=")[1][:-2]}
+                        )
                     else:
                         desc = l.split("Description=")[1][:-2]
                         description.update({res: desc})
@@ -282,8 +306,11 @@ def vcf_to_df(
         "skiprows": nrows_toskip + kwargs.get("skiprows", 0),
     }
     data = pd.read_csv(path, **{**kwargs, **csvkwargs})
-    print(description)
+    #print(description)
     funco_fields = [k for k, v in description.items() if FUNCO_DESC in v]
+    vep_fields = [k for k, v in description.items() if VEP_CSQ_DESC in v]
+    snpeff_fields = [k for k, v in description.items() if SNPEFF_ANN_DESC in v]
+    lof_fields = [k for k, v in description.items() if LOF_DESC in v]
     fields = {k: [] for k, _ in description.items()}
     try:
         for j, info in enumerate(data["INFO"].str.split(";").values.tolist()):
@@ -293,10 +320,13 @@ def vcf_to_df(
                 print(j, end="\r")
             for annot in info:
                 if annot in uniqueargs:
-                    res.update({annot: True})
+                    if annot == "REF":
+                        res.update({"REF_FLAG": True})
+                    else:
+                        res.update({annot: True})
                 elif "=" in annot:
                     # taking care of the funcotator special fields
-                    if "FUNCOTATION" in annot:
+                    if "FUNCOTATION=" in annot:
                         # for multi allelic site:
                         annot = annot.replace("FUNCOTATION=", "")[1:-1]
                         res.update({name: [] for name in funco_fields})
@@ -314,6 +344,40 @@ def vcf_to_df(
                                 res[funco_fields[i]].append(sub_annot)
                         for k in funco_fields:
                             res[k] = ",".join(res[k])
+                    elif "ANN=" in annot:
+                        annot = annot.replace("ANN=", "")
+                        res.update({name: [] for name in snpeff_fields})
+                        for site in annot.split(","):
+                            for i, sub_annot in enumerate(site.split("|")):
+                                res[snpeff_fields[i]].append(sub_annot)
+                        for k in snpeff_fields:
+                            if "".join(res[k]) != "":
+                                res[k] = ",".join(res[k])
+                            else:
+                                res[k] = ""
+                    elif "LOF=" in annot:
+                        annot = annot.replace("LOF=(", "")
+                        annot = annot.replace(")", "")
+                        res.update({name: [] for name in lof_fields})
+                        for site in annot.split(","):
+                            for i, sub_annot in enumerate(site.split("|")):
+                                res[lof_fields[i]].append(sub_annot)
+                        for k in lof_fields:
+                            if "".join(res[k]) != "":
+                                res[k] = ",".join(res[k])
+                            else:
+                                res[k] = ""
+                    elif "CSQ=" in annot:
+                        annot = annot.replace("CSQ=", "")
+                        res.update({name: [] for name in vep_fields})
+                        for site in annot.split(","):
+                            for i, sub_annot in enumerate(site.split("|")):
+                                res[vep_fields[i]].append(sub_annot)
+                        for k in vep_fields:
+                            if "".join(res[k]) != "":
+                                res[k] = ",".join(res[k])
+                            else:
+                                res[k] = ""
                     else:
                         k, annot = annot.split("=")
                         res.update({k: annot})
@@ -322,7 +386,7 @@ def vcf_to_df(
             for k in list(fields.keys()):
                 fields[k].append(res.get(k, None))
     except ValueError:
-        print(annot)
+        #print(annot)
         raise ValueError("unknown field")
 
     data = pd.concat(
@@ -346,9 +410,10 @@ def vcf_to_df(
         print("dropping uninformative columns:", to_drop)
         data = data.drop(columns=to_drop)
         dropped_cols += to_drop
+
     data.columns = [i.lower() for i in data.columns]
     samples = [i.lower() for i in colnames[9:]]
-    print("\nthe samples are:", samples)
+    #print("\nthe samples are:", samples)
     sorting = data["format"][0].split(":")
     for sample in samples:
         res = data[sample].str.split(":").values.tolist()
