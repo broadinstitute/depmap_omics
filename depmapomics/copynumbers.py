@@ -206,6 +206,7 @@ def get_cna_and_aneuploidy(
     seg["seg_width"] = seg["End"] - seg["Start"]
     merged_seg = seg.merge(cent, on=["Chromosome"], how="left")
     sig_table = sig_table.reset_index().rename(columns={"index": id_col})
+    sig_table[ploidy_col] = sig_table[ploidy_col].astype("float")
     merged_seg = merged_seg.merge(
         sig_table[[id_col, ploidy_col]], on=[id_col], how="left"
     )
@@ -222,6 +223,7 @@ def get_cna_and_aneuploidy(
 
     aneuploidy = cna_table.abs().sum(axis=1).to_dict()
     sig_table["Aneuploidy"] = sig_table[id_col].map(aneuploidy)
+    sig_table.set_index(id_col)
 
     print("Saving arm-level CNA matrix and signature table with aneuploidy score")
     sig_table.to_csv(save_output + "globalGenomicFeaturesWithAneuploidy_all.csv")
