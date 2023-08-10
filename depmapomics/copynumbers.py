@@ -218,7 +218,7 @@ def get_cna_and_aneuploidy(
     cna_table = (
         seg_with_arm.groupby([id_col, "chrom_arm"]).apply(arm_call).unstack(level=1)
     )
-    cna_table = cna_table.drop(columns=["21p", "22p"])
+    cna_table = cna_table[constants.CNA_ARMS]
 
     aneuploidy = cna_table.abs().sum(axis=1).to_dict()
     sig_table["Aneuploidy"] = sig_table[id_col].map(aneuploidy)
@@ -387,6 +387,7 @@ def generateSigTable(
     )
 
     # rename columns
+    sig_table.index.rename(constants.SAMPLEID, inplace=True)
     sig_table = sig_table.rename(columns=colrenaming)
 
     print("saving global genomic feature table")
