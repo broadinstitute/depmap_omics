@@ -179,6 +179,48 @@ SIGTABLE_RENAMING = {
 
 HG38_CENTROMERE = "data/Modeled_regions_for_GRCh38.tsv"
 
+CNA_ARMS = [
+    "1p",
+    "1q",
+    "2p",
+    "2q",
+    "3p",
+    "3q",
+    "4p",
+    "4q",
+    "5p",
+    "5q",
+    "6p",
+    "6q",
+    "7p",
+    "7q",
+    "8p",
+    "8q",
+    "9p",
+    "9q",
+    "10p",
+    "10q",
+    "11p",
+    "11q",
+    "12p",
+    "12q",
+    "13q",
+    "14q",
+    "15q",
+    "16p",
+    "16q",
+    "17p",
+    "17q",
+    "18p",
+    "18q",
+    "19p",
+    "19q",
+    "20p",
+    "20q",
+    "21q",
+    "22q",
+]
+
 MINFREQTOCALL = 0.25
 
 SV_COLNAME = "somatic_annotated_sv"
