@@ -18,7 +18,7 @@ import queue
 
 namespace = "broad-firecloud-ccle"
 # workspaces = ["DepMap_WES_CN_hg38", "DepMap_WGS_CN"]
-workspaces = ["DEV_DepMap_WES_CN_hg38"]
+workspaces = ["DEV_DepMap_WES_CN_hg38", "DEV_DepMap_WGS_CN"]
 
 import json
 
@@ -41,10 +41,12 @@ def get_transfers(workspace, dest_dataset="", ids=None):
 
     sample = wm.get_entities("sample")
     sample = sample.reset_index()
+    print(sample.head())
+    print(sample.loc[:, "sample_id"].isin(ids).sum())
 
     transfers = []
     for rec in sample.to_dict("records"):
-        if isinstance(rec["full_file"], list):
+        if isinstance(rec["parquet_with_hgvs"], list):
             dest_table = f"{dest_dataset}.{rec['sample_id'].replace('-', '_')}".lower()
             if ids is None:
                 transfers.append(
@@ -323,7 +325,6 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--ids",
-        default="CDS-00rz9N,CDS-01bI6z",
         type=str,
         required=True,
         help="CDS IDs to constraint the data query",
@@ -347,6 +348,7 @@ def main():
     args = parse_arguments()
     print(args)
     ids = args.ids.split(",")
+    print(ids)
 
     pickled_transfers = "transfers.pickled"
     if os.path.exists(pickled_transfers):
@@ -357,9 +359,11 @@ def main():
     else:
         transfers = []
         for workspace in workspaces:
+            print(workspace)
             transfers.extend(get_transfers(workspace, args.dest, ids))
         with open(pickled_transfers, "wb") as fd:
             pickle.dump(transfers, fd)
+    print(transfers)
 
     # Construct a BigQuery client object.
     client = bigquery.Client()
