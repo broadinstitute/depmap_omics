@@ -559,7 +559,7 @@ def cnPostProcessing(
                 "Chromosome",
                 "Start",
                 "End",
-                "MajorAlleleAbsoluteCN",
+                "SegmentAbsoluteCN",
                 "MinorAlleleAbsoluteCN",
                 "LoHStatus",
             ]
