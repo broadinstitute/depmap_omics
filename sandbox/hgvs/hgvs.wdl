@@ -21,6 +21,10 @@ workflow HgvsWorkflow {
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
+        Int boot_disk_size=60
+        Int disk_space=60
+        Int cpu = 10
+        Int mem = 80
     }
 
     call annotate_hgvs_task {
@@ -39,7 +43,11 @@ workflow HgvsWorkflow {
             clinvar_data=clinvar_data,
             clinvar_data_tbi=clinvar_data_tbi,
             pLi=pLi,
-            LoF=LoF
+            LoF=LoF,
+            boot_disk_size=boot_disk_size,
+            disk_space=disk_space,
+            cpu = cpu,
+            mem = mem,
     }
 
     output {
