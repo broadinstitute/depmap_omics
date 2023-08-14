@@ -77,10 +77,47 @@ def main(args=None):
 
     processed_count = 0
     for i in range(10_000):
+        # boolean annotations in vcf
+        bool_cols = [
+            "PON",
+            "ASP",
+            "R3",
+            "R5",
+            "VLD",
+            "INT",
+            "SLO",
+            "KGPhase1",
+            "KGPhase3",
+            "GNO",
+            "HD",
+            "RV",
+            "G5",
+            "G5A",
+            "NSM",
+            "REF",
+            "NOV",
+            "SYN",
+            "S3D",
+            "LSD",
+            "PM",
+            "PMC",
+            "U3",
+            "U5",
+            "NSF",
+            "NSN",
+            "NOC",
+            "MTP",
+            "DSS",
+            "TPA",
+            "OTH",
+            "ASS",
+            "CFL",
+            "OM",
+        ]
         # read in vcf as a df
         vcf_file, _, _ = mutations.vcf_to_df(
             vcf_filename,
-            additional_cols=["PON"],
+            additional_cols=bool_cols,
             parse_filter=True,
             force_keep=force_keep
             + list(TO_RENAME_OC.keys())
@@ -116,14 +153,14 @@ def main(args=None):
             tobreak = True
 
         # improve
-        vcf_file = improve(
-            vcf_file,
-            force_list=["oc_genehancer__feature_name"],
-            split_multiallelic=use_multi,
-            oncogene_list=oncogene,
-            tumor_suppressor_list=tumor_suppressor_list,
-            civic_df=civic_df,
-        )
+        # vcf_file = improve(
+        #     vcf_file,
+        #     force_list=["oc_genehancer__feature_name"],
+        #     split_multiallelic=use_multi,
+        #     oncogene_list=oncogene,
+        #     tumor_suppressor_list=tumor_suppressor_list,
+        #     civic_df=civic_df,
+        # )
 
         # checking we have the same set of columns
         cols = vcf_file.columns.tolist()
@@ -142,41 +179,40 @@ def main(args=None):
 
         # save full
         # need pyarrows
-        print("to parquet")
         pq.write_to_dataset(
             pa.Table.from_pandas(vcf_file), root_path=sample_name + "-maf-full.parquet"
         )
 
-        # save maf
-        print("saving maf")
-        if i == 0:
-            to_maf(
-                vcf_file,
-                sample_name,
-                only_somatic=True,
-                only_coding=True,
-                whitelist=whitelist,
-                drop_multi=True,
-                oncogenic_list=oncogene,
-                tumor_suppressor_list=tumor_suppressor_list,
-                tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
-                index=False,
-            )
-        else:
-            to_maf(
-                vcf_file,
-                sample_name,
-                only_somatic=True,
-                only_coding=True,
-                whitelist=whitelist,
-                drop_multi=True,
-                mode="a",
-                header=False,
-                oncogenic_list=oncogene,
-                tumor_suppressor_list=tumor_suppressor_list,
-                tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
-                index=False,
-            )
+        # # save maf
+        # print("saving maf")
+        # if i == 0:
+        #     to_maf(
+        #         vcf_file,
+        #         sample_name,
+        #         only_somatic=True,
+        #         only_coding=True,
+        #         whitelist=whitelist,
+        #         drop_multi=True,
+        #         oncogenic_list=oncogene,
+        #         tumor_suppressor_list=tumor_suppressor_list,
+        #         tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+        #         index=False,
+        #     )
+        # else:
+        #     to_maf(
+        #         vcf_file,
+        #         sample_name,
+        #         only_somatic=True,
+        #         only_coding=True,
+        #         whitelist=whitelist,
+        #         drop_multi=True,
+        #         mode="a",
+        #         header=False,
+        #         oncogenic_list=oncogene,
+        #         tumor_suppressor_list=tumor_suppressor_list,
+        #         tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+        #         index=False,
+        #     )
         del vcf_file
         if tobreak:
             break
@@ -436,7 +472,7 @@ def improve(
         if loc.sum() > 0:
             loc[loc.isna()] = False
             li = vcf.loc[loc, val]
-            print("replacing: ", val)
+            #print("replacing: ", val)
             for k, v in special_rep.items():  # "%23": "#",
                 li = li.str.replace(k, v)
             vcf.loc[loc, val] = li
@@ -479,7 +515,9 @@ def improve(
     vcf = vcf.replace(replace_empty)
 
     print("re-annotating CIVIC using static dataframe:")
-    vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
+    if civic_df is not None:
+        vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
+
     vcf = vcf.drop(
         columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]
     ).rename(
@@ -795,6 +833,9 @@ def improve(
 
     vcf["is_coding"] = ""
     vcf.loc[vcf["gencode_34_proteinchange"] != "", "is_coding"] = "Y"
+
+    # parse clndisdbincl and correct None values
+    # vcf.loc[vcf.clndisdbincl.isnull(), 'clndisdbincl'] = ''
     # else it is an oncokb value
 
     # somatic_score
