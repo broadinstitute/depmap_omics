@@ -1,3 +1,39 @@
+version 1.0
+
+workflow rsem_aggregate_results_workflow {
+
+    input {
+        Array[File] rsem_isoforms
+        Array[File] rsem_genes
+        String prefix
+
+        Int memory
+        Int disk_space
+        Int num_threads
+        Int num_preempt
+    }
+
+    call rsem_aggregate_results {
+        input:
+            rsem_isoforms = rsem_isoforms,
+            rsem_genes = rsem_genes,
+            prefix = prefix,
+            memory = memory,
+            disk_space = disk_space,
+            num_threads = num_threads,
+            num_preempt = num_preempt,
+    }
+
+    output {
+        File transcripts_tpm=rsem_aggregate_results.transcripts_tpm
+        File transcripts_isopct=rsem_aggregate_results.transcripts_isopct
+        File transcripts_expected_count=rsem_aggregate_results.transcripts_expected_count
+        File genes_tpm=rsem_aggregate_results.genes_tpm
+        File genes_expected_count=rsem_aggregate_results.genes_expected_count
+        File genes_effective_length=rsem_aggregate_results.genes_effective_length
+    }
+}
+
 task rsem_aggregate_results {
 
     Array[File] rsem_isoforms
@@ -40,7 +76,3 @@ task rsem_aggregate_results {
     }
 }
 
-
-workflow rsem_aggregate_results_workflow {
-    call rsem_aggregate_results
-}
