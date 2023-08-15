@@ -50,7 +50,7 @@ task rsem_aggregate_results {
 
 	command {
 		git clone https://github.com/broadinstitute/depmap_omics.git 
-        cd depmap_omics && git checkout add-effective-length && git pull && cd ..
+		cd depmap_omics && git checkout add-effective-length && git pull && cd ..
 		
 		echo $(date +"[%b %d %H:%M:%S] Combining transcript-level output")
 		python3 depmap_omics/RNA_pipeline/aggregate_rsem_results.py ${write_lines(rsem_isoforms)} TPM IsoPct expected_count ${prefix}
