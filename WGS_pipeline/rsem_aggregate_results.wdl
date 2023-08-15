@@ -36,14 +36,17 @@ workflow rsem_aggregate_results_workflow {
 
 task rsem_aggregate_results {
 
-    Array[File] rsem_isoforms
-    Array[File] rsem_genes
-    String prefix
+    input {
+        Array[File] rsem_isoforms
+        Array[File] rsem_genes
+        String prefix
 
-    Int memory
-    Int disk_space
-    Int num_threads
-    Int num_preempt
+        Int memory
+        Int disk_space
+        Int num_threads
+        Int num_preempt
+    }
+
 
     command {
     	git clone https://github.com/broadinstitute/ccle_processing.git
@@ -72,7 +75,7 @@ task rsem_aggregate_results {
     }
 
     meta {
-        author: "Francois Aguet"
+        author: "Francois Aguet, Simone Zhang"
     }
 }
 
