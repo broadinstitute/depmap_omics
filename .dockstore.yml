@@ -234,3 +234,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - dev-hgvs
+  - name: telomere
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/telomere/telomerehunter.wdl
+    testParameterFiles:
+      - /sandbox/telomere/test.json
+    filters: # All tags, no branches
+      branches:
+        - devel-telomere
