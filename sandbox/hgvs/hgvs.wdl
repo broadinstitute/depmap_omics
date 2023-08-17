@@ -21,6 +21,10 @@ workflow HgvsWorkflow {
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
+        Int boot_disk_size=60
+        Int disk_space=60
+        Int cpu = 10
+        Int mem = 80
     }
 
     call annotate_hgvs_task {
@@ -39,7 +43,11 @@ workflow HgvsWorkflow {
             clinvar_data=clinvar_data,
             clinvar_data_tbi=clinvar_data_tbi,
             pLi=pLi,
-            LoF=LoF
+            LoF=LoF,
+            boot_disk_size=boot_disk_size,
+            disk_space=disk_space,
+            cpu = cpu,
+            mem = mem,
     }
 
     output {
@@ -86,10 +94,6 @@ task annotate_hgvs_task {
         mkdir -p ./db/GRCh38/clinvar/
         cp ~{clinvar_data} ~{clinvar_data_tbi} ./db/GRCh38/clinvar/
         java -jar ~{snpsift} Annotate -clinvar -db ~{clinvar_data} ~{sample_id}.norm.snpeff.vcf > ~{sample_id}.norm.snpeff.clinvar.vcf
-        
-        mkdir -p ./db/GRCh38/dbsnp
-        cp ~{dbsnp_data} ~{dbsnp_data_tbi} ./db/GRCh38/dbsnp/
-        java -jar ~{snpsift} Annotate -dbsnp -db ~{dbsnp_data} ~{sample_id}.norm.snpeff.clinvar.vcf > ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf
 
         tar -C /tmp -xvzf ~{vep_data} 
         ls /tmp
@@ -102,14 +106,14 @@ task annotate_hgvs_task {
        
         cp ~{pLi} ~{LoF} /tmp
 
-        vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf \
-            --output_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
+        vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.vcf \
+            --output_file ~{sample_id}.norm.snpeff.clinvar.vep.vcf \
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
             --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
             --pick 
 
         perl /vcf2maf/vcf2maf.pl \
-            --input-vcf ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
+            --input-vcf ~{sample_id}.norm.snpeff.clinvar.vep.vcf \
             --output-maf ~{sample_id}.maf \
             --ref /tmp/Homo_sapiens_assembly38.fasta.gz \
             --vep-path /opt/conda/envs/vep/bin/ \
@@ -128,7 +132,7 @@ task annotate_hgvs_task {
 
     output {
         File output_maf = "~{sample_id}.maf"        
-        File output_vep_vcf = "~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf"
+        File output_vep_vcf = "~{sample_id}.norm.snpeff.clinvar.vep.vcf"
     }
 }
 
