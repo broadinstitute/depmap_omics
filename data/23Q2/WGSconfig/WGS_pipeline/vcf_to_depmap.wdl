@@ -46,7 +46,7 @@ task vcf_to_depmap {
         pip install bioservices==1.10.1
         pip install broad-genepy
         git clone https://github.com/broadinstitute/depmap_omics.git
-        cd depmap_omics && git checkout dev && pip install -e . && cd ..
+        cd depmap_omics && git checkout offcycle-run && pip install -e . && cd ..
         python depmap_omics/WGS_pipeline/vcf_to_depmap.py \
               ~{input_vcf} \
               ~{sample_id} \

@@ -1,6 +1,83 @@
 import re
 import numpy as np
 
+DROPCOMMA = [
+    "gencode_34_hugosymbol",
+    "gencode_34_chromosome",
+    "gencode_34_secondaryvariantclassification",
+    "gencode_34_annotationtranscript",
+    "gencode_34_transcriptstrand",
+    "gencode_34_transcriptexon",
+    "gencode_34_transcriptpos",
+    "achilles_top_genes",
+    "cgc_geneid",
+    "cgc_chr",
+    "cgc_chr_band",
+    "cgc_cancer_somatic_mut",
+    "cgc_cancer_germline_mut",
+    "cgc_cancer_syndrome",
+    "cgc_tissue_type",
+    "cgc_cancer_molecular_genetics",
+    "cgc_translocation_partner",
+    "cgc_other_germline_mut",
+    "cgc_other_syndrome/disease",
+    "clinvar_vcf_af_esp",
+    "clinvar_vcf_af_exac",
+    "clinvar_vcf_af_tgp",
+    "clinvar_vcf_alleleid",
+    "clinvar_vcf_clndisdbincl",
+    "clinvar_vcf_clndnincl",
+    "clinvar_vcf_clnhgvs",
+    "clinvar_vcf_clnsig",
+    "clinvar_vcf_clnsigincl",
+    "clinvar_vcf_clnvc",
+    "clinvar_vcf_clnvcso",
+    "clinvar_vcf_geneinfo",
+    "clinvar_vcf_origin",
+    "clinvar_vcf_rs",
+    "clinvar_vcf_ssr",
+    "clinvar_vcf_id",
+    "cosmic_overlapping_mutations",
+    "cosmicfusion_fusion_genes",
+    "cosmictissue_total_alterations_in_gene",
+    "cosmictissue_tissue_types_affected",
+    "dnarepairgenes_chromosome_location_linked_to_ncbi_mapview",
+    "dnarepairgenes_accession_number_linked_to_ncbi_entrez",
+    "familial_cancer_genes_syndrome",
+    "familial_cancer_genes_reference",
+    "gencode_xhgnc_hgnc_id",
+    "gencode_xrefseq_mrna_id",
+    "gencode_xrefseq_prot_acc",
+    "hgnc_hgnc_id",
+    "hgnc_status",
+    "hgnc_locus_group",
+    "hgnc_chromosome",
+    "hgnc_date_modified",
+    "hgnc_date_symbol_changed",
+    "hgnc_date_name_changed",
+    "hgnc_enzyme_ids",
+    "hgnc_entrez_gene_id",
+    "hgnc_ensembl_gene_id",
+    "hgnc_refseq_ids",
+    "hgnc_gene_family_id",
+    "hgnc_vega_id",
+    "hgnc_entrez_gene_id(supplied_by_ncbi)",
+    "hgnc_omim_id(supplied_by_omim)",
+    "hgnc_refseq(supplied_by_ncbi)",
+    "hgnc_uniprot_id(supplied_by_uniprot)",
+    "hgnc_ensembl_id(supplied_by_ensembl)",
+    "hgnc_ucsc_id(supplied_by_ucsc)",
+    "oreganno_build",
+    "oreganno_id",
+    "oreganno_values",
+    "simple_uniprot_uniprot_entry_name",
+    "simple_uniprot_drugbank",
+    "simple_uniprot_alt_uniprot_accessions",
+    "simple_uniprot_uniprot_accession",
+    "oc_oncokb__oncogenic",
+    "oc_original_input__chrom",
+    "oc_oncokb__knowneffect",
+]
 
 REPLACE_EMPTY = {
     np.nan: "",
@@ -53,6 +130,7 @@ REPLACE_SPECIAL_CHAR = {
     "%3D": "=",
     "%25": "%",
 }
+
 
 TO_RENAME_BASE = {
     "AF": "af",
@@ -204,6 +282,52 @@ TOKEEP_ADD = {
 }
 
 
+TOKEEP_LARGE_ADD = {
+    "go_biological_process": "str",
+    "go_cellular_component": "str",
+    "go_molecular_function": "str",
+    ###############
+    # "quality_score": "float",
+    # "somatic_score": "float",
+    # "oncokb_variant_summary": "str",
+    "pharmgkb_chemicals": "str",
+    "pharmgkb_pheno_cat": "str",
+    "dida_effect": "str",
+    "dida_relation": "str",
+    "dida_fam": "str",
+    "dida_funct": "str",
+    "dida_dist": "str",
+    "dida_pub": "str",
+    "encode_group": "str",
+    "encode_bound": "str",
+    "brca1_func_score": "str",
+    "spliceai_ds_ag": "str",
+    "spliceai_ds_al": "str",
+    "spliceai_ds_dg": "str",
+    "spliceai_ds_dl": "str",
+    "funseq2_motif": "str",
+    "funseq2_hot": "str",
+}
+
+
+ALL_ANNOTATORS = [
+    "oncokb",
+    "cscape",
+    "civic",
+    "brca1_func_assay",
+    "sift",
+    "provean",
+    "dann",
+    "revel",
+    "spliceai",
+    "gtex",
+    "funseq2",
+    "pharmgkb",
+    "dida",
+    "gwas_catalog",
+]
+
+
 def improve(
     vcf,
     force_list=["oc_genehancer__feature_name"],
@@ -218,10 +342,10 @@ def improve(
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
-
+    
 
     Args:
-    -----
+    ----- 
         revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
         vcf: a df from geney.mutations.vcf_to_df(): the input vcf annotated with opencravat
         force_list: list of elements we know have ',' separated values.
@@ -231,7 +355,7 @@ def improve(
         split_multiallelic: bool if True, will split multiallelic variants into separate rows
         min_count_hotspot: int minimum number of mutations in cosmic to consider the loci a hotspot
         civic_df (pd.DataFrame): dataframe containing civic annotations
-
+    
     Returns:
         the imrpoved vcf
     """
@@ -297,14 +421,8 @@ def improve(
     vcf = vcf.replace(replace_empty)
 
     print("re-annotating CIVIC using static dataframe:")
-    vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
-    vcf = vcf.rename(
-        columns={
-            "description": "oc_civic__description",
-            "civic_actionability_score": "oc_civic__clinical_a_score",
-            "civic_id": "oc_civic__id",
-        }
-    )
+    vcf = civic_df.merge(vcf, on=['chrom','pos', 'ref', 'alt'], how='right')
+    vcf = vcf.drop(columns=["oc_civic__description", "oc_civic__clinical_a_score", "oc_civic__id"]).rename(columns={"description": "oc_civic__description", "civic_actionability_score": "oc_civic__clinical_a_score", "civic_id": "oc_civic__id"})
 
     print("making new annotations")
     # creating merged annotations
@@ -321,6 +439,29 @@ def improve(
     vcf["issues"] = to_add
     todrop = ["dbsnp_asp", "dbsnp_cfl"]
 
+    # defining hotspot
+    vcf["cosmic_hotspot"] = ""
+
+    hotspot_l = []
+    for cosmic_over in list(
+        set(
+            vcf[vcf["cosmic_overlapping_mutations"] != ""][
+                "cosmic_overlapping_mutations"
+            ]
+        )
+    ):
+        # finding the number in " p.I517T(13)", " p.I517T(13), p.G202G(15), p.?(56)"
+        res = sum(
+            [
+                int(val.group(0)[1:-1])
+                for val in re.finditer(r"([(])\d+([)])", cosmic_over)
+            ]
+        )
+        if res > min_count_hotspot:
+            hotspot_l.append(cosmic_over)
+    loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
+    vcf.loc[loc, "cosmic_hotspot"] = "Y"
+
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
     loc = vcf["gencode_34_variantclassification"].isin(
@@ -335,10 +476,7 @@ def improve(
             "NONSENSE",
         ]
     )
-    vcf.loc[
-        loc,
-        "ccle_deleterious",
-    ] = "Y"
+    vcf.loc[loc, "ccle_deleterious",] = "Y"
     vcf["likely_lof"] = ""
     vcf.loc[loc, "likely_lof"] = "Y"
 
@@ -424,9 +562,7 @@ def improve(
     if "oc_civic__clinical_a_score" in vcf.columns.tolist():
         if "driver" not in vcf.columns.tolist():
             vcf["driver"] = ""
-        loc = (~vcf["oc_civic__clinical_a_score"].isnull()) & (
-            vcf["multiallelic"] != "Y"
-        )
+        loc = (~vcf["oc_civic__clinical_a_score"].isnull()) & (vcf["multiallelic"] != "Y")
         subvcf = vcf.loc[loc][["oc_civic__clinical_a_score"]]
         vcf.loc[
             subvcf[subvcf["oc_civic__clinical_a_score"].astype(float) >= 8].index,
@@ -435,7 +571,7 @@ def improve(
 
         if "likely_driver" not in vcf.columns.tolist():
             vcf["likely_driver"] = ""
-        loc = ~vcf["oc_civic__clinical_a_score"].isnull()
+        loc = (~vcf["oc_civic__clinical_a_score"].isnull())
         vcf.loc[loc, "likely_driver"] = "Y"
 
     # lof more
@@ -544,7 +680,9 @@ def improve(
     if "likely_gof" not in vcf.columns.tolist():
         vcf["likely_gof"] = ""
 
-    if "oc_hess_drivers__is_driver" in vcf.columns.tolist():
+    if (
+        "oc_hess_drivers__is_driver" in vcf.columns.tolist()
+    ):
         name = "oc_hess_drivers__is_driver"
         vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
 
@@ -615,7 +753,7 @@ def to_maf(
     tumor_suppressor_list=[],
     **kwargs
 ):
-    """to_maf
+    """to_maf 
 
     Args:
         vcf (_type_): _description_
@@ -654,7 +792,7 @@ def to_maf(
             # | vcf["fragments"]
         )
     )
-
+    
     # creating count columns
     vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
 
@@ -734,3 +872,13 @@ def to_maf(
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%2C")
     vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
+
+
+def read_parquet(link):
+    """auto read the set of parquet files from one sample and merge them
+
+    Args:
+        link (str): gs link to the parquet files
+    """
+    print("tofinish")
+    return pq.read_parquet("tmp/depmapomics/")

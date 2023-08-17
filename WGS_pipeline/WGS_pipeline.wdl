@@ -7,7 +7,7 @@ import "mutect2_v4.2.6.1.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
 import "remove_filtered.wdl" as removeFiltered
-import "vcf_to_depmap.wdl" as vcf_to_depmap
+import "../data/23Q2/WGSconfig/WGS_pipeline/vcf_to_depmap.wdl" as vcf_to_depmap
 import "PureCN_pipeline/PureCN.wdl" as PureCN
 import "msisensor2.wdl" as msisensor2
 import "opencravat_dm.wdl" as openCravat
