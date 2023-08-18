@@ -196,6 +196,18 @@ async def expressionPostProcessing(
                     "encoding": "utf-8",
                 },
                 {
+                    "path": folder + "genes_effective_length_profile.csv",
+                    "name": "genes_effectiveLength_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_effective_length.csv",
+                    "name": "genes_effectiveLength_withReplicates",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
                     "path": folder + "rna_qcs/all_qc.csv",
                     "name": "all_samples_qc",
                     "format": "NumericMatrixCSV",
