@@ -25,7 +25,7 @@ workflow run_opencravat {
 task opencravat {
     input {
         File vcf
-        File? oc_modules # a tar ball of the entie oc module folder (must start with the module folder in the path)
+        File oc_modules = "gs://ccleparams/oc_modules_trimmed.tar.gz"# a tar ball of the entie oc module folder (must start with the module folder in the path)
         String format = "vcf"
         File cosmic_annotation = "gs://cds-cosmic/cosmic_cmc_20230509_tier123.csv"
         File oncokb_annotation = "gs://cds-oncokb-data/OncoKB_Annotated_Final_2023-07-25_05-44-42.csv"
@@ -34,13 +34,13 @@ task opencravat {
         String genome = "hg38"
         String modules_options = "vcfreporter.type=separate"
 
-        Int memory = 16
+        Int memory = 32
         Int boot_disk_size = 100
         Int retries=1
-        Int disk_space = 20
+        Int disk_space = 100
         Int num_threads = 4
         Int num_preempt = 2
-        String docker = "karchinlab/opencravat"
+        String docker = "karchinlab/opencravat:2.2.6"
     }
     String oc_install = "oc module install-base && oc module install -y vcfreporter hg19 cscape_coding civic brca1_func_assay sift provean dann_coding revel spliceai gtex funseq2 pharmgkb dida gwas_catalog mavedb alfa ccre_screen"
     
