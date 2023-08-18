@@ -1,7 +1,33 @@
 version 1.0
 
 workflow TelomereWorkFlow {
-  call runTelomereHunter
+  input {
+      String sample_name
+      File tumor_bam
+      File tumor_bam_index
+      File? normal_bam
+      File? normal_bam_index
+      File? cytoband
+      Int preemptible=2
+      Int boot_disk_size=100
+      Int disk_space=200
+      Int cpu = 4
+      Int mem = 80
+  }
+  call runTelomereHunter { 
+      inputs:
+          String sample_name
+          File tumor_bam
+          File tumor_bam_index
+          File? normal_bam
+          File? normal_bam_index
+          File? cytoband
+          Int preemptible=preemptible
+          Int boot_disk_size=boot_disk_size
+          Int disk_space=disk_space
+          Int cpu = cpu
+          Int mem = mem
+  }
 }
 
 task runTelomereHunter {
@@ -13,6 +39,11 @@ task runTelomereHunter {
       File? normal_bam
       File? normal_bam_index
       File? cytoband
+      Int preemptible=2
+      Int boot_disk_size=60
+      Int disk_space=60
+      Int cpu = 4
+      Int mem = 80
   }
 
   output {
@@ -45,5 +76,10 @@ task runTelomereHunter {
 
   runtime {
       docker: "quay.io/wtsicgp/cgp-telomerehunter:1.1.0"
+      disks: "local-disk ~{disk_space} HDD"
+      memory: "~{mem} GB"
+      cpu: cpu
+      preemptible: preemptible
+      bootDiskSizeGb: boot_disk_size
   }
 }
