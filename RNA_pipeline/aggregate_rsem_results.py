@@ -55,7 +55,7 @@ if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description='Aggregate RSEM expression from multiple samples.')
     parser.add_argument('rsem_output_list', help='File listing RSEM output files, with format $sample_id.rsem.{genes|isoforms}.results')
-    parser.add_argument('col_ids', choices=['expected_count', 'TPM', 'FPKM', 'IsoPct'], nargs='+', help='Column header')
+    parser.add_argument('col_ids', choices=['expected_count', 'effective_length', 'TPM', 'FPKM', 'IsoPct'], nargs='+', help='Column header')
     parser.add_argument('output_prefix', help='Prefix for output file: ${prefix}.txt.gz')
     parser.add_argument('--chunk_size', default=500, type=int, help='Files to process simultaneously')
     parser.add_argument('--parquet', action='store_true', help='Write to parquet format instead of txt.gz')
