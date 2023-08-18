@@ -15,18 +15,29 @@ workflow TelomereWorkFlow {
       Int mem = 80
   }
   call runTelomereHunter { 
-      inputs:
-          String sample_name
-          File tumor_bam
-          File tumor_bam_index
-          File? normal_bam
-          File? normal_bam_index
-          File? cytoband
-          Int preemptible=preemptible
-          Int boot_disk_size=boot_disk_size
-          Int disk_space=disk_space
-          Int cpu = cpu
-          Int mem = mem
+      input:
+          sample_name=sample_name,
+          tumor_bam=tumor_bam,
+          tumor_bam_index=tumor_bam_index,
+          normal_bam=normal_bam,
+          normal_bam_index=normal_bam_index,
+          cytoband=cytoband,
+          preemptible=preemptible,
+          boot_disk_size=boot_disk_size,
+          disk_space=disk_space,
+          cpu = cpu,
+          mem = mem
+  }
+  output {
+      File TVR_top_contexts = runTelomereHunter.TVR_top_contexts
+      File all_plots_merged = runTelomereHunter.all_plots_merged
+      File normalized_TVR_counts = runTelomereHunter.normalized_TVR_counts
+      File singletons = runTelomereHunter.singletons
+      File summary = runTelomereHunter.summary
+      File summary_plot = runTelomereHunter.summary_plot
+      File all_plots = runTelomereHunter.all_plots
+      File tumor_telomere_counts = runTelomereHunter.tumor_telomere_counts
+      File? control_telomere_counts = runTelomereHunter.control_telomere_counts
   }
 }
 
