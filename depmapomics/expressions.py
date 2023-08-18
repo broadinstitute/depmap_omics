@@ -209,7 +209,8 @@ def subsetGenes(
                     missing.append(v.gene_id.split(".")[0])
             print("missing: " + str(len(missing)) + " genes")
         file = files[val].drop(columns=drop).set_index(index_id)
-        file = file[(file.sum(1) != 0) & (file.var(1) != 0)]
+        if "effective_length" not in val:
+            file = file[(file.sum(1) != 0) & (file.var(1) != 0)]
         r = [i.split(".")[0] for i in file.index]
         dup = h.dups(r)
         par_y_drop = []
