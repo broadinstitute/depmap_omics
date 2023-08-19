@@ -14,7 +14,8 @@ workflow TelomereWorkFlow {
       Int cpu = 4
       Int mem = 80
   }
-  call runTelomereHunter { 
+
+  call runTelomereHunter {
       input:
           sample_name=sample_name,
           tumor_bam=tumor_bam,
@@ -28,6 +29,7 @@ workflow TelomereWorkFlow {
           cpu = cpu,
           mem = mem
   }
+
   output {
       File TVR_top_contexts = runTelomereHunter.TVR_top_contexts
       File all_plots_merged = runTelomereHunter.all_plots_merged
@@ -42,7 +44,6 @@ workflow TelomereWorkFlow {
 }
 
 task runTelomereHunter {
-
   input {
       String sample_name
       File tumor_bam
@@ -68,7 +69,6 @@ task runTelomereHunter {
       File tumor_telomere_counts = "${sample_name}.telomerehunter.tumorCnt.output.tar.gz"
       File? control_telomere_counts = "${sample_name}.telomerehunter.controlCnt.output.tar.gz"
   }
-
 
   command {
     telomerehunter -ibt ${tumor_bam} \
