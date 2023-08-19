@@ -1,3 +1,3 @@
-{"TelomereWorkFlow.runTelomereHunter.sample_name":"ACH-000001",
-"TelomereWorkFlow.runTelomereHunter.tumor_bam":"NIHOVCAR3_OVARY.bam",
-"TelomereWorkFlow.runTelomereHunter.tumor_bam_index":"NIHOVCAR3_OVARY.bai"}
+{"TelomereWorkFlow.sample_name":"ACH-000001",
+"TelomereWorkFlow.tumor_bam":"NIHOVCAR3_OVARY.bam",
+"TelomereWorkFlow.tumor_bam_index":"NIHOVCAR3_OVARY.bai"}
