@@ -221,6 +221,10 @@ CNA_ARMS = [
     "22q",
 ]
 
+GENEMASKTHRESH = 0.5
+
+SEGDUP_BED = "data/segDup_majorAllele_withAltContigs_98pcFracMatch_merged.bed"
+
 MINFREQTOCALL = 0.25
 
 SV_COLNAME = "somatic_annotated_sv"
