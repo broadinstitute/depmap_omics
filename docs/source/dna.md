@@ -30,6 +30,6 @@ The list of segmental duplication intervals is pulled from [UCSC's table browser
 
 ![](../segdup_ucsc.png)
 
-We then removed from the list duplications where fracMatch < 0.98, as well as duplication pairs where neither segment is on a major contig.
+We then filtered this list by removing duplications where fracMatch < 0.98, as well as duplication pairs where neither segment is on a major contig. Processed bed file can be found at `data/segDup_majorAllele_withAltContigs_98pcFracMatch_merged.bed`.
 
-For the gene-level copy number matrix, we calculated each gene's overlap with segmentally duplicated regions and masked those where more than 50% of the gene body overlaps with segdup regions.
+For the gene-level copy number matrix, we calculated each gene's overlap with segmentally duplicated regions above and masked those where more than 50% of the gene body overlaps with segdup regions.
