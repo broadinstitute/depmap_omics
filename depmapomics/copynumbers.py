@@ -10,6 +10,7 @@ import pandas as pd
 import os
 from mgenepy import mutations as mut
 from mgenepy.utils import helper as h
+import pybedtools
 
 
 def renameColumns(df):
@@ -328,6 +329,11 @@ def pureCNpostprocess(
         absolute_genecn.values.max(),
     )
 
+    # masking
+    absolute_genecn = maskGenes(
+        absolute_genecn, mappingdf, "absolute CN", save_output=save_output + "purecn_"
+    )
+
     print("PureCN: saving seg and gene cn files")
     segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
@@ -345,6 +351,11 @@ def pureCNpostprocess(
         mappingdf,
         style="closest",
         value_colname="LoHStatus",
+    )
+
+    # masking
+    loh_status = maskGenes(
+        loh_status, mappingdf, "LoH", save_output=save_output + "loh_"
     )
 
     loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
@@ -397,6 +408,63 @@ def generateSigTable(
     print("done")
 
     return sig_table
+
+
+def maskGenes(
+    cnmatrix,
+    mybiomart,
+    matname,
+    save_output="",
+    maskthresh=constants.GENEMASKTHRESH,
+    segdup_bed=constants.SEGDUP_BED,
+):
+    """given a bed file consisting of highly repeated/duplicated regions, mask
+    genes that overlap with those regions (a gene is masked if the portion of its gene
+    body length that overlaps with those regions is higher than maskthresh)"""
+    # sort and format biomart
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
+        {"X": "23", "Y": "24", "MT": "25"}
+    )
+    mybiomart = mybiomart[mybiomart.Chromosome.isin(set(map(str, range(1, 26))))]
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(int)
+    mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
+        {23: "X", 24: "Y", 25: "MT"}
+    )
+    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
+    mybiomart["Chromosome"] = "chr" + mybiomart["Chromosome"].astype(str)
+
+    mybiomart[mybiomart.gene_name.isin(cnmatrix)][
+        ["Chromosome", "start", "end", "gene_name"]
+    ].to_csv(save_output + "biomart_cngenes.bed", sep="\t", header=False, index=False)
+
+    cngenes = pybedtools.BedTool(save_output + "biomart_cngenes.bed")
+    cngenes.intersect(segdup_bed).saveas(save_output + "mask_overlap.bed")
+
+    overlap_df = pd.read_csv(
+        save_output + "mask_overlap.bed",
+        sep="\t",
+        names=["chrom", "start", "end", "gene_name"],
+    )
+    gene_dict = (
+        mybiomart[["Chromosome", "start", "end", "gene_name"]]
+        .set_index("gene_name")
+        .T.to_dict("list")
+    )
+    masked_genes = []
+    for g in overlap_df.gene_name.unique().tolist():
+        _, start, end = gene_dict[g]
+        gene_length = end - start
+        overlap_length = 0
+        overlap_segments = overlap_df[overlap_df.gene_name == g]
+        for i, v in overlap_segments.iterrows():
+            overlap_length += v["end"] - v["start"]
+        if overlap_length / gene_length > maskthresh:
+            masked_genes.append(g)
+    print("masking " + str(len(masked_genes)) + " genes from " + matname)
+    cnmatrix = cnmatrix.drop(columns=masked_genes)
+
+    return cnmatrix
 
 
 def postProcess(
@@ -507,6 +575,9 @@ def postProcess(
         ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
     ].reset_index(drop=True)
     genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
+
+    # masking
+    genecn = maskGenes(genecn, mybiomart, "relative CN", save_output=save_output)
 
     # saving
     print("saving files")
