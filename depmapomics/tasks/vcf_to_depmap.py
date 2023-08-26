@@ -741,8 +741,8 @@ def drop_lowqual(
 ):
     loc = (
         # drops 30% of the variants
-        (vcf["af"].astype(float) >= min_freq)
-        & (vcf["ad"].str.split(",").str[1].astype(int) >= min_depth)
+        (vcf["AF"].astype(float) >= min_freq)
+        & (vcf["AD"].str.split(",").str[1].astype(int) >= min_depth)
         # drops 90% of the variants
         & ~(
             (vcf["map_qual"] == "Y")
