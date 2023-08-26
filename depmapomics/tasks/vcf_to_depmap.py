@@ -152,6 +152,8 @@ def main(args=None):
             # we have reached the end:
             tobreak = True
 
+        vcf_file = drop_lowqual(vcf_file)
+
         # improve
         vcf_file = improve(
             vcf_file,
@@ -732,14 +734,38 @@ def improve(
     return vcf
 
 
+def drop_lowqual(
+    vcf,
+    min_freq=0.15,
+    min_depth=2,
+):
+    loc = (
+        # drops 30% of the variants
+        (vcf["af"].astype(float) >= min_freq)
+        & (vcf["ad"].str.split(",").str[1].astype(int) >= min_depth)
+        # drops 90% of the variants
+        & ~(
+            (vcf["map_qual"] == "Y")
+            | (vcf["slippage"] == "Y")
+            | (vcf["strand_bias"] == "Y")
+            | (vcf["weak_evidence"] == "Y")
+            | (vcf["clustered_events"] == "Y")
+            | (vcf["base_qual"] == "Y")
+            # | vcf["fragments"]
+        )
+    )
+
+    vcf = vcf[loc]
+
+    return vcf
+
+
 def to_maf(
     vcf,
     sample_id,
     tokeep=TOKEEP_BASE,
     whitelist=False,
     drop_multi=True,
-    min_freq=0.15,
-    min_depth=2,
     max_log_pop_af=3,
     only_coding=True,
     only_somatic=True,
@@ -770,22 +796,6 @@ def to_maf(
     if drop_multi:
         #  drops 2% of the variants
         vcf = vcf[vcf["multiallelic"] != "Y"]
-
-    loc = (
-        # drops 30% of the variants
-        (vcf["af"].astype(float) >= min_freq)
-        & (vcf["ad"].str.split(",").str[1].astype(int) >= min_depth)
-        # drops 90% of the variants
-        & ~(
-            (vcf["map_qual"] == "Y")
-            | (vcf["slippage"] == "Y")
-            | (vcf["strand_bias"] == "Y")
-            | (vcf["weak_evidence"] == "Y")
-            | (vcf["clustered_events"] == "Y")
-            | (vcf["base_qual"] == "Y")
-            # | vcf["fragments"]
-        )
-    )
 
     # creating count columns
     vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
@@ -838,9 +848,7 @@ def to_maf(
             | (vcf["variant_info"] == "SPLICE_SITE")
             | important
         )
-
-    # we will drop 99.993% of the variants and 90% of the columns
-    vcf = vcf[loc]
+        vcf = vcf[loc]
 
     # redefine somatic (not germline or pon and a log pop. af of > max_log_pop_af)
     # drops 80% of the variants
