@@ -153,14 +153,14 @@ def main(args=None):
             tobreak = True
 
         # improve
-        # vcf_file = improve(
-        #     vcf_file,
-        #     force_list=["oc_genehancer__feature_name"],
-        #     split_multiallelic=use_multi,
-        #     oncogene_list=oncogene,
-        #     tumor_suppressor_list=tumor_suppressor_list,
-        #     civic_df=civic_df,
-        # )
+        vcf_file = improve(
+            vcf_file,
+            force_list=["oc_genehancer__feature_name"],
+            split_multiallelic=use_multi,
+            oncogene_list=oncogene,
+            tumor_suppressor_list=tumor_suppressor_list,
+            civic_df=civic_df,
+        )
 
         # checking we have the same set of columns
         cols = vcf_file.columns.tolist()
@@ -277,43 +277,29 @@ TO_RENAME_BASE = {
     "AD": "ad",
     "GT": "gt",
     "PS": "ps",
-    "gencode_34_variantclassification": "variant_info",
-    "gencode_34_varianttype": "variant_type",
-    "gencode_34_cdnachange": "dna_change",
-    "gencode_34_hugosymbol": "hugo_symbol",
-    "gencode_34_proteinchange": "protein_change",
-    "hgnc_uniprot_id(supplied_by_uniprot)": "uniprot_id",
-    "gencode_34_annotationtranscript": "transcript",
-    "hgnc_approved_name": "hgnc_name",
-    "hgnc_gene_family_name": "hgnc_family",
-    "gencode_34_transcriptexon": "transcript_exon",
-    "gencode_34_transcriptstrand": "transcript_strand",
-    "simple_uniprot_go_biological_process": "go_biological_process",
-    "simple_uniprot_go_cellular_component": "go_cellular_component",
-    "simple_uniprot_go_molecular_function": "go_molecular_function",
-    "cgc_tissue_type": "lineage_association",
-    "cgc_cancer_molecular_genetics": "cancer_molecular_genetics",
-    "gencode_34_gccontent": "gc_content",
+    "vep_consequence": "variant_info",
+    "vep_variant_class": "variant_type",
+    "vep_hgvsc": "dna_change",
+    "vep_symbol": "hugo_symbol",
+    "vep_hgvsp": "protein_change",
+    "vep_uniprot_isoform": "uniprot_id",
+    "vep_feature": "transcript",
+    # "hgnc_approved_name": "hgnc_name",
+    # "hgnc_gene_family_name": "hgnc_family",
+    # "gencode_34_transcriptexon": "transcript_exon",
+    # "gencode_34_transcriptstrand": "transcript_strand",
+    # "simple_uniprot_go_biological_process": "go_biological_process",
+    # "simple_uniprot_go_cellular_component": "go_cellular_component",
+    # "simple_uniprot_go_molecular_function": "go_molecular_function",
+    # "cgc_tissue_type": "lineage_association",
+    # "cgc_cancer_molecular_genetics": "cancer_molecular_genetics",
+    # "gencode_34_gccontent": "gc_content",
 }
 
 
 TO_RENAME_OC = {
-    "oc_oncokb_dm__highestsensitivelevel": "oncokb_sensitivelevel",
-    "oc_oncokb_dm__highestresistancelevel": "oncokb_resistancelevel",
-    "oc_oncokb_dm__highestdiagnosticimplicationlevel": "oncokb_diagnosticlevel",
-    "oc_oncokb_dm__highestprognosticimplicationlevel": "oncokb_prognosticlevel",
-    "oc_oncokb_dm__variantsummary": "oncokb_variant_summary",
-    "oc_oncokb_dm__pmids": "oncokb_pmids",
-    "oc_oncokb_dm__hotspot": "hotspot",
-    "oc_oncokb_dm__oncogenic": "oncokb_oncogenic",
-    ## same
-    "oc_oncokb__highestsensitivelevel": "oncokb_sensitivelevel",
-    "oc_oncokb__highestresistancelevel": "oncokb_resistancelevel",
-    "oc_oncokb__highestdiagnosticimplicationlevel": "oncokb_diagnosticlevel",
-    "oc_oncokb__highestprognosticimplicationlevel": "oncokb_prognosticlevel",
-    "oc_oncokb__variantsummary": "oncokb_variant_summary",
-    "oc_oncokb__pmids": "oncokb_pmids",
-    "oc_oncokb__hotspot": "hotspot",
+    "oc_oncokb__mutation_effect": "oncokb_effect",
+    "oc_oncokb__hotspot": "oncokb_hotspot",
     "oc_oncokb__oncogenic": "oncokb_oncogenic",
     ## same
     "oc_civic__description": "civic_description",
@@ -334,22 +320,16 @@ TO_RENAME_OC = {
     "oc_gwas_catalog__pmid": "gwas_pmid",
     "oc_ccre_screen___group": "encode_group",
     "oc_ccre_screen__bound": "encode_bound",
-    "oc_cscape__score": "cscape_score",
-    "oc_cscape_coding__score": "cscape_score",
     "oc_brca1_func_assay__score": "brca1_func_score",
-    "oc_dann__score": "dann_score",
-    "oc_dann_coding__dann_coding_score": "dann_score",
     "oc_revel__score": "revel_score",
     "oc_spliceai__ds_ag": "spliceai_ds_ag",
     "oc_spliceai__ds_al": "spliceai_ds_al",
     "oc_spliceai__ds_dg": "spliceai_ds_dg",
     "oc_spliceai__ds_dl": "spliceai_ds_dl",
     "oc_gtex__gtex_gene": "gtex_gene",
-    "oc_funseq2__score": "funseq2_score",
-    "oc_funseq2__motif": "funseq2_motif",
-    "oc_funseq2__hot": "funseq2_hot",
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
+    "oc_cosmic_sig__cosmic_tier": "cosmic_tier",
 }
 
 TOKEEP_BASE = {
@@ -367,17 +347,17 @@ TOKEEP_BASE = {
     "dna_change": "str",
     "protein_change": "str",
     "hugo_symbol": "str",
-    "hgnc_name": "str",
-    "hgnc_family": "str",
+    # "hgnc_name": "str",
+    # "hgnc_family": "str",
     "transcript": "str",
-    "transcript_exon": "str",
-    "transcript_strand": "str",
+    # "transcript_exon": "str",
+    # "transcript_strand": "str",
     "uniprot_id": "str",
-    "str": "str",
-    "dbsnp_id": "str",
-    "dbsnp_filter": "str",
-    "issues": "str",
-    "gc_content": "float",
+    # "str": "str",
+    # "dbsnp_id": "str",
+    # "dbsnp_filter": "str",
+    # "issues": "str",
+    # "gc_content": "float",
 }
 
 TOKEEP_ADD = {
@@ -409,16 +389,17 @@ TOKEEP_ADD = {
     "likely_lof": "str",
     "hess_driver": "str",
     "hess_signture": "str",
-    "cscape_score": "str",
-    "dann_score": "str",
     "revel_score": "str",
-    "funseq2_score": "str",
     "pharmgkb_id": "str",
     "dida_id": "str",
     "dida_name": "str",
     "gwas_disease": "str",
     "gwas_pmid": "str",
     "gtex_gene": "str",
+    "cosmic_tier": "str",
+    "oncokb_effect": "str",
+    "oncokb_hotspot": "str",
+    "oncokb_oncogenic": "str",
 }
 
 
@@ -472,7 +453,7 @@ def improve(
         if loc.sum() > 0:
             loc[loc.isna()] = False
             li = vcf.loc[loc, val]
-            #print("replacing: ", val)
+            # print("replacing: ", val)
             for k, v in special_rep.items():  # "%23": "#",
                 li = li.str.replace(k, v)
             vcf.loc[loc, val] = li
@@ -543,29 +524,6 @@ def improve(
     vcf["issues"] = to_add
     todrop = ["dbsnp_asp", "dbsnp_cfl"]
 
-    # defining hotspot
-    vcf["cosmic_hotspot"] = ""
-
-    hotspot_l = []
-    for cosmic_over in list(
-        set(
-            vcf[vcf["cosmic_overlapping_mutations"] != ""][
-                "cosmic_overlapping_mutations"
-            ]
-        )
-    ):
-        # finding the number in " p.I517T(13)", " p.I517T(13), p.G202G(15), p.?(56)"
-        res = sum(
-            [
-                int(val.group(0)[1:-1])
-                for val in re.finditer(r"([(])\d+([)])", cosmic_over)
-            ]
-        )
-        if res > min_count_hotspot:
-            hotspot_l.append(cosmic_over)
-    loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
-    vcf.loc[loc, "cosmic_hotspot"] = "Y"
-
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
     loc = vcf["gencode_34_variantclassification"].isin(
@@ -622,46 +580,26 @@ def improve(
 
     vcf["associated_with"] = ""
 
-    if "oc_oncokb_dm__oncogenic" in vcf.columns.tolist():
-        # defining drivers
-        vcf["driver"] = ""
-        loc = vcf["oc_oncokb_dm__oncogenic"] == "Oncogenic"
-        vcf.loc[loc, "driver"] = "Y"
-
-        vcf["likely_driver"] = ""
-        vcf.loc[loc, "likely_driver"] = "Y"
-        loc = vcf["oc_oncokb_dm__oncogenic"] == "Likely Oncogenic"
-        vcf.loc[loc, "likely_driver"] = "Y"
-
-        # clinical significance
-        vcf["clinically_significant"] = ""
-        loc = ~(
-            (vcf["oc_oncokb_dm__highestprognosticimplicationlevel"] == "")
-            & (vcf["oc_oncokb_dm__highestdiagnosticimplicationlevel"] == "")
-            & (vcf["oc_oncokb_dm__highestsensitivelevel"] == "")
-            & (vcf["oc_oncokb_dm__highestresistancelevel"] == "")
-        )
-        vcf.loc[loc, "clinically_significant"] = "Y"
-
+    if "oc_oncokb__oncogenic" in vcf.columns.tolist():
         # lof
         vcf["lof"] = ""
-        loc = vcf["oc_oncokb_dm__knowneffect"] == "Loss-of-function"
+        loc = vcf["oc_oncokb__mutation_effect"] == "Loss-of-function"
         vcf.loc[loc, "lof"] = "Y"
 
         # likely lof
         vcf.loc[loc, "likely_lof"] = "Y"
-        loc = vcf["oc_oncokb_dm__knowneffect"] == "Likely Loss-of-function"  # |
+        loc = vcf["oc_oncokb__mutation_effect"] == "Likely Loss-of-function"  # |
         vcf.loc[loc, "likely_lof"] = "Y"
 
         # gof
         vcf["gof"] = ""
-        loc = vcf["oc_oncokb_dm__knowneffect"] == "Gain-of-function"
+        loc = vcf["oc_oncokb__mutation_effect"] == "Gain-of-function"
         vcf["gof"] = "Y"
 
         # likely_gof
         vcf["likely_gof"] = ""
         vcf.loc[loc, "likely_gof"] = "Y"
-        loc = vcf["oc_oncokb_dm__knowneffect"] == "Likely Gain-of-function"  # |
+        loc = vcf["oc_oncokb__mutation_effect"] == "Likely Gain-of-function"  # |
         vcf.loc[loc, "likely_gof"] = "Y"
 
     # clinical evidence:
@@ -693,21 +631,6 @@ def improve(
         ].index
         vcf.loc[loc, "lof"] = "Y"
 
-    # likely lof in DANN
-    if (
-        "oc_dann__score" in vcf.columns.tolist()
-        or "oc_dann_coding__dann_coding_score" in vcf.columns.tolist()
-    ):
-        name_score = (
-            "oc_dann__score"
-            if "oc_dann__score" in vcf.columns.tolist()
-            else "oc_dann_coding__dann_coding_score"
-        )
-        # http://www.enlis.com/blog/2015/03/17/the-best-variant-prediction-method-that-no-one-is-using/
-        loc = (vcf[name_score] != "") & (vcf["multiallelic"] != "Y")
-        loc = vcf[loc][vcf[loc][name_score].astype(float) >= 0.96].index
-        vcf.loc[loc, "likely_lof"] = "Y"
-
     # lof revel
     if "oc_revel__score" in vcf.columns.tolist():
         # trancript lof
@@ -723,35 +646,6 @@ def improve(
 
         vcf.loc[loc, "transcript_likely_lof"] = trscs
 
-    # additional defining drivers --> TRAINED ON SOMATIC SO DOING NONSENSE
-    # if (
-    #    "oc_cscape__score" in vcf.columns.tolist()
-    #    or "oc_cscape_coding__score" in vcf.columns.tolist()
-    # ):
-    # score_name = (
-    #    "oc_cscape__score"
-    #    if "oc_cscape__score" in vcf.columns.tolist()
-    #    else "oc_cscape_coding__score"
-    # )
-    # if "likely_driver" not in vcf.columns.tolist():
-    #    vcf["likely_driver"] = ""
-    # subvcf = vcf[(vcf[score_name] != "") & (vcf["multiallelic"] != "Y")][
-    #    ["oc_base__coding", score_name]
-    # ]
-    # vcf.loc[
-    #    subvcf[
-    #        (
-    #            (subvcf["oc_base__coding"] != "")
-    #            & (subvcf[score_name].astype(float) >= 0.89)
-    #        )
-    #        | (
-    #            (subvcf["oc_base__coding"] == "")
-    #            & (subvcf[score_name].astype(float) >= 0.80)
-    #        )
-    #    ].index,
-    #    "likely_driver",
-    # ] = "Y"
-
     # generic annotation
     if "oc_spliceai__ds_ag" in vcf.columns.tolist():
         subvcf = vcf[(vcf["oc_spliceai__ds_ag"] != "") & (vcf["multiallelic"] != "Y")]
@@ -766,16 +660,6 @@ def improve(
     loc_e = []
     if "oc_gtex__gtex_gene" in vcf.columns.tolist():
         loc_e += vcf[vcf["oc_gtex__gtex_gene"] != ""].index.tolist()
-
-    if "oc_funseq2__score" in vcf.columns.tolist():
-        loc = (vcf["oc_funseq2__score"] != "") & (vcf["multiallelic"] != "Y")
-        loc_e += vcf[loc][
-            (vcf[loc].oc_funseq2__score.astype(float) >= 0.5)
-            & (
-                (vcf[loc]["oc_funseq2__motif"] != "")
-                | (vcf[loc]["oc_funseq2__hot"] != "")
-            )
-        ].index.tolist()
 
     vcf.loc[list(set(loc_e)), "associated_with"] += "expression;"
 
@@ -832,7 +716,7 @@ def improve(
     ] += "structural_relation;"
 
     vcf["is_coding"] = ""
-    vcf.loc[vcf["gencode_34_proteinchange"] != "", "is_coding"] = "Y"
+    vcf.loc[vcf["vep_hgvsp"] != "", "is_coding"] = "Y"
 
     # parse clndisdbincl and correct None values
     # vcf.loc[vcf.clndisdbincl.isnull(), 'clndisdbincl'] = ''
