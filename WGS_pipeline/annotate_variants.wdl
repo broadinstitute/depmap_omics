@@ -1,4 +1,5 @@
 version 1.0
+# Filters out low quality variants, add SnpEff, VEP and open cravat annotation
 
 import "remove_filtered.wdl" as removeFiltered
 import "../sandbox/hgvs/hgvs.wdl" as hgvs
