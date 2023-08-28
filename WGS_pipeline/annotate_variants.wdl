@@ -7,14 +7,16 @@ import "opencravat_dm.wdl" as openCravat
 workflow annotateVariants {
 
     input {
+        File sample_id
         File input_vcf
         String sample_id
+        String bcftools_exclude_string = 'FILTER~"weak_evidence"||FILTER~"map_qual"||FILTER~"strand_bias"||FILTER~"slippage"||FILTER~"clustered_events"||FILTER~"base_qual"'
     }
 
     call removeFiltered.RemoveFiltered as RemoveFiltered {
         input:
             sample_id=sample_name,
-            input_vcf=fix_mutect2.vcf_fixed,
+            input_vcf=input_vcf,
             bcftools_exclude_string=bcftools_exclude_string
     }
 
