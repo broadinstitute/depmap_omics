@@ -8,7 +8,6 @@ import "opencravat_dm.wdl" as openCravat
 workflow annotateVariants {
 
     input {
-        File sample_id
         File input_vcf
         String sample_id
         String bcftools_exclude_string = 'FILTER~"weak_evidence"||FILTER~"map_qual"||FILTER~"strand_bias"||FILTER~"slippage"||FILTER~"clustered_events"||FILTER~"base_qual"'
