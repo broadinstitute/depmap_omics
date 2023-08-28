@@ -53,6 +53,6 @@ task bcftools_annotate {
     }
 
     output {
-        File mask_annotated = "~{sample_id}.segdup.rm.vcf"
+        File mask_annotated = "~{sample_id}.segdup.rm.vcf.gz"
     }
 }
