@@ -16,7 +16,7 @@ workflow annotateVariants {
 
     call removeFiltered.RemoveFiltered as RemoveFiltered {
         input:
-            sample_id=sample_name,
+            sample_id=sample_id,
             input_vcf=input_vcf,
             bcftools_exclude_string=bcftools_exclude_string
     }
