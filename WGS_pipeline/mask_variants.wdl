@@ -52,6 +52,15 @@ task bcftools_annotate {
 
     }
 
+    runtime {
+        docker: docker
+        bootDiskSizeGb: "${boot_disk_size}"
+        memory: "${memory}GB"
+        disks: "local-disk ${disk_space} HDD"
+        cpu: "${num_threads}"
+        preemptible: "${num_preempt}"
+    }
+
     output {
         File mask_annotated = "~{sample_id}.segdup.rm.vcf.gz"
     }
