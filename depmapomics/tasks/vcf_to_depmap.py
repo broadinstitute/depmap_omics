@@ -121,6 +121,7 @@ def main(args=None):
             parse_filter=True,
             force_keep=force_keep
             + list(TO_RENAME_OC.keys())
+            + list(TO_RENAME_HGVS.keys())
             + list(TO_RENAME_BASE.keys()),
             drop_null=False,
             cols_to_drop=[
@@ -284,10 +285,11 @@ TO_RENAME_BASE = {
     "vep_hgvsc": "dna_change",
     "vep_symbol": "hugo_symbol",
     "vep_hgvsp": "protein_change",
+    "vep_gene": "ensembl_gene_id",
     "vep_uniprot_isoform": "uniprot_id",
     "vep_feature": "transcript",
-    # "hgnc_approved_name": "hgnc_name",
-    # "hgnc_gene_family_name": "hgnc_family",
+    "hgnc_approved_name": "hgnc_name",
+    "hgnc_gene_family_name": "hgnc_family",
     # "gencode_34_transcriptexon": "transcript_exon",
     # "gencode_34_transcriptstrand": "transcript_strand",
     # "simple_uniprot_go_biological_process": "go_biological_process",
@@ -295,7 +297,15 @@ TO_RENAME_BASE = {
     # "simple_uniprot_go_molecular_function": "go_molecular_function",
     # "cgc_tissue_type": "lineage_association",
     # "cgc_cancer_molecular_genetics": "cancer_molecular_genetics",
-    # "gencode_34_gccontent": "gc_content",
+    "gencode_34_gccontent": "gc_content",
+}
+
+TO_RENAME_HGVS = {
+    "vep_sift": "sift",
+    "vep_polyphen": "polyphen",
+    "vep_gnomade_af": "gnomade_af",
+    "vep_gnomadg_af": "gnomadg_af",
+    
 }
 
 
@@ -340,6 +350,7 @@ TOKEEP_BASE = {
     "ref": "str",
     "alt": "str",
     "af": "float",
+    "dp": "int",
     "ref_count": "int",
     "alt_count": "int",
     "gt": "str",
@@ -349,8 +360,8 @@ TOKEEP_BASE = {
     "dna_change": "str",
     "protein_change": "str",
     "hugo_symbol": "str",
-    # "hgnc_name": "str",
-    # "hgnc_family": "str",
+    "hgnc_name": "str",
+    "hgnc_family": "str",
     "transcript": "str",
     # "transcript_exon": "str",
     # "transcript_strand": "str",
@@ -359,30 +370,28 @@ TOKEEP_BASE = {
     # "dbsnp_id": "str",
     # "dbsnp_filter": "str",
     # "issues": "str",
-    # "gc_content": "float",
+    "gc_content": "float",
 }
 
 TOKEEP_ADD = {
+    "af_exac": "float",
+    "af_esp": "float",
+    "af_tgp": "float",
+    "vep_impact": "str",
+    "vep_biotype": "str",
+    "vep_hgnc_id": "str",
+
     ###############
     "lineage_association": "str",
     "achilles_top_genes": "str",
     "cancer_molecular_genetics": "str",
     "ccle_deleterious": "str",
     "structural_relation": "str",
-    "cosmic_hotspot": "str",
-    "cosmic_overlapping_mutations": "str",
     "associated_with": "str",
-    # "clinically_significant": "str",
-    # "gof": "str",
     "lof": "str",
     "driver": "str",
     "likely_driver": "str",
     "transcript_likely_lof": "str",
-    # "oncokb_sensitivelevel": "str",
-    # "oncokb_resistancelevel": "str",
-    # "oncokb_diagnosticlevel": "str",
-    # "oncokb_prognosticlevel": "str",
-    # "oncokb_pmids": "str",
     "civic_id": "str",
     "civic_description": "str",
     "civic_score": "str",
@@ -402,17 +411,17 @@ TOKEEP_ADD = {
     "oncokb_effect": "str",
     "oncokb_hotspot": "str",
     "oncokb_oncogenic": "str",
+
 }
 
 
 def improve(
     vcf,
     force_list=["oc_genehancer__feature_name"],
-    torename={**TO_RENAME_BASE, **TO_RENAME_OC},
+    torename={**TO_RENAME_BASE, **TO_RENAME_HGVS, **TO_RENAME_OC},
     special_rep=REPLACE_SPECIAL_CHAR,
     replace_empty=REPLACE_EMPTY,
     split_multiallelic=False,
-    min_count_hotspot=5,
     oncogene_list=[],
     tumor_suppressor_list=[],
     civic_df=None,
@@ -594,7 +603,7 @@ def improve(
         # gof
         vcf["gof"] = ""
         loc = vcf["oc_oncokb__mutation_effect"] == "Gain-of-function"
-        vcf["gof"] = "Y"
+        vcf.loc[loc, "gof"] = "Y"
 
         # likely_gof
         vcf["likely_gof"] = ""
@@ -715,17 +724,6 @@ def improve(
         vcf["structural_relation"] != "", "associated_with"
     ] += "structural_relation;"
 
-    vcf["is_coding"] = ""
-    vcf.loc[vcf["vep_hgvsp"] != "", "is_coding"] = "Y"
-
-    # parse clndisdbincl and correct None values
-    # vcf.loc[vcf.clndisdbincl.isnull(), 'clndisdbincl'] = ''
-    # else it is an oncokb value
-
-    # somatic_score
-
-    # quality_score
-
     # rename columns
     vcf = vcf.drop(columns=todrop).rename(columns=torename)
 
@@ -804,12 +802,18 @@ def to_maf(
             len(
                 set(
                     [
-                        "driver",
-                        "likely_gof",
-                        "clinically_significant",
-                        "lof",
-                        "likely_lof",
-                        "likely_driver",
+                        "oncokb_effect",
+                        "oncokb_oncogenic",
+                        "oncokb_hotspot",
+                        "cosmic_tier",
+                        "brca1_func_score",
+                        "clnsig",
+                        "civic_score"
+                        "vep_impact",
+                        "lof_percent_of_transcripts_affected",
+                        "vep_pli_gene_value",
+                        "vep_loftool",
+                        "hugo_symbol"
                     ]
                 )
                 - set(vcf.columns)
@@ -821,29 +825,40 @@ def to_maf(
                 set(tokeep) - set(vcf.columns),
             )
         print("performing whitelisting")
+        # important = (
+        #     (vcf["driver"] == "Y")
+        #     # | (vcf["gof"] == "Y")
+        #     # TODO: could define it with civic if grabbdd drugs in addition to diseases
+        #     # | (vcf["clinically_significant"] == "Y")
+        #     | (vcf["lof"] == "Y")
+        #     | (
+        #         (vcf["likely_lof"] == "Y")
+        #         & (vcf["hugo_symbol"].isin(tumor_suppressor_list))
+        #     )
+        #     | (
+        #         (vcf["likely_driver"] == "Y")
+        #         & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list)
+        #     )
+        # )
         important = (
-            (vcf["driver"] == "Y")
-            # | (vcf["gof"] == "Y")
-            # TODO: could define it with civic if grabbdd drugs in addition to diseases
-            # | (vcf["clinically_significant"] == "Y")
-            | (vcf["lof"] == "Y")
-            | (
-                (vcf["likely_lof"] == "Y")
-                & (vcf["hugo_symbol"].isin(tumor_suppressor_list))
+            (vcf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
+            | (vcf["oncokb_oncogenic"] == "Oncogenic")
+            | (vcf["oncokb_hotspot"] == "True")
+            | (vcf["cosmic_tier"] == "1")
+            | (vcf["brca1_func_score"].astype(float) <= -1.328)
+            | (vcf["clnsig"] == "Pathogenic")
+            | (vcf["civic_score"].astype(float) > 8)
+            | (((vcf["vep_impact"] == "HIGH") | (vcf["lof_percent_of_transcripts_affected"].astype(float) > 0.9)
+                | (vcf["vep_pli_gene_value"].astype(float) > 0.9) | (vcf["vep_loftool"].astype(float) > 0.9))
+                & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list))
             )
-            | (
-                (vcf["likely_driver"] == "Y")
-                & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list)
-            )
-        )
     else:
-        important = vcf["is_coding"].isna()
+        important = vcf["protein_change"] != ""
     if only_coding:
         # drops 99.5% of the variants
         print("only keeping coding mutations")
-        loc = loc & (
-            (vcf["is_coding"] == "Y")
-            | (vcf["variant_info"] == "SPLICE_SITE")
+        loc = (
+            ((vcf["protein_change"] != "") & (vcf["variant_info"] != "intergenic_variant"))
             | important
         )
         vcf = vcf[loc]
