@@ -521,18 +521,6 @@ def improve(
     print("making new annotations")
     # creating merged annotations
 
-    # issue
-    to_add = []
-    for val in vcf[["dbsnp_cfl", "dbsnp_asp"]].values:
-        if val[0] == "Y":
-            to_add.append("assembly_conflict")
-        elif val[1] == "Y":
-            to_add.append("as_specific")
-        else:
-            to_add.append("")
-    vcf["issues"] = to_add
-    todrop = ["dbsnp_asp", "dbsnp_cfl"]
-
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
     loc = vcf["gencode_34_variantclassification"].isin(
@@ -747,7 +735,6 @@ def drop_lowqual(
             | (vcf["weak_evidence"] == "Y")
             | (vcf["clustered_events"] == "Y")
             | (vcf["base_qual"] == "Y")
-            # | vcf["fragments"]
         )
     )
 
