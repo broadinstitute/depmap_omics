@@ -566,13 +566,6 @@ def improve(
     vcf["dna_repair"] = vcf["dna_repair"].replace(
         {": ,%3B,,": "", ": ,%3B,": "", np.nan: ""}
     )
-
-    todrop.extend(
-        [
-            "dnarepairgenes_accession_number_linked_to_ncbi_entrez",
-            "dnarepairgenes_activity_linked_to_omim",
-        ]
-    )
     ############################ ADDITIONNAL ANNOTATOR #########################
 
     vcf["associated_with"] = ""
@@ -713,7 +706,7 @@ def improve(
     ] += "structural_relation;"
 
     # rename columns
-    vcf = vcf.drop(columns=todrop).rename(columns=torename)
+    vcf = vcf.rename(columns=torename)
 
     return vcf
 
