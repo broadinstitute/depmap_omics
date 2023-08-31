@@ -4,6 +4,7 @@ version 1.0
 import "remove_filtered.wdl" as removeFiltered
 import "../sandbox/hgvs/hgvs.wdl" as hgvs
 import "opencravat_dm.wdl" as openCravat
+import "mask_variants.wdl" as mask_variants
 
 workflow annotateVariants {
 
@@ -20,9 +21,14 @@ workflow annotateVariants {
             bcftools_exclude_string=bcftools_exclude_string
     }
 
+    call mask_variants.run_mask_variants as mask_variants{
+        vcf=RemoveFiltered.output_vcf,
+        sample_id=sample_id,
+    }
+
     call hgvs.HgvsWorkflow as HgvsWorkflow{
         input:
-            input_vcf=RemoveFiltered.output_vcf,
+            input_vcf=mask_variants.mask_annotated,
             sample_id=sample_id,
     }
 
