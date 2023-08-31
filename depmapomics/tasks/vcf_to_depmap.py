@@ -821,16 +821,14 @@ def to_maf(
         #     )
         # )
         important = (
-            (vcf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
+            (vcf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function", "Likely Loss-of-function", "Likely Gain-of-function"]))
             | (vcf["oncokb_oncogenic"] == "Oncogenic")
             | (vcf["oncokb_hotspot"] == "True")
             | (vcf["cosmic_tier"] == "1")
             | (vcf["brca1_func_score"].astype(float) <= -1.328)
             | (vcf["clnsig"] == "Pathogenic")
             | (vcf["civic_score"].astype(float) > 8)
-            | (((vcf["vep_impact"] == "HIGH") | (vcf["lof_percent_of_transcripts_affected"].astype(float) > 0.9)
-                | (vcf["vep_pli_gene_value"].astype(float) > 0.9) | (vcf["vep_loftool"].astype(float) > 0.9))
-                & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list))
+            | ((vcf["vep_impact"] == "HIGH") & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list))
             )
     else:
         important = vcf["protein_change"] != ""
