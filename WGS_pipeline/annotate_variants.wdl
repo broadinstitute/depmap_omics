@@ -1,5 +1,6 @@
 version 1.0
-# Filters out low quality variants, add SnpEff, VEP and open cravat annotation
+# Filters out low quality variants, annotate if vairants overlap with segmental duplication or repeatmasker,
+# add SnpEff, VEP and open cravat annotation
 
 import "remove_filtered.wdl" as removeFiltered
 import "../sandbox/hgvs/hgvs.wdl" as hgvs
