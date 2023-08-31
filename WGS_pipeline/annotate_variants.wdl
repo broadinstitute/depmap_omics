@@ -21,9 +21,10 @@ workflow annotateVariants {
             bcftools_exclude_string=bcftools_exclude_string
     }
 
-    call mask_variants.run_mask_variants as mask_variants{
-        vcf=RemoveFiltered.output_vcf,
-        sample_id=sample_id,
+    call mask_variants.run_mask_variants as mask_variants {
+        input:
+            vcf=RemoveFiltered.output_vcf,
+            sample_id=sample_id,
     }
 
     call hgvs.HgvsWorkflow as HgvsWorkflow{
