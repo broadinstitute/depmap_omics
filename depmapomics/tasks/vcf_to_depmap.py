@@ -306,7 +306,7 @@ TO_RENAME_HGVS = {
     "vep_gnomade_af": "gnomade_af",
     "vep_gnomadg_af": "gnomadg_af",
     "vep_feature": "ensembl_feature_id",
-    "rs": "dbsnp_id",
+    "rs": "dbsnp_rs_id",
     "mc": "molecular_consequence"
     
 }
@@ -370,7 +370,7 @@ TOKEEP_BASE = {
     "hgnc_family": "str",
     "transcript": "str",
     "uniprot_id": "str",
-    "dbsnp_id": "str",
+    "dbsnp_rs_id": "str",
     "gc_content": "float",
 }
 
