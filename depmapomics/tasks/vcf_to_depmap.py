@@ -829,10 +829,7 @@ def to_maf(
     if only_coding:
         # drops 99.5% of the variants
         print("only keeping coding mutations")
-        loc = (
-            ((vcf["protein_change"] != "") | (vcf["variant_info"] != "intergenic_variant"))
-            | important
-        )
+        loc = ((vcf["variant_info"] != "intergenic_variant") | important)
         vcf = vcf[loc]
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
