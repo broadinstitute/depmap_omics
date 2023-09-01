@@ -847,7 +847,7 @@ def to_maf(
     if only_somatic:
         print("only keeping somatic mutations")
         loc = (
-            ~((vcf["germline"] == "Y") | (vcf["pon"] == "Y"))
+            ~(vcf["pon"] == "Y")
             & (~(vcf["gnomade_af"].astype(float) > max_pop_af))
             & (~(vcf["gnomadg_af"].astype(float) > max_pop_af))
         ) | important
