@@ -213,7 +213,7 @@ def main(args=None):
                 header=False,
                 oncogenic_list=oncogene,
                 tumor_suppressor_list=tumor_suppressor_list,
-                tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+                tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
                 index=False,
             )
         del vcf_file
@@ -803,7 +803,6 @@ def to_maf(
                         "clnsig",
                         "civic_score"
                         "vep_impact",
-                        "lof_percent_of_transcripts_affected",
                         "hugo_symbol"
                     ]
                 )
