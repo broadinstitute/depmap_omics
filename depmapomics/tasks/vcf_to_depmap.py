@@ -186,36 +186,36 @@ def main(args=None):
             pa.Table.from_pandas(vcf_file), root_path=sample_name + "-maf-full.parquet"
         )
 
-        # # save maf
-        # print("saving maf")
-        # if i == 0:
-        #     to_maf(
-        #         vcf_file,
-        #         sample_name,
-        #         only_somatic=True,
-        #         only_coding=True,
-        #         whitelist=whitelist,
-        #         drop_multi=True,
-        #         oncogenic_list=oncogene,
-        #         tumor_suppressor_list=tumor_suppressor_list,
-        #         tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
-        #         index=False,
-        #     )
-        # else:
-        #     to_maf(
-        #         vcf_file,
-        #         sample_name,
-        #         only_somatic=True,
-        #         only_coding=True,
-        #         whitelist=whitelist,
-        #         drop_multi=True,
-        #         mode="a",
-        #         header=False,
-        #         oncogenic_list=oncogene,
-        #         tumor_suppressor_list=tumor_suppressor_list,
-        #         tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
-        #         index=False,
-        #     )
+        # save maf
+        print("saving maf")
+        if i == 0:
+            to_maf(
+                vcf_file,
+                sample_name,
+                only_somatic=True,
+                only_coding=True,
+                whitelist=whitelist,
+                drop_multi=True,
+                oncogenic_list=oncogene,
+                tumor_suppressor_list=tumor_suppressor_list,
+                tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+                index=False,
+            )
+        else:
+            to_maf(
+                vcf_file,
+                sample_name,
+                only_somatic=True,
+                only_coding=True,
+                whitelist=whitelist,
+                drop_multi=True,
+                mode="a",
+                header=False,
+                oncogenic_list=oncogene,
+                tumor_suppressor_list=tumor_suppressor_list,
+                tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+                index=False,
+            )
         del vcf_file
         if tobreak:
             break
@@ -305,6 +305,9 @@ TO_RENAME_HGVS = {
     "vep_polyphen": "polyphen",
     "vep_gnomade_af": "gnomade_af",
     "vep_gnomadg_af": "gnomadg_af",
+    "vep_feature": "ensembl_feature_id",
+    "rs": "dbsnp_id",
+    "mc": "molecular_consequence"
     
 }
 
@@ -342,6 +345,7 @@ TO_RENAME_OC = {
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
     "oc_cosmic_sig__cosmic_tier": "cosmic_tier",
+    "oc_provean__prediction": "provean_prediction"
 }
 
 TOKEEP_BASE = {
@@ -360,26 +364,42 @@ TOKEEP_BASE = {
     "dna_change": "str",
     "protein_change": "str",
     "hugo_symbol": "str",
+    "ensembl_gene_id": "str",
+    "ensembl_feature_id": "str",
     "hgnc_name": "str",
     "hgnc_family": "str",
     "transcript": "str",
-    # "transcript_exon": "str",
-    # "transcript_strand": "str",
     "uniprot_id": "str",
-    # "str": "str",
-    # "dbsnp_id": "str",
-    # "dbsnp_filter": "str",
-    # "issues": "str",
+    "dbsnp_id": "str",
     "gc_content": "float",
 }
 
 TOKEEP_ADD = {
-    "af_exac": "float",
-    "af_esp": "float",
-    "af_tgp": "float",
+    "lof_gene_name": "str",
+    "lof_gene_id": "str",
+    "lof_number_of_transcripts_in_gene": "str",
+    "lof_percent_of_transcripts_affected": "str",
+    "nmd": "str",
+    "clnsig": "str",
+    "molecular_consequence": "str",
+    "af_exac": "str",
+    "af_esp": "str",
+    "af_tgp": "str",
     "vep_impact": "str",
     "vep_biotype": "str",
     "vep_hgnc_id": "str",
+    "vep_existing_variation": "str",
+    "vep_mane_select": "str",
+    "vep_ensp": "str",
+    "vep_swissprot": "str",
+    "sift": "str",
+    "polyphen": "str",
+    "gnomade_af": "float",
+    "gnomadg_af": "float",
+    "vep_clin_sig": "str",
+    "vep_somatic": "str",
+    "vep_pli_gene_value": "str",
+    "vep_loftool": "str",
 
     ###############
     "lineage_association": "str",
@@ -392,6 +412,7 @@ TOKEEP_ADD = {
     "driver": "str",
     "likely_driver": "str",
     "transcript_likely_lof": "str",
+    "brca1_func_score": "str",
     "civic_id": "str",
     "civic_description": "str",
     "civic_score": "str",
@@ -411,6 +432,7 @@ TOKEEP_ADD = {
     "oncokb_effect": "str",
     "oncokb_hotspot": "str",
     "oncokb_oncogenic": "str",
+    "provean_prediction": "str",
 
 }
 
@@ -505,6 +527,9 @@ def improve(
     # replace empty characters:
     print("replacing empty characters:")
     vcf = vcf.replace(replace_empty)
+    vcf["gnomade_af"] = vcf["gnomade_af"].replace("", np.nan)
+    vcf["gnomadg_af"] = vcf["gnomadg_af"].replace("", np.nan)
+    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].replace("", np.nan)
 
     print("re-annotating CIVIC using static dataframe:")
     if civic_df is not None:
@@ -522,24 +547,8 @@ def improve(
     # creating merged annotations
 
     # ccle_deleterious
-    vcf["ccle_deleterious"] = ""
-    loc = vcf["gencode_34_variantclassification"].isin(
-        [
-            "DE_NOVO_START_OUT_FRAME",
-            "DE_NOVO_START_IN_FRAME",
-            "FRAME_SHIFT_DEL",
-            "FRAME_SHIFT_INS",
-            "START_CODON_INS",
-            "START_CODON_DEL",
-            "NONSTOP",
-            "NONSENSE",
-        ]
-    )
-    vcf.loc[
-        loc,
-        "ccle_deleterious",
-    ] = "Y"
     vcf["likely_lof"] = ""
+    loc = vcf["vep_impact"] == "HIGH"
     vcf.loc[loc, "likely_lof"] = "Y"
 
     # structural_relation
@@ -743,10 +752,12 @@ def to_maf(
     whitelist=False,
     drop_multi=True,
     max_log_pop_af=3,
+    max_pop_af=0.00001,
     only_coding=True,
     only_somatic=True,
     oncogenic_list=[],
     tumor_suppressor_list=[],
+    mask_segdup_and_rm=True,
     **kwargs,
 ):
     """to_maf
@@ -776,6 +787,8 @@ def to_maf(
     # creating count columns
     vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
 
+    important = vcf["protein_change"] != ""
+
     if whitelist:
         # if missing columns print issue
         if (
@@ -791,8 +804,6 @@ def to_maf(
                         "civic_score"
                         "vep_impact",
                         "lof_percent_of_transcripts_affected",
-                        "vep_pli_gene_value",
-                        "vep_loftool",
                         "hugo_symbol"
                     ]
                 )
@@ -805,21 +816,6 @@ def to_maf(
                 set(tokeep) - set(vcf.columns),
             )
         print("performing whitelisting")
-        # important = (
-        #     (vcf["driver"] == "Y")
-        #     # | (vcf["gof"] == "Y")
-        #     # TODO: could define it with civic if grabbdd drugs in addition to diseases
-        #     # | (vcf["clinically_significant"] == "Y")
-        #     | (vcf["lof"] == "Y")
-        #     | (
-        #         (vcf["likely_lof"] == "Y")
-        #         & (vcf["hugo_symbol"].isin(tumor_suppressor_list))
-        #     )
-        #     | (
-        #         (vcf["likely_driver"] == "Y")
-        #         & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list)
-        #     )
-        # )
         important = (
             (vcf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function", "Likely Loss-of-function", "Likely Gain-of-function"]))
             | (vcf["oncokb_oncogenic"] == "Oncogenic")
@@ -830,13 +826,18 @@ def to_maf(
             | (vcf["civic_score"].astype(float) > 8)
             | ((vcf["vep_impact"] == "HIGH") & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list))
             )
-    else:
-        important = vcf["protein_change"] != ""
     if only_coding:
         # drops 99.5% of the variants
         print("only keeping coding mutations")
         loc = (
             ((vcf["protein_change"] != "") & (vcf["variant_info"] != "intergenic_variant"))
+            | important
+        )
+        vcf = vcf[loc]
+    if mask_segdup_and_rm:
+        print("removing variants in segmental duplication and repeatmasker regions")
+        loc = (
+            ((vcf["segdup"] != "True") & (vcf["rm"] != "True"))
             | important
         )
         vcf = vcf[loc]
@@ -847,7 +848,8 @@ def to_maf(
         print("only keeping somatic mutations")
         loc = (
             ~((vcf["germline"] == "Y") | (vcf["pon"] == "Y"))
-            & (vcf["popaf"].astype(float) > max_log_pop_af)
+            & (~(vcf["gnomade_af"].astype(float) > max_pop_af))
+            & (~(vcf["gnomadg_af"].astype(float) > max_pop_af))
         ) | important
         vcf = vcf[loc]
     print(
