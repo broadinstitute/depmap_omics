@@ -198,7 +198,7 @@ def main(args=None):
                 drop_multi=True,
                 oncogenic_list=oncogene,
                 tumor_suppressor_list=tumor_suppressor_list,
-                tokeep={**vcf.TOKEEP_BASE, **vcf.TOKEEP_ADD},
+                tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
                 index=False,
             )
         else:
