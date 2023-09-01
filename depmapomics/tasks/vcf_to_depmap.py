@@ -278,6 +278,7 @@ REPLACE_SPECIAL_CHAR = {
 TO_RENAME_BASE = {
     "AF": "af",
     "AD": "ad",
+    "DP": "dp",
     "GT": "gt",
     "PS": "ps",
     "vep_consequence": "variant_info",
@@ -368,7 +369,6 @@ TOKEEP_BASE = {
     "ensembl_feature_id": "str",
     "hgnc_name": "str",
     "hgnc_family": "str",
-    "transcript": "str",
     "uniprot_id": "str",
     "dbsnp_rs_id": "str",
     "gc_content": "float",
@@ -402,10 +402,7 @@ TOKEEP_ADD = {
     "vep_loftool": "str",
 
     ###############
-    "lineage_association": "str",
     "achilles_top_genes": "str",
-    "cancer_molecular_genetics": "str",
-    "ccle_deleterious": "str",
     "structural_relation": "str",
     "associated_with": "str",
     "lof": "str",
