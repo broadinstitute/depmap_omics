@@ -830,7 +830,7 @@ def to_maf(
         # drops 99.5% of the variants
         print("only keeping coding mutations")
         loc = (
-            ((vcf["protein_change"] != "") & (vcf["variant_info"] != "intergenic_variant"))
+            ((vcf["protein_change"] != "") | (vcf["variant_info"] != "intergenic_variant"))
             | important
         )
         vcf = vcf[loc]
