@@ -15,7 +15,7 @@ workflow run_vcf_to_depmap {
 
     output {
         Array[File] full_file=vcf_to_depmap.full_file
-        # File depmap_maf=vcf_to_depmap.depmap_maf
+        File depmap_maf=vcf_to_depmap.depmap_maf
     }
 }
 
@@ -63,6 +63,6 @@ task vcf_to_depmap {
 
     output {
         Array[File] full_file = glob("~{sample_id}-maf-full.parquet/*.parquet")
-        # File depmap_maf = "~{sample_id}-maf-coding_somatic-subset.csv.gz"
+        File depmap_maf = "~{sample_id}-maf-coding_somatic-subset.csv.gz"
     }
 }
