@@ -726,6 +726,7 @@ def drop_lowqual(
         # drops 30% of the variants
         (vcf["AF"].astype(float) >= min_freq)
         & (vcf["AD"].str.split(",").str[1].astype(int) >= min_depth)
+        & (~(vcf["chrom"].str.contains("_")))
         # drops 90% of the variants
         & ~(
             (vcf["map_qual"] == "Y")
