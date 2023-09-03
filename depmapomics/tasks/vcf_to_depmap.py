@@ -824,9 +824,12 @@ def to_maf(
             | ((vcf["vep_impact"] == "HIGH") & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list))
             )
     if only_coding:
-        # drops 99.5% of the variants
         print("only keeping coding mutations")
-        loc = ((vcf["variant_info"] != "intergenic_variant") | important)
+        loc = ((vcf["variant_info"].str.contains("splice"))
+            | (vcf["vep_impact"].isin(["HIGH", "MODERATE"]))
+            | (vcf["protein_change"] != "")
+            | important
+            )
         vcf = vcf[loc]
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
