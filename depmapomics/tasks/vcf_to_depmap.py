@@ -180,6 +180,7 @@ def main(args=None):
 
         # save full
         # need pyarrows
+        print("saving " + str(len(vcf_file)) + " variants in parquet")
         pq.write_to_dataset(
             pa.Table.from_pandas(vcf_file), root_path=sample_name + "-maf-full.parquet"
         )
@@ -722,8 +723,8 @@ def drop_lowqual(
 ):
     loc = (
         # drops 30% of the variants
-        (vcf["AF"].astype(float) >= min_freq)
-        & (vcf["AD"].str.split(",").str[1].astype(int) >= min_depth)
+        (vcf["af"].astype(float) >= min_freq)
+        & (vcf["ad"].str.split(",").str[1].astype(int) >= min_depth)
         & (~(vcf["chrom"].str.contains("_")))
         # drops 90% of the variants
         & ~(
