@@ -153,8 +153,6 @@ def main(args=None):
             # we have reached the end:
             tobreak = True
 
-        vcf_file = drop_lowqual(vcf_file)
-
         # improve
         vcf_file = improve(
             vcf_file,
@@ -781,6 +779,9 @@ def to_maf(
     if drop_multi:
         #  drops 2% of the variants
         vcf = vcf[vcf["multiallelic"] != "Y"]
+
+    # drop low quality and low coverage
+    vcf = drop_lowqual(vcf)
 
     # creating count columns
     vcf[["ref_count", "alt_count"]] = vcf["ad"].str.split(",", expand=True)
