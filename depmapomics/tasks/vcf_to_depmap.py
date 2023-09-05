@@ -783,7 +783,7 @@ def to_maf(
         vcf = vcf[vcf["multiallelic"] != "Y"]
 
     # creating count columns
-    vcf[["ref_count", "alt_count"]] = np.array(vcf["ad"].str.split(",").to_list())
+    vcf[["ref_count", "alt_count"]] = vcf["ad"].str.split(",", expand=True)
 
     important = vcf["protein_change"] != ""
 
