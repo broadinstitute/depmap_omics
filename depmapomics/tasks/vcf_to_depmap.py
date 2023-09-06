@@ -713,9 +713,9 @@ def improve(
     ] += "structural_relation;"
 
     # high impact oncogenes and tumor suppressor
-    if "vep_impact" in vcf.columns.tolist():
-        onco_loc = ((vcf["vep_impact"] == "HIGH") & (vcf["hugo_symbol"].isin(oncogene_list)))
-        ts_loc = ((vcf["vep_impact"] == "HIGH") & (vcf["hugo_symbol"].isin(tumor_suppressor_list)))
+    if "vep_impact" in vcf.columns.tolist() and "vep_symbol" in vcf.columns.tolist():
+        onco_loc = ((vcf["vep_impact"] == "HIGH") & (vcf["vep_symbol"].isin(oncogene_list)))
+        ts_loc = ((vcf["vep_impact"] == "HIGH") & (vcf["vep_symbol"].isin(tumor_suppressor_list)))
         vcf.loc[onco_loc, "oncogene_high_impact"] = True
         vcf.loc[ts_loc, "tumor_suppressor_high_impact"] = True
 
