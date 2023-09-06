@@ -854,12 +854,12 @@ def to_maf(
         + ". removed: {:2f}%".format((1 - (len(vcf) / initsize)) * 100)
     )
 
-    if len(vcf[vcf["ad"].str.count(",") != 1]) > 0:
-        print("ad column incorrectly formatted for:")
-        print(vcf[vcf["ad"].str.count(",") != 1][["chrom", "pos"]])
+    vcf["ref_count"] = None
+    vcf["alt_count"] = None
 
-    # creating count columns
-    vcf[["ref_count", "alt_count"]] = vcf["ad"].str.split(",", expand=True)
+    if len(vcf) > 0:
+        # creating count columns
+        vcf[["ref_count", "alt_count"]] = vcf["ad"].str.split(",", expand=True)
 
     # subsetting
     vcf = vcf[list(tokeep.keys())]
