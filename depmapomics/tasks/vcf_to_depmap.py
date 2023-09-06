@@ -830,7 +830,7 @@ def to_maf(
             | (vcf["cosmic_tier"] == "1")
             | (vcf["brca1_func_score"].astype(float) <= -1.328)
             | (vcf["clnsig"] == "Pathogenic")
-            | (vcf["civic_score"].astype(float) > 8)
+            | (vcf["civic_score"].astype(float) >= 8)
             | (vcf["oncogene_high_impact"] is True)
             | (vcf["tumor_suppressor_high_impact"] is True)
             | (vcf["hess_driver"] == "Y")
