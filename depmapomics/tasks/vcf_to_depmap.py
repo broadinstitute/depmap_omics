@@ -401,7 +401,6 @@ TOKEEP_ADD = {
     "vep_loftool": "str",
     "oncogene_high_impact": "bool",
     "tumor_suppressor_high_impact": "bool",
-    "rescued": "bool",
 
     ###############
     "achilles_top_genes": "str",
