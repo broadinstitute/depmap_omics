@@ -724,7 +724,7 @@ def drop_lowqual(
     loc = (
         # drops 30% of the variants
         (vcf["af"].astype(float) >= min_freq)
-        & (vcf["ad"].str.split(",").str[1].astype(int) >= min_depth)
+        & (vcf["dp"].astype(int) >= min_depth)
         & (~(vcf["chrom"].str.contains("_")))
         # drops 90% of the variants
         & ~(
@@ -779,7 +779,7 @@ def to_maf(
     initsize = len(vcf)
     if drop_multi:
         #  drops 2% of the variants
-        vcf = vcf[vcf["multiallelic"] != "Y"]
+        vcf = vcf[(vcf["multiallelic"] is not True) & (vcf["multiallelic"] != "Y")]
 
     # drop low quality and low coverage
     vcf = drop_lowqual(vcf)
