@@ -399,6 +399,9 @@ TOKEEP_ADD = {
     "vep_somatic": "str",
     "vep_pli_gene_value": "str",
     "vep_loftool": "str",
+    "oncogene_high_impact": "bool",
+    "tumor_suppressor_high_impact": "bool",
+    "rescued": "bool",
 
     ###############
     "achilles_top_genes": "str",
@@ -710,6 +713,13 @@ def improve(
         vcf["structural_relation"] != "", "associated_with"
     ] += "structural_relation;"
 
+    # high impact oncogenes and tumor suppressor
+    if "vep_impact" in vcf.columns.tolist():
+        onco_loc = ((vcf["vep_impact"] == "HIGH") & vcf["hugo_symbol"].isin(oncogene_list))
+        ts_loc = ((vcf["vep_impact"] == "HIGH") & vcf["hugo_symbol"].isin(tumor_suppressor_list))
+        vcf.loc[onco_loc, "oncogene_high_impact"] = True
+        vcf.loc[ts_loc, "tumor_suppressor_high_impact"] = True
+
     # rename columns
     vcf = vcf.rename(columns=torename)
 
@@ -799,8 +809,10 @@ def to_maf(
                         "brca1_func_score",
                         "clnsig",
                         "civic_score"
-                        "vep_impact",
-                        "hugo_symbol"
+                        "hugo_symbol",
+                        "hess_driver",
+                        "oncogene_high_impact",
+                        "tumor_suppressor_high_impact"
                     ]
                 )
                 - set(vcf.columns)
@@ -820,12 +832,13 @@ def to_maf(
             | (vcf["brca1_func_score"].astype(float) <= -1.328)
             | (vcf["clnsig"] == "Pathogenic")
             | (vcf["civic_score"].astype(float) > 8)
-            | ((vcf["vep_impact"] == "HIGH") & vcf["hugo_symbol"].isin(oncogenic_list + tumor_suppressor_list))
+            | (vcf["oncogene_high_impact"] is True)
+            | (vcf["tumor_suppressor_high_impact"] is True)
+            | (vcf["hess_driver"] == "Y")
             )
     if only_coding:
         print("only keeping coding mutations")
-        loc = ((vcf["variant_info"].str.contains("splice"))
-            | (vcf["vep_impact"].isin(["HIGH", "MODERATE"]))
+        loc = (((vcf["variant_info"].str.contains("splice")) & (vcf["vep_impact"].isin(["HIGH", "MODERATE"])))
             | (vcf["protein_change"] != "")
             | important
             )
@@ -848,6 +861,7 @@ def to_maf(
             & (~(vcf["gnomadg_af"].astype(float) > max_pop_af))
         ) | important
         vcf = vcf[loc]
+
     print(
         "new size: "
         + str(len(vcf))
@@ -869,6 +883,9 @@ def to_maf(
         vcf[k] = vcf[k].astype(v)
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%2C")
+
+    vcf.loc[important, "rescue"] = True
+
     vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
 
 
