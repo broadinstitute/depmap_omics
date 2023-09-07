@@ -785,7 +785,7 @@ def to_maf(
     vcf = drop_lowqual(vcf)
 
     important = pd.Series(False, index=vcf.index)
-    loc = pd.Series(False, index=vcf.index)
+    loc = pd.Series(True, index=vcf.index)
 
     if whitelist:
         # if missing columns print issue
@@ -831,24 +831,24 @@ def to_maf(
         print("only keeping coding mutations")
         loc = (((vcf["variant_info"].str.contains("splice")) & (vcf["vep_impact"].isin(["HIGH", "MODERATE"])))
             | (vcf["protein_change"] != "")
-            | important | loc
+            | important
             )
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
         loc = (
-            ((vcf["segdup"] != "True") & (vcf["rm"] != "True"))
-            | important | loc
+            (((vcf["segdup"] != "True") & (vcf["rm"] != "True"))
+            | important) & loc
         )
 
     # redefine somatic (not germline or pon and a log pop. af of > max_log_pop_af)
     # drops 80% of the variants
     if only_somatic:
         print("only keeping somatic mutations")
-        loc = (
+        loc = ((
             ~(vcf["pon"] == "Y")
             & (~(vcf["gnomade_af"].astype(float) > max_pop_af))
             & (~(vcf["gnomadg_af"].astype(float) > max_pop_af))
-        ) | important | loc
+        ) | important) & loc
     
     vcf = vcf[loc]
 
