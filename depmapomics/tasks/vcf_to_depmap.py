@@ -812,7 +812,21 @@ def to_maf(
         ):
             print(
                 "missing columns to perform whitelisting",
-                set(tokeep) - set(vcf.columns),
+                set(
+                    [
+                        "oncokb_effect",
+                        "oncokb_oncogenic",
+                        "oncokb_hotspot",
+                        "cosmic_tier",
+                        "brca1_func_score",
+                        "clnsig",
+                        "civic_score"
+                        "hugo_symbol",
+                        "hess_driver",
+                        "oncogene_high_impact",
+                        "tumor_suppressor_high_impact"
+                    ]
+                ) - set(vcf.columns),
             )
         print("performing whitelisting")
         important = (
