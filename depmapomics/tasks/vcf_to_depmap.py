@@ -883,7 +883,9 @@ def to_maf(
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%2C")
 
-    vcf.loc[important, "rescue"] = True
+    vcf["rescue"] = None
+    if len(vcf) > 0:
+        vcf.loc[important, "rescue"] = True
 
     vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
 
