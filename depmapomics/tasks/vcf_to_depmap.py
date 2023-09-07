@@ -195,8 +195,6 @@ def main(args=None):
                 only_coding=True,
                 whitelist=whitelist,
                 drop_multi=True,
-                oncogenic_list=oncogene,
-                tumor_suppressor_list=tumor_suppressor_list,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
                 index=False,
             )
@@ -210,8 +208,6 @@ def main(args=None):
                 drop_multi=True,
                 mode="a",
                 header=False,
-                oncogenic_list=oncogene,
-                tumor_suppressor_list=tumor_suppressor_list,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
                 index=False,
             )
@@ -777,8 +773,6 @@ def to_maf(
         max_log_pop_af (float): maximum -log10 population allele frequency to keep a variant
         only_coding (bool): set it to true to keep only coding variants
         only_somatic (bool): set it to true to keep only somatic variants
-        oncogenic_list (list[str]): list of oncogenes
-        tumor_suppressor_list (list[str]): list of tumor suppressors
 
     """
     # dropping
