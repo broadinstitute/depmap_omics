@@ -757,12 +757,9 @@ def to_maf(
     tokeep=TOKEEP_BASE,
     whitelist=False,
     drop_multi=True,
-    max_log_pop_af=3,
     max_pop_af=0.00001,
     only_coding=True,
     only_somatic=True,
-    oncogenic_list=[],
-    tumor_suppressor_list=[],
     mask_segdup_and_rm=True,
     **kwargs,
 ):
@@ -793,7 +790,8 @@ def to_maf(
     # drop low quality and low coverage
     vcf = drop_lowqual(vcf)
 
-    important = vcf["protein_change"] != ""
+    important = pd.Series(False, index=vcf.index)
+    loc = pd.Series(False, index=vcf.index)
 
     if whitelist:
         # if missing columns print issue
@@ -839,16 +837,14 @@ def to_maf(
         print("only keeping coding mutations")
         loc = (((vcf["variant_info"].str.contains("splice")) & (vcf["vep_impact"].isin(["HIGH", "MODERATE"])))
             | (vcf["protein_change"] != "")
-            | important
+            | important | loc
             )
-        vcf = vcf[loc]
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
         loc = (
             ((vcf["segdup"] != "True") & (vcf["rm"] != "True"))
-            | important
+            | important | loc
         )
-        vcf = vcf[loc]
 
     # redefine somatic (not germline or pon and a log pop. af of > max_log_pop_af)
     # drops 80% of the variants
@@ -858,8 +854,9 @@ def to_maf(
             ~(vcf["pon"] == "Y")
             & (~(vcf["gnomade_af"].astype(float) > max_pop_af))
             & (~(vcf["gnomadg_af"].astype(float) > max_pop_af))
-        ) | important
-        vcf = vcf[loc]
+        ) | important | loc
+    
+    vcf = vcf[loc]
 
     print(
         "new size: "
