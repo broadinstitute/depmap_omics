@@ -820,7 +820,7 @@ def to_maf(
                         "cosmic_tier",
                         "brca1_func_score",
                         "clnsig",
-                        "civic_score"
+                        "civic_score",
                         "hugo_symbol",
                         "hess_driver",
                         "oncogene_high_impact",
