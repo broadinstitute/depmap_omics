@@ -837,8 +837,8 @@ def to_maf(
             | (vcf["brca1_func_score"].astype(float) <= -1.328)
             | (vcf["clnsig"] == "Pathogenic")
             | (vcf["civic_score"].astype(float) >= 8)
-            | (vcf["oncogene_high_impact"] is True)
-            | (vcf["tumor_suppressor_high_impact"] is True)
+            | (vcf["oncogene_high_impact"])
+            | (vcf["tumor_suppressor_high_impact"])
             | (vcf["hess_driver"] == "Y")
             )
     if only_coding:
