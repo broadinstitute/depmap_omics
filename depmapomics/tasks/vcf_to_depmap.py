@@ -819,7 +819,6 @@ def to_maf(
                         "oncokb_hotspot",
                         "cosmic_tier",
                         "brca1_func_score",
-                        "clnsig",
                         "civic_score",
                         "hugo_symbol",
                         "hess_driver",
@@ -835,7 +834,6 @@ def to_maf(
             | (vcf["oncokb_hotspot"] == "True")
             | (vcf["cosmic_tier"] == "1")
             | (vcf["brca1_func_score"].astype(float) <= -1.328)
-            | (vcf["clnsig"] == "Pathogenic")
             | (vcf["civic_score"].astype(float) >= 8)
             | (vcf["oncogene_high_impact"])
             | (vcf["tumor_suppressor_high_impact"])
