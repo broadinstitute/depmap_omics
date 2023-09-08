@@ -395,8 +395,8 @@ TOKEEP_ADD = {
     "vep_somatic": "str",
     "vep_pli_gene_value": "str",
     "vep_loftool": "str",
-    "oncogene_high_impact": "bool",
-    "tumor_suppressor_high_impact": "bool",
+    "oncogene_high_impact": "str",
+    "tumor_suppressor_high_impact": "str",
 
     ###############
     "achilles_top_genes": "str",
