@@ -524,7 +524,7 @@ def improve(
     vcf["vep_gnomade_af"] = vcf["vep_gnomade_af"].replace("", np.nan)
     vcf["vep_gnomadg_af"] = vcf["vep_gnomadg_af"].replace("", np.nan)
     vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].replace("", np.nan)
-    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].astype('float64')
+    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].astype(float)
 
     print("re-annotating CIVIC using static dataframe:")
     if civic_df is not None:
