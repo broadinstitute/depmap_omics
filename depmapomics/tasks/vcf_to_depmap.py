@@ -524,7 +524,7 @@ def improve(
     vcf["vep_gnomade_af"] = vcf["vep_gnomade_af"].replace("", np.nan)
     vcf["vep_gnomadg_af"] = vcf["vep_gnomadg_af"].replace("", np.nan)
     vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].replace("", np.nan)
-    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].astype(float)
+    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].astype('float64')
 
     print("re-annotating CIVIC using static dataframe:")
     if civic_df is not None:
@@ -830,7 +830,7 @@ def to_maf(
             )
         print("performing whitelisting")
         important = (
-            (vcf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function", "Likely Loss-of-function", "Likely Gain-of-function"]))
+            (vcf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
             | (vcf["oncokb_oncogenic"] == "Oncogenic")
             | (vcf["oncokb_hotspot"] == "True")
             | (vcf["cosmic_tier"] == "1")
