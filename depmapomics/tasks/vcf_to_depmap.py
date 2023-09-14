@@ -850,7 +850,7 @@ def to_maf(
     if only_coding:
         print("only keeping coding mutations")
         loc = (((vcf["variant_info"].str.contains("splice")) & (vcf["vep_impact"].isin(["HIGH", "MODERATE"])))
-            | ((~vcf["protein_change"].isna()) & (~vcf["protein_change"].str.endswith("=")))
+            | ((vcf["protein_change"].str.endswith("=") != True))
             | important
             )
     if mask_segdup_and_rm:
