@@ -28,6 +28,7 @@ def main(args=None):
     parser.add_argument("--use_multi", default=False, type=to_bool)
     parser.add_argument("--force_keep", default=[], type=lambda x: x.split(","))
     parser.add_argument("--whitelist", default=False, type=to_bool)
+    parser.add_argument("--version", default="", type=str)
     args = parser.parse_args()
 
     vcf_filename = args.vcf_filename
@@ -40,6 +41,7 @@ def main(args=None):
     use_multi = args.use_multi
     force_keep = args.force_keep
     whitelist = args.whitelist
+    version = args.version
 
     prev_cols = []
 
@@ -197,6 +199,7 @@ def main(args=None):
                 drop_multi=True,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
                 index=False,
+                version=version,
             )
         else:
             to_maf(
@@ -210,6 +213,7 @@ def main(args=None):
                 header=False,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
                 index=False,
+                version=version
             )
         del vcf_file
         if tobreak:
@@ -762,6 +766,7 @@ def to_maf(
     only_coding=True,
     only_somatic=True,
     mask_segdup_and_rm=True,
+    version="",
     **kwargs,
 ):
     """to_maf
@@ -892,6 +897,9 @@ def to_maf(
     vcf["rescue"] = None
     if len(vcf) > 0:
         vcf.loc[important, "rescue"] = True
+
+    if version != "":
+        vcf.index.name = version
 
     vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
 
