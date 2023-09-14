@@ -367,6 +367,7 @@ TOKEEP_BASE = {
     "uniprot_id": "str",
     "dbsnp_rs_id": "str",
     "gc_content": "float",
+    "transcript": "str",
 }
 
 TOKEEP_ADD = {
@@ -823,7 +824,6 @@ def to_maf(
                         "oncokb_hotspot",
                         "cosmic_tier",
                         "brca1_func_score",
-                        "civic_score",
                         "hugo_symbol",
                         "hess_driver",
                         "oncogene_high_impact",
@@ -838,7 +838,6 @@ def to_maf(
             | (vcf["oncokb_hotspot"] == "True")
             | (vcf["cosmic_tier"] == "1")
             | (vcf["brca1_func_score"].astype(float) <= -1.328)
-            | (vcf["civic_score"].astype(float) >= 8)
             | (vcf["oncogene_high_impact"])
             | (vcf["tumor_suppressor_high_impact"])
             | (vcf["hess_driver"] == "Y")
@@ -846,7 +845,7 @@ def to_maf(
     if only_coding:
         print("only keeping coding mutations")
         loc = (((vcf["variant_info"].str.contains("splice")) & (vcf["vep_impact"].isin(["HIGH", "MODERATE"])))
-            | ((vcf["protein_change"] != "") & (~vcf["variant_info"].str.contains("synonymous")))
+            | ((~vcf["protein_change"].isna()) & (~vcf["protein_change"].str.endswith("=")))
             | important
             )
     if mask_segdup_and_rm:
