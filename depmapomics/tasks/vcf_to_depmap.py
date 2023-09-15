@@ -842,7 +842,7 @@ def to_maf(
         important = (
             (vcf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
             | (vcf["oncokb_oncogenic"] == "Oncogenic")
-            | (vcf["oncokb_hotspot"] == "True")
+            | (vcf["oncokb_hotspot"] == "Y")
             | (vcf["cosmic_tier"] == "1")
             | (vcf["brca1_func_score"].astype(float) <= -1.328)
             | (vcf["oncogene_high_impact"])
