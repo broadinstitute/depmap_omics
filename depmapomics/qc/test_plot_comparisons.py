@@ -15,11 +15,32 @@ SHARED_DATA_CORRELATION_THRESHOLD = 0.95
 MIN_SAMPLESIZE_FOR_CORR = 10
 
 
-def get_data_stack(file, number_of_points=1000000, random_state=0):
+def get_data_stack(
+    file: str, number_of_points: int = 100000, random_state: int = 0
+) -> tuple[pd.DataFrame, list[str]]:
+    """Return a stacked combined data frame from two consecutive versions
+    with a subsampled set of Model ID and gene pairs.
+
+    Parameters
+    -----------
+    file: str
+        taiga file name.
+    number_of_points: int
+        the subsampled number of points.
+    random_state: int
+        random sample seed.
+
+    Returns
+    --------
+    data_stack: pd.DataFrame
+        merged and stacked dataframe from two versions.
+    cols: tuple[str, str]
+        names of the file versions.
+    """
     data1, data2 = get_both_releases_from_taiga(file)
 
-    row = set(data1.index) & set(data2.index)
-    col = set(data1.columns) & set(data2.columns)
+    row = list(set(data1.index.values) & set(data2.index.values))
+    col = list(set(data1.columns.values) & set(data2.columns.values))
 
     data1_stack = data1.loc[row, col].stack()
     data2_stack = data2.loc[row, col].stack()
@@ -130,7 +151,8 @@ def test_plot_per_gene_means(data, file_attr):
     stats_new = data2.loc[new_lines].mean()
 
     data_compare_stats = pd.concat([stats_old, stats_new], keys=["old", "new"], axis=1)
-    corr = data_compare_stats.corr().iloc[0, 1]
+    #corr = data_compare_stats.corr().iloc[0, 1]
+    corr = data_compare_stats.corr().values[0, 1]
 
     if file_attr["omicssource"] == "RNA":
         data_compare_stats["ERCC"] = data_compare_stats.index.map(
@@ -176,8 +198,11 @@ PARAMS_plot_matrix_comparison = [
     "data_stack, file", PARAMS_plot_matrix_comparison, indirect=["data_stack"]
 )
 @pytest.mark.plot
-def test_plot_matrix_comparison(data_stack, file):
+def test_plot_matrix_comparison(data_stack: tuple, file: tuple):
     data_stack_df, cols = data_stack
+    cols = [f"{j}.{i}" for i, j in enumerate(cols)]
+    data_stack_df.columns = data_stack_df.columns.tolist()[:2] + cols
+
     corr = data_stack_df.corr().iloc[0, 1]
     sns.kdeplot(data=data_stack_df, x=cols[0], y=cols[1], fill=True)
     minmax = (data_stack_df[cols].min().min(), data_stack_df[cols].max().max())
