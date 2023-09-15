@@ -862,7 +862,7 @@ def to_maf(
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
         loc = (
-            (((vcf["segdup"] != "True") & (vcf["rm"] != "True"))
+            (((vcf["segdup"] != "Y") & (vcf["rm"] != "Y"))
             | important) & loc
         )
 
