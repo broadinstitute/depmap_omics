@@ -908,11 +908,9 @@ async def mutationPostProcessing(
         """
         end_pos = Start_Position
         if Variant_Type in ["SNP", "DNP", "TNP"]:
-            end_pos = Start_Position + len(Reference_Allele)
-        if Variant_Type == "INS":
-            end_pos = Start_Position + 1
-        if Variant_Type == "DEL":
-            end_pos = Start_Position + len(Alternate_Allele) - 1
+            end_pos = Start_Position + len(Reference_Allele) - 1
+        if Variant_Type == "INS" or Variant_Type == "DEL":
+            end_pos = Start_Position + len(Reference_Allele) - 1
         # TODO add SV types
         return end_pos
 
