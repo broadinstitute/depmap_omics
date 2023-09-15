@@ -3,6 +3,7 @@ import pyarrow as pa
 from mgenepy.utils import helper as h
 import os
 import pandas as pd
+import pandas.api.types as ptypes
 import argparse
 import pyarrow.parquet as pq
 
@@ -796,6 +797,8 @@ def to_maf(
     # drop low quality and low coverage
     vcf = drop_lowqual(vcf)
 
+    assert ptypes.is_string_dtype(vcf["cosmic_tier"])
+
     important = pd.Series(False, index=vcf.index)
     loc = pd.Series(True, index=vcf.index)
 
@@ -852,7 +855,7 @@ def to_maf(
     if only_coding:
         print("only keeping coding mutations")
         loc = (((vcf["variant_info"].str.contains("splice")) & (vcf["vep_impact"].isin(["HIGH", "MODERATE"])))
-            | ((vcf["protein_change"].str.endswith("=") != True))
+            | ((vcf["protein_change"].str.endswith("=") == False))
             | important
             )
     if mask_segdup_and_rm:
