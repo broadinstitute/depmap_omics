@@ -432,6 +432,8 @@ TOKEEP_ADD = {
     "oncokb_hotspot": "str",
     "oncokb_oncogenic": "str",
     "provean_prediction": "str",
+    "segdup": "str",
+    "rm": "str"
 
 }
 
