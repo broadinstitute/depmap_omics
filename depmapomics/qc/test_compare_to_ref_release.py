@@ -28,8 +28,8 @@ def tsv2csv(df):
     return df
 
 
-####### FIXTURES ####
 def get_both_releases_from_taiga(file, portal=PORTAL):
+    """Download Taiga datasets from two releases."""
     data1 = tc.get(
         name=PREV_RELEASE["name"], file=file, version=PREV_RELEASE["version"]
     )
@@ -112,7 +112,6 @@ def dataframes_merged(request):
     return merged_df
 
 
-##### TESTS ############
 # PARAMS_compare_column_names = [x['file'] for x in FILE_ATTRIBUTES if not x['ismatrix']]
 PARAMS_compare_column_names = [x["file"] for x in FILE_ATTRIBUTES_PAIRED]
 
@@ -333,8 +332,7 @@ def test_compare_column_dtypes(data, method):
 
 
 PARAMS_compare_cell_lines = [
-    (x["file"], "index" if x["ismatrix"] else "ModelID")
-    for x in FILE_ATTRIBUTES_PAIRED
+    (x["file"], "index" if x["ismatrix"] else "ModelID") for x in FILE_ATTRIBUTES_PAIRED
 ]
 
 

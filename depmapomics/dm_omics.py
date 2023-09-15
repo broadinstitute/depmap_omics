@@ -196,6 +196,18 @@ async def expressionPostProcessing(
                     "encoding": "utf-8",
                 },
                 {
+                    "path": folder + "genes_effective_length_profile.csv",
+                    "name": "genes_effectiveLength_profile",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "genes_effective_length.csv",
+                    "name": "genes_effectiveLength_withReplicates",
+                    "format": "NumericMatrixCSV",
+                    "encoding": "utf-8",
+                },
+                {
                     "path": folder + "rna_qcs/all_qc.csv",
                     "name": "all_samples_qc",
                     "format": "NumericMatrixCSV",
@@ -389,6 +401,7 @@ def cnPostProcessing(
             wes_purecn_genecn,
             wes_loh,
             wes_feature_table,
+            wes_arm_cna,
         ) = cn.postProcess(
             wesrefworkspace,
             setEntity=wessetentity,
@@ -410,8 +423,9 @@ def cnPostProcessing(
             wesfolder + "purecn_genecn_all.csv", index_col=0
         )
         wes_loh = pd.read_csv(wesfolder + "purecn_loh_all.csv", index_col=0)
+        wes_arm_cna = pd.read_csv(wesfolder + "arm_cna_all.csv", index_col=0)
         wes_feature_table = pd.read_csv(
-            wesfolder + "globalGenomicFeatures_all.csv", index_col=0
+            wesfolder + "globalGenomicFeaturesWithAneuploidy_all.csv", index_col=0
         )
     # subset and rename to PR-indexed matrices
     wessegments_pr = (
@@ -435,6 +449,9 @@ def cnPostProcessing(
     wes_loh_pr = wes_loh[wes_loh.index.isin(set(renaming_dict.keys()))].rename(
         index=renaming_dict
     )
+    wes_arm_cna_pr = wes_arm_cna[
+        wes_arm_cna.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
     wes_feature_table_pr = wes_feature_table[
         wes_feature_table.index.isin(set(renaming_dict.keys()))
     ].rename(index=renaming_dict)
@@ -450,6 +467,7 @@ def cnPostProcessing(
         wgs_purecn_genecn,
         wgs_loh,
         wgs_feature_table,
+        wgs_arm_cna,
     ) = cn.postProcess(
         wgsrefworkspace,
         setEntity=wgssetentity,
@@ -514,6 +532,9 @@ def cnPostProcessing(
     wgs_loh_pr = wgs_loh[wgs_loh.index.isin(set(renaming_dict.keys()))].rename(
         index=renaming_dict
     )
+    wgs_arm_cna_pr = wgs_arm_cna[
+        wgs_arm_cna.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
     wgs_feature_table_pr = wgs_feature_table[
         wgs_feature_table.index.isin(set(renaming_dict.keys()))
     ].rename(index=renaming_dict)
@@ -550,7 +571,7 @@ def cnPostProcessing(
                 "Chromosome",
                 "Start",
                 "End",
-                "MajorAlleleAbsoluteCN",
+                "SegmentAbsoluteCN",
                 "MinorAlleleAbsoluteCN",
                 "LoHStatus",
             ]
@@ -575,6 +596,8 @@ def cnPostProcessing(
     merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn.csv")
     merged_loh = wgs_loh.append(wes_loh)
     merged_loh.to_csv(folder + "merged_loh.csv")
+    merged_arm_cna = wes_arm_cna.append(wgs_arm_cna)
+    merged_arm_cna.to_csv(folder + "merged_arm_cna.csv")
     merged_feature_table = wgs_feature_table.append(wes_feature_table)
     merged_feature_table.to_csv(folder + "merged_feature_table.csv")
 
@@ -591,6 +614,8 @@ def cnPostProcessing(
     merged_purecn_genecn_pr.to_csv(folder + "merged_absolute_genecn_profile.csv")
     merged_loh_pr = wgs_loh_pr.append(wes_loh_pr)
     merged_loh_pr.to_csv(folder + "merged_loh_profile.csv")
+    merged_arm_cna_pr = wes_arm_cna_pr.append(wgs_arm_cna_pr)
+    merged_arm_cna_pr.to_csv(folder + "merged_arm_cna_profile.csv")
     merged_feature_table_pr = wgs_feature_table_pr.append(wes_feature_table_pr)
     merged_feature_table_pr.to_csv(folder + "merged_feature_table_profile.csv")
 
@@ -652,6 +677,12 @@ def cnPostProcessing(
                 "encoding": "utf-8",
             },
             {
+                "path": folder + "merged_arm_cna.csv",
+                "name": "armLevelCNA_withReplicates",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
                 "path": folder + "merged_absolute_segments_profile.csv",
                 "name": "merged_absolute_segments_profile",
                 "format": "TableCSV",
@@ -672,6 +703,12 @@ def cnPostProcessing(
             {
                 "path": folder + "merged_feature_table_profile.csv",
                 "name": "globalGenomicFeatures_profile",
+                "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "merged_arm_cna_profile.csv",
+                "name": "armLevelCNA_profile",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
