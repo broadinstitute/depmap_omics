@@ -899,7 +899,7 @@ def to_maf(
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%2C")
 
-    vcf["rescue"] = None
+    vcf["rescue"] = False
     if len(vcf) > 0:
         vcf.loc[important, "rescue"] = True
 
