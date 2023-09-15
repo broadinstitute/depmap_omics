@@ -288,7 +288,6 @@ TO_RENAME_BASE = {
     "vep_hgvsp": "protein_change",
     "vep_gene": "ensembl_gene_id",
     "vep_uniprot_isoform": "uniprot_id",
-    "vep_feature": "transcript",
     "hgnc_approved_name": "hgnc_name",
     "hgnc_gene_family_name": "hgnc_family",
     # "gencode_34_transcriptexon": "transcript_exon",
@@ -372,7 +371,6 @@ TOKEEP_BASE = {
     "uniprot_id": "str",
     "dbsnp_rs_id": "str",
     "gc_content": "float",
-    "transcript": "str",
 }
 
 TOKEEP_ADD = {
