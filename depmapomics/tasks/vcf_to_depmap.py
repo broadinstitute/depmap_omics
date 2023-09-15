@@ -907,7 +907,7 @@ def to_maf(
     if version != "":
         vcf.index.name = version
 
-    vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", **kwargs)
+    vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", index_label=version, **kwargs)
 
 
 if __name__ == "__main__":
