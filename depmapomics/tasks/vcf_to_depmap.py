@@ -201,7 +201,7 @@ def main(args=None):
                 whitelist=whitelist,
                 drop_multi=True,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
-                index=False,
+                index=True,
                 version=version,
             )
         else:
@@ -215,8 +215,7 @@ def main(args=None):
                 mode="a",
                 header=False,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
-                index=False,
-                version=version
+                index=True,
             )
         del vcf_file
         if tobreak:
