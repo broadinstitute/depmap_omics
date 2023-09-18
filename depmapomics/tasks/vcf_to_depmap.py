@@ -528,8 +528,6 @@ def improve(
     # replace empty characters:
     print("replacing empty characters:")
     vcf = vcf.replace(replace_empty)
-    vcf["vep_gnomade_af"] = vcf["vep_gnomade_af"].replace("", np.nan)
-    vcf["vep_gnomadg_af"] = vcf["vep_gnomadg_af"].replace("", np.nan)
     vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].replace("", np.nan)
     vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].astype('float64')
 
@@ -795,6 +793,9 @@ def to_maf(
 
     # drop low quality and low coverage
     vcf = drop_lowqual(vcf)
+
+    vcf["gnomade_af"] = vcf["gnomade_af"].replace("", np.nan)
+    vcf["gnomadg_af"] = vcf["gnomadg_af"].replace("", np.nan)
 
     assert ptypes.is_string_dtype(vcf["cosmic_tier"])
 
