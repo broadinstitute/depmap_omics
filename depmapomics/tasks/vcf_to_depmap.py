@@ -722,6 +722,9 @@ def improve(
         ts_loc = ((vcf["vep_impact"] == "HIGH") & (vcf["vep_symbol"].isin(tumor_suppressor_list)))
         vcf.loc[onco_loc, "oncogene_high_impact"] = True
         vcf.loc[ts_loc, "tumor_suppressor_high_impact"] = True
+    
+    vcf["vep_gnomade_af"] = vcf["vep_gnomade_af"].astype(str)
+    vcf["vep_gnomadg_af"] = vcf["vep_gnomadg_af"].astype(str)
 
 
     # rename columns
