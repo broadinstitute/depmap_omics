@@ -245,12 +245,9 @@ def main():
             transfers.extend(get_transfers(workspace, ids=ids))
         with open(pickled_transfers, "wb") as fd:
             pickle.dump(transfers, fd)
-    print(transfers)
     success_df = concatenate_tables(f"mafs_latest", None, transfers, parallelism=15)
     df = pd.concat([s.transfer for s in success_df], axis=0)
     df.to_csv("23Q4_mutation_maf_latest.tsv", sep='\t')
-    print(df.head())
-    print(df.shape)
 
 
 if __name__ == "__main__":
