@@ -47,12 +47,9 @@ def get_transfers(workspace, dest_dataset='', ids=None):
 
     transfers = []
     for rec in sample.to_dict("records"):
-        #if 'parquet_with_hgvs' in rec:
-        #if 'full_file_whitelisted' in rec:
         if 'full_annotated_parquet' in rec:
             
             print(rec["sample_id"])
-            #if isinstance(rec['full_file_whitelisted'], float):
             if isinstance(rec['full_annotated_parquet'], float):
                 continue
             if ids == ['']:
@@ -64,7 +61,6 @@ def get_transfers(workspace, dest_dataset='', ids=None):
                     continue
                 dest_table = f"{dest_dataset}.{rec['sample_id'].replace('-', '_')}".lower()
                 print(rec['full_annotated_parquet'])
-                #transfers.append(Transfer(rec['full_file_whitelisted'], dest_table, rec["sample_id"]))
                 transfers.append(Transfer(rec['full_annotated_parquet'], dest_table, rec["sample_id"]))
     return transfers
 
@@ -306,6 +302,8 @@ def concatenate_tables(dest_table, client, transfers, parallelism):
     failures = copy_in_parallel(
         remaining_transfers, parallism=parallelism, dest_table=dest_table
     )
+    for f in failures:
+        print(f.transfer.cds_id)
     print(failures)
 
     print(f"{len(failures)} failures")
