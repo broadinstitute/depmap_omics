@@ -270,7 +270,7 @@ workflow WGS_pipeline {
         # opencravat
         File oc_error_file=annotateVariants.oc_error_file
         File oc_log_file=annotateVariants.oc_log_file
-        File oc_main_file=annotateVariants.oc_main_file
+        File oc_main_file=annotateVariants.hgvs_oc_vcf
         # File oc_sql_files=open_cravat.oc_sql_file
         # vcf_to_depmap
         Array[File] dna_pipeline_main_parquet=my_vcf_to_depmap.full_file
