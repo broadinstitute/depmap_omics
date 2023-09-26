@@ -42,5 +42,7 @@ workflow annotateVariants {
     output {
         File hgvs_maf = HgvsWorkflow.maf
         File hgvs_oc_vcf = open_cravat.oc_main_file
+        File oc_error_file=open_cravat.oc_error_file
+        File oc_log_file=open_cravat.oc_log_file
     }
 }
