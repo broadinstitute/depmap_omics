@@ -17,10 +17,9 @@ COPY depmapomics/__init__.py /install/depmapomics/__init__.py
 COPY mgenepy/__init__.py /install/mgenepy/__init__.py
 RUN cd /install && poetry config virtualenvs.create false
 RUN cd /install && poetry install
+RUN pip install biomart
 
 # now add on the py code
 COPY depmapomics /install/depmapomics
 COPY mgenepy /install/mgenepy
 RUN cd /install && poetry install
-
-RUN pip install biomart
