@@ -13,6 +13,11 @@ workflow annotateVariants {
         File input_vcf
         String sample_id
         String bcftools_exclude_string = 'FILTER~"weak_evidence"||FILTER~"map_qual"||FILTER~"strand_bias"||FILTER~"slippage"||FILTER~"clustered_events"||FILTER~"base_qual"'
+        Int hgvs_boot_disk_size=100
+        Int hgvs_disk_space=200
+        Int oc_boot_disk_size=600
+        Int oc_disk_space=600
+        Int oc_mem=64
     }
 
     call removeFiltered.RemoveFiltered as RemoveFiltered {
@@ -32,11 +37,16 @@ workflow annotateVariants {
         input:
             input_vcf=mask_variants.mask_annotated,
             sample_id=sample_id,
+            boot_disk_size=hgvs_boot_disk_size,
+            disk_space=hgvs_disk_space,
     }
 
     call openCravat.opencravat as open_cravat {
         input:
             vcf=HgvsWorkflow.vep,
+            boot_disk_size=oc_boot_disk_size,
+            disk_space=oc_disk_space,
+            memory=oc_mem
     }
 
     output {

@@ -73,6 +73,13 @@ workflow WGS_pipeline {
         # PureCN
         File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
 
+        # annotation
+        Int hgvs_boot_disk_size=100
+        Int hgvs_disk_space=200
+        Int oc_boot_disk_size=600
+        Int oc_disk_space=600
+        Int oc_mem=64
+
         #vcf_to_depmap
         String vcf_to_depmap_version
         String vcf_to_depmap_docker="us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:test"
@@ -178,7 +185,12 @@ workflow WGS_pipeline {
         input:
             sample_id=sample_name,
             input_vcf=fix_mutect2.vcf_fixed,
-            bcftools_exclude_string=bcftools_exclude_string
+            bcftools_exclude_string=bcftools_exclude_string,
+            hgvs_boot_disk_size=hgvs_boot_disk_size,
+            hgvs_disk_space=hgvs_disk_space,
+            oc_boot_disk_size=oc_boot_disk_size,
+            oc_disk_space=oc_disk_space,
+            oc_mem=oc_mem
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
