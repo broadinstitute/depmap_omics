@@ -564,7 +564,7 @@ def GetMafEndPosition(start: int, ref: str, alt: str) -> tuple:
 
 
 def standardize_maf(maf: pd.DataFrame):
-	"""Standardize DepMap csv file into MAF 2.4 format
+    """Standardize DepMap csv file into MAF 2.4 format
 
     Parameter
     --------------
@@ -581,7 +581,7 @@ def standardize_maf(maf: pd.DataFrame):
     maf.loc[:, 'InFrame'] = formatted_coords[3]
     maf.loc[:, 'Variant_Classification'] = maf.loc[:, ['variant_info', 'Variant_Type', 'InFrame']].apply(lambda x: GetVariantClassification(*x), axis=1)
 
-    maf_variants_23q4_clean_v3.rename(
+    maf.rename(
         columns={
             "hugo_symbol": "Hugo_Symbol",
             "chrom": "Chromosome",
@@ -612,8 +612,8 @@ def standardize_maf(maf: pd.DataFrame):
             "Variant_Classification",
             "Protein_Change",
         ] 
-	reordered_columns += list(set(maf_variants_23q4_clean_v3.columns) - set(reordered_columns))
-	maf = maf.loc[:, reordered_columns]
+    reordered_columns += list(set(maf.columns) - set(reordered_columns))
+    maf = maf.loc[:, reordered_columns]
     return maf
 
 
@@ -644,7 +644,6 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     maf = maf.loc[~maf.Hugo_Symbol.isnull(), :]
     maf = maf.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
 
-
     # optional step: add metadata information
     # step 4: remove high af from DepMap cohort
     internal_afs_23q4 = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
@@ -655,7 +654,7 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     internal_afs_23q4_ratio_dict = {}
     for k, v in Counter(internal_afs_23q4.tolist()).items():
         internal_afs_23q4_ratio_dict[k] = v / total_samples
-	maf.loc[:, "internal_afs_23q4"] = internal_afs_23q4.map(internal_afs_23q4_ratio_dict)
-	maf = maf.loc[(maf.internal_afs_23q4 <= max_recurrence) | (maf.rescue), :]
+    maf.loc[:, "internal_afs_23q4"] = internal_afs_23q4.map(internal_afs_23q4_ratio_dict)
+    maf = maf.loc[(maf.internal_afs_23q4 <= max_recurrence) | (maf.rescue), :]
     return maf
 
