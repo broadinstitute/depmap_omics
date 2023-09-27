@@ -8,10 +8,16 @@ version 1.0
 workflow run_opencravat {
     input {
         File vcf
+        Int boot_disk_size = 100
+        Int disk_space = 100
+        Int memory = 32
     }
     call opencravat {
         input:
-            vcf=vcf
+            vcf=vcf,
+            boot_disk_size=boot_disk_size,
+            disk_space=disk_space,
+            memory=memory
     }
     output {
         File oc_error_file=opencravat.oc_error_file
