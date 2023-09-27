@@ -647,8 +647,7 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     # optional step: add metadata information
     # step 4: remove high af from DepMap cohort
     internal_afs_23q4 = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
-	total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
-    from collections import Counter
+    total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
     # assume there are very few duplicated variants per sample
     # actually we have total 4 duplicated variants, it is trivial
     internal_afs_23q4_ratio_dict = {}
