@@ -761,6 +761,8 @@ async def mutationPostProcessing(
     print("DOING WES")
     folder = constants.WORKING_DIR + samplesetname + "/wes_"
 
+    # TODO: replace with multiprocessing 
+    # ./sandbox/dna_eval/combine_mafs.py
     wesmutations, wessvs = mutations.postProcess(
         wes_wm,
         AllSamplesetName if AllSamplesetName else samplesetname,
@@ -898,114 +900,7 @@ async def mutationPostProcessing(
     lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
     driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
 
-    merged.rename(
-        columns={
-            "HugoSymbol": "Hugo_Symbol",
-            "Chrom": "Chromosome",
-            "Pos": "Start_Position",
-            "VariantType": "Variant_Type",
-            "Ref": "Reference_Allele",
-            "Alt": "Alternate_Allele",
-            "DepMap_ID": "Tumor_Sample_Barcode",
-            "VariantInfo": "Variant_Classification",
-            "ProteinChange": "Protein_Change",
-        },
-        inplace=True,
-    )
-
-    merged.loc[:, "Chromosome"] = merged.loc[:, "Chromosome"].str.replace("chr", "")
-
-    def assign_end_pos(
-        *,
-        Start_Position: int,
-        Variant_Type: str,
-        Reference_Allele: str,
-        Alternate_Allele: str,
-        **kwargs,
-    ) -> int:
-        """Assign End_Position to different Variant_Type
-
-        NOTE: MAF is 1-based coordinate, https://www.biostars.org/p/84686/
-        If SNP/DNP, end_pos = start_pos + len(ref)
-        If INS, end_pos = start_pos + 1
-        If DEL, end_pos = start_pos + len(alt) - 1
-
-        Ignore multiple alleles now
-
-        Parameter
-        ----------
-        Start_Position: int,
-        Variant_Type: str,
-        Reference_Allele: str,
-        Alternate_Allele: str,
-
-        Return
-        ---------
-        End_Position: int
-        """
-        end_pos = Start_Position
-        if Variant_Type in ["SNP", "DNP", "TNP"]:
-            end_pos = Start_Position + len(Reference_Allele) - 1
-        if Variant_Type == "INS" or Variant_Type == "DEL":
-            end_pos = Start_Position + len(Reference_Allele) - 1
-        # TODO add SV types
-        return end_pos
-
-    merged.loc[:, "End_Position"] = merged.apply(
-        lambda row: assign_end_pos(**row), axis=1
-    )
-
-    merged.loc[:, "NCBI_Build"] = "GRCh38"  # or 38?
-    merged.loc[:, "Strand"] = "+"  # TODO: need to check vcf2maf later
-    merged.loc[:, "Tumor_Seq_Allele1"] = merged.loc[
-        :, "Reference_Allele"
-    ]  # TODO: need to check vcf2maf later
-    merged.loc[:, "Tumor_Seq_Allele2"] = merged.loc[:, "Alternate_Allele"]
-
-    merged = merged.loc[
-        :,
-        [
-            "Hugo_Symbol",
-            "NCBI_Build",
-            "Chromosome",
-            "Start_Position",
-            "End_Position",
-            "Variant_Type",
-            "Reference_Allele",
-            "Tumor_Seq_Allele1",
-            "Tumor_Seq_Allele2",
-            "Tumor_Sample_Barcode",
-            "Variant_Classification",
-            "Protein_Change",
-        ],
-    ]
-
-    # DepMap 20Q1 mutation issues.. https://github.com/PoisonAlien/maftools/issues/644
-    # Mapping of variant classification https://github.com/PoisonAlien/maftools/blob/41ddaabbd824f24a99f66439366be98775edebb2/R/icgc_to_maf.R#L52
-    merged.loc[:, "Variant_Classification"] = merged.loc[
-        :, "Variant_Classification"
-    ].map(
-        {
-            "MISSENSE": "Missense_Mutation",
-            "SILENT": "Silent",
-            "IN_FRAME_INS": "In_Frame_Ins",
-            "IN_FRAME_DEL": "In_Frame_Del",
-            "SPLICE_SITE": "Splice_Site",
-            "NONSENSE": "Nonsense_Mutation",
-            "FRAME_SHIFT_DEL": "Frame_Shift_Del",
-            "FRAME_SHIFT_INS": "Frame_Shift_Ins",
-            "NONSTOP": "Nonstop_Mutation",
-            "START_CODON_SNP": "Silent",
-            "START_CODON_INS": "Silent",
-        }
-    )
-
-    # sort by chrom, start, and end columns for IGV import
-    merged["Chromosome"] = merged["Chromosome"].replace({"X": 23, "Y": 24, "M": 25})
-    merged["Chromosome"] = merged["Chromosome"].astype("int")
-    merged = merged.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
-    merged["Chromosome"] = merged["Chromosome"].replace({23: "X", 24: "Y", 25: "M"})
-
+    merged = mutations.postprocess_main_steps(merged, version=env_config.version)
     # TODO: add pandera type validation
 
     merged.to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)

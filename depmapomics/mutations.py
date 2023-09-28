@@ -617,7 +617,7 @@ def standardize_maf(maf: pd.DataFrame):
     return maf
 
 
-def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05, version=) -> pd.DataFrame:
+def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05, version: str = '23Q4') -> pd.DataFrame:
     """ DepMap postprocessing steps after vcf_to_depmap
 
     Parameter
@@ -655,5 +655,6 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
         internal_afs_ratio_dict[k] = v / total_samples
     maf.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
     maf = maf.loc[(maf.internal_afs <= max_recurrence) | (maf.rescue), :]
+    maf['version'] = version
     return maf
 
