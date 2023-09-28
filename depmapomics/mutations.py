@@ -617,7 +617,7 @@ def standardize_maf(maf: pd.DataFrame):
     return maf
 
 
-def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05) -> pd.DataFrame:
+def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05, version=) -> pd.DataFrame:
     """ DepMap postprocessing steps after vcf_to_depmap
 
     Parameter
@@ -646,14 +646,14 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
 
     # optional step: add metadata information
     # step 4: remove high af from DepMap cohort
-    internal_afs_23q4 = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
+    internal_afs = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
     total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
     # assume there are very few duplicated variants per sample
     # actually we have total 4 duplicated variants, it is trivial
-    internal_afs_23q4_ratio_dict = {}
-    for k, v in Counter(internal_afs_23q4.tolist()).items():
-        internal_afs_23q4_ratio_dict[k] = v / total_samples
-    maf.loc[:, "internal_afs_23q4"] = internal_afs_23q4.map(internal_afs_23q4_ratio_dict)
-    maf = maf.loc[(maf.internal_afs_23q4 <= max_recurrence) | (maf.rescue), :]
+    internal_afs_ratio_dict = {}
+    for k, v in Counter(internal_afs.tolist()).items():
+        internal_afs_ratio_dict[k] = v / total_samples
+    maf.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
+    maf = maf.loc[(maf.internal_afs <= max_recurrence) | (maf.rescue), :]
     return maf
 
