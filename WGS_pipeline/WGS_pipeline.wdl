@@ -195,7 +195,7 @@ workflow WGS_pipeline {
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
-            input_vcf=annotateVariants.hgvs_maf,
+            input_vcf=annotateVariants.hgvs_oc_vcf,
             sample_id=sample_name,
             version=vcf_to_depmap_version,
             whitelist=whitelist,
