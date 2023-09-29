@@ -83,7 +83,7 @@ workflow WGS_pipeline {
         #vcf_to_depmap
         String vcf_to_depmap_version
         String vcf_to_depmap_docker="us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:test"
-        String whitelist=true
+        Boolean whitelist=true
     }
 
     call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
