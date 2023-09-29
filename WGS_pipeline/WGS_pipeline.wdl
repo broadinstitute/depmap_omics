@@ -199,6 +199,7 @@ workflow WGS_pipeline {
             sample_id=sample_name,
             version=vcf_to_depmap_version,
             whitelist=whitelist,
+            docker_image=vcf_to_depmap_docker,
     }
 
     output {
