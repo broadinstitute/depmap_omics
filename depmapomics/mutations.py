@@ -311,7 +311,9 @@ def postProcess(
     # )
 
     print("saving somatic mutations (all)")
-    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
+    #  /home/ubuntu/depmap_omics/depmapomics/mutations.py:314:71 - error: Argument of type "None" cannot be assigned to parameter "index" of type "_bool" in function "to_csv"
+    #      Type "None" cannot be assigned to type "_bool" (reportGeneralTypeIssues)
+    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=False)
     print("done")
 
     svs = None
@@ -325,7 +327,7 @@ def postProcess(
             sv_renaming=sv_renaming,
         )
         print("saving svs (all)")
-        svs.to_csv(save_output + "svs_all.csv", index=None)
+        svs.to_csv(save_output + "svs_all.csv", index=False)
 
     return mutations, svs
 
