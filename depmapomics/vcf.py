@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 import numpy as np
 
 
@@ -214,7 +215,7 @@ def improve(
     min_count_hotspot=5,
     oncogene_list=[],
     tumor_suppressor_list=[],
-    civic_df=None,
+    civic_df: pd.DataFrame = pd.DataFrame()
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
