@@ -221,7 +221,10 @@ async def fingerPrint(
         ref = mytracker.add_model_cols_to_seqtable(["PatientID", "ModelID"])
         pr_table = mytracker.read_pr_table()
         ref["ModelCondition"] = ref["ProfileID"].apply(
-            lambda x: pr_table.loc[x, "ModelCondition"]
+            lambda x: pr_table.loc[x, "ModelCondition"] if x != None else None
+        )
+        ref["profile_blist"] = ref["ProfileID"].apply(
+            lambda x: pr_table.loc[x, "BlacklistOmics"] if x != None else None
         )
         # add model and participant info to new samples that are not in the sequencing table yet
         samples["ModelID"] = samples["ProfileID"].apply(
@@ -232,6 +235,9 @@ async def fingerPrint(
         )
         samples["ModelCondition"] = samples["ProfileID"].apply(
             lambda x: pr_table.loc[x, "ModelCondition"]
+        )
+        samples["profile_blist"] = samples["ProfileID"].apply(
+            lambda x: pr_table.loc[x, "BlacklistOmics"] if x != None else None
         )
 
     else:

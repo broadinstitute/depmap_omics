@@ -11,6 +11,7 @@ import os
 from mgenepy import mutations as mut
 from mgenepy.utils import helper as h
 import pybedtools  # type: ignore
+import subprocess
 
 
 def renameColumns(df):
@@ -430,6 +431,7 @@ def maskGenes(
     maskthresh=constants.GENEMASKTHRESH,
     segdup_bed=constants.SEGDUP_BED,
     repeat_bed=constants.RM_BED,
+    bedtoolspath=constants.BEDTOOLSPATH,
 ):
     """given a bed file consisting of highly repeated/duplicated regions, mask
     genes that overlap with those regions (a gene is masked if the portion of its gene
@@ -451,8 +453,20 @@ def maskGenes(
     mybiomart[["Chromosome", "start", "end", "gene_name"]].to_csv(
         save_output + "biomart_cngenes.bed", sep="\t", header=False, index=False
     )
-    cngenes = pybedtools.BedTool(save_output + "biomart_cngenes.bed")
-    cngenes.intersect(segdup_bed).saveas(save_output + "mask_overlap_segdup.bed")
+
+    subprocess.call(
+        [
+            bedtoolspath
+            + "bedtools intersect -a "
+            + save_output
+            + "biomart_cngenes.bed -b "
+            + segdup_bed
+            + " > "
+            + save_output
+            + "mask_overlap_segdup.bed"
+        ],
+        shell=True,
+    )
 
     overlap_segdup = pd.read_csv(
         save_output + "mask_overlap_segdup.bed",
@@ -513,10 +527,23 @@ def maskGenes(
     ].astype(str)
 
     biomart_exon_union[["chromosome_name", "col0", "col1", "gene_name"]].to_csv(
-        "biomart_exons.bed", sep="\t", header=False, index=False
+        save_output + "biomart_exons.bed", sep="\t", header=False, index=False
     )
-    exons_merged = pybedtools.BedTool("biomart_exons.bed")
-    exons_merged.intersect(repeat_bed).saveas(save_output + "mask_overlap_rm.bed")
+
+    subprocess.call(
+        [
+            bedtoolspath
+            + "bedtools intersect -a "
+            + save_output
+            + "biomart_exons.bed -b "
+            + repeat_bed
+            + " > "
+            + save_output
+            + "mask_overlap_rm.bed"
+        ],
+        shell=True,
+    )
+
     overlap_rm = pd.read_csv(
         save_output + "mask_overlap_rm.bed",
         sep="\t",
@@ -589,6 +616,7 @@ def postProcess(
     source_rename={},
     useCache=False,
     maxYchrom=constants.MAXYCHROM,
+    bedtoolspath=constants.BEDTOOLSPATH,
 ):
     """post process an aggregated CN segment file, the CCLE way
 
@@ -684,7 +712,13 @@ def postProcess(
     genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
 
     # masking
-    genecn = maskGenes(genecn, mybiomart, "relative CN", save_output=save_output)
+    genecn = maskGenes(
+        genecn,
+        mybiomart,
+        "relative CN",
+        save_output=save_output,
+        bedtoolspath=bedtoolspath,
+    )
 
     # saving
     print("saving files")
