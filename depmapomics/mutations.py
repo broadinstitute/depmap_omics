@@ -1,4 +1,5 @@
 """Mutation postprocessing module."""
+import re
 from depmapomics import constants
 from mgenepy.utils import helper as h
 import os
@@ -310,7 +311,9 @@ def postProcess(
     # )
 
     print("saving somatic mutations (all)")
-    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=None)
+    #  /home/ubuntu/depmap_omics/depmapomics/mutations.py:314:71 - error: Argument of type "None" cannot be assigned to parameter "index" of type "_bool" in function "to_csv"
+    #      Type "None" cannot be assigned to type "_bool" (reportGeneralTypeIssues)
+    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=False)
     print("done")
 
     svs = None
@@ -324,7 +327,7 @@ def postProcess(
             sv_renaming=sv_renaming,
         )
         print("saving svs (all)")
-        svs.to_csv(save_output + "svs_all.csv", index=None)
+        svs.to_csv(save_output + "svs_all.csv", index=False)
 
     return mutations, svs
 
@@ -460,3 +463,200 @@ def generateGermlineMatrix(
         binary_matrices[lib] = sorted_guides_bed
 
     return binary_matrices
+
+
+def GetVariantClassification(vep_seq_ontology: str, var_type: str, inframe: bool) -> str:
+    """Map VEP sequence ontology into MAF variant classifications,
+    VEP consequences is ordered by http://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html"""
+
+    if re.match(r"^(splice_acceptor_variant|splice_donor_variant|transcript_ablation|exon_loss_variant)", vep_seq_ontology):
+        return "Splice_Site"
+    
+    if re.match(r"^(stop_gained)", vep_seq_ontology):
+        return "Nonsense_Mutation"
+
+    if (re.match(r"^(frameshift_variant)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and not inframe)) and (var_type == 'DEL'):
+        return "Frame_Shift_Del"
+
+    if (re.match(r"^(frameshift_variant)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and not inframe)) and (var_type == 'INS'):
+        return "Frame_Shift_Ins"
+    
+    if re.match(r"^(stop_lost)", vep_seq_ontology):
+        return "Nonstop_Mutation"
+    
+    if re.match(r"^(initiator_codon_variant|start_lost)", vep_seq_ontology):
+        return "Translation_Start_Site" 
+
+    if re.match(r"^(inframe_insertion|conservative_inframe_insertion|disruptive_inframe_insertion)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and inframe and (var_type == 'INS')):
+        return "In_Frame_Ins"
+
+    if re.match(r"^(inframe_deletion|disruptive_inframe_deletion|conservative_inframe_deletion)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and inframe and (var_type == 'DEL')):
+        return "In_Frame_Del"
+
+    if re.match(r"^(missense_variant|coding_sequence_variant|conservative_missense_variant|rare_amino_acid_variant)", vep_seq_ontology):
+        return "Missense_Mutation"
+
+    if re.match(r"^(transcript_amplification|intron_variant|INTRAGENIC|intragenic_variant)", vep_seq_ontology):
+        return "Intron"
+
+    if re.match(r"^(incomplete_terminal_codon_variant|synonymous_variant|stop_retained_variant|NMD_transcript_variant|start_retained_variant)", vep_seq_ontology):
+        return "Silent"
+
+    if re.match(r"^(splice_region_variant|splice_polypyrimidine_tract_variant|splice_donor_5th_base_variant|splice_donor_region_variant)", vep_seq_ontology):
+        return "Splice_Region"
+
+    if re.match(r"^(mature_miRNA_variant|exon_variant|non_coding_exon_variant|non_coding_transcript_exon_variant|non_coding_transcript_variant|nc_transcript_variant|coding_transcript_variant)", vep_seq_ontology):
+        return "RNA"
+
+    if re.match(r"^(5_prime_UTR_variant|5_prime_UTR_premature_start_codon_gain_variant)", vep_seq_ontology):
+        return "5'UTR"
+
+    if re.match(r"^3_prime_UTR_variant", vep_seq_ontology):
+        return "3'UTR"
+
+    if re.match(r"^upstream_gene_variant", vep_seq_ontology):
+        return "5'Flank"
+
+    if re.match(r"^downstream_gene_variant", vep_seq_ontology):
+        return "3'Flank"
+
+    if re.match(r"^(TF_binding_site_variant|regulatory_region_variant|regulatory_region|intergenic_variant|intergenic_region)", vep_seq_ontology):
+        return "IGR" 
+
+    if vep_seq_ontology == "":
+        return "NoAnnotation"
+
+    return "TargetedRegion"
+
+
+def GetMafEndPosition(start: int, ref: str, alt: str) -> tuple:
+    """Get the end position from the VCF start position and ref alt alleles
+
+    Learn the complex InDel from https://github.com/qinqian/vcf2maf/blob/main/vcf2maf.pl#L706
+
+
+    Return
+    -----------
+    (start, vartype, inframe): tuple
+    """
+    assert len(ref) > 0
+    assert len(alt) > 0
+    if len(ref) == len(alt):
+        var_type_dict = {1: "SNP", 2: "DNP", 3: "TNP"}
+        inframe = False
+        if len(alt) > 3:
+            var_type = "ONP"
+        else:
+            var_type = var_type_dict[len(alt)]
+        return start, start + len(alt) - 1, var_type, inframe
+    elif len(ref) < len(alt):
+        # Insertion
+        var_type = "INS";
+        inframe = abs(len(ref) - len(alt)) % 3 == 0
+        if ref == "-":
+            return start - 1, start, var_type, inframe
+        else:
+            return start, start + len(ref) - 1, var_type, inframe
+    else:
+        # Deletion
+        inframe = abs(len(ref) - len(alt)) % 3 == 0
+        var_type = 'DEL'
+        return start, start + len(ref) - 1, var_type, inframe
+
+
+
+def standardize_maf(maf: pd.DataFrame):
+    """Standardize DepMap csv file into MAF 2.4 format
+
+    Parameter
+    --------------
+    maf: pd.DataFrame
+         a data frame that loads all the variants 
+        
+    """
+    formatted_coords = maf.loc[:, ['pos', 'ref', 'alt']].apply(lambda x: GetMafEndPosition(*x), axis=1, result_type="expand")
+
+    maf.loc[:, 'Strand'] = '+'
+    maf.loc[:, 'Start_Position'] = formatted_coords[0]
+    maf.loc[:, 'End_Position'] = formatted_coords[1]
+    maf.loc[:, 'Variant_Type'] = formatted_coords[2]
+    maf.loc[:, 'InFrame'] = formatted_coords[3]
+    maf.loc[:, 'Variant_Classification'] = maf.loc[:, ['variant_info', 'Variant_Type', 'InFrame']].apply(lambda x: GetVariantClassification(*x), axis=1)
+
+    maf.rename(
+        columns={
+            "hugo_symbol": "Hugo_Symbol",
+            "chrom": "Chromosome",
+            "ref": "Reference_Allele",
+            "alt": "Alternate_Allele",
+            "cds_id": "Tumor_Sample_Barcode",
+            "protein_change": "Protein_Change",
+        },
+        inplace=True,
+    )
+    maf.loc[:, "NCBI_Build"] = "GRCh38" 
+    maf.loc[:, "Center"] = "DepMap" 
+    maf.loc[:, "Tumor_Seq_Allele1"] = maf.loc[
+        :, "Reference_Allele"
+    ] 
+    maf.loc[:, "Tumor_Seq_Allele2"] = maf.loc[:, "Alternate_Allele"]
+    reordered_columns = [
+            "Hugo_Symbol",
+            "NCBI_Build",
+            "Chromosome",
+            "Start_Position",
+            "End_Position",
+            "Variant_Type",
+            "Reference_Allele",
+            "Tumor_Seq_Allele1",
+            "Tumor_Seq_Allele2",
+            "Tumor_Sample_Barcode",
+            "Variant_Classification",
+            "Protein_Change",
+        ] 
+    reordered_columns += list(set(maf.columns) - set(reordered_columns))
+    maf = maf.loc[:, reordered_columns]
+    return maf
+
+
+def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05, version: str = '23Q4') -> pd.DataFrame:
+    """ DepMap postprocessing steps after vcf_to_depmap
+
+    Parameter
+    ------------
+    maf: pd.DataFrame
+        a data frame from variants aggregation results
+
+    """
+    # force nan to be zero
+    maf.loc[:, 'gnomade_af'] = maf.loc[:, 'gnomade_af'].fillna(0)
+    maf.loc[:, 'gnomadg_af'] = maf.loc[:, 'gnomadg_af'].fillna(0)
+
+    # step 1: filter the leftmost synonymous mutation 
+    maf = maf.query("~variant_info.str.contains('^synony', regex=True)")
+    
+    # step 2: less stringent cutoff for gnomad
+    maf = maf.drop(maf.index[((maf.gnomadg_af > adjusted_gnomad_af_cutoff) | (maf.gnomade_af > adjusted_gnomad_af_cutoff))], axis=0)
+
+    # step 3: format the mutation and remove all silent mutation classes
+    #         remove variants without gene symbols
+    #         sort variants by genome position to be compatible with IGV
+    maf = standardize_maf(maf)
+    maf = maf.loc[~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "5'UTR", "3'Flank", 'Splice_Region', "5'Flank"]), :]
+    maf = maf.loc[~maf.Hugo_Symbol.isnull(), :]
+    maf = maf.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
+
+    # optional step: add metadata information
+    # step 4: remove high af from DepMap cohort
+    internal_afs = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
+    total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
+    # assume there are very few duplicated variants per sample
+    # actually we have total 4 duplicated variants, it is trivial
+    internal_afs_ratio_dict = {}
+    for k, v in Counter(internal_afs.tolist()).items():
+        internal_afs_ratio_dict[k] = v / total_samples
+    maf.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
+    maf = maf.loc[(maf.internal_afs <= max_recurrence) | (maf.rescue), :]
+    maf['version'] = version
+    return maf
+
