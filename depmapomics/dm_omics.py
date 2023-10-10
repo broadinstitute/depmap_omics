@@ -386,7 +386,6 @@ def cnPostProcessing(
 
     assert len(tracker) != 0, "broken source for sample tracker"
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
     save_dir = save_dir + samplesetname + "/"
     # doing wes
@@ -427,34 +426,6 @@ def cnPostProcessing(
         wes_feature_table = pd.read_csv(
             wesfolder + "globalGenomicFeaturesWithAneuploidy_all.csv", index_col=0
         )
-    # subset and rename to PR-indexed matrices
-    wessegments_pr = (
-        wessegments[wessegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]
-        .replace({constants.SAMPLEID: renaming_dict})
-        .reset_index(drop=True)
-    )
-    wes_purecn_segments_pr = (
-        wes_purecn_segments[
-            wes_purecn_segments[constants.SAMPLEID].isin(set(renaming_dict.keys()))
-        ]
-        .replace({constants.SAMPLEID: renaming_dict})
-        .reset_index(drop=True)
-    )
-    wes_genecn_pr = wesgenecn[wesgenecn.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
-    wes_purecn_genecn_pr = wes_purecn_genecn[
-        wes_purecn_genecn.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
-    wes_loh_pr = wes_loh[wes_loh.index.isin(set(renaming_dict.keys()))].rename(
-        index=renaming_dict
-    )
-    wes_arm_cna_pr = wes_arm_cna[
-        wes_arm_cna.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
-    wes_feature_table_pr = wes_feature_table[
-        wes_feature_table.index.isin(set(renaming_dict.keys()))
-    ].rename(index=renaming_dict)
 
     # doing wgs
     print("doing wgs")
@@ -510,6 +481,37 @@ def cnPostProcessing(
     pr_table = mytracker.update_pr_from_seq(["wes"])
 
     mytracker.close_gumbo_client()
+
+    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
+
+    # subset and rename to PR-indexed matrices
+    wessegments_pr = (
+        wessegments[wessegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]
+        .replace({constants.SAMPLEID: renaming_dict})
+        .reset_index(drop=True)
+    )
+    wes_purecn_segments_pr = (
+        wes_purecn_segments[
+            wes_purecn_segments[constants.SAMPLEID].isin(set(renaming_dict.keys()))
+        ]
+        .replace({constants.SAMPLEID: renaming_dict})
+        .reset_index(drop=True)
+    )
+    wes_genecn_pr = wesgenecn[wesgenecn.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    wes_purecn_genecn_pr = wes_purecn_genecn[
+        wes_purecn_genecn.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
+    wes_loh_pr = wes_loh[wes_loh.index.isin(set(renaming_dict.keys()))].rename(
+        index=renaming_dict
+    )
+    wes_arm_cna_pr = wes_arm_cna[
+        wes_arm_cna.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
+    wes_feature_table_pr = wes_feature_table[
+        wes_feature_table.index.isin(set(renaming_dict.keys()))
+    ].rename(index=renaming_dict)
 
     wgssegments_pr = (
         wgssegments[wgssegments[constants.SAMPLEID].isin(set(renaming_dict.keys()))]

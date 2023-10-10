@@ -1,6 +1,6 @@
-SAMPLESETNAME = "23Q2"
+SAMPLESETNAME = "23Q4"
 
-RELEASE = "23q2"
+RELEASE = "23q4"
 
 WORKING_DIR = "output/"
 
@@ -226,6 +226,8 @@ GENEMASKTHRESH = 0.5
 SEGDUP_BED = "data/segDup_majorAllele_withAltContigs_98pcFracMatch_merged.bed"
 
 RM_BED = "data/repeatMasker_max10_noAlt_merged.bed"
+
+BEDTOOLSPATH = "~/bin/bedtools2/bin/"
 
 MINFREQTOCALL = 0.25
 
