@@ -1,3 +1,5 @@
+version = '23Q4'
+
 BAM_GCS_BUCKET = "gs://cclebams"
 
 RNA_GCS_PATH_HG38 = "gs://cclebams/rnasq_hg38/"
