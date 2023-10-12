@@ -11,6 +11,7 @@ import multiprocessing
 import subprocess
 import pandera as pa
 from tqdm import tqdm
+import numpy as np
 
 
 def annotateLikelyImmortalized(
@@ -589,7 +590,7 @@ def standardize_maf(maf: pd.DataFrame):
             "chrom": "Chromosome",
             "ref": "Reference_Allele",
             "alt": "Alternate_Allele",
-            "cds_id": "Tumor_Sample_Barcode",
+            constants.SAMPLEID: "Tumor_Sample_Barcode",
             "protein_change": "Protein_Change",
         },
         inplace=True,
@@ -619,7 +620,46 @@ def standardize_maf(maf: pd.DataFrame):
     return maf
 
 
-def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05, version: str = '23Q4') -> pd.DataFrame:
+def patchEGFR(maf, hugo_col="Hugo_Symbol", protein_col="Protein_Change", inframe_col="InFrame", oncohotspot_col="oncokb_hotspot"):
+    """mark EGFR in frame deletions as hotspots"""
+    topatch = maf[(maf[hugo_col] == "EGFR") & (maf[protein_col].str.endswith("del")) & (maf[inframe_col])].index.tolist()
+    maf.loc[topatch, oncohotspot_col] = True
+    return maf
+
+
+def convertProteinChange(maf, protein_col="Protein_Change", protein_dict=constants.PROTEIN_DICT):
+    """reformat the protein change column to exclude ensembl protein ids,
+    and rename protein code from 3-letter to 1-letter"""
+    maf[protein_col] = maf[protein_col].str.split(":").str[1]
+    maf[protein_col] = maf[protein_col].fillna("")
+    maf[protein_col] = maf[protein_col].replace(protein_dict, regex=True)
+    maf[protein_col] = maf[protein_col].replace(r'^\s*$', np.nan, regex=True)
+    
+    return maf
+
+
+def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
+    """pull gene mapping info from biomart, add column for entrez gene id
+    by mapping from ensembl ids"""
+    mybiomart = h.generateGeneNames()
+    mybiomart = mybiomart[~mybiomart.entrezgene_id.isna()]
+    renaming_dict = dict(zip(mybiomart.ensembl_gene_id, mybiomart.entrezgene_id.astype("Int64").astype(str)))
+    print("adding entrez id column")
+    maf[entrez_col] = maf[ensembl_col].map(renaming_dict)
+    maf[entrez_col] = maf[entrez_col].fillna("")
+                         
+    return maf
+
+
+def addCols(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
+    """add likely LoF column: true if a variant is high vep impact or likely lof according to oncoKB"""
+    if row[vep_col] == "HIGH" or row[oncoimpact_col] == "Likely Loss-of-function" or row[oncoimpact_col] == "Loss-of-function":
+        return True
+    else:
+        return False
+
+
+def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05, version: str = constants.SAMPLESETNAME) -> pd.DataFrame:
     """ DepMap postprocessing steps after vcf_to_depmap
 
     Parameter
@@ -638,16 +678,24 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     # step 2: less stringent cutoff for gnomad
     maf = maf.drop(maf.index[((maf.gnomadg_af > adjusted_gnomad_af_cutoff) | (maf.gnomade_af > adjusted_gnomad_af_cutoff))], axis=0)
 
-    # step 3: format the mutation and remove all silent mutation classes
+    # step 3: remove all silent mutation classes
     #         remove variants without gene symbols
-    #         sort variants by genome position to be compatible with IGV
     maf = standardize_maf(maf)
     maf = maf.loc[~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "5'UTR", "3'Flank", 'Splice_Region', "5'Flank"]), :]
     maf = maf.loc[~maf.Hugo_Symbol.isnull(), :]
     maf = maf.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
 
+    # step 4: re-annotate missing EGFR hotspots
+    maf = patchEGFR(maf)
+
+    # step 5: convert protein change from 3-letter to 1-letter
+    maf = convertProteinChange(maf)
+
+    # step 6: add likely LoF column based on vep impact and oncokb mutation effect
+    maf["likely_lof"] = maf.apply(addCols, axis=1)
+
     # optional step: add metadata information
-    # step 4: remove high af from DepMap cohort
+    # step 6: remove high af from DepMap cohort
     internal_afs = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
     total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
     # assume there are very few duplicated variants per sample

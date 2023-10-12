@@ -295,6 +295,11 @@ CIVIC_SCORE_COL = "CivicScore"
 
 HESS_COL = "HessDriver"
 
+PROTEIN_DICT = {'Cys': 'C', 'Asp': 'D', 'Ser': 'S', 'Gln': 'Q', 'Lys': 'K',
+     'Ile': 'I', 'Pro': 'P', 'Thr': 'T', 'Phe': 'F', 'Asn': 'N', 
+     'Gly': 'G', 'His': 'H', 'Leu': 'L', 'Arg': 'R', 'Trp': 'W', 
+     'Ala': 'A', 'Val':'V', 'Glu': 'E', 'Tyr': 'Y', 'Met': 'M'}
+
 MUTCOL_DEPMAP = {
     "chrom": "Chrom",
     "pos": "Pos",
