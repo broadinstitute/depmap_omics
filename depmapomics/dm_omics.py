@@ -811,6 +811,8 @@ async def mutationPostProcessing(
         drop=True
     )
 
+    mergedmutations = mutations.addEntrez(mergedmutations, entrez_col="EntrezGeneID")
+
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
