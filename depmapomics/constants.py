@@ -383,7 +383,7 @@ MUTCOL_DEPMAP = {
     # 'segdup': 'Segdup',
     # 'rm': 'Rm',
     # 'rescue': 'Rescue',
-    "EntrezGeneID": "EntrezGeneID"
+    "EntrezGeneID": "EntrezGeneID",
     'DepMap_ID': 'Depmap_ID',
  }
 
@@ -400,8 +400,8 @@ MUTCOL_STANDARDMAF = {
     "Protein_Change": "Protein_Change",
     "Hugo_Symbol": "Hugo_Symbol",
     "NCBI_Build": "NCBI_Build",
-    "Strand": "Strand"
-    "InFrame": "InFrame"
+    "Strand": "Strand",
+    "InFrame": "InFrame",
 }
 
 FUSION_COLNAME = [
