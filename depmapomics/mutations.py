@@ -288,6 +288,8 @@ def postProcess(
         keep_cols=constants.MUTCOL_DEPMAP,
     )
 
+    # TODO: Alvin add TERT patch
+
     # print("annotating likely immortalized status")
     # mutations = annotateLikelyImmortalized(
     #     mutations, hotspotcol="cosmic_hotspot", max_recurrence=constants.IMMORTALIZED_THR,
