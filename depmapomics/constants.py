@@ -281,8 +281,6 @@ CHROM_COL = "Chrom"
 
 POS_COL = "Pos"
 
-HOTSPOT_COL = "CosmicHotspot"
-
 IMMORTALIZED_THR = 0.05
 
 HUGO_COL = "HugoSymbol"
@@ -294,6 +292,10 @@ CCLE_DELETERIOUS_COL = "CCLEDeleterious"
 CIVIC_SCORE_COL = "CivicScore"
 
 HESS_COL = "HessDriver"
+
+ONCOKB_HOTSPOT_COL = "OncoKBHotspot"
+
+COSMIC_TIER_COL = "CosmicTier"
 
 PROTEIN_DICT = {'Cys': 'C', 'Asp': 'D', 'Ser': 'S', 'Gln': 'Q', 'Lys': 'K',
      'Ile': 'I', 'Pro': 'P', 'Thr': 'T', 'Phe': 'F', 'Asn': 'N', 
