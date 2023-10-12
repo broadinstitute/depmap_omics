@@ -383,6 +383,7 @@ MUTCOL_DEPMAP = {
     # 'segdup': 'Segdup',
     # 'rm': 'Rm',
     # 'rescue': 'Rescue',
+    "EntrezGeneID": "EntrezGeneID"
     'DepMap_ID': 'Depmap_ID',
  }
 
