@@ -82,7 +82,6 @@ def makeMatrices(
     id_col=constants.SAMPLEID,
     hugo_col=constants.HUGO_COL,
     lof_col=constants.LIKELY_LOF_COL,
-    ccle_deleterious_col=constants.CCLE_DELETERIOUS_COL,
     hess_col=constants.HESS_COL,
     oncokb_hotspot_col=constants.ONCOKB_HOTSPOT_COL,
     cosmic_tier_col=constants.COSMIC_TIER_COL,
