@@ -80,12 +80,12 @@ def makeMatrices(
     maf,
     homin=0.95,
     id_col=constants.SAMPLEID,
-    hotspot_col=constants.HOTSPOT_COL,
     hugo_col=constants.HUGO_COL,
     lof_col=constants.LIKELY_LOF_COL,
     ccle_deleterious_col=constants.CCLE_DELETERIOUS_COL,
-    civic_col=constants.CIVIC_SCORE_COL,
     hess_col=constants.HESS_COL,
+    oncokb_hotspot_col=constants.ONCOKB_HOTSPOT_COL,
+    cosmic_tier_col=constants.COSMIC_TIER_COL,
 ):
     """generates genotyped hotspot, driver and damaging mutation matrices
 
@@ -105,7 +105,7 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[subset_maf[hess_col] == True]
+        hotspot = subset_maf[(subset_maf[hess_col] == True) | (subset_maf[oncokb_hotspot_col] == True) | (subset_maf[cosmic_tier_col] == 1)]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
@@ -114,9 +114,7 @@ def makeMatrices(
         hotspot_mat.loc[sample, list(homhotspot)] = "2"
         hotspot_mat.loc[sample, list(hethotspot)] = "1"
         # damaging
-        lof = subset_maf[
-            (subset_maf[lof_col] == True) | (subset_maf[ccle_deleterious_col] == True)
-        ]
+        lof = subset_maf[(subset_maf[lof_col] == True)]
         homlof = set(lof[lof["GT"] == "1|1"][hugo_col])
         for dup in h.dups(lof[hugo_col]):
             if lof[lof[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
