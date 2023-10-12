@@ -383,8 +383,23 @@ MUTCOL_DEPMAP = {
     # 'segdup': 'Segdup',
     # 'rm': 'Rm',
     # 'rescue': 'Rescue',
-    'DepMap_ID': 'Depmap_ID'
+    'DepMap_ID': 'Depmap_ID',
  }
+
+MUTCOL_STANDARDMAF = {
+    "Chromosome": "Chromosome",
+    "Start_Position": "Start_Position",
+    "End_Position": "End_Position",
+    "Variant_Type": "Variant_Type",
+    "Reference_Allele": "Reference_Allele",
+    "Tumor_Seq_Allele1": "Tumor_Seq_Allele1",
+    "Tumor_Seq_Allele2": "Tumor_Seq_Allele2",
+    "Tumor_Sample_Barcode": "Tumor_Sample_Barcode",
+    "Variant_Classification": "Variant_Classification",
+    "Protein_Change": "Protein_Change",
+    "Hugo_Symbol": "Hugo_Symbol",
+    "NCBI_Build": "NCBI_Build",
+}
 
 FUSION_COLNAME = [
     "FusionName",
