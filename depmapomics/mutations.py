@@ -98,7 +98,6 @@ def makeMatrices(
     gene_names = list(maf[hugo_col].unique())
     hotspot_mat = pd.DataFrame(columns=gene_names)
     lof_mat = pd.DataFrame(columns=gene_names)
-    driver_mat = pd.DataFrame(columns=gene_names)
     sample_ids = list(maf[id_col].unique())
     le = len(sample_ids)
     for j in range(le):
@@ -125,26 +124,12 @@ def makeMatrices(
         hetlof = set(lof[hugo_col]) - homlof
         lof_mat.loc[sample, list(homlof)] = "2"
         lof_mat.loc[sample, list(hetlof)] = "1"
-        # driver
-        driver = subset_maf[
-            ((~subset_maf[civic_col].isnull()) & (subset_maf[civic_col] != 0))
-            | (subset_maf[hess_col] == True)
-        ]
-        homdriv = set(driver[driver["GT"] == "1|1"][hugo_col])
-        for dup in h.dups(driver[hugo_col]):
-            if driver[driver[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
-                homdriv.add(dup)
-        hetdriv = set(driver[hugo_col]) - homdriv
-        driver_mat.loc[sample, list(homdriv)] = "2"
-        driver_mat.loc[sample, list(hetdriv)] = "1"
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
     lof_mat = lof_mat.dropna(axis="columns", how="all")
-    driver_mat = driver_mat.dropna(axis="columns", how="all")
     hotspot_mat = hotspot_mat.fillna(0).astype(int)
     lof_mat = lof_mat.fillna(0).astype(int)
-    driver_mat = driver_mat.fillna(0).astype(int)
 
-    return hotspot_mat, lof_mat, driver_mat
+    return hotspot_mat, lof_mat
 
 
 def managingDuplicates(samples, failed, datatype, tracker):
@@ -695,7 +680,7 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     maf["likely_lof"] = maf.apply(addCols, axis=1)
 
     # optional step: add metadata information
-    # step 6: remove high af from DepMap cohort
+    # step 7: remove high af from DepMap cohort
     internal_afs = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
     total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
     # assume there are very few duplicated variants per sample
