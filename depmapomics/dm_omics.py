@@ -844,30 +844,26 @@ async def mutationPostProcessing(
         if "Y" in merged[col].values:
             merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
 
-    merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
-    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("Unknown")
-    merged = merged.drop(columns=["achilles_top_genes"])
+    merged = mutations.addEntrez(merged, entrez_col="EntrezGeneID")
     merged = merged.rename(columns=mutcol)
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
 
     # making genotyped mutation matrices
     print("creating mutation matrices")
-    hotspot_mat, lof_mat, driver_mat = mutations.makeMatrices(merged)
+    hotspot_mat, lof_mat = mutations.makeMatrices(merged)
     # add entrez ids to column names
-    mybiomart["gene_name"] = [
-        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
-        if not pd.isna(i["entrezgene_id"])
+    merged["gene_name"] = [
+        i["HugoSymbol"] + " (" + str(i["EntrezGeneID"]).split(".")[0] + ")"
+        if i["EntrezGeneID"] != ""
         else i["hgnc_symbol"] + " (Unknown)"
-        for _, i in mybiomart.iterrows()
+        for _, i in merged.iterrows()
     ]
-    symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
+    symbol_to_symbolentrez_dict = dict(zip(merged.HugoSymbol, merged.gene_name))
     hotspot_mat = hotspot_mat.rename(columns=symbol_to_symbolentrez_dict)
     lof_mat = lof_mat.rename(columns=symbol_to_symbolentrez_dict)
-    driver_mat = driver_mat.rename(columns=symbol_to_symbolentrez_dict)
 
     hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
     lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
-    driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
 
     merged = mutations.postprocess_main_steps(merged, version=env_config.version)
     # TODO: add pandera type validation
@@ -918,12 +914,6 @@ async def mutationPostProcessing(
             changes_description="new " + samplesetname + " release!",
             dataset_permaname=taiga_dataset,
             upload_files=[
-                {
-                    "path": folder + "somatic_mutations_genotyped_driver_profile.csv",
-                    "name": "somaticMutations_genotypedMatrix_driver_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
                 {
                     "path": folder + "somatic_mutations_genotyped_hotspot_profile.csv",
                     "name": "somaticMutations_genotypedMatrix_hotspot_profile",
