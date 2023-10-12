@@ -811,41 +811,6 @@ async def mutationPostProcessing(
         drop=True
     )
 
-    # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
-    print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
-    hugo_mapping = pd.read_csv(constants.HGNC_MAPPING, sep="\t")
-    hugo_mapping = {
-        b: a for a, b in hugo_mapping[~hugo_mapping["Previous symbol"].isna()].values
-    }
-
-    mybiomart = h.generateGeneNames()
-    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
-
-    genes_in_maf = set(mergedmutations.hugo_symbol)
-    genes_not_in_biomart = genes_in_maf - set(mybiomart.hgnc_symbol)
-    maf_gene_renaming = dict()
-    maf_genes_to_drop = []
-    for gene in genes_not_in_biomart:
-        # if the hugo symbol in maf is outdated, and the new name is in biomart,
-        # we will rename it to the new name in the maf
-        if gene in hugo_mapping and hugo_mapping[gene] in set(mybiomart.hgnc_symbol):
-            maf_gene_renaming[gene] = hugo_mapping[gene]
-        # if the hugo symbol can't be found in biomart with or without hugo_mapping,
-        # we will drop that gene from the maf
-        else:
-            maf_genes_to_drop.append(gene)
-    mergedmutations = mergedmutations[
-        ~mergedmutations.hugo_symbol.isin(maf_genes_to_drop)
-    ]
-    mergedmutations = mergedmutations.replace({"hugo_symbol": maf_gene_renaming})
-
-    # add entrez id column
-    symbol_to_entrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.entrezgene_id))
-    mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
-        symbol_to_entrez_dict
-    )
-    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
-    mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
