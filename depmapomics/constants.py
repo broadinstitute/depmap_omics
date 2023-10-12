@@ -399,6 +399,8 @@ MUTCOL_STANDARDMAF = {
     "Protein_Change": "Protein_Change",
     "Hugo_Symbol": "Hugo_Symbol",
     "NCBI_Build": "NCBI_Build",
+    "Strand": "Strand"
+    "InFrame": "InFrame"
 }
 
 FUSION_COLNAME = [
