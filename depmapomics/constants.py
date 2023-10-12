@@ -375,7 +375,7 @@ MUTCOL_DEPMAP = {
     'gwas_disease': 'GwasDisease',
     'gwas_pmid': 'GwasPmID',
     'gtex_gene': 'GtexGene',
-    'cosmic_tier': 'CosmicTier',
+    # 'cosmic_tier': 'CosmicTier',
     # 'oncokb_effect': 'OncokbEffect',
     # 'oncokb_hotspot': 'OncokbHotspot',
     # 'oncokb_oncogenic': 'OncokbOncogenic',
