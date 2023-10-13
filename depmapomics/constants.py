@@ -367,7 +367,7 @@ MUTCOL_DEPMAP = {
     # 'likely_gof': 'LikelyGof',
     'likely_lof': 'LikelyLoF',
     'hess_driver': 'HessDriver',
-    'hess_signture': 'HessSignture',
+    'hess_signture': 'HessSignature',
     'revel_score': 'RevelScore',
     'pharmgkb_id': 'PharmgkbId',
     'dida_id': 'DidaID',
