@@ -857,7 +857,7 @@ async def mutationPostProcessing(
     merged["gene_name"] = [
         i["HugoSymbol"] + " (" + str(i["EntrezGeneID"]).split(".")[0] + ")"
         if i["EntrezGeneID"] != ""
-        else i["hgnc_symbol"] + " (Unknown)"
+        else i["HugoSymbol"] + " (Unknown)"
         for _, i in merged.iterrows()
     ]
     symbol_to_symbolentrez_dict = dict(zip(merged.HugoSymbol, merged.gene_name))
