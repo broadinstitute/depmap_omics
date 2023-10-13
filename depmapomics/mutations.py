@@ -674,7 +674,6 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     # step 6: add likely LoF column based on vep impact and oncokb mutation effect
     maf["likely_lof"] = maf.apply(addCols, axis=1)
 
-    # optional step: add metadata information
     # step 7: remove high af from DepMap cohort
     internal_afs = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
     total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]

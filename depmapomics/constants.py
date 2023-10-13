@@ -293,9 +293,9 @@ CIVIC_SCORE_COL = "CivicScore"
 
 HESS_COL = "HessDriver"
 
-ONCOKB_HOTSPOT_COL = "OncoKBHotspot"
+ONCOKB_HOTSPOT_COL = "oncokb_hotspot"
 
-COSMIC_TIER_COL = "CosmicTier"
+COSMIC_TIER_COL = "cosmic_tier"
 
 PROTEIN_DICT = {'Cys': 'C', 'Asp': 'D', 'Ser': 'S', 'Gln': 'Q', 'Lys': 'K',
      'Ile': 'I', 'Pro': 'P', 'Thr': 'T', 'Phe': 'F', 'Asn': 'N', 
@@ -383,7 +383,7 @@ MUTCOL_DEPMAP = {
     # 'segdup': 'Segdup',
     # 'rm': 'Rm',
     # 'rescue': 'Rescue',
-    'DepMap_ID': 'Depmap_ID',
+    'DepMap_ID': 'DepMap_ID',
  }
 
 MUTCOL_STANDARDMAF = {
