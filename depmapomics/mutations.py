@@ -290,15 +290,14 @@ def postProcess(
 
     # TODO: Alvin add TERT patch
 
-    # print("annotating likely immortalized status")
-    # mutations = annotateLikelyImmortalized(
-    #     mutations, hotspotcol="cosmic_hotspot", max_recurrence=constants.IMMORTALIZED_THR,
-    # )
+    print("further filtering and standardizing maf")
+
+    mutations_with_standard_cols = postprocess_main_steps(mutations)
 
     print("saving somatic mutations (all)")
     #  /home/ubuntu/depmap_omics/depmapomics/mutations.py:314:71 - error: Argument of type "None" cannot be assigned to parameter "index" of type "_bool" in function "to_csv"
     #      Type "None" cannot be assigned to type "_bool" (reportGeneralTypeIssues)
-    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=False)
+    mutations_with_standard_cols.to_csv(save_output + "somatic_mutations_all.csv", index=False)
     print("done")
 
     svs = None
@@ -314,7 +313,7 @@ def postProcess(
         print("saving svs (all)")
         svs.to_csv(save_output + "svs_all.csv", index=False)
 
-    return mutations, svs
+    return mutations_with_standard_cols, svs
 
 
 def mapBed(file, vcfdir, guide_df):
@@ -568,17 +567,12 @@ def standardize_maf(maf: pd.DataFrame):
     maf.loc[:, 'InFrame'] = formatted_coords[3]
     maf.loc[:, 'Variant_Classification'] = maf.loc[:, ['variant_info', 'Variant_Type', 'InFrame']].apply(lambda x: GetVariantClassification(*x), axis=1)
 
-    maf.rename(
-        columns={
-            "hugo_symbol": "Hugo_Symbol",
-            "chrom": "Chromosome",
-            "ref": "Reference_Allele",
-            "alt": "Alternate_Allele",
-            constants.SAMPLEID: "Tumor_Sample_Barcode",
-            "protein_change": "Protein_Change",
-        },
-        inplace=True,
-    )
+    maf["Hugo_Symbol"] = maf["hugo_symbol"]
+    maf["Chromosome"] = maf["chrom"]
+    maf["Reference_Allele"] = maf["ref"]
+    maf["Alternate_Allele"] = maf["alt"]
+    maf["Tumor_Sample_Barcode"] = maf[constants.SAMPLEID]
+    maf["Protein_Change"] = maf["protein_change"]
     maf.loc[:, "NCBI_Build"] = "GRCh38" 
     maf.loc[:, "Center"] = "DepMap" 
     maf.loc[:, "Tumor_Seq_Allele1"] = maf.loc[
