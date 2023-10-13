@@ -811,9 +811,9 @@ async def mutationPostProcessing(
         drop=True
     )
 
-    mergedmutations = mutations.addEntrez(mergedmutations, entrez_col="EntrezGeneID")
-
     mergedmutations = mergedmutations.rename(columns=mutcol)
+
+    mergedmutations = mutations.addEntrez(mergedmutations, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
 
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
     # For all columns, convert "Y" to True/False
@@ -844,8 +844,8 @@ async def mutationPostProcessing(
         if "Y" in merged[col].values:
             merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
 
-    merged = mutations.addEntrez(merged, entrez_col="EntrezGeneID")
     merged = merged.rename(columns=mutcol)
+    merged = mutations.addEntrez(merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
     merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
 
     # making genotyped mutation matrices
