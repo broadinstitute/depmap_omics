@@ -567,6 +567,8 @@ def standardize_maf(maf: pd.DataFrame):
     maf.loc[:, 'InFrame'] = formatted_coords[3]
     maf.loc[:, 'Variant_Classification'] = maf.loc[:, ['variant_info', 'Variant_Type', 'InFrame']].apply(lambda x: GetVariantClassification(*x), axis=1)
 
+    assert maf["pos"].equals(maf["Start_Position"]), "Standardizing MAF shifted start position"
+
     maf["Hugo_Symbol"] = maf["hugo_symbol"]
     maf["Chromosome"] = maf["chrom"]
     maf["Reference_Allele"] = maf["ref"]
