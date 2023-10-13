@@ -847,6 +847,7 @@ async def mutationPostProcessing(
 
     merged = merged.rename(columns=mutcol)
     merged = mutations.addEntrez(merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
+    merged.to_csv(folder + "somatic_mutations_all_cols_profile.csv", index=False)
     merged[mutcol.values()].to_csv(folder + "somatic_mutations_profile.csv", index=False)
     merged[standardmafcol.keys()].to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
@@ -933,6 +934,12 @@ async def mutationPostProcessing(
                 },
                 {
                     "path": folder + "somatic_mutations_profile.maf.csv",
+                    "name": "somaticMutations_profile_maf",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_all_cols_profile.csv",
                     "name": "somaticMutations_profile_maf",
                     "format": "TableCSV",
                     "encoding": "utf-8",
