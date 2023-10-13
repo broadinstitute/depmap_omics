@@ -735,6 +735,7 @@ async def mutationPostProcessing(
     sv_col: str = constants.SV_COLNAME,
     sv_filename: str = constants.SV_FILENAME,
     mutcol: dict = constants.MUTCOL_DEPMAP,
+    standardmafcol: dict = constants.MUTCOL_STANDARDMAF,
     mafcol: str = constants.MAF_COL,
     doCleanup: bool = False,
     run_sv: bool = True,
@@ -823,7 +824,7 @@ async def mutationPostProcessing(
                 mergedmutations[col].values == "Y", True, False
             )
 
-    mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
+    mergedmutations[mutcol.keys()].to_csv(folder + "somatic_mutations.csv", index=False)
 
     if run_sv:
         if wgssvs is not None:
@@ -846,7 +847,8 @@ async def mutationPostProcessing(
 
     merged = merged.rename(columns=mutcol)
     merged = mutations.addEntrez(merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
-    merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
+    merged[mutcol.keys()].to_csv(folder + "somatic_mutations_profile.csv", index=False)
+    merged[standardmafcol.keys()].to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
     # making genotyped mutation matrices
     print("creating mutation matrices")
@@ -865,10 +867,7 @@ async def mutationPostProcessing(
     hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
     lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
 
-    merged = mutations.postprocess_main_steps(merged, version=env_config.version)
     # TODO: add pandera type validation
-
-    merged.to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
     if run_guidemat:
         # generate germline binary matrix
