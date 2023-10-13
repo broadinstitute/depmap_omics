@@ -365,7 +365,7 @@ MUTCOL_DEPMAP = {
     'civic_score': 'CivicScore',
     # 'popaf': 'Popaf',
     # 'likely_gof': 'LikelyGof',
-    'likely_lof': 'LikelyLof',
+    'likely_lof': 'LikelyLoF',
     'hess_driver': 'HessDriver',
     'hess_signture': 'HessSignture',
     'revel_score': 'RevelScore',
