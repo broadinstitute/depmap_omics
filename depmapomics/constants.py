@@ -330,7 +330,7 @@ MUTCOL_DEPMAP = {
     'lof_number_of_transcripts_in_gene': 'LofNumberOfTranscriptsInGene',
     'lof_percent_of_transcripts_affected': 'LofPercentOfTranscriptsAffected',
     'nmd': 'NMD',
-    'clnsig': 'ClnSig',
+    # 'clnsig': 'ClnSig',
     'molecular_consequence': 'MolecularConsequence',
     # 'af_exac': 'AfExac',
     # 'af_esp': 'AfEsp',
