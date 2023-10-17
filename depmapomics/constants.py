@@ -382,7 +382,7 @@ MUTCOL_DEPMAP = {
     'provean_prediction': 'ProveanPrediction',
     # 'segdup': 'Segdup',
     # 'rm': 'Rm',
-    # 'rescue': 'Rescue',
+    'rescue': 'Rescue',
     'DepMap_ID': 'DepMap_ID',
  }
 
