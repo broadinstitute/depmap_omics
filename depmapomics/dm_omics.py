@@ -824,7 +824,7 @@ async def mutationPostProcessing(
                 mergedmutations[col].values == "Y", True, False
             )
 
-    mergedmutations[mutcol.values()].to_csv(folder + "somatic_mutations.csv", index=False)
+    mergedmutations[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(folder + "somatic_mutations.csv", index=False)
 
     if run_sv:
         if wgssvs is not None:
@@ -848,7 +848,7 @@ async def mutationPostProcessing(
     merged = merged.rename(columns=mutcol)
     merged = mutations.addEntrez(merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
     merged.to_csv(folder + "somatic_mutations_all_cols_profile.csv", index=False)
-    merged[mutcol.values()].to_csv(folder + "somatic_mutations_profile.csv", index=False)
+    merged[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(folder + "somatic_mutations_profile.csv", index=False)
     merged[standardmafcol.keys()].to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
     # making genotyped mutation matrices
