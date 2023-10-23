@@ -294,7 +294,6 @@ def postProcess(
     )
 
     print("further filtering and standardizing maf")
-
     mutations_with_standard_cols = postprocess_main_steps(mutations)
 
     print("saving somatic mutations (all)")
@@ -570,13 +569,18 @@ def standardize_maf(maf: pd.DataFrame):
     maf.loc[:, 'InFrame'] = formatted_coords[3]
     maf.loc[:, 'Variant_Classification'] = maf.loc[:, ['variant_info', 'Variant_Type', 'InFrame']].apply(lambda x: GetVariantClassification(*x), axis=1)
 
-    assert maf["pos"].equals(maf["Start_Position"]), "Standardizing MAF shifted start position"
+    print((maf["pos"] - maf["Start_Position"]).sum())
+    assert (maf["pos"]-maf["Start_Position"]).sum()==0, "Standardizing MAF shifted start position"
 
     maf["Hugo_Symbol"] = maf["hugo_symbol"]
     maf["Chromosome"] = maf["chrom"]
     maf["Reference_Allele"] = maf["ref"]
     maf["Alternate_Allele"] = maf["alt"]
-    maf["Tumor_Sample_Barcode"] = maf[constants.SAMPLEID]
+
+    try:
+        maf["Tumor_Sample_Barcode"] = maf[constants.SAMPLEID]
+    except KeyError:
+        maf["Tumor_Sample_Barcode"] = maf['CDS_ID']
     maf["Protein_Change"] = maf["protein_change"]
     maf.loc[:, "NCBI_Build"] = "GRCh38" 
     maf.loc[:, "Center"] = "DepMap" 
@@ -664,7 +668,10 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     # step 3: remove all silent mutation classes
     #         remove variants without gene symbols
     maf = standardize_maf(maf)
-    maf = maf.loc[~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "5'UTR", "3'Flank", 'Splice_Region', "5'Flank"]), :]
+    # add rescue for silent mutations that include TERT
+    # because TERT belongs to 5'Flank
+    maf = maf.loc[(~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "5'UTR", "3'Flank", 'Splice_Region', "5'Flank"])) | (maf.rescue), :]
+    # maf = maf.loc[~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "3'Flank", 'Splice_Region']), :]
     maf = maf.loc[~maf.Hugo_Symbol.isnull(), :]
     maf = maf.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
 

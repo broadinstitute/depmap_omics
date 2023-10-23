@@ -16,6 +16,9 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 from google.cloud import bigquery
+from .mutations import postprocess_main_steps
+
+
 
 project_id = 'depmap-omics'
 client = bigquery.Client(project=project_id)
@@ -779,7 +782,15 @@ async def mutationPostProcessing(
     # Only rescue TERT now
     print("TERT.........")
     tert_muts = job_query_to_dataframe(f"SELECT * FROM `depmap-omics.maf_staging.merged_maf_latest8` WHERE hugo_symbol = 'TERT' AND pos >= 1295054 AND pos <= 1295365 AND {quality_filter}")
-    print(tert_muts.head())
+    tert_muts.loc[:, 'gnomadg_af'] = tert_muts.loc[:, 'gnomadg_af'].replace('', '0').astype(float)
+    tert_muts.loc[:, 'gnomade_af'] = tert_muts.loc[:, 'gnomade_af'].replace('', '0').astype(float)
+    tert_muts.loc[:, 'rescue'] = True
+
+    tert_mutations_with_standard_cols = postprocess_main_steps(tert_muts)
+    print('transforming tert maf...')
+    print(tert_mutations_with_standard_cols.head())
+    print(tert_mutations_with_standard_cols.shape)
+    print(tert_mutations_with_standard_cols.columns)
 
     # doing wes
     print("DOING WES")
@@ -795,11 +806,16 @@ async def mutationPostProcessing(
         sv_filename=sv_filename,
         mafcol=mafcol,
         run_sv=run_sv,
-        debug=True,
+        debug=False,
         **kwargs,
     )
+    # wesmutations.to_csv("wes_test.csv")
 
-    tert_muts_wes = tert_muts.loc[tert_muts.CDS_ID.isin(), :]
+    tert_mutations_with_standard_cols_wes = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wesmutations.Tumor_Sample_Barcode), :]
+
+    print(tert_mutations_with_standard_cols_wes.shape)
+    wesmutations = pd.concat([wesmutations.reset_index(drop=True),
+                              tert_mutations_with_standard_cols_wes.reset_index(drop=True)], axis=1)
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
@@ -822,10 +838,15 @@ async def mutationPostProcessing(
         sv_filename=sv_filename,
         mafcol=mafcol,
         run_sv=run_sv,
+        debug=False,
         **kwargs,
     )
 
-    tert_muts_wgs = tert_muts.loc[tert_muts.CDS_ID.isin(), :]
+    tert_mutations_with_standard_cols_wgs = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wgsmutations.Tumor_Sample_Barcode), :]
+    print(tert_mutations_with_standard_cols_wgs.shape)
+
+    wgsmutations = pd.concat([wgsmutations.reset_index(drop=True),
+                              tert_mutations_with_standard_cols_wgs.reset_index(drop=True)], axis=1)
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
