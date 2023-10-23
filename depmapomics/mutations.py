@@ -632,6 +632,8 @@ def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
     mybiomart = mybiomart[~mybiomart.entrezgene_id.isna()]
     renaming_dict = dict(zip(mybiomart.ensembl_gene_id, mybiomart.entrezgene_id.astype("Int64").astype(str)))
     print("adding entrez id column")
+    print(maf[ensembl_col])
+    print(maf[ensembl_col].head())
     maf[entrez_col] = maf[ensembl_col].map(renaming_dict)
     maf[entrez_col] = maf[entrez_col].fillna("")
                          

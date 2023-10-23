@@ -778,7 +778,14 @@ async def mutationPostProcessing(
     tert_muts.loc[:, 'gnomade_af'] = tert_muts.loc[:, 'gnomade_af'].replace('', '0').astype(float)
     tert_muts.loc[:, 'rescue'] = True
 
-    tert_mutations_with_standard_cols = postprocess_main_steps(tert_muts)
+    tert_muts[["ref_count", "alt_count"]] = tert_muts["ad"].str.split(",", expand=True)
+    # tert_muts.rename({'cds_id': 'DepMap_ID'}, inplace=True)
+    tert_muts.loc[:, 'DepMap_ID'] = tert_muts.loc[:, 'CDS_ID']
+
+    # Turn off internal af filter for TERT
+    tert_mutations_with_standard_cols = postprocess_main_steps(tert_muts, max_recurrence=1.0)
+
+    
     print('transforming tert maf...')
     print(tert_mutations_with_standard_cols.head())
     print(tert_mutations_with_standard_cols.shape)
@@ -802,12 +809,27 @@ async def mutationPostProcessing(
         **kwargs,
     )
     # wesmutations.to_csv("wes_test.csv")
+    wesmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
-    tert_mutations_with_standard_cols_wes = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wesmutations.Tumor_Sample_Barcode), :]
+    tert_mutations_with_standard_cols_wes = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wesmutations.Tumor_Sample_Barcode), wesmutations.columns]
+    print(wesmutations.shape, tert_mutations_with_standard_cols_wes.shape)
+    print(np.setdiff1d(tert_mutations_with_standard_cols_wes.columns, wesmutations.columns))
+
+    print(tert_mutations_with_standard_cols_wes.columns)
+    print(wesmutations.columns)
+
+    assert wesmutations.shape[1] == 98
+    assert tert_mutations_with_standard_cols_wes.shape[1] == 98
+    print((wesmutations.columns == tert_mutations_with_standard_cols_wes.columns).sum())
+    assert (wesmutations.columns == tert_mutations_with_standard_cols_wes.columns).sum() == 98, 'TERT and WES columns mismatch'
 
     print(tert_mutations_with_standard_cols_wes.shape)
-    wesmutations = pd.concat([wesmutations.reset_index(drop=True),
-                              tert_mutations_with_standard_cols_wes.reset_index(drop=True)], axis=1)
+    wesmutations = pd.concat([
+        wesmutations, 
+        tert_mutations_with_standard_cols_wes,
+        ],
+        axis=0)
+    print(wesmutations.shape)
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
@@ -833,12 +855,16 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
+    wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
-    tert_mutations_with_standard_cols_wgs = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wgsmutations.Tumor_Sample_Barcode), :]
+    tert_mutations_with_standard_cols_wgs = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wgsmutations.Tumor_Sample_Barcode), wgsmutations.columns]
     print(tert_mutations_with_standard_cols_wgs.shape)
 
-    wgsmutations = pd.concat([wgsmutations.reset_index(drop=True),
-                              tert_mutations_with_standard_cols_wgs.reset_index(drop=True)], axis=1)
+    wgsmutations = pd.concat([
+        wgsmutations, 
+        tert_mutations_with_standard_cols_wgs
+        ],
+        axis=0)
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
