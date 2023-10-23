@@ -838,7 +838,7 @@ async def mutationPostProcessing(
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict})
+    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
 
     # doing wgs
     print("DOING WGS")
@@ -868,7 +868,7 @@ async def mutationPostProcessing(
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict})
+    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
 
     # merge
     print("merging WES and WGS")
