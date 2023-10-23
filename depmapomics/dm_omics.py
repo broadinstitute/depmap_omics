@@ -15,16 +15,8 @@ from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
-from google.cloud import bigquery
 from .mutations import postprocess_main_steps
-
-
-
-project_id = 'depmap-omics'
-client = bigquery.Client(project=project_id)
-table_name = "merged_maf_latest8"
-gnomad = "NOT ((IFNULL(SAFE_CAST(gnomadg_af AS NUMERIC), 0)>1e-3 OR IFNULL(SAFE_CAST(gnomade_af AS NUMERIC), 0)>1e-3) OR (panel_of_normals='Y'))"
-quality_filter = f"(weak_evidence!='Y') AND (map_qual!='Y') AND (strand_bias !='Y') AND (slippage != 'Y') AND (clustered_events != 'Y') AND (base_qual != 'Y') AND (SAFE_CAST(AF AS NUMERIC) >=0.15) AND (SAFE_CAST(DP AS NUMERIC) >= 2) AND ({gnomad})"
+from google.cloud import bigquery
 
 
 async def expressionPostProcessing(
@@ -733,7 +725,8 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
-def job_query_to_dataframe(sql):
+def job_query_to_dataframe(sql, project_id):
+    client = bigquery.Client(project=project_id)
     query_job = client.query(sql)
     df = query_job.to_dataframe()
     return df
@@ -780,8 +773,7 @@ async def mutationPostProcessing(
 
     # BigQuery for patching noncoding mutation
     # Only rescue TERT now
-    print("TERT.........")
-    tert_muts = job_query_to_dataframe(f"SELECT * FROM `depmap-omics.maf_staging.merged_maf_latest8` WHERE hugo_symbol = 'TERT' AND pos >= 1295054 AND pos <= 1295365 AND {quality_filter}")
+    tert_muts = job_query_to_dataframe(f"SELECT * FROM `depmap-omics.maf_staging.{env_config.table_name}` WHERE hugo_symbol = 'TERT' AND pos >= 1295054 AND pos <= 1295365 AND {env_config.quality_filter}", env_config.project_id)
     tert_muts.loc[:, 'gnomadg_af'] = tert_muts.loc[:, 'gnomadg_af'].replace('', '0').astype(float)
     tert_muts.loc[:, 'gnomade_af'] = tert_muts.loc[:, 'gnomade_af'].replace('', '0').astype(float)
     tert_muts.loc[:, 'rescue'] = True
