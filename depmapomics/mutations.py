@@ -648,7 +648,7 @@ def addCols(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
         return False
 
 
-def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05) -> pd.DataFrame:
+def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.1) -> pd.DataFrame:
     """ DepMap postprocessing steps after vcf_to_depmap
 
     Parameter
