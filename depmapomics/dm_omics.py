@@ -15,6 +15,14 @@ from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
+from google.cloud import bigquery
+
+project_id = 'depmap-omics'
+client = bigquery.Client(project=project_id)
+table_name = "merged_maf_latest8"
+gnomad = "NOT ((IFNULL(SAFE_CAST(gnomadg_af AS NUMERIC), 0)>1e-3 OR IFNULL(SAFE_CAST(gnomade_af AS NUMERIC), 0)>1e-3) OR (panel_of_normals='Y'))"
+quality_filter = f"(weak_evidence!='Y') AND (map_qual!='Y') AND (strand_bias !='Y') AND (slippage != 'Y') AND (clustered_events != 'Y') AND (base_qual != 'Y') AND (SAFE_CAST(AF AS NUMERIC) >=0.15) AND (SAFE_CAST(DP AS NUMERIC) >= 2) AND ({gnomad})"
+
 
 async def expressionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
@@ -722,6 +730,12 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
+def job_query_to_dataframe(sql):
+    query_job = client.query(sql)
+    df = query_job.to_dataframe()
+    return df
+
+
 async def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
@@ -755,10 +769,17 @@ async def mutationPostProcessing(
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
         upload_taiga (bool, optional): whether to upload to taiga. Defaults to False.
     """
+
     tc = TaigaClient()
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
+
+    # BigQuery for patching noncoding mutation
+    # Only rescue TERT now
+    print("TERT.........")
+    tert_muts = job_query_to_dataframe(f"SELECT * FROM `depmap-omics.maf_staging.merged_maf_latest8` WHERE hugo_symbol = 'TERT' AND pos >= 1295054 AND pos <= 1295365 AND {quality_filter}")
+    print(tert_muts.head())
 
     # doing wes
     print("DOING WES")
@@ -774,8 +795,11 @@ async def mutationPostProcessing(
         sv_filename=sv_filename,
         mafcol=mafcol,
         run_sv=run_sv,
+        debug=True,
         **kwargs,
     )
+
+    tert_muts_wes = tert_muts.loc[tert_muts.CDS_ID.isin(), :]
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
@@ -801,6 +825,8 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
+    tert_muts_wgs = tert_muts.loc[tert_muts.CDS_ID.isin(), :]
+
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
     ].replace({constants.SAMPLEID: renaming_dict})
@@ -808,6 +834,9 @@ async def mutationPostProcessing(
     # merge
     print("merging WES and WGS")
     folder = constants.WORKING_DIR + samplesetname + "/merged_"
+    if not os.path.exists(constants.WORKING_DIR + samplesetname):
+        os.mkdir(constants.WORKING_DIR + samplesetname)
+
     mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
         drop=True
     )
