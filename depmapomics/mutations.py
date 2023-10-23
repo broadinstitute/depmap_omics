@@ -658,6 +658,7 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     # force nan to be zero
     maf.loc[:, 'gnomade_af'] = maf.loc[:, 'gnomade_af'].fillna(0)
     maf.loc[:, 'gnomadg_af'] = maf.loc[:, 'gnomadg_af'].fillna(0)
+    print(maf.loc[:, 'gnomade_af'])
 
     # step 1: filter the leftmost synonymous mutation 
     maf = maf.query("~variant_info.str.contains('^synony', regex=True)")
