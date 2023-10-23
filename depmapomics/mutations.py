@@ -614,14 +614,19 @@ def patchEGFR(maf, hugo_col="Hugo_Symbol", protein_col="Protein_Change", inframe
     return maf
 
 
-def convertProteinChange(maf, protein_col="Protein_Change", protein_dict=constants.PROTEIN_DICT):
+def convertProteinChange(
+    maf,
+    protein_cols=["Protein_Change", "protein_change"],
+    protein_dict=constants.PROTEIN_DICT,
+):
     """reformat the protein change column to exclude ensembl protein ids,
     and rename protein code from 3-letter to 1-letter"""
-    maf[protein_col] = maf[protein_col].str.split(":").str[1]
-    maf[protein_col] = maf[protein_col].fillna("")
-    maf[protein_col] = maf[protein_col].replace(protein_dict, regex=True)
-    maf[protein_col] = maf[protein_col].replace(r'^\s*$', np.nan, regex=True)
-    
+    for protein_col in protein_cols:
+        maf[protein_col] = maf[protein_col].str.split(":").str[1]
+        maf[protein_col] = maf[protein_col].fillna("")
+        maf[protein_col] = maf[protein_col].replace(protein_dict, regex=True)
+        maf[protein_col] = maf[protein_col].replace(r"^\s*$", np.nan, regex=True)
+
     return maf
 
 
