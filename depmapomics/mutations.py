@@ -663,7 +663,10 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     maf = maf.query("~variant_info.str.contains('^synony', regex=True)")
     
     # step 2: less stringent cutoff for gnomad
-    maf = maf.drop(maf.index[((maf.gnomadg_af > adjusted_gnomad_af_cutoff) | (maf.gnomade_af > adjusted_gnomad_af_cutoff))], axis=0)
+    maf = maf[
+        (maf["gnomade_af"] < adjusted_gnomad_af_cutoff)
+        & (maf["gnomadg_af"] < adjusted_gnomad_af_cutoff)
+    ]
 
     # step 3: remove all silent mutation classes
     #         remove variants without gene symbols
