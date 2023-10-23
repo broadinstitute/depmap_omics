@@ -188,6 +188,9 @@ def aggregateMAFs(
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    for col in sample_table.columns:
+        print(col)
+    print(mafcol)
     sample_table_valid = sample_table[~sample_table[mafcol].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
@@ -258,6 +261,7 @@ def postProcess(
     sv_filename=constants.SV_FILENAME,
     sv_renaming=constants.SV_COLRENAME,
     run_sv=True,
+    debug=False
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
 
@@ -286,9 +290,8 @@ def postProcess(
         sampleset=sampleset,
         mafcol=mafcol,
         keep_cols=constants.MUTCOL_DEPMAP,
+        debug=debug
     )
-
-    # TODO: Alvin add TERT patch
 
     print("further filtering and standardizing maf")
 
