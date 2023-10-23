@@ -1,7 +1,7 @@
 
 project_id = 'depmap-omics'
 table_name = "merged_maf_latest8"
-gnomad = "NOT ((IFNULL(SAFE_CAST(gnomadg_af AS NUMERIC), 0)>1e-3 OR IFNULL(SAFE_CAST(gnomade_af AS NUMERIC), 0)>1e-3) OR (panel_of_normals='Y'))"
+gnomad = "NOT ((IFNULL(SAFE_CAST(gnomadg_af AS NUMERIC), 0)>1e-3 OR IFNULL(SAFE_CAST(gnomade_af AS NUMERIC), 0)>1e-3))"
 quality_filter = f"(weak_evidence!='Y') AND (map_qual!='Y') AND (strand_bias !='Y') AND (slippage != 'Y') AND (clustered_events != 'Y') AND (base_qual != 'Y') AND (SAFE_CAST(AF AS NUMERIC) >=0.15) AND (SAFE_CAST(DP AS NUMERIC) >= 2) AND ({gnomad})"
 
 version = '23Q4'
