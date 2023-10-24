@@ -16,7 +16,7 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 from .mutations import postprocess_main_steps
-from google.cloud import bigquery
+from google.cloud import bigquery # type: ignore
 
 
 async def expressionPostProcessing(
@@ -873,8 +873,8 @@ async def mutationPostProcessing(
     # merge
     print("merging WES and WGS")
     folder = constants.WORKING_DIR + samplesetname + "/merged_"
-    if not os.path.exists(constants.WORKING_DIR + samplesetname):
-        os.mkdir(constants.WORKING_DIR + samplesetname)
+    # if not os.path.exists(constants.WORKING_DIR + samplesetname):
+    #     os.mkdir(constants.WORKING_DIR + samplesetname)
 
     mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
         drop=True
