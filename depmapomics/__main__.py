@@ -23,6 +23,8 @@ class Command(object):
         await dm_omics.mutationPostProcessing(
             wesrefworkspace=env_config.WESCNWORKSPACE,
             wgsrefworkspace=env_config.WGSWORKSPACE,
+            run_guidemat=False,
+            run_sv=False, mafcol="depmap_maf_23q4"
         )
 
 

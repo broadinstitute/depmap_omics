@@ -11,6 +11,7 @@ import multiprocessing
 import subprocess
 import pandera as pa
 from tqdm import tqdm
+import numpy as np
 
 
 def annotateLikelyImmortalized(
@@ -79,12 +80,11 @@ def makeMatrices(
     maf,
     homin=0.95,
     id_col=constants.SAMPLEID,
-    hotspot_col=constants.HOTSPOT_COL,
     hugo_col=constants.HUGO_COL,
     lof_col=constants.LIKELY_LOF_COL,
-    ccle_deleterious_col=constants.CCLE_DELETERIOUS_COL,
-    civic_col=constants.CIVIC_SCORE_COL,
     hess_col=constants.HESS_COL,
+    oncokb_hotspot_col=constants.ONCOKB_HOTSPOT_COL,
+    cosmic_tier_col=constants.COSMIC_TIER_COL,
 ):
     """generates genotyped hotspot, driver and damaging mutation matrices
 
@@ -97,7 +97,6 @@ def makeMatrices(
     gene_names = list(maf[hugo_col].unique())
     hotspot_mat = pd.DataFrame(columns=gene_names)
     lof_mat = pd.DataFrame(columns=gene_names)
-    driver_mat = pd.DataFrame(columns=gene_names)
     sample_ids = list(maf[id_col].unique())
     le = len(sample_ids)
     for j in range(le):
@@ -105,7 +104,7 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[subset_maf[hess_col] == True]
+        hotspot = subset_maf[(subset_maf[hess_col] == True) | (subset_maf[oncokb_hotspot_col] == True) | (subset_maf[cosmic_tier_col] == 1)]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
@@ -114,9 +113,7 @@ def makeMatrices(
         hotspot_mat.loc[sample, list(homhotspot)] = "2"
         hotspot_mat.loc[sample, list(hethotspot)] = "1"
         # damaging
-        lof = subset_maf[
-            (subset_maf[lof_col] == True) | (subset_maf[ccle_deleterious_col] == True)
-        ]
+        lof = subset_maf[(subset_maf[lof_col] == True)]
         homlof = set(lof[lof["GT"] == "1|1"][hugo_col])
         for dup in h.dups(lof[hugo_col]):
             if lof[lof[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
@@ -124,26 +121,12 @@ def makeMatrices(
         hetlof = set(lof[hugo_col]) - homlof
         lof_mat.loc[sample, list(homlof)] = "2"
         lof_mat.loc[sample, list(hetlof)] = "1"
-        # driver
-        driver = subset_maf[
-            ((~subset_maf[civic_col].isnull()) & (subset_maf[civic_col] != 0))
-            | (subset_maf[hess_col] == True)
-        ]
-        homdriv = set(driver[driver["GT"] == "1|1"][hugo_col])
-        for dup in h.dups(driver[hugo_col]):
-            if driver[driver[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
-                homdriv.add(dup)
-        hetdriv = set(driver[hugo_col]) - homdriv
-        driver_mat.loc[sample, list(homdriv)] = "2"
-        driver_mat.loc[sample, list(hetdriv)] = "1"
     hotspot_mat = hotspot_mat.dropna(axis="columns", how="all")
     lof_mat = lof_mat.dropna(axis="columns", how="all")
-    driver_mat = driver_mat.dropna(axis="columns", how="all")
     hotspot_mat = hotspot_mat.fillna(0).astype(int)
     lof_mat = lof_mat.fillna(0).astype(int)
-    driver_mat = driver_mat.fillna(0).astype(int)
 
-    return hotspot_mat, lof_mat, driver_mat
+    return hotspot_mat, lof_mat
 
 
 def managingDuplicates(samples, failed, datatype, tracker):
@@ -205,6 +188,9 @@ def aggregateMAFs(
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    for col in sample_table.columns:
+        print(col)
+    print(mafcol)
     sample_table_valid = sample_table[~sample_table[mafcol].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
@@ -275,6 +261,7 @@ def postProcess(
     sv_filename=constants.SV_FILENAME,
     sv_renaming=constants.SV_COLRENAME,
     run_sv=True,
+    debug=False
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
 
@@ -303,17 +290,16 @@ def postProcess(
         sampleset=sampleset,
         mafcol=mafcol,
         keep_cols=constants.MUTCOL_DEPMAP,
+        debug=debug
     )
 
-    # print("annotating likely immortalized status")
-    # mutations = annotateLikelyImmortalized(
-    #     mutations, hotspotcol="cosmic_hotspot", max_recurrence=constants.IMMORTALIZED_THR,
-    # )
+    print("further filtering and standardizing maf")
+    mutations_with_standard_cols = postprocess_main_steps(mutations)
 
     print("saving somatic mutations (all)")
     #  /home/ubuntu/depmap_omics/depmapomics/mutations.py:314:71 - error: Argument of type "None" cannot be assigned to parameter "index" of type "_bool" in function "to_csv"
     #      Type "None" cannot be assigned to type "_bool" (reportGeneralTypeIssues)
-    mutations.to_csv(save_output + "somatic_mutations_all.csv", index=False)
+    mutations_with_standard_cols.to_csv(save_output + "somatic_mutations_all.csv", index=False)
     print("done")
 
     svs = None
@@ -329,7 +315,7 @@ def postProcess(
         print("saving svs (all)")
         svs.to_csv(save_output + "svs_all.csv", index=False)
 
-    return mutations, svs
+    return mutations_with_standard_cols, svs
 
 
 def mapBed(file, vcfdir, guide_df):
@@ -583,17 +569,19 @@ def standardize_maf(maf: pd.DataFrame):
     maf.loc[:, 'InFrame'] = formatted_coords[3]
     maf.loc[:, 'Variant_Classification'] = maf.loc[:, ['variant_info', 'Variant_Type', 'InFrame']].apply(lambda x: GetVariantClassification(*x), axis=1)
 
-    maf.rename(
-        columns={
-            "hugo_symbol": "Hugo_Symbol",
-            "chrom": "Chromosome",
-            "ref": "Reference_Allele",
-            "alt": "Alternate_Allele",
-            "cds_id": "Tumor_Sample_Barcode",
-            "protein_change": "Protein_Change",
-        },
-        inplace=True,
-    )
+    print((maf["pos"] - maf["Start_Position"]).sum())
+    assert (maf["pos"]-maf["Start_Position"]).sum()==0, "Standardizing MAF shifted start position"
+
+    maf["Hugo_Symbol"] = maf["hugo_symbol"]
+    maf["Chromosome"] = maf["chrom"]
+    maf["Reference_Allele"] = maf["ref"]
+    maf["Alternate_Allele"] = maf["alt"]
+
+    try:
+        maf["Tumor_Sample_Barcode"] = maf[constants.SAMPLEID]
+    except KeyError:
+        maf["Tumor_Sample_Barcode"] = maf['CDS_ID']
+    maf["Protein_Change"] = maf["protein_change"]
     maf.loc[:, "NCBI_Build"] = "GRCh38" 
     maf.loc[:, "Center"] = "DepMap" 
     maf.loc[:, "Tumor_Seq_Allele1"] = maf.loc[
@@ -619,7 +607,53 @@ def standardize_maf(maf: pd.DataFrame):
     return maf
 
 
-def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.05, version: str = '23Q4') -> pd.DataFrame:
+def patchEGFR(maf, hugo_col="Hugo_Symbol", protein_col="Protein_Change", inframe_col="InFrame", oncohotspot_col="oncokb_hotspot"):
+    """mark EGFR in frame deletions as hotspots"""
+    topatch = maf[(maf[hugo_col] == "EGFR") & (maf[protein_col].str.endswith("del")) & (maf[inframe_col])].index.tolist()
+    maf.loc[topatch, oncohotspot_col] = True
+    return maf
+
+
+def convertProteinChange(
+    maf,
+    protein_cols=["Protein_Change", "protein_change"],
+    protein_dict=constants.PROTEIN_DICT,
+):
+    """reformat the protein change column to exclude ensembl protein ids,
+    and rename protein code from 3-letter to 1-letter"""
+    for protein_col in protein_cols:
+        maf[protein_col] = maf[protein_col].str.split(":").str[1]
+        maf[protein_col] = maf[protein_col].fillna("")
+        maf[protein_col] = maf[protein_col].replace(protein_dict, regex=True)
+        maf[protein_col] = maf[protein_col].replace(r"^\s*$", np.nan, regex=True)
+
+    return maf
+
+
+def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
+    """pull gene mapping info from biomart, add column for entrez gene id
+    by mapping from ensembl ids"""
+    mybiomart = h.generateGeneNames()
+    mybiomart = mybiomart[~mybiomart.entrezgene_id.isna()]
+    renaming_dict = dict(zip(mybiomart.ensembl_gene_id, mybiomart.entrezgene_id.astype("Int64").astype(str)))
+    print("adding entrez id column")
+    print(maf[ensembl_col])
+    print(maf[ensembl_col].head())
+    maf[entrez_col] = maf[ensembl_col].map(renaming_dict)
+    maf[entrez_col] = maf[entrez_col].fillna("")
+                         
+    return maf
+
+
+def addCols(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
+    """add likely LoF column: true if a variant is high vep impact or likely lof according to oncoKB"""
+    if row[vep_col] == "HIGH" or row[oncoimpact_col] == "Likely Loss-of-function" or row[oncoimpact_col] == "Loss-of-function":
+        return True
+    else:
+        return False
+
+
+def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.1) -> pd.DataFrame:
     """ DepMap postprocessing steps after vcf_to_depmap
 
     Parameter
@@ -631,23 +665,37 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     # force nan to be zero
     maf.loc[:, 'gnomade_af'] = maf.loc[:, 'gnomade_af'].fillna(0)
     maf.loc[:, 'gnomadg_af'] = maf.loc[:, 'gnomadg_af'].fillna(0)
+    print(maf.loc[:, 'gnomade_af'])
 
     # step 1: filter the leftmost synonymous mutation 
     maf = maf.query("~variant_info.str.contains('^synony', regex=True)")
     
     # step 2: less stringent cutoff for gnomad
-    maf = maf.drop(maf.index[((maf.gnomadg_af > adjusted_gnomad_af_cutoff) | (maf.gnomade_af > adjusted_gnomad_af_cutoff))], axis=0)
+    maf = maf[
+        (maf["gnomade_af"] < adjusted_gnomad_af_cutoff)
+        & (maf["gnomadg_af"] < adjusted_gnomad_af_cutoff)
+    ]
 
-    # step 3: format the mutation and remove all silent mutation classes
+    # step 3: remove all silent mutation classes
     #         remove variants without gene symbols
-    #         sort variants by genome position to be compatible with IGV
     maf = standardize_maf(maf)
-    maf = maf.loc[~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "5'UTR", "3'Flank", 'Splice_Region', "5'Flank"]), :]
+    # add rescue for silent mutations that include TERT
+    # because TERT belongs to 5'Flank
+    maf = maf.loc[(~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "5'UTR", "3'Flank", 'Splice_Region', "5'Flank"])) | (maf.rescue), :]
+    # maf = maf.loc[~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "3'Flank", 'Splice_Region']), :]
     maf = maf.loc[~maf.Hugo_Symbol.isnull(), :]
     maf = maf.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
 
-    # optional step: add metadata information
-    # step 4: remove high af from DepMap cohort
+    # step 4: re-annotate missing EGFR hotspots
+    maf = patchEGFR(maf)
+
+    # step 5: convert protein change from 3-letter to 1-letter
+    maf = convertProteinChange(maf)
+
+    # step 6: add likely LoF column based on vep impact and oncokb mutation effect
+    maf["likely_lof"] = maf.apply(addCols, axis=1)
+
+    # step 7: remove high af from DepMap cohort
     internal_afs = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
     total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
     # assume there are very few duplicated variants per sample
@@ -657,6 +705,5 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
         internal_afs_ratio_dict[k] = v / total_samples
     maf.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
     maf = maf.loc[(maf.internal_afs <= max_recurrence) | (maf.rescue), :]
-    maf['version'] = version
     return maf
 

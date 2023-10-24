@@ -15,6 +15,9 @@ from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
+from .mutations import postprocess_main_steps
+from google.cloud import bigquery # type: ignore
+
 
 async def expressionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
@@ -722,6 +725,13 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
+def job_query_to_dataframe(sql, project_id):
+    client = bigquery.Client(project=project_id)
+    query_job = client.query(sql)
+    df = query_job.to_dataframe()
+    return df
+
+
 async def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
@@ -735,6 +745,7 @@ async def mutationPostProcessing(
     sv_col: str = constants.SV_COLNAME,
     sv_filename: str = constants.SV_FILENAME,
     mutcol: dict = constants.MUTCOL_DEPMAP,
+    standardmafcol: dict = constants.MUTCOL_STANDARDMAF,
     mafcol: str = constants.MAF_COL,
     doCleanup: bool = False,
     run_sv: bool = True,
@@ -754,10 +765,31 @@ async def mutationPostProcessing(
         doCleanup (bool, optional): whether to clean up the workspace. Defaults to False.
         upload_taiga (bool, optional): whether to upload to taiga. Defaults to False.
     """
+
     tc = TaigaClient()
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
+
+    # BigQuery for patching noncoding mutation
+    # Only rescue TERT now
+    tert_muts = job_query_to_dataframe(f"SELECT * FROM `depmap-omics.maf_staging.{env_config.table_name}` WHERE hugo_symbol = 'TERT' AND pos >= 1295054 AND pos <= 1295365 AND {env_config.quality_filter}", env_config.project_id)
+    tert_muts.loc[:, 'gnomadg_af'] = tert_muts.loc[:, 'gnomadg_af'].replace('', '0').astype(float)
+    tert_muts.loc[:, 'gnomade_af'] = tert_muts.loc[:, 'gnomade_af'].replace('', '0').astype(float)
+    tert_muts.loc[:, 'rescue'] = True
+
+    tert_muts[["ref_count", "alt_count"]] = tert_muts["ad"].str.split(",", expand=True)
+    # tert_muts.rename({'cds_id': 'DepMap_ID'}, inplace=True)
+    tert_muts.loc[:, 'DepMap_ID'] = tert_muts.loc[:, 'CDS_ID']
+
+    # Turn off internal af filter for TERT
+    tert_mutations_with_standard_cols = postprocess_main_steps(tert_muts, max_recurrence=1.0)
+
+    
+    print('transforming tert maf...')
+    print(tert_mutations_with_standard_cols.head())
+    print(tert_mutations_with_standard_cols.shape)
+    print(tert_mutations_with_standard_cols.columns)
 
     # doing wes
     print("DOING WES")
@@ -773,8 +805,31 @@ async def mutationPostProcessing(
         sv_filename=sv_filename,
         mafcol=mafcol,
         run_sv=run_sv,
+        debug=False,
         **kwargs,
     )
+    # wesmutations.to_csv("wes_test.csv")
+    wesmutations.drop(['0915', '0918'], axis=1, inplace=True)
+
+    tert_mutations_with_standard_cols_wes = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wesmutations.Tumor_Sample_Barcode), wesmutations.columns]
+    print(wesmutations.shape, tert_mutations_with_standard_cols_wes.shape)
+    print(np.setdiff1d(tert_mutations_with_standard_cols_wes.columns, wesmutations.columns))
+
+    print(tert_mutations_with_standard_cols_wes.columns)
+    print(wesmutations.columns)
+
+    assert wesmutations.shape[1] == 98
+    assert tert_mutations_with_standard_cols_wes.shape[1] == 98
+    print((wesmutations.columns == tert_mutations_with_standard_cols_wes.columns).sum())
+    assert (wesmutations.columns == tert_mutations_with_standard_cols_wes.columns).sum() == 98, 'TERT and WES columns mismatch'
+
+    print(tert_mutations_with_standard_cols_wes.shape)
+    wesmutations = pd.concat([
+        wesmutations, 
+        tert_mutations_with_standard_cols_wes,
+        ],
+        axis=0)
+    print(wesmutations.shape)
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
@@ -783,7 +838,7 @@ async def mutationPostProcessing(
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict})
+    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
 
     # doing wgs
     print("DOING WGS")
@@ -797,56 +852,37 @@ async def mutationPostProcessing(
         sv_filename=sv_filename,
         mafcol=mafcol,
         run_sv=run_sv,
+        debug=False,
         **kwargs,
     )
+    wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
+
+    tert_mutations_with_standard_cols_wgs = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wgsmutations.Tumor_Sample_Barcode), wgsmutations.columns]
+    print(tert_mutations_with_standard_cols_wgs.shape)
+
+    wgsmutations = pd.concat([
+        wgsmutations, 
+        tert_mutations_with_standard_cols_wgs
+        ],
+        axis=0)
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict})
+    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
 
     # merge
     print("merging WES and WGS")
     folder = constants.WORKING_DIR + samplesetname + "/merged_"
+    # if not os.path.exists(constants.WORKING_DIR + samplesetname):
+    #     os.mkdir(constants.WORKING_DIR + samplesetname)
+
     mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
         drop=True
     )
 
-    # some hgnc symbols in the maf are outdated, we are renaming them here and then dropping ones that aren't in biomart
-    print("replacing outdated hugo symbols and dropping ones that aren't in biomart")
-    hugo_mapping = pd.read_csv(constants.HGNC_MAPPING, sep="\t")
-    hugo_mapping = {
-        b: a for a, b in hugo_mapping[~hugo_mapping["Previous symbol"].isna()].values
-    }
-
-    mybiomart = h.generateGeneNames()
-    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
-
-    genes_in_maf = set(mergedmutations.hugo_symbol)
-    genes_not_in_biomart = genes_in_maf - set(mybiomart.hgnc_symbol)
-    maf_gene_renaming = dict()
-    maf_genes_to_drop = []
-    for gene in genes_not_in_biomart:
-        # if the hugo symbol in maf is outdated, and the new name is in biomart,
-        # we will rename it to the new name in the maf
-        if gene in hugo_mapping and hugo_mapping[gene] in set(mybiomart.hgnc_symbol):
-            maf_gene_renaming[gene] = hugo_mapping[gene]
-        # if the hugo symbol can't be found in biomart with or without hugo_mapping,
-        # we will drop that gene from the maf
-        else:
-            maf_genes_to_drop.append(gene)
-    mergedmutations = mergedmutations[
-        ~mergedmutations.hugo_symbol.isin(maf_genes_to_drop)
-    ]
-    mergedmutations = mergedmutations.replace({"hugo_symbol": maf_gene_renaming})
-
-    # add entrez id column
-    symbol_to_entrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.entrezgene_id))
-    mergedmutations["EntrezGeneID"] = mergedmutations["hugo_symbol"].map(
-        symbol_to_entrez_dict
-    )
-    mergedmutations["EntrezGeneID"] = mergedmutations["EntrezGeneID"].fillna("Unknown")
-    mergedmutations = mergedmutations.drop(columns=["achilles_top_genes"])
     mergedmutations = mergedmutations.rename(columns=mutcol)
+
+    mergedmutations = mutations.addEntrez(mergedmutations, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
 
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
     # For all columns, convert "Y" to True/False
@@ -856,7 +892,7 @@ async def mutationPostProcessing(
                 mergedmutations[col].values == "Y", True, False
             )
 
-    mergedmutations.to_csv(folder + "somatic_mutations.csv", index=False)
+    mergedmutations[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(folder + "somatic_mutations.csv", index=False)
 
     if run_sv:
         if wgssvs is not None:
@@ -877,35 +913,30 @@ async def mutationPostProcessing(
         if "Y" in merged[col].values:
             merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
 
-    merged["EntrezGeneID"] = merged["hugo_symbol"].map(symbol_to_entrez_dict)
-    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("Unknown")
-    merged = merged.drop(columns=["achilles_top_genes"])
     merged = merged.rename(columns=mutcol)
-    merged.to_csv(folder + "somatic_mutations_profile.csv", index=False)
+    merged = mutations.addEntrez(merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
+    merged.to_csv(folder + "somatic_mutations_all_cols_profile.csv", index=False)
+    merged[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(folder + "somatic_mutations_profile.csv", index=False)
+    merged[standardmafcol.keys()].to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
     # making genotyped mutation matrices
     print("creating mutation matrices")
-    hotspot_mat, lof_mat, driver_mat = mutations.makeMatrices(merged)
+    hotspot_mat, lof_mat = mutations.makeMatrices(merged)
     # add entrez ids to column names
-    mybiomart["gene_name"] = [
-        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
-        if not pd.isna(i["entrezgene_id"])
-        else i["hgnc_symbol"] + " (Unknown)"
-        for _, i in mybiomart.iterrows()
+    merged["gene_name"] = [
+        i["HugoSymbol"] + " (" + str(i["EntrezGeneID"]).split(".")[0] + ")"
+        if i["EntrezGeneID"] != ""
+        else i["HugoSymbol"] + " (Unknown)"
+        for _, i in merged.iterrows()
     ]
-    symbol_to_symbolentrez_dict = dict(zip(mybiomart.hgnc_symbol, mybiomart.gene_name))
+    symbol_to_symbolentrez_dict = dict(zip(merged.HugoSymbol, merged.gene_name))
     hotspot_mat = hotspot_mat.rename(columns=symbol_to_symbolentrez_dict)
     lof_mat = lof_mat.rename(columns=symbol_to_symbolentrez_dict)
-    driver_mat = driver_mat.rename(columns=symbol_to_symbolentrez_dict)
 
     hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
     lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
-    driver_mat.to_csv(folder + "somatic_mutations_genotyped_driver_profile.csv")
 
-    merged = mutations.postprocess_main_steps(merged, version=env_config.version)
     # TODO: add pandera type validation
-
-    merged.to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
 
     if run_guidemat:
         # generate germline binary matrix
@@ -952,12 +983,6 @@ async def mutationPostProcessing(
             dataset_permaname=taiga_dataset,
             upload_files=[
                 {
-                    "path": folder + "somatic_mutations_genotyped_driver_profile.csv",
-                    "name": "somaticMutations_genotypedMatrix_driver_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
                     "path": folder + "somatic_mutations_genotyped_hotspot_profile.csv",
                     "name": "somaticMutations_genotypedMatrix_hotspot_profile",
                     "format": "NumericMatrixCSV",
@@ -977,6 +1002,12 @@ async def mutationPostProcessing(
                 },
                 {
                     "path": folder + "somatic_mutations_profile.maf.csv",
+                    "name": "somaticMutations_profile_maf",
+                    "format": "TableCSV",
+                    "encoding": "utf-8",
+                },
+                {
+                    "path": folder + "somatic_mutations_all_cols_profile.csv",
                     "name": "somaticMutations_profile_maf",
                     "format": "TableCSV",
                     "encoding": "utf-8",
