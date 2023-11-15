@@ -1,4 +1,4 @@
-# Given a set of samples, aggregate the MSISensor2
+# Given a set of samples, aggregate the MSISensor2 repeats per site
 version 1.0
 
 workflow microsatellite_repeats {
@@ -13,12 +13,13 @@ workflow microsatellite_repeats {
     }
 
     call find_n_repeats {
-        msisensor2_output_dis=msisensor2_output_dis,
-        sample_set_id=sample_set_id,
-        memory=memory,
-        num_threads=num_threads,
-        disk_space=disk_space,
-        num_preempt=num_preempt
+        input:
+            msisensor2_output_dis=msisensor2_output_dis,
+            sample_set_id=sample_set_id,
+            memory=memory,
+            num_threads=num_threads,
+            disk_space=disk_space,
+            num_preempt=num_preempt
     }
 
     output {
