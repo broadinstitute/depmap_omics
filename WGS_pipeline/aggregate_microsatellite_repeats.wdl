@@ -40,7 +40,7 @@ task find_n_repeats {
 
     
     command{
-        git clone https://github.com/broadinstitute/depmap_omics.git
+        git clone --branch microsat https://github.com/broadinstitute/depmap_omics.git
         python3 depmap_omics/WGS_pipeline/aggregate_msisensor2_repeats.py ${write_lines(msisensor2_output_dis)} ${sample_set_id}
     }
 
