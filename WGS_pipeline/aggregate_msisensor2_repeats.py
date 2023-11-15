@@ -36,13 +36,22 @@ if __name__=='__main__':
     parser.add_argument('-o', '--output_dir', default='.', help='Output directory')
     args = parser.parse_args()
 
+    print("MSISensor2 Repeat Aggregation")
+
     #get file paths
     with open(args.msisensor2_output_list) as f:
         file_list = f.read().strip().split('\n')
 
+    print(f"Running on {len(file_list)} files")
+
     #find n repeats in each file and combine into a dataframe with rows as microsatellites and columns as models
     ms_repeats = {}
-    for path in file_list:
+    for i, path in enumerate(file_list):
+        if i % 25 == 0: print(i)
         ms_repeats[os.path.split(path)[1].split('.')[0]] = get_n_repeats_from_msisensor2_output_dis(path)
     ms_repeats = pd.concat(ms_repeats, axis=1)
+    print("Created microsatellite site x model matrix with shape {ms_repeats.shape}")
+
+    #write output
     ms_repeats.to_csv(os.path.join(args.output_dir, f"{args.output_prefix}.microsatellite_repeats.csv"))
+    print("Done!")
