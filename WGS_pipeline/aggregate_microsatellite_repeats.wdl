@@ -50,7 +50,7 @@ task find_n_repeats {
     }
 
     runtime {
-        docker: "gcr.io/cds-docker-containers/microsat"
+        docker: "iboylebroad/microsat:latest"
         cpu: "${num_threads}"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
