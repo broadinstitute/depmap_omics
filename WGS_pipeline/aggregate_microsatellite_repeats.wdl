@@ -50,7 +50,7 @@ task find_n_repeats {
     }
 
     runtime {
-        docker: "docker.io/jkobject/ccle_rnaseq:latest"
+        docker: "gcr.io/cds-docker-containers/microsat"
         cpu: "${num_threads}"
         memory: "${memory}GB"
         disks: "local-disk ${disk_space} HDD"
