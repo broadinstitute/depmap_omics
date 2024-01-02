@@ -1008,7 +1008,7 @@ async def mutationPostProcessing(
                 },
                 {
                     "path": folder + "somatic_mutations_all_cols_profile.csv",
-                    "name": "somaticMutations_profile_maf",
+                    "name": "somaticMutations_profile_all_cols",
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
