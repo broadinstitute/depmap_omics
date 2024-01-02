@@ -104,7 +104,11 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[(subset_maf[hess_col] == True) | (subset_maf[oncokb_hotspot_col] == True) | (subset_maf[cosmic_tier_col] == 1)]
+        hotspot = subset_maf[
+            (subset_maf[hess_col] == True)
+            | (subset_maf[oncokb_hotspot_col] == True)
+            | (subset_maf[cosmic_tier_col] == 1)
+        ]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
@@ -204,7 +208,8 @@ def aggregateMAFs(
         # can be 0 once the type is fixed upstream
         # TODO: replace hess_signature later
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
-            print(name + " is missing columns")
+            print(name + " is missing columns:")
+            print(set(keep_cols.keys()) - set(maf.columns))
         all_mafs.append(maf)
         if debug:
             counter += 1
@@ -261,7 +266,7 @@ def postProcess(
     sv_filename=constants.SV_FILENAME,
     sv_renaming=constants.SV_COLRENAME,
     run_sv=True,
-    debug=False
+    debug=False,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
 
@@ -290,7 +295,7 @@ def postProcess(
         sampleset=sampleset,
         mafcol=mafcol,
         keep_cols=constants.MUTCOL_DEPMAP,
-        debug=debug
+        debug=debug,
     )
 
     print("further filtering and standardizing maf")
@@ -299,7 +304,9 @@ def postProcess(
     print("saving somatic mutations (all)")
     #  /home/ubuntu/depmap_omics/depmapomics/mutations.py:314:71 - error: Argument of type "None" cannot be assigned to parameter "index" of type "_bool" in function "to_csv"
     #      Type "None" cannot be assigned to type "_bool" (reportGeneralTypeIssues)
-    mutations_with_standard_cols.to_csv(save_output + "somatic_mutations_all.csv", index=False)
+    mutations_with_standard_cols.to_csv(
+        save_output + "somatic_mutations_all.csv", index=False
+    )
     print("done")
 
     svs = None
@@ -451,50 +458,94 @@ def generateGermlineMatrix(
     return binary_matrices
 
 
-def GetVariantClassification(vep_seq_ontology: str, var_type: str, inframe: bool) -> str:
+def GetVariantClassification(
+    vep_seq_ontology: str, var_type: str, inframe: bool
+) -> str:
     """Map VEP sequence ontology into MAF variant classifications,
-    VEP consequences is ordered by http://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html"""
+    VEP consequences is ordered by http://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
+    """
 
-    if re.match(r"^(splice_acceptor_variant|splice_donor_variant|transcript_ablation|exon_loss_variant)", vep_seq_ontology):
+    if re.match(
+        r"^(splice_acceptor_variant|splice_donor_variant|transcript_ablation|exon_loss_variant)",
+        vep_seq_ontology,
+    ):
         return "Splice_Site"
-    
+
     if re.match(r"^(stop_gained)", vep_seq_ontology):
         return "Nonsense_Mutation"
 
-    if (re.match(r"^(frameshift_variant)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and not inframe)) and (var_type == 'DEL'):
+    if (
+        re.match(r"^(frameshift_variant)", vep_seq_ontology)
+        or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and not inframe)
+    ) and (var_type == "DEL"):
         return "Frame_Shift_Del"
 
-    if (re.match(r"^(frameshift_variant)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and not inframe)) and (var_type == 'INS'):
+    if (
+        re.match(r"^(frameshift_variant)", vep_seq_ontology)
+        or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and not inframe)
+    ) and (var_type == "INS"):
         return "Frame_Shift_Ins"
-    
+
     if re.match(r"^(stop_lost)", vep_seq_ontology):
         return "Nonstop_Mutation"
-    
-    if re.match(r"^(initiator_codon_variant|start_lost)", vep_seq_ontology):
-        return "Translation_Start_Site" 
 
-    if re.match(r"^(inframe_insertion|conservative_inframe_insertion|disruptive_inframe_insertion)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and inframe and (var_type == 'INS')):
+    if re.match(r"^(initiator_codon_variant|start_lost)", vep_seq_ontology):
+        return "Translation_Start_Site"
+
+    if re.match(
+        r"^(inframe_insertion|conservative_inframe_insertion|disruptive_inframe_insertion)",
+        vep_seq_ontology,
+    ) or (
+        re.match(r"^(protein_altering_variant)", vep_seq_ontology)
+        and inframe
+        and (var_type == "INS")
+    ):
         return "In_Frame_Ins"
 
-    if re.match(r"^(inframe_deletion|disruptive_inframe_deletion|conservative_inframe_deletion)", vep_seq_ontology) or (re.match(r"^(protein_altering_variant)", vep_seq_ontology) and inframe and (var_type == 'DEL')):
+    if re.match(
+        r"^(inframe_deletion|disruptive_inframe_deletion|conservative_inframe_deletion)",
+        vep_seq_ontology,
+    ) or (
+        re.match(r"^(protein_altering_variant)", vep_seq_ontology)
+        and inframe
+        and (var_type == "DEL")
+    ):
         return "In_Frame_Del"
 
-    if re.match(r"^(missense_variant|coding_sequence_variant|conservative_missense_variant|rare_amino_acid_variant)", vep_seq_ontology):
+    if re.match(
+        r"^(missense_variant|coding_sequence_variant|conservative_missense_variant|rare_amino_acid_variant)",
+        vep_seq_ontology,
+    ):
         return "Missense_Mutation"
 
-    if re.match(r"^(transcript_amplification|intron_variant|INTRAGENIC|intragenic_variant)", vep_seq_ontology):
+    if re.match(
+        r"^(transcript_amplification|intron_variant|INTRAGENIC|intragenic_variant)",
+        vep_seq_ontology,
+    ):
         return "Intron"
 
-    if re.match(r"^(incomplete_terminal_codon_variant|synonymous_variant|stop_retained_variant|NMD_transcript_variant|start_retained_variant)", vep_seq_ontology):
+    if re.match(
+        r"^(incomplete_terminal_codon_variant|synonymous_variant|stop_retained_variant|NMD_transcript_variant|start_retained_variant)",
+        vep_seq_ontology,
+    ):
         return "Silent"
 
-    if re.match(r"^(splice_region_variant|splice_polypyrimidine_tract_variant|splice_donor_5th_base_variant|splice_donor_region_variant)", vep_seq_ontology):
+    if re.match(
+        r"^(splice_region_variant|splice_polypyrimidine_tract_variant|splice_donor_5th_base_variant|splice_donor_region_variant)",
+        vep_seq_ontology,
+    ):
         return "Splice_Region"
 
-    if re.match(r"^(mature_miRNA_variant|exon_variant|non_coding_exon_variant|non_coding_transcript_exon_variant|non_coding_transcript_variant|nc_transcript_variant|coding_transcript_variant)", vep_seq_ontology):
+    if re.match(
+        r"^(mature_miRNA_variant|exon_variant|non_coding_exon_variant|non_coding_transcript_exon_variant|non_coding_transcript_variant|nc_transcript_variant|coding_transcript_variant)",
+        vep_seq_ontology,
+    ):
         return "RNA"
 
-    if re.match(r"^(5_prime_UTR_variant|5_prime_UTR_premature_start_codon_gain_variant)", vep_seq_ontology):
+    if re.match(
+        r"^(5_prime_UTR_variant|5_prime_UTR_premature_start_codon_gain_variant)",
+        vep_seq_ontology,
+    ):
         return "5'UTR"
 
     if re.match(r"^3_prime_UTR_variant", vep_seq_ontology):
@@ -506,8 +557,11 @@ def GetVariantClassification(vep_seq_ontology: str, var_type: str, inframe: bool
     if re.match(r"^downstream_gene_variant", vep_seq_ontology):
         return "3'Flank"
 
-    if re.match(r"^(TF_binding_site_variant|regulatory_region_variant|regulatory_region|intergenic_variant|intergenic_region)", vep_seq_ontology):
-        return "IGR" 
+    if re.match(
+        r"^(TF_binding_site_variant|regulatory_region_variant|regulatory_region|intergenic_variant|intergenic_region)",
+        vep_seq_ontology,
+    ):
+        return "IGR"
 
     if vep_seq_ontology == "":
         return "NoAnnotation"
@@ -537,7 +591,7 @@ def GetMafEndPosition(start: int, ref: str, alt: str) -> tuple:
         return start, start + len(alt) - 1, var_type, inframe
     elif len(ref) < len(alt):
         # Insertion
-        var_type = "INS";
+        var_type = "INS"
         inframe = abs(len(ref) - len(alt)) % 3 == 0
         if ref == "-":
             return start - 1, start, var_type, inframe
@@ -546,9 +600,8 @@ def GetMafEndPosition(start: int, ref: str, alt: str) -> tuple:
     else:
         # Deletion
         inframe = abs(len(ref) - len(alt)) % 3 == 0
-        var_type = 'DEL'
+        var_type = "DEL"
         return start, start + len(ref) - 1, var_type, inframe
-
 
 
 def standardize_maf(maf: pd.DataFrame):
@@ -557,20 +610,26 @@ def standardize_maf(maf: pd.DataFrame):
     Parameter
     --------------
     maf: pd.DataFrame
-         a data frame that loads all the variants 
-        
-    """
-    formatted_coords = maf.loc[:, ['pos', 'ref', 'alt']].apply(lambda x: GetMafEndPosition(*x), axis=1, result_type="expand")
+         a data frame that loads all the variants
 
-    maf.loc[:, 'Strand'] = '+'
-    maf.loc[:, 'Start_Position'] = formatted_coords[0]
-    maf.loc[:, 'End_Position'] = formatted_coords[1]
-    maf.loc[:, 'Variant_Type'] = formatted_coords[2]
-    maf.loc[:, 'InFrame'] = formatted_coords[3]
-    maf.loc[:, 'Variant_Classification'] = maf.loc[:, ['variant_info', 'Variant_Type', 'InFrame']].apply(lambda x: GetVariantClassification(*x), axis=1)
+    """
+    formatted_coords = maf.loc[:, ["pos", "ref", "alt"]].apply(
+        lambda x: GetMafEndPosition(*x), axis=1, result_type="expand"
+    )
+
+    maf.loc[:, "Strand"] = "+"
+    maf.loc[:, "Start_Position"] = formatted_coords[0]
+    maf.loc[:, "End_Position"] = formatted_coords[1]
+    maf.loc[:, "Variant_Type"] = formatted_coords[2]
+    maf.loc[:, "InFrame"] = formatted_coords[3]
+    maf.loc[:, "Variant_Classification"] = maf.loc[
+        :, ["variant_info", "Variant_Type", "InFrame"]
+    ].apply(lambda x: GetVariantClassification(*x), axis=1)
 
     print((maf["pos"] - maf["Start_Position"]).sum())
-    assert (maf["pos"]-maf["Start_Position"]).sum()==0, "Standardizing MAF shifted start position"
+    assert (
+        maf["pos"] - maf["Start_Position"]
+    ).sum() == 0, "Standardizing MAF shifted start position"
 
     maf["Hugo_Symbol"] = maf["hugo_symbol"]
     maf["Chromosome"] = maf["chrom"]
@@ -580,36 +639,44 @@ def standardize_maf(maf: pd.DataFrame):
     try:
         maf["Tumor_Sample_Barcode"] = maf[constants.SAMPLEID]
     except KeyError:
-        maf["Tumor_Sample_Barcode"] = maf['CDS_ID']
+        maf["Tumor_Sample_Barcode"] = maf["CDS_ID"]
     maf["Protein_Change"] = maf["protein_change"]
-    maf.loc[:, "NCBI_Build"] = "GRCh38" 
-    maf.loc[:, "Center"] = "DepMap" 
-    maf.loc[:, "Tumor_Seq_Allele1"] = maf.loc[
-        :, "Reference_Allele"
-    ] 
+    maf.loc[:, "NCBI_Build"] = "GRCh38"
+    maf.loc[:, "Center"] = "DepMap"
+    maf.loc[:, "Tumor_Seq_Allele1"] = maf.loc[:, "Reference_Allele"]
     maf.loc[:, "Tumor_Seq_Allele2"] = maf.loc[:, "Alternate_Allele"]
     reordered_columns = [
-            "Hugo_Symbol",
-            "NCBI_Build",
-            "Chromosome",
-            "Start_Position",
-            "End_Position",
-            "Variant_Type",
-            "Reference_Allele",
-            "Tumor_Seq_Allele1",
-            "Tumor_Seq_Allele2",
-            "Tumor_Sample_Barcode",
-            "Variant_Classification",
-            "Protein_Change",
-        ] 
+        "Hugo_Symbol",
+        "NCBI_Build",
+        "Chromosome",
+        "Start_Position",
+        "End_Position",
+        "Variant_Type",
+        "Reference_Allele",
+        "Tumor_Seq_Allele1",
+        "Tumor_Seq_Allele2",
+        "Tumor_Sample_Barcode",
+        "Variant_Classification",
+        "Protein_Change",
+    ]
     reordered_columns += list(set(maf.columns) - set(reordered_columns))
     maf = maf.loc[:, reordered_columns]
     return maf
 
 
-def patchEGFR(maf, hugo_col="Hugo_Symbol", protein_col="Protein_Change", inframe_col="InFrame", oncohotspot_col="oncokb_hotspot"):
+def patchEGFR(
+    maf,
+    hugo_col="Hugo_Symbol",
+    protein_col="Protein_Change",
+    inframe_col="InFrame",
+    oncohotspot_col="oncokb_hotspot",
+):
     """mark EGFR in frame deletions as hotspots"""
-    topatch = maf[(maf[hugo_col] == "EGFR") & (maf[protein_col].str.endswith("del")) & (maf[inframe_col])].index.tolist()
+    topatch = maf[
+        (maf[hugo_col] == "EGFR")
+        & (maf[protein_col].str.endswith("del"))
+        & (maf[inframe_col])
+    ].index.tolist()
     maf.loc[topatch, oncohotspot_col] = True
     return maf
 
@@ -635,26 +702,37 @@ def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
     by mapping from ensembl ids"""
     mybiomart = h.generateGeneNames()
     mybiomart = mybiomart[~mybiomart.entrezgene_id.isna()]
-    renaming_dict = dict(zip(mybiomart.ensembl_gene_id, mybiomart.entrezgene_id.astype("Int64").astype(str)))
+    renaming_dict = dict(
+        zip(
+            mybiomart.ensembl_gene_id,
+            mybiomart.entrezgene_id.astype("Int64").astype(str),
+        )
+    )
     print("adding entrez id column")
-    print(maf[ensembl_col])
-    print(maf[ensembl_col].head())
     maf[entrez_col] = maf[ensembl_col].map(renaming_dict)
     maf[entrez_col] = maf[entrez_col].fillna("")
-                         
+
     return maf
 
 
 def addCols(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
     """add likely LoF column: true if a variant is high vep impact or likely lof according to oncoKB"""
-    if row[vep_col] == "HIGH" or row[oncoimpact_col] == "Likely Loss-of-function" or row[oncoimpact_col] == "Loss-of-function":
+    if (
+        row[vep_col] == "HIGH"
+        or row[oncoimpact_col] == "Likely Loss-of-function"
+        or row[oncoimpact_col] == "Loss-of-function"
+    ):
         return True
     else:
         return False
 
 
-def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1e-3, max_recurrence: float = 0.1) -> pd.DataFrame:
-    """ DepMap postprocessing steps after vcf_to_depmap
+def postprocess_main_steps(
+    maf: pd.DataFrame,
+    adjusted_gnomad_af_cutoff: float = 1e-3,
+    max_recurrence: float = 0.1,
+) -> pd.DataFrame:
+    """DepMap postprocessing steps after vcf_to_depmap
 
     Parameter
     ------------
@@ -663,13 +741,12 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
 
     """
     # force nan to be zero
-    maf.loc[:, 'gnomade_af'] = maf.loc[:, 'gnomade_af'].fillna(0)
-    maf.loc[:, 'gnomadg_af'] = maf.loc[:, 'gnomadg_af'].fillna(0)
-    print(maf.loc[:, 'gnomade_af'])
+    maf.loc[:, "gnomade_af"] = maf.loc[:, "gnomade_af"].fillna(0)
+    maf.loc[:, "gnomadg_af"] = maf.loc[:, "gnomadg_af"].fillna(0)
 
-    # step 1: filter the leftmost synonymous mutation 
+    # step 1: filter the leftmost synonymous mutation
     maf = maf.query("~variant_info.str.contains('^synony', regex=True)")
-    
+
     # step 2: less stringent cutoff for gnomad
     maf = maf[
         (maf["gnomade_af"] < adjusted_gnomad_af_cutoff)
@@ -681,7 +758,23 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     maf = standardize_maf(maf)
     # add rescue for silent mutations that include TERT
     # because TERT belongs to 5'Flank
-    maf = maf.loc[(~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "5'UTR", "3'Flank", 'Splice_Region', "5'Flank"])) | (maf.rescue), :]
+    maf = maf.loc[
+        (
+            ~maf.Variant_Classification.isin(
+                [
+                    "Silent",
+                    "RNA",
+                    "Intron",
+                    "5'UTR",
+                    "3'Flank",
+                    "Splice_Region",
+                    "5'Flank",
+                ]
+            )
+        )
+        | (maf.rescue),
+        :,
+    ]
     # maf = maf.loc[~maf.Variant_Classification.isin(['Silent', 'RNA', 'Intron', "3'Flank", 'Splice_Region']), :]
     maf = maf.loc[~maf.Hugo_Symbol.isnull(), :]
     maf = maf.sort_values(by=["Chromosome", "Start_Position", "End_Position"])
@@ -696,7 +789,16 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     maf["likely_lof"] = maf.apply(addCols, axis=1)
 
     # step 7: remove high af from DepMap cohort
-    internal_afs = maf.loc[:, ['Chromosome', 'Start_Position', 'End_Position', 'Tumor_Seq_Allele1', 'Tumor_Seq_Allele2']].apply(lambda x: ':'.join(map(str, x)), axis=1)
+    internal_afs = maf.loc[
+        :,
+        [
+            "Chromosome",
+            "Start_Position",
+            "End_Position",
+            "Tumor_Seq_Allele1",
+            "Tumor_Seq_Allele2",
+        ],
+    ].apply(lambda x: ":".join(map(str, x)), axis=1)
     total_samples = maf.Tumor_Sample_Barcode.unique().shape[0]
     # assume there are very few duplicated variants per sample
     # actually we have total 4 duplicated variants, it is trivial
@@ -706,4 +808,3 @@ def postprocess_main_steps(maf: pd.DataFrame, adjusted_gnomad_af_cutoff: float=1
     maf.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
     maf = maf.loc[(maf.internal_afs <= max_recurrence) | (maf.rescue), :]
     return maf
-
