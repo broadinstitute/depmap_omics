@@ -715,12 +715,21 @@ def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
     return maf
 
 
-def addCols(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
+def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
     """add likely LoF column: true if a variant is high vep impact or likely lof according to oncoKB"""
     if (
         row[vep_col] == "HIGH"
         or row[oncoimpact_col] == "Likely Loss-of-function"
         or row[oncoimpact_col] == "Loss-of-function"
+    ):
+        return True
+    else:
+        return False
+
+def addHotspot(row, hess_col=constants.HESS_COL, oncokb_hotspot_col=constants.ONCOKB_HOTSPOT_COL, cosmic_tier_col=constants.COSMIC_TIER_COL):
+    """add hotspot column: true if a variant is an hotspot in oncoKB, or has been identified in the Hess paper, or is tier 1 in cosmic"""
+    if (
+        (row[hess_col] == True) | (row[oncokb_hotspot_col] == True) | (row[cosmic_tier_col] == 1)
     ):
         return True
     else:
@@ -786,9 +795,12 @@ def postprocess_main_steps(
     maf = convertProteinChange(maf)
 
     # step 6: add likely LoF column based on vep impact and oncokb mutation effect
-    maf["likely_lof"] = maf.apply(addCols, axis=1)
+    maf["likely_lof"] = maf.apply(addLikelyLoF, axis=1)
 
-    # step 7: remove high af from DepMap cohort
+    # step 7: add hotspot column based on 
+    maf["hotspot"] = maf.apply(addHotspot, axis=1)
+
+    # step 8: remove high af from DepMap cohort
     internal_afs = maf.loc[
         :,
         [
