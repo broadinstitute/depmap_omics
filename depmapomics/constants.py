@@ -287,6 +287,8 @@ HUGO_COL = "HugoSymbol"
 
 LIKELY_LOF_COL = "LikelyLoF"
 
+HOTSPOT_COL = "Hotspot"
+
 CCLE_DELETERIOUS_COL = "CCLEDeleterious"
 
 CIVIC_SCORE_COL = "CivicScore"

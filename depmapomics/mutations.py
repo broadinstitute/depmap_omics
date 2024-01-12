@@ -82,9 +82,7 @@ def makeMatrices(
     id_col=constants.SAMPLEID,
     hugo_col=constants.HUGO_COL,
     lof_col=constants.LIKELY_LOF_COL,
-    hess_col=constants.HESS_COL,
-    oncokb_hotspot_col=constants.ONCOKB_HOTSPOT_COL,
-    cosmic_tier_col=constants.COSMIC_TIER_COL,
+    hotspot_col=constants.HOTSPOT_COL,
 ):
     """generates genotyped hotspot, driver and damaging mutation matrices
 
@@ -104,11 +102,7 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[
-            (subset_maf[hess_col] == True)
-            | (subset_maf[oncokb_hotspot_col] == True)
-            | (subset_maf[cosmic_tier_col] == 1)
-        ]
+        hotspot = subset_maf[subset_maf[hotspot_col] == True]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
