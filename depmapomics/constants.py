@@ -366,6 +366,7 @@ MUTCOL_DEPMAP = {
     # 'popaf': 'Popaf',
     # 'likely_gof': 'LikelyGof',
     'likely_lof': 'LikelyLoF',
+    'hotspot': 'Hotspot',
     'hess_driver': 'HessDriver',
     'hess_signture': 'HessSignature',
     'revel_score': 'RevelScore',
