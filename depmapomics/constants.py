@@ -291,9 +291,7 @@ HOTSPOT_COL = "Hotspot"
 
 CCLE_DELETERIOUS_COL = "CCLEDeleterious"
 
-CIVIC_SCORE_COL = "CivicScore"
-
-HESS_COL = "HessDriver"
+HESS_COL = "hess_driver"
 
 ONCOKB_HOTSPOT_COL = "oncokb_hotspot"
 
