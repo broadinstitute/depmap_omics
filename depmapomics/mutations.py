@@ -186,8 +186,6 @@ def aggregateMAFs(
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
-    for col in sample_table.columns:
-        print(col)
     print(mafcol)
     sample_table_valid = sample_table[~sample_table[mafcol].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
@@ -720,15 +718,6 @@ def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
     else:
         return False
 
-def addHotspot(row, hess_col=constants.HESS_COL, oncokb_hotspot_col=constants.ONCOKB_HOTSPOT_COL, cosmic_tier_col=constants.COSMIC_TIER_COL):
-    """add hotspot column: true if a variant is an hotspot in oncoKB, or has been identified in the Hess paper, or is tier 1 in cosmic"""
-    if (
-        (row[hess_col] == True) | (row[oncokb_hotspot_col] == True) | (row[cosmic_tier_col] == 1)
-    ):
-        return True
-    else:
-        return False
-
 
 def postprocess_main_steps(
     maf: pd.DataFrame,
@@ -792,7 +781,12 @@ def postprocess_main_steps(
     maf["likely_lof"] = maf.apply(addLikelyLoF, axis=1)
 
     # step 7: add hotspot column based on 
-    maf["hotspot"] = maf.apply(addHotspot, axis=1)
+    maf["hotspot"] = False
+    maf.loc[((maf[constants.HESS_COL] == "Y")
+        | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
+        | (maf[constants.COSMIC_TIER_COL] == 1)), "hotspot"] = True
+    print("unique hotspot genes: ")
+    print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
 
     # step 8: remove high af from DepMap cohort
     internal_afs = maf.loc[
