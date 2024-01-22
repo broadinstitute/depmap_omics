@@ -550,6 +550,7 @@ task CollectWgsMetrics {
         docker: dockerImage
         time_minutes: timeMinutes
         memory: memory
+        bootDiskSizeGb: 100
     }
     
     parameter_meta {
@@ -1263,7 +1264,7 @@ task EstimateComplexity {
         memory: "~{hardware_memory_GB}G"
         time_minutes: timeMinutes
         docker: dockerImage
-	bootDiskSizeGb: 32
+	    bootDiskSizeGb: 32
         disks: "local-disk 100 HDD"
         preemptible: 2
         maxRetries: 0
