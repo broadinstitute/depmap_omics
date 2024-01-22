@@ -1244,7 +1244,7 @@ task EstimateComplexity {
         Int? hardware_memory_GB = 16
 
         Int timeMinutes = 1 + ceil(size(inputBam, "GiB") * 8)
-        String dockerImage = "broadinstitute/picard:2.25.0"
+        String dockerImage = "broadinstitute/picard:2.27.5"
     }
 
     command {
