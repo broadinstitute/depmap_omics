@@ -7,8 +7,8 @@ import "tasks/mosdepth.wdl" as mosdepth
 
 workflow BamMetrics {
     input {
-        Array[File] bams
-        Array[File] bamIndexes
+        Array[File] bam
+        Array[File] bamIndex
         File referenceFasta
         File referenceFastaDict
         File referenceFastaFai
@@ -28,33 +28,28 @@ workflow BamMetrics {
         allowNestedInputs: true
     }
 
-    Array[Int] mapq = [20]
-    Array[Int] indexes = range(length(bams))
-    scatter(bam_and_index in indexes) {
-	String prefix = outputDir + "/" + basename(bams[bam_and_index], ".bam")
-
         call samtools.Flagstat as Flagstat {
             input:
-                inputBam = bams[bam_and_index],
+                inputBam = bam,
                 outputPath = prefix + ".flagstats",
                 dockerImage = dockerImages["samtools"]
         }
         scatter (q in mapq) {
             call samtools.ViewCount as Count {
             	input:
-            		inputBam = bams[bam_and_index],
+            		inputBam = bam,
             		MAPQthreshold=q
             }
         }
         call picard.EstimateComplexity as Libcomplex {
             input:
-            	inputBam = bams[bam_and_index],
+            	inputBam = bam,
             	metricsPath = prefix + ".libcomplex"
         }
         call picard.CollectWgsMetrics as WgsMetrics {
             input:
-            	inputBam = bams[bam_and_index],
-                inputBamIndex = bamIndexes[bam_and_index],
+            	inputBam = bam,
+                inputBamIndex = bamIndex,
                 referenceFasta = referenceFasta,
                 referenceFastaDict = referenceFastaDict,
                 referenceFastaFai = referenceFastaFai
@@ -82,8 +77,8 @@ workflow BamMetrics {
         # }
         call picard.CollectMultipleMetrics as picardMetrics {
             input:
-            	inputBam = bams[bam_and_index],
-            	inputBamIndex = bamIndexes[bam_and_index],
+            	inputBam = bam,
+            	inputBamIndex = bamIndex,
                 referenceFasta = referenceFasta,
                 referenceFastaDict = referenceFastaDict,
                 referenceFastaFai = referenceFastaFai,
@@ -109,8 +104,8 @@ workflow BamMetrics {
 
     parameter_meta {
         # inputs
-        bams: {description: "The BAM file for which metrics will be collected.", category: "required"}
-        bamIndexes: {description: "The index for the bam file.", category: "required"}
+        bam: {description: "The BAM file for which metrics will be collected.", category: "required"}
+        bamIndex: {description: "The index for the bam file.", category: "required"}
         outputDir: {description: "The directory to which the outputs will be written.", category: "common"}
         referenceFasta: {description: "The reference fasta file.", category: "required"}
         referenceFastaDict: {description: "The sequence dictionary associated with the reference fasta file.", category: "required"}
