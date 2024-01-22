@@ -1237,6 +1237,7 @@ task EstimateComplexity {
     input {
         File inputBam
         String metricsPath
+        File referenceFasta="gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta"
 
         Int javaXmxMb =  6656  # 6.5G
         String memoryMb = javaXmxMb + 512
@@ -1250,6 +1251,7 @@ task EstimateComplexity {
         java "-Xmx${hardware_memory_GB}g" -jar /usr/picard/picard.jar \
         EstimateLibraryComplexity \
         -I ~{inputBam} \
+        -R ~{referenceFasta}
         -O ~{metricsPath}
     }
 
