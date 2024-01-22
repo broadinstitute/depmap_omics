@@ -598,7 +598,7 @@ def maskGenes(
         + " of which were not masked by segdup"
     )
 
-    to_rescue = rescue_list.read().split('\n')
+    to_rescue = open(rescue_list, "r").read().split('\n')
     cnmatrix = cnmatrix.drop(columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
 
     return cnmatrix
