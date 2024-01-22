@@ -547,6 +547,7 @@ task CollectWgsMetrics {
     }
 
     runtime {
+        disks: "local-disk 150 HDD"
         docker: dockerImage
         time_minutes: timeMinutes
         memory: memory
