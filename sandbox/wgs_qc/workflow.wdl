@@ -28,65 +28,67 @@ workflow BamMetrics {
         allowNestedInputs: true
     }
 
-        call samtools.Flagstat as Flagstat {
+    Array[Int] mapq = [20]
+    String prefix = outputDir + "/" + basename(bam, ".bam")
+
+    call samtools.Flagstat as Flagstat {
+        input:
+            inputBam = bam,
+            outputPath = prefix + ".flagstats",
+            dockerImage = dockerImages["samtools"]
+    }
+    scatter (q in mapq) {
+        call samtools.ViewCount as Count {
             input:
-                inputBam = bam,
-                outputPath = prefix + ".flagstats",
-                dockerImage = dockerImages["samtools"]
+                inputBam = bams[bam_and_index],
+                MAPQthreshold=q
         }
-        scatter (q in mapq) {
-            call samtools.ViewCount as Count {
-            	input:
-            		inputBam = bam,
-            		MAPQthreshold=q
-            }
-        }
-        call picard.EstimateComplexity as Libcomplex {
-            input:
-            	inputBam = bam,
-            	metricsPath = prefix + ".libcomplex"
-        }
-        call picard.CollectWgsMetrics as WgsMetrics {
-            input:
-            	inputBam = bam,
-                inputBamIndex = bamIndex,
-                referenceFasta = referenceFasta,
-                referenceFastaDict = referenceFastaDict,
-                referenceFastaFai = referenceFastaFai
-        }
-        # call picard.CollectHsMetrics as CollectHsMetrics {
-        #     input:
-        #     	inputBam = bams[bam_and_index],
-        #     	inputBamIndex = bamIndexes[bam_and_index],
-        #         referenceFasta = referenceFasta,
-        #         referenceFastaDict = referenceFastaDict,
-        #         referenceFastaFai = referenceFastaFai,
-		# targets = targetBed[bam_and_index],
-        #     	basename = prefix
-        # }
-	#Not suitable for WES due to capture of 2% genome
-        #call samtools.Depth as Depth {
-        #    input: inputBam = bams[bam_and_index], bamIndex = bamIndexes[bam_and_index]
-        #}
-        # call mosdepth.Depth as Depth2 {
-        #     input:
-        #     	inputBam = bams[bam_and_index],
-        #     	bamIndex = bamIndexes[bam_and_index],
-		# targetBed = targetBed[bam_and_index],
-        #     	outputPath = prefix + "_depth"
-        # }
-        call picard.CollectMultipleMetrics as picardMetrics {
-            input:
-            	inputBam = bam,
-            	inputBamIndex = bamIndex,
-                referenceFasta = referenceFasta,
-                referenceFastaDict = referenceFastaDict,
-                referenceFastaFai = referenceFastaFai,
-                basename = prefix,
-                collectAlignmentSummaryMetrics = collectAlignmentSummaryMetrics,
-                meanQualityByCycle = meanQualityByCycle,
-                dockerImage = dockerImages["picard"]
-        }
+    }
+    call picard.EstimateComplexity as Libcomplex {
+        input:
+            inputBam = bam,
+            metricsPath = prefix + ".libcomplex"
+    }
+    call picard.CollectWgsMetrics as WgsMetrics {
+        input:
+            inputBam = bam,
+            inputBamIndex = bamIndex,
+            referenceFasta = referenceFasta,
+            referenceFastaDict = referenceFastaDict,
+            referenceFastaFai = referenceFastaFai
+    }
+    # call picard.CollectHsMetrics as CollectHsMetrics {
+    #     input:
+    #     	inputBam = bams[bam_and_index],
+    #     	inputBamIndex = bamIndexes[bam_and_index],
+    #         referenceFasta = referenceFasta,
+    #         referenceFastaDict = referenceFastaDict,
+    #         referenceFastaFai = referenceFastaFai,
+    # targets = targetBed[bam_and_index],
+    #     	basename = prefix
+    # }
+#Not suitable for WES due to capture of 2% genome
+    #call samtools.Depth as Depth {
+    #    input: inputBam = bams[bam_and_index], bamIndex = bamIndexes[bam_and_index]
+    #}
+    # call mosdepth.Depth as Depth2 {
+    #     input:
+    #     	inputBam = bams[bam_and_index],
+    #     	bamIndex = bamIndexes[bam_and_index],
+    # targetBed = targetBed[bam_and_index],
+    #     	outputPath = prefix + "_depth"
+    # }
+    call picard.CollectMultipleMetrics as picardMetrics {
+        input:
+            inputBam = bam,
+            inputBamIndex = bamIndex,
+            referenceFasta = referenceFasta,
+            referenceFastaDict = referenceFastaDict,
+            referenceFastaFai = referenceFastaFai,
+            basename = prefix,
+            collectAlignmentSummaryMetrics = collectAlignmentSummaryMetrics,
+            meanQualityByCycle = meanQualityByCycle,
+            dockerImage = dockerImages["picard"]
     }
 
     output {
