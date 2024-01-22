@@ -558,6 +558,8 @@ def maskGenes(
         .T.to_dict("list")
     )
 
+    to_rescue = open(rescue_list, "r").read().split('\n')
+
     # segdup
     masked_genes_segdup = []
     for g in overlap_segdup.gene_name.unique().tolist():
@@ -598,7 +600,6 @@ def maskGenes(
         + " of which were not masked by segdup"
     )
 
-    to_rescue = open(rescue_list, "r").read().split('\n')
     cnmatrix = cnmatrix.drop(columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
 
     return cnmatrix
