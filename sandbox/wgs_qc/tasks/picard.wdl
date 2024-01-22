@@ -1251,7 +1251,7 @@ task EstimateComplexity {
         java "-Xmx${hardware_memory_GB}g" -jar /usr/picard/picard.jar \
         EstimateLibraryComplexity \
         -I ~{inputBam} \
-        -R ~{referenceFasta}
+        -R ~{referenceFasta} \
         -O ~{metricsPath}
     }
 
