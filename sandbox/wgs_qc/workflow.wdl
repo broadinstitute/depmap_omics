@@ -7,8 +7,8 @@ import "tasks/mosdepth.wdl" as mosdepth
 
 workflow BamMetrics {
     input {
-        Array[File] bam
-        Array[File] bamIndex
+        File bam
+        File bamIndex
         File referenceFasta
         File referenceFastaDict
         File referenceFastaFai
@@ -90,16 +90,16 @@ workflow BamMetrics {
     }
 
     output {
-        Array[File] flagstats = Flagstat.flagstat
+        File flagstats = Flagstat.flagstat
         # Array[File] depth_summary = Depth.result
         # Array[File] depth_summary2 = Depth2.result2
         # Array[File] depth_summary3 = Depth2.result_sum
 
-        Array[File] libcomp = Libcomplex.metricsFile
+        File libcomp = Libcomplex.metricsFile
         # Array[File] HsMetrics = CollectHsMetrics.HsMetrics
-        Array[Array[File]] count = Count.count_stat
-        Array[Array[File]] picardMetricsFiles = picardMetrics.allStats
-        Array[File] wgs_metrics = WgsMetrics.metrics
+        Array[File] count = Count.count_stat
+        Array[File] picardMetricsFiles = picardMetrics.allStats
+        File wgs_metrics = WgsMetrics.metrics
     }
 
     parameter_meta {
