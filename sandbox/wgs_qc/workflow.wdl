@@ -99,7 +99,7 @@ workflow BamMetrics {
 
         File libcomp = Libcomplex.metricsFile
         # Array[File] HsMetrics = CollectHsMetrics.HsMetrics
-        File count = Count.count_stat
+        Array[File] count = Count.count_stat
         Array[File] picardMetricsFiles = picardMetrics.allStats
         File wgs_metrics = WgsMetrics.metrics
     }
