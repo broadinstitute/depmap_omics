@@ -432,6 +432,7 @@ def maskGenes(
     segdup_bed=constants.SEGDUP_BED,
     repeat_bed=constants.RM_BED,
     bedtoolspath=constants.BEDTOOLSPATH,
+    rescue_list=constants.ONCOKB_ONCOGENE_LIST,
 ):
     """given a bed file consisting of highly repeated/duplicated regions, mask
     genes that overlap with those regions (a gene is masked if the portion of its gene
@@ -596,7 +597,8 @@ def maskGenes(
         + " of which were not masked by segdup"
     )
 
-    cnmatrix = cnmatrix.drop(columns=masked_genes_segdup + masked_genes_rm)
+    to_rescue = rescue_list.read().split('\n')
+    cnmatrix = cnmatrix.drop(columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
 
     return cnmatrix
 
