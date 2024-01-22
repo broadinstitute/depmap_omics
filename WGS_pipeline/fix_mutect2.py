@@ -46,6 +46,7 @@ with gzip.open(sys.argv[1], "r+") as f:
                         if line_buff[check_index][6] in [
                             "clustered_events",
                             "clustered_events;haplotype",
+                            "clustered_events;germline;haplotype"
                         ]:
                             n_somatic = 0
                             for neighbor in line_buff:
