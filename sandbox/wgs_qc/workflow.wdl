@@ -40,7 +40,7 @@ workflow BamMetrics {
     scatter (q in mapq) {
         call samtools.ViewCount as Count {
             input:
-                inputBam = bams[bam_and_index],
+                inputBam = bam,
                 MAPQthreshold=q
         }
     }
