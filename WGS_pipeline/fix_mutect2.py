@@ -43,11 +43,9 @@ with gzip.open(sys.argv[1], "r+") as f:
 
                     # Check lines > size_tocheck from current position
                     while abs(line_pos[check_index] - current_pos) > size_tocheck:
-                        if line_buff[check_index][6] in [
-                            "clustered_events",
-                            "clustered_events;haplotype",
-                            "clustered_events;germline;haplotype"
-                        ]:
+
+                        # removes clustered_events flag if <2 events in 100bp region are somatic
+                        if 'clustered_events' in line_buff[check_index][6]:
                             n_somatic = 0
                             for neighbor in line_buff:
                                 if "germline" not in neighbor[6] and abs(
