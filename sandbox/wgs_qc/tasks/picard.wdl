@@ -1263,6 +1263,7 @@ task EstimateComplexity {
     }
 
     runtime {
+        cpu: 16
         memory: "~{hardware_memory_GB}G"
         time_minutes: timeMinutes
         docker: dockerImage
