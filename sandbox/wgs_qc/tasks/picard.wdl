@@ -1242,9 +1242,9 @@ task EstimateComplexity {
         File referenceFasta="gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta"
         File referenceFai="gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
 
-        Int javaXmxMb =  9656  # 6.5G
+        Int javaXmxMb =  12656  # 6.5G
         String memoryMb = javaXmxMb + 10000
-        Int? hardware_memory_GB = 100
+        Int? hardware_memory_GB = 200
 
         Int timeMinutes = 1 + ceil(size(inputBam, "GiB") * 32)
         String dockerImage = "broadinstitute/picard:2.27.5"
