@@ -64,7 +64,7 @@ def main(args=None):
     tobreak = False
 
     loc = os.path.dirname(os.path.abspath(__file__))
-    oncogene = h.fileToList(loc + "/oncokb_dm/data/onocogene_oncokb.txt")
+    oncogene = h.fileToList(loc + "/oncokb_dm/data/oncogene_oncokb.txt")
     tumor_suppressor_list = h.fileToList(
         loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
     )
