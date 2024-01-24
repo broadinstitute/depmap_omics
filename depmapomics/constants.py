@@ -287,11 +287,11 @@ HUGO_COL = "HugoSymbol"
 
 LIKELY_LOF_COL = "LikelyLoF"
 
+HOTSPOT_COL = "Hotspot"
+
 CCLE_DELETERIOUS_COL = "CCLEDeleterious"
 
-CIVIC_SCORE_COL = "CivicScore"
-
-HESS_COL = "HessDriver"
+HESS_COL = "hess_driver"
 
 ONCOKB_HOTSPOT_COL = "oncokb_hotspot"
 
@@ -366,6 +366,7 @@ MUTCOL_DEPMAP = {
     # 'popaf': 'Popaf',
     # 'likely_gof': 'LikelyGof',
     'likely_lof': 'LikelyLoF',
+    'hotspot': 'Hotspot',
     'hess_driver': 'HessDriver',
     'hess_signture': 'HessSignature',
     'revel_score': 'RevelScore',
