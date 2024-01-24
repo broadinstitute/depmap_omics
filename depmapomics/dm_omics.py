@@ -808,7 +808,7 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-    # wesmutations.to_csv("wes_test.csv")
+    
     wesmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
     tert_mutations_with_standard_cols_wes = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wesmutations.Tumor_Sample_Barcode), wesmutations.columns]
@@ -1018,24 +1018,38 @@ async def mutationPostProcessing(
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
-                {
-                    "path": folder + "binary_germline_avana.csv",
-                    "name": "binary_mutation_avana",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "binary_germline_ky.csv",
-                    "name": "binary_mutation_ky",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "binary_germline_humagne.csv",
-                    "name": "binary_mutation_humagne",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
+            ], upload_async=False,
+            dataset_description=taiga_description,)
+        if run_guidemat:
+            tc.update_dataset(
+                changes_description="new " + samplesetname + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "binary_germline_avana.csv",
+                        "name": "binary_mutation_avana",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "binary_germline_ky.csv",
+                        "name": "binary_mutation_ky",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "binary_germline_humagne.csv",
+                        "name": "binary_mutation_humagne",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                ], upload_async=False,
+            dataset_description=taiga_description,)
+        if run_sv:
+            tc.update_dataset(
+                changes_description="new " + samplesetname + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[           
                 {
                     "path": folder + "svs.csv",
                     "name": "structuralVariants_withReplicates",
@@ -1048,7 +1062,5 @@ async def mutationPostProcessing(
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
-            ],
-            upload_async=False,
-            dataset_description=taiga_description,
-        )
+            ], upload_async=False,
+            dataset_description=taiga_description,)
