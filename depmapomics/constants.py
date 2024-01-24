@@ -302,7 +302,7 @@ PROTEIN_DICT = {'Cys': 'C', 'Asp': 'D', 'Ser': 'S', 'Gln': 'Q', 'Lys': 'K',
      'Gly': 'G', 'His': 'H', 'Leu': 'L', 'Arg': 'R', 'Trp': 'W', 
      'Ala': 'A', 'Val':'V', 'Glu': 'E', 'Tyr': 'Y', 'Met': 'M'}
 
-ONCOKB_ONCOGENE_LIST = "depmapomics/tasks/oncokb_dm/data/onocogene_oncokb.txt"
+ONCOKB_ONCOGENE_LIST = "depmapomics/tasks/oncokb_dm/data/oncogene_oncokb.txt"
 
 ONCOKB_TM_LIST = "depmapomics/tasks/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 
