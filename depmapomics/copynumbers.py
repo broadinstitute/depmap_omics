@@ -432,10 +432,12 @@ def maskGenes(
     segdup_bed=constants.SEGDUP_BED,
     repeat_bed=constants.RM_BED,
     bedtoolspath=constants.BEDTOOLSPATH,
+    rescue_list=constants.ONCOKB_ONCOGENE_LIST,
 ):
     """given a bed file consisting of highly repeated/duplicated regions, mask
     genes that overlap with those regions (a gene is masked if the portion of its gene
     body length that overlaps with those regions is higher than maskthresh)"""
+
     # sort and format biomart
     mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
         {"X": "23", "Y": "24", "MT": "25"}
@@ -556,6 +558,8 @@ def maskGenes(
         .T.to_dict("list")
     )
 
+    to_rescue = open(rescue_list, "r").read().split('\n')
+
     # segdup
     masked_genes_segdup = []
     for g in overlap_segdup.gene_name.unique().tolist():
@@ -569,7 +573,7 @@ def maskGenes(
             masked_genes_segdup.append(g)
     print(
         "masking "
-        + str(len(masked_genes_segdup))
+        + str(len(set(masked_genes_segdup) - set(to_rescue)))
         + " genes from "
         + matname
         + " due to segmental duplication"
@@ -586,17 +590,17 @@ def maskGenes(
             masked_genes_rm.append(g)
     print(
         "masking "
-        + str(len(masked_genes_rm))
+        + str(len(set(masked_genes_rm) - set(to_rescue)))
         + " genes from "
         + matname
         + " due to repeat masker, "
     )
     print(
-        str(len(set(masked_genes_rm) - set(masked_genes_segdup)))
+        str(len(set(masked_genes_rm) - set(masked_genes_segdup) - set(to_rescue)))
         + " of which were not masked by segdup"
     )
 
-    cnmatrix = cnmatrix.drop(columns=masked_genes_segdup + masked_genes_rm)
+    cnmatrix = cnmatrix.drop(columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
 
     return cnmatrix
 
