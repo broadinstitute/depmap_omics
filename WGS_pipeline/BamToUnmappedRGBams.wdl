@@ -87,7 +87,8 @@ task RevertSam {
     --VALIDATION_STRINGENCY LENIENT \
     --ATTRIBUTE_TO_CLEAR FT \
     --ATTRIBUTE_TO_CLEAR CO \
-    --SORT_ORDER coordinate
+    --SORT_ORDER coordinate \
+    --RESTORE_HARDCLIPS false
   }
   runtime {
     docker: docker
