@@ -1,16 +1,17 @@
-## Copyright Broad Institute, 2017
+version 1.0
+## Copyright Broad Institute, 2018
+## https://raw.githubusercontent.com/gatk-workflows/seq-format-conversion/3.0.0/bam-to-unmapped-bams.wdl
 ## 
-## This WDL reverts a SAM or BAM file to uBAMs, one per readgroup 
+## This WDL converts BAM  to unmapped BAMs
 ##
 ## Requirements/expectations :
-## - Pair-end sequencing data in SAM or BAM format
-## - One or more read groups
+## - BAM file
 ##
 ## Outputs :
-## - Set of unmapped BAMs, one per read group, with reads sorted by queryname
+## - Sorted Unmapped BAMs
 ##
-## Cromwell version support 
-## - Successfully tested on v27
+## Cromwell version support
+## - Successfully tested on v47
 ## - Does not work on versions < v23 due to output syntax
 ##
 ## Runtime parameters are optimized for Broad's Google Cloud Platform implementation. 
@@ -25,154 +26,109 @@
 ## licensing information pertaining to the included programs.
 
 # WORKFLOW DEFINITION
-workflow BamToUnmappedRGBamsWf {
+workflow BamToUnmappedBams {
+  input {
+    File input_bam
 
-  File ref_fasta
-  File ref_fasta_index
-
-  File input_bam
-
-  String picard_path
-  String picard_docker
-
-  Int preemptible_tries
-
-  # Revert input to unmapped
-  call RevertBamToUnmappedRGBams {
+    Int additional_disk_size = 20
+    String gatk_docker = "broadinstitute/gatk:4.2.6.1"
+    String gatk_path = "/gatk/gatk"
+  }
+    Float input_size = size(input_bam, "GB")
+    
+  call RevertSam {
     input:
       input_bam = input_bam,
-      picard_path = picard_path,
-      docker_image = picard_docker
+      disk_size = ceil(input_size * 3) + additional_disk_size,
+      docker = gatk_docker,
+      gatk_path = gatk_path
   }
 
-  scatter (unmapped_bam in RevertBamToUnmappedRGBams.unmapped_bams) {
+  scatter (unmapped_bam in RevertSam.unmapped_bams) {
+    String output_basename = basename(unmapped_bam, ".coord.sorted.unmapped.bam")
+    Float unmapped_bam_size = size(unmapped_bam, "GB")
 
-    # Get the basename, i.e. strip the filepath and the extension
-    String bam_basename = basename(unmapped_bam, ".bam")
-
-    # Sort the BAM records
-    call SortBamByQueryname {
+    call SortSam {
       input:
         input_bam = unmapped_bam,
-        sorted_bam_name = bam_basename + ".unmapped.bam",
-        picard_path = picard_path,
-        docker_image = picard_docker,
-        preemptible_tries = preemptible_tries
-    }
-
-    # ValidateSamFile
-    call ValidateSamFile {
-      input:
-        input_bam = SortBamByQueryname.sorted_bam,
-        report_filename = bam_basename + ".unmapped.validation_report",
-        picard_path = picard_path,
-        docker_image = picard_docker,
-        preemptible_tries = preemptible_tries
+        sorted_bam_name = output_basename + ".unmapped.bam",
+        disk_size = ceil(unmapped_bam_size * 6) + additional_disk_size,
+        docker = gatk_docker,
+        gatk_path = gatk_path
     }
   }
 
-  # Outputs that will be retained when execution is complete
   output {
-    Array[File] sortsam_out = SortBamByQueryname.sorted_bam
-    Array[File] validatesam_out = ValidateSamFile.report
+    Array[File] output_bams = SortSam.sorted_bam
   }
 }
 
-# TASK DEFINITIONS
+task RevertSam {
+  input {
+    #Command parameters
+    File input_bam
+    String gatk_path
 
-# Revert a BAM to uBAMs, one per readgroup
-task RevertBamToUnmappedRGBams {
-  File input_bam
-  String output_dir
+    #Runtime parameters
+    Int disk_size
+    String docker
+    Int machine_mem_gb = 2
+    Int preemptible_attempts = 3
+  }
+    Int command_mem_gb = machine_mem_gb - 1    ####Needs to occur after machine_mem_gb is set 
 
-  Int disk_size
-  String mem_size
-
-  String docker_image
-  String picard_path
-  String java_opt
-
-  command {
-    java ${java_opt} -jar ${picard_path}picard.jar \
-      RevertSam \
-      INPUT=${input_bam} \
-      O=${output_dir} \
-      OUTPUT_BY_READGROUP=true \
-      VALIDATION_STRINGENCY=LENIENT \
-      ATTRIBUTE_TO_CLEAR=FT \
-      ATTRIBUTE_TO_CLEAR=CO \
-      SORT_ORDER=coordinate
+  command { 
+ 
+    ~{gatk_path} --java-options "-Xmx~{command_mem_gb}g" \
+    RevertSam \
+    --INPUT ~{input_bam} \
+    --OUTPUT ./ \
+    --OUTPUT_BY_READGROUP true \
+    --VALIDATION_STRINGENCY LENIENT \
+    --ATTRIBUTE_TO_CLEAR FT \
+    --ATTRIBUTE_TO_CLEAR CO \
+    --SORT_ORDER coordinate
   }
   runtime {
-    docker: docker_image
+    docker: docker
     disks: "local-disk " + disk_size + " HDD"
-    memory: mem_size 
+    memory: machine_mem_gb + " GB"
+    preemptible: preemptible_attempts
   }
   output {
     Array[File] unmapped_bams = glob("*.bam")
   }
 }
 
-# Sort the BAM records by queryname
-task SortBamByQueryname {
-  File input_bam
-  String sorted_bam_name
-
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
-
-  String docker_image
-  String picard_path
-  String java_opt
+task SortSam {
+  input {
+    #Command parameters
+    File input_bam
+    String sorted_bam_name
+    #Runtime parameters
+    String gatk_path
+    Int disk_size
+    String docker
+    Int machine_mem_gb = 4
+    Int preemptible_attempts = 3
+  }
+    Int command_mem_gb = machine_mem_gb - 1    ####Needs to occur after machine_mem_gb is set 
 
   command {
-    java ${java_opt} -jar ${picard_path}picard.jar \
-      SortSam \
-      INPUT=${input_bam} \
-      OUTPUT=${sorted_bam_name} \
-      SORT_ORDER=queryname \
-      MAX_RECORDS_IN_RAM=1000000
+    ~{gatk_path} --java-options "-Xmx~{command_mem_gb}g" \
+    SortSam \
+    --INPUT ~{input_bam} \
+    --OUTPUT ~{sorted_bam_name} \
+    --SORT_ORDER queryname \
+    --MAX_RECORDS_IN_RAM 1000000
   }
   runtime {
-    docker: docker_image
+    docker: docker
     disks: "local-disk " + disk_size + " HDD"
-    memory: mem_size 
-    preemptible: preemptible_tries
+    memory: machine_mem_gb + " GB"
+    preemptible: preemptible_attempts
   }
   output {
-    File sorted_bam = "${sorted_bam_name}"
-  }
-}
-
-# Check that the BAM format is technically valid
-task ValidateSamFile {
-  File input_bam
-  String report_filename
-
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
-
-  String docker_image
-  String picard_path
-  String java_opt
-
-  command {
-    java ${java_opt} -jar ${picard_path}picard.jar \
-      ValidateSamFile \
-      INPUT=${input_bam} \
-      OUTPUT=${report_filename} \
-      MODE=VERBOSE \
-      IS_BISULFITE_SEQUENCED=false 
-  }
-  runtime {
-    docker: docker_image
-    disks: "local-disk " + disk_size + " HDD"
-    memory: mem_size 
-    preemptible: preemptible_tries 
-  }
-  output {
-    File report = "${report_filename}"
+    File sorted_bam = "~{sorted_bam_name}"
   }
 }
