@@ -854,6 +854,7 @@ def to_maf(
             | (vcf["oncogene_high_impact"])
             | (vcf["tumor_suppressor_high_impact"])
             | (vcf["hess_driver"] == "Y")
+            | ((vcf["hugo_symbol"] == "TERT") & (vcf["pos"] >= 1295054) & (vcf["pos"] <= 1295365))
             )
     if only_coding:
         print("only keeping coding mutations")
