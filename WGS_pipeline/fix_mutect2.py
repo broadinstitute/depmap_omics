@@ -45,13 +45,28 @@ with gzip.open(sys.argv[1], "r+") as f:
                     while abs(line_pos[check_index] - current_pos) > size_tocheck:
 
                         # removes clustered_events flag if <2 events in 100bp region are somatic
-                        if 'clustered_events' in line_buff[check_index][6]:
+                        # print(line_buff[check_index][0])
+                        # print(type(line_buff[check_index][1]))
+                        # print(line_buff[check_index][6])
+                        # if line_buff[check_index][0] == 'chr16' and line_buff[check_index][1] == '72957858':
+                                # print('outside if')
+                                # print(len(line_buff))
+                                # print(check_index)
+                                # print(line_buff)
+                                # print('\n')
+                        # if 'clustered_events' in line_buff[check_index][6]:
+                        if line_buff[check_index][6] in [
+                            "clustered_events",
+                            "clustered_events;haplotype",
+                        ]:      
                             n_somatic = 0
                             for neighbor in line_buff:
                                 if "germline" not in neighbor[6] and abs(
                                     int(neighbor[1]) - line_pos[check_index]
                                 ) <= int(size_tocheck / 2):
                                     n_somatic += 1
+                            # if line_buff[check_index][0] == 'chr16' and line_buff[check_index][1] == '72957858':
+                            #     print(n_somatic)
                             if n_somatic <= 2:
                                 line_buff[check_index][6] = "PASS"
                         check_index += 1
