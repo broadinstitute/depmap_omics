@@ -175,16 +175,11 @@ workflow WGS_pipeline {
             vcf=select_first([mutect2.funcotated_file, mutect2.base_vcf]),
     }
 
-    call fixmutect2.fix_mutect2 as fix_mutect2 {
-        input:
-            sample_id=sample_name,
-            vcf_file=set_GT.vcf_fixedploid
-    }
-
     call annotate_variants.annotateVariants as annotateVariants{
         input:
             sample_id=sample_name,
-            input_vcf=fix_mutect2.vcf_fixed,
+            # input_vcf=fix_mutect2.vcf_fixed,
+            input_vcf=set_GT.vcf_fixedploid,
             bcftools_exclude_string=bcftools_exclude_string,
             hgvs_boot_disk_size=hgvs_boot_disk_size,
             hgvs_disk_space=hgvs_disk_space,
@@ -193,9 +188,17 @@ workflow WGS_pipeline {
             oc_mem=oc_mem
     }
 
+    call fixmutect2.fix_mutect2 as fix_mutect2 {
+        input:
+            sample_id=sample_name,
+            # vcf_file=set_GT.vcf_fixedploid
+            vcf_file=annotateVariants.hgvs_oc_vcf
+    }
+
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
-            input_vcf=annotateVariants.hgvs_oc_vcf,
+            # input_vcf=annotateVariants.hgvs_oc_vcf,
+            input_vcf=fix_mutect2.vcf_fixed,
             sample_id=sample_name,
             version=vcf_to_depmap_version,
             whitelist=whitelist,
