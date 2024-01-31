@@ -725,7 +725,7 @@ def postProcess(
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-    purecn_segments, purecn_genecn, loh_status, failed = pureCNpostprocess(
+    purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
         refworkspace,
         sampleset=purecnsampleset,
         mappingdf=mybiomart,
@@ -734,7 +734,7 @@ def postProcess(
         save_output=save_output,
     )
     feature_table = generateSigTable(
-        refworkspace, todrop=failed, save_output=save_output
+        refworkspace, todrop=purecn_failed, save_output=save_output
     )
     cna_table, feature_table = get_cna_and_aneuploidy(
         purecn_segments,
