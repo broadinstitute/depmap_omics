@@ -40,6 +40,7 @@ workflows:
       branches:
         - dev
         - master
+        - skip-mut-annotation
   - name: WGS_aggregate
     subclass: WDL
     publish: True

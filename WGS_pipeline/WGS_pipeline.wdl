@@ -181,26 +181,26 @@ workflow WGS_pipeline {
             vcf_file=set_GT.vcf_fixedploid
     }
 
-    call annotate_variants.annotateVariants as annotateVariants{
-        input:
-            sample_id=sample_name,
-            input_vcf=fix_mutect2.vcf_fixed,
-            bcftools_exclude_string=bcftools_exclude_string,
-            hgvs_boot_disk_size=hgvs_boot_disk_size,
-            hgvs_disk_space=hgvs_disk_space,
-            oc_boot_disk_size=oc_boot_disk_size,
-            oc_disk_space=oc_disk_space,
-            oc_mem=oc_mem
-    }
+    # call annotate_variants.annotateVariants as annotateVariants{
+    #     input:
+    #         sample_id=sample_name,
+    #         input_vcf=fix_mutect2.vcf_fixed,
+    #         bcftools_exclude_string=bcftools_exclude_string,
+    #         hgvs_boot_disk_size=hgvs_boot_disk_size,
+    #         hgvs_disk_space=hgvs_disk_space,
+    #         oc_boot_disk_size=oc_boot_disk_size,
+    #         oc_disk_space=oc_disk_space,
+    #         oc_mem=oc_mem
+    # }
 
-    call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
-        input:
-            input_vcf=annotateVariants.hgvs_oc_vcf,
-            sample_id=sample_name,
-            version=vcf_to_depmap_version,
-            whitelist=whitelist,
-            docker_image=vcf_to_depmap_docker,
-    }
+    # call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
+    #     input:
+    #         input_vcf=annotateVariants.hgvs_oc_vcf,
+    #         sample_id=sample_name,
+    #         version=vcf_to_depmap_version,
+    #         whitelist=whitelist,
+    #         docker_image=vcf_to_depmap_docker,
+    # }
 
     output {
         # #CNVSomaticPairWorkflow
@@ -279,14 +279,14 @@ workflow WGS_pipeline {
         File msisensor2_output_dis=msisensor2_workflow.msisensor2_output_dis
         File msisensor2_output_somatic=msisensor2_workflow.msisensor2_output_somatic
         # hgvs
-        File hgvs_maf=annotateVariants.hgvs_maf
-        # opencravat
-        File oc_error_file=annotateVariants.oc_error_file
-        File oc_log_file=annotateVariants.oc_log_file
-        File oc_main_file=annotateVariants.hgvs_oc_vcf
-        # File oc_sql_files=open_cravat.oc_sql_file
-        # vcf_to_depmap
-        Array[File] dna_pipeline_main_parquet=my_vcf_to_depmap.full_file
-        File somatic_maf=my_vcf_to_depmap.depmap_maf
+        # File hgvs_maf=annotateVariants.hgvs_maf
+        # # opencravat
+        # File oc_error_file=annotateVariants.oc_error_file
+        # File oc_log_file=annotateVariants.oc_log_file
+        # File oc_main_file=annotateVariants.hgvs_oc_vcf
+        # # File oc_sql_files=open_cravat.oc_sql_file
+        # # vcf_to_depmap
+        # Array[File] dna_pipeline_main_parquet=my_vcf_to_depmap.full_file
+        # File somatic_maf=my_vcf_to_depmap.depmap_maf
     }
 }
