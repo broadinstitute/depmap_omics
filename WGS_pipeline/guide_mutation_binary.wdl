@@ -44,21 +44,21 @@ task guide_mutation {
 
         bcftools query\
             --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
-            --regions-file ${avana_bed}" \
+            --regions-file "${avana_bed}" \
             --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' \
-            ${vcf} > avana_${sample_id}.bed
+            "${vcf}" > avana_${sample_id}.bed
 
         bcftools query\
             --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
-            --regions-file ${humagne_bed}" \
+            --regions-file "${humagne_bed}" \
             --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' \
-            ${vcf} > humagne_${sample_id}.bed
+            "${vcf}" > humagne_${sample_id}.bed
 
         bcftools query\
             --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
-            --regions-file ${ky_bed}" \
+            --regions-file "${ky_bed}" \
             --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' \
-            ${vcf} > ky_${sample_id}.bed
+            "${vcf}" > ky_${sample_id}.bed
         
         gzip ${sample_id}_fixedploidy.vcf
     }
