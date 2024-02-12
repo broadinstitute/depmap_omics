@@ -1,6 +1,6 @@
 version 1.0
 # converts hg19 bams to hg38, and preprocesses it for the following steps (WGS_pipeline)
-import "CramToBam.wdl" as CramToBam
+# import "CramToBam.wdl" as CramToBam
 import "https://raw.githubusercontent.com/gatk-workflows/seq-format-conversion/3.0.0/bam-to-unmapped-bams.wdl" as BamToUnmappedRGBams
 import "https://raw.githubusercontent.com/gatk-workflows/gatk4-data-processing/2.1.1/processing-for-variant-discovery-gatk4.wdl" as PreProcessingForVariantDiscovery_GATK4
 import "ArrayOfFilesToTxt_v1_0.wdl" as ArrayOfFilesToTxt
@@ -9,8 +9,9 @@ workflow WGS_preprocessing {
 
     input {
         #cramtobam
-        File input_cram
-        File input_cram_index
+        # File input_cram
+        # File input_cram_index
+        File bam_file
         String samtools_docker = "biocontainers/samtools:v1.9-4-deb_cv1"
         Boolean requester_pays = false
         #BamToUnmappedRGBams
@@ -41,17 +42,17 @@ workflow WGS_preprocessing {
         String unmapped_bam_suffix = ".bam"
     }
 
-    call CramToBam.CramToBam as CramToBam{
-        input:
-            cram_file = input_cram,
-            reference_fasta = ref_fasta,
-            samtools_docker = samtools_docker,
-            requester_pays = requester_pays,
-    }
+    # call CramToBam.CramToBam as CramToBam{
+    #     input:
+    #         cram_file = input_cram,
+    #         reference_fasta = ref_fasta,
+    #         samtools_docker = samtools_docker,
+    #         requester_pays = requester_pays,
+    # }
 
     call BamToUnmappedRGBams.BamToUnmappedBams as BamToUnmappedBams {
         input:
-            input_bam=CramToBam.bam_file,
+            input_bam=bam_file,
     }
 
     call ArrayOfFilesToTxt.CreateTxt as CreateTxt {
