@@ -939,38 +939,25 @@ async def mutationPostProcessing(
     # TODO: add pandera type validation
 
     if run_guidemat:
-        # generate germline binary matrix
-        wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
-        wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
-        wgs_vcfs = wgs_samples[vcf_colname]
-        wes_vcfs = wes_samples[vcf_colname]
-        vcflist = (
-            wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
-        )
-        vcflist = [v for v in vcflist if v.startswith("gs://")]
+        # aggregate germline binary matrix
+        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName)
+        wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName)
 
-        print("generating germline binary matrix")
-        germline_mats = mutations.generateGermlineMatrix(
-            vcflist,
-            vcfdir=vcfdir,
-            savedir=constants.WORKING_DIR + samplesetname + "/",
-            filename="binary_mutguides.tsv.gz",
-            bed_locations=bed_locations,
-        )
-        for lib, mat in germline_mats.items():
+        for lib, _ in bed_locations.items():
             # merging wes and wgs
             print("renaming merged wes and wgs germline matrix for library: ", lib)
-            germline_mat_noguides = mat.iloc[:, 4:]
+            germline_mat_merged = pd.concat([wes_germline_mats[lib], wgs_germline_mats[lib].iloc[:, 4:]], axis=1)
+            germline_mat_merged_noguides = germline_mat_merged.iloc[:, 4:]
 
             # transform from CDSID-level to PR-level
             whitelist_cols = [
-                x for x in germline_mat_noguides.columns if x in renaming_dict
+                x for x in germline_mat_merged_noguides.columns if x in renaming_dict
             ]
-            whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
+            whitelist_germline_mat = germline_mat_merged_noguides[whitelist_cols]
             mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
 
             mergedmat = mergedmat.astype(bool).astype(int)
-            sorted_mat = mat.iloc[:, :4].join(mergedmat)
+            sorted_mat = germline_mat_merged.iloc[:, :4].join(mergedmat)
             sorted_mat["end"] = sorted_mat["end"].astype(int)
             print("saving merged binary matrix for library: ", lib)
             sorted_mat.to_csv(
