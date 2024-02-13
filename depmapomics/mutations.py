@@ -5,7 +5,6 @@ from mgenepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
-from mgenepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
@@ -323,24 +322,6 @@ def postProcess(
         svs.to_csv(save_output + "svs_all.csv", index=False)
 
     return mutations_with_standard_cols, svs
-
-
-def mapBed(file, vcfdir, guide_df):
-    """map mutations in one vcf file to regions in the guide bed file"""
-
-    bed = pd.read_csv(
-        vcfdir + file,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    bed["foldchange"] = 1
-    name = file.split("/")[-1].split(".")[0].split("_")[1]
-    if len(bed) == 0:
-        return (name, None)
-    val = chip.putInBed(guide_df, bed, mergetype="sum")
-
-    return (name, val)
 
 
 def generateGermlineMatrix(

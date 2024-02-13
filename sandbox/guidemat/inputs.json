@@ -1,4 +1,4 @@
 {
-    "run_guide_mutation.vcf": "/home/ubuntu/depmap_omics/CDS-00rz9N.hg38-filtered.vcf.gz",
-    "run_guide_mutation.sample_id": "CDS-00rz9N"
+    "run_guide_mutation.vcf": "gs://fc-secure-d2a2d895-a7af-4117-bdc7-652d7d268324/f9b61379-98c3-420b-ac3b-ecd5a531ffc7/Mutect2/f719e912-303b-4b6a-8fb9-3e4731847e83/call-Filter/CDS-01bI6z.hg38-filtered.vcf.gz",
+    "run_guide_mutation.sample_id": "CDS-01bI6z"
 }
