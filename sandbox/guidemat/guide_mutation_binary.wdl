@@ -5,7 +5,7 @@ workflow run_guide_mutation {
         String sample_id
         File vcf
         File vcf_index=vcf + ".tbi"
-        String docker="depmapomics:bcftools"
+        String docker="us-docker.pkg.dev/depmap-omics/public/depmapomics:bcftools"
     }
 
     call guide_mutation {
