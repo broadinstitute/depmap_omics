@@ -47,6 +47,7 @@ task fix_mutect2 {
 
     command {
         git clone https://github.com/broadinstitute/depmap_omics.git
+        cd depmap_omics && git checkout fix-mutect2 && git pull && cd ..
         pip install wheel
         pip install bgzip
 
