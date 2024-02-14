@@ -270,6 +270,24 @@ workflows:
     filters: # All tags, no branches
       branches:
         - mask-repeats-and-segdups
+  - name: aggregate_microsatellite_repeats
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/aggregate_microsatellite_repeats.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - microsat
+  - name: wgs_qc
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/wgs_qc/workflow.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - add-wgs-cram-qc
   - name: guide_mutation_binary
     subclass: WDL
     publish: True
