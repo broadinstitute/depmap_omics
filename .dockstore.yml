@@ -40,6 +40,7 @@ workflows:
       branches:
         - dev
         - master
+        - guidemat-wdl
   - name: WGS_aggregate
     subclass: WDL
     publish: True
