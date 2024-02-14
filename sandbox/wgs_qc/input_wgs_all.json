@@ -1,0 +1,27 @@
+{
+    "BamMetrics.bams": [
+        "gs://new-wgs-qc/ICC8.cram",
+        "gs://new-wgs-qc/JEG3.cram",
+        "gs://new-wgs-qc/JR.cram",
+        "gs://new-wgs-qc/CHLA266.cram",
+        "gs://new-wgs-qc/EGI1.cram",
+        "gs://new-wgs-qc/GIMEN.cram",
+        "gs://new-wgs-qc/HEC116.cram",
+        "gs://new-wgs-qc/C99.cram",
+        "gs://new-wgs-qc/C4I.cram"
+    ],
+    "BamMetrics.bamIndexes": [
+        "gs://new-wgs-qc/ICC8.cram.crai",
+        "gs://new-wgs-qc/JEG3.cram.crai",
+        "gs://new-wgs-qc/JR.cram.crai",
+        "gs://new-wgs-qc/CHLA266.cram.crai",
+        "gs://new-wgs-qc/EGI1.cram.crai",
+        "gs://new-wgs-qc/GIMEN.cram.crai",
+        "gs://new-wgs-qc/HEC116.cram.crai",
+        "gs://new-wgs-qc/C99.cram.crai",
+        "gs://new-wgs-qc/C4I.cram.crai"
+    ],
+    "BamMetrics.referenceFasta": "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta",
+    "BamMetrics.referenceFastaDict": "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dict",
+    "BamMetrics.referenceFastaFai": "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
+}
