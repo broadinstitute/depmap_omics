@@ -21,9 +21,9 @@ def mapBed(file, name, guides_fn, lib_name):
     if len(bed) == 0:
         return (name, None)
     val = chip.putInBed(guide_df, bed, mergetype="sum")
+    guide_df = guide_df.sort_values(by=["chrom", "start", "end"]).reset_index(drop=True).rename(columns={"foldchange": "sgRNA"})
     guide_df[name] = val
     guide_df[name] = guide_df[name].astype(bool).astype(int)
-    guide_df = guide_df.sort_values(by=["chrom", "start", "end"]).reset_index(drop=True).rename(columns={"foldchange": "sgRNA"})
     guide_df["end"] = guide_df["end"].astype(int)
     guide_df.to_csv(name + "_" + lib_name + "_mut_binary.csv", index=False)
 
