@@ -1,0 +1,11 @@
+{
+    "BamMetrics.bams": [
+        "gs://new-wgs-qc/C4I.cram"
+    ],
+    "BamMetrics.bamIndexes": [
+        "gs://new-wgs-qc/C4I.cram.crai"
+    ],
+    "BamMetrics.referenceFasta": "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta",
+    "BamMetrics.referenceFastaDict": "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dict",
+    "BamMetrics.referenceFastaFai": "gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
+}

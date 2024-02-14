@@ -217,6 +217,7 @@ workflows:
         - master
         - mutation-annotation-eval
         - update-vcf-to-depmap
+        - add-tert-to-wdl
   - name: vcf2maf
     subclass: WDL
     publish: True
