@@ -278,3 +278,7 @@ workflows:
     filters: # All tags, no branches
       branches:
         - add-wgs-cram-qc
+  - name: aggregate_microsatellite_repeats
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/aggregate_microsatellite_repeats.wdl
