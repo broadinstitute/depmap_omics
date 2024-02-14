@@ -944,6 +944,8 @@ async def mutationPostProcessing(
         wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName)
 
         for lib, _ in bed_locations.items():
+            assert lib in wes_germline_mats, "library missing in wes"
+            assert lib in wgs_germline_mats, "library missing in wgs"
             # merging wes and wgs
             print("renaming merged wes and wgs germline matrix for library: ", lib)
             germline_mat_merged = pd.concat([wes_germline_mats[lib], wgs_germline_mats[lib].iloc[:, 4:]], axis=1)
