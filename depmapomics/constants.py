@@ -112,6 +112,8 @@ GUIDESBED = {
 
 VCFCOLNAME = "mutect2_filtered_vcf"
 
+BINARY_MUT_COLNAME_DICT = {"avana": "avana_binary_mut", "humagne": "humagne_binary_mut", "ky": "ky_binary_mut"}
+
 GENECHANGETHR = 0.025
 
 SEGMENTSTHR = 1500
