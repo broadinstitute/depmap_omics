@@ -40,6 +40,7 @@ workflows:
       branches:
         - dev
         - master
+        - guidemat-wdl
   - name: WGS_aggregate
     subclass: WDL
     publish: True
@@ -288,3 +289,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - add-wgs-cram-qc
+  - name: guide_mutation_binary
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/guidemat/guide_mutation_binary.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - guidemat-wdl
