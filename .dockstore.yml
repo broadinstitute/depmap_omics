@@ -30,6 +30,17 @@ workflows:
       branches:
         - dev
         - master
+  - name: WGS_preprocessing
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dev
+        - master
+        - gulatide
   - name: WGS_pipeline
     subclass: WDL
     publish: True
@@ -40,7 +51,6 @@ workflows:
       branches:
         - dev
         - master
-        - gulatide
   - name: WGS_aggregate
     subclass: WDL
     publish: True
