@@ -9,9 +9,9 @@ workflow WGS_preprocessing {
 
     input {
         #cramtobam
-        # File input_cram
-        # File input_cram_index
-        File bam_file
+        File input_cram
+        File input_cram_index
+        # File bam_file
         String samtools_docker = "biocontainers/samtools:v1.9-4-deb_cv1"
         Boolean requester_pays = false
         #BamToUnmappedRGBams
@@ -21,6 +21,7 @@ workflow WGS_preprocessing {
         #PreProcessingForVariantDiscovery_GATK4
         #https://github.com/gatk-workflows/gatk4-data-processing/blob/c44603c464fe3cb7d9b82da2a95f844fdeb20e3c/processing-for-variant-discovery-gatk4.wdl
         String ref_name
+        File old_ref_fasta
         File ref_fasta
         File ref_fasta_index
         File ref_dict
@@ -42,13 +43,13 @@ workflow WGS_preprocessing {
         String unmapped_bam_suffix = ".bam"
     }
 
-    # call CramToBam.CramToBam as CramToBam{
-    #     input:
-    #         cram_file = input_cram,
-    #         reference_fasta = ref_fasta,
-    #         samtools_docker = samtools_docker,
-    #         requester_pays = requester_pays,
-    # }
+    call CramToBam.CramToBam as CramToBam{
+        input:
+            cram_file = input_cram,
+            reference_fasta = old_ref_fasta,
+            samtools_docker = samtools_docker,
+            requester_pays = requester_pays,
+    }
 
     call BamToUnmappedRGBams.BamToUnmappedBams as BamToUnmappedBams {
         input:
