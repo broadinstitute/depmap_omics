@@ -53,7 +53,7 @@ workflow WGS_preprocessing {
 
     call BamToUnmappedRGBams.BamToUnmappedBams as BamToUnmappedBams {
         input:
-            input_bam=bam_file,
+            input_bam=CramToBam.bam_file,
     }
 
     call ArrayOfFilesToTxt.CreateTxt as CreateTxt {
