@@ -42,17 +42,17 @@ workflow WGS_pipeline {
 
         String gcs_project_for_requester_pays
 
-        # #CNV_Somatic_Workflow_on_Sample
-        # #us.gcr.io/broad-gatk/gatk:4.1.5.0
-        # File common_sites = "gs://ccleparams/references/intervals/common_sites_hg38_lifted.list"
-        # File intervals
-        # File read_count_pon
-        # Boolean is_run_funcotator_for_cnv
-        # Int cnv_preemptible_attempts = 1
-        # Float num_changepoints_penalty_factor = 5
-        # String funcotator_ref_version = "hg38"
-        # File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
-        # File? blacklist_intervals
+        #CNV_Somatic_Workflow_on_Sample
+        #us.gcr.io/broad-gatk/gatk:4.1.5.0
+        File common_sites = "gs://ccleparams/references/intervals/common_sites_hg38_lifted.list"
+        File intervals
+        File read_count_pon
+        Boolean is_run_funcotator_for_cnv
+        Int cnv_preemptible_attempts = 1
+        Float num_changepoints_penalty_factor = 5
+        String funcotator_ref_version = "hg38"
+        File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
+        File? blacklist_intervals
 
         String manta_docker = "wwliao/manta:latest"
         String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
