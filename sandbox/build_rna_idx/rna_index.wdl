@@ -10,16 +10,16 @@ workflow RNAIndex {
 
     call star_build_index {
         input:
-            File fasta,
-            File gtf,
-            String sample_id
+            fasta=fasta,
+            gtf=gtf,
+            sample_id=sample_id
     }
 
     call rsem_build_index {
         input:
-            File fasta,
-            File gtf,
-            String sample_id
+            fasta=fasta,
+            gtf=gtf,
+            sample_id=sample_id
     }
 
     output {
