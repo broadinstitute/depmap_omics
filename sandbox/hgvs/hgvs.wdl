@@ -17,6 +17,9 @@ workflow HgvsWorkflow {
         File snpeff_config = "gs://snpsift_data/snpEff.config"
         File snpsift = "gs://snpsift_data/SnpSift.jar"
 
+        File alphamis = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz"
+        File alphamis_idx = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz.tbi"
+
         File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
@@ -39,7 +42,9 @@ workflow HgvsWorkflow {
             clinvar_data=clinvar_data,
             clinvar_data_tbi=clinvar_data_tbi,
             pLi=pLi,
-            LoF=LoF
+            LoF=LoF,
+            alphamis=alphamis,
+            alphamis_idx=alphamis_idx,
     }
 
     output {
@@ -54,6 +59,8 @@ task annotate_hgvs_task {
         File input_vcf
         File fasta
         File fai
+        File alphamis
+        File alphamis_idx
         File gzi
         File pLi
         File LoF
@@ -100,11 +107,12 @@ task annotate_hgvs_task {
         cp ~{gzi} /tmp
         du -sh /tmp/Homo_sapiens_assembly38.fasta.gz*
        
-        cp ~{pLi} ~{LoF} /tmp
+        cp ~{pLi} ~{LoF} ~{alphamis} ~{alphamis_idx} /tmp
 
         vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf \
             --output_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
+            --plugin AlphaMissense,/tmp/AlphaMissense_hg38.tsv.gz \
             --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
             --pick 
 
