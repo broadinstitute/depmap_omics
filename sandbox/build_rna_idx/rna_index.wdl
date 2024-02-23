@@ -47,7 +47,7 @@ task star_build_index {
 
     command {
         STAR --runThreadN ~{cpu} --runMode genomeGenerate --genomeDir ~{sample_id} --genomeFastaFiles ~{fasta} --sjdbGTFfile ~{gtf} --sjdbOverhang 100
-        tar cvf ~{sample_id}
+        tar cvf ~{sample_id}_star.tar ~{sample_id}
     }
 
     runtime {
@@ -60,7 +60,7 @@ task star_build_index {
     }
 
     output {
-        File output_tar = "~{sample_id}"
+        File output_tar = "~{sample_id}_star.tar"
     }
 }
 
@@ -81,8 +81,9 @@ task rsem_build_index {
     }
 
     command {
+        mkdir ~{sample_id}
         rsem-prepare-reference --gtf ~{gtf} ~{fasta} ~{sample_id}
-        tar cvf ~{sample_id}
+        tar cvf ~{sample_id}_rsem.tar ~{sample_id}
     }
 
     runtime {
@@ -95,6 +96,6 @@ task rsem_build_index {
     }
 
     output {
-        File output_tar = "~{sample_id}"
+        File output_tar = "~{sample_id}_rsem.tar"
     }
 }
