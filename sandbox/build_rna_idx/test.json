@@ -1,5 +1,5 @@
 {
     "RNAIndex.fasta": "test.vcf",
-    "RNAIndex.sample_id": "test"
+    "RNAIndex.sample_id": "test",
     "RNAIndex.gtf": "test.gtf"
 }
