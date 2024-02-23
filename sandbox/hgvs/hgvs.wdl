@@ -98,6 +98,9 @@ task annotate_hgvs_task {
         cp ~{dbsnp_data} ~{dbsnp_data_tbi} ./db/GRCh38/dbsnp/
         java -jar ~{snpsift} Annotate -dbsnp -db ~{dbsnp_data} ~{sample_id}.norm.snpeff.clinvar.vcf > ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf
 
+        mkdir -p /tmp/Plugins
+        wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/111/AlphaMissense.pm -O /tmp/Plugins/AlphaMissense.pm
+
         tar -C /tmp -xvzf ~{vep_data} 
         ls /tmp
         chmod 777 /tmp/homo_sapiens
@@ -108,8 +111,6 @@ task annotate_hgvs_task {
         du -sh /tmp/Homo_sapiens_assembly38.fasta.gz*
        
         cp ~{pLi} ~{LoF} ~{alphamis} ~{alphamis_idx} /tmp
-
-        wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/111/AlphaMissense.pm -O /tmp/Plugins/AlphaMissense.pm
 
         vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf \
             --output_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
