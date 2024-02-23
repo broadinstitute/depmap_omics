@@ -236,6 +236,15 @@ workflows:
     filters: # All tags, no branches
       branches:
         - dev-hgvs
+  - name: rna_index
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/build_rna_idx/rna_index.wdl
+    testParameterFiles:
+      - /sandbox/build_rna_idx/test.json
+    filters: # All tags, no branches
+      branches:
+        - dev-hgvs
   - name: telomere
     subclass: WDL
     publish: True
