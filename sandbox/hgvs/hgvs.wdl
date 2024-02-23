@@ -109,6 +109,8 @@ task annotate_hgvs_task {
        
         cp ~{pLi} ~{LoF} ~{alphamis} ~{alphamis_idx} /tmp
 
+        wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/111/AlphaMissense.pm -O /tmp/Plugins/AlphaMissense.pm
+
         vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf \
             --output_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
