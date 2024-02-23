@@ -112,7 +112,7 @@ task annotate_hgvs_task {
         vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vcf \
             --output_file ~{sample_id}.norm.snpeff.clinvar.dbsnp.vep.vcf \
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
-            --plugin AlphaMissense,/tmp/AlphaMissense_hg38.tsv.gz \
+            --plugin AlphaMissense,file=/tmp/AlphaMissense_hg38.tsv.gz \
             --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
             --pick 
 
