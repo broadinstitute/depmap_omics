@@ -1,0 +1,11 @@
+{
+ "inputs": {
+  "microsatellite_repeats.msisensor2_output_dis": "this.samples.msisensor2_output_dis",
+  "microsatellite_repeats.sample_set_id": "this.sample_set_id"
+ },
+ "outputs": {
+  "microsatellite_repeats.ms_repeats": "this.ms_repeats"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample_set"
+}

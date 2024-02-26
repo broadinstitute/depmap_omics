@@ -99,11 +99,14 @@ def checkMismatches(lod_mat, ref, samples, thr=100):
     print("\n\nsamples that should match but don't:")
     for u in set(samples.ModelID):
         scores = lod_mat.loc[
-            samples[samples.ModelID == u].index,
+            samples[
+                (samples.ModelID == u) & (ref.blacklist != 1) & (ref.profile_blist != 1)
+            ].index,
             ref[
                 (ref.ModelID == u)
                 & (ref.index.isin(lod_mat.columns))
                 & (ref.blacklist != 1)
+                & (ref.profile_blist != 1)
             ].index.tolist(),
         ]
         for i, j in [
@@ -210,6 +213,8 @@ def checkMatches(lod_mat, ref, thr=500):
             and j in ref.index
             and ref.loc[i, "blacklist"] is not True
             and ref.loc[j, "blacklist"] is not True
+            and ref.loc[i, "profile_blist"] is not True
+            and ref.loc[j, "profile_blist"] is not True
         ):
             if i == j:
                 continue

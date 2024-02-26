@@ -1,0 +1,17 @@
+{
+ "inputs": {
+  "annotateVariants.HgvsWorkflow.boot_disk_size": "100",
+  "annotateVariants.HgvsWorkflow.disk_space": "200",
+  "annotateVariants.input_vcf": "this.mutect2_fixed_vcf",
+  "annotateVariants.open_cravat.boot_disk_size": "800",
+  "annotateVariants.open_cravat.disk_space": "800",
+  "annotateVariants.open_cravat.memory": "64",
+  "annotateVariants.sample_id": "this.sample_id"
+ },
+ "outputs": {
+  "annotateVariants.hgvs_maf": "this.hgvs_maf_masked",
+  "annotateVariants.hgvs_oc_vcf": "this.hgvs_oc_vcf_masked"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

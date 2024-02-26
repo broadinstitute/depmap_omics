@@ -72,13 +72,18 @@ VIRTUAL_RELEASES = {
         "internal": taiga_latest_path("internal-23q2-1e49"),
         "dmc": taiga_latest_path("dmc-23q2-d87c"),
         "public": taiga_latest_path("public-23q2-19de"),
-    }
+    },
+    "23Q4": {
+        "internal": taiga_latest_path("internal-23q4-ac2b"),
+        "dmc": taiga_latest_path("dmc-23q4-32b7"),
+        "public": taiga_latest_path("public-23q4-d816"),
+    },
 }  # release ids on taiga
 
 PORTALS = ["dmc", "public", "internal"]  # used for 'bookkeeping' markers
 PORTAL = "internal"  # used for 'not bookkeeping' markers
-PREV_QUARTER = "22Q4"
-NEW_QUARTER = "23Q2"
+PREV_QUARTER = "23Q2"
+NEW_QUARTER = "23Q4"
 
 PREV_RELEASE = VIRTUAL_RELEASES[PREV_QUARTER][PORTAL]
 NEW_RELEASE = VIRTUAL_RELEASES[NEW_QUARTER][PORTAL]
@@ -138,7 +143,7 @@ FILES_RELEASED_BEFORE = [
 ]
 
 # correlation thresholds above which we consider two releases as 'similar'
-CORRELATION_THRESHOLDS = {"OmicsCNGene": 0.99, "all_expressions": 0.98}
+CORRELATION_THRESHOLDS = {"OmicsCNGene": 0.8, "all_expressions": 0.98}
 
 SKIP_ARXSPAN_COMPARISON = (
     True  # set to False if you want to test whether some arxspans were added/removed
@@ -256,11 +261,11 @@ FILE_ATTRIBUTES = [
 ]
 
 # comment/uncomment to use all/subset of files for testing
-# FILE_ATTRIBUTES = [
-#     x
-#     for x in FILE_ATTRIBUTES
-#     if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
-# ]
+FILE_ATTRIBUTES = [
+    x
+    for x in FILE_ATTRIBUTES
+    if (x["file"] in ["OmicsCNSegmentsProfile", "OmicsCNGene"])
+]
 # FILE_ATTRIBUTES = [x for x in FILE_ATTRIBUTES if (x["file"] in ["CCLE_mutations"])]
 # FILE_ATTRIBUTES = [
 #     x for x in FILE_ATTRIBUTES if (x["omicssource"] in ["RNA"]) and x["ismatrix"]

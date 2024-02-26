@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import random
 import string
-from biomart import BiomartServer
 import io
 
 prevshowcount = 100
@@ -43,6 +42,13 @@ def generateGeneNames(
     useCache=False,
     cache_folder="/".join(__file__.split("/")[:-3]) + "/",
     attributes=[],
+    default_attr=[
+        "ensembl_gene_id",
+        "clone_based_ensembl_gene",
+        "hgnc_symbol",
+        "gene_biotype",
+        "entrezgene_id",
+    ],
 ):
     """generate a genelist dataframe from ensembl's biomart
 
@@ -57,13 +63,6 @@ def generateGeneNames(
     Returns:
         [type]: [description]
     """
-    attr = [
-        "ensembl_gene_id",
-        "clone_based_ensembl_gene",
-        "hgnc_symbol",
-        "gene_biotype",
-        "entrezgene_id",
-    ]
     assert cache_folder[-1] == "/"
 
     cache_folder = os.path.expanduser(cache_folder)
@@ -74,16 +73,18 @@ def generateGeneNames(
         res = pd.read_csv(cachefile)
     else:
         print("downloading gene names from biomart")
-        res = _fetchFromServer(ensemble_server, attr + attributes)
+        res = _fetchFromServer(ensemble_server, default_attr + attributes)
         res.to_csv(cachefile, index=False)
 
-    res.columns = attr + attributes
+    res.columns = default_attr + attributes
     if type(res) is not type(pd.DataFrame()):
         raise ValueError("should be a dataframe")
-    res = res[~(res["clone_based_ensembl_gene"].isna() & res["hgnc_symbol"].isna())]
-    res.loc[res[res.hgnc_symbol.isna()].index, "hgnc_symbol"] = res[
-        res.hgnc_symbol.isna()
-    ]["clone_based_ensembl_gene"]
+
+    if "clone_based_ensembl_gene" in default_attr and "hgnc_symbol" in default_attr:
+        res = res[~(res["clone_based_ensembl_gene"].isna() & res["hgnc_symbol"].isna())]
+        res.loc[res[res.hgnc_symbol.isna()].index, "hgnc_symbol"] = res[
+            res.hgnc_symbol.isna()
+        ]["clone_based_ensembl_gene"]
 
     return res
 

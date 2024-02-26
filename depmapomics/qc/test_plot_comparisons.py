@@ -15,9 +15,7 @@ SHARED_DATA_CORRELATION_THRESHOLD = 0.95
 MIN_SAMPLESIZE_FOR_CORR = 10
 
 
-def get_data_stack(
-    file: str, number_of_points: int = 100000, random_state: int = 0
-) -> tuple[pd.DataFrame, tuple[str, str]]:
+def get_data_stack(file: str, number_of_points: int = 100000, random_state: int = 0):
     """Return a stacked combined data frame from two consecutive versions
     with a subsampled set of Model ID and gene pairs.
 
@@ -39,8 +37,8 @@ def get_data_stack(
     """
     data1, data2 = get_both_releases_from_taiga(file)
 
-    row = set(data1.index) & set(data2.index)
-    col = set(data1.columns) & set(data2.columns)
+    row = list(set(data1.index.values) & set(data2.index.values))
+    col = list(set(data1.columns.values) & set(data2.columns.values))
 
     data1_stack = data1.loc[row, col].stack()
     data2_stack = data2.loc[row, col].stack()
@@ -151,7 +149,8 @@ def test_plot_per_gene_means(data, file_attr):
     stats_new = data2.loc[new_lines].mean()
 
     data_compare_stats = pd.concat([stats_old, stats_new], keys=["old", "new"], axis=1)
-    corr = data_compare_stats.corr().iloc[0, 1]
+    # corr = data_compare_stats.corr().iloc[0, 1]
+    corr = data_compare_stats.corr().values[0, 1]
 
     if file_attr["omicssource"] == "RNA":
         data_compare_stats["ERCC"] = data_compare_stats.index.map(

@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 import numpy as np
 
 
@@ -98,6 +99,9 @@ TO_RENAME_OC = {
     "oc_oncokb__hotspot": "hotspot",
     "oc_oncokb__oncogenic": "oncokb_oncogenic",
     ## same
+    "oc_civic__description": "civic_description",
+    "oc_civic__clinical_a_score": "civic_score",
+    "oc_civic__id": "civic_id",
     "oc_pharmgkb__id": "pharmgkb_id",
     "oc_pharmgkb__chemicals": "pharmgkb_chemicals",
     "oc_pharmgkb__pheno_cat": "pharmgkb_pheno_cat",
@@ -113,20 +117,22 @@ TO_RENAME_OC = {
     "oc_gwas_catalog__pmid": "gwas_pmid",
     "oc_ccre_screen___group": "encode_group",
     "oc_ccre_screen__bound": "encode_bound",
+    "oc_cscape__score": "cscape_score",
+    "oc_cscape_coding__score": "cscape_score",
     "oc_brca1_func_assay__score": "brca1_func_score",
+    "oc_dann__score": "dann_score",
+    "oc_dann_coding__dann_coding_score": "dann_score",
     "oc_revel__score": "revel_score",
     "oc_spliceai__ds_ag": "spliceai_ds_ag",
     "oc_spliceai__ds_al": "spliceai_ds_al",
     "oc_spliceai__ds_dg": "spliceai_ds_dg",
     "oc_spliceai__ds_dl": "spliceai_ds_dl",
     "oc_gtex__gtex_gene": "gtex_gene",
+    "oc_funseq2__score": "funseq2_score",
+    "oc_funseq2__motif": "funseq2_motif",
+    "oc_funseq2__hot": "funseq2_hot",
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
-    "oc_cosmic_sig__cosmic_tier": "cosmic_tier",
-    "oc_oncokb__protein_change": "oncokb_protein_change",
-    "oc_oncokb__oncogenic": "oncokb_oncogenic",
-    "oc_oncokb__mutation_effect": "oncokb_mutation_effect",
-    "oc_oncokb__hotspot": "oncokb_hotspot",
 }
 
 TOKEEP_BASE = {
@@ -186,7 +192,10 @@ TOKEEP_ADD = {
     "likely_lof": "str",
     "hess_driver": "str",
     "hess_signture": "str",
+    "cscape_score": "str",
+    "dann_score": "str",
     "revel_score": "str",
+    "funseq2_score": "str",
     "pharmgkb_id": "str",
     "dida_id": "str",
     "dida_name": "str",
@@ -206,7 +215,7 @@ def improve(
     min_count_hotspot=5,
     oncogene_list=[],
     tumor_suppressor_list=[],
-    civic_df=None,
+    civic_df: pd.DataFrame = pd.DataFrame()
 ):
     """
     given a dataframe representing vcf annotated with opencravat, will improve it.
@@ -214,7 +223,7 @@ def improve(
 
     Args:
     -----
-        revel, spliceai, gtex, pharmgkb, dida, gwas_catalog]
+        revel, spliceai, gtex, funseq2, pharmgkb, dida, gwas_catalog]
         vcf: a df from geney.mutations.vcf_to_df(): the input vcf annotated with opencravat
         force_list: list of elements we know have ',' separated values.
         torename: dict(str: str) renaming dict for columns
@@ -292,9 +301,9 @@ def improve(
     vcf = civic_df.merge(vcf, on=["chrom", "pos", "ref", "alt"], how="right")
     vcf = vcf.rename(
         columns={
-            "description": "civic_description",
-            "civic_actionability_score": "civic_clinical_a_score",
-            "civic_id": "civic_id",
+            "description": "oc_civic__description",
+            "civic_actionability_score": "oc_civic__clinical_a_score",
+            "civic_id": "oc_civic__id",
         }
     )
 
@@ -312,29 +321,6 @@ def improve(
             to_add.append("")
     vcf["issues"] = to_add
     todrop = ["dbsnp_asp", "dbsnp_cfl"]
-
-    # defining hotspot
-    vcf["cosmic_hotspot"] = ""
-
-    hotspot_l = []
-    for cosmic_over in list(
-        set(
-            vcf[vcf["cosmic_overlapping_mutations"] != ""][
-                "cosmic_overlapping_mutations"
-            ]
-        )
-    ):
-        # finding the number in " p.I517T(13)", " p.I517T(13), p.G202G(15), p.?(56)"
-        res = sum(
-            [
-                int(val.group(0)[1:-1])
-                for val in re.finditer(r"([(])\d+([)])", cosmic_over)
-            ]
-        )
-        if res > min_count_hotspot:
-            hotspot_l.append(cosmic_over)
-    loc = vcf["cosmic_overlapping_mutations"].isin(hotspot_l)
-    vcf.loc[loc, "cosmic_hotspot"] = "Y"
 
     # ccle_deleterious
     vcf["ccle_deleterious"] = ""
@@ -463,6 +449,21 @@ def improve(
         ].index
         vcf.loc[loc, "lof"] = "Y"
 
+    # likely lof in DANN
+    if (
+        "oc_dann__score" in vcf.columns.tolist()
+        or "oc_dann_coding__dann_coding_score" in vcf.columns.tolist()
+    ):
+        name_score = (
+            "oc_dann__score"
+            if "oc_dann__score" in vcf.columns.tolist()
+            else "oc_dann_coding__dann_coding_score"
+        )
+        # http://www.enlis.com/blog/2015/03/17/the-best-variant-prediction-method-that-no-one-is-using/
+        loc = (vcf[name_score] != "") & (vcf["multiallelic"] != "Y")
+        loc = vcf[loc][vcf[loc][name_score].astype(float) >= 0.96].index
+        vcf.loc[loc, "likely_lof"] = "Y"
+
     # lof revel
     if "oc_revel__score" in vcf.columns.tolist():
         # trancript lof
@@ -478,6 +479,35 @@ def improve(
 
         vcf.loc[loc, "transcript_likely_lof"] = trscs
 
+    # additional defining drivers --> TRAINED ON SOMATIC SO DOING NONSENSE
+    # if (
+    #    "oc_cscape__score" in vcf.columns.tolist()
+    #    or "oc_cscape_coding__score" in vcf.columns.tolist()
+    # ):
+    # score_name = (
+    #    "oc_cscape__score"
+    #    if "oc_cscape__score" in vcf.columns.tolist()
+    #    else "oc_cscape_coding__score"
+    # )
+    # if "likely_driver" not in vcf.columns.tolist():
+    #    vcf["likely_driver"] = ""
+    # subvcf = vcf[(vcf[score_name] != "") & (vcf["multiallelic"] != "Y")][
+    #    ["oc_base__coding", score_name]
+    # ]
+    # vcf.loc[
+    #    subvcf[
+    #        (
+    #            (subvcf["oc_base__coding"] != "")
+    #            & (subvcf[score_name].astype(float) >= 0.89)
+    #        )
+    #        | (
+    #            (subvcf["oc_base__coding"] == "")
+    #            & (subvcf[score_name].astype(float) >= 0.80)
+    #        )
+    #    ].index,
+    #    "likely_driver",
+    # ] = "Y"
+
     # generic annotation
     if "oc_spliceai__ds_ag" in vcf.columns.tolist():
         subvcf = vcf[(vcf["oc_spliceai__ds_ag"] != "") & (vcf["multiallelic"] != "Y")]
@@ -492,6 +522,16 @@ def improve(
     loc_e = []
     if "oc_gtex__gtex_gene" in vcf.columns.tolist():
         loc_e += vcf[vcf["oc_gtex__gtex_gene"] != ""].index.tolist()
+
+    if "oc_funseq2__score" in vcf.columns.tolist():
+        loc = (vcf["oc_funseq2__score"] != "") & (vcf["multiallelic"] != "Y")
+        loc_e += vcf[loc][
+            (vcf[loc].oc_funseq2__score.astype(float) >= 0.5)
+            & (
+                (vcf[loc]["oc_funseq2__motif"] != "")
+                | (vcf[loc]["oc_funseq2__hot"] != "")
+            )
+        ].index.tolist()
 
     vcf.loc[list(set(loc_e)), "associated_with"] += "expression;"
 
