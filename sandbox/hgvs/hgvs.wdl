@@ -48,7 +48,7 @@ workflow HgvsWorkflow {
             pLi=pLi,
             LoF=LoF,
             alphamis=alphamis,
-            alphamis_idx=alphamis_idx,,
+            alphamis_idx=alphamis_idx,
             boot_disk_size=boot_disk_size,
             disk_space=disk_space,
             cpu = cpu,
