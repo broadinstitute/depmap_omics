@@ -271,6 +271,7 @@ workflows:
       branches:
         - merge-annotators
         - master
+        - dev-hgvs
   - name: mask_variants
     subclass: WDL
     publish: True
