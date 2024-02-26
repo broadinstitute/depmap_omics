@@ -389,6 +389,8 @@ MUTCOL_DEPMAP = {
     'provean_prediction': 'ProveanPrediction',
     # 'segdup': 'Segdup',
     # 'rm': 'Rm',
+    'am_class': 'AMClass',
+    'am_pathogenicity': 'AMPathogenicity',
     'rescue': 'Rescue',
     'DepMap_ID': 'DepMap_ID',
  }
