@@ -10,6 +10,8 @@ import pandas as pd
 import os
 from mgenepy import mutations as mut
 from mgenepy.utils import helper as h
+import pybedtools  # type: ignore
+import subprocess
 
 
 def renameColumns(df):
@@ -144,6 +146,95 @@ def managingDuplicates(samples, failed, datatype, tracker, newname="arxspan_id")
     return renaming
 
 
+def arm_call(
+    df,
+    cn_colname="SegmentAbsoluteCN",
+    width_colname="seg_width",
+    ploidy_colname="Ploidy",
+):
+    """determines arm-level CNA. Outputs can be 1 (gain), 0 (neutral), or -1 (loss)"""
+    df = df[~df.arm.isna()]
+    df.sort_values(cn_colname, inplace=True)
+    cumsum = df[width_colname].cumsum()
+    cutoff = df[width_colname].sum() / 2.0
+    median = df[cn_colname][cumsum >= cutoff].iloc[0].round().astype(int)
+
+    ploidy = df[ploidy_colname].iloc[0].round().astype(int)
+    status = 0
+    if median > ploidy:
+        status = 1
+    elif median < ploidy:
+        status = -1
+    return status
+
+
+def get_which_arm(df, start_colname="Start", end_colname="End"):
+    """given a segment, determine which chromosome arm it is on"""
+    df["seg_cent"] = 0.5 * (df[start_colname] + df[end_colname])
+    df["arm"] = None
+    df.loc[df["seg_cent"] < df["cent_start"], "arm"] = "p"
+    df.loc[df["seg_cent"] > df["cent_end"], "arm"] = "q"
+    return df
+
+
+def get_cna_and_aneuploidy(
+    seg,
+    sig_table,
+    cent_filename=constants.HG38_CENTROMERE,
+    id_col=constants.SAMPLEID,
+    ploidy_col="Ploidy",
+    save_output="",
+):
+    """Arm-level CNA matrix and add aneuploidy scores to signature table"""
+    print("generating arm-level CNA and aneuploidy score")
+    # parse centromere file
+    cent = pd.read_csv(cent_filename, sep="\t", index_col=False)
+    cent = (
+        cent[
+            ~(cent["#region_name"].str.startswith("HET"))
+            & (~cent["chr"].isin(["X", "Y"]))
+        ]
+        .drop(columns=["#region_name"])
+        .rename(
+            columns={"chr": "Chromosome", "start": "cent_start", "stop": "cent_end"}
+        )
+    )
+    cent["cent_mid"] = (
+        (0.5 * (cent["cent_start"] + cent["cent_end"])).round().astype(int)
+    )
+    cent["Chromosome"] = cent["Chromosome"].astype(int)
+
+    seg["Chromosome"] = seg["Chromosome"].astype(int)
+    seg["seg_width"] = seg["End"] - seg["Start"]
+    merged_seg = seg.merge(cent, on=["Chromosome"], how="left")
+    sig_table = sig_table.reset_index().rename(columns={"index": id_col})
+    sig_table[ploidy_col] = sig_table[ploidy_col].astype("float")
+    merged_seg = merged_seg.merge(
+        sig_table[[id_col, ploidy_col]], on=[id_col], how="left"
+    )
+
+    seg_with_arm = get_which_arm(merged_seg)
+    seg_with_arm["chrom_arm"] = (
+        seg_with_arm["Chromosome"].astype(str) + seg_with_arm["arm"]
+    )
+
+    cna_table = (
+        seg_with_arm.groupby([id_col, "chrom_arm"]).apply(arm_call).unstack(level=1)
+    )
+    cna_table = cna_table[constants.CNA_ARMS]
+
+    aneuploidy = cna_table.abs().sum(axis=1).to_dict()
+    sig_table["Aneuploidy"] = sig_table[id_col].map(aneuploidy)
+    sig_table = sig_table.set_index(id_col)
+
+    print("Saving arm-level CNA matrix and signature table with aneuploidy score")
+    sig_table.to_csv(save_output + "globalGenomicFeaturesWithAneuploidy_all.csv")
+    cna_table.to_csv(save_output + "arm_cna_all.csv")
+    print("done")
+
+    return cna_table, sig_table
+
+
 def pureCNpostprocess(
     refworkspace,
     sortby=[constants.SAMPLEID, "Chromosome", "Start", "End"],
@@ -239,6 +330,11 @@ def pureCNpostprocess(
         absolute_genecn.values.max(),
     )
 
+    # masking
+    absolute_genecn = maskGenes(
+        absolute_genecn, mappingdf, "absolute CN", save_output=save_output + "purecn_"
+    )
+
     print("PureCN: saving seg and gene cn files")
     segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
@@ -256,6 +352,11 @@ def pureCNpostprocess(
         mappingdf,
         style="closest",
         value_colname="LoHStatus",
+    )
+
+    # masking
+    loh_status = maskGenes(
+        loh_status, mappingdf, "LoH", save_output=save_output + "loh_"
     )
 
     loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
@@ -300,6 +401,7 @@ def generateSigTable(
     )
 
     # rename columns
+    sig_table.index.rename(constants.SAMPLEID, inplace=True)
     sig_table = sig_table.rename(columns=colrenaming)
 
     print("saving global genomic feature table")
@@ -307,6 +409,200 @@ def generateSigTable(
     print("done")
 
     return sig_table
+
+
+def exonUnion(df):
+    """given a dataframe from biomart, take the union of intervals"""
+    sorted_data = sorted(list(zip(df.exon_chrom_start, df.exon_chrom_end)))
+    b = []
+    for begin, end in sorted_data:
+        if b and b[-1][1] >= begin - 1:
+            b[-1][1] = max(b[-1][1], end)
+        else:
+            b.append([begin, end])
+    return b
+
+
+def maskGenes(
+    cnmatrix,
+    mybiomart,
+    matname,
+    save_output="",
+    maskthresh=constants.GENEMASKTHRESH,
+    segdup_bed=constants.SEGDUP_BED,
+    repeat_bed=constants.RM_BED,
+    bedtoolspath=constants.BEDTOOLSPATH,
+    rescue_list=constants.ONCOKB_ONCOGENE_LIST,
+):
+    """given a bed file consisting of highly repeated/duplicated regions, mask
+    genes that overlap with those regions (a gene is masked if the portion of its gene
+    body length that overlaps with those regions is higher than maskthresh)"""
+
+    # sort and format biomart
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
+        {"X": "23", "Y": "24", "MT": "25"}
+    )
+    mybiomart = mybiomart[mybiomart.Chromosome.isin(set(map(str, range(1, 26))))]
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(int)
+    mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
+        {23: "X", 24: "Y", 25: "MT"}
+    )
+    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
+    mybiomart["Chromosome"] = "chr" + mybiomart["Chromosome"].astype(str)
+
+    mybiomart = mybiomart[mybiomart.gene_name.isin(cnmatrix)]
+    mybiomart[["Chromosome", "start", "end", "gene_name"]].to_csv(
+        save_output + "biomart_cngenes.bed", sep="\t", header=False, index=False
+    )
+
+    subprocess.call(
+        [
+            bedtoolspath
+            + "bedtools intersect -a "
+            + save_output
+            + "biomart_cngenes.bed -b "
+            + segdup_bed
+            + " > "
+            + save_output
+            + "mask_overlap_segdup.bed"
+        ],
+        shell=True,
+    )
+
+    overlap_segdup = pd.read_csv(
+        save_output + "mask_overlap_segdup.bed",
+        sep="\t",
+        names=["chrom", "start", "end", "gene_name"],
+    )
+
+    # download and reformat exon info
+    biomart_exon_raw = h.generateGeneNames(
+        attributes=[
+            "chromosome_name",
+            "exon_chrom_start",
+            "exon_chrom_end",
+            "ensembl_gene_id",
+        ],
+        default_attr=[],
+    )
+    biomart_exon = biomart_exon_raw.merge(
+        mybiomart[["ensembl_gene_id", "gene_name"]], on=["ensembl_gene_id"], how="left"
+    )
+    biomart_exon = biomart_exon[biomart_exon.gene_name.isin(cnmatrix)]
+
+    biomart_exon_union = (
+        pd.DataFrame(
+            biomart_exon.groupby(["gene_name"]).apply(exonUnion), columns=["exons"]
+        )
+        .reset_index()
+        .explode("exons")
+        .reset_index(drop=True)
+    )
+    biomart_exon_union = pd.concat(
+        [
+            biomart_exon_union[["gene_name"]],
+            pd.DataFrame(biomart_exon_union["exons"].tolist()).add_prefix("col"),
+        ],
+        axis=1,
+    )
+    biomart_exon_union = biomart_exon_union.merge(
+        biomart_exon[["gene_name", "chromosome_name"]], on=["gene_name"], how="left"
+    )
+    biomart_exon_union["chromosome_name"] = biomart_exon_union[
+        "chromosome_name"
+    ].replace({"X": "23", "Y": "24", "MT": "25"})
+    biomart_exon_union = biomart_exon_union[
+        biomart_exon_union.chromosome_name.isin(set(map(str, range(1, 26))))
+    ]
+    biomart_exon_union["chromosome_name"] = biomart_exon_union[
+        "chromosome_name"
+    ].astype(int)
+    biomart_exon_union = biomart_exon_union.sort_values(
+        by=["chromosome_name", "col0", "col1"]
+    )
+    biomart_exon_union["chromosome_name"] = biomart_exon_union[
+        "chromosome_name"
+    ].replace({23: "X", 24: "Y", 25: "MT"})
+    biomart_exon_union["chromosome_name"] = "chr" + biomart_exon_union[
+        "chromosome_name"
+    ].astype(str)
+
+    biomart_exon_union[["chromosome_name", "col0", "col1", "gene_name"]].to_csv(
+        save_output + "biomart_exons.bed", sep="\t", header=False, index=False
+    )
+
+    subprocess.call(
+        [
+            bedtoolspath
+            + "bedtools intersect -a "
+            + save_output
+            + "biomart_exons.bed -b "
+            + repeat_bed
+            + " > "
+            + save_output
+            + "mask_overlap_rm.bed"
+        ],
+        shell=True,
+    )
+
+    overlap_rm = pd.read_csv(
+        save_output + "mask_overlap_rm.bed",
+        sep="\t",
+        names=["chrom", "start", "end", "gene_name"],
+    )
+
+    gene_dict = (
+        mybiomart[["Chromosome", "start", "end", "gene_name"]]
+        .set_index("gene_name")
+        .T.to_dict("list")
+    )
+
+    to_rescue = open(rescue_list, "r").read().split('\n')
+
+    # segdup
+    masked_genes_segdup = []
+    for g in overlap_segdup.gene_name.unique().tolist():
+        _, start, end = gene_dict[g]
+        gene_length = end - start
+        overlap_length = 0
+        overlap_segments = overlap_segdup[overlap_segdup.gene_name == g]
+        for i, v in overlap_segments.iterrows():
+            overlap_length += v["end"] - v["start"]
+        if overlap_length / gene_length > maskthresh:
+            masked_genes_segdup.append(g)
+    print(
+        "masking "
+        + str(len(set(masked_genes_segdup) - set(to_rescue)))
+        + " genes from "
+        + matname
+        + " due to segmental duplication"
+    )
+
+    # repeat masker
+    masked_genes_rm = []
+    for g in overlap_rm.gene_name.unique().tolist():
+        all_overlaps = overlap_rm[overlap_rm.gene_name == g]
+        exons = biomart_exon_union[biomart_exon_union.gene_name == g]
+        exon_length = exons["col1"].sum() - exons["col0"].sum()
+        overlap_length = all_overlaps["end"].sum() - all_overlaps["start"].sum()
+        if overlap_length / exon_length > maskthresh:
+            masked_genes_rm.append(g)
+    print(
+        "masking "
+        + str(len(set(masked_genes_rm) - set(to_rescue)))
+        + " genes from "
+        + matname
+        + " due to repeat masker, "
+    )
+    print(
+        str(len(set(masked_genes_rm) - set(masked_genes_segdup) - set(to_rescue)))
+        + " of which were not masked by segdup"
+    )
+
+    cnmatrix = cnmatrix.drop(columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
+
+    return cnmatrix
 
 
 def postProcess(
@@ -324,6 +620,7 @@ def postProcess(
     source_rename={},
     useCache=False,
     maxYchrom=constants.MAXYCHROM,
+    bedtoolspath=constants.BEDTOOLSPATH,
 ):
     """post process an aggregated CN segment file, the CCLE way
 
@@ -418,12 +715,21 @@ def postProcess(
     ].reset_index(drop=True)
     genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
 
+    # masking
+    genecn = maskGenes(
+        genecn,
+        mybiomart,
+        "relative CN",
+        save_output=save_output,
+        bedtoolspath=bedtoolspath,
+    )
+
     # saving
     print("saving files")
     segments.to_csv(save_output + "segments_all.csv", index=False)
     genecn.to_csv(save_output + "genecn_all.csv")
     print("done")
-    purecn_segments, purecn_genecn, loh_status, failed = pureCNpostprocess(
+    purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
         refworkspace,
         sampleset=purecnsampleset,
         mappingdf=mybiomart,
@@ -432,7 +738,13 @@ def postProcess(
         save_output=save_output,
     )
     feature_table = generateSigTable(
-        refworkspace, todrop=failed, save_output=save_output
+        refworkspace, todrop=purecn_failed, save_output=save_output
+    )
+    cna_table, feature_table = get_cna_and_aneuploidy(
+        purecn_segments,
+        feature_table,
+        id_col=constants.SAMPLEID,
+        save_output=save_output,
     )
     return (
         segments,
@@ -442,4 +754,5 @@ def postProcess(
         purecn_genecn,
         loh_status,
         feature_table,
+        cna_table,
     )

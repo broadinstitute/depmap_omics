@@ -6,11 +6,12 @@ import "manta_annot.wdl" as manta_annot
 import "mutect2_v4.2.6.1.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
-import "remove_filtered.wdl" as removeFiltered
+import "annotate_variants.wdl" as annotate_variants
 import "vcf_to_depmap.wdl" as vcf_to_depmap
 import "PureCN_pipeline/PureCN.wdl" as PureCN
 import "msisensor2.wdl" as msisensor2
-import "opencravat_dm.wdl" as openCravat
+import "guide_mutation_binary.wdl" as guide_mutation_binary
+
 
 workflow WGS_pipeline {
 
@@ -73,9 +74,20 @@ workflow WGS_pipeline {
         # PureCN
         File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
 
-        #opencravat
-        Array[String] annotators = ["cscape", "civic", "brca1_func_assay", "provean", "dann", "revel", "spliceai", "gtex", "funseq2", "pharmgkb", "dida", "gwas_catalog", "ccre_screen", "alfa"]
-        File oc_modules = "gs://ccleparams/oc_modules.tar"
+        # annotation
+        Int hgvs_boot_disk_size=100
+        Int hgvs_disk_space=200
+        Int oc_boot_disk_size=600
+        Int oc_disk_space=600
+        Int oc_mem=64
+
+        #vcf_to_depmap
+        String vcf_to_depmap_version
+        String vcf_to_depmap_docker="us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:test"
+        Boolean whitelist=true
+
+        #guide_mutation_binary
+        String guide_mutation_docker="us-docker.pkg.dev/depmap-omics/public/depmapomics:bcftools"
     }
 
     call CNV_Somatic_Workflow_on_Sample.CNVSomaticPairWorkflow as CNVSomaticPairWorkflow {
@@ -146,6 +158,13 @@ workflow WGS_pipeline {
             run_orientation_bias_mixture_model_filter=true,
     }
 
+    call guide_mutation_binary.run_guide_mutation as run_guide_mutation{
+        input:
+            sample_id=sample_name,
+            vcf=mutect2.base_vcf,
+            docker=guide_mutation_docker
+    }
+
     # call PureCN.PureCN as PureCN {
     #     input:
     #         sampleID=sample_name,
@@ -173,24 +192,25 @@ workflow WGS_pipeline {
             vcf_file=set_GT.vcf_fixedploid
     }
 
-    call removeFiltered.RemoveFiltered as RemoveFiltered {
+    call annotate_variants.annotateVariants as annotateVariants{
         input:
             sample_id=sample_name,
             input_vcf=fix_mutect2.vcf_fixed,
-            bcftools_exclude_string=bcftools_exclude_string
-    }
-
-    call openCravat.opencravat as open_cravat {
-        input:
-            vcf=RemoveFiltered.output_vcf,
-            annotators_to_use=annotators,
-            oc_modules=oc_modules,
+            bcftools_exclude_string=bcftools_exclude_string,
+            hgvs_boot_disk_size=hgvs_boot_disk_size,
+            hgvs_disk_space=hgvs_disk_space,
+            oc_boot_disk_size=oc_boot_disk_size,
+            oc_disk_space=oc_disk_space,
+            oc_mem=oc_mem
     }
 
     call vcf_to_depmap.vcf_to_depmap as my_vcf_to_depmap {
         input:
-            input_vcf=open_cravat.oc_main_file,
+            input_vcf=annotateVariants.hgvs_oc_vcf,
             sample_id=sample_name,
+            version=vcf_to_depmap_version,
+            whitelist=whitelist,
+            docker_image=vcf_to_depmap_docker,
     }
 
     output {
@@ -269,13 +289,19 @@ workflow WGS_pipeline {
         File msisensor2_output=msisensor2_workflow.msisensor2_output
         File msisensor2_output_dis=msisensor2_workflow.msisensor2_output_dis
         File msisensor2_output_somatic=msisensor2_workflow.msisensor2_output_somatic
+        # hgvs
+        File hgvs_maf=annotateVariants.hgvs_maf
         # opencravat
-        File oc_error_file=open_cravat.oc_error_file
-        File oc_log_file=open_cravat.oc_log_file
-        File oc_main_file=open_cravat.oc_main_file
+        File oc_error_file=annotateVariants.oc_error_file
+        File oc_log_file=annotateVariants.oc_log_file
+        File oc_main_file=annotateVariants.hgvs_oc_vcf
         # File oc_sql_files=open_cravat.oc_sql_file
         # vcf_to_depmap
         Array[File] dna_pipeline_main_parquet=my_vcf_to_depmap.full_file
         File somatic_maf=my_vcf_to_depmap.depmap_maf
+        # guide_mutation_binary
+        File avana_guide_mutation_matrix = run_guide_mutation.avana_binary_mut
+        File humagne_guide_mutation_matrix = run_guide_mutation.humagne_binary_mut
+        File ky_guide_mutation_matrix = run_guide_mutation.ky_binary_mut
     }
 }

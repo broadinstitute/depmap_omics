@@ -214,3 +214,11 @@ gcs_cache
 *vcf
 *BamMetrics
 modules/
+*.vcf.gz
+*fasta*
+*pdf
+*clinvar*
+*gz
+*tbi
+
+guidemat_test/

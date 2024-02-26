@@ -1,6 +1,6 @@
-SAMPLESETNAME = "23Q2"
+SAMPLESETNAME = "23Q4"
 
-RELEASE = "23q2"
+RELEASE = "23q4"
 
 WORKING_DIR = "output/"
 
@@ -112,6 +112,8 @@ GUIDESBED = {
 
 VCFCOLNAME = "mutect2_filtered_vcf"
 
+BINARY_MUT_COLNAME_DICT = {"avana": "avana_binary_mut", "humagne": "humagne_binary_mut", "ky": "ky_binary_mut"}
+
 GENECHANGETHR = 0.025
 
 SEGMENTSTHR = 1500
@@ -177,6 +179,58 @@ SIGTABLE_RENAMING = {
     "msisensor2_score": "MSIScore",
 }
 
+HG38_CENTROMERE = "data/Modeled_regions_for_GRCh38.tsv"
+
+CNA_ARMS = [
+    "1p",
+    "1q",
+    "2p",
+    "2q",
+    "3p",
+    "3q",
+    "4p",
+    "4q",
+    "5p",
+    "5q",
+    "6p",
+    "6q",
+    "7p",
+    "7q",
+    "8p",
+    "8q",
+    "9p",
+    "9q",
+    "10p",
+    "10q",
+    "11p",
+    "11q",
+    "12p",
+    "12q",
+    "13q",
+    "14q",
+    "15q",
+    "16p",
+    "16q",
+    "17p",
+    "17q",
+    "18p",
+    "18q",
+    "19p",
+    "19q",
+    "20p",
+    "20q",
+    "21q",
+    "22q",
+]
+
+GENEMASKTHRESH = 0.5
+
+SEGDUP_BED = "data/segDup_majorAllele_withAltContigs_98pcFracMatch_merged.bed"
+
+RM_BED = "data/repeatMasker_max10_noAlt_merged.bed"
+
+BEDTOOLSPATH = "~/bin/bedtools2/bin/"
+
 MINFREQTOCALL = 0.25
 
 SV_COLNAME = "somatic_annotated_sv"
@@ -229,74 +283,131 @@ CHROM_COL = "Chrom"
 
 POS_COL = "Pos"
 
-HOTSPOT_COL = "CosmicHotspot"
-
 IMMORTALIZED_THR = 0.05
 
 HUGO_COL = "HugoSymbol"
 
 LIKELY_LOF_COL = "LikelyLoF"
 
+HOTSPOT_COL = "Hotspot"
+
 CCLE_DELETERIOUS_COL = "CCLEDeleterious"
 
-CIVIC_SCORE_COL = "CivicScore"
+HESS_COL = "hess_driver"
 
-HESS_COL = "HessDriver"
+ONCOKB_HOTSPOT_COL = "oncokb_hotspot"
+
+COSMIC_TIER_COL = "cosmic_tier"
+
+PROTEIN_DICT = {'Cys': 'C', 'Asp': 'D', 'Ser': 'S', 'Gln': 'Q', 'Lys': 'K',
+     'Ile': 'I', 'Pro': 'P', 'Thr': 'T', 'Phe': 'F', 'Asn': 'N', 
+     'Gly': 'G', 'His': 'H', 'Leu': 'L', 'Arg': 'R', 'Trp': 'W', 
+     'Ala': 'A', 'Val':'V', 'Glu': 'E', 'Tyr': 'Y', 'Met': 'M'}
+
+ONCOKB_ONCOGENE_LIST = "depmapomics/tasks/oncokb_dm/data/oncogene_oncokb.txt"
+
+ONCOKB_TM_LIST = "depmapomics/tasks/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 
 MUTCOL_DEPMAP = {
-    "chrom": "Chrom",
-    "pos": "Pos",
-    "ref": "Ref",
-    "alt": "Alt",
-    "af": "AF",
-    "ref_count": "RefCount",
-    "alt_count": "AltCount",
-    "gt": "GT",
-    "ps": "PS",
-    "variant_type": "VariantType",
-    "variant_info": "VariantInfo",
-    "dna_change": "DNAChange",
-    "protein_change": "ProteinChange",
-    "hugo_symbol": "HugoSymbol",
-    "hgnc_name": "HgncName",
-    "hgnc_family": "HgncFamily",
-    "transcript": "Transcript",
-    "transcript_exon": "TranscriptExon",
-    "transcript_strand": "TranscriptStrand",
-    "uniprot_id": "UniprotID",
-    "str": "Str",
-    "dbsnp_id": "DbsnpID",
-    "dbsnp_filter": "DbsnpFilter",
-    "issues": "Issues",
-    "gc_content": "GcContent",
-    "lineage_association": "LineageAssociation",
-    "cancer_molecular_genetics": "CancerMolecularGenetics",
-    "ccle_deleterious": "CCLEDeleterious",
-    "structural_relation": "StructuralRelation",
-    "cosmic_hotspot": "CosmicHotspot",
-    "cosmic_overlapping_mutations": "CosmicOverlappingMutations",
-    "associated_with": "AssociatedWith",
-    "lof": "LoF",
-    "driver": "Driver",
-    "likely_driver": "LikelyDriver",
-    "transcript_likely_lof": "TranscriptLikelyLoF",
-    "civic_id": "CivicID",
-    "civic_description": "CivicDescription",
-    "civic_score": "CivicScore",
-    "popaf": "Popaf",
-    "likely_gof": "LikelyGoF",
-    "likely_lof": "LikelyLoF",
-    "hess_driver": "HessDriver",
-    "hess_signture": "HessSignature",
-    "hess_signature": "HessSignature",
-    "revel_score": "RevelScore",
-    "pharmgkb_id": "PharmgkbID",
-    "dida_id": "DidaID",
-    "dida_name": "DidaName",
-    "gwas_disease": "GwasDisease",
-    "gwas_pmid": "GwasPmID",
-    "gtex_gene": "GTexGene",
-    "DepMap_ID": "DepMap_ID",
+    'chrom': 'Chrom',
+    'pos': 'Pos',
+    'ref': 'Ref',
+    'alt': 'Alt',
+    'af': 'AF',
+    'dp': 'DP',
+    'ref_count': 'RefCount',
+    'alt_count': 'AltCount',
+    'gt': 'GT',
+    'ps': 'PS',
+    'variant_type': 'VariantType',
+    'variant_info': 'VariantInfo',
+    'dna_change': 'DNAChange',
+    'protein_change': 'ProteinChange',
+    'hugo_symbol': 'HugoSymbol',
+    'ensembl_gene_id': 'EnsemblGeneID',
+    'ensembl_feature_id': 'EnsemblFeatureID',
+    'hgnc_name': 'HgncName',
+    'hgnc_family': 'HgncFamily',
+    'uniprot_id': 'UniprotID',
+    'dbsnp_rs_id': 'DbsnpRsID',
+    'gc_content': 'GcContent',
+    'lof_gene_name': 'LofGeneName',
+    'lof_gene_id': 'LofGeneId',
+    'lof_number_of_transcripts_in_gene': 'LofNumberOfTranscriptsInGene',
+    'lof_percent_of_transcripts_affected': 'LofPercentOfTranscriptsAffected',
+    'nmd': 'NMD',
+    # 'clnsig': 'ClnSig',
+    'molecular_consequence': 'MolecularConsequence',
+    # 'af_exac': 'AfExac',
+    # 'af_esp': 'AfEsp',
+    # 'af_tgp': 'AfTgp',
+    'vep_impact': 'VepImpact',
+    'vep_biotype': 'VepBiotype',
+    'vep_hgnc_id': 'VepHgncID',
+    'vep_existing_variation': 'VepExistingVariation',
+    'vep_mane_select': 'VepManeSelect',
+    'vep_ensp': 'VepENSP',
+    'vep_swissprot': 'VepSwissprot',
+    'sift': 'Sift',
+    'polyphen': 'Polyphen',
+    'gnomade_af': 'GnomadeAF',
+    'gnomadg_af': 'GnomadgAF',
+    'vep_clin_sig': 'VepClinSig',
+    'vep_somatic': 'VepSomatic',
+    'vep_pli_gene_value': 'VepPliGeneValue',
+    'vep_loftool': 'VepLofTool',
+    'oncogene_high_impact': 'OncogeneHighImpact',
+    'tumor_suppressor_high_impact': 'TumorSuppressorHighImpact',
+    # 'achilles_top_genes': 'AchillesTopGenes',
+    # 'structural_relation': 'StructuralRelation',
+    # 'associated_with': 'AssociatedWith',
+    # 'lof': 'Lof',
+    # 'driver': 'Driver',
+    # 'likely_driver': 'LikelyDriver',
+    'transcript_likely_lof': 'TranscriptLikelyLof',
+    'brca1_func_score': 'Brca1FuncScore',
+    'civic_id': 'CivicID',
+    'civic_description': 'CivicDescription',
+    'civic_score': 'CivicScore',
+    # 'popaf': 'Popaf',
+    # 'likely_gof': 'LikelyGof',
+    'likely_lof': 'LikelyLoF',
+    'hotspot': 'Hotspot',
+    'hess_driver': 'HessDriver',
+    'hess_signture': 'HessSignature',
+    'revel_score': 'RevelScore',
+    'pharmgkb_id': 'PharmgkbId',
+    'dida_id': 'DidaID',
+    'dida_name': 'DidaName',
+    'gwas_disease': 'GwasDisease',
+    'gwas_pmid': 'GwasPmID',
+    'gtex_gene': 'GtexGene',
+    # 'cosmic_tier': 'CosmicTier',
+    # 'oncokb_effect': 'OncokbEffect',
+    # 'oncokb_hotspot': 'OncokbHotspot',
+    # 'oncokb_oncogenic': 'OncokbOncogenic',
+    'provean_prediction': 'ProveanPrediction',
+    # 'segdup': 'Segdup',
+    # 'rm': 'Rm',
+    'rescue': 'Rescue',
+    'DepMap_ID': 'DepMap_ID',
+ }
+
+MUTCOL_STANDARDMAF = {
+    "Chromosome": "Chromosome",
+    "Start_Position": "Start_Position",
+    "End_Position": "End_Position",
+    "Variant_Type": "Variant_Type",
+    "Reference_Allele": "Reference_Allele",
+    "Tumor_Seq_Allele1": "Tumor_Seq_Allele1",
+    "Tumor_Seq_Allele2": "Tumor_Seq_Allele2",
+    "Tumor_Sample_Barcode": "Tumor_Sample_Barcode",
+    "Variant_Classification": "Variant_Classification",
+    "Protein_Change": "Protein_Change",
+    "Hugo_Symbol": "Hugo_Symbol",
+    "NCBI_Build": "NCBI_Build",
+    "Strand": "Strand",
+    "InFrame": "InFrame",
 }
 
 FUSION_COLNAME = [
@@ -337,7 +448,7 @@ STARBAMCOLTERRA = ["internal_bam_filepath", "internal_bai_filepath"]
 
 RSEM_TRANSCRIPTS = ["rsem_transcripts_expected_count", "rsem_transcripts_tpm"]
 
-RSEMFILENAME_GENE = ["genes_tpm", "genes_expected_count"]
+RSEMFILENAME_GENE = ["genes_tpm", "genes_expected_count", "genes_effective_length"]
 
 PROTEINEFILENAMES = ["proteincoding_genes_tpm", "proteincoding_genes_expected_count"]
 

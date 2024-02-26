@@ -5,12 +5,23 @@ workflow run_manta_annotator {
     input {
         File sv
         File exon_annot="gs://ccleparams/hg38_ensembl_exonlocations_formatted.txt"
+
+        Int mem_size = 4
+        Int disk_size = 30
+        Int cores = 8
+        String docker_image="jkobject/manta_annot"
+        Int preemptible_tries = 3
     }
 
     call manta_annotator {
         input:
             sv=sv,
-            exon_annot=exon_annot
+            exon_annot=exon_annot,
+            mem_size=mem_size,
+            disk_size=disk_size,
+            cores=cores,
+            docker_image=docker_image,
+            preemptible_tries=preemptible_tries
     }
     output {
         File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
