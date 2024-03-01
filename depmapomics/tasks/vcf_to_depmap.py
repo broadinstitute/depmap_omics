@@ -306,6 +306,8 @@ TO_RENAME_HGVS = {
     "vep_polyphen": "polyphen",
     "vep_gnomade_af": "gnomade_af",
     "vep_gnomadg_af": "gnomadg_af",
+    "vep_am_class": "am_class", 
+    "vep_am_pathogenicity": "am_pathogenicity",
     "vep_feature": "ensembl_feature_id",
     "rs": "dbsnp_rs_id",
     "mc": "molecular_consequence"
@@ -396,6 +398,8 @@ TOKEEP_ADD = {
     "polyphen": "str",
     "gnomade_af": "float",
     "gnomadg_af": "float",
+    "am_class": "str",
+    "am_pathogenicity": "str",
     "vep_clin_sig": "str",
     "vep_somatic": "str",
     "vep_pli_gene_value": "str",
