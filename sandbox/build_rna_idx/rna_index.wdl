@@ -82,8 +82,8 @@ task rsem_build_index {
 
     command {
         mkdir -p ~{sample_id}_rsem_references
-        rsem-prepare-reference --gtf ~{gtf} ~{fasta} ~{sample_id}
-        cp ~{sample_id}.chrlist ~{sample_id}.seq ~{sample_id}.idx.fa ~{sample_id}.ti ~{sample_id}.n2g.idx.fa ~{sample_id}.transcripts.fa ~{sample_id}.grp ~{sample_id}_rsem_references
+        rsem-prepare-reference --gtf ~{gtf} ~{fasta} rsem_reference
+        cp rsem_reference.chrlist rsem_reference.seq rsem_reference.idx.fa rsem_reference.ti rsem_reference.n2g.idx.fa rsem_reference.transcripts.fa rsem_reference.grp ~{sample_id}_rsem_references
         tar cvfz ~{sample_id}_rsem.tar.gz ~{sample_id}_rsem_references
     }
 
