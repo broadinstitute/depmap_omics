@@ -47,7 +47,7 @@ task star_build_index {
 
     command {
         STAR --runThreadN ~{cpu} --runMode genomeGenerate --genomeDir ~{sample_id} --genomeFastaFiles ~{fasta} --sjdbGTFfile ~{gtf} --sjdbOverhang 100
-        tar cvfz ~{sample_id}_star.tar ~{sample_id}
+        tar cvfz ~{sample_id}_star.tar.gz ~{sample_id}
     }
 
     runtime {
