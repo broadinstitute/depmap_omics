@@ -47,7 +47,7 @@ task star_build_index {
 
     command {
         STAR --runThreadN ~{cpu} --runMode genomeGenerate --genomeDir ~{sample_id} --genomeFastaFiles ~{fasta} --sjdbGTFfile ~{gtf} --sjdbOverhang 100
-        tar cvf ~{sample_id}_star.tar ~{sample_id}
+        tar cvfz ~{sample_id}_star.tar ~{sample_id}
     }
 
     runtime {
@@ -60,7 +60,7 @@ task star_build_index {
     }
 
     output {
-        File output_tar = "~{sample_id}_star.tar"
+        File output_tar = "~{sample_id}_star.tar.gz"
     }
 }
 
@@ -81,16 +81,10 @@ task rsem_build_index {
     }
 
     command {
-#rsem_reference_hg38_gencode_38/rsem_reference.chrlist
-#rsem_reference_hg38_gencode_38/rsem_reference.seq
-#rsem_reference_hg38_gencode_38/rsem_reference.idx.fa
-#rsem_reference_hg38_gencode_38/rsem_reference.ti
-#rsem_reference_hg38_gencode_38/rsem_reference.n2g.idx.fa
-#rsem_reference_hg38_gencode_38/rsem_reference.transcripts.fa
-#rsem_reference_hg38_gencode_38/rsem_reference.grp
+        mkdir -p ~{sample_id}_rsem_references
         rsem-prepare-reference --gtf ~{gtf} ~{fasta} ~{sample_id}
-        tar cvf ~{sample_id}_rsem.tar ~{sample_id}.chrlist ~{sample_id}.seq ~{sample_id}.idx.fa ~{sample_id}.ti ~{sample_id}.n2g.idx.fa ~{sample_id}.transcripts.fa ~{sample_id}.grp
-
+        cp ~{sample_id}.chrlist ~{sample_id}.seq ~{sample_id}.idx.fa ~{sample_id}.ti ~{sample_id}.n2g.idx.fa ~{sample_id}.transcripts.fa ~{sample_id}.grp ~{sample_id}_rsem_references
+        tar cvfz ~{sample_id}_rsem.tar.gz ~{sample_id}_rsem_references
     }
 
     runtime {
@@ -103,6 +97,6 @@ task rsem_build_index {
     }
 
     output {
-        File output_tar = "~{sample_id}_rsem.tar"
+        File output_tar = "~{sample_id}_rsem.tar.gz"
     }
 }
