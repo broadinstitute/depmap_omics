@@ -244,7 +244,7 @@ workflows:
       - /sandbox/build_rna_idx/test.json
     filters: # All tags, no branches
       branches:
-        - dev-hgvs
+        - master
   - name: telomere
     subclass: WDL
     publish: True
