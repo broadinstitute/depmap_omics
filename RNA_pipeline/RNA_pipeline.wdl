@@ -102,8 +102,8 @@ workflow RNA_pipeline {
 
   call hg38_star_fusion.star_fusion_hg38_wf as StarFusion {
     input:
-      left_fastq=samtofastq.fastq1,
-      right_fastq=samtofastq.fastq2,
+      left_fq=samtofastq.fastq1,
+      right_fq=samtofastq.fastq2,
       sample_id=sample_id,
       genome_plug_n_play_tar_gz=genome_plug_n_play_tar_gz,
       fusion_inspector="validate"
