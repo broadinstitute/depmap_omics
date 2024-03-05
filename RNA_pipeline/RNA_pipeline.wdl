@@ -166,6 +166,12 @@ workflow RNA_pipeline {
     #StarFusion
     File fusion_predictions=StarFusion.fusion_predictions
     File fusion_predictions_abridged=StarFusion.fusion_predictions_abridged
+
+    File? fusion_inspector_validate_web=StarFusion.fusion_inspector_validate_web
+    File? fusion_inspector_validate_fusions_abridged=StarFusion.fusion_inspector_validate_fusions_abridged
+    File? fusion_inspector_inspect_fusions_abridged=StarFusion.fusion_inspector_inspect_fusions_abridged
+    File? fusion_inspector_inspect_web=StarFusion.fusion_inspector_inspect_web
+
     #rna_mutect2
     # File merged_vcf = RNAseq_mutect2.merged_vcf
     # File merged_vcf_index = RNAseq_mutect2.merged_vcf_index
