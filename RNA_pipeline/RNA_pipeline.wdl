@@ -4,7 +4,8 @@ import "samtofastq_wdl1-0.wdl" as samtofastq_v1
 import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_wdl1-0.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
-import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
+# import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
+import "star_fusion_hg38.wdl" as hg38_star_fusion
 #import "rnaseq_mutect2_tumor_only.wdl" as rna_mutect2
 
 
@@ -17,6 +18,8 @@ workflow RNA_pipeline {
 
   #star_v1
   File star_index
+
+  File genome_plug_n_play_tar_gz
 
   #star fusion
   Array[File] ctat_genome_lib_build_dir_files
@@ -88,13 +91,22 @@ workflow RNA_pipeline {
       paired_end="true"
   }
 
-  call hg38_STAR_fusion.StarFusion as StarFusion {
+#  call hg38_STAR_fusion.StarFusion as StarFusion {
+#    input:
+#      left_fastq=samtofastq.fastq1,
+#      right_fastq=samtofastq.fastq2,
+#      prefix=sample_id,
+#      ctat_genome_lib_build_dir_files=ctat_genome_lib_build_dir_files,
+#      ref_genome_fa_star_idx_files=ref_genome_fa_star_idx_files
+#  }
+
+  call hg38_star_fusion.star_fusion_hg38_wf as StarFusion {
     input:
       left_fastq=samtofastq.fastq1,
       right_fastq=samtofastq.fastq2,
-      prefix=sample_id,
-      ctat_genome_lib_build_dir_files=ctat_genome_lib_build_dir_files,
-      ref_genome_fa_star_idx_files=ref_genome_fa_star_idx_files
+      sample_id=sample_id,
+      genome_plug_n_play_tar_gz=genome_plug_n_play_tar_gz,
+      fusion_inspector="validate"
   }
 
 #   call rna_mutect2.RNAseq_mutect2 as RNAseq_mutect2{
