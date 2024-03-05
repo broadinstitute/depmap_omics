@@ -7,7 +7,7 @@ workflow star_fusion_hg38_wf {
     
     String sample_id
 
-    File genome_plug_n_play_tar_gz = "gs://ctat_genome_libs/__genome_libs_StarFv1.10/GRCh38_gencode_v22_CTAT_lib_Mar012021.plug-n-play.tar.gz"
+    File genome_plug_n_play_tar_gz
     
     # input data options
     File? left_fq
@@ -23,7 +23,7 @@ workflow star_fusion_hg38_wf {
     String docker = "trinityctat/starfusion:1.13.0"
     Int num_cpu = 12
     Float fastq_disk_space_multiplier = 3.25
-    String memory = "64G"
+    String memory = "64 GB"
     Float genome_disk_space_multiplier = 2.5
     Int preemptible = 2
     Float extra_disk_space = 10
