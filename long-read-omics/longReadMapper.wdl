@@ -48,7 +48,8 @@ task longReadMapper {
 
   runtime {
     docker: "us.gcr.io/cds-docker-containers/gulatide/long-read-align"
-
+    memory: "8GB"
+    max_retries: 3
   }
 }
 
