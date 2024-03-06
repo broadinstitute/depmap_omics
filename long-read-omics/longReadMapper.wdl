@@ -3,6 +3,7 @@ version 1.0
 workflow helloLongReadMapper {
   call longReadMapper
 
+
   output {
     File rawBam = longReadMapper.rawBam 
     File rawBamIndex = longReadMapper.rawBamIndex 
@@ -17,6 +18,8 @@ task longReadMapper {
     String sampleName
     String readType
     File inputFile
+    Int memory
+    String docker
 
   }
 
@@ -47,8 +50,8 @@ task longReadMapper {
   }
 
   runtime {
-    docker: "us.gcr.io/cds-docker-containers/gulatide/long-read-align"
-    memory: "8GB"
+    docker: "${docker}" 
+    memory: "${memory}GB"
     max_retries: 3
   }
 }
