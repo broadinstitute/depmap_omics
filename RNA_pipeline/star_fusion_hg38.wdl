@@ -26,7 +26,7 @@ workflow star_fusion_hg38_wf {
     String memory = "64GB"
     Float genome_disk_space_multiplier = 2.5
     Int preemptible = 2
-    Float extra_disk_space = 10
+    Float extra_disk_space = 100
     Boolean use_ssd = true
 
   }
