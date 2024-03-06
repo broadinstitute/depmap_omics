@@ -21,7 +21,7 @@ task longReadMapper {
   }
 
   command {
-	
+    
     minimap2 -ax ${readType} \
           ${RefFasta} \
           ${inputFile} \
@@ -31,7 +31,7 @@ task longReadMapper {
           -Sb \
           -o ${sampleName}.bam \
           ${sampleName}.sam
-	
+    
     samtools sort \
           ${sampleName}.bam \
           -o ${sampleName}.sorted.bam
