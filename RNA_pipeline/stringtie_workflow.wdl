@@ -13,7 +13,7 @@ workflow run_stringtie {
         input:
             bam=bam,
             bamIndex=bai,
-            assembledTranscriptsFile=output_dir
+            assembledTranscriptsFile=output_dir + ".gtf"
     }
 
     output {
