@@ -307,10 +307,10 @@ workflows:
     filters: # All tags, no branches
       branches:
         - guidemat-wdl
-  - name: stringtie
+  - name: stringtie_workflow
     subclass: WDL
     publish: True
-    primaryDescriptorPath: /RNA_pipeline/stringtie.wdl
+    primaryDescriptorPath: /RNA_pipeline/stringtie_workflow.wdl
     testParameterFiles:
       - /test.json
     filters: # All tags, no branches
