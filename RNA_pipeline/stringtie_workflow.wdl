@@ -17,7 +17,7 @@ workflow run_stringtie {
     }
 
     output {
-        File assembledTranscripts = Stringtie.assembledTranscriptsFile
-        File? geneAbundance = Stringtie.geneAbundanceFile
+        File assembledTranscripts = Stringtie.assembledTranscripts
+        File? geneAbundance = Stringtie.geneAbundance
     }
 }
