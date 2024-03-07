@@ -4,6 +4,7 @@ version 1.0
 workflow RNAStrandWorkflow {
     input {
         File input_bam
+        File input_bai
         File refseq = "gs://cds-vep-data/ucsc_ncbi_refseq_curated_hg38_20240303.bed"
 
         String sample_id
@@ -18,6 +19,7 @@ workflow RNAStrandWorkflow {
     call strand_check_task as strand {
         input:
             input_bam=input_bam,
+            input_bai=input_bai,
             refseq=refseq,
             sample_id=sample_id,
 
@@ -30,6 +32,7 @@ workflow RNAStrandWorkflow {
 
     output {
         File rna_strand_output=strand.strand_info
+        File rna_tin_output=strand.tin_info
     }
 }
 
@@ -38,6 +41,7 @@ workflow RNAStrandWorkflow {
 task strand_check_task {
     input {
         File input_bam
+        File input_bai
         File refseq
         String sample_id
 
@@ -50,7 +54,8 @@ task strand_check_task {
     }
 
     command {
-        infer_experiment.py -r ~{refseq} -i ~{input_bam}
+        infer_experiment.py -r ~{refseq} -i ~{input_bam} > ~{sample_id}.strand_info
+        tin.py -r ~{refseq} -i ~{input_bam} > ~{sample_id}.transcript_integrity
     }
 
     runtime {
@@ -63,7 +68,8 @@ task strand_check_task {
     }
 
     output {
-        File strand_info = stdout()
+        File strand_info = "~{sample_id}.strand_info"
+        File tin_info = "~{sample_id}.transcript_integrity"
     }
 }
 
