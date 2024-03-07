@@ -4,6 +4,8 @@ import "samtofastq_wdl1-0.wdl" as samtofastq_v1
 import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_wdl1-0.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
+import "ctat_mutations_Terra_hg38" as rna_mutation
+
 # import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
 import "star_fusion_hg38.wdl" as hg38_star_fusion
 #import "rnaseq_mutect2_tumor_only.wdl" as rna_mutect2
@@ -15,6 +17,9 @@ workflow RNA_pipeline {
   #samtofastq_v1
   File input_bam_cram
   File reference_fasta
+
+  String is_stranded = "true"
+  String is_stranded_rnaseqc = "RF"
 
   #star_v1
   File star_index
@@ -79,7 +84,8 @@ workflow RNA_pipeline {
     input:
       bam_file=star.bam_file,
       genes_gtf=genes_gtf,
-      sample_id=sample_id
+      sample_id=sample_id,
+      strandedness=is_stranded_rnaseqc
   }
 
   call rsem_v1.rsem as rsem {
@@ -87,7 +93,7 @@ workflow RNA_pipeline {
       transcriptome_bam=star.transcriptome_bam,
       prefix=sample_id,
       rsem_reference=rsem_reference,
-      is_stranded="false",
+      is_stranded=is_stranded,
       paired_end="true"
   }
 
@@ -98,6 +104,13 @@ workflow RNA_pipeline {
       sample_id=sample_id,
       genome_plug_n_play_tar_gz=genome_plug_n_play_tar_gz,
       fusion_inspector="validate"
+  }
+
+  call rna_mutation.ctat_mutations_Terra_hg38 as ctat_mutation {
+    input:
+      sample_id=sample_id,
+      left=samtofastq.fastq1,
+      right=samtofastq.fastq2
   }
 
 #   call rna_mutect2.RNAseq_mutect2 as RNAseq_mutect2{
