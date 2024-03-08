@@ -8,6 +8,7 @@ import "ctat_mutations_Terra_hg38" as rna_mutation
 
 # import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
 import "star_fusion_hg38.wdl" as hg38_star_fusion
+
 #import "rnaseq_mutect2_tumor_only.wdl" as rna_mutect2
 
 
@@ -186,6 +187,14 @@ workflow RNA_pipeline {
 
     # File? funcotated_file = RNAseq_mutect2.funcotated_file
     # File? funcotated_file_index = RNAseq_mutect2.funcotated_file_index
+
+    File? haplotype_caller_vcf = ctat_mutation.haplotype_caller_vcf
+    File? annotated_vcf = ctat_mutation.annotated_vcf
+    File? filtered_vcf = ctat_mutation.filtered_vcf
+    File? output_log_final =  ctat_mutation.output_log_final
+    File? cancer_igv_report = ctat_mutation.cancer_igv_report
+    File? cancer_variants_tsv = ctat_mutation.cancer_variants_tsv
+    File? cancer_vcf = ctat_mutation.cancer_vcf
   }
 }
 
