@@ -4,7 +4,7 @@ import "samtofastq_wdl1-0.wdl" as samtofastq_v1
 import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_wdl1-0.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
-import "ctat_mutations_Terra_hg38" as rna_mutation
+import "ctat-mutations.hg38.wdl" as rna_mutation
 
 # import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
 import "star_fusion_hg38.wdl" as hg38_star_fusion
