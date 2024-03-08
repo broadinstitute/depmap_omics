@@ -107,12 +107,12 @@ workflow RNA_pipeline {
       fusion_inspector="validate"
   }
 
-  call rna_mutation.ctat_mutations_Terra_hg38 as ctat_mutation {
-    input:
-      sample_id=sample_id,
-      left=samtofastq.fastq1,
-      right=samtofastq.fastq2
-  }
+#  call rna_mutation.ctat_mutations_Terra_hg38 as ctat_mutation {
+#    input:
+#      sample_id=sample_id,
+#      left=samtofastq.fastq1,
+#      right=samtofastq.fastq2
+#  }
 
 #   call rna_mutect2.RNAseq_mutect2 as RNAseq_mutect2{
 #       input:
@@ -188,13 +188,14 @@ workflow RNA_pipeline {
     # File? funcotated_file = RNAseq_mutect2.funcotated_file
     # File? funcotated_file_index = RNAseq_mutect2.funcotated_file_index
 
-    File? haplotype_caller_vcf = ctat_mutation.haplotype_caller_vcf
-    File? annotated_vcf = ctat_mutation.annotated_vcf
-    File? filtered_vcf = ctat_mutation.filtered_vcf
-    File? output_log_final =  ctat_mutation.output_log_final
-    File? cancer_igv_report = ctat_mutation.cancer_igv_report
-    File? cancer_variants_tsv = ctat_mutation.cancer_variants_tsv
-    File? cancer_vcf = ctat_mutation.cancer_vcf
+    #ctat-mutation
+    #File? haplotype_caller_vcf = ctat_mutation.haplotype_caller_vcf
+    #File? annotated_vcf = ctat_mutation.annotated_vcf
+    #File? filtered_vcf = ctat_mutation.filtered_vcf
+    #File? output_log_final =  ctat_mutation.output_log_final
+    #File? cancer_igv_report = ctat_mutation.cancer_igv_report
+    #File? cancer_variants_tsv = ctat_mutation.cancer_variants_tsv
+    #File? cancer_vcf = ctat_mutation.cancer_vcf
   }
 }
 
