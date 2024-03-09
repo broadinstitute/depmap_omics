@@ -81,13 +81,13 @@ workflow RNA_pipeline {
       star_index=star_index
   }
 
-  call rnaseqc2_v1.rnaseqc2 as rnaseqc2 {
-    input:
-      bam_file=star.bam_file,
-      genes_gtf=genes_gtf,
-      sample_id=sample_id,
-      strandedness=is_stranded_rnaseqc
-  }
+#  call rnaseqc2_v1.rnaseqc2 as rnaseqc2 {
+#    input:
+#      bam_file=star.bam_file,
+#      genes_gtf=genes_gtf,
+#      sample_id=sample_id,
+#      strandedness=is_stranded_rnaseqc
+#  }
 
   call rsem_v1.rsem as rsem {
     input:
@@ -98,14 +98,14 @@ workflow RNA_pipeline {
       paired_end="true"
   }
 
-  call hg38_star_fusion.star_fusion_hg38_wf as StarFusion {
-    input:
-      left_fq=samtofastq.fastq1,
-      right_fq=samtofastq.fastq2,
-      sample_id=sample_id,
-      genome_plug_n_play_tar_gz=genome_plug_n_play_tar_gz,
-      fusion_inspector="validate"
-  }
+#  call hg38_star_fusion.star_fusion_hg38_wf as StarFusion {
+#    input:
+#      left_fq=samtofastq.fastq1,
+#      right_fq=samtofastq.fastq2,
+#      sample_id=sample_id,
+#      genome_plug_n_play_tar_gz=genome_plug_n_play_tar_gz,
+#      fusion_inspector="validate"
+#  }
 
 #  call rna_mutation.ctat_mutations_Terra_hg38 as ctat_mutation {
 #    input:
@@ -160,22 +160,22 @@ workflow RNA_pipeline {
     File junctions_pass1=star.junctions_pass1
     Array[File] logs=star.logs
     #rnaseqc
-    File gene_tpm=rnaseqc2.gene_tpm
-    File gene_counts=rnaseqc2.gene_counts
-    File exon_counts=rnaseqc2.exon_counts
-    File metrics=rnaseqc2.metrics
-    File insertsize_distr=rnaseqc2.insertsize_distr
+    #File gene_tpm=rnaseqc2.gene_tpm
+    #File gene_counts=rnaseqc2.gene_counts
+    #File exon_counts=rnaseqc2.exon_counts
+    #File metrics=rnaseqc2.metrics
+    #File insertsize_distr=rnaseqc2.insertsize_distr
     #rsem
     File genes=rsem.genes
     File isoforms=rsem.isoforms
     #StarFusion
-    File fusion_predictions=StarFusion.fusion_predictions
-    File fusion_predictions_abridged=StarFusion.fusion_predictions_abridged
+    #File fusion_predictions=StarFusion.fusion_predictions
+    #File fusion_predictions_abridged=StarFusion.fusion_predictions_abridged
 
-    File? fusion_inspector_validate_web=StarFusion.fusion_inspector_validate_web
-    File? fusion_inspector_validate_fusions_abridged=StarFusion.fusion_inspector_validate_fusions_abridged
-    File? fusion_inspector_inspect_fusions_abridged=StarFusion.fusion_inspector_inspect_fusions_abridged
-    File? fusion_inspector_inspect_web=StarFusion.fusion_inspector_inspect_web
+    #File? fusion_inspector_validate_web=StarFusion.fusion_inspector_validate_web
+    #File? fusion_inspector_validate_fusions_abridged=StarFusion.fusion_inspector_validate_fusions_abridged
+    #File? fusion_inspector_inspect_fusions_abridged=StarFusion.fusion_inspector_inspect_fusions_abridged
+    #File? fusion_inspector_inspect_web=StarFusion.fusion_inspector_inspect_web
 
     #rna_mutect2
     # File merged_vcf = RNAseq_mutect2.merged_vcf
