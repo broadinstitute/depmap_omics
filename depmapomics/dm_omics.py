@@ -16,7 +16,7 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 from .mutations import postprocess_main_steps
-from google.cloud import bigquery # type: ignore
+from multiprocessing import Pool
 
 
 async def expressionPostProcessing(
@@ -38,6 +38,7 @@ async def expressionPostProcessing(
     starlogs={},
     compute_enrichment=False,
     billing_proj=constants.GCS_PAYER_PROJECT,
+    generate_count_matrix=True,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -136,6 +137,24 @@ async def expressionPostProcessing(
         ].rename(index=renaming_dict)
         enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
+
+    def load_rnaseqc(terra_path):
+        rnaseqc_count_df = pd.read_csv(terra_path, sep='\t', skiprows=2)
+        rnaseqc_count_df = rnaseqc_count_df.set_index(rnaseqc_count_df.apply(lambda x: f"{x[1]} ({x[0].split('.')[0]})", axis=1))
+        rnaseqc_count_df = rnaseqc_count_df.drop(["Name", "Description"], axis=1)
+        return rnaseqc_count_df
+
+    if generate_count_matrix:
+        pool = Pool(12)
+        terra_rnaseq_df = dm.WorkspaceManager(refworkspace).get_samples()
+        rnaseqc_count_dfs = pool.map(load_rnaseqc, terra_rnaseq_df.rnaseqc2_gene_counts)
+        rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
+        rnaseqc_count_mat = rnaseqc_count_mat.T
+        rnaseqc_count_mat.to_csv(folder + "rnaseqc_count_mat.csv")
+        rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
+        rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
+        pool.close()
+    
     mytracker.close_gumbo_client()
 
     if not dry_run:
@@ -240,6 +259,31 @@ async def expressionPostProcessing(
                         "encoding": "utf-8",
                     },
                 ],
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=dataset_description,
+            )
+        if generate_count_matrix:
+            tc.update_dataset(
+                changes_description="adding rnaseqc2 gene counts for new "
+                + samplesetname
+                + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "rnaseqc_count_mat.csv",
+                        "name": "rnaseqc_count_mat_withReplicates",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "rnaseqc_count_mat_pr.csv",
+                        "name": "rnaseqc_count_mat_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                ],
+                add_all_existing_files=True,
                 upload_async=False,
                 dataset_description=dataset_description,
             )
@@ -725,13 +769,6 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
-def job_query_to_dataframe(sql, project_id):
-    client = bigquery.Client(project=project_id)
-    query_job = client.query(sql)
-    df = query_job.to_dataframe()
-    return df
-
-
 async def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
@@ -983,24 +1020,28 @@ async def mutationPostProcessing(
                         "format": "TableCSV",
                         "encoding": "utf-8",
                     },
-                ], upload_async=False,
-            dataset_description=taiga_description,)
+                ], 
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=taiga_description,)
         if run_sv:
             tc.update_dataset(
                 changes_description="new " + samplesetname + " release!",
                 dataset_permaname=taiga_dataset,
                 upload_files=[           
-                {
-                    "path": folder + "svs.csv",
-                    "name": "structuralVariants_withReplicates",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "svs_profile.csv",
-                    "name": "structuralVariants_profile",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-            ], upload_async=False,
-            dataset_description=taiga_description,)
+                    {
+                        "path": folder + "svs.csv",
+                        "name": "structuralVariants_withReplicates",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "svs_profile.csv",
+                        "name": "structuralVariants_profile",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                ], 
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=taiga_description,)
