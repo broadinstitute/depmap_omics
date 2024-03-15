@@ -473,7 +473,7 @@ async def postProcess(
 
     all_qc_df = myQC.export_qc(refworkspace, selected_samples=[]).transpose()
     if not os.path.exists(save_output + "rna_qcs/"):
-        os.mkdir(save_output + "rna_qcs/")
+        os.mkdir(save_output + "rna_qcs/") # type: ignore
     all_qc_df.to_csv(save_output + "rna_qcs/all_qc.csv")
 
     failed = failed.index.tolist()
