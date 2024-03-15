@@ -30,6 +30,7 @@ workflows:
       branches:
         - dev
         - master
+        - rna-strandness-fix
   - name: WGS_pipeline
     subclass: WDL
     publish: True
