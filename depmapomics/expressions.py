@@ -9,7 +9,7 @@ from scipy.stats import zscore
 from mgenepy.utils import helper as h
 from mgenepy import rna
 from depmapomics.qc import rna as myQC
-from multiprocessing import Pool
+from tqdm import tqdm
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
     """
@@ -380,13 +380,13 @@ def load_rnaseqc(terra_path):
 
 def parse_rnaseqc_counts(refworkspace, samplesetname):
     """parse rnaseqc gene counts to one a list of dataframes"""
-    pool = Pool(12)
     refwm = dm.WorkspaceManager(refworkspace)
     terra_rnaseq_df = refwm.get_samples()
     samplesinset = [i["entityName"]for i in refwm.get_entities("sample_set").loc[samplesetname].samples]
     terra_rnaseq_df = terra_rnaseq_df.loc[samplesinset, :]
-    rnaseqc_count_dfs = pool.map(load_rnaseqc, terra_rnaseq_df.rnaseqc2_gene_counts)
-    pool.close()
+    rnaseqc_count_dfs = []
+    for _, row in tqdm(terra_rnaseq_df.iterrows(), total=len(terra_rnaseq_df)):
+        rnaseqc_count_dfs.append(load_rnaseqc(row["rnaseqc2_gene_counts"]))
     return rnaseqc_count_dfs
 
 async def postProcess(
