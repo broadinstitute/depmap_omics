@@ -16,7 +16,6 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 from .mutations import postprocess_main_steps
-from multiprocessing import Pool
 
 
 async def expressionPostProcessing(
@@ -105,24 +104,26 @@ async def expressionPostProcessing(
         **kwargs,
     )
 
-    print("updating the tracker")
+    if not dry_run:
+        print("updating the tracker")
 
-    track.updateTrackerRNA(
-        failed,
-        lowqual[lowqual.sum(1) > 3].index.tolist(),
-        ccle_refsamples,
-        samplesetname,
-        refworkspace,
-        samplesinset=samplesinset,
-        starlogs=starlogs,
-        dry_run=dry_run,
-        billing_proj=billing_proj,
-    )
+        track.updateTrackerRNA(
+            failed,
+            lowqual[lowqual.sum(1) > 3].index.tolist(),
+            ccle_refsamples,
+            samplesetname,
+            refworkspace,
+            samplesinset=samplesinset,
+            starlogs=starlogs,
+            dry_run=dry_run,
+            billing_proj=billing_proj,
+        )
 
     pr_table = mytracker.read_pr_table()
 
-    # subset and rename, include all PRs that have associated CDS-ids
-    pr_table = mytracker.update_pr_from_seq(["rna"])
+    if not dry_run:
+        # subset and rename, include all PRs that have associated CDS-ids
+        pr_table = mytracker.update_pr_from_seq(["rna"])
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
@@ -138,22 +139,14 @@ async def expressionPostProcessing(
         enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
 
-    def load_rnaseqc(terra_path):
-        rnaseqc_count_df = pd.read_csv(terra_path, sep='\t', skiprows=2)
-        rnaseqc_count_df = rnaseqc_count_df.set_index(rnaseqc_count_df.apply(lambda x: f"{x[1]} ({x[0].split('.')[0]})", axis=1))
-        rnaseqc_count_df = rnaseqc_count_df.drop(["Name", "Description"], axis=1)
-        return rnaseqc_count_df
-
     if generate_count_matrix:
-        pool = Pool(12)
-        terra_rnaseq_df = dm.WorkspaceManager(refworkspace).get_samples()
-        rnaseqc_count_dfs = pool.map(load_rnaseqc, terra_rnaseq_df.rnaseqc2_gene_counts)
+        print("generating rnaseqc gene count matrix")
+        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad)
         rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
         rnaseqc_count_mat = rnaseqc_count_mat.T
         rnaseqc_count_mat.to_csv(folder + "rnaseqc_count_mat.csv")
         rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
         rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
-        pool.close()
     
     mytracker.close_gumbo_client()
 
