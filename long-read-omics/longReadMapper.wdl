@@ -3,7 +3,6 @@ version 1.0
 workflow helloLongReadMapper {
   call longReadMapper
 
-
   output {
     File rawBam = longReadMapper.rawBam 
     File rawBamIndex = longReadMapper.rawBamIndex 
@@ -23,7 +22,7 @@ task longReadMapper {
 
   }
 
-  command {
+  command <<<
     
     minimap2 -ax ${readType} \
           ${RefFasta} \
@@ -42,7 +41,7 @@ task longReadMapper {
     samtools index \
           ${sampleName}.sorted.bam 
 
-  }
+  >>>
 
   output {
       File rawBam = "${sampleName}.sorted.bam"
