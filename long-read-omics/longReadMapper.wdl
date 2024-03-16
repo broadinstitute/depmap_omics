@@ -18,11 +18,12 @@ task longReadMapper {
     String readType
     File inputFile
     Int memory
+    Int disk_size
     String docker
 
   }
 
-  command <<<
+  command {
     
     minimap2 -ax ${readType} \
           ${RefFasta} \
@@ -41,7 +42,7 @@ task longReadMapper {
     samtools index \
           ${sampleName}.sorted.bam 
 
-  >>>
+  }
 
   output {
       File rawBam = "${sampleName}.sorted.bam"
@@ -52,6 +53,7 @@ task longReadMapper {
     docker: "${docker}" 
     memory: "${memory}GB"
     max_retries: 3
+    disks: "local-disk " + disk_size + " HDD"
   }
 }
 
