@@ -70,7 +70,7 @@ task isoquantQuantifyTask {
         Array[File] isoquantOutputs = glob("isoquant_output/~{sampleName}/*.gz")
         File ?transcriptModelsGTF = "isoquant_output/~{sampleName}/~{sampleName}.transcript_models.gtf.gz"
         File ?readAssignmentsTSV = "isoquant_output/~{sampleName}/~{sampleName}.read_assignments.tsv.gz"
-        Array[File] bamFiles = glob("isoquant_output/~{sampleName}/*.gz")
+        Array[File] bamFiles = glob("isoquant_output/~{sampleName}/aux/*.gz")
         File monitoringLog = "monitoring.log"
     }
 
@@ -128,6 +128,7 @@ workflow isoquantQuantify {
         Array[File] isoquantOutputs = isoquantQuantifyTask.isoquantOutputs
         File ?transcriptModelsGTF = isoquantQuantifyTask.transcriptModelsGTF
         File ?readAssignmentsTSV = isoquantQuantifyTask.readAssignmentsTSV
+        Array[File] bamFiles = isoquantQuantifyTask.bamFiles
         # File monitoringLog = isoquantQuantifyTask.monitoringLog
     }
 }
