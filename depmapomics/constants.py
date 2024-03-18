@@ -602,6 +602,7 @@ VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
     "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
     "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
     "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
+    "rnaseqc_count_mat_profile": "OmicsExpressionRNASeQCGeneCountProfile"
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
