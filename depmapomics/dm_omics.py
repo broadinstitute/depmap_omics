@@ -16,7 +16,6 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 from .mutations import postprocess_main_steps
-from google.cloud import bigquery # type: ignore
 
 
 async def expressionPostProcessing(
@@ -38,6 +37,7 @@ async def expressionPostProcessing(
     starlogs={},
     compute_enrichment=False,
     billing_proj=constants.GCS_PAYER_PROJECT,
+    generate_count_matrix=True,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -104,24 +104,26 @@ async def expressionPostProcessing(
         **kwargs,
     )
 
-    print("updating the tracker")
+    if not dry_run:
+        print("updating the tracker")
 
-    track.updateTrackerRNA(
-        failed,
-        lowqual[lowqual.sum(1) > 3].index.tolist(),
-        ccle_refsamples,
-        samplesetname,
-        refworkspace,
-        samplesinset=samplesinset,
-        starlogs=starlogs,
-        dry_run=dry_run,
-        billing_proj=billing_proj,
-    )
+        track.updateTrackerRNA(
+            failed,
+            lowqual[lowqual.sum(1) > 3].index.tolist(),
+            ccle_refsamples,
+            samplesetname,
+            refworkspace,
+            samplesinset=samplesinset,
+            starlogs=starlogs,
+            dry_run=dry_run,
+            billing_proj=billing_proj,
+        )
 
     pr_table = mytracker.read_pr_table()
 
-    # subset and rename, include all PRs that have associated CDS-ids
-    pr_table = mytracker.update_pr_from_seq(["rna"])
+    if not dry_run:
+        # subset and rename, include all PRs that have associated CDS-ids
+        pr_table = mytracker.update_pr_from_seq(["rna"])
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
@@ -136,6 +138,16 @@ async def expressionPostProcessing(
         ].rename(index=renaming_dict)
         enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
+
+    if generate_count_matrix:
+        print("generating rnaseqc gene count matrix")
+        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad)
+        rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
+        rnaseqc_count_mat = rnaseqc_count_mat.T
+        rnaseqc_count_mat.to_csv(folder + "rnaseqc_count_mat.csv")
+        rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
+        rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
+    
     mytracker.close_gumbo_client()
 
     if not dry_run:
@@ -240,6 +252,31 @@ async def expressionPostProcessing(
                         "encoding": "utf-8",
                     },
                 ],
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=dataset_description,
+            )
+        if generate_count_matrix:
+            tc.update_dataset(
+                changes_description="adding rnaseqc2 gene counts for new "
+                + samplesetname
+                + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "rnaseqc_count_mat.csv",
+                        "name": "rnaseqc_count_mat_withReplicates",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "rnaseqc_count_mat_pr.csv",
+                        "name": "rnaseqc_count_mat_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                ],
+                add_all_existing_files=True,
                 upload_async=False,
                 dataset_description=dataset_description,
             )
@@ -725,13 +762,6 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
-def job_query_to_dataframe(sql, project_id):
-    client = bigquery.Client(project=project_id)
-    query_job = client.query(sql)
-    df = query_job.to_dataframe()
-    return df
-
-
 async def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
@@ -983,24 +1013,28 @@ async def mutationPostProcessing(
                         "format": "TableCSV",
                         "encoding": "utf-8",
                     },
-                ], upload_async=False,
-            dataset_description=taiga_description,)
+                ], 
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=taiga_description,)
         if run_sv:
             tc.update_dataset(
                 changes_description="new " + samplesetname + " release!",
                 dataset_permaname=taiga_dataset,
                 upload_files=[           
-                {
-                    "path": folder + "svs.csv",
-                    "name": "structuralVariants_withReplicates",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "svs_profile.csv",
-                    "name": "structuralVariants_profile",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-            ], upload_async=False,
-            dataset_description=taiga_description,)
+                    {
+                        "path": folder + "svs.csv",
+                        "name": "structuralVariants_withReplicates",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "svs_profile.csv",
+                        "name": "structuralVariants_profile",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                ], 
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=taiga_description,)

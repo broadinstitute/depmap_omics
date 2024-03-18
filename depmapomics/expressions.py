@@ -9,7 +9,7 @@ from scipy.stats import zscore
 from mgenepy.utils import helper as h
 from mgenepy import rna
 from depmapomics.qc import rna as myQC
-
+from tqdm import tqdm
 
 def addSamplesRSEMToMain(input_filenames, main_filename):
     """
@@ -371,6 +371,24 @@ def saveFiles(files, folder=constants.WORKING_DIR, rep=("rsem", "expression")):
             )
 
 
+def load_rnaseqc(terra_path):
+    """read rnaseqc2 gene counts table from a file path"""
+    rnaseqc_count_df = pd.read_csv(terra_path, sep='\t', skiprows=2)
+    rnaseqc_count_df = rnaseqc_count_df.set_index(rnaseqc_count_df.apply(lambda x: f"{x[1]} ({x[0].split('.')[0]})", axis=1))
+    rnaseqc_count_df = rnaseqc_count_df.drop(["Name", "Description"], axis=1)
+    return rnaseqc_count_df
+
+def parse_rnaseqc_counts(refworkspace, samplesetname):
+    """parse rnaseqc gene counts to one a list of dataframes"""
+    refwm = dm.WorkspaceManager(refworkspace)
+    terra_rnaseq_df = refwm.get_samples()
+    samplesinset = [i["entityName"]for i in refwm.get_entities("sample_set").loc[samplesetname].samples]
+    terra_rnaseq_df = terra_rnaseq_df.loc[samplesinset, :]
+    rnaseqc_count_dfs = []
+    for _, row in tqdm(terra_rnaseq_df.iterrows(), total=len(terra_rnaseq_df)):
+        rnaseqc_count_dfs.append(load_rnaseqc(row["rnaseqc2_gene_counts"]))
+    return rnaseqc_count_dfs
+
 async def postProcess(
     refworkspace,
     samplesetname,
@@ -454,6 +472,8 @@ async def postProcess(
     )
 
     all_qc_df = myQC.export_qc(refworkspace, selected_samples=[]).transpose()
+    if not os.path.exists(save_output + "rna_qcs/"):
+        os.mkdir(save_output + "rna_qcs/") # type: ignore
     all_qc_df.to_csv(save_output + "rna_qcs/all_qc.csv")
 
     failed = failed.index.tolist()
