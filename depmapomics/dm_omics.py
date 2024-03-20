@@ -276,8 +276,8 @@ async def expressionPostProcessing(
                         "encoding": "utf-8",
                     },
                     {
-                        "path": folder + "stranded_proteincoding_genes_tpm_profile_logp1.csv",
-                        "name": "stranded_proteinCoding_genes_tpm_logp1_profile",
+                        "path": folder + "gene_sets_profile.csv",
+                        "name": "gene_set_enrichment_profile",
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
                     },
@@ -324,8 +324,8 @@ async def expressionPostProcessing(
                         "encoding": "utf-8",
                     },
                     {
-                        "path": folder + "stranded_rnaseqc_count_mat_pr.csv",
-                        "name": "rnaseqc_count_mat_profile",
+                        "path": folder + "stranded_proteincoding_genes_tpm_profile_logp1.csv",
+                        "name": "stranded_proteinCoding_genes_tpm_logp1_profile",
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
                     },
