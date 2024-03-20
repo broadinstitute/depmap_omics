@@ -159,11 +159,11 @@ async def expressionPostProcessing(
     expressions.saveFiles(pr_files, folder)
     if run_stranded:
         pr_files_stranded = dict()
-        tpm_mat = files_stranded["proteincoding_genes_tpm"]
-        pr_files_stranded["proteincoding_genes_tpm_profile"] = tpm_mat[tpm_mat.index.isin(set(renaming_dict.keys()))].rename(
+        tpm_mat = files_stranded["proteincoding_genes_tpm_stranded"]
+        pr_files_stranded["proteincoding_genes_tpm_profile_stranded"] = tpm_mat[tpm_mat.index.isin(set(renaming_dict.keys()))].rename(
             index=renaming_dict
         )
-        expressions.saveFiles(pr_files_stranded, folder+"stranded_")
+        expressions.saveFiles(pr_files_stranded, folder)
 
     if generate_count_matrix:
         print("generating rnaseqc gene count matrix")
@@ -320,12 +320,12 @@ async def expressionPostProcessing(
                 upload_files=[
                     {
                         "path": folder + "stranded_rnaseqc_count_mat_pr.csv",
-                        "name": "rnaseqc_count_mat_profile",
+                        "name": "stranded_rnaseqc_count_mat_profile",
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
                     },
                     {
-                        "path": folder + "stranded_proteincoding_genes_tpm_profile_logp1.csv",
+                        "path": folder + "proteincoding_genes_tpm_profile_stranded_logp1.csv",
                         "name": "stranded_proteinCoding_genes_tpm_logp1_profile",
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
