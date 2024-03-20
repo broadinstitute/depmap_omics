@@ -612,9 +612,6 @@ async def postProcessStranded(
         recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
     """
     print("postprocessing stranded samples")
-
-    save_output += "stranded_"
-
     if not samplesetToLoad:
         samplesetToLoad = samplesetname
     refwm = dm.WorkspaceManager(refworkspace)
@@ -688,6 +685,4 @@ async def postProcessStranded(
     saveFiles(files, save_output)
     print("done")
 
-    return (
-        files
-    )
+    return files
