@@ -276,8 +276,8 @@ async def expressionPostProcessing(
                         "encoding": "utf-8",
                     },
                     {
-                        "path": folder + "gene_sets_profile.csv",
-                        "name": "gene_set_enrichment_profile",
+                        "path": folder + "stranded_proteincoding_genes_tpm_profile_logp1.csv",
+                        "name": "stranded_proteinCoding_genes_tpm_logp1_profile",
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
                     },
@@ -305,6 +305,31 @@ async def expressionPostProcessing(
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
                     },
+                ],
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=dataset_description,
+            )
+        if run_stranded:
+            tc.update_dataset(
+                changes_description="adding stranded data sets for "
+                + samplesetname
+                + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "stranded_rnaseqc_count_mat_pr.csv",
+                        "name": "rnaseqc_count_mat_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "stranded_rnaseqc_count_mat_pr.csv",
+                        "name": "rnaseqc_count_mat_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    
                 ],
                 add_all_existing_files=True,
                 upload_async=False,
