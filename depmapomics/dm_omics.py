@@ -108,6 +108,7 @@ async def expressionPostProcessing(
         **kwargs,
     )
 
+    files_stranded = dict()
     if run_stranded:
         files_stranded = await expressions.postProcessStranded(
             refworkspace,
@@ -141,6 +142,8 @@ async def expressionPostProcessing(
         # subset and rename, include all PRs that have associated CDS-ids
         pr_table = mytracker.update_pr_from_seq(["rna"])
 
+    mytracker.close_gumbo_client()
+
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
@@ -157,7 +160,7 @@ async def expressionPostProcessing(
     if run_stranded:
         pr_files_stranded = dict()
         tpm_mat = files_stranded["proteincoding_genes_tpm"]
-        pr_files_stranded[k + "_profile"] = tpm_mat[tpm_mat.index.isin(set(renaming_dict.keys()))].rename(
+        pr_files_stranded["proteincoding_genes_tpm_profile"] = tpm_mat[tpm_mat.index.isin(set(renaming_dict.keys()))].rename(
             index=renaming_dict
         )
         expressions.saveFiles(pr_files_stranded, folder+"stranded_")
@@ -177,8 +180,6 @@ async def expressionPostProcessing(
             rnaseqc_count_mat.to_csv(folder + "stranded_rnaseqc_count_mat.csv")
             rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
             rnaseqc_count_mat_pr.to_csv(folder + "stranded_rnaseqc_count_mat_pr.csv")
-    
-    mytracker.close_gumbo_client()
 
     if not dry_run:
         print("uploading to taiga")
