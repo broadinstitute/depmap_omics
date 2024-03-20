@@ -21,6 +21,7 @@ from .mutations import postprocess_main_steps
 async def expressionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
     samplesetname=constants.SAMPLESETNAME,
+    samplesetname_stranded=constants.SAMPLESETNAME_STRANDED,
     colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
     ensemblserver=constants.ENSEMBL_SERVER_V,
     doCleanup=True,
@@ -38,6 +39,9 @@ async def expressionPostProcessing(
     compute_enrichment=False,
     billing_proj=constants.GCS_PAYER_PROJECT,
     generate_count_matrix=True,
+    run_stranded=True,
+    rnaseqc2_gene_count_col=constants.RNASEQC2_GENE_COUNT_COL,
+    rnaseqc2_gene_count_col_stranded=constants.RNASEQC2_GENE_COUNT_COL_STRANDED,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -104,6 +108,18 @@ async def expressionPostProcessing(
         **kwargs,
     )
 
+    if run_stranded:
+        files_stranded = await expressions.postProcessStranded(
+            refworkspace,
+            samplesetname_stranded,
+            failed,
+            save_output=folder,
+            ensemblserver=ensemblserver,
+            samplesetToLoad=samplesetname_stranded,
+            geneLevelCols=constants.RSEMFILENAME_GENE_STRANDED,
+            trancriptLevelCols=constants.RSEMFILENAME_TRANSCRIPTS_STRANDED,
+        )
+
     if not dry_run:
         print("updating the tracker")
 
@@ -138,15 +154,29 @@ async def expressionPostProcessing(
         ].rename(index=renaming_dict)
         enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
+    if run_stranded:
+        pr_files_stranded = dict()
+        tpm_mat = files_stranded["proteincoding_genes_tpm"]
+        pr_files_stranded[k + "_profile"] = tpm_mat[tpm_mat.index.isin(set(renaming_dict.keys()))].rename(
+            index=renaming_dict
+        )
+        expressions.saveFiles(pr_files_stranded, folder+"stranded_")
 
     if generate_count_matrix:
         print("generating rnaseqc gene count matrix")
-        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad)
+        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad, rnaseqc2_gene_count_col)
         rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
         rnaseqc_count_mat = rnaseqc_count_mat.T
         rnaseqc_count_mat.to_csv(folder + "rnaseqc_count_mat.csv")
         rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
         rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
+        if run_stranded:
+            rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad, rnaseqc2_gene_count_col_stranded)
+            rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
+            rnaseqc_count_mat = rnaseqc_count_mat.T
+            rnaseqc_count_mat.to_csv(folder + "stranded_rnaseqc_count_mat.csv")
+            rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
+            rnaseqc_count_mat_pr.to_csv(folder + "stranded_rnaseqc_count_mat_pr.csv")
     
     mytracker.close_gumbo_client()
 
