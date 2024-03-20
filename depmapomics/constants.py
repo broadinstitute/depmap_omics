@@ -460,7 +460,7 @@ PROTEINEFILENAMES = ["proteincoding_genes_tpm", "proteincoding_genes_expected_co
 
 RSEMFILENAME_TRANSCRIPTS = ["transcripts_tpm", "transcripts_expected_count"]
 
-RSEMFILENAME_TRANSCRIPTS = ["transcripts_tpm_stranded", "transcripts_expected_count_stranded"]
+RSEMFILENAME_TRANSCRIPTS_STRANDED = ["transcripts_tpm_stranded", "transcripts_expected_count_stranded"]
 
 RNASEQC2_GENE_COUNT_COL = "rnaseqc2_gene_counts"
 
