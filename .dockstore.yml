@@ -41,24 +41,6 @@ workflows:
         - dev
         - master
         - guidemat-wdl
-  - name: WGS_preprocessing
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - master
-  - name: WGS_preprocessing_DRAGEN
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing_DRAGEN.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - dragen-preprocess-fix
   - name: WGS_aggregate
     subclass: WDL
     publish: True
@@ -235,6 +217,7 @@ workflows:
         - master
         - mutation-annotation-eval
         - update-vcf-to-depmap
+        - add-tert-to-wdl
   - name: vcf2maf
     subclass: WDL
     publish: True
@@ -253,6 +236,15 @@ workflows:
     filters: # All tags, no branches
       branches:
         - dev-hgvs
+  - name: rna_index
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/build_rna_idx/rna_index.wdl
+    testParameterFiles:
+      - /sandbox/build_rna_idx/test.json
+    filters: # All tags, no branches
+      branches:
+        - master
   - name: telomere
     subclass: WDL
     publish: True
@@ -279,6 +271,7 @@ workflows:
       branches:
         - merge-annotators
         - master
+        - dev-hgvs
   - name: mask_variants
     subclass: WDL
     publish: True
@@ -288,3 +281,30 @@ workflows:
     filters: # All tags, no branches
       branches:
         - mask-repeats-and-segdups
+  - name: aggregate_microsatellite_repeats
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/aggregate_microsatellite_repeats.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - microsat
+  - name: wgs_qc
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/wgs_qc/workflow.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - add-wgs-cram-qc
+  - name: guide_mutation_binary
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /sandbox/guidemat/guide_mutation_binary.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - guidemat-wdl
