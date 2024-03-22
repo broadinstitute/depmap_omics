@@ -16,7 +16,6 @@ from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
 
 from .mutations import postprocess_main_steps
-from google.cloud import bigquery # type: ignore
 
 
 async def expressionPostProcessing(
@@ -38,6 +37,7 @@ async def expressionPostProcessing(
     starlogs={},
     compute_enrichment=False,
     billing_proj=constants.GCS_PAYER_PROJECT,
+    generate_count_matrix=True,
     **kwargs,
 ):
     """the full CCLE Expression post processing pipeline (used only by CCLE)
@@ -104,24 +104,26 @@ async def expressionPostProcessing(
         **kwargs,
     )
 
-    print("updating the tracker")
+    if not dry_run:
+        print("updating the tracker")
 
-    track.updateTrackerRNA(
-        failed,
-        lowqual[lowqual.sum(1) > 3].index.tolist(),
-        ccle_refsamples,
-        samplesetname,
-        refworkspace,
-        samplesinset=samplesinset,
-        starlogs=starlogs,
-        dry_run=dry_run,
-        billing_proj=billing_proj,
-    )
+        track.updateTrackerRNA(
+            failed,
+            lowqual[lowqual.sum(1) > 3].index.tolist(),
+            ccle_refsamples,
+            samplesetname,
+            refworkspace,
+            samplesinset=samplesinset,
+            starlogs=starlogs,
+            dry_run=dry_run,
+            billing_proj=billing_proj,
+        )
 
     pr_table = mytracker.read_pr_table()
 
-    # subset and rename, include all PRs that have associated CDS-ids
-    pr_table = mytracker.update_pr_from_seq(["rna"])
+    if not dry_run:
+        # subset and rename, include all PRs that have associated CDS-ids
+        pr_table = mytracker.update_pr_from_seq(["rna"])
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
@@ -136,6 +138,16 @@ async def expressionPostProcessing(
         ].rename(index=renaming_dict)
         enrichments.to_csv(folder + "gene_sets_profile.csv")
     expressions.saveFiles(pr_files, folder)
+
+    if generate_count_matrix:
+        print("generating rnaseqc gene count matrix")
+        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad)
+        rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
+        rnaseqc_count_mat = rnaseqc_count_mat.T
+        rnaseqc_count_mat.to_csv(folder + "rnaseqc_count_mat.csv")
+        rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
+        rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
+    
     mytracker.close_gumbo_client()
 
     if not dry_run:
@@ -240,6 +252,31 @@ async def expressionPostProcessing(
                         "encoding": "utf-8",
                     },
                 ],
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=dataset_description,
+            )
+        if generate_count_matrix:
+            tc.update_dataset(
+                changes_description="adding rnaseqc2 gene counts for new "
+                + samplesetname
+                + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "rnaseqc_count_mat.csv",
+                        "name": "rnaseqc_count_mat_withReplicates",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "rnaseqc_count_mat_pr.csv",
+                        "name": "rnaseqc_count_mat_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                ],
+                add_all_existing_files=True,
                 upload_async=False,
                 dataset_description=dataset_description,
             )
@@ -725,13 +762,6 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
-def job_query_to_dataframe(sql, project_id):
-    client = bigquery.Client(project=project_id)
-    query_job = client.query(sql)
-    df = query_job.to_dataframe()
-    return df
-
-
 async def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
@@ -771,26 +801,6 @@ async def mutationPostProcessing(
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
 
-    # BigQuery for patching noncoding mutation
-    # Only rescue TERT now
-    tert_muts = job_query_to_dataframe(f"SELECT * FROM `depmap-omics.maf_staging.{env_config.table_name}` WHERE hugo_symbol = 'TERT' AND pos >= 1295054 AND pos <= 1295365 AND {env_config.quality_filter}", env_config.project_id)
-    tert_muts.loc[:, 'gnomadg_af'] = tert_muts.loc[:, 'gnomadg_af'].replace('', '0').astype(float)
-    tert_muts.loc[:, 'gnomade_af'] = tert_muts.loc[:, 'gnomade_af'].replace('', '0').astype(float)
-    tert_muts.loc[:, 'rescue'] = True
-
-    tert_muts[["ref_count", "alt_count"]] = tert_muts["ad"].str.split(",", expand=True)
-    # tert_muts.rename({'cds_id': 'DepMap_ID'}, inplace=True)
-    tert_muts.loc[:, 'DepMap_ID'] = tert_muts.loc[:, 'CDS_ID']
-
-    # Turn off internal af filter for TERT
-    tert_mutations_with_standard_cols = postprocess_main_steps(tert_muts, max_recurrence=1.0)
-
-    
-    print('transforming tert maf...')
-    print(tert_mutations_with_standard_cols.head())
-    print(tert_mutations_with_standard_cols.shape)
-    print(tert_mutations_with_standard_cols.columns)
-
     # doing wes
     print("DOING WES")
     folder = constants.WORKING_DIR + samplesetname + "/wes_"
@@ -808,28 +818,8 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-    # wesmutations.to_csv("wes_test.csv")
+    
     wesmutations.drop(['0915', '0918'], axis=1, inplace=True)
-
-    tert_mutations_with_standard_cols_wes = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wesmutations.Tumor_Sample_Barcode), wesmutations.columns]
-    print(wesmutations.shape, tert_mutations_with_standard_cols_wes.shape)
-    print(np.setdiff1d(tert_mutations_with_standard_cols_wes.columns, wesmutations.columns))
-
-    print(tert_mutations_with_standard_cols_wes.columns)
-    print(wesmutations.columns)
-
-    assert wesmutations.shape[1] == 98
-    assert tert_mutations_with_standard_cols_wes.shape[1] == 98
-    print((wesmutations.columns == tert_mutations_with_standard_cols_wes.columns).sum())
-    assert (wesmutations.columns == tert_mutations_with_standard_cols_wes.columns).sum() == 98, 'TERT and WES columns mismatch'
-
-    print(tert_mutations_with_standard_cols_wes.shape)
-    wesmutations = pd.concat([
-        wesmutations, 
-        tert_mutations_with_standard_cols_wes,
-        ],
-        axis=0)
-    print(wesmutations.shape)
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
@@ -856,15 +846,6 @@ async def mutationPostProcessing(
         **kwargs,
     )
     wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
-
-    tert_mutations_with_standard_cols_wgs = tert_mutations_with_standard_cols.loc[tert_mutations_with_standard_cols.Tumor_Sample_Barcode.isin(wgsmutations.Tumor_Sample_Barcode), wgsmutations.columns]
-    print(tert_mutations_with_standard_cols_wgs.shape)
-
-    wgsmutations = pd.concat([
-        wgsmutations, 
-        tert_mutations_with_standard_cols_wgs
-        ],
-        axis=0)
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
@@ -939,38 +920,27 @@ async def mutationPostProcessing(
     # TODO: add pandera type validation
 
     if run_guidemat:
-        # generate germline binary matrix
-        wgs_samples = dm.WorkspaceManager(wgsrefworkspace).get_samples()
-        wes_samples = dm.WorkspaceManager(wesrefworkspace).get_samples()
-        wgs_vcfs = wgs_samples[vcf_colname]
-        wes_vcfs = wes_samples[vcf_colname]
-        vcflist = (
-            wgs_vcfs[~wgs_vcfs.isna()].tolist() + wes_vcfs[~wes_vcfs.isna()].tolist()
-        )
-        vcflist = [v for v in vcflist if v.startswith("gs://")]
+        # aggregate germline binary matrix
+        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName)
+        wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName)
 
-        print("generating germline binary matrix")
-        germline_mats = mutations.generateGermlineMatrix(
-            vcflist,
-            vcfdir=vcfdir,
-            savedir=constants.WORKING_DIR + samplesetname + "/",
-            filename="binary_mutguides.tsv.gz",
-            bed_locations=bed_locations,
-        )
-        for lib, mat in germline_mats.items():
+        for lib, _ in bed_locations.items():
+            assert lib in wes_germline_mats, "library missing in wes"
+            assert lib in wgs_germline_mats, "library missing in wgs"
             # merging wes and wgs
             print("renaming merged wes and wgs germline matrix for library: ", lib)
-            germline_mat_noguides = mat.iloc[:, 4:]
+            germline_mat_merged = pd.concat([wes_germline_mats[lib], wgs_germline_mats[lib].iloc[:, 4:]], axis=1)
+            germline_mat_merged_noguides = germline_mat_merged.iloc[:, 4:]
 
             # transform from CDSID-level to PR-level
             whitelist_cols = [
-                x for x in germline_mat_noguides.columns if x in renaming_dict
+                x for x in germline_mat_merged_noguides.columns if x in renaming_dict
             ]
-            whitelist_germline_mat = germline_mat_noguides[whitelist_cols]
+            whitelist_germline_mat = germline_mat_merged_noguides[whitelist_cols]
             mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
 
             mergedmat = mergedmat.astype(bool).astype(int)
-            sorted_mat = mat.iloc[:, :4].join(mergedmat)
+            sorted_mat = germline_mat_merged.iloc[:, :4].join(mergedmat)
             sorted_mat["end"] = sorted_mat["end"].astype(int)
             print("saving merged binary matrix for library: ", lib)
             sorted_mat.to_csv(
@@ -1018,37 +988,53 @@ async def mutationPostProcessing(
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
-                {
-                    "path": folder + "binary_germline_avana.csv",
-                    "name": "binary_mutation_avana",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "binary_germline_ky.csv",
-                    "name": "binary_mutation_ky",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "binary_germline_humagne.csv",
-                    "name": "binary_mutation_humagne",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "svs.csv",
-                    "name": "structuralVariants_withReplicates",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "svs_profile.csv",
-                    "name": "structuralVariants_profile",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-            ],
-            upload_async=False,
-            dataset_description=taiga_description,
-        )
+            ], upload_async=False,
+            dataset_description=taiga_description,)
+        if run_guidemat:
+            tc.update_dataset(
+                changes_description="new " + samplesetname + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[
+                    {
+                        "path": folder + "binary_germline_avana.csv",
+                        "name": "binary_mutation_avana",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "binary_germline_ky.csv",
+                        "name": "binary_mutation_ky",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "binary_germline_humagne.csv",
+                        "name": "binary_mutation_humagne",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                ], 
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=taiga_description,)
+        if run_sv:
+            tc.update_dataset(
+                changes_description="new " + samplesetname + " release!",
+                dataset_permaname=taiga_dataset,
+                upload_files=[           
+                    {
+                        "path": folder + "svs.csv",
+                        "name": "structuralVariants_withReplicates",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "svs_profile.csv",
+                        "name": "structuralVariants_profile",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                ], 
+                add_all_existing_files=True,
+                upload_async=False,
+                dataset_description=taiga_description,)
