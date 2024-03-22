@@ -436,9 +436,12 @@ TOKEEP_ADD = {
     "oncokb_hotspot": "str",
     "oncokb_oncogenic": "str",
     "provean_prediction": "str",
+    "spliceai_ds_ag": "str",
+    "spliceai_ds_al": "str",
+    "spliceai_ds_dg": "str",
+    "spliceai_ds_dl": "str",
     "segdup": "str",
     "rm": "str"
-
 }
 
 
