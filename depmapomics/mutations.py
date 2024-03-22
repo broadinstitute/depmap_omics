@@ -5,7 +5,6 @@ from mgenepy.utils import helper as h
 import os
 import pandas as pd
 from collections import Counter
-from mgenepy.epigenetics import chipseq as chip
 from itertools import repeat
 import multiprocessing
 import subprocess
@@ -82,9 +81,7 @@ def makeMatrices(
     id_col=constants.SAMPLEID,
     hugo_col=constants.HUGO_COL,
     lof_col=constants.LIKELY_LOF_COL,
-    hess_col=constants.HESS_COL,
-    oncokb_hotspot_col=constants.ONCOKB_HOTSPOT_COL,
-    cosmic_tier_col=constants.COSMIC_TIER_COL,
+    hotspot_col=constants.HOTSPOT_COL,
 ):
     """generates genotyped hotspot, driver and damaging mutation matrices
 
@@ -104,11 +101,7 @@ def makeMatrices(
         sample = sample_ids[j]
         subset_maf = maf[maf[id_col] == sample]
         # hotspot
-        hotspot = subset_maf[
-            (subset_maf[hess_col] == True)
-            | (subset_maf[oncokb_hotspot_col] == True)
-            | (subset_maf[cosmic_tier_col] == 1)
-        ]
+        hotspot = subset_maf[subset_maf[hotspot_col] == True]
         homhotspot = set(hotspot[hotspot["GT"] == "1|1"][hugo_col])
         for dup in h.dups(hotspot[hugo_col]):
             if hotspot[hotspot[hugo_col] == dup]["AF"].astype(float).sum() >= homin:
@@ -192,8 +185,6 @@ def aggregateMAFs(
     sample_table = wm.get_samples()
     samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
-    for col in sample_table.columns:
-        print(col)
     print(mafcol)
     sample_table_valid = sample_table[~sample_table[mafcol].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
@@ -255,6 +246,47 @@ def aggregateSV(
     print("saving aggregated SVs")
     all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
     return all_svs
+
+def aggregateGermlineMatrix(
+    wm,
+    sampleset="all",
+    binary_mut_colname_dict=constants.BINARY_MUT_COLNAME_DICT,
+    save_output="",
+):
+    """aggregate binary guide mutations pulled from a terra workspace
+
+    Args:
+        wm (str): terra workspace where the data is stored
+        sampleset (str): name of the sample set in the workspace
+        binary_mut_colname_dict (dict): dictionary mapping library name to corresponding column name 
+                                        in terra workspace where the binarized mutation calls are stored
+        save_output (str, optional): whether to save our data. Defaults to "".
+
+    Returns:
+    """
+    print("aggregating binary mutation matrices")
+    sample_table = wm.get_samples()
+    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    all_guide_matrices = dict()
+    for lib, colname in binary_mut_colname_dict.items():
+        sample_table_valid = sample_table[~sample_table[colname].isna()]
+        na_samples = set(sample_table.index) - set(sample_table_valid.index)
+        print(str(len(na_samples)) + " samples don't have corresponding binarized mutation calls for " + lib + ": ", na_samples)
+        all_muts = []
+        header = False
+        for name, row in sample_table_valid.iterrows():
+            sample_mut = pd.read_csv(row[colname])
+            if header == False:
+                all_muts.append(sample_mut)
+                header = True
+            else:
+                all_muts.append(sample_mut[[name]])
+        all_muts = pd.concat(all_muts, axis=1)
+        print("saving aggregated binary mutation matrices")
+        all_guide_matrices[lib] = all_muts
+        all_muts.to_csv(save_output + lib + "_binary_guide_mutations", index=False)
+    return all_guide_matrices
 
 
 def postProcess(
@@ -323,139 +355,6 @@ def postProcess(
         svs.to_csv(save_output + "svs_all.csv", index=False)
 
     return mutations_with_standard_cols, svs
-
-
-def mapBed(file, vcfdir, guide_df):
-    """map mutations in one vcf file to regions in the guide bed file"""
-
-    bed = pd.read_csv(
-        vcfdir + file,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "foldchange"],
-    )
-    bed["foldchange"] = 1
-    name = file.split("/")[-1].split(".")[0].split("_")[1]
-    if len(bed) == 0:
-        return (name, None)
-    val = chip.putInBed(guide_df, bed, mergetype="sum")
-
-    return (name, val)
-
-
-def generateGermlineMatrix(
-    vcfs,
-    vcfdir,
-    savedir=constants.WORKING_DIR + constants.SAMPLESETNAME + "/",
-    filename="binary_mutguides.tsv.gz",
-    bed_locations=constants.GUIDESBED,
-    cores=16,
-):
-    """generate profile-level germline mutation matrix for achilles' ancestry correction. VCF files are generated
-    using the CCLE pipeline on terra
-    Args:
-        vcfs (list): list of vcf file locations (gs links)
-        vcfdir (str, optional): directory where vcf files are saved.
-        savedir (str, optional): directory where output germline matrices are saved.
-        bed_location (str, optional): location of the guides bed file.
-        vcf_colname (str, optional): vcf column name on terra.
-        cores (int, optional): number of cores in parallel processing.
-
-    Returns:
-        sorted_mat (pd.DataFrame): binary matrix where each row is a region in the guide, and each column corresponds to a profile
-    """
-    # check if bcftools is installed
-    print("generating germline matrix")
-    print(
-        "bcftools is required in order to generate the matrix. Checking if bcftools is installed..."
-    )
-    try:
-        subprocess.call(["bcftools"])
-    except FileNotFoundError:
-        raise RuntimeError("bcftools not installed!")
-
-    h.createFoldersFor(savedir)
-    # load vcfs from workspace using dalmatian
-    h.createFoldersFor(vcfdir)
-
-    # save vcfs from workspace locally,
-    # and run bcftools query to transform vcfs into format needed for subsequent steps
-    # only including regions in the guide bed file
-
-    cmds = []
-    for lib, _ in bed_locations.items():
-        h.createFoldersFor(vcfdir + lib + "/")
-    for sam in vcfs:
-        cmd = (
-            "gsutil cp "
-            + sam
-            + " "
-            + vcfdir
-            + sam.split("/")[-1]
-            + " && gsutil cp "
-            + sam
-            + ".tbi"
-            + " "
-            + vcfdir
-            + sam.split("/")[-1]
-            + ".tbi && "
-        )
-        for lib, fn in bed_locations.items():
-            cmd += (
-                "bcftools query\
-                    --exclude \"FILTER!='PASS'&GT!='mis'&GT!~'\.'\"\
-                    --regions-file "
-                + fn
-                + " \
-                    --format '%CHROM\\t%POS\\t%END\\t%ALT{0}\n' "
-                + vcfdir
-                + sam.split("/")[-1]
-                + " > "
-                + vcfdir
-                + lib
-                + "/"
-                + "loc_"
-                + sam.split("/")[-1].split(".")[0]
-                + ".bed && "
-            )
-        cmd += "rm " + vcfdir + sam.split("/")[-1] + "*"
-        cmds.append(cmd)
-
-    print("running bcftools index and query")
-    h.parrun(cmds, cores=cores)
-    print("finished running bcftools index and query")
-
-    pool = multiprocessing.Pool(cores)
-    binary_matrices = dict()
-    for lib, fn in bed_locations.items():
-        print("mapping to library: ", lib)
-        guides_bed = pd.read_csv(
-            fn,
-            sep="\t",
-            header=None,
-            names=["chrom", "start", "end", "foldchange"],
-        )
-        res = pool.starmap(
-            mapBed,
-            zip(
-                os.listdir(vcfdir + lib + "/"),
-                repeat(vcfdir + lib + "/"),
-                repeat(guides_bed),
-            ),
-        )
-        sorted_guides_bed = guides_bed.sort_values(
-            by=["chrom", "start", "end"]
-        ).reset_index(drop=True)
-        print("done pooling")
-        for name, val in res:
-            if val is not None:
-                sorted_guides_bed[name] = val
-        sorted_guides_bed = sorted_guides_bed.rename(columns={"foldchange": "sgRNA"})
-        print("saving binary matrix for library: ", lib)
-        sorted_guides_bed.to_csv(savedir + lib + "_" + filename, index=False)
-        binary_matrices[lib] = sorted_guides_bed
-
-    return binary_matrices
 
 
 def GetVariantClassification(
@@ -715,7 +614,7 @@ def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
     return maf
 
 
-def addCols(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
+def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
     """add likely LoF column: true if a variant is high vep impact or likely lof according to oncoKB"""
     if (
         row[vep_col] == "HIGH"
@@ -786,9 +685,17 @@ def postprocess_main_steps(
     maf = convertProteinChange(maf)
 
     # step 6: add likely LoF column based on vep impact and oncokb mutation effect
-    maf["likely_lof"] = maf.apply(addCols, axis=1)
+    maf["likely_lof"] = maf.apply(addLikelyLoF, axis=1)
 
-    # step 7: remove high af from DepMap cohort
+    # step 7: add hotspot column based on 
+    maf["hotspot"] = False
+    maf.loc[((maf[constants.HESS_COL] == "Y")
+        | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
+        | (maf[constants.COSMIC_TIER_COL] == 1)), "hotspot"] = True
+    print("unique hotspot genes: ")
+    print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
+
+    # step 8: remove high af from DepMap cohort
     internal_afs = maf.loc[
         :,
         [
