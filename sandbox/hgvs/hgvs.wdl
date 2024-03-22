@@ -10,12 +10,13 @@ workflow HgvsWorkflow {
 
         File clinvar_data = "gs://snpsift_data/clinvar-latest.vcf.gz"
         File clinvar_data_tbi = "gs://snpsift_data/clinvar-latest.vcf.gz.tbi"
-        File dbsnp_data = "gs://snpsift_data/00-All.vcf.gz"
-        File dbsnp_data_tbi = "gs://snpsift_data/00-All.vcf.gz.tbi"
 
         File snpeff = "gs://snpsift_data/snpEff.jar"
         File snpeff_config = "gs://snpsift_data/snpEff.config"
         File snpsift = "gs://snpsift_data/SnpSift.jar"
+
+        File alphamis = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz"
+        File alphamis_idx = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz.tbi"
 
         File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
@@ -38,12 +39,12 @@ workflow HgvsWorkflow {
             snpeff=snpeff,
             snpsift=snpsift,
             snpeff_config=snpeff_config,
-            dbsnp_data=dbsnp_data,
-            dbsnp_data_tbi=dbsnp_data_tbi,
             clinvar_data=clinvar_data,
             clinvar_data_tbi=clinvar_data_tbi,
             pLi=pLi,
             LoF=LoF,
+            alphamis=alphamis,
+            alphamis_idx=alphamis_idx,
             boot_disk_size=boot_disk_size,
             disk_space=disk_space,
             cpu = cpu,
@@ -62,6 +63,8 @@ task annotate_hgvs_task {
         File input_vcf
         File fasta
         File fai
+        File alphamis
+        File alphamis_idx
         File gzi
         File pLi
         File LoF
@@ -69,8 +72,6 @@ task annotate_hgvs_task {
         File snpeff
         File snpeff_config
         File snpsift
-        File dbsnp_data
-        File dbsnp_data_tbi
         File clinvar_data
         File clinvar_data_tbi
         String sample_id
@@ -95,6 +96,9 @@ task annotate_hgvs_task {
         cp ~{clinvar_data} ~{clinvar_data_tbi} ./db/GRCh38/clinvar/
         java -jar ~{snpsift} Annotate -clinvar -db ~{clinvar_data} ~{sample_id}.norm.snpeff.vcf > ~{sample_id}.norm.snpeff.clinvar.vcf
 
+        mkdir -p /tmp/Plugins
+        wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/111/AlphaMissense.pm -O /tmp/Plugins/AlphaMissense.pm
+
         tar -C /tmp -xvzf ~{vep_data} 
         ls /tmp
         chmod 777 /tmp/homo_sapiens
@@ -104,11 +108,12 @@ task annotate_hgvs_task {
         cp ~{gzi} /tmp
         du -sh /tmp/Homo_sapiens_assembly38.fasta.gz*
        
-        cp ~{pLi} ~{LoF} /tmp
+        cp ~{pLi} ~{LoF} ~{alphamis} ~{alphamis_idx} /tmp
 
         vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.vcf \
             --output_file ~{sample_id}.norm.snpeff.clinvar.vep.vcf \
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
+            --plugin AlphaMissense,file=/tmp/AlphaMissense_hg38.tsv.gz \
             --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
             --pick 
 
