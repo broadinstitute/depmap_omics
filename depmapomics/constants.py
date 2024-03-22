@@ -112,6 +112,8 @@ GUIDESBED = {
 
 VCFCOLNAME = "mutect2_filtered_vcf"
 
+BINARY_MUT_COLNAME_DICT = {"avana": "avana_binary_mut", "humagne": "humagne_binary_mut", "ky": "ky_binary_mut"}
+
 GENECHANGETHR = 0.025
 
 SEGMENTSTHR = 1500
@@ -287,11 +289,11 @@ HUGO_COL = "HugoSymbol"
 
 LIKELY_LOF_COL = "LikelyLoF"
 
+HOTSPOT_COL = "Hotspot"
+
 CCLE_DELETERIOUS_COL = "CCLEDeleterious"
 
-CIVIC_SCORE_COL = "CivicScore"
-
-HESS_COL = "HessDriver"
+HESS_COL = "hess_driver"
 
 ONCOKB_HOTSPOT_COL = "oncokb_hotspot"
 
@@ -301,6 +303,10 @@ PROTEIN_DICT = {'Cys': 'C', 'Asp': 'D', 'Ser': 'S', 'Gln': 'Q', 'Lys': 'K',
      'Ile': 'I', 'Pro': 'P', 'Thr': 'T', 'Phe': 'F', 'Asn': 'N', 
      'Gly': 'G', 'His': 'H', 'Leu': 'L', 'Arg': 'R', 'Trp': 'W', 
      'Ala': 'A', 'Val':'V', 'Glu': 'E', 'Tyr': 'Y', 'Met': 'M'}
+
+ONCOKB_ONCOGENE_LIST = "depmapomics/tasks/oncokb_dm/data/oncogene_oncokb.txt"
+
+ONCOKB_TM_LIST = "depmapomics/tasks/oncokb_dm/data/tumor_suppressor_oncokb.txt"
 
 MUTCOL_DEPMAP = {
     'chrom': 'Chrom',
@@ -366,6 +372,7 @@ MUTCOL_DEPMAP = {
     # 'popaf': 'Popaf',
     # 'likely_gof': 'LikelyGof',
     'likely_lof': 'LikelyLoF',
+    'hotspot': 'Hotspot',
     'hess_driver': 'HessDriver',
     'hess_signture': 'HessSignature',
     'revel_score': 'RevelScore',
@@ -382,6 +389,8 @@ MUTCOL_DEPMAP = {
     'provean_prediction': 'ProveanPrediction',
     # 'segdup': 'Segdup',
     # 'rm': 'Rm',
+    'am_class': 'AMClass',
+    'am_pathogenicity': 'AMPathogenicity',
     'rescue': 'Rescue',
     'DepMap_ID': 'DepMap_ID',
  }
@@ -593,6 +602,7 @@ VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
     "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
     "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
     "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
+    "rnaseqc_count_mat_profile": "OmicsExpressionRNASeQCGeneCountProfile"
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
