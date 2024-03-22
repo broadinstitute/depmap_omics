@@ -48,8 +48,16 @@ workflows:
       - /test.json
     filters: # All tags, no branches
       branches:
-        - dragen-preprocess-fix
         - master
+  - name: WGS_preprocessing_DRAGEN
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing_DRAGEN.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - dragen-preprocess-fix
   - name: WGS_aggregate
     subclass: WDL
     publish: True
