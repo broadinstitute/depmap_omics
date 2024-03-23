@@ -344,6 +344,10 @@ TO_RENAME_OC = {
     "oc_spliceai__ds_al": "spliceai_ds_al",
     "oc_spliceai__ds_dg": "spliceai_ds_dg",
     "oc_spliceai__ds_dl": "spliceai_ds_dl",
+    "oc_spliceai__dp_ag": "spliceai_dp_ag",
+    "oc_spliceai__dp_al": "spliceai_dp_al",
+    "oc_spliceai__dp_dg": "spliceai_dp_dg",
+    "oc_spliceai__dp_dl": "spliceai_dp_dl",
     "oc_gtex__gtex_gene": "gtex_gene",
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
@@ -436,9 +440,16 @@ TOKEEP_ADD = {
     "oncokb_hotspot": "str",
     "oncokb_oncogenic": "str",
     "provean_prediction": "str",
+    "spliceai_ds_ag": "str",
+    "spliceai_ds_al": "str",
+    "spliceai_ds_dg": "str",
+    "spliceai_ds_dl": "str",
+    "spliceai_dp_ag": "str",
+    "spliceai_dp_al": "str",
+    "spliceai_dp_dg": "str",
+    "spliceai_dp_dl": "str",
     "segdup": "str",
     "rm": "str"
-
 }
 
 
