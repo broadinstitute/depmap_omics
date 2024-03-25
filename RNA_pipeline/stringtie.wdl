@@ -37,7 +37,7 @@ task Stringtie {
         String memory = "2GiB"
         Int timeMinutes = 1 + ceil(size(bam, "G") * 60 / threads)
         String dockerImage = "quay.io/biocontainers/stringtie:1.3.6--h92e31bf_0"
-        Int disk_size = 1 + ceil(size(bam, "G") * 4 / threads)
+        Int disk_size = 1 + ceil(size(bam, "G") * 2 / threads)
     }
 
     command {
