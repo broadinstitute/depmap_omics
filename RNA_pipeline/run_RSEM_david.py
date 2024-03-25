@@ -45,7 +45,7 @@ with cd(args.output_dir):
         cmd += args.ci_memory
 
     if args.is_stranded=='true':
-        cmd += ' --forward-prob 0.0'
+        cmd += ' --strandedness reverse --forward-prob 0.0'
 
     if os.path.splitext(args.input_file)[1]=='.bam':
         cmd += ' --bam '+args.input_file+' '+os.path.join(args.rsem_ref_dir,'rsem_reference')+' '+args.prefix+'.rsem'

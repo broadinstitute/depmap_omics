@@ -4,8 +4,11 @@ import "samtofastq_wdl1-0.wdl" as samtofastq_v1
 import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_wdl1-0.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
+import "ctat-mutations.hg38.wdl" as rna_mutation
+
 # import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
 import "star_fusion_hg38.wdl" as hg38_star_fusion
+
 #import "rnaseq_mutect2_tumor_only.wdl" as rna_mutect2
 
 
@@ -15,6 +18,9 @@ workflow RNA_pipeline {
   #samtofastq_v1
   File input_bam_cram
   File reference_fasta
+
+  String is_stranded = "true"
+  String is_stranded_rnaseqc = "RF"
 
   #star_v1
   File star_index
@@ -75,30 +81,38 @@ workflow RNA_pipeline {
       star_index=star_index
   }
 
-  call rnaseqc2_v1.rnaseqc2 as rnaseqc2 {
-    input:
-      bam_file=star.bam_file,
-      genes_gtf=genes_gtf,
-      sample_id=sample_id
-  }
+#  call rnaseqc2_v1.rnaseqc2 as rnaseqc2 {
+#    input:
+#      bam_file=star.bam_file,
+#      genes_gtf=genes_gtf,
+#      sample_id=sample_id,
+#      strandedness=is_stranded_rnaseqc
+#  }
 
   call rsem_v1.rsem as rsem {
     input:
       transcriptome_bam=star.transcriptome_bam,
       prefix=sample_id,
       rsem_reference=rsem_reference,
-      is_stranded="false",
+      is_stranded=is_stranded,
       paired_end="true"
   }
 
-  call hg38_star_fusion.star_fusion_hg38_wf as StarFusion {
-    input:
-      left_fq=samtofastq.fastq1,
-      right_fq=samtofastq.fastq2,
-      sample_id=sample_id,
-      genome_plug_n_play_tar_gz=genome_plug_n_play_tar_gz,
-      fusion_inspector="validate"
-  }
+#  call hg38_star_fusion.star_fusion_hg38_wf as StarFusion {
+#    input:
+#      left_fq=samtofastq.fastq1,
+#      right_fq=samtofastq.fastq2,
+#      sample_id=sample_id,
+#      genome_plug_n_play_tar_gz=genome_plug_n_play_tar_gz,
+#      fusion_inspector="validate"
+#  }
+
+#  call rna_mutation.ctat_mutations_Terra_hg38 as ctat_mutation {
+#    input:
+#      sample_id=sample_id,
+#      left=samtofastq.fastq1,
+#      right=samtofastq.fastq2
+#  }
 
 #   call rna_mutect2.RNAseq_mutect2 as RNAseq_mutect2{
 #       input:
@@ -146,22 +160,22 @@ workflow RNA_pipeline {
     File junctions_pass1=star.junctions_pass1
     Array[File] logs=star.logs
     #rnaseqc
-    File gene_tpm=rnaseqc2.gene_tpm
-    File gene_counts=rnaseqc2.gene_counts
-    File exon_counts=rnaseqc2.exon_counts
-    File metrics=rnaseqc2.metrics
-    File insertsize_distr=rnaseqc2.insertsize_distr
+    #File gene_tpm=rnaseqc2.gene_tpm
+    #File gene_counts=rnaseqc2.gene_counts
+    #File exon_counts=rnaseqc2.exon_counts
+    #File metrics=rnaseqc2.metrics
+    #File insertsize_distr=rnaseqc2.insertsize_distr
     #rsem
     File genes=rsem.genes
     File isoforms=rsem.isoforms
     #StarFusion
-    File fusion_predictions=StarFusion.fusion_predictions
-    File fusion_predictions_abridged=StarFusion.fusion_predictions_abridged
+    #File fusion_predictions=StarFusion.fusion_predictions
+    #File fusion_predictions_abridged=StarFusion.fusion_predictions_abridged
 
-    File? fusion_inspector_validate_web=StarFusion.fusion_inspector_validate_web
-    File? fusion_inspector_validate_fusions_abridged=StarFusion.fusion_inspector_validate_fusions_abridged
-    File? fusion_inspector_inspect_fusions_abridged=StarFusion.fusion_inspector_inspect_fusions_abridged
-    File? fusion_inspector_inspect_web=StarFusion.fusion_inspector_inspect_web
+    #File? fusion_inspector_validate_web=StarFusion.fusion_inspector_validate_web
+    #File? fusion_inspector_validate_fusions_abridged=StarFusion.fusion_inspector_validate_fusions_abridged
+    #File? fusion_inspector_inspect_fusions_abridged=StarFusion.fusion_inspector_inspect_fusions_abridged
+    #File? fusion_inspector_inspect_web=StarFusion.fusion_inspector_inspect_web
 
     #rna_mutect2
     # File merged_vcf = RNAseq_mutect2.merged_vcf
@@ -173,6 +187,15 @@ workflow RNA_pipeline {
 
     # File? funcotated_file = RNAseq_mutect2.funcotated_file
     # File? funcotated_file_index = RNAseq_mutect2.funcotated_file_index
+
+    #ctat-mutation
+    #File? haplotype_caller_vcf = ctat_mutation.haplotype_caller_vcf
+    #File? annotated_vcf = ctat_mutation.annotated_vcf
+    #File? filtered_vcf = ctat_mutation.filtered_vcf
+    #File? output_log_final =  ctat_mutation.output_log_final
+    #File? cancer_igv_report = ctat_mutation.cancer_igv_report
+    #File? cancer_variants_tsv = ctat_mutation.cancer_variants_tsv
+    #File? cancer_vcf = ctat_mutation.cancer_vcf
   }
 }
 
