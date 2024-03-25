@@ -788,8 +788,6 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-    
-    wesmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
