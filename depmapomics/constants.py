@@ -372,7 +372,6 @@ MUTCOL_DEPMAP = {
     # 'popaf': 'Popaf',
     # 'likely_gof': 'LikelyGof',
     'likely_lof': 'LikelyLoF',
-    'hotspot': 'Hotspot',
     'hess_driver': 'HessDriver',
     'hess_signture': 'HessSignature',
     'revel_score': 'RevelScore',
@@ -394,6 +393,9 @@ MUTCOL_DEPMAP = {
     'rescue': 'Rescue',
     'DepMap_ID': 'DepMap_ID',
  }
+
+# columns generated in postprocessing, not in terra
+MUTCOL_ADDITIONAL = {'hotspot': 'Hotspot'}
 
 MUTCOL_STANDARDMAF = {
     "Chromosome": "Chromosome",
