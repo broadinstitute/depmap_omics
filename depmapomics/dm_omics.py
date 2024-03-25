@@ -747,7 +747,6 @@ async def mutationPostProcessing(
     mutcol: dict = constants.MUTCOL_DEPMAP,
     standardmafcol: dict = constants.MUTCOL_STANDARDMAF,
     mafcol: str = constants.MAF_COL,
-    doCleanup: bool = False,
     run_sv: bool = True,
     run_guidemat: bool = True,
     upload_taiga: bool = True,
@@ -828,6 +827,7 @@ async def mutationPostProcessing(
         drop=True
     )
 
+    mutcol.update(constants.MUTCOL_ADDITIONAL)
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     mergedmutations = mutations.addEntrez(mergedmutations, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
