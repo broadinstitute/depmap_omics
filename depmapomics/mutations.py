@@ -687,11 +687,18 @@ def postprocess_main_steps(
     # step 6: add likely LoF column based on vep impact and oncokb mutation effect
     maf["likely_lof"] = maf.apply(addLikelyLoF, axis=1)
 
-    # step 7: add hotspot column based on 
+    # step 7: add hotspot column based on multiplt criteria
     maf["hotspot"] = False
     maf.loc[((maf[constants.HESS_COL] == "Y")
         | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
         | (maf[constants.COSMIC_TIER_COL] == 1)), "hotspot"] = True
+    # manually classify two TERT promoter mutations
+    maf.loc[(maf["chrom"] == "chr5") 
+            & (maf["pos"] == 1295135) 
+            & (maf["alt"] == "A"), "hotspot"] = True
+    maf.loc[(maf["chrom"] == "chr5") 
+            & (maf["pos"] == 1295113) 
+            & (maf["alt"] == "A"), "hotspot"] = True
     print("unique hotspot genes: ")
     print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
 

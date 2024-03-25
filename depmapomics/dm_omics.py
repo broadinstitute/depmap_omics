@@ -815,7 +815,6 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-    wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
