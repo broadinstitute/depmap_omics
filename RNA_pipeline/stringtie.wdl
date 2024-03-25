@@ -1,5 +1,5 @@
 version 1.0
-# from https://raw.githubusercontent.com/biowdl/tasks/develop/stringtie.wdl
+
 # Copyright (c) 2017 Leiden University Medical Center
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -37,6 +37,7 @@ task Stringtie {
         String memory = "2GiB"
         Int timeMinutes = 1 + ceil(size(bam, "G") * 60 / threads)
         String dockerImage = "quay.io/biocontainers/stringtie:1.3.6--h92e31bf_0"
+        Int disk_size = 30
     }
 
     command {
@@ -64,6 +65,7 @@ task Stringtie {
         memory: memory
         time_minutes: timeMinutes
         docker: dockerImage
+        disks: "local-disk ${disk_size} HDD"
     }
 
     parameter_meta {

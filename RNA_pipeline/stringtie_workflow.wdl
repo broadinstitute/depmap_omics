@@ -1,6 +1,6 @@
 version 1.0
 
-import "https://raw.githubusercontent.com/biowdl/tasks/develop/stringtie.wdl" as stringtie
+import "stringtie.wdl" as stringtie
 
 workflow run_stringtie {
     input {
