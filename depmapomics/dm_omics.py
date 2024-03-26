@@ -833,7 +833,6 @@ async def mutationPostProcessing(
     mutcol: dict = constants.MUTCOL_DEPMAP,
     standardmafcol: dict = constants.MUTCOL_STANDARDMAF,
     mafcol: str = constants.MAF_COL,
-    doCleanup: bool = False,
     run_sv: bool = True,
     run_guidemat: bool = True,
     upload_taiga: bool = True,
@@ -874,8 +873,6 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-    
-    wesmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
@@ -901,7 +898,6 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-    wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
@@ -917,6 +913,7 @@ async def mutationPostProcessing(
         drop=True
     )
 
+    mutcol.update(constants.MUTCOL_ADDITIONAL)
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
     mergedmutations = mutations.addEntrez(mergedmutations, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
