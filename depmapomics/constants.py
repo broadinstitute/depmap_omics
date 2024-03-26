@@ -446,15 +446,25 @@ FUSION_MINFFPM = 0.05
 
 FUSION_MAXFFPM = 0.1
 
+SAMPLESETNAME_STRANDED = "all_stranded"
+
 STARBAMCOLTERRA = ["internal_bam_filepath", "internal_bai_filepath"]
 
 RSEM_TRANSCRIPTS = ["rsem_transcripts_expected_count", "rsem_transcripts_tpm"]
 
 RSEMFILENAME_GENE = ["genes_tpm", "genes_expected_count", "genes_effective_length"]
 
+RSEMFILENAME_GENE_STRANDED = ["genes_tpm_stranded", "genes_expected_count_stranded", "genes_effective_length_stranded"]
+
 PROTEINEFILENAMES = ["proteincoding_genes_tpm", "proteincoding_genes_expected_count"]
 
 RSEMFILENAME_TRANSCRIPTS = ["transcripts_tpm", "transcripts_expected_count"]
+
+RSEMFILENAME_TRANSCRIPTS_STRANDED = ["transcripts_tpm_stranded", "transcripts_expected_count_stranded"]
+
+RNASEQC2_GENE_COUNT_COL = "rnaseqc2_gene_counts"
+
+RNASEQC2_GENE_COUNT_COL_STRANDED = "rnaseqc2_gene_counts_stranded"
 
 RSEMFILENAME = [
     "genes_tpm",

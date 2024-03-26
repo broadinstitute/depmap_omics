@@ -378,7 +378,7 @@ def load_rnaseqc(terra_path):
     rnaseqc_count_df = rnaseqc_count_df.drop(["Name", "Description"], axis=1)
     return rnaseqc_count_df
 
-def parse_rnaseqc_counts(refworkspace, samplesetname):
+def parse_rnaseqc_counts(refworkspace, samplesetname, colname):
     """parse rnaseqc gene counts to one a list of dataframes"""
     refwm = dm.WorkspaceManager(refworkspace)
     terra_rnaseq_df = refwm.get_samples()
@@ -386,7 +386,7 @@ def parse_rnaseqc_counts(refworkspace, samplesetname):
     terra_rnaseq_df = terra_rnaseq_df.loc[samplesinset, :]
     rnaseqc_count_dfs = []
     for _, row in tqdm(terra_rnaseq_df.iterrows(), total=len(terra_rnaseq_df)):
-        rnaseqc_count_dfs.append(load_rnaseqc(row["rnaseqc2_gene_counts"]))
+        rnaseqc_count_dfs.append(load_rnaseqc(row[colname]))
     return rnaseqc_count_dfs
 
 async def postProcess(
@@ -565,3 +565,124 @@ async def postProcess(
         lowqual,
         enrichments if compute_enrichment else None,
     )
+
+async def postProcessStranded(
+    refworkspace,
+    samplesetname,
+    failed,
+    save_output="",
+    ensemblserver=constants.ENSEMBL_SERVER_V,
+    samplesetToLoad="all",
+    geneLevelCols=constants.RSEMFILENAME_GENE,
+    trancriptLevelCols=constants.RSEMFILENAME_TRANSCRIPTS,
+    renamingFunc=None,
+    samplesinset=[],
+    rsemfilelocs=None,
+    useCache=False,
+    dropNonMatching=False,
+):
+    """postprocess a set of aggregated Expression table from RSEM in the CCLE way
+
+    (usually using the aggregate_RSEM terra worklow)
+
+    Args:
+        refworkspace (str): terra workspace where the ref data is stored
+        sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
+        save_output (str, optional): whether to save our data. Defaults to "".
+        doCleanup (bool, optional): whether to clean the Terra workspaces from their unused output and lo. Defaults to True.
+        colstoclean (list, optional): the columns to clean in the terra workspace. Defaults to [].
+        ensemblserver (str, optional): ensembl server biomart version . Defaults to constants.ENSEMBL_SERVER_V.
+        todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
+        priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
+        useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
+        samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
+        geneLevelCols (list, optional): the columns that contain the gene level
+        expression data in the workspace. Defaults to constants.RSEMFILENAME_GENE.
+        trancriptLevelCols (list, optional): the columns that contain the transcript
+        level expression data in the workspacce. Defaults to constants.RSEMFILENAME_TRANSCRIPTS.
+        ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
+        rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
+        samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
+        rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
+        renamingFunc (function, optional): the function to use to rename the sample columns
+        (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
+        compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
+        dropNonMatching (bool, optional): whether to drop the non matching genes
+        between entrez and ensembl. Defaults to False.
+        recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
+    """
+    print("postprocessing stranded samples")
+    if not samplesetToLoad:
+        samplesetToLoad = samplesetname
+    refwm = dm.WorkspaceManager(refworkspace)
+    # if save_output:
+    #     terra.saveWorkspace(refworkspace, save_output + "terra/")
+
+    samplesinset = [
+        i["entityName"]
+        for i in refwm.get_entities("sample_set").loc[samplesetname].samples
+    ]
+
+    print("generating gene names")
+
+    mybiomart = h.generateGeneNames(ensemble_server=ensemblserver, useCache=useCache)
+    # creating renaming index, keeping top name first
+    gene_rename = {}
+    for _, i in mybiomart.iterrows():
+        if i.ensembl_gene_id not in gene_rename:
+            gene_rename.update(
+                {i.ensembl_gene_id: i.hgnc_symbol + " (" + i.ensembl_gene_id + ")"}
+            )
+    protcod_rename = {}
+    for _, i in mybiomart[
+        (~mybiomart.entrezgene_id.isna()) & (mybiomart.gene_biotype == "protein_coding")
+    ].iterrows():
+        if i.ensembl_gene_id not in protcod_rename:
+            protcod_rename.update(
+                {
+                    i.ensembl_gene_id: i.hgnc_symbol
+                    + " ("
+                    + str(int(i.entrezgene_id))
+                    + ")"
+                }
+            )
+
+    print("loading files")
+    files, _ = loadFromRSEMaggregate(
+        refworkspace,
+        todrop=failed,
+        filenames=trancriptLevelCols + geneLevelCols,
+        sampleset=samplesetToLoad,
+        renamingFunc=renamingFunc,
+        rsemfilelocs=rsemfilelocs,
+        folder=save_output,
+    )
+    print("renaming files")
+    # gene level
+    if len(geneLevelCols) > 0:
+        files = extractProtCod(
+            files,
+            mybiomart[mybiomart.gene_biotype == "protein_coding"],
+            protcod_rename,
+            dropNonMatching=dropNonMatching,
+            filenames=geneLevelCols,
+        )
+        files = subsetGenes(
+            files,
+            gene_rename,
+            filenames=geneLevelCols,
+            index_id="gene_id",
+            drop="transcript_id",
+        )
+    if len(trancriptLevelCols) > 0:
+        files = subsetGenes(
+            files,
+            gene_rename,
+            filenames=trancriptLevelCols,
+            drop="gene_id",
+            index_id="transcript_id",
+        )
+    saveFiles(files, save_output)
+    print("done")
+
+    return files
