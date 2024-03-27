@@ -8,7 +8,7 @@ import math
 import seaborn as sns
 
 
-async def gsva(data, geneset_file, method="ssgsea", recompute=True):
+def gsva(data, geneset_file, method="ssgsea", recompute=True):
     print("you need to have R installed with GSVA and GSEABase library installed")
     pathtogenepy = os.path.dirname(os.path.abspath(__file__))
     if (

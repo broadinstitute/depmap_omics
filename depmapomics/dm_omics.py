@@ -18,7 +18,7 @@ from depmapomics import copynumbers as cn
 from .mutations import postprocess_main_steps
 
 
-async def expressionPostProcessing(
+def expressionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
     samplesetname=constants.SAMPLESETNAME,
     samplesetname_stranded=constants.SAMPLESETNAME_STRANDED,
@@ -88,7 +88,7 @@ async def expressionPostProcessing(
         folder = save_output + "dryrun/"
 
     h.createFoldersFor(folder)
-    files, failed, _, renaming, lowqual, enrichments = await expressions.postProcess(
+    files, failed, _, renaming, lowqual, enrichments = expressions.postProcess(
         refworkspace,
         samplesetname,
         save_output=folder,
@@ -110,7 +110,7 @@ async def expressionPostProcessing(
 
     files_stranded = dict()
     if run_stranded:
-        files_stranded = await expressions.postProcessStranded(
+        files_stranded = expressions.postProcessStranded(
             refworkspace,
             samplesetname_stranded,
             failed,
@@ -339,7 +339,7 @@ async def expressionPostProcessing(
         print("done")
 
 
-async def fusionPostProcessing(
+def fusionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
     sampleset=constants.SAMPLESETNAME,
     fusionSamplecol=constants.SAMPLEID,
@@ -818,7 +818,7 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
-async def mutationPostProcessing(
+def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
     vcfdir: str = constants.VCFDIR,
