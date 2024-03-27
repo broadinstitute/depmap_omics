@@ -311,7 +311,7 @@ def extractProtCod(
     return files
 
 
-async def ssGSEA(tpm_genes, geneset_file=constants.SSGSEAFILEPATH, recompute=True):
+def ssGSEA(tpm_genes, geneset_file=constants.SSGSEAFILEPATH, recompute=True):
     """the way we run ssGSEA on the CCLE dataset
 
     Args:
@@ -345,7 +345,7 @@ async def ssGSEA(tpm_genes, geneset_file=constants.SSGSEAFILEPATH, recompute=Tru
     # counts_genes_merged, _, _= h.mergeSplicingVariants(counts_genes.T, defined='.')
 
     enrichments = (
-        await rna.gsva(
+        rna.gsva(
             tpm_genes.T, geneset_file=geneset_file, method="ssgsea", recompute=recompute
         )
     ).T
@@ -389,7 +389,7 @@ def parse_rnaseqc_counts(refworkspace, samplesetname, colname):
         rnaseqc_count_dfs.append(load_rnaseqc(row[colname]))
     return rnaseqc_count_dfs
 
-async def postProcess(
+def postProcess(
     refworkspace,
     samplesetname,
     save_output="",
@@ -551,7 +551,7 @@ async def postProcess(
 
     if compute_enrichment:
         print("doing ssGSEA")
-        enrichments = await ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
+        enrichments = ssGSEA(files[ssGSEAcol], recompute=recompute_ssgsea)
         print("saving files")
         enrichments.to_csv(save_output + "gene_sets_all.csv")
     saveFiles(files, save_output)
@@ -566,7 +566,7 @@ async def postProcess(
         enrichments if compute_enrichment else None,
     )
 
-async def postProcessStranded(
+def postProcessStranded(
     refworkspace,
     samplesetname,
     failed,

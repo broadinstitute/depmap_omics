@@ -18,9 +18,9 @@ class Command(object):
         """Running gene expression post-processing."""
         raise NotImplementedError
 
-    async def mutation_postprocess(self):
+    def mutation_postprocess(self):
         print(os.environ["DEPMAP_ENV"])
-        await dm_omics.mutationPostProcessing(
+        dm_omics.mutationPostProcessing(
             wesrefworkspace=env_config.WESCNWORKSPACE,
             wgsrefworkspace=env_config.WGSWORKSPACE,
             run_guidemat=False,
