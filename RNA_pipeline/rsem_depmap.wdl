@@ -26,8 +26,11 @@ task rsem {
         tar -xvvf ${rsem_reference} -C rsem_reference --strip-components=1
 
         git clone https://github.com/broadinstitute/ccle_processing.git
+        cd ccle_processing && git checkout rna-strandness-fix
+        cd -
 
         chmod +x ccle_processing/RNA_pipeline/run_RSEM_david.py
+
 
         ccle_processing/RNA_pipeline/run_RSEM_david.py \
             ${"--max_frag_len " + max_frag_len} \

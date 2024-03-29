@@ -1,6 +1,6 @@
 version 1.0
 
-import "https://raw.githubusercontent.com/STAR-Fusion/STAR-Fusion/Terra-1.10.1/WDL/star_fusion_workflow.wdl" as SFW
+import "star_fusion_workflow.wdl" as SFW
 
 workflow star_fusion_hg38_wf {
   input {
@@ -23,10 +23,10 @@ workflow star_fusion_hg38_wf {
     String docker = "trinityctat/starfusion:1.13.0"
     Int num_cpu = 12
     Float fastq_disk_space_multiplier = 3.25
-    String memory = "64 GB"
+    String memory = "64GB"
     Float genome_disk_space_multiplier = 2.5
     Int preemptible = 2
-    Float extra_disk_space = 10
+    Float extra_disk_space = 100
     Boolean use_ssd = true
 
   }
