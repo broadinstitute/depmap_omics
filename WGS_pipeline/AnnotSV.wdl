@@ -39,12 +39,10 @@ task annotate_sv_annotsv {
         # annotate SVs
         tar -xzf ~{annotsv_db_tar_gz}
         AnnotSV -annotationsDir . -SvinputFile ~{input_vcf} -outputDir out_AnnotSV | tee ~{sample_id}.AnnotSV.log
-        touch out_AnnotSV/svs.annotated.tsv
-        mv out_AnnotSV/svs.somaticSV.annotated.tsv ~{sample_id}.annotsv.tsv
     >>>
 
     output {
-        File tsv = "~{sample_id}.annotsv.tsv"
+        File tsv = "~{sample_id}.somaticSV.annotated.tsv"
         File log = "~{sample_id}.AnnotSV.log"
     }
 
