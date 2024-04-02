@@ -33,7 +33,7 @@ task annotate_sv_annotsv {
         Int threadCount = 2
         String docker = "quay.io/biocontainers/annotsv"
         Int diskSizeGB = 5*round(size(input_vcf, "GB") + size(annotsv_db_tar_gz, "GB")) + 30
-        String cosmic_cna = "gs://cds-cosmic/CosmicCNA_v97/CosmicCompleteCNA.tsv.gz"
+        File cosmic_cna = "gs://cds-cosmic/CosmicCNA_v97/CosmicCompleteCNA.tsv.gz"
     }
     
     command <<<
@@ -41,7 +41,7 @@ task annotate_sv_annotsv {
 
         # annotate SVs
         tar -xzf ~{annotsv_db_tar_gz}
-        gsutil cp ~{cosmic_cna} Annotations_Human/FtIncludedInSV/COSMIC/GRCh38/
+        mv ~{cosmic_cna} Annotations_Human/FtIncludedInSV/COSMIC/GRCh38/CosmicCompleteCNA.tsv.gz
 
         AnnotSV -annotationsDir . -annotationMode full -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.full.tsv -outputDir . | tee ~{sample_id}.AnnotSV.full.log
 
