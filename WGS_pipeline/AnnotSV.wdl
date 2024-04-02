@@ -16,8 +16,10 @@ workflow AnnotSV_workflow {
     }
 
     output {
-        File annotated_svs = annotate_sv_annotsv.tsv
-        File annotsv_log = annotate_sv_annotsv.log
+        File annotated_svs_full = annotate_sv_annotsv.full_tsv
+        File annotsv_log_full = annotate_sv_annotsv.full_log
+        File annotated_svs_split = annotate_sv_annotsv.split_tsv
+        File annotsv_log_split = annotate_sv_annotsv.split_log
     }
 }
 
@@ -31,6 +33,7 @@ task annotate_sv_annotsv {
         Int threadCount = 2
         String docker = "quay.io/biocontainers/annotsv"
         Int diskSizeGB = 5*round(size(input_vcf, "GB") + size(annotsv_db_tar_gz, "GB")) + 30
+        String cosmic_cna = "gs://cds-cosmic/CosmicCNA_v97/CosmicCompleteCNA.tsv.gz"
     }
     
     command <<<
@@ -38,12 +41,18 @@ task annotate_sv_annotsv {
 
         # annotate SVs
         tar -xzf ~{annotsv_db_tar_gz}
-        AnnotSV -annotationsDir . -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.tsv -outputDir . | tee ~{sample_id}.AnnotSV.log
+        gsutil cp ~{cosmic_cna} Annotations_Human/FtIncludedInSV/COSMIC/GRCh38/
+
+        AnnotSV -annotationsDir . -annotationMode full -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.full.tsv -outputDir . | tee ~{sample_id}.AnnotSV.full.log
+
+        AnnotSV -annotationsDir . -annotationMode split -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.split.tsv -outputDir . | tee ~{sample_id}.AnnotSV.split.log
     >>>
 
     output {
-        File tsv = "~{sample_id}.AnnotSV.tsv"
-        File log = "~{sample_id}.AnnotSV.log"
+        File full_tsv = "~{sample_id}.AnnotSV.full.tsv"
+        File full_log = "~{sample_id}.AnnotSV.full.log"
+        File split_tsv = "~{sample_id}.AnnotSV.split.tsv"
+        File split_log = "~{sample_id}.AnnotSV.split.log"
     }
 
     runtime {
