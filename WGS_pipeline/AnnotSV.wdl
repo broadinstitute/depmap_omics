@@ -20,6 +20,7 @@ workflow AnnotSV_workflow {
         File annotsv_log_full = annotate_sv_annotsv.full_log
         File annotated_svs_split = annotate_sv_annotsv.split_tsv
         File annotsv_log_split = annotate_sv_annotsv.split_log
+        File annotated_svs_full_vcf = annotate_sv_annotsv.full_vcf
     }
 }
 
@@ -43,9 +44,9 @@ task annotate_sv_annotsv {
         tar -xzf ~{annotsv_db_tar_gz}
         mv ~{cosmic_cna} Annotations_Human/FtIncludedInSV/COSMIC/GRCh38/CosmicCompleteCNA.tsv.gz
 
-        AnnotSV -annotationsDir . -annotationMode full -includeCI 0 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.full.tsv -outputDir . | tee ~{sample_id}.AnnotSV.full.log
+        AnnotSV -annotationsDir . -annotationMode full -includeCI 0 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.full.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.full.log
 
-        AnnotSV -annotationsDir . -annotationMode split -includeCI 0 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.split.tsv -outputDir . | tee ~{sample_id}.AnnotSV.split.log
+        AnnotSV -annotationsDir . -annotationMode split -includeCI 0 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.split.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.split.log
     >>>
 
     output {
@@ -53,6 +54,7 @@ task annotate_sv_annotsv {
         File full_log = "~{sample_id}.AnnotSV.full.log"
         File split_tsv = "~{sample_id}.AnnotSV.split.tsv"
         File split_log = "~{sample_id}.AnnotSV.split.log"
+        File full_vcf = "~{sample_id}.AnnotSV.full.vcf"
     }
 
     runtime {
