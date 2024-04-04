@@ -34,7 +34,7 @@ task annotate_sv_annotsv {
         Int memSizeGB = 8
         Int threadCount = 2
         String docker = "quay.io/biocontainers/annotsv"
-        Int diskSizeGB = 5*round(size(input_vcf, "GB") + size(annotsv_db_tar_gz, "GB")) + 30
+        Int diskSizeGB = 5*round(size(input_vcf, "GB") + size(annotsv_db_tar_gz, "GB")) + 50
         File cosmic_cna = "gs://cds-cosmic/CosmicCNA_v97/CosmicCompleteCNA.tsv.gz"
     }
     
