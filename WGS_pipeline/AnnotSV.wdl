@@ -45,12 +45,6 @@ task annotate_sv_annotsv {
         tar -xzf ~{annotsv_db_tar_gz}
         mv ~{cosmic_cna} Annotations_Human/FtIncludedInSV/COSMIC/GRCh38/CosmicCompleteCNA.tsv.gz
 
-        for c in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y
-        do
-            wget https://storage.googleapis.com/gcp-public-data--gnomad/release/4.0/genome_sv/gnomad.v4.0.sv.chr${c}.vcf.gz
-            mv gnomad.v4.0.sv.chr${c}.vcf.gz Annotations_Human/SVincludedInFt/BenignSV/GRCh38/
-        done
-
         AnnotSV -annotationsDir . -annotationMode full -includeCI 0 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.full.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.full.log
 
         AnnotSV -annotationsDir . -annotationMode split -includeCI 0 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.split.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.split.log
