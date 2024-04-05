@@ -309,13 +309,3 @@ workflows:
     filters: # All tags, no branches
       branches:
         - guidemat-wdl
-- name: WGS_preprocessing_DRAGEN
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing_DRAGEN.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - dragen-preprocess-fix
-        - master
