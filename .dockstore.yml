@@ -318,3 +318,4 @@ workflows:
     filters: # All tags, no branches
       branches:
         - dragen-preprocess-fix
+        - master
