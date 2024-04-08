@@ -45,9 +45,9 @@ task annotate_sv_annotsv {
         tar -xzf ~{annotsv_db_tar_gz}
         mv ~{cosmic_cna} Annotations_Human/FtIncludedInSV/COSMIC/GRCh38/CosmicCompleteCNA.tsv.gz
 
-        AnnotSV -annotationsDir . -annotationMode full -includeCI 0 -SVminSize 1 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.full.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.full.log
+        AnnotSV -annotationsDir . -annotationMode full -includeCI 0 -SVminSize -1 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.full.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.full.log
 
-        AnnotSV -annotationsDir . -annotationMode split -includeCI 0 -SVminSize 1 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.split.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.split.log
+        AnnotSV -annotationsDir . -annotationMode split -includeCI 0 -SVminSize -1 -SvinputFile ~{input_vcf} -outputFile ~{sample_id}.AnnotSV.split.tsv -outputDir . -vcf 1 | tee ~{sample_id}.AnnotSV.split.log
     >>>
 
     output {
