@@ -28,8 +28,21 @@ workflow RNAStrandWorkflow {
             mem = mem
     }
 
+    call parse_line as parse_1pp1mm {
+        input:
+            line = strand.line_1pp1mm
+    }
+
+    call parse_line as parse_1pm1mp {
+        input:
+            line = strand.line_1pm1mp
+    }
+
     output {
-        File rna_strand_output=strand.strand_info
+        Float percentage_1pp1mm = parse_1pp1mm.percentage
+        Float percentage_1pm1mp = parse_1pm1mp.percentage
+        # If fraction explained by 1+-,1-+,2++,2-- is higher than 0.7, it is stranded 
+        Boolean inferred_stranded = percentage_1pm1mp > 0.7
     }
 }
 
@@ -63,10 +76,21 @@ task strand_check_task {
     }
 
     output {
-        String line_1pp1mm = read_lines(stdout())[2]
-        String line_1pm1mp = read_lines(stdout())[3]
-        Float percentage_1pp1mm = grep -o '[^: ]*$line_1pp1mm'
-
+        String line_1pp1mm = read_lines(stdout())[4]
+        String line_1pm1mp = read_lines(stdout())[5]
     }
 }
 
+task parse_line {
+    input {
+        String line
+    }
+
+    command {
+        echo ~{line} | grep -oE "[^:]+$"
+    }
+
+    output {
+        Float percentage = read_float(stdout())
+    }
+}
