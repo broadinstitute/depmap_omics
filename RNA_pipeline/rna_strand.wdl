@@ -7,7 +7,7 @@ workflow RNAStrandWorkflow {
         File refseq = "gs://cds-vep-data/ucsc_ncbi_refseq_curated_hg38_20240303.bed"
 
         String sample_id
-        String docker_image = "qianqin/strand:latest"
+        String docker_image = "us-docker.pkg.dev/depmap-omics/public/strand:24q2"
 
         Int boot_disk_size=60
         Int disk_space=60
@@ -63,6 +63,10 @@ task strand_check_task {
     }
 
     output {
-        File strand_info = stdout()
+        String line_1pp1mm = read_lines(stdout())[2]
+        String line_1pm1mp = read_lines(stdout())[3]
+        Float percentage_1pp1mm = grep -o '[^: ]*$line_1pp1mm'
+
     }
 }
+
