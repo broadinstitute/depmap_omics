@@ -275,7 +275,7 @@ def aggregateGermlineMatrix(
         print(str(len(na_samples)) + " samples don't have corresponding binarized mutation calls for " + lib + ": ", na_samples)
         all_muts = []
         header = False
-        for name, row in sample_table_valid.iterrows():
+        for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
             sample_mut = pd.read_csv(row[colname])
             if header == False:
                 all_muts.append(sample_mut)
