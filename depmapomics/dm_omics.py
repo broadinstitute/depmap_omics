@@ -703,9 +703,7 @@ def cnPostProcessing(
 
     # profile-ID level
     mergedsegments_pr.to_csv(folder + "merged_segments_profile.csv", index=False)
-    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr).apply(
-        lambda x: np.log2(1 + x)
-    )
+    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
     mergedgenecn_pr.to_csv(folder + "merged_genecn_profile.csv")
     merged_purecn_segments_pr.to_csv(
         folder + "merged_absolute_segments_profile.csv", index=False
@@ -976,8 +974,11 @@ async def mutationPostProcessing(
 
     if run_guidemat:
         # aggregate germline binary matrix
-        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName)
-        wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName)
+        print("aggregating binary guide mutation matrices")
+        print("aggregating wes")
+        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName, save_output=folder)
+        print("aggregating wgs")
+        wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName, save_output=folder)
 
         for lib, _ in bed_locations.items():
             assert lib in wes_germline_mats, "library missing in wes"
