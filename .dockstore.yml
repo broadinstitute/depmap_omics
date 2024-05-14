@@ -309,3 +309,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - guidemat-wdl
+  - name: gridss2_workflow
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/gridss2_workflow.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - gridss2
