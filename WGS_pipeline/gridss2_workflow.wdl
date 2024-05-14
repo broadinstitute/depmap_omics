@@ -27,7 +27,7 @@ workflow run_gridss2 {
     BwaIndex ref_struct = BwaIndex {
             fastaFile: ref_fasta,
             indexFiles: [ref_fasta_index, ref_dict, ref_alt, ref_sa, ref_ann, ref_bwt, ref_pac, ref_amb]
-        }
+    }
 
     call gridss_tasks.GRIDSS as GRIDSS{
         input:
