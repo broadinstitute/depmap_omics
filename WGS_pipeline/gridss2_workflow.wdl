@@ -123,9 +123,9 @@ task GRIDSS {
         gridssProperties: {description: "A properties file for gridss.", category: "advanced"}
 
         threads: {description: "The number of the threads to use.", category: "advanced"}
+        disk_size: {description: "Size of boot disk", category: "advanced"}
         jvmHeapSizeGb: {description: "The size of JVM heap for assembly and variant calling", category: "advanced"}
         nonJvmMemoryGb: {description: "The amount of memory in Gb to be requested besides JVM memory.", category: "advanced"}
-        timeMinutes: {description: "The maximum amount of time the job will run in minutes.", category: "advanced"}
         dockerImage: {description: "The docker image used for this task. Changing this may result in errors which the developers may choose not to address.", category: "advanced"}
 
         # outputs
