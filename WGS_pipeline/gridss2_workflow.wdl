@@ -46,6 +46,7 @@ workflow run_gridss2 {
         File vcfIndex = GRIDSS.vcfIndex
         File assembly = GRIDSS.assembly
         File assemblyIndex = GRIDSS.assemblyIndex
+        Array[File] log = GRIDSS.log
     }
 }
 
@@ -100,6 +101,7 @@ task GRIDSS {
         File vcfIndex = outputPrefix + ".vcf.gz.tbi"
         File assembly = outputPrefix + "_assembly.bam"
         File assemblyIndex = outputPrefix + "_assembly.bai"
+        Array[File] log = glob("./gridss.full.*.log")
     }
 
     runtime {
