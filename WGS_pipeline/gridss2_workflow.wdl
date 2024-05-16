@@ -38,7 +38,8 @@ workflow run_gridss2 {
             tumorBai = [bai],
             tumorLabel = [sample_id],
             reference = ref_struct,
-            dockerImage = dockerImage
+            dockerImage = dockerImage,
+            outputPrefix = sample_id
     }
 
     output {
