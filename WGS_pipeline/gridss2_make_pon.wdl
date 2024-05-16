@@ -45,14 +45,17 @@ workflow generate_pon_workflow {
         }
     }
 
-
+    call GeneratePonBedpe {
+        input:
+            vcfFiles=GRIDSS.vcf,
+            vcfIndexes=GRIDSS.vcfIndex,
+            referenceFasta=ref_fasta,
+            referenceFastaFai=ref_fasta_index,
+    }
 
     output {
-        Array[File] vcf = GRIDSS.vcf
-        Array[File] vcfIndex = GRIDSS.vcfIndex
-        Array[File] assembly = GRIDSS.assembly
-        Array[File] assemblyIndex = GRIDSS.assemblyIndex
-        Array[Array[File]] log = GRIDSS.log
+        File pon_bedpe = GeneratePonBedpe.bedpe
+        File pon_bed = GeneratePonBedpe.bed
     }
 }
 
