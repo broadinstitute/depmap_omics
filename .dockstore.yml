@@ -318,3 +318,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - gridss2
+  - name: gridss2_make_pon
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/gridss2_make_pon.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - gridss2
