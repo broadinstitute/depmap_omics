@@ -36,9 +36,9 @@ workflow generate_pon_workflow {
     scatter (idx in range(length(sample_ids)) ) {
         call gridss.GRIDSS as GRIDSS{
             input:
-                tumorBam = bams[idx],
-                tumorBai = bais[idx],
-                tumorLabel = sample_ids[idx],
+                tumorBam = [bams[idx]],
+                tumorBai = [bais[idx]],
+                tumorLabel = [sample_ids[idx]],
                 reference = ref_struct,
                 dockerImage = dockerImage,
                 outputPrefix = sample_ids[idx]
