@@ -2,7 +2,7 @@ version 1.0
 
 # modified "https://raw.githubusercontent.com/biowdl/tasks/develop/gridss.wdl"
 
-import gridss2_workflow.wdl as gridss
+import "gridss2_workflow.wdl" as gridss
 
 struct BwaIndex {
     File fastaFile
