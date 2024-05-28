@@ -66,7 +66,6 @@ task annotate_sv_vep {
         bcftools norm -m- -w 10000 -f ~{fasta} -O z -o ~{sample_id}.norm.vcf.gz ~{input_vcf}
 
         mkdir -p /tmp/Plugins
-        wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/111/AlphaMissense.pm -O /tmp/Plugins/AlphaMissense.pm
 
         tar -C /tmp -xvzf ~{vep_data} 
         ls /tmp
