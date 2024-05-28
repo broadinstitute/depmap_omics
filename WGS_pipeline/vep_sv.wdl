@@ -37,7 +37,7 @@ workflow VEP_SV_Workflow {
     }
 
     output { 
-        File vep=annotate_hgvs_task.output_vep_vcf
+        File vep=annotate_sv_vep.output_vep_vcf
     }
 }
 
