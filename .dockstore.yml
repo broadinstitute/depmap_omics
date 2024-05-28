@@ -336,3 +336,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - master
+- name: vep_sv.wdl
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/vep_sv.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - vep-sv
