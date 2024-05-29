@@ -11,6 +11,7 @@ workflow VEP_SV_Workflow {
         File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
+        File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
         Int boot_disk_size=60
         Int disk_space=60
         Int cpu = 10
@@ -23,6 +24,7 @@ workflow VEP_SV_Workflow {
             sample_id=sample_id,
             fasta=fasta,
             fai=fai,
+            gzi=gzi,
             vep_data=vep_data,
             boot_disk_size=boot_disk_size,
             disk_space=disk_space,
@@ -44,6 +46,7 @@ task annotate_sv_vep {
         File fai
         File vep_data
         String sample_id
+        File gzi
         String docker_image="ensemblorg/ensembl-vep:release_112.0"
         String assembly="GRCh38"
         Int preemptible=2
@@ -58,7 +61,16 @@ task annotate_sv_vep {
 
         ln -s ~{fasta} genome_reference.fasta
 
-        tar -C /vep_cache -xvzf ~{vep_data} 
+        mkdir -p /vep_cache
+
+        tar -C /vep_cache -xvzf ~{vep_data}
+        chmod 777 /vep_cache/homo_sapiens
+        ls /vep_cache/homo_sapiens
+        cp ~{fai} /vep_cache
+        cp ~{fasta} /vep_cache
+        cp ~{gzi} /vep_cache
+        du -sh /vep_cache/Homo_sapiens_assembly38.fasta.gz*
+
 
         perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
             --input_file ~{input_vcf} \
