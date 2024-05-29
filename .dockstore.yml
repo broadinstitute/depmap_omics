@@ -279,7 +279,7 @@ workflows:
     filters: # All tags, no branches
       branches:
         - long-read-dev
-  - name: longReadMapper
+  - name: generateIndexFiles
     subclass: WDL
     publish: True
     primaryDescriptorPath: /long-read-omics/generateIndexFiles.wdl
@@ -288,52 +288,7 @@ workflows:
     filters: # All tags, no branches
       branches:
         - long-read-dev
-  - name: longReadMapper
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /long-read-omics/longReadMapper.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - long-read-dev
- name: longReadMapper
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /long-read-omics/longReadMapper.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - long-read-dev
-- name: longReadMapper
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /long-read-omics/longReadMapper.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - long-read-dev
-- name: longReadMapper
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /long-read-omics/longReadMapper.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - long-read-dev
-- name: longReadMapper
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /long-read-omics/longReadMapper.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - long-read-dev
- name: IsoQuantQuantify
+  - name: IsoQuantQuantify
     subclass: WDL
     publish: True
     primaryDescriptorPath: /long-read-omics/IsoQuantQuantify.wdl
