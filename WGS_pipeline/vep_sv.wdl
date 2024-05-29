@@ -50,7 +50,7 @@ task annotate_sv_vep {
         File LoF
         File vep_data
         String sample_id
-        String docker_image="us.gcr.io/cds-docker-containers/hgvs"
+        String docker_image="ensemblorg/ensembl-vep:release_112.0"
         String assembly="GRCh38"
         Int preemptible=2
         Int boot_disk_size=60
@@ -60,9 +60,6 @@ task annotate_sv_vep {
     }
 
     command {
-
-        bcftools norm -m- -w 10000 -f ~{fasta} -O z -o ~{sample_id}.norm.vcf.gz ~{input_vcf}
-
         mkdir -p /tmp/Plugins
 
         tar -C /tmp -xvzf ~{vep_data} 
@@ -77,8 +74,8 @@ task annotate_sv_vep {
         cp ~{pLi} ~{LoF} /tmp
 
         vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp \
-            --input_file ~{sample_id}.norm.vcf.gz \
-            --output_file ~{sample_id}.norm.snpeff.clinvar.vep.vcf \
+            --input_file ~{input_vcf} \
+            --output_file ~{sample_id}.vep.vcf \
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
             --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
             --pick --max_sv_size 50000000
