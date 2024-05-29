@@ -11,7 +11,6 @@ workflow VEP_SV_Workflow {
         File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
-        File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
         Int boot_disk_size=60
         Int disk_space=60
         Int cpu = 10
@@ -24,10 +23,7 @@ workflow VEP_SV_Workflow {
             sample_id=sample_id,
             fasta=fasta,
             fai=fai,
-            gzi=gzi,
             vep_data=vep_data,
-            pLi=pLi,
-            LoF=LoF,
             boot_disk_size=boot_disk_size,
             disk_space=disk_space,
             cpu = cpu,
