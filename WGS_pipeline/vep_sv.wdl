@@ -58,7 +58,7 @@ task annotate_sv_vep {
 
         ln -s ~{fasta} genome_reference.fasta
 
-        unzip ~{vep_data} -d vep_cache/
+        tar -C /vep_cache -xvzf ~{vep_data} 
 
         perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
             --input_file ~{input_vcf} \
