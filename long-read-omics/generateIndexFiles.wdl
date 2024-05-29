@@ -31,6 +31,6 @@ task generateIndexFiles {
 		docker: "${docker}"
 		memory: "${memory}GB"
 		max_retries: 3
-		disks: "local-disk" + disk_size + " HDD"
+		disks: "local-disk " + disk_size + " HDD"
 	}
 }
