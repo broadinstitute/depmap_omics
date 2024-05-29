@@ -35,7 +35,8 @@ workflow VEP_SV_Workflow {
     }
 
     output { 
-        File vep=annotate_sv_vep.output_vep_vcf
+        File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
+        File vep_sv_stats = annotate_sv_vep.output_vep_stats
     }
 }
 
@@ -45,9 +46,6 @@ task annotate_sv_vep {
         File input_vcf
         File fasta
         File fai
-        File gzi
-        File pLi
-        File LoF
         File vep_data
         String sample_id
         String docker_image="ensemblorg/ensembl-vep:release_112.0"
@@ -60,26 +58,26 @@ task annotate_sv_vep {
     }
 
     command {
-        mkdir -p /tmp/Plugins
+        set -euo pipefail
 
-        tar -C /tmp -xvzf ~{vep_data} 
-        ls /tmp
-        chmod 777 /tmp/homo_sapiens
-        ls /tmp/homo_sapiens
-        cp ~{fai} /tmp
-        cp ~{fasta} /tmp
-        cp ~{gzi} /tmp
-        du -sh /tmp/Homo_sapiens_assembly38.fasta.gz*
-       
-        cp ~{pLi} ~{LoF} /tmp
+        ln -s ~{fasta} genome_reference.fasta
 
-        vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp \
+        unzip ~{vep_data} -d vep_cache/
+
+        perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
             --input_file ~{input_vcf} \
-            --output_file ~{sample_id}.vep.vcf \
-            --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
-            --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
-            --pick --max_sv_size 50000000
-
+            --vcf \
+            --output_file ~{sample_id}_sv_vep_annotated.vcf \
+            --stats_file ~{sample_id}_sv_vep_stats.txt \
+            --stats_text \
+            --cache \
+            --dir_cache vep_cache/ \
+            --fasta genome_reference.fasta \
+            --fork ~{cpu} \
+            --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
+            --sift b --polyphen b --total_length --ccds --canonical --biotype \
+            --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg
+        fi
     }
 
     runtime {
@@ -92,7 +90,8 @@ task annotate_sv_vep {
     }
 
     output {     
-        File output_vep_vcf = "~{sample_id}.norm.snpeff.clinvar.vep.vcf"
+        File output_vep_vcf = "~{sample_id}_sv_vep_annotated.vcf"
+        File output_vep_stats = "~{sample_id}_sv_vep_stats.txt"
     }
 }
 
