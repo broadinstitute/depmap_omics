@@ -79,7 +79,7 @@ task annotate_sv_vep {
             --stats_file ~{sample_id}_sv_vep_stats.txt \
             --stats_text \
             --cache \
-            --dir_cache tmp/vep_cache/ \
+            --dir_cache tmp/vep_cache \
             --fasta genome_reference.fasta \
             --fork ~{cpu} \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
