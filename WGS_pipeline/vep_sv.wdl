@@ -47,6 +47,7 @@ task annotate_sv_vep {
         File vep_data
         String sample_id
         File gzi
+        File gnomad="gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz"
         String docker_image="ensemblorg/ensembl-vep:release_112.0"
         String assembly="GRCh38"
         Int preemptible=2
@@ -62,6 +63,9 @@ task annotate_sv_vep {
         ln -s ~{fasta} genome_reference.fasta
 
         mkdir -p /tmp/vep_cache
+        mkdir -p /tmp/vep_cache/Plugins
+        wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/112/StructuralVariantOverlap.pm -O /tmp/vep_cache/Plugins/StructuralVariantOverlap.pm
+        cp ~{gnomad} /tmp/vep_cache
 
         tar -C /tmp/vep_cache -xvzf ~{vep_data}
         chmod 777 /tmp/vep_cache/homo_sapiens
@@ -84,6 +88,7 @@ task annotate_sv_vep {
             --fork ~{cpu} \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
             --sift b --polyphen b --total_length --ccds --canonical --biotype \
+            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/gnomad_v2.1_sv.sites.vcf.gz \
             --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg
     }
 
