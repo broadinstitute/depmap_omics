@@ -2,7 +2,7 @@ version 1.0
 
 workflow generateIndexFilesWorkflow {
 	
-	call generateIndexFiles
+	call generateIndexFiles 
 
 	output {
 		File rawBamIndex = generateIndexFiles.rawBamIndex		
@@ -20,7 +20,13 @@ task generateIndexFiles {
 	}
 
 	command {
-		samtools index ${inputFile}
+		#samtools view -bS \
+		#	      -o ${sampleName}.merged.sorted.bam \
+		#	      ${inputFile}
+		
+		cp ${inputFile} ./${sampleName}.merged.sorted.bam 
+		
+		samtools index ${sampleName}.merged.sorted.bam 
 	}
 
 	output {
