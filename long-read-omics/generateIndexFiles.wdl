@@ -24,7 +24,7 @@ task generateIndexFiles {
 	}
 
 	output {
-		File rawBamIndex = "${sampleName}.sorted.bam.bai"
+		File rawBamIndex = "${sampleName}.merged.sorted.bam.bai"
 	}
 
 	runtime {
