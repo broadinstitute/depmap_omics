@@ -61,10 +61,10 @@ task annotate_sv_vep {
 
         ln -s ~{fasta} genome_reference.fasta
 
-        mkdir -p /vep_cache
+        sudo mkdir -p /vep_cache
 
         tar -C /vep_cache -xvzf ~{vep_data}
-        chmod 777 /vep_cache/homo_sapiens
+        sudo chmod 777 /vep_cache/homo_sapiens
         ls /vep_cache/homo_sapiens
         cp ~{fai} /vep_cache
         cp ~{fasta} /vep_cache
