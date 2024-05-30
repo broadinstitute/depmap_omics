@@ -12,6 +12,7 @@ workflow VEP_SV_Workflow {
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
+        File gnomad = "gs://gcp-public-data--gnomad/release/4.1/genome_sv/gnomad.v4.1.sv.sites.vcf.gz"
         Int boot_disk_size=60
         Int disk_space=60
         Int cpu = 10
@@ -30,6 +31,7 @@ workflow VEP_SV_Workflow {
             disk_space=disk_space,
             cpu = cpu,
             mem = mem,
+            gnomad=gnomad
     }
 
     output { 
@@ -47,7 +49,7 @@ task annotate_sv_vep {
         File vep_data
         String sample_id
         File gzi
-        File gnomad="gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz"
+        File gnomad
         String docker_image="ensemblorg/ensembl-vep:release_112.0"
         String assembly="GRCh38"
         Int preemptible=2
@@ -56,6 +58,8 @@ task annotate_sv_vep {
         Int cpu = 10
         Int mem = 80
     }
+
+    String gnomad_basename = basename(gnomad)
 
     command {
         set -euo pipefail
@@ -88,7 +92,7 @@ task annotate_sv_vep {
             --fork ~{cpu} \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
             --sift b --polyphen b --total_length --ccds --canonical --biotype \
-            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/gnomad_v2.1_sv.sites.vcf.gz \
+            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename} \
             --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg
     }
 
