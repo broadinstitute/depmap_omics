@@ -61,15 +61,15 @@ task annotate_sv_vep {
 
         ln -s ~{fasta} genome_reference.fasta
 
-        sudo mkdir -p /vep_cache
+        mkdir -p /tmp
 
-        tar -C /vep_cache -xvzf ~{vep_data}
-        sudo chmod 777 /vep_cache/homo_sapiens
-        ls /vep_cache/homo_sapiens
-        cp ~{fai} /vep_cache
-        cp ~{fasta} /vep_cache
-        cp ~{gzi} /vep_cache
-        du -sh /vep_cache/Homo_sapiens_assembly38.fasta.gz*
+        tar -C /tmp -xvzf ~{vep_data}
+        chmod 777 /tmp/homo_sapiens
+        ls /tmp/homo_sapiens
+        cp ~{fai} /tmp
+        cp ~{fasta} /tmp
+        cp ~{gzi} /tmp
+        du -sh /tmp/Homo_sapiens_assembly38.fasta.gz*
 
 
         perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
@@ -79,7 +79,7 @@ task annotate_sv_vep {
             --stats_file ~{sample_id}_sv_vep_stats.txt \
             --stats_text \
             --cache \
-            --dir_cache vep_cache/ \
+            --dir_cache tmp/ \
             --fasta genome_reference.fasta \
             --fork ~{cpu} \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
