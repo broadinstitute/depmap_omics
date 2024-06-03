@@ -14,6 +14,8 @@ workflow VEP_SV_Workflow {
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
         File gnomad = "gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz"
         File gnomad_idx = "gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz.tbi"
+
+        Int max_sv_size = 50000000
         Int boot_disk_size=60
         Int disk_space=60
         Int cpu = 10
@@ -33,7 +35,8 @@ workflow VEP_SV_Workflow {
             cpu = cpu,
             mem = mem,
             gnomad=gnomad,
-            gnomad_idx=gnomad_idx
+            gnomad_idx=gnomad_idx,
+            max_sv_size=max_sv_size
     }
 
     output { 
@@ -61,6 +64,8 @@ task annotate_sv_vep {
         Int disk_space=60
         Int cpu = 10
         Int mem = 80
+        Int max_sv_size = 50000000
+        Int sv_match_percentage=80
     }
 
     String gnomad_basename = basename(gnomad)
@@ -98,9 +103,9 @@ task annotate_sv_vep {
             --fork ~{cpu} \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
             --sift b --polyphen b --total_length --ccds --canonical --biotype \
-            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename} \
+            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename},percentage=~{sv_match_percentage} \
             --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg \
-            --max_sv_size 100000000
+            --max_sv_size ~{max_sv_size}
     }
 
     runtime {
