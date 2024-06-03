@@ -76,6 +76,7 @@ task annotate_sv_vep {
         cp ~{sv_plugin} /tmp/vep_cache/Plugins/StructuralVariantOverlap.pm
 
         cp ~{gnomad} /tmp/vep_cache
+        cp ~{gnomad_idx} /tmp/vep_cache 
 
         tar -C /tmp/vep_cache -xvzf ~{vep_data}
         chmod 777 /tmp/vep_cache/homo_sapiens
