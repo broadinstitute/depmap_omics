@@ -100,7 +100,7 @@ task annotate_sv_vep {
             --sift b --polyphen b --total_length --ccds --canonical --biotype \
             --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename} \
             --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg \
-            --max_sv_size 100000000 --batch_size 2500
+            --max_sv_size 100000000
     }
 
     runtime {
