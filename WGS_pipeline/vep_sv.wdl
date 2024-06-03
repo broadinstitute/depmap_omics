@@ -79,7 +79,6 @@ task annotate_sv_vep {
 
         tar -C /tmp/vep_cache -xvzf ~{vep_data}
         chmod 777 /tmp/vep_cache/homo_sapiens
-        ls /tmp/vep_cache/homo_sapiens
         cp ~{fai} /tmp/vep_cache
         cp ~{fasta} /tmp/vep_cache
         cp ~{gzi} /tmp/vep_cache
