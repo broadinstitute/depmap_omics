@@ -13,6 +13,7 @@ workflow VEP_SV_Workflow {
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
         File gnomad = "gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz"
+        File gnomad_idx = "gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz.tbi"
         Int boot_disk_size=60
         Int disk_space=60
         Int cpu = 10
@@ -31,7 +32,8 @@ workflow VEP_SV_Workflow {
             disk_space=disk_space,
             cpu = cpu,
             mem = mem,
-            gnomad=gnomad
+            gnomad=gnomad,
+            gnomad_idx=gnomad_idx
     }
 
     output { 
@@ -50,6 +52,7 @@ task annotate_sv_vep {
         String sample_id
         File gzi
         File gnomad
+        File gnomad_idx
         File sv_plugin="gs://cds-vep-data/StructuralVariantOverlap.pm"
         String docker_image="ensemblorg/ensembl-vep:release_112.0"
         String assembly="GRCh38"
