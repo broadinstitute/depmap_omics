@@ -110,8 +110,8 @@ task annotate_sv_vep {
         perl /opt/vep/src/ensembl-vep/vep   \
             --database \
             --db_version 112 \
-            --input_file  ~{input_vcf} \
-            --output_file  ~{sample_id}_sv_vep_annotated.vcf \
+            --input_file ~{input_vcf} \
+            --output_file ~{sample_id}_sv_vep_annotated.vcf \
             --dir /tmp/vep_cache \
             --dir_plugins /tmp/vep_cache/Plugins \
             --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename} \
