@@ -5,8 +5,6 @@ workflow VEP_SV_Workflow {
     input {
         File input_vcf
         String sample_id
-        File pLi = "gs://cds-vep-data/pLI_values.txt"
-        File LoF = "gs://cds-vep-data/LoFtool_scores.txt"
 
         File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
@@ -77,8 +75,6 @@ task annotate_sv_vep {
         ln -s ~{fasta} genome_reference.fasta
 
         mkdir -p /tmp/vep_cache
-        mkdir -p /tmp/vep_cache/Plugins
-        cp ~{sv_plugin} /tmp/vep_cache/Plugins/StructuralVariantOverlap.pm
 
         cp ~{gnomad} /tmp/vep_cache
         cp ~{gnomad_idx} /tmp/vep_cache 
@@ -91,31 +87,20 @@ task annotate_sv_vep {
         du -sh /tmp/vep_cache/Homo_sapiens_assembly38.fasta.gz*
 
 
-        # perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
-        #     --input_file ~{input_vcf} \
-        #     --vcf \
-        #     --output_file ~{sample_id}_sv_vep_annotated.vcf \
-        #     --stats_file ~{sample_id}_sv_vep_stats.txt \
-        #     --stats_text \
-        #     --cache \
-        #     --dir_cache /tmp/vep_cache \
-        #     --fasta genome_reference.fasta \
-        #     --fork ~{cpu} \
-        #     --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
-        #     --sift b --polyphen b --total_length --ccds --canonical --biotype \
-        #     --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename},percentage=~{sv_match_percentage} \
-        #     --max_sv_size ~{max_sv_size}
-
-        # barebone
-        perl /opt/vep/src/ensembl-vep/vep   \
-            --database \
-            --db_version 112 \
+        perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
             --input_file ~{input_vcf} \
+            --vcf \
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
-            --dir /tmp/vep_cache \
-            --dir_plugins /tmp/vep_cache/Plugins \
-            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename} \
-            --force_overwrite --no_stats
+            --stats_file ~{sample_id}_sv_vep_stats.txt \
+            --stats_text \
+            --cache \
+            --dir_cache /tmp/vep_cache \
+            --fasta genome_reference.fasta \
+            --fork ~{cpu} \
+            --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
+            --sift b --polyphen b --total_length --ccds --canonical --biotype \
+            --max_sv_size ~{max_sv_size}
+
     }
 
     runtime {
