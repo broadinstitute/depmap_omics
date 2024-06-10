@@ -15,7 +15,8 @@ task Manta {
         String manta_docker
         String config_manta
         Boolean is_major_contigs_only
-        File major_contig_bed="gs://ccleparams/manta_major_contigs.bed"
+        File major_contig_bed="gs://ccleparams/manta_major_contigs.bed.gz"
+        File major_contig_bed_index="gs://ccleparams/manta_major_contigs.bed.gz.tbi"
 
         Int? disk_size
         Int? mem_size
@@ -45,7 +46,8 @@ task Manta {
         # reference links
         ln -vs ${ref_fasta} reference.fasta
         ln -vs ${ref_fasta_index} reference.fasta.fai
-        ln -vs ${major_contig_bed} major_contigs.bed
+        ln -vs ${major_contig_bed} major_contigs.bed.gz
+        ln -vs ${major_contig_bed_index} major_contigs.bed.gz.tbi
 
         if [ ${is_major_contigs_only} = true ]
         then
