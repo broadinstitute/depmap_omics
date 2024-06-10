@@ -51,7 +51,7 @@ task Manta {
 
         if [ ${is_major_contigs_only} = true ]
         then
-            major_contig_line="--callRegions major_contigs.bed"
+            major_contig_line="--callRegions major_contigs.bed.gz"
         fi
 
         ${config_manta} --tumorBam "tumor.$EXTENSION" \
