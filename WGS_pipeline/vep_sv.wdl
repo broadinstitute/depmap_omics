@@ -94,6 +94,7 @@ task annotate_sv_vep {
             --stats_file ~{sample_id}_sv_vep_stats.txt \
             --stats_text \
             --cache \
+            --dont_skip \
             --dir_cache /tmp/vep_cache \
             --fasta genome_reference.fasta \
             --fork ~{cpu} \
