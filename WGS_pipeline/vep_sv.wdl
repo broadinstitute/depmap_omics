@@ -141,14 +141,13 @@ task gnomad_filter {
         Int mem = 10
     }
 
-    command {
+    command <<<
         set -euo pipefail
 
         bcftools view --with-header ~{input_vcf} | awk -F"\t" '{
             split($8, info, ";");
             for (i=1; i<=length(info); i++) {
                 if (info[i] ~ /^CSQ=/) {
-                    #print("test", info[i])
                     split(substr(info[i], 5), csq, "|");
                     if (csq[length(csq)-1] == "") {
                             print $0
@@ -167,7 +166,7 @@ task gnomad_filter {
                 }
             }
         }' > ~{sample_id}.vep_annotated.gnomad_filtered.vcf
-    }
+    >>>
 
     runtime {
         disks: "local-disk ~{disk_space} HDD"
