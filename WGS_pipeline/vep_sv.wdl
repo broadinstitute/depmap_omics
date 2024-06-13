@@ -144,6 +144,8 @@ task gnomad_filter {
     command <<<
         set -euo pipefail
 
+        bcftools view -h ~{input_vcf} > ~{sample_id}.vep_annotated.gnomad_filtered.vcf
+
         bcftools view --with-header ~{input_vcf} | awk -F"\t" '{
             split($8, info, ";");
             for (i=1; i<=length(info); i++) {
@@ -165,7 +167,7 @@ task gnomad_filter {
                     }
                 }
             }
-        }' > ~{sample_id}.vep_annotated.gnomad_filtered.vcf
+        }' >> ~{sample_id}.vep_annotated.gnomad_filtered.vcf
     >>>
 
     runtime {
