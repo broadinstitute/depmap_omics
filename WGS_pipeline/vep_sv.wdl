@@ -37,9 +37,16 @@ workflow VEP_SV_Workflow {
             max_sv_size=max_sv_size
     }
 
+    call gnomad_filter {
+        input:
+            input_vcf=annotate_sv_vep.output_vep_vcf,
+            sample_id=sample_id,
+    }
+
     output { 
         File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
         File vep_sv_stats = annotate_sv_vep.output_vep_stats
+        File gnomad_filtered_sv = gnomad_filter.output_filtered_vcf
     }
 }
 
@@ -121,3 +128,57 @@ task annotate_sv_vep {
     }
 }
 
+task gnomad_filter {
+    input {
+        File input_vcf
+        String sample_id
+        Float gnomad_cutoff=0.001
+        String docker_image="dceoy/bcftools"
+        Int preemptible=2
+        Int boot_disk_size=10
+        Int disk_space=10
+        Int cpu = 2
+        Int mem = 10
+    }
+
+    command {
+        set -euo pipefail
+
+        bcftools view --with-header ~{input_vcf} | awk -F"\t" '{
+            split($8, info, ";");
+            for (i=1; i<=length(info); i++) {
+                if (info[i] ~ /^CSQ=/) {
+                    #print("test", info[i])
+                    split(substr(info[i], 5), csq, "|");
+                    if (csq[length(csq)-1] == "") {
+                            print $0
+                    } else {
+                        split(csq[length(csq)-1], af, "&");
+                        min=1
+                        for (j=1; j<=length(af); j++) {
+                            if (af[j] <= min) {
+                                min = af[j]
+                            }
+                        }
+                        if (min <= ~{gnomad_cutoff}) {
+                            print $0
+                        }
+                    }
+                }
+            }
+        }' > ~{sample_id}.vep_annotated.gnomad_filtered.vcf
+    }
+
+    runtime {
+        disks: "local-disk ~{disk_space} HDD"
+        memory: "~{mem} GB"
+        cpu: cpu
+        preemptible: preemptible
+        bootDiskSizeGb: boot_disk_size
+        docker: docker_image
+    }
+
+    output {     
+        File output_filtered_vcf = "~{sample_id}.vep_annotated.gnomad_filtered.vcf"
+    }
+}
