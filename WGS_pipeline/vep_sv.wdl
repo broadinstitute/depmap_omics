@@ -151,10 +151,10 @@ task gnomad_filter {
             for (i=1; i<=length(info); i++) {
                 if (info[i] ~ /^CSQ=/) {
                     split(substr(info[i], 5), csq, "|");
-                    if (csq[length(csq)-1] == "") {
+                    if (csq[length(csq)-2] == "") {
                             print $0
                     } else {
-                        split(csq[length(csq)-1], af, "&");
+                        split(csq[length(csq)-2], af, "&");
                         min=1
                         for (j=1; j<=length(af); j++) {
                             if (af[j] <= min) {
