@@ -100,14 +100,11 @@ task annotate_hgvs_task {
         wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/111/AlphaMissense.pm -O /tmp/Plugins/AlphaMissense.pm
 
         tar -C /tmp -xvzf ~{vep_data} 
-        ls /tmp
         chmod 777 /tmp/homo_sapiens
-        ls /tmp/homo_sapiens
         cp ~{fai} /tmp
         cp ~{fasta} /tmp
         cp ~{gzi} /tmp
-        du -sh /tmp/Homo_sapiens_assembly38.fasta.gz*
-       
+
         cp ~{pLi} ~{LoF} ~{alphamis} ~{alphamis_idx} /tmp
 
         vep --species homo_sapiens --cache --assembly ~{assembly} --no_progress --no_stats --everything --dir /tmp --input_file ~{sample_id}.norm.snpeff.clinvar.vcf \
