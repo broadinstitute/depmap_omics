@@ -99,7 +99,7 @@ task annotate_hgvs_task {
         mkdir -p /tmp/Plugins
         wget -c https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/111/AlphaMissense.pm -O /tmp/Plugins/AlphaMissense.pm
 
-        tar -C /tmp -xvzf ~{vep_data} 
+        tar -C /tmp -xzf ~{vep_data}
         chmod 777 /tmp/homo_sapiens
         cp ~{fai} /tmp
         cp ~{fasta} /tmp
