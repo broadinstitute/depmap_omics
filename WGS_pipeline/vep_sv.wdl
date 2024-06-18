@@ -105,6 +105,7 @@ task annotate_sv_vep {
             --dir_cache /tmp/vep_cache \
             --fasta genome_reference.fasta \
             --fork ~{cpu} \
+            --pick \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
             --sift b --polyphen b --total_length --ccds --canonical --biotype \
             --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg \
