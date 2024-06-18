@@ -86,7 +86,7 @@ task annotate_sv_vep {
         cp ~{gnomad} /tmp/vep_cache
         cp ~{gnomad_idx} /tmp/vep_cache 
 
-        tar -C /tmp/vep_cache -xvzf ~{vep_data}
+        tar -C /tmp/vep_cache -xzf ~{vep_data}
         chmod 777 /tmp/vep_cache/homo_sapiens
         cp ~{fai} /tmp/vep_cache
         cp ~{fasta} /tmp/vep_cache
