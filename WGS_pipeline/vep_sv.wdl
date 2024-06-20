@@ -43,10 +43,18 @@ workflow VEP_SV_Workflow {
             sample_id=sample_id,
     }
 
+    call vcf2bedpe {
+        input:
+            input_vcf=gnomad_filter.output_filtered_vcf,
+            output_vcf_basename=sample_id,
+
+    }
+
     output { 
         File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
         File vep_sv_stats = annotate_sv_vep.output_vep_stats
         File gnomad_filtered_sv = gnomad_filter.output_filtered_vcf
+        File gnomad_filtered_bedpe = vcf2bedpe.output_bedpe
     }
 }
 
@@ -182,5 +190,35 @@ task gnomad_filter {
 
     output {     
         File output_filtered_vcf = "~{sample_id}.vep_annotated.gnomad_filtered.vcf"
+    }
+}
+
+
+task vcf2bedpe {
+    input {
+        File input_vcf
+        String output_vcf_basename
+        Int preemptible_tries=2
+    }
+
+    command {
+        set -eo pipefail
+
+        bgzip input_vcf 
+        zcat ${input_vcf}.gz \
+            | svtools vcftobedpe \
+            > ${output_vcf_basename}.bedpe
+    }
+
+    runtime {
+        docker: "halllab/svtools@sha256:38ac08a8685ff58329b72e2b9c366872086d41ef21da84278676e06ef7f1bfbb"
+        cpu: "1"
+        memory: "3 GB"
+        disks: "local-disk " +  3*ceil( size(input_vcf_gz, "GB")) + " HDD"
+        preemptible: preemptible_tries
+    }
+
+    output {
+        File output_bedpe = "${output_vcf_basename}.bedpe"
     }
 }
