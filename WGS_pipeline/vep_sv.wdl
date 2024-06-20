@@ -204,7 +204,7 @@ task vcf2bedpe {
     command {
         set -eo pipefail
 
-        bgzip input_vcf 
+        bgzip ~{input_vcf} 
         zcat ${input_vcf}.gz \
             | svtools vcftobedpe \
             > ${output_vcf_basename}.bedpe
