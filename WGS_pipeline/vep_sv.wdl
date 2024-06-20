@@ -193,7 +193,7 @@ task gnomad_filter {
     }
 }
 
-
+# stolen from https://github.com/hall-lab/sv-pipeline/blob/master/scripts/SV_Tasks.wdl
 task vcf2bedpe {
     input {
         File input_vcf
