@@ -26,6 +26,7 @@ async def expressionPostProcessing(
     ensemblserver=constants.ENSEMBL_SERVER_V,
     doCleanup=True,
     samplesetToLoad="all",
+    strandedSamplesetToLoad="all_stranded",
     taiga_dataset=env_config.TAIGA_EXPRESSION,
     save_output=constants.WORKING_DIR,
     minsimi=constants.RNAMINSIMI,
@@ -174,7 +175,8 @@ async def expressionPostProcessing(
         rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
         rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
         if run_stranded:
-            rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad, rnaseqc2_gene_count_col_stranded)
+            print("generating rnaseqc gene count matrix for stranded subset")
+            rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, strandedSamplesetToLoad, rnaseqc2_gene_count_col_stranded)
             rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
             rnaseqc_count_mat = rnaseqc_count_mat.T
             rnaseqc_count_mat.to_csv(folder + "stranded_rnaseqc_count_mat.csv")
@@ -701,9 +703,7 @@ def cnPostProcessing(
 
     # profile-ID level
     mergedsegments_pr.to_csv(folder + "merged_segments_profile.csv", index=False)
-    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr).apply(
-        lambda x: np.log2(1 + x)
-    )
+    mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
     mergedgenecn_pr.to_csv(folder + "merged_genecn_profile.csv")
     merged_purecn_segments_pr.to_csv(
         folder + "merged_absolute_segments_profile.csv", index=False
@@ -974,8 +974,11 @@ async def mutationPostProcessing(
 
     if run_guidemat:
         # aggregate germline binary matrix
-        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName)
-        wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName)
+        print("aggregating binary guide mutation matrices")
+        print("aggregating wes")
+        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName, save_output=folder)
+        print("aggregating wgs")
+        wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName, save_output=folder)
 
         for lib, _ in bed_locations.items():
             assert lib in wes_germline_mats, "library missing in wes"
