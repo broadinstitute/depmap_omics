@@ -79,6 +79,7 @@ task annotate_sv_vep {
         Int mem = 80
         Int max_sv_size = 50000000
         Int sv_match_percentage=80
+        Int gnomad_distance=500
     }
 
     String gnomad_basename = basename(gnomad)
@@ -117,7 +118,7 @@ task annotate_sv_vep {
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
             --sift b --polyphen b --total_length --ccds --canonical --biotype \
             --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg \
-            --custom file=/tmp/vep_cache/~{gnomad_basename},short_name=gnomAD_SV,format=vcf,type=overlap,overlap_cutoff=~{sv_match_percentage},distance=500,same_type=1,fields=AC%AF%FILTER,summary_stats=min \
+            --custom file=/tmp/vep_cache/~{gnomad_basename},short_name=gnomAD_SV,format=vcf,type=overlap,overlap_cutoff=~{sv_match_percentage},distance=~{gnomad_distance},same_type=1,fields=AC%AF%FILTER,summary_stats=min \
             --max_sv_size ~{max_sv_size}
 
     }
