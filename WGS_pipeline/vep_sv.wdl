@@ -21,7 +21,7 @@ workflow VEP_SV_Workflow {
         Int mem = 80
     }
 
-    call survivor {
+    call survivor.Merge as merge {
         input:
             filePaths=[input_vcf, gnomad],
             breakpointDistance=500,
@@ -62,7 +62,7 @@ workflow VEP_SV_Workflow {
         File vep_sv_stats = annotate_sv_vep.output_vep_stats
         File gnomad_filtered_sv = gnomad_filter.output_filtered_vcf
         File gnomad_filtered_bedpe = vcf2bedpe.output_bedpe
-        File merged_w_gnomad = survivor.mergedVcf
+        File merged_w_gnomad = merge.mergedVcf
     }
 }
 
