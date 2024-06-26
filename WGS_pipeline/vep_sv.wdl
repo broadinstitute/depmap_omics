@@ -216,7 +216,7 @@ task vcf2bedpe {
     }
 
     runtime {
-        docker: "halllab/svtools@sha256:38ac08a8685ff58329b72e2b9c366872086d41ef21da84278676e06ef7f1bfbb"
+        docker: "halllab/svtools:v0.5.1"
         cpu: "1"
         memory: "3 GB"
         disks: "local-disk " +  3*ceil( size(input_vcf, "GB")) + " HDD"
