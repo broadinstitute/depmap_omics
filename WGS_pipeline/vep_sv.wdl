@@ -158,9 +158,9 @@ task gnomad_filter {
 
         bcftools filter --include 'SUM(FORMAT/PR[0:1]+FORMAT/SR[0:1]) > 3' ~{input_vcf} > ~{sample_id}.vep_annotated.pr_sr_filtered.vcf
 
-        bcftools view -h ~{input_vcf} > ~{sample_id}.vep_annotated.pr_sr_filtered.gnomad_filtered.vcf
+        bcftools view -h ~{sample_id}.vep_annotated.pr_sr_filtered.vcf > ~{sample_id}.vep_annotated.pr_sr_filtered.gnomad_filtered.vcf
 
-        bcftools view --with-header ~{sample_id}.vep_annotated.pr_sr_filtered.vcf | awk -F"\t" '{
+        bcftools view ~{sample_id}.vep_annotated.pr_sr_filtered.vcf | awk -F"\t" '{
             split($8, info, ";");
             for (i=1; i<=length(info); i++) {
                 if (info[i] ~ /^CSQ=/) {
@@ -181,7 +181,7 @@ task gnomad_filter {
                     }
                 }
             }
-        }' >> ~{sample_id}.vep_annotated.gnomad_filtered.vcf
+        }' >> ~{sample_id}.vep_annotated.pr_sr_filtered.gnomad_filtered.vcf
     >>>
 
     runtime {
@@ -194,7 +194,7 @@ task gnomad_filter {
     }
 
     output {     
-        File output_filtered_vcf = "~{sample_id}.vep_annotated.gnomad_filtered.vcf"
+        File output_filtered_vcf = "~{sample_id}.vep_annotated.pr_sr_filtered.gnomad_filtered.vcf"
     }
 }
 
