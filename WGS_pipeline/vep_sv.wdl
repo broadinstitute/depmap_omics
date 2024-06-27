@@ -1,7 +1,5 @@
 version 1.0
 
-import "https://raw.githubusercontent.com/biowdl/tasks/develop/survivor.wdl" as survivor
-
 workflow VEP_SV_Workflow {
     input {
         File input_vcf
@@ -21,15 +19,15 @@ workflow VEP_SV_Workflow {
         Int mem = 80
     }
 
-    call survivor.Merge as merge {
+    call pr_sr_filter {
         input:
-            filePaths=[input_vcf, gnomad],
-            breakpointDistance=500,
+            input_vcf=input_vcf,
+            sample_id=sample_id,
     }
 
     call annotate_sv_vep {
         input:
-            input_vcf=input_vcf,
+            input_vcf=pr_sr_filter.output_filtered_vcf,
             sample_id=sample_id,
             fasta=fasta,
             fai=fai,
@@ -62,9 +60,42 @@ workflow VEP_SV_Workflow {
         File vep_sv_stats = annotate_sv_vep.output_vep_stats
         File gnomad_filtered_sv = gnomad_filter.output_filtered_vcf
         File gnomad_filtered_bedpe = vcf2bedpe.output_bedpe
-        File merged_w_gnomad = merge.mergedVcf
     }
 }
+
+
+task pr_sr_filter {
+    input {
+        File input_vcf
+        String sample_id
+        String docker_image="dceoy/bcftools"
+        Int preemptible=2
+        Int boot_disk_size=10
+        Int disk_space=10
+        Int cpu = 2
+        Int mem = 10
+    }
+
+    command <<<
+        set -euo pipefail
+
+        bcftools filter --include 'SUM(FORMAT/PR[0:1]+FORMAT/SR[0:1]) > 3' ~{input_vcf} > ~{sample_id}.pr_sr_filtered.vcf
+    >>>
+
+    runtime {
+        disks: "local-disk ~{disk_space} HDD"
+        memory: "~{mem} GB"
+        cpu: cpu
+        preemptible: preemptible
+        bootDiskSizeGb: boot_disk_size
+        docker: docker_image
+    }
+
+    output {     
+        File output_filtered_vcf = "~{sample_id}.pr_sr_filtered.vcf"
+    }
+}
+
 
 # Standard interface to run vcf to maf
 task annotate_sv_vep {
@@ -165,11 +196,9 @@ task gnomad_filter {
     command <<<
         set -euo pipefail
 
-        bcftools filter --include 'SUM(FORMAT/PR[0:1]+FORMAT/SR[0:1]) > 3' ~{input_vcf} > ~{sample_id}.vep_annotated.pr_sr_filtered.vcf
+        bcftools view -h ~{input_vcf} > ~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf
 
-        bcftools view -h ~{sample_id}.vep_annotated.pr_sr_filtered.vcf > ~{sample_id}.vep_annotated.pr_sr_filtered.gnomad_filtered.vcf
-
-        bcftools view ~{sample_id}.vep_annotated.pr_sr_filtered.vcf | awk -F"\t" '{
+        bcftools view ~{input_vcf} | awk -F"\t" '{
             split($8, info, ";");
             for (i=1; i<=length(info); i++) {
                 if (info[i] ~ /^CSQ=/) {
@@ -190,7 +219,7 @@ task gnomad_filter {
                     }
                 }
             }
-        }' >> ~{sample_id}.vep_annotated.pr_sr_filtered.gnomad_filtered.vcf
+        }' >> ~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf
     >>>
 
     runtime {
@@ -203,7 +232,7 @@ task gnomad_filter {
     }
 
     output {     
-        File output_filtered_vcf = "~{sample_id}.vep_annotated.pr_sr_filtered.gnomad_filtered.vcf"
+        File output_filtered_vcf = "~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf"
     }
 }
 
