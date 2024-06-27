@@ -336,3 +336,13 @@ workflows:
     filters: # All tags, no branches
       branches:
         - master
+- name: rna_strand.wdl
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /RNA_pipeline/rna_strand.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - master
+        - rework-rnastrand-wdl
