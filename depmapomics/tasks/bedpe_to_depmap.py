@@ -152,3 +152,51 @@ def bedpe_to_df(
         )
 
     return data, description, dropped_cols
+
+
+def filter_svs(df, 
+               sv_gnomad_cutoff = 0.001, 
+               cosmic_fusion_pairs="gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv",
+               oncogene_list="/home/xiaomeng/bin/depmap_omics/depmapomics/tasks/oncokb_dm/data/oncogene_oncokb.txt",
+               ts_list="/home/xiaomeng/bin/depmap_omics/depmapomics/tasks/oncokb_dm/data/tumor_suppressor_oncokb.txt",
+               large_sv_size = 20000,
+              ):
+    
+    # drop variants shorter than 50
+    df = df[(df["SVLEN_A"].isna()) | 
+       (df["SVLEN_A"].astype(float).astype('Int64') <= -50) | 
+       (df["SVLEN_A"].astype(float).astype('Int64') >= 50)]
+    
+    oncogenes = h.fileToList(oncogene_list)
+    tumor_suppressors = h.fileToList(ts_list)
+    oncogenes_and_ts = set(oncogenes + tumor_suppressors)
+    
+    cosmic = pd.read_csv(cosmic_fusion_pairs)
+    cosmic_pairs = list(zip(cosmic['Gene_A'], cosmic['Gene_B']))
+    cosmic_pairs_sorted = set([tuple(sorted(elem)) for elem in cosmic_pairs])
+    
+    df["rescue"] = False
+    
+    # rescue large SVs
+    df.loc[(~df["SVLEN_A"].isna()) & 
+       ((df["SVLEN_A"].astype(float).astype('Int64') <= -large_sv_size) | 
+       (df["SVLEN_A"].astype(float).astype('Int64') >= large_sv_size)), "rescue"] = True
+    
+    # rescue breakpoints that fall on oncogenes or tumor suppressors
+    df.loc[(df["vep_SYMBOL_A"].isin(oncogenes_and_ts)) | (df["vep_SYMBOL_B"].isin(oncogenes_and_ts)), "rescue"] = True
+    
+    # rescue gene pairs in cosmic
+    df['vep_SYMBOL_A'] = df['vep_SYMBOL_A'].fillna("")
+    df['vep_SYMBOL_B'] = df['vep_SYMBOL_B'].fillna("")
+    df["pair"] = [tuple(sorted(elem)) for elem in list(zip(df['vep_SYMBOL_A'], df['vep_SYMBOL_B']))]
+    df.loc[df["pair"].isin(cosmic_pairs_sorted), "rescue"] = True
+    
+    # gnomad AF parsing
+    df["max_af"] = df["vep_gnomAD_SV_AF_A"].fillna("").str.split("&").apply(lambda x: max([float(e) if e != "" else 0 for e in x]))
+    
+    df = df[(df["rescue"] == True) |
+           ((df["max_af"] < sv_gnomad_cutoff) &
+           ((df["vep_BIOTYPE_A"].str.startswith("protein_coding")) |
+           (df["vep_IMPACT_A"] == "HIGH")))]
+    
+    return df
