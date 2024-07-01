@@ -80,6 +80,7 @@ task pr_sr_filter {
         set -euo pipefail
 
         bcftools filter --include 'SUM(FORMAT/PR[0:1]+FORMAT/SR[0:1]) > 3' ~{input_vcf} > ~{sample_id}.pr_sr_filtered.vcf
+        bcftools view -i 'FILTER="PASS"|FILTER="MaxDepth"' ~{sample_id}.pr_sr_filtered.vcf > ~{sample_id}.pr_sr_filtered.passed.vcf
     >>>
 
     runtime {
@@ -92,7 +93,7 @@ task pr_sr_filter {
     }
 
     output {     
-        File output_filtered_vcf = "~{sample_id}.pr_sr_filtered.vcf"
+        File output_filtered_vcf = "~{sample_id}.pr_sr_filtered.passed.vcf"
     }
 }
 
