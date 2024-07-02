@@ -386,7 +386,7 @@ def vcf_to_df(
             for k in list(fields.keys()):
                 fields[k].append(res.get(k, None))
     except ValueError:
-        #print(annot)
+        print(annot)
         raise ValueError("unknown field")
 
     data = pd.concat(
@@ -463,7 +463,7 @@ def vcf_to_df(
         data.loc[loc, "SB"] = data.loc[loc, "SB_1_2_3"]
         data = data.drop(columns=["SB_1", "SB_1_2_3"])
         data = data.rename(columns={"SB_1_2": "PS", "SB_1": "PID"})
-    else:
+    elif 'SB' in data.columns.tolist():
         loc = data.SB.isna()
         data.loc[loc, "SB"] = data.loc[loc, "PGT"]
         data.loc[loc, "PGT"] = ""
