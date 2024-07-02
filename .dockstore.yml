@@ -273,6 +273,7 @@ workflows:
         - merge-annotators
         - master
         - dev-hgvs
+        - tcga_mutation_processing
   - name: mask_variants
     subclass: WDL
     publish: True
