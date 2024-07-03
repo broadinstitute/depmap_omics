@@ -196,9 +196,11 @@ def filter_svs(df,
     # gnomad AF parsing
     df["max_af"] = df["vep_gnomAD_SV_AF_A"].fillna("").str.split("&").apply(lambda x: max([float(e) if e != "" else 0 for e in x]))
     
+    # filter while keeping rescues
     df = df[(df["rescue"] == True) |
            ((df["max_af"] < sv_gnomad_cutoff) &
            ((df["vep_BIOTYPE_A"].str.startswith("protein_coding")) |
-           (df["vep_IMPACT_A"] == "HIGH")))]
+           (df["vep_IMPACT_A"] == "HIGH") |
+           ((df["vep_Consequence_A"].str.contains("splice")) & (df["vep_IMPACT_A"] == "MODERATE"))))]
     
     return df
