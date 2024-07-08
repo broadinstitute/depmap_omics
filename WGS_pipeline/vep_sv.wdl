@@ -126,6 +126,9 @@ task annotate_sv_vep {
 
         ln -s ~{fasta} genome_reference.fasta
 
+        mkdir -p /tmp/Plugins
+        cp ~{sv_plugin} /tmp/Plugins/StructuralVariantOverlap.pm
+
         mkdir -p /tmp/vep_cache
 
         cp ~{gnomad} /tmp/vep_cache
@@ -147,7 +150,7 @@ task annotate_sv_vep {
             --stats_text \
             --cache \
             --dont_skip \
-            --dir_cache /tmp/vep_cache \
+            --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
             --fasta genome_reference.fasta \
             --fork ~{cpu} \
             --pick \
