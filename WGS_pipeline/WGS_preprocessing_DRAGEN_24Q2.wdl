@@ -1,8 +1,8 @@
 version 1.0
 # converts hg38 cram to hg38 bam, and preprocesses it for the following steps (WGS_pipeline)
 # for DRAGEN-aligned cram samples
-import "CramToBam.wdl" as CramToBam
-import "BamToUnmappedRGBams_noHardClips.wdl" as BamToUnmappedRGBams
+import "CramToBam" as CramToBam
+import "BamToUnmappedRGBams_noHardClips" as BamToUnmappedRGBams
 import "https://raw.githubusercontent.com/gatk-workflows/gatk4-data-processing/2.1.1/processing-for-variant-discovery-gatk4.wdl" as PreProcessingForVariantDiscovery_GATK4
 import "ArrayOfFilesToTxt_v1_0.wdl" as ArrayOfFilesToTxt
 
