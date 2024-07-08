@@ -131,8 +131,8 @@ task annotate_sv_vep {
 
         mkdir -p /tmp/vep_cache
 
-        cp ~{gnomad} /tmp/vep_cache
-        cp ~{gnomad_idx} /tmp/vep_cache 
+        cp ~{gnomad} /tmp/Plugins
+        cp ~{gnomad_idx} /tmp/Plugins 
 
         tar -C /tmp/vep_cache -xzf ~{vep_data}
         chmod 777 /tmp/vep_cache/homo_sapiens
@@ -142,23 +142,35 @@ task annotate_sv_vep {
         du -sh /tmp/vep_cache/Homo_sapiens_assembly38.fasta.gz*
 
 
+        # perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
+        #     --input_file ~{input_vcf} \
+        #     --vcf \
+        #     --output_file ~{sample_id}_sv_vep_annotated.vcf \
+        #     --stats_file ~{sample_id}_sv_vep_stats.txt \
+        #     --stats_text \
+        #     --cache \
+        #     --dont_skip \
+        #     --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
+        #     --fasta genome_reference.fasta \
+        #     --fork ~{cpu} \
+        #     --pick \
+        #     --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
+        #     --sift b --polyphen b --total_length --ccds --canonical --biotype \
+        #     --protein --xref_refseq --mane --af --max_af --af_1kg --af_gnomadg \
+        #     --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename},same_type=1,overlap_cutoff=80,reciprocal=0,same_type=1,fields=AC%AF \
+        #     --max_sv_size ~{max_sv_size}
+
         perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
             --input_file ~{input_vcf} \
-            --vcf \
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
             --stats_file ~{sample_id}_sv_vep_stats.txt \
-            --stats_text \
             --cache \
-            --dont_skip \
             --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
-            --fasta genome_reference.fasta \
-            --fork ~{cpu} \
-            --pick \
-            --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
-            --sift b --polyphen b --total_length --ccds --canonical --biotype \
-            --protein --xref_refseq --mane --af --max_af --af_1kg --af_gnomadg \
-            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename},same_type=1,overlap_cutoff=80,reciprocal=0,same_type=1,fields=AC%AF \
-            --max_sv_size ~{max_sv_size}
+            --fork 10 \
+            --vcf \
+            --dont_skip \
+            --plugin StructuralVariantOverlap,file=/tmp/Plugins/~{gnomad_basename},same_type=1,overlap_cutoff=80,reciprocal=0,same_type=1,fields=AC%AF
+
 
     }
 
