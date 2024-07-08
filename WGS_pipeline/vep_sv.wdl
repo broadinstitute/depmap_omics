@@ -153,8 +153,8 @@ task annotate_sv_vep {
             --pick \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
             --sift b --polyphen b --total_length --ccds --canonical --biotype \
-            --protein --xref_refseq --mane --pubmed --af --max_af --af_1kg --af_gnomadg \
-            --custom file=/tmp/vep_cache/~{gnomad_basename},short_name=gnomAD_SV,format=vcf,type=~{sv_match_type},overlap_cutoff=~{sv_match_percentage},distance=~{gnomad_distance},reciprocal=~{sv_match_reciprocal},same_type=1,fields=AC%AF%FILTER,summary_stats=min \
+            --protein --xref_refseq --mane --af --max_af --af_1kg --af_gnomadg \
+            --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename},same_type=1,overlap_cutoff=80,reciprocal=0,same_type=1,fields=AC%AF \
             --max_sv_size ~{max_sv_size}
 
     }
