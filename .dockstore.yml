@@ -274,6 +274,15 @@ workflows:
         - master
         - dev-hgvs
         - tcga_mutation_processing
+  - name: WGS_preprocessing_DRAGEN_24Q2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing_DRAGEN_24Q2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - master
   - name: mask_variants
     subclass: WDL
     publish: True
@@ -310,15 +319,6 @@ workflows:
     filters: # All tags, no branches
       branches:
         - guidemat-wdl
-- name: WGS_preprocessing_DRAGEN_24Q2
-    subclass: WDL
-    publish: True
-    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing_DRAGEN_24Q2.wdl
-    testParameterFiles:
-      - /test.json
-    filters: # All tags, no branches
-      branches:
-        - master
 - name: CramToBam.wdl
     subclass: WDL
     publish: True
