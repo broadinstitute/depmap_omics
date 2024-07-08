@@ -219,6 +219,7 @@ workflows:
         - update-vcf-to-depmap
         - add-tert-to-wdl
         - add-aplice-ai
+        - tcga_mutation_processing
   - name: vcf2maf
     subclass: WDL
     publish: True
