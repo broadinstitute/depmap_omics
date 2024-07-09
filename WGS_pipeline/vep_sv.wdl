@@ -51,7 +51,6 @@ workflow VEP_SV_Workflow {
 
     output { 
         File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
-        File vep_sv_stats = annotate_sv_vep.output_vep_stats
         File bedpe = vcf2bedpe.output_bedpe
     }
 }
@@ -163,7 +162,6 @@ task annotate_sv_vep {
         perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
             --input_file ~{input_vcf} \
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
-            --stats_file ~{sample_id}_sv_vep_stats.txt \
             --cache \
             --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
             --fork 10 \
@@ -185,7 +183,6 @@ task annotate_sv_vep {
 
     output {     
         File output_vep_vcf = "~{sample_id}_sv_vep_annotated.vcf"
-        File output_vep_stats = "~{sample_id}_sv_vep_stats.txt"
     }
 }
 
