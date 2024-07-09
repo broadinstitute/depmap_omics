@@ -161,7 +161,15 @@ async def expressionPostProcessing(
     if run_stranded:
         pr_files_stranded = dict()
         tpm_mat = files_stranded["proteincoding_genes_tpm_stranded"]
+        all_genes_mat = files_stranded["genes_tpm_stranded"]
+        transcripts_mat = files_stranded["transcripts_tpm_stranded"]
         pr_files_stranded["proteincoding_genes_tpm_profile_stranded"] = tpm_mat[tpm_mat.index.isin(set(renaming_dict.keys()))].rename(
+            index=renaming_dict
+        )
+        pr_files_stranded["genes_tpm_profile_stranded"] = all_genes_mat[all_genes_mat.index.isin(set(renaming_dict.keys()))].rename(
+            index=renaming_dict
+        )
+        pr_files_stranded["transcripts_tpm_profile_stranded"] = transcripts_mat[transcripts_mat.index.isin(set(renaming_dict.keys()))].rename(
             index=renaming_dict
         )
         expressions.saveFiles(pr_files_stranded, folder)
@@ -329,6 +337,18 @@ async def expressionPostProcessing(
                     {
                         "path": folder + "proteincoding_genes_tpm_profile_stranded_logp1.csv",
                         "name": "stranded_proteinCoding_genes_tpm_logp1_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "genes_tpm_profile_stranded_logp1.csv",
+                        "name": "stranded_genes_tpm_logp1_profile",
+                        "format": "NumericMatrixCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "transcripts_tpm_profile_stranded_logp1.csv",
+                        "name": "stranded_transcripts_tpm_logp1_profile",
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
                     },
