@@ -147,25 +147,6 @@ task annotate_sv_vep {
         cp ~{gzi} /tmp/vep_cache
         du -sh /tmp/vep_cache/Homo_sapiens_assembly38.fasta.gz*
 
-
-        # perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
-        #     --input_file ~{input_vcf} \
-        #     --vcf \
-        #     --output_file ~{sample_id}_sv_vep_annotated.vcf \
-        #     --stats_file ~{sample_id}_sv_vep_stats.txt \
-        #     --stats_text \
-        #     --cache \
-        #     --dont_skip \
-        #     --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
-        #     --fasta genome_reference.fasta \
-        #     --fork ~{cpu} \
-        #     --pick \
-        #     --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol \
-        #     --sift b --polyphen b --total_length --ccds --canonical --biotype \
-        #     --protein --xref_refseq --mane --af --max_af --af_1kg --af_gnomadg \
-        #     --plugin StructuralVariantOverlap,file=/tmp/vep_cache/~{gnomad_basename},same_type=1,overlap_cutoff=80,reciprocal=0,same_type=1,fields=AC%AF \
-        #     --max_sv_size ~{max_sv_size}
-
         perl /opt/vep/src/ensembl-vep/vep --force_overwrite \
             --input_file ~{input_vcf} \
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
@@ -253,7 +234,7 @@ task gnomad_filter {
                             print $0
                     } else {
                         split(csq[length(csq)-2], af, "&");
-                        max=1
+                        max=0
                         for (j=1; j<=length(af); j++) {
                             if (af[j] >= max) {
                                 max = af[j]
