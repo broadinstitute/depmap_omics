@@ -102,7 +102,7 @@ task annotate_sv_vep {
         File gnomad
         File gnomad_idx
         File sv_plugin="gs://cds-vep-data/StructuralVariantOverlap.pm"
-        String docker_image="ensemblorg/ensembl-vep:release_112.0"
+        String docker_image="siyerbroad/cds-ensembl-vep_release110"
         String assembly="GRCh38"
         Int preemptible=2
         Int boot_disk_size=60
@@ -125,11 +125,11 @@ task annotate_sv_vep {
 
         ln -s ~{fasta} genome_reference.fasta
 
-        mkdir -p /tmp/Plugins
-        curl https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/110/StructuralVariantOverlap.pm -o /tmp/Plugins/StructuralVariantOverlap.pm
+        git clone -b release/110 https://github.com/Ensembl/VEP_plugins.git
 
         mkdir -p /tmp/vep_cache
 
+        mkdir -p /tmp/Plugins
         cp ~{gnomad} /tmp/Plugins
         cp ~{gnomad_idx} /tmp/Plugins 
 
@@ -163,7 +163,7 @@ task annotate_sv_vep {
             --input_file ~{input_vcf} \
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
             --cache \
-            --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
+            --dir_cache /tmp/vep_cache --dir_plugins VEP_plugins \
             --fork 10 \
             --vcf \
             --dont_skip \
