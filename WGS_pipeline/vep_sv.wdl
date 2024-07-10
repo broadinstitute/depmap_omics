@@ -126,7 +126,7 @@ task annotate_sv_vep {
         ln -s ~{fasta} genome_reference.fasta
 
         mkdir -p /tmp/Plugins
-        cp ~{sv_plugin} /tmp/Plugins/StructuralVariantOverlap.pm
+        curl https://raw.githubusercontent.com/Ensembl/VEP_plugins/release/110/StructuralVariantOverlap.pm -o /tmp/Plugins/StructuralVariantOverlap.pm
 
         mkdir -p /tmp/vep_cache
 
