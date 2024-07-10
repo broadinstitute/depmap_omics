@@ -49,9 +49,16 @@ workflow VEP_SV_Workflow {
 
     }
 
+    call gnomad_filter {
+        input:
+            input_vcf=annotate_sv_vep.output_vep_vcf,
+            sample_id=sample_id,
+    }
+
     output { 
         File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
         File bedpe = vcf2bedpe.output_bedpe
+        File gnomad_filtered_no_rescue = gnomad_filter.output_filtered_vcf
     }
 }
 
@@ -163,12 +170,15 @@ task annotate_sv_vep {
             --input_file ~{input_vcf} \
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
             --cache \
+            --fasta genome_reference.fasta \
             --dir_cache /tmp/vep_cache --dir_plugins VEP_plugins \
             --fork 10 \
             --vcf \
-            --dont_skip \
+            --dont_skip --pick \
+            --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol --mane \
+            --total_length --ccds --canonical --biotype --protein \
+            --max_sv_size ~{max_sv_size} \
             --plugin StructuralVariantOverlap,file=/tmp/Plugins/~{gnomad_basename},same_type=1,overlap_cutoff=80,reciprocal=0,same_type=1,fields=AC%AF
-
 
     }
 
@@ -213,5 +223,61 @@ task vcf2bedpe {
 
     output {
         File output_bedpe = "${output_vcf_basename}.bedpe"
+    }
+}
+
+task gnomad_filter {
+    input {
+        File input_vcf
+        String sample_id
+        Float gnomad_cutoff=0.001
+        String docker_image="dceoy/bcftools"
+        Int preemptible=2
+        Int boot_disk_size=10
+        Int disk_space=10
+        Int cpu = 2
+        Int mem = 10
+    }
+
+    command <<<
+        set -euo pipefail
+
+        bcftools view -h ~{input_vcf} > ~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf
+
+        bcftools view ~{input_vcf} | awk -F"\t" '{
+            split($8, info, ";");
+            for (i=1; i<=length(info); i++) {
+                if (info[i] ~ /^CSQ=/) {
+                    split(substr(info[i], 5), csq, "|");
+                    if (csq[length(csq)-2] == "") {
+                            print $0
+                    } else {
+                        split(csq[length(csq)-2], af, "&");
+                        max=1
+                        for (j=1; j<=length(af); j++) {
+                            if (af[j] >= max) {
+                                max = af[j]
+                            }
+                        }
+                        if (max <= ~{gnomad_cutoff}) {
+                            print $0
+                        }
+                    }
+                }
+            }
+        }' >> ~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf
+    >>>
+
+    runtime {
+        disks: "local-disk ~{disk_space} HDD"
+        memory: "~{mem} GB"
+        cpu: cpu
+        preemptible: preemptible
+        bootDiskSizeGb: boot_disk_size
+        docker: docker_image
+    }
+
+    output {     
+        File output_filtered_vcf = "~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf"
     }
 }
