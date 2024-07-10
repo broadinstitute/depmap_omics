@@ -1,11 +1,56 @@
 import pandas as pd
 from mgenepy.utils import helper as h
+import gzip
 
+COLS_TO_KEEP = ["CHROM_A",
+                "START_A",
+                "END_A",
+                "ID",
+                "STRAND_A",
+                "TYPE",
+                "FILTER",
+                "REF_A",
+                "ALT_A",
+                "SVLEN_A",
+                "MATEID_A",
+                "SVINSLEN_A",
+                "BND_DEPTH_A",
+                "MATE_BND_DEPTH_A",
+                "vep_Consequence_A",
+                "vep_IMPACT_A",
+                "vep_SYMBOL_A",
+                "vep_Gene_A",
+                "vep_BIOTYPE_A",
+                "vep_SV_overlap_name_A",
+                "vep_SV_overlap_AF_A",
+                "CHROM_B",
+                "START_B",
+                "END_B",
+                "ID",
+                "STRAND_B",
+                "TYPE",
+                "FILTER",
+                "REF_B",
+                "ALT_B",
+                "SVLEN_B",
+                "MATEID_B",
+                "SVINSLEN_B",
+                "BND_DEPTH_B",
+                "MATE_BND_DEPTH_B",
+                "vep_Consequence_B",
+                "vep_IMPACT_B",
+                "vep_SYMBOL_B",
+                "vep_Gene_B",
+                "vep_BIOTYPE_B",
+                "vep_SV_overlap_name_B",
+                "vep_SV_overlap_AF_B",
+                "PR",
+                "SR",
+                "Rescue"]
 
 def bedpe_to_df(
     path,
     additional_cols=[],
-    **kwargs,
 ):
     """
     transforms a bedpe file into a dataframe file as best as it can
@@ -80,9 +125,9 @@ def bedpe_to_df(
         "index_col": False,
         "header": None,
         "names": colnames,
-        "skiprows": nrows_toskip + kwargs.get("skiprows", 0),
+        "skiprows": nrows_toskip,
     }
-    data = pd.read_csv(path, **{**kwargs, **csvkwargs})
+    data = pd.read_csv(path, **csvkwargs)
     
     vep_fields_a = [k+"_A" for k, v in description.items() if VEP_CSQ_DESC in v]
     vep_fields_b = [k+"_B" for k, v in description.items() if VEP_CSQ_DESC in v]
@@ -100,10 +145,7 @@ def bedpe_to_df(
                     if annot == ".":
                         pass
                     elif annot in uniqueargs:
-                        if annot == "REF":
-                            res.update({"REF_FLAG": True})
-                        else:
-                            res.update({annot: True})
+                        res.update({annot: True})
                     elif "=" in annot:
                         # taking care of the funcotator special fields
                         if "CSQ=" in annot:
@@ -156,12 +198,14 @@ def bedpe_to_df(
     return data, description, dropped_cols
 
 
+
 def filter_svs(df, 
                sv_gnomad_cutoff = 0.001, 
                cosmic_fusion_pairs="gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv",
                oncogene_list="/home/xiaomeng/bin/depmap_omics/depmapomics/tasks/oncokb_dm/data/oncogene_oncokb.txt",
                ts_list="/home/xiaomeng/bin/depmap_omics/depmapomics/tasks/oncokb_dm/data/tumor_suppressor_oncokb.txt",
                large_sv_size = 20000,
+               cols_to_keep=COLS_TO_KEEP,
               ):
     
     # drop variants shorter than 50
@@ -169,38 +213,46 @@ def filter_svs(df,
        (df["SVLEN_A"].astype(float).astype('Int64') <= -50) | 
        (df["SVLEN_A"].astype(float).astype('Int64') >= 50)]
     
-    oncogenes = h.fileToList(oncogene_list)
-    tumor_suppressors = h.fileToList(ts_list)
+    with open(oncogene_list) as f:
+        oncogenes = [val[:-1] for val in f.readlines()]
+    
+    with open(ts_list) as f:
+        tumor_suppressors = [val[:-1] for val in f.readlines()]
+
     oncogenes_and_ts = set(oncogenes + tumor_suppressors)
     
     cosmic = pd.read_csv(cosmic_fusion_pairs)
     cosmic_pairs = list(zip(cosmic['Gene_A'], cosmic['Gene_B']))
     cosmic_pairs_sorted = set([tuple(sorted(elem)) for elem in cosmic_pairs])
     
-    df["rescue"] = False
+    df["Rescue"] = False
     
     # rescue large SVs
     df.loc[(~df["SVLEN_A"].isna()) & 
        ((df["SVLEN_A"].astype(float).astype('Int64') <= -large_sv_size) | 
-       (df["SVLEN_A"].astype(float).astype('Int64') >= large_sv_size)), "rescue"] = True
+       (df["SVLEN_A"].astype(float).astype('Int64') >= large_sv_size)), "Rescue"] = True
     
     # rescue breakpoints that fall on oncogenes or tumor suppressors
-    df.loc[(df["vep_SYMBOL_A"].isin(oncogenes_and_ts)) | (df["vep_SYMBOL_B"].isin(oncogenes_and_ts)), "rescue"] = True
+    df.loc[(df["vep_SYMBOL_A"].isin(oncogenes_and_ts)) | (df["vep_SYMBOL_B"].isin(oncogenes_and_ts)), "Rescue"] = True
     
     # rescue gene pairs in cosmic
     df['vep_SYMBOL_A'] = df['vep_SYMBOL_A'].fillna("")
     df['vep_SYMBOL_B'] = df['vep_SYMBOL_B'].fillna("")
     df["pair"] = [tuple(sorted(elem)) for elem in list(zip(df['vep_SYMBOL_A'], df['vep_SYMBOL_B']))]
-    df.loc[df["pair"].isin(cosmic_pairs_sorted), "rescue"] = True
+    df.loc[df["pair"].isin(cosmic_pairs_sorted), "Rescue"] = True
     
     # gnomad AF parsing
-    df["max_af"] = df["vep_gnomAD_SV_AF_A"].fillna("").str.split("&").apply(lambda x: max([float(e) if e != "" else 0 for e in x]))
+    df["max_af"] = df["vep_SV_overlap_AF_A"].fillna("").str.split("&").apply(lambda x: max([float(e) if e != "" else 0 for e in x]))
     
     # filter while keeping rescues
-    df = df[(df["rescue"] == True) |
+    df = df[(df["Rescue"] == True) |
            ((df["max_af"] < sv_gnomad_cutoff) &
            ((df["vep_BIOTYPE_A"].str.startswith("protein_coding")) |
            (df["vep_IMPACT_A"] == "HIGH") |
            ((df["vep_Consequence_A"].str.contains("splice")) & (df["vep_IMPACT_A"] == "MODERATE"))))]
     
-    return df
+    return df[cols_to_keep]
+
+
+def __main__():
+    
