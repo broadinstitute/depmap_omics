@@ -55,10 +55,18 @@ workflow VEP_SV_Workflow {
             sample_id=sample_id,
     }
 
+    call bedpe_to_depmap {
+        input:
+            input_bedpe=vcf2bedpe.output_bedpe,
+            sample_id=sample_id
+    }
+
     output { 
         File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
         File bedpe = vcf2bedpe.output_bedpe
         File gnomad_filtered_no_rescue = gnomad_filter.output_filtered_vcf
+        File expanded_sv_bedpe=bedpe_to_depmap.expanded_bedpe
+        File expanded_filtered_sv_bedpe=bedpe_to_depmap.expanded_filtered_bedpe
     }
 }
 
@@ -260,5 +268,40 @@ task gnomad_filter {
 
     output {     
         File output_filtered_vcf = "~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf"
+    }
+}
+
+
+task bedpe_to_depmap {
+    input {
+        File input_bedpe
+        String sample_id
+
+        String docker_image="us-docker.pkg.dev/depmap-omics/public/bedpe_to_depmap:test"
+        Int preemptible=3
+        Int boot_disk_size=10
+        Int disk_space=40
+        Int cpu = 4
+        Int mem = 32
+    }
+
+    command {
+        python -u /home/bedpe_to_depmap.py \
+              ~{input_bedpe} \
+              ~{sample_id} 
+    }
+
+    runtime {
+        disks: "local-disk ~{disk_space} HDD"
+        memory: "~{mem} GB"
+        cpu: cpu
+        preemptible: preemptible
+        bootDiskSizeGb: boot_disk_size
+        docker: docker_image
+    }
+
+    output {
+        File expanded_bedpe = "~{sample_id}.svs.expanded.bedpe"
+        File expanded_filtered_bedpe = "~{sample_id}.svs.expanded.filtered.bedpe"
     }
 }
