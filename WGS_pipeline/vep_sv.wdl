@@ -163,7 +163,6 @@ task annotate_sv_vep {
             --fork 10 \
             --vcf \
             --dont_skip \
-            # --pick \
             --numbers --offline --hgvs --shift_hgvs 0 --terms SO --symbol --mane \
             --total_length --ccds --canonical --biotype --protein \
             --max_sv_size ~{max_sv_size} \
