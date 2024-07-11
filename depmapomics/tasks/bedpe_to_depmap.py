@@ -1,6 +1,6 @@
 import pandas as pd
-from mgenepy.utils import helper as h
 import gzip
+import argparse
 
 COLS_TO_KEEP = ["CHROM_A",
                 "START_A",
@@ -48,6 +48,24 @@ COLS_TO_KEEP = ["CHROM_A",
                 "SR",
                 "Rescue"]
 
+def main(args=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("vcf_filename")
+    parser.add_argument("sample_name")
+
+    args = parser.parse_args()
+
+    vcf_filename = args.vcf_filename
+    sample_name = args.sample_name
+
+    print("expanding INFO fields")
+    bedpe_df = bedpe_to_df(vcf_filename)
+    bedpe_df.to_csv(sample_name + ".svs.expanded.bedpe", index=False)
+
+    print("filtering & rescuing")
+    df_filtered = filter_svs(bedpe_df)
+    df_filtered.to_csv(sample_name + ".svs.expanded.filtered.bedpe", index=False)
+
 def bedpe_to_df(
     path,
     additional_cols=[],
@@ -80,12 +98,6 @@ def bedpe_to_df(
     VEP_CSQ_DESC = "Consequence annotations from Ensembl VEP."
 
     dropped_cols = []
-    
-    tokeep = ['SVLEN', 'CIGAR', 'MATEID', 'EVENT', 'HOMLEN', 'HOMSEQ', 'SVINSLEN', 'SVINSSEQ', 
-              'LEFT_SVINSSEQ', 'RIGHT_SVINSSEQ', 'BND_DEPTH', 'MATE_BND_DEPTH', 
-              'vep_Consequence', 'vep_IMPACT', 'vep_SYMBOL', 'vep_Gene', 'vep_Feature_type', 'vep_Feature', 
-              'vep_HGVSc', 'vep_HGVSp', 'vep_MANE_SELECT', 
-              'vep_SIFT', 'vep_PolyPhen', 'vep_gnomAD_SV', 'vep_gnomAD_SV_AF', 'PR', 'SR']
 
     def read_comments(f):
         description = {}
@@ -195,7 +207,7 @@ def bedpe_to_df(
             axis=1,
         )
 
-    return data, description, dropped_cols
+    return data
 
 
 
@@ -254,5 +266,6 @@ def filter_svs(df,
     return df[cols_to_keep]
 
 
-def __main__():
-    
+
+if __name__ == "__main__":
+    main()
