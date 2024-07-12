@@ -267,9 +267,9 @@ def filter_svs(df,
     return df[cols_to_keep]
 
 def correct_bnd_gene(bedpe):
-    # if either breakend is intergenic, remove gene label
-    bedpe.loc[((bedpe.vep_Consequence_A.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_A == "feature_truncation")) & (bedpe.TYPE == "BND"), "vep_SYMBOL_A"] = ""
-    bedpe.loc[((bedpe.vep_Consequence_B.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_B == "feature_truncation")) & (bedpe.TYPE == "BND"), "vep_SYMBOL_B"] = ""
+    # if either breakend is intergenic OR only feature_truncation, remove gene label
+    bedpe.loc[((bedpe.vep_Consequence_A.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_A == "feature_truncation")) & (bedpe.TYPE == "BND"), ["vep_SYMBOL_A", "vep_Gene_A", "vep_BIOTYPE_A"]] = ""
+    bedpe.loc[((bedpe.vep_Consequence_B.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_B == "feature_truncation")) & (bedpe.TYPE == "BND"), ["vep_SYMBOL_B", "vep_Gene_B", "vep_BIOTYPE_B"]] = ""
 
     return bedpe
     
