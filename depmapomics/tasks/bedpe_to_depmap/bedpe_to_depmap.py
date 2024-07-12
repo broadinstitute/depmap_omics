@@ -215,8 +215,8 @@ def bedpe_to_df(
 def filter_svs(df, 
                sv_gnomad_cutoff = 0.001, 
                cosmic_fusion_pairs="gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv",
-               oncogene_list="/home/xiaomeng/bin/depmap_omics/depmapomics/tasks/oncokb_dm/data/oncogene_oncokb.txt",
-               ts_list="/home/xiaomeng/bin/depmap_omics/depmapomics/tasks/oncokb_dm/data/tumor_suppressor_oncokb.txt",
+               oncogene_list="/home/oncogene_oncokb.txt",
+               ts_list="/home/tumor_suppressor_oncokb.txt",
                large_sv_size = 20000,
                cols_to_keep=COLS_TO_KEEP,
               ):

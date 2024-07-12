@@ -862,14 +862,14 @@ async def mutationPostProcessing(
 
     # TODO: replace with multiprocessing 
     # ./sandbox/dna_eval/combine_mafs.py
-    wesmutations, wessvs = mutations.postProcess(
+    wesmutations, _ = mutations.postProcess(
         wes_wm,
         AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
         mafcol=mafcol,
-        run_sv=run_sv,
+        run_sv=False,
         debug=False,
         **kwargs,
     )
@@ -930,13 +930,12 @@ async def mutationPostProcessing(
 
     if run_sv:
         if wgssvs is not None:
-            mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
-            mergedsvs.to_csv(folder + "svs.csv", index=False)
-            mergedsvs_pr = mergedsvs[
-                mergedsvs[constants.SAMPLEID].isin(renaming_dict.keys())
+            wgssvs.to_csv(folder + "svs.csv", index=False)
+            wgssvs_pr = wgssvs[
+                wgssvs[constants.SAMPLEID].isin(renaming_dict.keys())
             ].replace({constants.SAMPLEID: renaming_dict})
             print("saving somatic svs")
-            mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
+            wgssvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
     merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
         drop=True
