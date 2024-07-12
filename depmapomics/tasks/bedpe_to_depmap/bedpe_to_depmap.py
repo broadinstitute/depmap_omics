@@ -77,28 +77,17 @@ def bedpe_to_df(
     Args:
     -----
         path: str filepath to the vcf file
-        additional_filters: list[str] additional values added by the filtering tool looks for PASS, base_qual,
-            clustered_events, fragment, germline, haplotype, map_qual, multiallelic,
-            panel_of_normals, position, slippage, strand_bias, weak_evidence
-        additional_cols: list[str] of additional colnames in the vcf already looks for 'DB',
-            'SOMATIC', 'GERMLINE', "OVERLAP", "IN_PON", "STR", "ReverseComplementedAlleles"
-        drop_null: bool if a column appears to be fully empty, will drop it
-        force_keep: list[str] columns to force keep even if they are empty
-        cols_to_drop: list[str] columns to drop even if they are not empty
+        uniqueargs: list of flags that are boolean (present == True, absent == False)
 
     Returns:
     --------
       a dataframe fo the vcf
-      a dict associating each column with its description (gathered from the vcf header)
-      a list of the columns that have been dropped
     """
     uniqueargs = [
         "IMPRECISE",
     ] + additional_cols
 
     VEP_CSQ_DESC = "Consequence annotations from Ensembl VEP."
-
-    dropped_cols = []
 
     def read_comments(f):
         description = {}
@@ -217,10 +206,11 @@ def filter_svs(df,
                cosmic_fusion_pairs="gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv",
                oncogene_list="/home/oncogene_oncokb.txt",
                ts_list="/home/tumor_suppressor_oncokb.txt",
-               large_sv_size = 20000,
+               large_sv_size = 1e9,
                cols_to_keep=COLS_TO_KEEP,
               ):
-    
+    """filter SVs in bedpe while rescuing important ones
+    """
     # drop variants shorter than 50
     df = df[(df["SVLEN_A"].isna()) | 
        (df["SVLEN_A"].astype(float).astype('Int64') <= -50) | 
@@ -267,9 +257,12 @@ def filter_svs(df,
     return df[cols_to_keep]
 
 def correct_bnd_gene(bedpe):
+    """VEP v112 assigns some BND SVs to the same gene when they are not. this function attempts to correct that"""
     # if either breakend is intergenic OR only feature_truncation, remove gene label
-    bedpe.loc[((bedpe.vep_Consequence_A.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_A == "feature_truncation")) & (bedpe.TYPE == "BND"), ["vep_SYMBOL_A", "vep_Gene_A", "vep_BIOTYPE_A"]] = ""
-    bedpe.loc[((bedpe.vep_Consequence_B.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_B == "feature_truncation")) & (bedpe.TYPE == "BND"), ["vep_SYMBOL_B", "vep_Gene_B", "vep_BIOTYPE_B"]] = ""
+    bedpe.loc[((bedpe.vep_Consequence_A.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_A == "feature_truncation")) & (bedpe.TYPE == "BND"), 
+              ["vep_SYMBOL_A", "vep_Gene_A", "vep_BIOTYPE_A"]] = ""
+    bedpe.loc[((bedpe.vep_Consequence_B.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_B == "feature_truncation")) & (bedpe.TYPE == "BND"), 
+              ["vep_SYMBOL_B", "vep_Gene_B", "vep_BIOTYPE_B"]] = ""
 
     return bedpe
     
