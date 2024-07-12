@@ -64,6 +64,7 @@ def main(args=None):
 
     print("filtering & rescuing")
     df_filtered = filter_svs(bedpe_df)
+    df_filtered = correct_bnd_gene(df_filtered)
     df_filtered.to_csv(sample_name + ".svs.expanded.filtered.bedpe", index=False)
 
 def bedpe_to_df(
@@ -265,7 +266,13 @@ def filter_svs(df,
     
     return df[cols_to_keep]
 
+def correct_bnd_gene(bedpe):
+    # if either breakend is intergenic, remove gene label
+    bedpe.loc[((bedpe.vep_Consequence_A.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_A == "feature_truncation")) & (bedpe.TYPE == "BND"), "vep_SYMBOL_A"] = ""
+    bedpe.loc[((bedpe.vep_Consequence_B.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_B == "feature_truncation")) & (bedpe.TYPE == "BND"), "vep_SYMBOL_B"] = ""
 
+    return bedpe
+    
 
 if __name__ == "__main__":
     main()
