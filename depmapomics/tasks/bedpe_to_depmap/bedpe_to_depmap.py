@@ -51,19 +51,24 @@ COLS_TO_KEEP = ["CHROM_A",
 def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("vcf_filename")
+    parser.add_argument("gene_annotation_filename")
     parser.add_argument("sample_name")
 
     args = parser.parse_args()
 
     vcf_filename = args.vcf_filename
     sample_name = args.sample_name
+    gene_annotation_filename = args.gene_annotation_filename
 
     print("expanding INFO fields")
     bedpe_df = bedpe_to_df(vcf_filename)
-    bedpe_df.to_csv(sample_name + ".svs.expanded.bedpe", index=False)
+
+    print("reannotating gene symbols")
+    bedpe_reannotated = (bedpe_df, gene_annotation_filename)
+    bedpe_df.to_csv(sample_name + ".svs.expanded.reannotated.bedpe", index=False)
 
     print("filtering & rescuing")
-    df_filtered = filter_svs(bedpe_df)
+    df_filtered = filter_svs(bedpe_reannotated)
     df_filtered = correct_bnd_gene(df_filtered)
     df_filtered.to_csv(sample_name + ".svs.expanded.filtered.bedpe", index=False)
 
@@ -199,7 +204,21 @@ def bedpe_to_df(
 
     return data
 
+def reannotate_genes(bedpe, annotation_path):
+    """since VEP can't reliably give the correct gene symbol annotation, redo it here"""
+    gene_annotation = pd.read_csv(annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_A", "ID_A", "GENE_A", "CHROM_B", "START_B", "END_B", "ID_B", "GENE_B"])
+    
+    merged = pd.merge(bedpe, gene_annotation[["CHROM_A", "START_A", "END_A", "GENE_A", "CHROM_B", "START_B", "END_B", "GENE_B"]], on=["CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B"])
+    merged.loc[merged["GENE_A"] == ".", "GENE_A"] = ".;."
+    merged[['SYMBOL_A', 'GENEID_A']] = merged['GENE_A'].str.split(';', n=1, expand=True)
+    merged.loc[merged["GENE_B"] == ".", "GENE_B"] = ".;."
+    merged[['SYMBOL_B', 'GENEID_B']] = merged['GENE_B'].str.split(';', n=1, expand=True)
 
+    merged["GENEID_A"] = merged["GENEID_A"].str[2:-2]
+    merged["GENEID_B"] = merged["GENEID_B"].str[2:-2]
+    merged = merged.drop(['GENE_A', 'GENE_B'], axis=1)
+    
+    return merged
 
 def filter_svs(df, 
                sv_gnomad_cutoff = 0.001, 
