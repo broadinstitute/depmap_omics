@@ -18,8 +18,8 @@ COLS_TO_KEEP = ["CHROM_A",
                 "MATE_BND_DEPTH_A",
                 "vep_Consequence_A",
                 "vep_IMPACT_A",
-                "vep_SYMBOL_A",
-                "vep_Gene_A",
+                'SYMBOL_A',
+                'GENEID_A',
                 "vep_BIOTYPE_A",
                 "vep_SV_overlap_name_A",
                 "vep_SV_overlap_AF_A",
@@ -39,8 +39,8 @@ COLS_TO_KEEP = ["CHROM_A",
                 "MATE_BND_DEPTH_B",
                 "vep_Consequence_B",
                 "vep_IMPACT_B",
-                "vep_SYMBOL_B",
-                "vep_Gene_B",
+                'SYMBOL_B', 
+                'GENEID_B',
                 "vep_BIOTYPE_B",
                 "vep_SV_overlap_name_B",
                 "vep_SV_overlap_AF_B",
@@ -64,12 +64,12 @@ def main(args=None):
     bedpe_df = bedpe_to_df(vcf_filename)
 
     print("reannotating gene symbols")
-    bedpe_reannotated = (bedpe_df, gene_annotation_filename)
-    bedpe_df.to_csv(sample_name + ".svs.expanded.reannotated.bedpe", index=False)
+    bedpe_reannotated = reannotate_genes(bedpe_df, gene_annotation_filename)
+    bedpe_reannotated.to_csv(sample_name + ".svs.expanded.reannotated.bedpe", index=False)
 
     print("filtering & rescuing")
     df_filtered = filter_svs(bedpe_reannotated)
-    df_filtered = correct_bnd_gene(df_filtered)
+    # df_filtered = correct_bnd_gene(df_filtered)
     df_filtered.to_csv(sample_name + ".svs.expanded.filtered.bedpe", index=False)
 
 def bedpe_to_df(
@@ -255,12 +255,12 @@ def filter_svs(df,
        (df["SVLEN_A"].astype(float).astype('Int64') >= large_sv_size)), "Rescue"] = True
     
     # rescue breakpoints that fall on oncogenes or tumor suppressors
-    df.loc[(df["vep_SYMBOL_A"].isin(oncogenes_and_ts)) | (df["vep_SYMBOL_B"].isin(oncogenes_and_ts)), "Rescue"] = True
+    df.loc[(df["SYMBOL_A"].isin(oncogenes_and_ts)) | (df["SYMBOL_B"].isin(oncogenes_and_ts)), "Rescue"] = True
     
     # rescue gene pairs in cosmic
-    df['vep_SYMBOL_A'] = df['vep_SYMBOL_A'].fillna("")
-    df['vep_SYMBOL_B'] = df['vep_SYMBOL_B'].fillna("")
-    df["pair"] = [tuple(sorted(elem)) for elem in list(zip(df['vep_SYMBOL_A'], df['vep_SYMBOL_B']))]
+    df['SYMBOL_A'] = df['SYMBOL_A'].fillna("")
+    df['SYMBOL_B'] = df['SYMBOL_B'].fillna("")
+    df["pair"] = [tuple(sorted(elem)) for elem in list(zip(df['SYMBOL_A'], df['SYMBOL_B']))]
     df.loc[df["pair"].isin(cosmic_pairs_sorted), "Rescue"] = True
     
     # gnomad AF parsing
