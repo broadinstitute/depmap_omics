@@ -118,6 +118,8 @@ task annotate_sv_vep {
         File gnomad_idx
         File sv_plugin="gs://cds-vep-data/StructuralVariantOverlap.pm"
         String docker_image="ensemblorg/ensembl-vep:release_112.0"
+        File gtf="gs://depmap-omics-24q4-rna-ref/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.sorted.gtf.gz"
+        File gtf_index="gs://depmap-omics-24q4-rna-ref/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.sorted.gtf.gz.tbi"
         String assembly="GRCh38"
         Int preemptible=2
         Int boot_disk_size=60
@@ -159,6 +161,7 @@ task annotate_sv_vep {
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
             --cache \
             --fasta genome_reference.fasta \
+            --gtf ~{gtf} \
             --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
             --fork 10 \
             --vcf \
