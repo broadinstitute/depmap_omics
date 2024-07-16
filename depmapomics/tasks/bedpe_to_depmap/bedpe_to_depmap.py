@@ -50,18 +50,18 @@ COLS_TO_KEEP = ["CHROM_A",
 
 def main(args=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("vcf_filename")
+    parser.add_argument("bedpe_filename")
     parser.add_argument("gene_annotation_filename")
     parser.add_argument("sample_name")
 
     args = parser.parse_args()
 
-    vcf_filename = args.vcf_filename
+    bedpe_filename = args.bedpe_filename
     sample_name = args.sample_name
     gene_annotation_filename = args.gene_annotation_filename
 
     print("expanding INFO fields")
-    bedpe_df = bedpe_to_df(vcf_filename)
+    bedpe_df = bedpe_to_df(bedpe_filename)
 
     print("reannotating gene symbols")
     bedpe_reannotated = reannotate_genes(bedpe_df, gene_annotation_filename)
@@ -206,9 +206,9 @@ def bedpe_to_df(
 
 def reannotate_genes(bedpe, annotation_path):
     """since VEP can't reliably give the correct gene symbol annotation, redo it here"""
-    gene_annotation = pd.read_csv(annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_A", "ID_A", "GENE_A", "CHROM_B", "START_B", "END_B", "ID_B", "GENE_B"])
+    gene_annotation = pd.read_csv(annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_A", "NAME_A", "GENE_A", "CHROM_B", "START_B", "END_B", "NAME_B", "GENE_B"])
     
-    merged = pd.merge(bedpe, gene_annotation[["CHROM_A", "START_A", "END_A", "GENE_A", "CHROM_B", "START_B", "END_B", "GENE_B"]], on=["CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B"])
+    merged = pd.merge(bedpe, gene_annotation[["CHROM_A", "START_A", "END_A", "NAME_A", "GENE_A", "CHROM_B", "START_B", "END_B", "GENE_B"]], on=["CHROM_A", "START_A", "END_A", "NAME_A", "CHROM_B", "START_B", "END_B"])
     
     def split_multi(s):
         if s == ".":
