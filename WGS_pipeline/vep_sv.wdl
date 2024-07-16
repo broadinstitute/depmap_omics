@@ -55,6 +55,12 @@ workflow VEP_SV_Workflow {
             sample_id=sample_id,
     }
 
+    call reannotate_genes {
+        input:
+            input_bedpe=vcf2bedpe.output_bedpe,
+            sample_id=sample_id
+    }
+
     call bedpe_to_depmap {
         input:
             input_bedpe=vcf2bedpe.output_bedpe,
@@ -67,6 +73,7 @@ workflow VEP_SV_Workflow {
         File gnomad_filtered_no_rescue = gnomad_filter.output_filtered_vcf
         File expanded_sv_bedpe=bedpe_to_depmap.expanded_bedpe
         File expanded_filtered_sv_bedpe=bedpe_to_depmap.expanded_filtered_bedpe
+        File reannotate_genes_bedpe=reannotate_genes.output_reannotated_bedpe
     }
 }
 
@@ -271,6 +278,71 @@ task gnomad_filter {
 
     output {     
         File output_filtered_vcf = "~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf"
+    }
+}
+
+task reannotate_genes {
+    input {
+        File input_bedpe
+        String sample_id
+        File gtf_bed="gs://ccleparams/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed"
+        String docker_image="biocontainers/bedtools"
+        Int preemptible=2
+        Int boot_disk_size=10
+        Int disk_space=10
+        Int cpu = 2
+        Int mem = 10
+    }
+
+    command <<<
+        set -euo pipefail
+
+        sed '/^#/d' ~{input_bedpe} |\
+        cut -f1-3,13,16 |\
+        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
+        sed 's/;//g' | sed 's/"//g' | \
+        awk -F"\t" '{ \
+                    if ($5 != ".") { \
+                    split($4,arr,":");  \
+                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
+                    } \
+                    else { \
+                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
+                    } \
+        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.A.bed
+
+
+        sed '/^#/d' ~{input_bedpe} | \
+        cut -f4,5,6,13,16 | \
+        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
+        sed 's/;//g' | sed 's/"//g' | \
+        awk -F"\t" '{ \
+                    if ($5 != ".") { \
+                    split($4,arr,":");  \
+                print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
+                } \
+                else { \
+                print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
+                } \
+        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.B.bed
+
+        join -1 5 -2 5 gene_overlaps.A.bed gene_overlaps.B.bed  | sed 's/ /\t/g' | cut -f2- > ~{sample_id}.SV.gene_overlaps.txt
+
+    >>>
+
+    runtime {
+        disks: "local-disk ~{disk_space} HDD"
+        memory: "~{mem} GB"
+        cpu: cpu
+        preemptible: preemptible
+        bootDiskSizeGb: boot_disk_size
+        docker: docker_image
+    }
+
+    output {     
+        File output_reannotated_bedpe = "~{sample_id}.SV.gene_overlaps.txt"
     }
 }
 
