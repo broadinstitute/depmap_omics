@@ -64,6 +64,7 @@ workflow VEP_SV_Workflow {
     call bedpe_to_depmap {
         input:
             input_bedpe=vcf2bedpe.output_bedpe,
+            gene_annotation=reannotate_genes.output_reannotated_bedpe,
             sample_id=sample_id
     }
 
@@ -359,6 +360,7 @@ task reannotate_genes {
 task bedpe_to_depmap {
     input {
         File input_bedpe
+        File gene_annotation
         String sample_id
 
         String docker_image="us-docker.pkg.dev/depmap-omics/public/bedpe_to_depmap:test"
@@ -372,6 +374,7 @@ task bedpe_to_depmap {
     command {
         python -u /home/bedpe_to_depmap.py \
               ~{input_bedpe} \
+              ~{gene_annotation} \
               ~{sample_id} 
     }
 
