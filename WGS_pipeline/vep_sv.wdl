@@ -388,8 +388,8 @@ task bedpe_to_depmap {
     }
 
     output {
-        File expanded_bedpe = "~{sample_id}.svs.expanded.bedpe"
-        File expanded_filtered_bedpe = "~{sample_id}.svs.expanded.filtered.bedpe"
+        File expanded_bedpe = "~{sample_id}.svs.expanded.reannotated.bedpe"
+        File expanded_filtered_bedpe = "~{sample_id}.svs.expanded.reannotated.filtered.bedpe"
         File dels = "~{sample_id}_dels.bed"
         File dups = "~{sample_id}_dups.bed"
     }
