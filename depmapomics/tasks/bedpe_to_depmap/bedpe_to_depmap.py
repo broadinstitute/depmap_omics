@@ -16,11 +16,8 @@ COLS_TO_KEEP = ["CHROM_A",
                 "SVINSLEN_A",
                 "BND_DEPTH_A",
                 "MATE_BND_DEPTH_A",
-                "vep_Consequence_A",
-                "vep_IMPACT_A",
                 'SYMBOL_A',
                 'GENEID_A',
-                "vep_BIOTYPE_A",
                 "vep_SV_overlap_name_A",
                 "vep_SV_overlap_AF_A",
                 "CHROM_B",
@@ -34,11 +31,8 @@ COLS_TO_KEEP = ["CHROM_A",
                 "SVINSLEN_B",
                 "BND_DEPTH_B",
                 "MATE_BND_DEPTH_B",
-                "vep_Consequence_B",
-                "vep_IMPACT_B",
                 'SYMBOL_B', 
                 'GENEID_B',
-                "vep_BIOTYPE_B",
                 "vep_SV_overlap_name_B",
                 "vep_SV_overlap_AF_B",
                 "PR",
@@ -66,8 +60,10 @@ def main(args=None):
 
     print("filtering & rescuing")
     df_filtered = filter_svs(bedpe_reannotated)
-    # df_filtered = correct_bnd_gene(df_filtered)
     df_filtered.to_csv(sample_name + ".svs.expanded.filtered.bedpe", index=False)
+
+    print("save bed files for bedtools operations downstream")
+    save_bed_for_dup_del(df_filtered, sample_name)
 
 def bedpe_to_df(
     path,
@@ -272,24 +268,20 @@ def filter_svs(df,
     df["max_af"] = df["vep_SV_overlap_AF_A"].fillna("").str.split("&").apply(lambda x: max([float(e) if e != "" else 0 for e in x]))
     
     # filter while keeping rescues
-    df = df[(df["Rescue"] == True) |
-           ((df["max_af"] < sv_gnomad_cutoff) &
-           ((df["vep_BIOTYPE_A"].str.startswith("protein_coding")) |
-           (df["vep_IMPACT_A"] == "HIGH") |
-           ((df["vep_Consequence_A"].str.contains("splice")) & (df["vep_IMPACT_A"] == "MODERATE"))))]
+    df = df[(df["Rescue"] == True) | (df["max_af"] < sv_gnomad_cutoff)]
     
     return df[cols_to_keep]
 
-def correct_bnd_gene(bedpe):
-    """VEP v112 assigns some BND SVs to the same gene when they are not. this function attempts to correct that"""
-    # if either breakend is intergenic OR only feature_truncation, remove gene label
-    bedpe.loc[((bedpe.vep_Consequence_A.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_A == "feature_truncation")) & (bedpe.TYPE == "BND"), 
-              ["vep_SYMBOL_A", "vep_Gene_A", "vep_BIOTYPE_A"]] = ""
-    bedpe.loc[((bedpe.vep_Consequence_B.str.contains("intergenic_variant")) | (bedpe.vep_Consequence_B == "feature_truncation")) & (bedpe.TYPE == "BND"), 
-              ["vep_SYMBOL_B", "vep_Gene_B", "vep_BIOTYPE_B"]] = ""
+def save_bed_for_dup_del(df, sample_id):
+    """for downstream bedtool operations, save .bed files for duplications and deletions"""
+    dups = df[df.TYPE == "DUP"]
+    assert (dups["START_A"] < dups["END_B"]).all()
+    dups[["CHROM_A", "START_A", "END_B"]].to_csv(sample_id + "_dups.bed", header=False, sep="\t", index=False)
 
-    return bedpe
-    
+    dels = df[df.TYPE == "DEL"]
+    assert (dels["START_A"] < dels["END_B"]).all()
+    dels[["CHROM_A", "START_A", "END_B"]].to_csv(sample_id + "_dels.bed", header=False, sep="\t", index=False)
+
 
 if __name__ == "__main__":
     main()
