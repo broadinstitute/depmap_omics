@@ -209,13 +209,21 @@ def reannotate_genes(bedpe, annotation_path):
     gene_annotation = pd.read_csv(annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_A", "ID_A", "GENE_A", "CHROM_B", "START_B", "END_B", "ID_B", "GENE_B"])
     
     merged = pd.merge(bedpe, gene_annotation[["CHROM_A", "START_A", "END_A", "GENE_A", "CHROM_B", "START_B", "END_B", "GENE_B"]], on=["CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B"])
-    merged.loc[merged["GENE_A"] == ".", "GENE_A"] = ".;."
+    
+    def split_multi(s):
+        if s == ".":
+            return ".;."
+        else:
+            s = s.split(",")
+            symbols = ", ".join([elem.split("@")[0] for elem in s])
+            ids = ", ".join([elem.split("@")[1] for elem in s])
+            return symbols + ";" + ids
+    
+    merged.loc[merged["GENE_A"] != ".", "GENE_A"] = merged["GENE_A"].map(split_multi)
     merged[['SYMBOL_A', 'GENEID_A']] = merged['GENE_A'].str.split(';', n=1, expand=True)
-    merged.loc[merged["GENE_B"] == ".", "GENE_B"] = ".;."
+    merged.loc[merged["GENE_B"] != ".", "GENE_B"] = merged["GENE_B"].map(split_multi)
     merged[['SYMBOL_B', 'GENEID_B']] = merged['GENE_B'].str.split(';', n=1, expand=True)
 
-    merged["GENEID_A"] = merged["GENEID_A"].str[2:-2]
-    merged["GENEID_B"] = merged["GENEID_B"].str[2:-2]
     merged = merged.drop(['GENE_A', 'GENE_B'], axis=1)
     
     return merged
