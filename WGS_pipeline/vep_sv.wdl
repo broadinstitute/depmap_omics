@@ -286,7 +286,7 @@ task reannotate_genes {
         File input_bedpe
         String sample_id
         File gtf_bed="gs://ccleparams/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed"
-        String docker_image="biocontainers/bedtools"
+        String docker_image="biocontainers/bedtools:v2.28.0_cv2"
         Int preemptible=2
         Int boot_disk_size=10
         Int disk_space=10
