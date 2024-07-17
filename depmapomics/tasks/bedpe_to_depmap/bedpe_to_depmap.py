@@ -62,11 +62,11 @@ def main(args=None):
 
     print("reannotating gene symbols")
     bedpe_reannotated = reannotate_genes(bedpe_df, gene_annotation_filename, annotated_overlap_del, annotated_overlap_dup)
-    bedpe_reannotated.to_csv(sample_name + ".svs.expanded.reannotated.bedpe", index=False)
+    bedpe_reannotated.to_csv(sample_name + ".svs.expanded.reannotated.bedpe", index=False, sep="\t")
 
     print("filtering & rescuing")
     df_filtered = filter_svs(bedpe_reannotated)
-    df_filtered.to_csv(sample_name + ".svs.expanded.reannotated.filtered.bedpe", index=False)
+    df_filtered.to_csv(sample_name + ".svs.expanded.reannotated.filtered.bedpe", index=False, sep="\t")
 
     print("save bed files for bedtools operations downstream")
     save_bed_for_dup_del(df_filtered, sample_name)
