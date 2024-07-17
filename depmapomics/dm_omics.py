@@ -957,6 +957,7 @@ async def mutationPostProcessing(
             wgssvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
             print("map entrez ids to SV matrix columns")
+            # pull the gene id mapping table from taiga dataset maintained by the portal
             hgnc_table = tc.get(
                 name=hgnc_mapping_taiga,
                 version=hgnc_mapping_table_version,
