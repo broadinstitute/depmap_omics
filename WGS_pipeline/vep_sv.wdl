@@ -70,13 +70,6 @@ workflow VEP_SV_Workflow {
             sample_id=sample_id
     }
 
-    call intersect_dels_and_dups {
-        input:
-            dels_bed=bedpe_to_depmap.dels,
-            dups_bed=bedpe_to_depmap.dups,
-            sample_id=sample_id
-    }
-
     output { 
         File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
         File bedpe = vcf2bedpe.output_bedpe
@@ -84,8 +77,6 @@ workflow VEP_SV_Workflow {
         File expanded_sv_bedpe=bedpe_to_depmap.expanded_bedpe
         File expanded_filtered_sv_bedpe=bedpe_to_depmap.expanded_filtered_bedpe
         File reannotate_genes_bedpe=reannotate_genes.output_reannotated_bedpe
-        File sv_del_genes = intersect_dels_and_dups.del_genes
-        File sv_dup_genes = intersect_dels_and_dups.dup_genes
     }
 }
 
@@ -438,41 +429,5 @@ task bedpe_to_depmap {
         File expanded_filtered_bedpe = "~{sample_id}.svs.expanded.reannotated.filtered.bedpe"
         File dels = "~{sample_id}_dels.bed"
         File dups = "~{sample_id}_dups.bed"
-    }
-}
-
-task intersect_dels_and_dups {
-    input {
-        File dels_bed
-        File dups_bed
-        String sample_id
-        File gtf_bed="gs://ccleparams/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.HUGO_ONLY.bed"
-        String docker_image="biocontainers/bedtools:v2.28.0_cv2"
-        Int preemptible=2
-        Int boot_disk_size=10
-        Int disk_space=10
-        Int cpu = 2
-        Int mem = 10
-    }
-
-    command <<<
-        set -euo pipefail
-
-        bedtools intersect -a ~{dels_bed} -b ~{gtf_bed} -wao | bedtools groupby -g 1,2,3 -c 7 -o distinct > ~{sample_id}.del_genes.bed
-        bedtools intersect -a ~{dups_bed} -b ~{gtf_bed} -wao | bedtools groupby -g 1,2,3 -c 7 -o distinct > ~{sample_id}.dup_genes.bed
-    >>>
-
-    runtime {
-        disks: "local-disk ~{disk_space} HDD"
-        memory: "~{mem} GB"
-        cpu: cpu
-        preemptible: preemptible
-        bootDiskSizeGb: boot_disk_size
-        docker: docker_image
-    }
-
-    output {     
-        File del_genes = "~{sample_id}.del_genes.bed"
-        File dup_genes = "~{sample_id}.dup_genes.bed"
     }
 }
