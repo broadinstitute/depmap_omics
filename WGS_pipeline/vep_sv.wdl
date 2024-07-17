@@ -65,6 +65,8 @@ workflow VEP_SV_Workflow {
         input:
             input_bedpe=vcf2bedpe.output_bedpe,
             gene_annotation=reannotate_genes.output_reannotated_bedpe,
+            del_annotation=reannotate_genes.annotated_overlap_del,
+            dup_annotation=reannotate_genes.annotated_overlap_dup,
             sample_id=sample_id
     }
 
@@ -307,6 +309,7 @@ task reannotate_genes {
     command <<<
         set -euo pipefail
 
+        # annotate genes at breakpoints
         sed '/^#/d' ~{input_bedpe} |\
         cut -f1-3,13,16 |\
         bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
@@ -340,6 +343,43 @@ task reannotate_genes {
 
         join -1 5 -2 5 gene_overlaps.A.bed gene_overlaps.B.bed  | sed 's/ /\t/g' | cut -f2- > ~{sample_id}.SV.gene_overlaps.txt
 
+        # subset DEL and DUP variants
+        awk -F"\t" '{ if ($11 == "DEL") print }' ~{input_bedpe} > ~{sample_id}.DEL.bedpe
+        awk -F"\t" '{ if ($11 == "DUP") print }' ~{input_bedpe} > ~{sample_id}.DUP.bedpe
+
+        # for DEL, not just look at genes at the breakpoints, but also genes that lie between breakpoints
+        # so here intersect (start_a, end_b) with GTF
+        sed '/^#/d'  ~{sample_id}.DEL.bedpe |\
+        cut -f1,2,6,13,16 |\
+        bedtools intersect -a stdin -b gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed -wao | \
+        sed 's/;//g' | sed 's/"//g' | \
+        awk -F"\t" '{ \
+                    if ($5 != ".") { \
+                    split($4,arr,":");  \
+                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
+                    } \
+                    else { \
+                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
+                    } \
+        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > ~{sample_id}.DEL.overlap.bed
+
+        # for DUP, not just look at genes at the breakpoints, but also genes that lie between breakpoints
+        # so here intersect (start_a, end_b) with GTF
+        sed '/^#/d'  ~{sample_id}.DUP.bedpe |\
+        cut -f1,2,6,13,16 |\
+        bedtools intersect -a stdin -b gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed -wao | \
+        sed 's/;//g' | sed 's/"//g' | \
+        awk -F"\t" '{ \
+                    if ($5 != ".") { \
+                    split($4,arr,":");  \
+                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
+                    } \
+                    else { \
+                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
+                    } \
+        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > ~{sample_id}.DUP.overlap.bed
     >>>
 
     runtime {
@@ -353,6 +393,8 @@ task reannotate_genes {
 
     output {     
         File output_reannotated_bedpe = "~{sample_id}.SV.gene_overlaps.txt"
+        File annotated_overlap_del = "~{sample_id}.DEL.overlap.bed"
+        File annotated_overlap_dup = "~{sample_id}.DUP.overlap.bed"
     }
 }
 
@@ -361,6 +403,8 @@ task bedpe_to_depmap {
     input {
         File input_bedpe
         File gene_annotation
+        File del_annotation
+        File dup_annotation
         String sample_id
 
         String docker_image="us-docker.pkg.dev/depmap-omics/public/bedpe_to_depmap:test"
@@ -375,6 +419,8 @@ task bedpe_to_depmap {
         python -u /home/bedpe_to_depmap.py \
               ~{input_bedpe} \
               ~{gene_annotation} \
+              ~{del_annotation} \
+              ~{dup_annotation} \
               ~{sample_id} 
     }
 

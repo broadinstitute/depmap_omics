@@ -35,6 +35,8 @@ COLS_TO_KEEP = ["CHROM_A",
                 'GENEID_B',
                 "vep_SV_overlap_name_B",
                 "vep_SV_overlap_AF_B",
+                "DEL_SYMBOLS",
+                "DUP_SYMBOLS",
                 "PR",
                 "SR",
                 "Rescue"]
@@ -43,6 +45,8 @@ def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("bedpe_filename")
     parser.add_argument("gene_annotation_filename")
+    parser.add_argument("annotated_overlap_del")
+    parser.add_argument("annotated_overlap_dup")
     parser.add_argument("sample_name")
 
     args = parser.parse_args()
@@ -50,12 +54,14 @@ def main(args=None):
     bedpe_filename = args.bedpe_filename
     sample_name = args.sample_name
     gene_annotation_filename = args.gene_annotation_filename
+    annotated_overlap_del = args.annotated_overlap_del
+    annotated_overlap_dup = args.annotated_overlap_dup
 
     print("expanding INFO fields")
     bedpe_df = bedpe_to_df(bedpe_filename)
 
     print("reannotating gene symbols")
-    bedpe_reannotated = reannotate_genes(bedpe_df, gene_annotation_filename)
+    bedpe_reannotated = reannotate_genes(bedpe_df, gene_annotation_filename, annotated_overlap_del, annotated_overlap_dup)
     bedpe_reannotated.to_csv(sample_name + ".svs.expanded.reannotated.bedpe", index=False)
 
     print("filtering & rescuing")
@@ -197,14 +203,18 @@ def bedpe_to_df(
 
     return data
 
-def reannotate_genes(bedpe, annotation_path):
+def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation_path):
     """since VEP can't reliably give the correct gene symbol annotation, redo it here"""
     gene_annotation = pd.read_csv(annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_A", "NAME_A", "GENE_A", "CHROM_B", "START_B", "END_B", "NAME_B", "GENE_B"])
-    
+    del_annotation = pd.read_csv(del_annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DELGENES"])
+    dup_annotation = pd.read_csv(dup_annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DUPGENES"])
+
     merged = pd.merge(bedpe, gene_annotation[["CHROM_A", "START_A", "END_A", "NAME_A", "GENE_A", "CHROM_B", "START_B", "END_B", "GENE_B"]], on=["CHROM_A", "START_A", "END_A", "NAME_A", "CHROM_B", "START_B", "END_B"])
-    
+    merged = pd.merge(merged, del_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DELGENES"]], on=["CHROM_A", "START_A", "END_B", "NAME_A"], how='left')
+    merged = pd.merge(merged, dup_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DUPGENES"]], on=["CHROM_A", "START_A", "END_B", "NAME_A"], how='left')
+
     def split_multi(s):
-        if s == ".":
+        if pd.isna(s) or s == ".":
             return ".;."
         else:
             s = s.split(",")
@@ -217,7 +227,12 @@ def reannotate_genes(bedpe, annotation_path):
     merged.loc[merged["GENE_B"] != ".", "GENE_B"] = merged["GENE_B"].map(split_multi)
     merged[['SYMBOL_B', 'GENEID_B']] = merged['GENE_B'].str.split(';', n=1, expand=True)
 
-    merged = merged.drop(['GENE_A', 'GENE_B'], axis=1)
+    merged.loc[merged["DELGENES"] != ".", "DELGENES"] = merged["DELGENES"].map(split_multi)
+    merged[['DEL_SYMBOLS', 'DEL_GENEIDS']] = merged['DELGENES'].str.split(';', n=1, expand=True)
+    merged.loc[merged["DUPGENES"] != ".", "DUPGENES"] = merged["DUPGENES"].map(split_multi)
+    merged[['DUP_SYMBOLS', 'DUP_GENEIDS']] = merged['DUPGENES'].str.split(';', n=1, expand=True)
+
+    merged = merged.drop(['GENE_A', 'GENE_B', 'DEL_GENEIDS', 'DUP_GENEIDS'], axis=1)
     
     return merged
 
