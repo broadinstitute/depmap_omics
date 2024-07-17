@@ -246,7 +246,7 @@ def aggregateSV(
     all_svs = pd.concat(all_svs)
     assert set(sv_header) - set(all_svs.columns) == set()
     print("saving aggregated SVs")
-    all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
+    all_svs.to_csv(save_output + save_filename, index=False)
     return all_svs
 
 
@@ -258,8 +258,8 @@ def generate_sv_matrix(
     geneb_colname="SYMBOL_B",
     del_colname="DEL_SYMBOLS",
     dup_colname="DUP_SYMBOLS",
-    save_output="",
-    save_filename="",
+    save_output=constants.WORKING_DIR,
+    save_filename=constants.SV_MAT_FILENAME,
 ):
     """generate sample x gene matrix indicating which genes are affected by which type(s) of SVs
 
@@ -339,6 +339,7 @@ def generate_sv_matrix(
         ds.append(d)
 
     sv_mat = pd.DataFrame(ds, index=sample_ids).applymap(lambda x: ", ".join(x))
+    sv_mat.index.name = id_col
     sv_mat.to_csv(save_output + save_filename)
 
     return sv_mat
@@ -401,6 +402,7 @@ def postProcess(
     save_output=constants.WORKING_DIR,
     sv_col=constants.SV_COLNAME,
     sv_filename=constants.SV_FILENAME,
+    sv_mat_filename=constants.SV_MAT_FILENAME,
     sv_header=constants.SV_HEADER,
     run_sv=True,
     debug=False,
@@ -447,6 +449,7 @@ def postProcess(
     print("done")
 
     svs = None
+    sv_mat = None
     if run_sv:
         svs = aggregateSV(
             wm,
@@ -456,10 +459,11 @@ def postProcess(
             save_filename=sv_filename,
             sv_header=sv_header,
         )
-        print("saving svs (all)")
-        svs.to_csv(save_output + "svs_all.csv", index=False)
+        sv_mat = generate_sv_matrix(
+            svs, save_output=save_output, save_filename=sv_mat_filename
+        )
 
-    return mutations_with_standard_cols, svs
+    return mutations_with_standard_cols, svs, sv_mat
 
 
 def GetVariantClassification(

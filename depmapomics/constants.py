@@ -227,6 +227,7 @@ CNA_ARMS = [
     "22q",
 ]
 
+
 GENEMASKTHRESH = 0.5
 
 SEGDUP_BED = "data/segDup_majorAllele_withAltContigs_98pcFracMatch_merged.bed"
@@ -240,6 +241,8 @@ MINFREQTOCALL = 0.25
 SV_COLNAME = "expanded_filtered_sv_bedpe"
 
 SV_FILENAME = "all_sv.csv"
+
+SV_MAT_FILENAME = "all_sv_matrix.csv"
 
 SV_HEADER = [
     "CHROM_A",
@@ -685,5 +688,11 @@ POTENTIAL_LIST = "https://docs.google.com/spreadsheets/d/1YuKEgZ1pFKRYzydvncQt9Y
 DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 TAIGA_ETERNAL = "depmap-a0ab"
+
+HGNC_MAPPING_TABLE_TAIGAID = "hgnc-gene-table-e250"
+
+HGNC_MAPPING_TABLE_NAME = "hgnc_complete_set"
+
+HGNC_MAPPING_TABLE_VERSION = 3
 
 VIRTUAL = {"internal": "", "ibm": "", "dmc": "", "public": ""}
