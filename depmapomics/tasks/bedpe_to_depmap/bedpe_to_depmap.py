@@ -2,44 +2,47 @@ import pandas as pd
 import gzip
 import argparse
 
-COLS_TO_KEEP = ["CHROM_A",
-                "START_A",
-                "END_A",
-                "ID",
-                "STRAND_A",
-                "TYPE",
-                "FILTER",
-                "REF_A",
-                "ALT_A",
-                "SVLEN_A",
-                "MATEID_A",
-                "SVINSLEN_A",
-                "BND_DEPTH_A",
-                "MATE_BND_DEPTH_A",
-                'SYMBOL_A',
-                'GENEID_A',
-                "vep_SV_overlap_name_A",
-                "vep_SV_overlap_AF_A",
-                "CHROM_B",
-                "START_B",
-                "END_B",
-                "STRAND_B",
-                "REF_B",
-                "ALT_B",
-                "SVLEN_B",
-                "MATEID_B",
-                "SVINSLEN_B",
-                "BND_DEPTH_B",
-                "MATE_BND_DEPTH_B",
-                'SYMBOL_B', 
-                'GENEID_B',
-                "vep_SV_overlap_name_B",
-                "vep_SV_overlap_AF_B",
-                "DEL_SYMBOLS",
-                "DUP_SYMBOLS",
-                "PR",
-                "SR",
-                "Rescue"]
+COLS_TO_KEEP = [
+    "CHROM_A",
+    "START_A",
+    "END_A",
+    "ID",
+    "STRAND_A",
+    "TYPE",
+    "FILTER",
+    "REF_A",
+    "ALT_A",
+    "SVLEN_A",
+    "MATEID_A",
+    "SVINSLEN_A",
+    "BND_DEPTH_A",
+    "MATE_BND_DEPTH_A",
+    "SYMBOL_A",
+    "GENEID_A",
+    "vep_SV_overlap_name_A",
+    "vep_SV_overlap_AF_A",
+    "CHROM_B",
+    "START_B",
+    "END_B",
+    "STRAND_B",
+    "REF_B",
+    "ALT_B",
+    "SVLEN_B",
+    "MATEID_B",
+    "SVINSLEN_B",
+    "BND_DEPTH_B",
+    "MATE_BND_DEPTH_B",
+    "SYMBOL_B",
+    "GENEID_B",
+    "vep_SV_overlap_name_B",
+    "vep_SV_overlap_AF_B",
+    "DEL_SYMBOLS",
+    "DUP_SYMBOLS",
+    "PR",
+    "SR",
+    "Rescue",
+]
+
 
 def main(args=None):
     parser = argparse.ArgumentParser()
@@ -61,15 +64,22 @@ def main(args=None):
     bedpe_df = bedpe_to_df(bedpe_filename)
 
     print("reannotating gene symbols")
-    bedpe_reannotated = reannotate_genes(bedpe_df, gene_annotation_filename, annotated_overlap_del, annotated_overlap_dup)
-    bedpe_reannotated.to_csv(sample_name + ".svs.expanded.reannotated.bedpe", index=False, sep="\t")
+    bedpe_reannotated = reannotate_genes(
+        bedpe_df, gene_annotation_filename, annotated_overlap_del, annotated_overlap_dup
+    )
+    bedpe_reannotated.to_csv(
+        sample_name + ".svs.expanded.reannotated.bedpe", index=False, sep="\t"
+    )
 
     print("filtering & rescuing")
     df_filtered = filter_svs(bedpe_reannotated)
-    df_filtered.to_csv(sample_name + ".svs.expanded.reannotated.filtered.bedpe", index=False, sep="\t")
+    df_filtered.to_csv(
+        sample_name + ".svs.expanded.reannotated.filtered.bedpe", index=False, sep="\t"
+    )
 
     print("save bed files for bedtools operations downstream")
     save_bed_for_dup_del(df_filtered, sample_name)
+
 
 def bedpe_to_df(
     path,
@@ -104,7 +114,7 @@ def bedpe_to_df(
                 if "INFO" in l[:20]:
                     res = l.split("ID=")[1].split(",")[0]
                     if res == "CSQ":
-                        #print("parsing VEP CSQ")
+                        # print("parsing VEP CSQ")
                         for val in l.split("Description=")[1][:-3].split("|"):
                             val = "vep_" + val.split("Format: ")[-1]
                             description.update({val: VEP_CSQ_DESC})
@@ -134,13 +144,16 @@ def bedpe_to_df(
         "skiprows": nrows_toskip,
     }
     data = pd.read_csv(path, **csvkwargs)
-    
-    vep_fields_a = [k+"_A" for k, v in description.items() if VEP_CSQ_DESC in v]
-    vep_fields_b = [k+"_B" for k, v in description.items() if VEP_CSQ_DESC in v]
-    fields_a = {k+"_A": [] for k, _ in description.items()}
-    fields_b = {k+"_B": [] for k, _ in description.items()}
+
+    vep_fields_a = [k + "_A" for k, v in description.items() if VEP_CSQ_DESC in v]
+    vep_fields_b = [k + "_B" for k, v in description.items() if VEP_CSQ_DESC in v]
+    fields_a = {k + "_A": [] for k, _ in description.items()}
+    fields_b = {k + "_B": [] for k, _ in description.items()}
     fields_combined = {}
-    for suffix, side, fields, vep_fields in [("_A", "INFO_A", fields_a, vep_fields_a), ("_B", "INFO_B", fields_b, vep_fields_b)]:
+    for suffix, side, fields, vep_fields in [
+        ("_A", "INFO_A", fields_a, vep_fields_a),
+        ("_B", "INFO_B", fields_b, vep_fields_b),
+    ]:
         try:
             for j, info in enumerate(data[side].str.split(";").values.tolist()):
                 res = {}
@@ -167,7 +180,7 @@ def bedpe_to_df(
                                     res[k] = ""
                         elif "END" not in annot:
                             k, annot = annot.split("=")
-                            res.update({k+suffix: annot})
+                            res.update({k + suffix: annot})
                     else:
                         raise ValueError("unknown argument: " + annot)
                 for k in list(fields.keys()):
@@ -178,9 +191,13 @@ def bedpe_to_df(
         fields_combined.update(fields)
 
     data = pd.concat(
-        [data.drop(columns=["INFO_A", "INFO_B"]), pd.DataFrame(data=fields_combined, index=data.index)], axis=1
+        [
+            data.drop(columns=["INFO_A", "INFO_B"]),
+            pd.DataFrame(data=fields_combined, index=data.index),
+        ],
+        axis=1,
     )
-    
+
     samples = [i for i in colnames[21:]]
     sorting = data["FORMAT"][0].split(":")
     for sample in samples:
@@ -203,15 +220,65 @@ def bedpe_to_df(
 
     return data
 
+
 def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation_path):
     """since VEP can't reliably give the correct gene symbol annotation, redo it here"""
-    gene_annotation = pd.read_csv(annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_A", "NAME_A", "GENE_A", "CHROM_B", "START_B", "END_B", "NAME_B", "GENE_B"])
-    del_annotation = pd.read_csv(del_annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DELGENES"])
-    dup_annotation = pd.read_csv(dup_annotation_path, sep="\t", names = ["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DUPGENES"])
+    gene_annotation = pd.read_csv(
+        annotation_path,
+        sep="\t",
+        names=[
+            "CHROM_A",
+            "START_A",
+            "END_A",
+            "NAME_A",
+            "GENE_A",
+            "CHROM_B",
+            "START_B",
+            "END_B",
+            "NAME_B",
+            "GENE_B",
+        ],
+    )
+    del_annotation = pd.read_csv(
+        del_annotation_path,
+        sep="\t",
+        names=["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DELGENES"],
+    )
+    dup_annotation = pd.read_csv(
+        dup_annotation_path,
+        sep="\t",
+        names=["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DUPGENES"],
+    )
 
-    merged = pd.merge(bedpe, gene_annotation[["CHROM_A", "START_A", "END_A", "NAME_A", "GENE_A", "CHROM_B", "START_B", "END_B", "GENE_B"]], on=["CHROM_A", "START_A", "END_A", "NAME_A", "CHROM_B", "START_B", "END_B"])
-    merged = pd.merge(merged, del_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DELGENES"]], on=["CHROM_A", "START_A", "END_B", "NAME_A"], how='left')
-    merged = pd.merge(merged, dup_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DUPGENES"]], on=["CHROM_A", "START_A", "END_B", "NAME_A"], how='left')
+    merged = pd.merge(
+        bedpe,
+        gene_annotation[
+            [
+                "CHROM_A",
+                "START_A",
+                "END_A",
+                "NAME_A",
+                "GENE_A",
+                "CHROM_B",
+                "START_B",
+                "END_B",
+                "GENE_B",
+            ]
+        ],
+        on=["CHROM_A", "START_A", "END_A", "NAME_A", "CHROM_B", "START_B", "END_B"],
+    )
+    merged = pd.merge(
+        merged,
+        del_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DELGENES"]],
+        on=["CHROM_A", "START_A", "END_B", "NAME_A"],
+        how="left",
+    )
+    merged = pd.merge(
+        merged,
+        dup_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DUPGENES"]],
+        on=["CHROM_A", "START_A", "END_B", "NAME_A"],
+        how="left",
+    )
 
     def split_multi(s):
         if pd.isna(s) or s == ".":
@@ -221,81 +288,113 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
             symbols = ", ".join([elem.split("@")[0] for elem in s])
             ids = ", ".join([elem.split("@")[1] for elem in s])
             return symbols + ";" + ids
-    
+
     merged.loc[merged["GENE_A"] != ".", "GENE_A"] = merged["GENE_A"].map(split_multi)
-    merged[['SYMBOL_A', 'GENEID_A']] = merged['GENE_A'].str.split(';', n=1, expand=True)
+    merged[["SYMBOL_A", "GENEID_A"]] = merged["GENE_A"].str.split(";", n=1, expand=True)
     merged.loc[merged["GENE_B"] != ".", "GENE_B"] = merged["GENE_B"].map(split_multi)
-    merged[['SYMBOL_B', 'GENEID_B']] = merged['GENE_B'].str.split(';', n=1, expand=True)
+    merged[["SYMBOL_B", "GENEID_B"]] = merged["GENE_B"].str.split(";", n=1, expand=True)
 
-    merged.loc[merged["DELGENES"] != ".", "DELGENES"] = merged["DELGENES"].map(split_multi)
-    merged[['DEL_SYMBOLS', 'DEL_GENEIDS']] = merged['DELGENES'].str.split(';', n=1, expand=True)
-    merged.loc[merged["DUPGENES"] != ".", "DUPGENES"] = merged["DUPGENES"].map(split_multi)
-    merged[['DUP_SYMBOLS', 'DUP_GENEIDS']] = merged['DUPGENES'].str.split(';', n=1, expand=True)
+    merged.loc[merged["DELGENES"] != ".", "DELGENES"] = merged["DELGENES"].map(
+        split_multi
+    )
+    merged[["DEL_SYMBOLS", "DEL_GENEIDS"]] = merged["DELGENES"].str.split(
+        ";", n=1, expand=True
+    )
+    merged.loc[merged["DUPGENES"] != ".", "DUPGENES"] = merged["DUPGENES"].map(
+        split_multi
+    )
+    merged[["DUP_SYMBOLS", "DUP_GENEIDS"]] = merged["DUPGENES"].str.split(
+        ";", n=1, expand=True
+    )
 
-    merged = merged.drop(['GENE_A', 'GENE_B', 'DEL_GENEIDS', 'DUP_GENEIDS'], axis=1)
-    
+    merged = merged.drop(["GENE_A", "GENE_B", "DEL_GENEIDS", "DUP_GENEIDS"], axis=1)
+
     return merged
 
-def filter_svs(df, 
-               sv_gnomad_cutoff = 0.001, 
-               cosmic_fusion_pairs="gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv",
-               oncogene_list="/home/oncogene_oncokb.txt",
-               ts_list="/home/tumor_suppressor_oncokb.txt",
-               large_sv_size = 1e9,
-               cols_to_keep=COLS_TO_KEEP,
-              ):
-    """filter SVs in bedpe while rescuing important ones
-    """
+
+def filter_svs(
+    df,
+    sv_gnomad_cutoff=0.001,
+    cosmic_fusion_pairs="gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv",
+    oncogene_list="/home/oncogene_oncokb.txt",
+    ts_list="/home/tumor_suppressor_oncokb.txt",
+    large_sv_size=1e9,
+    cols_to_keep=COLS_TO_KEEP,
+):
+    """filter SVs in bedpe while rescuing important ones"""
     # drop variants shorter than 50
-    df = df[(df["SVLEN_A"].isna()) | 
-       (df["SVLEN_A"].astype(float).astype('Int64') <= -50) | 
-       (df["SVLEN_A"].astype(float).astype('Int64') >= 50)]
-    
+    df = df[
+        (df["SVLEN_A"].isna())
+        | (df["SVLEN_A"].astype(float).astype("Int64") <= -50)
+        | (df["SVLEN_A"].astype(float).astype("Int64") >= 50)
+    ]
+
     with open(oncogene_list) as f:
         oncogenes = [val[:-1] for val in f.readlines()]
-    
+
     with open(ts_list) as f:
         tumor_suppressors = [val[:-1] for val in f.readlines()]
 
     oncogenes_and_ts = set(oncogenes + tumor_suppressors)
-    
+
     cosmic = pd.read_csv(cosmic_fusion_pairs)
-    cosmic_pairs = list(zip(cosmic['Gene_A'], cosmic['Gene_B']))
+    cosmic_pairs = list(zip(cosmic["Gene_A"], cosmic["Gene_B"]))
     cosmic_pairs_sorted = set([tuple(sorted(elem)) for elem in cosmic_pairs])
-    
+
     df["Rescue"] = False
-    
+
     # rescue large SVs
-    df.loc[(~df["SVLEN_A"].isna()) & 
-       ((df["SVLEN_A"].astype(float).astype('Int64') <= -large_sv_size) | 
-       (df["SVLEN_A"].astype(float).astype('Int64') >= large_sv_size)), "Rescue"] = True
-    
+    df.loc[
+        (~df["SVLEN_A"].isna())
+        & (
+            (df["SVLEN_A"].astype(float).astype("Int64") <= -large_sv_size)
+            | (df["SVLEN_A"].astype(float).astype("Int64") >= large_sv_size)
+        ),
+        "Rescue",
+    ] = True
+
     # rescue breakpoints that fall on oncogenes or tumor suppressors
-    df.loc[(df["SYMBOL_A"].isin(oncogenes_and_ts)) | (df["SYMBOL_B"].isin(oncogenes_and_ts)), "Rescue"] = True
-    
+    df.loc[
+        (df["SYMBOL_A"].isin(oncogenes_and_ts))
+        | (df["SYMBOL_B"].isin(oncogenes_and_ts)),
+        "Rescue",
+    ] = True
+
     # rescue gene pairs in cosmic
-    df['SYMBOL_A'] = df['SYMBOL_A'].fillna("")
-    df['SYMBOL_B'] = df['SYMBOL_B'].fillna("")
-    df["pair"] = [tuple(sorted(elem)) for elem in list(zip(df['SYMBOL_A'], df['SYMBOL_B']))]
+    df["SYMBOL_A"] = df["SYMBOL_A"].fillna("")
+    df["SYMBOL_B"] = df["SYMBOL_B"].fillna("")
+    df["pair"] = [
+        tuple(sorted(elem)) for elem in list(zip(df["SYMBOL_A"], df["SYMBOL_B"]))
+    ]
     df.loc[df["pair"].isin(cosmic_pairs_sorted), "Rescue"] = True
-    
+
     # gnomad AF parsing
-    df["max_af"] = df["vep_SV_overlap_AF_A"].fillna("").str.split("&").apply(lambda x: max([float(e) if e != "" else 0 for e in x]))
-    
+    df["max_af"] = (
+        df["vep_SV_overlap_AF_A"]
+        .fillna("")
+        .str.split("&")
+        .apply(lambda x: max([float(e) if e != "" else 0 for e in x]))
+    )
+
     # filter while keeping rescues
     df = df[(df["Rescue"] == True) | (df["max_af"] < sv_gnomad_cutoff)]
-    
+
     return df[cols_to_keep]
+
 
 def save_bed_for_dup_del(df, sample_id):
     """for downstream bedtool operations, save .bed files for duplications and deletions"""
     dups = df[df.TYPE == "DUP"]
     assert (dups["START_A"] < dups["END_B"]).all()
-    dups[["CHROM_A", "START_A", "END_B"]].to_csv(sample_id + "_dups.bed", header=False, sep="\t", index=False)
+    dups[["CHROM_A", "START_A", "END_B"]].to_csv(
+        sample_id + "_dups.bed", header=False, sep="\t", index=False
+    )
 
     dels = df[df.TYPE == "DEL"]
     assert (dels["START_A"] < dels["END_B"]).all()
-    dels[["CHROM_A", "START_A", "END_B"]].to_csv(sample_id + "_dels.bed", header=False, sep="\t", index=False)
+    dels[["CHROM_A", "START_A", "END_B"]].to_csv(
+        sample_id + "_dels.bed", header=False, sep="\t", index=False
+    )
 
 
 if __name__ == "__main__":
