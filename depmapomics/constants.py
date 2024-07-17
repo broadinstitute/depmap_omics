@@ -237,41 +237,14 @@ SV_COLNAME = "somatic_annotated_sv"
 
 SV_FILENAME = "all_sv.csv"
 
-SV_COLRENAME = {
-    "CHROM_A": "ChromA",
-    "START_A": "StartA",
-    "END_A": "EndA",
-    "CHROM_B": "ChromB",
-    "START_B": "StartB",
-    "END_B": "EndB",
-    "ID": "ID",
-    "QUAL": "Qual",
-    "STRAND_A": "StrandA",
-    "STRAND_B": "StrandB",
-    "TYPE": "Type",
-    "FILTER": "Filter",
-    "NAME_A": "NameA",
-    "REF_A": "RefA",
-    "ALT_A": "AltA",
-    "NAME_B": "NameB",
-    "REF_B": "RefB",
-    "ALT_B": "AltB",
-    "INFO_A": "InfoA",
-    "INFO_B": "InfoB",
-    "FORMAT": "Format",
-    "SPAN": "Span",
-    "HOMSEQ": "HomSeq",
-    "HOMLEN": "HomLen",
-    "BREAK_A_Ensembl_Gene": "BreakAEnsemblGene",
-    "BREAK_A_Gene_Name": "BreakAGeneName",
-    "BREAK_B_Ensembl_Gene": "BreakBEnsemblGene",
-    "BREAK_B_Gene_Name": "BreakBGeneName",
-    "BREAK_A_Ensembl_Exon": "BreakAEnsemblExon",
-    "BREAK_B_Ensembl_Exon": "BreakBEnsemblExon",
-    "Filter": "Filter",
-    "SAMPLE": "Sample",
-    "OCILY12": "Sample",
-}
+SV_COLRENAME = ['CHROM_A', 'START_A', 'END_A', 'ID', 'STRAND_A', 'TYPE', 'FILTER',
+       'REF_A', 'ALT_A', 'SVLEN_A', 'MATEID_A', 'SVINSLEN_A', 'BND_DEPTH_A',
+       'MATE_BND_DEPTH_A', 'SYMBOL_A', 'GENEID_A', 'vep_SV_overlap_name_A',
+       'vep_SV_overlap_AF_A', 'CHROM_B', 'START_B', 'END_B', 'STRAND_B',
+       'REF_B', 'ALT_B', 'SVLEN_B', 'MATEID_B', 'SVINSLEN_B', 'BND_DEPTH_B',
+       'MATE_BND_DEPTH_B', 'SYMBOL_B', 'GENEID_B', 'vep_SV_overlap_name_B',
+       'vep_SV_overlap_AF_B', 'DEL_SYMBOLS', 'DUP_SYMBOLS', 'PR', 'SR',
+       'Rescue']
 
 MAF_COL = "depmap_maf"
 

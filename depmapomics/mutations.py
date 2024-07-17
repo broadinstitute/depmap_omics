@@ -240,7 +240,6 @@ def aggregateSV(
     for name, row in sample_table_valid.iterrows():
         sv = pd.read_csv(row[sv_colname], sep="\t")
         sv[constants.SAMPLEID] = name
-        sv = sv.rename(columns=sv_renaming)
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
     print("saving aggregated SVs")
