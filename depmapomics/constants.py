@@ -233,7 +233,7 @@ BEDTOOLSPATH = "~/bin/bedtools2/bin/"
 
 MINFREQTOCALL = 0.25
 
-SV_COLNAME = "somatic_annotated_sv"
+SV_COLNAME = "expanded_filtered_sv_bedpe"
 
 SV_FILENAME = "all_sv.csv"
 
