@@ -1,4 +1,5 @@
 """Mutation postprocessing module."""
+
 import re
 from depmapomics import constants
 from mgenepy.utils import helper as h
@@ -214,17 +215,18 @@ def aggregateSV(
     wm,
     sampleset="all",
     sv_colname=constants.SV_COLNAME,
-    sv_renaming=constants.SV_COLRENAME,
-    save_output="",
-    save_filename="",
+    sv_header=constants.SV_HEADER,
+    save_output=constants.WORKING_DIR,
+    save_filename=constants.SV_FILENAME,
 ):
     """aggregate SVs pulled from a terra workspace
 
     Args:
-        refworkspace (str): terra workspace where the ref data is stored
-        sampleids (list[str]): list of sequencing IDs
-        all_sv_colname (str): name of column in terra workspace that contains sv output files. Defaults to "filtered_annotated_sv"
-        save_output (str, optional): whether to save our data. Defaults to "".
+        wm (dm.WorkspaceManager): workspace manager for the workspace where the data is stored
+        sampleset (str, optional): name of the sample set to aggregate
+        sv_colname (str, optional): name of the column in terra workspace where sample-level SVs are stored
+        save_output (str, optional): whether to save our data.
+        save_filename (str, optional): name of the saved file
 
     Returns:
 
@@ -242,9 +244,105 @@ def aggregateSV(
         sv[constants.SAMPLEID] = name
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
+    assert set(sv_header) - set(all_svs.columns) == set()
     print("saving aggregated SVs")
     all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
     return all_svs
+
+
+def generate_sv_matrix(
+    df,
+    id_col=constants.SAMPLEID,
+    type_colname="TYPE",
+    genea_colname="SYMBOL_A",
+    geneb_colname="SYMBOL_B",
+    del_colname="DEL_SYMBOLS",
+    dup_colname="DUP_SYMBOLS",
+    save_output="",
+    save_filename="",
+):
+    """generate sample x gene matrix indicating which genes are affected by which type(s) of SVs
+
+    df (pd.DataFrame): aggregated SV table in bedpe format
+    id_col (str, optional): name of the column in df that contains sample IDs
+    type_colname (str, optional): name of the column in df that contains SV type annotation
+    genea_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint A
+    geneb_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint B
+    del_colname (str, optional): name of the column in df that contains genes spanned by DELs
+    dup_colname (str, optional): name of the column in df that contains genes spanned by DUPs
+    save_output (str, optional): whether to save our data. Defaults to "".
+    save_filename (str, optional): name of the saved file
+    """
+
+    # gather all unique gene symbols in the df
+    symbols = (
+        df[genea_colname].str.split(", ").tolist()
+        + df[geneb_colname].str.split(", ").tolist()
+        + df[del_colname].str.split(", ").tolist()
+        + df[dup_colname].str.split(", ").tolist()
+    )
+    symbol_flat_list = set([x for xs in symbols for x in xs])
+    symbol_flat_list.remove(".")
+
+    sample_ids = list(df[id_col].unique())
+    le = len(sample_ids)
+
+    ds = []
+    # iterate over all sample ids
+    for j in range(le):
+        h.showcount(j, le)
+        sample = sample_ids[j]
+        # init a gene: SV type dict for each sample
+        d = {k: [] for k in symbol_flat_list}
+        # subset df to only one sample
+        subset_bedpe = df[df[id_col] == sample]
+
+        # for BNDs, get genes at breakpoint A and breakpoint B
+        bnds = subset_bedpe[subset_bedpe[type_colname] == "BND"]
+        bnd_genes = (
+            bnds[genea_colname].str.split(", ").tolist()
+            + bnds[geneb_colname].str.split(", ").tolist()
+        )
+        bnd_genes = set([x for xs in bnd_genes for x in xs])
+        bnd_genes.remove(".")
+
+        for g in bnd_genes:
+            d[g].append("BND")
+
+        # for INSs, get genes at breakpoint A
+        inss = subset_bedpe[subset_bedpe[type_colname] == "INS"]
+        ins_genes = inss[genea_colname].str.split(", ").tolist()
+        ins_genes = set([x for xs in ins_genes for x in xs])
+        ins_genes.remove(".")
+
+        for g in ins_genes:
+            d[g].append("INS")
+
+        # for DELs, get genes that intersect with the whole segment
+        dels = subset_bedpe[subset_bedpe[type_colname] == "DEL"]
+        del_genes = dels[del_colname].str.split(", ").tolist()
+        del_genes = set([x for xs in del_genes for x in xs])
+        del_genes.remove(".")
+
+        for g in del_genes:
+            d[g].append("DEL")
+
+        # for DUPs, get genes that intersect with the whole segment
+        dups = subset_bedpe[subset_bedpe[type_colname] == "DUP"]
+        dup_genes = dups[dup_colname].str.split(", ").tolist()
+        dup_genes = set([x for xs in dup_genes for x in xs])
+        dup_genes.remove(".")
+
+        for g in dup_genes:
+            d[g].append("DUP")
+
+        ds.append(d)
+
+    sv_mat = pd.DataFrame(ds, index=sample_ids).applymap(lambda x: ", ".join(x))
+    sv_mat.to_csv(save_output + save_filename)
+
+    return sv_mat
+
 
 def aggregateGermlineMatrix(
     wm,
@@ -257,7 +355,7 @@ def aggregateGermlineMatrix(
     Args:
         wm (str): terra workspace where the data is stored
         sampleset (str): name of the sample set in the workspace
-        binary_mut_colname_dict (dict): dictionary mapping library name to corresponding column name 
+        binary_mut_colname_dict (dict): dictionary mapping library name to corresponding column name
                                         in terra workspace where the binarized mutation calls are stored
         save_output (str, optional): whether to save our data. Defaults to "".
 
@@ -271,10 +369,18 @@ def aggregateGermlineMatrix(
     for lib, colname in binary_mut_colname_dict.items():
         sample_table_valid = sample_table[~sample_table[colname].isna()]
         na_samples = set(sample_table.index) - set(sample_table_valid.index)
-        print(str(len(na_samples)) + " samples don't have corresponding binarized mutation calls for " + lib + ": ", na_samples)
+        print(
+            str(len(na_samples))
+            + " samples don't have corresponding binarized mutation calls for "
+            + lib
+            + ": ",
+            na_samples,
+        )
         all_muts = []
         header = False
-        for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
+        for name, row in tqdm(
+            sample_table_valid.iterrows(), total=len(sample_table_valid)
+        ):
             sample_mut = pd.read_csv(row[colname])
             if header == False:
                 all_muts.append(sample_mut)
@@ -295,7 +401,7 @@ def postProcess(
     save_output=constants.WORKING_DIR,
     sv_col=constants.SV_COLNAME,
     sv_filename=constants.SV_FILENAME,
-    sv_renaming=constants.SV_COLRENAME,
+    sv_header=constants.SV_HEADER,
     run_sv=True,
     debug=False,
 ):
@@ -348,7 +454,7 @@ def postProcess(
             sv_colname=sv_col,
             save_output=save_output,
             save_filename=sv_filename,
-            sv_renaming=sv_renaming,
+            sv_header=sv_header,
         )
         print("saving svs (all)")
         svs.to_csv(save_output + "svs_all.csv", index=False)
@@ -688,16 +794,23 @@ def postprocess_main_steps(
 
     # step 7: add hotspot column based on multiplt criteria
     maf["hotspot"] = False
-    maf.loc[((maf[constants.HESS_COL] == "Y")
-        | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
-        | (maf[constants.COSMIC_TIER_COL] == 1)), "hotspot"] = True
+    maf.loc[
+        (
+            (maf[constants.HESS_COL] == "Y")
+            | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
+            | (maf[constants.COSMIC_TIER_COL] == 1)
+        ),
+        "hotspot",
+    ] = True
     # manually classify two TERT promoter mutations
-    maf.loc[(maf["chrom"] == "chr5") 
-            & (maf["pos"] == 1295135) 
-            & (maf["alt"] == "A"), "hotspot"] = True
-    maf.loc[(maf["chrom"] == "chr5") 
-            & (maf["pos"] == 1295113) 
-            & (maf["alt"] == "A"), "hotspot"] = True
+    maf.loc[
+        (maf["chrom"] == "chr5") & (maf["pos"] == 1295135) & (maf["alt"] == "A"),
+        "hotspot",
+    ] = True
+    maf.loc[
+        (maf["chrom"] == "chr5") & (maf["pos"] == 1295113) & (maf["alt"] == "A"),
+        "hotspot",
+    ] = True
     print("unique hotspot genes: ")
     print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
 
