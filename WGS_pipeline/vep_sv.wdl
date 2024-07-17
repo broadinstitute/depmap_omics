@@ -351,7 +351,7 @@ task reannotate_genes {
         # so here intersect (start_a, end_b) with GTF
         sed '/^#/d'  ~{sample_id}.DEL.bedpe |\
         cut -f1,2,6,13,16 |\
-        bedtools intersect -a stdin -b gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed -wao | \
+        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
         sed 's/;//g' | sed 's/"//g' | \
         awk -F"\t" '{ \
                     if ($5 != ".") { \
@@ -368,7 +368,7 @@ task reannotate_genes {
         # so here intersect (start_a, end_b) with GTF
         sed '/^#/d'  ~{sample_id}.DUP.bedpe |\
         cut -f1,2,6,13,16 |\
-        bedtools intersect -a stdin -b gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed -wao | \
+        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
         sed 's/;//g' | sed 's/"//g' | \
         awk -F"\t" '{ \
                     if ($5 != ".") { \
