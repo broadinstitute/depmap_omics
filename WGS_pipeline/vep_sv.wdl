@@ -73,7 +73,6 @@ workflow VEP_SV_Workflow {
     output { 
         File vep_annotated_sv = annotate_sv_vep.output_vep_vcf
         File bedpe = vcf2bedpe.output_bedpe
-        File gnomad_filtered_no_rescue = gnomad_filter.output_filtered_vcf
         File expanded_sv_bedpe=bedpe_to_depmap.expanded_bedpe
         File expanded_filtered_sv_bedpe=bedpe_to_depmap.expanded_filtered_bedpe
         File reannotate_genes_bedpe=reannotate_genes.output_reannotated_bedpe
@@ -82,6 +81,7 @@ workflow VEP_SV_Workflow {
 
 
 task pr_sr_filter {
+    # drop SVs where PR_alt + SR_alt < 3 OR FILTER is not PASS or MaxDepth
     input {
         File input_vcf
         String sample_id
@@ -115,7 +115,6 @@ task pr_sr_filter {
 }
 
 
-# Standard interface to run vcf to maf
 task annotate_sv_vep {
     input {
         File input_vcf
@@ -128,8 +127,6 @@ task annotate_sv_vep {
         File gnomad_idx
         File sv_plugin="gs://cds-vep-data/StructuralVariantOverlap.pm"
         String docker_image="ensemblorg/ensembl-vep:release_112.0"
-        File gtf="gs://depmap-omics-24q4-rna-ref/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.sorted.gtf.gz"
-        File gtf_index="gs://depmap-omics-24q4-rna-ref/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.sorted.gtf.gz.tbi"
         String assembly="GRCh38"
         Int preemptible=2
         Int boot_disk_size=60
@@ -137,10 +134,6 @@ task annotate_sv_vep {
         Int cpu = 10
         Int mem = 80
         Int max_sv_size = 50000000
-        Int sv_match_percentage=80
-        Int gnomad_distance=0
-        String sv_match_type="overlap" # overlap (default), within, surrounding or exact
-        Int sv_match_reciprocal=0
 
     }
 
@@ -171,7 +164,6 @@ task annotate_sv_vep {
             --output_file ~{sample_id}_sv_vep_annotated.vcf \
             --cache \
             --fasta genome_reference.fasta \
-            --gtf ~{gtf} \
             --dir_cache /tmp/vep_cache --dir_plugins /tmp/Plugins \
             --fork 10 \
             --vcf \
@@ -199,6 +191,7 @@ task annotate_sv_vep {
 }
 
 # stolen from https://github.com/hall-lab/sv-pipeline/blob/master/scripts/SV_Tasks.wdl
+# converts SV vcf to bedpe
 task vcf2bedpe {
     input {
         File input_vcf
@@ -228,7 +221,10 @@ task vcf2bedpe {
     }
 }
 
+
 task gnomad_filter {
+    # !!!!! this task is only for QC evaluations, NOT where the actual gnomad filtering happens !!!!!
+    # !!!!! the actual gnomad filtering with rescue enabled happens in bedpe_to_depmap !!!!!
     input {
         File input_vcf
         String sample_id
@@ -285,6 +281,7 @@ task gnomad_filter {
 }
 
 task reannotate_genes {
+    # since VEP doesn't correctly annotate genes at breakpoints, we have to intersect them ourselves
     input {
         File input_bedpe
         String sample_id
@@ -300,7 +297,7 @@ task reannotate_genes {
     command <<<
         set -euo pipefail
 
-        # annotate genes at breakpoints
+        # annotate genes at breakpoint A
         sed '/^#/d' ~{input_bedpe} |\
         cut -f1-3,13,16 |\
         bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
@@ -314,9 +311,9 @@ task reannotate_genes {
                     print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
                     } \
         }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
-        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.A.bed
+        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.A.bed # collapse all genes to one row
 
-
+        # annotate genes at breakpoint B
         sed '/^#/d' ~{input_bedpe} | \
         cut -f4,5,6,13,16 | \
         bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
@@ -330,8 +327,9 @@ task reannotate_genes {
                 print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
                 } \
         }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
-        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.B.bed
+        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.B.bed # collapse all genes to one row
 
+        # join breakpoint A annotations and breakpoint B annotations
         join -1 5 -2 5 gene_overlaps.A.bed gene_overlaps.B.bed  | sed 's/ /\t/g' | cut -f2- > ~{sample_id}.SV.gene_overlaps.txt
 
         # subset DEL and DUP variants
@@ -391,6 +389,9 @@ task reannotate_genes {
 
 
 task bedpe_to_depmap {
+    # see python module for details, but in short, it includes:
+    # expanding INFO annotation column, incorporating gene re-annotation generated above,
+    # gnomad filering, rescuing, keeping only columns of interest
     input {
         File input_bedpe
         File gene_annotation
@@ -427,7 +428,5 @@ task bedpe_to_depmap {
     output {
         File expanded_bedpe = "~{sample_id}.svs.expanded.reannotated.bedpe"
         File expanded_filtered_bedpe = "~{sample_id}.svs.expanded.reannotated.filtered.bedpe"
-        File dels = "~{sample_id}_dels.bed"
-        File dups = "~{sample_id}_dups.bed"
     }
 }
