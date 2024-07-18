@@ -356,12 +356,12 @@ TOKEEP_BASE = {
     "pos": "int",
     "ref": "str",
     "alt": "str",
-    "af": "float",
-    "dp": "int",
-    "ref_count": "int",
-    "alt_count": "int",
-    "gt": "str",
-    "ps": "str",
+    #"af": "float",
+    #"dp": "int",
+    #"ref_count": "int",
+    #"alt_count": "int",
+    #"gt": "str",
+    #"ps": "str",
     "variant_type": "str",
     "variant_info": "str",
     "dna_change": "str",
@@ -369,11 +369,11 @@ TOKEEP_BASE = {
     "hugo_symbol": "str",
     "ensembl_gene_id": "str",
     "ensembl_feature_id": "str",
-    "hgnc_name": "str",
-    "hgnc_family": "str",
+    #"hgnc_name": "str",
+    #"hgnc_family": "str",
     "uniprot_id": "str",
     "dbsnp_rs_id": "str",
-    "gc_content": "float",
+    #"gc_content": "float",
 }
 
 TOKEEP_ADD = {
@@ -408,8 +408,8 @@ TOKEEP_ADD = {
     "tumor_suppressor_high_impact": "str",
 
     ###############
-    "achilles_top_genes": "str",
-    "structural_relation": "str",
+    #"achilles_top_genes": "str",
+    #"structural_relation": "str",
     "associated_with": "str",
     "lof": "str",
     "driver": "str",
@@ -419,7 +419,7 @@ TOKEEP_ADD = {
     "civic_id": "str",
     "civic_description": "str",
     "civic_score": "str",
-    "popaf": "str",
+    #"popaf": "str",
     "likely_gof": "str",
     "likely_lof": "str",
     "hess_driver": "str",
@@ -478,7 +478,7 @@ def improve(
     # while FORMAT fields are for individual samples.
     # https://github.com/broadinstitute/gatk/issues/6067
     # here we are dropping the one in INFO
-    if vcf[["DP"]].shape[1] > 1:
+    if 'DP' in vcf.columns and vcf[["DP"]].shape[1] > 1:
         vcf["DP_keep"] = vcf["DP"].iloc[:, 1]
         vcf = vcf.drop(columns=["DP"]).rename(columns={"DP_keep": "DP"})
 
@@ -556,29 +556,31 @@ def improve(
     vcf.loc[loc, "likely_lof"] = "Y"
 
     # structural_relation
-    vcf["structural_relation"] = vcf["cgc_translocation_partner"]
-    loc = (vcf["cgc_translocation_partner"] == "") & ~(
-        vcf["cosmicfusion_fusion_genes"] == ""
-    )
-    vcf.loc[loc, "structural_relation"] = (
-        vcf.loc[loc, "cosmicfusion_fusion_genes"]
-        .str.split("_")
-        .str[2]
-        .str.split("{EN")
-        .str[0]
-    )
+    if 'cgc_translocation_partner' in vcf.columns:
+        vcf["structural_relation"] = vcf["cgc_translocation_partner"]
+        loc = (vcf["cgc_translocation_partner"] == "") & ~(
+            vcf["cosmicfusion_fusion_genes"] == ""
+        )
+        vcf.loc[loc, "structural_relation"] = (
+            vcf.loc[loc, "cosmicfusion_fusion_genes"]
+            .str.split("_")
+            .str[2]
+            .str.split("{EN")
+            .str[0]
+        )
 
     # DNArepair
-    vcf["dna_repair"] = ""
-    loc = ~(vcf["dnarepairgenes_activity_linked_to_omim"] == "")
-    vcf["dna_repair"] = (
-        vcf.loc[loc, "dnarepairgenes_accession_number_linked_to_ncbi_entrez"]
-        + ": "
-        + vcf.loc[loc, "dnarepairgenes_activity_linked_to_omim"]
-    )
-    vcf["dna_repair"] = vcf["dna_repair"].replace(
-        {": ,%3B,,": "", ": ,%3B,": "", np.nan: ""}
-    )
+    if 'dnarepairgenes_activity_linked_to_omim' in vcf.columns:
+        vcf["dna_repair"] = ""
+        loc = ~(vcf["dnarepairgenes_activity_linked_to_omim"] == "")
+        vcf["dna_repair"] = (
+            vcf.loc[loc, "dnarepairgenes_accession_number_linked_to_ncbi_entrez"]
+            + ": "
+            + vcf.loc[loc, "dnarepairgenes_activity_linked_to_omim"]
+        )
+        vcf["dna_repair"] = vcf["dna_repair"].replace(
+            {": ,%3B,,": "", ": ,%3B,": "", np.nan: ""}
+        )
     ############################ ADDITIONNAL ANNOTATOR #########################
 
     vcf["associated_with"] = ""
@@ -681,16 +683,17 @@ def improve(
         vcf.loc[(vcf[name] == "Y"), "likely_driver"] = "Y"
 
     if "likely_driver" in vcf.columns.tolist():
-        vcf.loc[
-            (vcf["likely_driver"] == "Y")
-            & vcf["gencode_34_hugosymbol"].isin(tumor_suppressor_list),
-            "likely_lof",
-        ] = "Y"
-        vcf.loc[
-            (vcf["likely_driver"] == "Y")
-            & vcf["gencode_34_hugosymbol"].isin(oncogene_list),
-            "likely_gof",
-        ] = "Y"
+        if 'gencode_34_hugosymbol' in vcf.columns:
+            vcf.loc[
+                (vcf["likely_driver"] == "Y")
+                & vcf["gencode_34_hugosymbol"].isin(tumor_suppressor_list),
+                "likely_lof",
+            ] = "Y"
+            vcf.loc[
+                (vcf["likely_driver"] == "Y")
+                & vcf["gencode_34_hugosymbol"].isin(oncogene_list),
+                "likely_gof",
+            ] = "Y"
         vcf.loc[
             (vcf["likely_driver"] == "Y"),  # | (vcf["clinically_significant"] == "Y"),
             "associated_with",
@@ -712,11 +715,12 @@ def improve(
     if "oc_gwas_catalog__disease" in vcf.columns.tolist():
         loc_g = vcf["oc_gwas_catalog__disease"] != ""
         vcf.loc[loc_g, "associated_with"] += "gwas;"
-
-    vcf.loc[vcf["dna_repair"] != "", "associated_with"] += "dna_repair;"
-    vcf.loc[
-        vcf["structural_relation"] != "", "associated_with"
-    ] += "structural_relation;"
+    if 'dna_repair' in vcf.columns:
+        vcf.loc[vcf["dna_repair"] != "", "associated_with"] += "dna_repair;"
+    if 'structural_relation' in vcf.columns:
+        vcf.loc[
+            vcf["structural_relation"] != "", "associated_with"
+        ] += "structural_relation;"
 
     # high impact oncogenes and tumor suppressor
     if "vep_impact" in vcf.columns.tolist() and "vep_symbol" in vcf.columns.tolist():
@@ -742,11 +746,12 @@ def drop_lowqual(
     min_freq=0.15,
     min_depth=2,
 ):
+    trueseries = pd.Series([True for x in range(len(vcf))])
     loc = (
         # drops 30% of the variants
-        (vcf["af"].astype(float) >= min_freq)
-        & (vcf["dp"].astype(int) >= min_depth)
-        & (~(vcf["chrom"].str.contains("_")))
+        ((vcf["af"].astype(float) >= min_freq) if 'af' in vcf.columns else trueseries)
+        & ((vcf["dp"].astype(int) >= min_depth) if 'dp' in vcf.columns else trueseries)
+        & ((~(vcf["chrom"].str.contains("_")))  if 'chrom' in vcf.columns else trueseries)
         # drops 90% of the variants
         & ~(
             (vcf["map_qual"] == "Y")
@@ -895,7 +900,7 @@ def to_maf(
     vcf["ref_count"] = None
     vcf["alt_count"] = None
 
-    if len(vcf) > 0:
+    if len(vcf) > 0 and 'ad' in vcf.columns:
         # creating count columns
         vcf[["ref_count", "alt_count"]] = vcf["ad"].str.split(",", expand=True)
 
@@ -904,7 +909,11 @@ def to_maf(
 
     # setting the right type
     for k, v in tokeep.items():
-        vcf[k] = vcf[k].astype(v)
+        try:
+            vcf[k] = vcf[k].astype(v)
+        except TypeError as e:
+            print(k,v)
+            raise e
         if v == "str":
             vcf[k] = vcf[k].replace(",", "%2C")
 
