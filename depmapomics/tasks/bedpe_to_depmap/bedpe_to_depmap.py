@@ -1,6 +1,7 @@
 import pandas as pd
 import gzip
 import argparse
+import itertools
 
 COLS_TO_KEEP = [
     "CHROM_A",
@@ -76,9 +77,6 @@ def main(args=None):
     df_filtered.to_csv(
         sample_name + ".svs.expanded.reannotated.filtered.bedpe", index=False, sep="\t"
     )
-
-    print("save bed files for bedtools operations downstream")
-    save_bed_for_dup_del(df_filtered, sample_name)
 
 
 def bedpe_to_df(
@@ -353,20 +351,33 @@ def filter_svs(
         "Rescue",
     ] = True
 
+    def onco_ts_overlap(s):
+        l = s.split(", ")
+        return len(set(l) & oncogenes_and_ts) > 0
+
     # rescue breakpoints that fall on oncogenes or tumor suppressors
+    df["onco_ts_overlap_A"] = df["SYMBOL_A"].apply(onco_ts_overlap)
+    df["onco_ts_overlap_B"] = df["SYMBOL_B"].apply(onco_ts_overlap)
+
     df.loc[
-        (df["SYMBOL_A"].isin(oncogenes_and_ts))
-        | (df["SYMBOL_B"].isin(oncogenes_and_ts)),
+        (df["onco_ts_overlap_A"] == True) | (df["onco_ts_overlap_A"] == True),
         "Rescue",
     ] = True
 
     # rescue gene pairs in cosmic
-    df["SYMBOL_A"] = df["SYMBOL_A"].fillna("")
-    df["SYMBOL_B"] = df["SYMBOL_B"].fillna("")
-    df["pair"] = [
-        tuple(sorted(elem)) for elem in list(zip(df["SYMBOL_A"], df["SYMBOL_B"]))
-    ]
-    df.loc[df["pair"].isin(cosmic_pairs_sorted), "Rescue"] = True
+    def list_all_pairs(a, b):
+        alist = a.split(", ")
+        blist = b.split(", ")
+
+        all_pairs = list(itertools.product(alist, blist))
+        all_pairs = set([tuple(sorted(elem)) for elem in all_pairs])
+
+        return len(all_pairs & cosmic_pairs_sorted) > 0
+
+    df["pair_in_cosmic"] = df.apply(
+        lambda row: list_all_pairs(row["SYMBOL_A"], row["SYMBOL_B"]), axis=1
+    )
+    df.loc[df["pair_in_cosmic"] == True, "Rescue"] = True
 
     # gnomad AF parsing
     df["max_af"] = (
@@ -380,21 +391,6 @@ def filter_svs(
     df = df[(df["Rescue"] == True) | (df["max_af"] < sv_gnomad_cutoff)]
 
     return df[cols_to_keep]
-
-
-def save_bed_for_dup_del(df, sample_id):
-    """for downstream bedtool operations, save .bed files for duplications and deletions"""
-    dups = df[df.TYPE == "DUP"]
-    assert (dups["START_A"] < dups["END_B"]).all()
-    dups[["CHROM_A", "START_A", "END_B"]].to_csv(
-        sample_id + "_dups.bed", header=False, sep="\t", index=False
-    )
-
-    dels = df[df.TYPE == "DEL"]
-    assert (dels["START_A"] < dels["END_B"]).all()
-    dels[["CHROM_A", "START_A", "END_B"]].to_csv(
-        sample_id + "_dels.bed", header=False, sep="\t", index=False
-    )
 
 
 if __name__ == "__main__":
