@@ -230,6 +230,7 @@ def aggregateSV(
         save_filename (str, optional): name of the saved file
 
     Returns:
+        all_svs (pd.DataFrame): aggregated SVs in the bedpe format
 
     """
     print("aggregating SVs")
@@ -265,15 +266,19 @@ def generate_sv_matrix(
 ):
     """generate sample x gene matrix indicating which genes are affected by which type(s) of SVs
 
-    df (pd.DataFrame): aggregated SV table in bedpe format
-    id_col (str, optional): name of the column in df that contains sample IDs
-    type_colname (str, optional): name of the column in df that contains SV type annotation
-    genea_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint A
-    geneb_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint B
-    del_colname (str, optional): name of the column in df that contains genes spanned by DELs
-    dup_colname (str, optional): name of the column in df that contains genes spanned by DUPs
-    save_output (str, optional): whether to save our data. Defaults to "".
-    save_filename (str, optional): name of the saved file
+    Args:
+        df (pd.DataFrame): aggregated SV table in bedpe format
+        id_col (str, optional): name of the column in df that contains sample IDs
+        type_colname (str, optional): name of the column in df that contains SV type annotation
+        genea_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint A
+        geneb_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint B
+        del_colname (str, optional): name of the column in df that contains genes spanned by DELs
+        dup_colname (str, optional): name of the column in df that contains genes spanned by DUPs
+        save_output (str, optional): whether to save our data. Defaults to "".
+        save_filename (str, optional): name of the saved file
+
+    Returns:
+        sv_mat (pd.DataFrame): sample x gene matrix
     """
 
     # gather all unique gene symbols in the df
