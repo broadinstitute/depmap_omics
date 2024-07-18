@@ -85,6 +85,7 @@ def bedpe_to_df(
 ):
     """
     transforms a bedpe file into a dataframe file as best as it can
+    largely borrowed from vcf_to_df in the same repo
 
     Args:
     -----
@@ -220,7 +221,19 @@ def bedpe_to_df(
 
 
 def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation_path):
-    """since VEP can't reliably give the correct gene symbol annotation, redo it here"""
+    """since VEP can't reliably give the correct gene symbol annotation, redo it here
+
+    Args:
+        bedpe (df.DataFrame): SVs in bedpe format
+        annotation_path (str): path to the gene reannotation file for breakpoints
+        del_annotation_path (str): path to gene reannotation file for DELs only, considering the entire deleted intervals
+        dup_annotation_path (str): path to gene reannotation file for DUPs only, considering the entire duplicated intervals
+
+    Returns:
+        merged (pd.DataFrame): SVs in bedpe format, with corrected gene annotation
+
+    """
+    # read in annotation files for all breakpoints, DELs, and DUPs separately
     gene_annotation = pd.read_csv(
         annotation_path,
         sep="\t",
@@ -248,6 +261,7 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
         names=["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DUPGENES"],
     )
 
+    # merge annotations to the SV table one by one
     merged = pd.merge(
         bedpe,
         gene_annotation[
@@ -278,6 +292,8 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
         how="left",
     )
 
+    # in the case where there are multiple genes in one cell (HUGO1@ENSEMBL1; HUGO2@ENSEMBL2; ...)
+    # split them in to separate comma-separated columns
     def split_multi(s):
         if pd.isna(s) or s == ".":
             return ".;."
@@ -305,6 +321,7 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
         ";", n=1, expand=True
     )
 
+    # drop redundant columns
     merged = merged.drop(["GENE_A", "GENE_B", "DEL_GENEIDS", "DUP_GENEIDS"], axis=1)
 
     return merged
@@ -319,7 +336,21 @@ def filter_svs(
     large_sv_size=1e9,
     cols_to_keep=COLS_TO_KEEP,
 ):
-    """filter SVs in bedpe while rescuing important ones"""
+    """filter SVs in bedpe while rescuing important ones
+
+    Args:
+        df (pd.DataFrame): SVs in bedpe format
+        sv_gnomad_cutoff (float): max gnomad allele frequency for an SV to be considered somatic
+        cosmic_fusion_pairs (str): path to file containing cosmic fusion gene pairs
+        oncogene_list (str): path to file containing list of oncogenes according to OncoKB
+        ts_list (str): path to file containing list of tumor suppressor genes according to OncoKB
+        large_sv_size (int): size of SVs beyond which is considered large and needs to be rescued
+        cols_to_keep (list): list of columns to keep in the SV data
+
+    Returns:
+        df (pd.DataFrame): filtered SVs in bedpe format
+
+    """
     # drop variants shorter than 50
     df = df[
         (df["SVLEN_A"].isna())
