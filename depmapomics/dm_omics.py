@@ -949,11 +949,11 @@ async def mutationPostProcessing(
 
     if run_sv:
         if wgssvs is not None:
+            print("saving WGS svs")
             wgssvs.to_csv(folder + "svs.csv", index=False)
             wgssvs_pr = wgssvs[
                 wgssvs[constants.SAMPLEID].isin(renaming_dict.keys())
             ].replace({constants.SAMPLEID: renaming_dict})
-            print("saving somatic svs")
             wgssvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
             print("map entrez ids to SV matrix columns")
@@ -963,8 +963,10 @@ async def mutationPostProcessing(
                 version=hgnc_mapping_table_version,
                 file=hgnc_mapping_table_name,
             )
+            # some rows in the table are missing entrez ids, replace them with "Unknown"
             hgnc_table["entrez_id"] = hgnc_table["entrez_id"].fillna("Unknown")
             hugo_entrez_pairs = list(zip(hgnc_table.symbol, hgnc_table.entrez_id))
+            # generate a dictionary, key: hugo symbol, value: hugo symbol (entrez id)
             gene_renaming_dict = dict(
                 [
                     (

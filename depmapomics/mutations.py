@@ -225,6 +225,7 @@ def aggregateSV(
         wm (dm.WorkspaceManager): workspace manager for the workspace where the data is stored
         sampleset (str, optional): name of the sample set to aggregate
         sv_colname (str, optional): name of the column in terra workspace where sample-level SVs are stored
+        sv_header (list, optional): columns that are expected in the SV file
         save_output (str, optional): whether to save our data.
         save_filename (str, optional): name of the saved file
 
@@ -244,6 +245,7 @@ def aggregateSV(
         sv[constants.SAMPLEID] = name
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
+    # making sure all expected columns are present in the dataframe
     assert set(sv_header) - set(all_svs.columns) == set()
     print("saving aggregated SVs")
     all_svs.to_csv(save_output + save_filename, index=False)
@@ -287,6 +289,7 @@ def generate_sv_matrix(
     sample_ids = list(df[id_col].unique())
     le = len(sample_ids)
 
+    # init list of dicts, each dict in this list accounts for one row (one sample)
     ds = []
     # iterate over all sample ids
     for j in range(le):
