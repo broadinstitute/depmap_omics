@@ -244,6 +244,8 @@ SV_FILENAME = "all_sv.csv"
 
 SV_MAT_FILENAME = "all_sv_matrix.csv"
 
+SV_INTERNAL_AF_CUTOFF = 0.5
+
 SV_HEADER = [
     "CHROM_A",
     "START_A",

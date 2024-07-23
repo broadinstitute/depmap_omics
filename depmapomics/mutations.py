@@ -253,7 +253,7 @@ def aggregateSV(
     return all_svs
 
 
-def sv_internal_af_filter(bedpe, cutoff=0.5):
+def sv_internal_af_filter(bedpe, cutoff=constants.SV_INTERNAL_AF_CUTOFF):
     """In order to filter out artifacts, calculate the allele frequencies of SVs
     within the sample set. Remove ones that are above the cutoff and not rescued
 
@@ -442,6 +442,7 @@ def postProcess(
     sv_mat_filename=constants.SV_MAT_FILENAME,
     sv_header=constants.SV_HEADER,
     run_sv=True,
+    sv_af_cutoff=constants.SV_INTERNAL_AF_CUTOFF,
     debug=False,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
@@ -496,6 +497,7 @@ def postProcess(
             save_filename=sv_filename,
             sv_header=sv_header,
         )
+        svs = sv_internal_af_filter(svs, cutoff=sv_af_cutoff)
         sv_mat = generate_sv_matrix(
             svs, save_output=save_output, save_filename=sv_mat_filename
         )

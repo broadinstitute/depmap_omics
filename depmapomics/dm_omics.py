@@ -842,6 +842,7 @@ async def mutationPostProcessing(
     standardmafcol: dict = constants.MUTCOL_STANDARDMAF,
     mafcol: str = constants.MAF_COL,
     run_sv: bool = True,
+    sv_af_cutoff: float = constants.SV_INTERNAL_AF_CUTOFF,
     run_guidemat: bool = True,
     upload_taiga: bool = True,
     hgnc_mapping_taiga: str = constants.HGNC_MAPPING_TABLE_TAIGAID,
@@ -908,6 +909,7 @@ async def mutationPostProcessing(
         sv_filename=sv_filename,
         mafcol=mafcol,
         run_sv=run_sv,
+        sv_af_cutoff=sv_af_cutoff,
         debug=False,
         **kwargs,
     )
