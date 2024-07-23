@@ -253,6 +253,35 @@ def aggregateSV(
     return all_svs
 
 
+def sv_internal_af_filter(bedpe, cutoff=0.5):
+    """In order to filter out artifacts, calculate the allele frequencies of SVs
+    within the sample set. Remove ones that are above the cutoff and not rescued
+
+    Args:
+        bedpe (pd.DataFrame): aggregated SV table in bedpe format
+        cutoff (float): max allele frequency allowed
+
+    Returns:
+        filtered_bedpe (pd.DataFrame): aggregated SV table in bedpe format, with SVs that pass the AF filter only
+    """
+    print("filtering SVs based on internal AF")
+    from collections import Counter
+
+    internal_afs = bedpe.loc[
+        :,
+        ["CHROM_A", "START_A", "END_A", "ALT_A", "CHROM_B", "START_B", "END_B", "TYPE"],
+    ].apply(lambda x: ":".join(map(str, x)), axis=1)
+    total_samples = bedpe.DepMap_ID.unique().shape[0]
+    internal_afs_ratio_dict = {}
+    for k, v in Counter(internal_afs.tolist()).items():
+        internal_afs_ratio_dict[k] = v / total_samples
+    bedpe.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
+
+    filtered_bedpe = bedpe[(bedpe.internal_afs <= cutoff) | (bedpe.Rescue == True)]
+
+    return filtered_bedpe
+
+
 def generate_sv_matrix(
     df,
     id_col=constants.SAMPLEID,

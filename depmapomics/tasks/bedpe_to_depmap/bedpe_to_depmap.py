@@ -90,11 +90,11 @@ def bedpe_to_df(
     Args:
     -----
         path: str filepath to the vcf file
-        uniqueargs: list of flags that are boolean (present == True, absent == False)
+        additional_cols: list of flags that are boolean (present == True, absent == False)
 
     Returns:
     --------
-      a dataframe fo the vcf
+      a dataframe for the bedpe
     """
     uniqueargs = [
         "IMPRECISE",
