@@ -433,7 +433,7 @@ def maskGenes(
     segdup_bed=constants.SEGDUP_BED,
     repeat_bed=constants.RM_BED,
     bedtoolspath=constants.BEDTOOLSPATH,
-    rescue_list=constants.ONCOKB_ONCOGENE_LIST,
+    rescue_list=constants.ONCOKB_ONCOGENE_ENSG_LIST,
 ):
     """given a bed file consisting of highly repeated/duplicated regions, mask
     genes that overlap with those regions (a gene is masked if the portion of its gene
@@ -449,7 +449,7 @@ def maskGenes(
     mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
         {23: "X", 24: "Y", 25: "MT"}
     )
-    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
+    mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
     mybiomart["Chromosome"] = "chr" + mybiomart["Chromosome"].astype(str)
 
     mybiomart = mybiomart[mybiomart.ensembl_gene_id.isin(cnmatrix)]
@@ -529,7 +529,7 @@ def maskGenes(
         "chromosome_name"
     ].astype(str)
 
-    biomart_exon_union[["chromosome_name", "col0", "col1", "gene_name"]].to_csv(
+    biomart_exon_union[["chromosome_name", "col0", "col1", "ensembl_gene_id"]].to_csv(
         save_output + "biomart_exons.bed", sep="\t", header=False, index=False
     )
 
@@ -559,13 +559,8 @@ def maskGenes(
         .T.to_dict("list")
     )
 
-    gene2gene_entrez_dict = dict(
-        zip(mybiomart["hgnc_symbol"], mybiomart["ensembl_gene_id"])
-    )
-
     to_rescue = open(rescue_list, "r").read().split("\n")
-    to_rescue = set(to_rescue) & set(mybiomart["hgnc_symbol"])
-    to_rescue = [gene2gene_entrez_dict[g] for g in to_rescue]
+    to_rescue = set(to_rescue) & set(mybiomart["ensembl_gene_id"])
     print("rescuing " + str(len(to_rescue)) + " genes from oncokb's oncogene list")
 
     # segdup
@@ -683,14 +678,7 @@ def postProcess(
     mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
     mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
     mybiomart = mybiomart[mybiomart["Chromosome"].isin(set(segments["Chromosome"]))]
-    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
-    mybiomart["gene_name"] = [
-        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
-        for _, i in mybiomart.iterrows()
-    ]
-    mybiomart = mybiomart[
-        ~mybiomart.entrezgene_id.isna()
-    ]  # dropping all nan entrez id cols
+    mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
     # drop Ychrom if > maxYchrom
     ychrom = segments[segments.Chromosome.str.contains("Y")]
     countYdrop = [
