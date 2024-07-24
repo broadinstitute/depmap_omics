@@ -185,7 +185,6 @@ def bedpe_to_df(
                 for k in list(fields.keys()):
                     fields[k].append(res.get(k, None))
         except ValueError:
-            print(annot)
             raise ValueError("unknown field")
         fields_combined.update(fields)
 
