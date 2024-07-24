@@ -468,6 +468,9 @@ def cnPostProcessing(
     segmentsthresh=constants.SEGMENTSTHR,
     maxYchrom=constants.MAXYCHROM,
     billing_proj=constants.GCS_PAYER_PROJECT,
+    hgnc_mapping_taiga=constants.HGNC_MAPPING_TABLE_TAIGAID,
+    hgnc_mapping_table_name=constants.HGNC_MAPPING_TABLE_NAME,
+    hgnc_mapping_table_version=constants.HGNC_MAPPING_TABLE_VERSION,
     dryrun=False,
     **kwargs,
 ):
@@ -688,6 +691,22 @@ def cnPostProcessing(
         .reset_index(drop=True)
     )
 
+    print("map hugo symbols and entrez ids to gene CN columns")
+    # pull the gene id mapping table from taiga dataset maintained by the portal
+    hgnc_table = tc.get(
+        name=hgnc_mapping_taiga,
+        version=hgnc_mapping_table_version,
+        file=hgnc_mapping_table_name,
+    )
+
+    hgnc_table["hugo_entrez"] = (
+        hgnc_table["symbol"].astype(str)
+        + " ("
+        + hgnc_table["entrez_id"].astype("Int64").astype(str)
+        + ")"
+    )
+    ensg2hugo_entrez_dict = dict(zip(hgnc_table["symbol"], hgnc_table["hugo_entrez"]))
+
     # merging wes and wgs
     # CDS-ID level
     print("saving merged files")
@@ -695,12 +714,23 @@ def cnPostProcessing(
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
     mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
     mergedcn = wgsgenecn.append(wesgenecn)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(mergedcn.columns) & set(hgnc_table["ensembl_gene_id"])
+    mergedcn = mergedcn[cols_in_portal_table].rename(columns=ensg2hugo_entrez_dict)
+
     mergedcn.to_csv(folder + "merged_genecn.csv")
     merged_purecn_segments = wgs_purecn_segments.append(
         wes_purecn_segments
     ).reset_index(drop=True)
     merged_purecn_segments.to_csv(folder + "merged_absolute_segments.csv", index=False)
     merged_purecn_genecn = wgs_purecn_genecn.append(wes_purecn_genecn)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(merged_purecn_genecn.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    merged_purecn_genecn = merged_purecn_genecn[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn.csv")
     merged_loh = wgs_loh.append(wes_loh)
     merged_loh.to_csv(folder + "merged_loh.csv")
@@ -712,11 +742,23 @@ def cnPostProcessing(
     # profile-ID level
     mergedsegments_pr.to_csv(folder + "merged_segments_profile.csv", index=False)
     mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
+    cols_in_portal_table = set(mergedgenecn_pr.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    mergedgenecn_pr = mergedgenecn_pr[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     mergedgenecn_pr.to_csv(folder + "merged_genecn_profile.csv")
     merged_purecn_segments_pr.to_csv(
         folder + "merged_absolute_segments_profile.csv", index=False
     )
     merged_purecn_genecn_pr = wgs_purecn_genecn_pr.append(wes_purecn_genecn_pr)
+    cols_in_portal_table = set(merged_purecn_genecn_pr.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    merged_purecn_genecn_pr = merged_purecn_genecn_pr[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     merged_purecn_genecn_pr.to_csv(folder + "merged_absolute_genecn_profile.csv")
     merged_loh_pr = wgs_loh_pr.append(wes_loh_pr)
     merged_loh_pr.to_csv(folder + "merged_loh_profile.csv")
