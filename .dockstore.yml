@@ -309,24 +309,24 @@ workflows:
     filters: # All tags, no branches
       branches:
         - guidemat-wdl
-# - name: CramToBam.wdl
-#     subclass: WDL
-#     publish: True
-#     primaryDescriptorPath: /WGS_pipeline/CramToBam.wdl
-#     testParameterFiles:
-#       - /test.json
-#     filters: # All tags, no branches
-#       branches:
-#         - master
-# - name: BamToUnmappedRGBams_noHardClips.wdl
-#     subclass: WDL
-#     publish: True
-#     primaryDescriptorPath: /WGS_pipeline/BamToUnmappedRGBams_noHardClips.wdl
-#     testParameterFiles:
-#       - /test.json
-#     filters: # All tags, no branches
-#       branches:
-#         - master
+  # - name: CramToBam
+  #   subclass: WDL
+  #   publish: True
+  #   primaryDescriptorPath: /WGS_pipeline/CramToBam.wdl
+  #   testParameterFiles:
+  #     - /test.json
+  #   filters: # All tags, no branches
+  #     branches:
+  #       - master
+  # - name: BamToUnmappedRGBams_noHardClips
+  #   subclass: WDL
+  #   publish: True
+  #   primaryDescriptorPath: /WGS_pipeline/BamToUnmappedRGBams_noHardClips.wdl
+  #   testParameterFiles:
+  #     - /test.json
+  #   filters: # All tags, no branches
+  #     branches:
+  #       - master
 - name: vep_sv.wdl
     subclass: WDL
     publish: True
