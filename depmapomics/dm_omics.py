@@ -950,7 +950,7 @@ async def mutationPostProcessing(
     )
 
     if run_sv:
-        if wgssvs is not None:
+        if wgssvs is not None and wgs_sv_mat is not None:
             print("saving WGS svs")
             wgssvs.to_csv(folder + "svs.csv", index=False)
             wgssvs_pr = wgssvs[
@@ -988,6 +988,8 @@ async def mutationPostProcessing(
                 wgs_sv_mat.index.isin(renaming_dict.keys())
             ].rename(index=renaming_dict)
             wgs_sv_mat_pr.to_csv(folder + "sv_mat_with_entrez_profile.csv", index=False)
+        else:
+            print("no WGS SVs processed")
 
     merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
         drop=True
