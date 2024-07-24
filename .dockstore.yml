@@ -1,4 +1,5 @@
 version: 1.2
+
 workflows:
   - name: cnn-variant-filter
     subclass: WDL
@@ -219,6 +220,7 @@ workflows:
         - update-vcf-to-depmap
         - add-tert-to-wdl
         - add-aplice-ai
+        - tcga_mutation_processing
   - name: vcf2maf
     subclass: WDL
     publish: True
@@ -259,7 +261,8 @@ workflows:
     subclass: WDL
     publish: True
     primaryDescriptorPath: /RNA_pipeline/rsem_aggregate_results.wdl
-    branches:
+    filters:
+      branches:
         - add-effective-length
         - master
   - name: annotate_variants
@@ -273,6 +276,16 @@ workflows:
         - merge-annotators
         - master
         - dev-hgvs
+        - tcga_mutation_processing
+  - name: WGS_preprocessing_DRAGEN_24Q2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing_DRAGEN_24Q2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - master
   - name: mask_variants
     subclass: WDL
     publish: True
