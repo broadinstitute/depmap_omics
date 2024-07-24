@@ -682,4 +682,10 @@ DEPMAP_TAIGA = "arxspan-cell-line-export-f808"
 
 TAIGA_ETERNAL = "depmap-a0ab"
 
+HGNC_MAPPING_TABLE_TAIGAID = "hgnc-gene-table-e250"
+
+HGNC_MAPPING_TABLE_NAME = "hgnc_complete_set"
+
+HGNC_MAPPING_TABLE_VERSION = 3
+
 VIRTUAL = {"internal": "", "ibm": "", "dmc": "", "public": ""}
