@@ -277,7 +277,9 @@ def sv_internal_af_filter(bedpe, cutoff=constants.SV_INTERNAL_AF_CUTOFF):
         internal_afs_ratio_dict[k] = v / total_samples
     bedpe.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
 
-    filtered_bedpe = bedpe[(bedpe.internal_afs <= cutoff) | (bedpe.Rescue == True)]
+    filtered_bedpe = bedpe[
+        (bedpe.internal_afs <= cutoff) | (bedpe.Rescue == True)
+    ].drop(["internal_afs"], axis=1)
 
     return filtered_bedpe
 
