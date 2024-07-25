@@ -353,6 +353,7 @@ def pureCNpostprocess(
         mappingdf,
         style="closest",
         value_colname="LoHStatus",
+        gene_names_col="ensembl_gene_id",
     )
 
     # masking
