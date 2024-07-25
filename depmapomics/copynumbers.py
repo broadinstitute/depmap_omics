@@ -610,7 +610,6 @@ def postProcess(
     source_rename={},
     useCache=False,
     maxYchrom=constants.MAXYCHROM,
-    bedtoolspath=constants.BEDTOOLSPATH,
 ):
     """post process an aggregated CN segment file, the CCLE way
 
