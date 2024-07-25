@@ -331,11 +331,6 @@ def pureCNpostprocess(
         absolute_genecn.values.max(),
     )
 
-    # masking
-    absolute_genecn = maskGenes(
-        absolute_genecn, mappingdf, "absolute CN", save_output=save_output + "purecn_"
-    )
-
     print("PureCN: saving seg and gene cn files")
     segments.to_csv(save_output + "purecn_segments_all.csv", index=False)
     absolute_genecn.to_csv(save_output + "purecn_genecn_all.csv")
@@ -354,11 +349,6 @@ def pureCNpostprocess(
         style="closest",
         value_colname="LoHStatus",
         gene_names_col="ensembl_gene_id",
-    )
-
-    # masking
-    loh_status = maskGenes(
-        loh_status, mappingdf, "LoH", save_output=save_output + "loh_"
     )
 
     loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
@@ -426,9 +416,6 @@ def exonUnion(df):
 
 
 def maskGenes(
-    cnmatrix,
-    mybiomart,
-    matname,
     save_output="",
     maskthresh=constants.GENEMASKTHRESH,
     segdup_bed=constants.SEGDUP_BED,
@@ -438,7 +425,23 @@ def maskGenes(
 ):
     """given a bed file consisting of highly repeated/duplicated regions, mask
     genes that overlap with those regions (a gene is masked if the portion of its gene
-    body length that overlaps with those regions is higher than maskthresh)"""
+    body length that overlaps with those regions is higher than maskthresh)
+
+    Returns a list of geness to be masked, minus rescue (intersection with oncokb oncogenes)
+    """
+    mybiomart = h.generateGeneNames(
+        ensemble_server=constants.ENSEMBL_SERVER_V,
+        attributes=["start_position", "end_position", "chromosome_name"],
+    )
+    mybiomart = mybiomart.rename(
+        columns={
+            "start_position": "start",
+            "end_position": "end",
+            "chromosome_name": "Chromosome",
+        }
+    )
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
+    mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
 
     # sort and format biomart
     mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
@@ -453,7 +456,6 @@ def maskGenes(
     mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
     mybiomart["Chromosome"] = "chr" + mybiomart["Chromosome"].astype(str)
 
-    mybiomart = mybiomart[mybiomart.ensembl_gene_id.isin(cnmatrix)]
     mybiomart[["Chromosome", "start", "end", "ensembl_gene_id"]].to_csv(
         save_output + "biomart_cngenes.bed", sep="\t", header=False, index=False
     )
@@ -479,7 +481,7 @@ def maskGenes(
     )
 
     # download and reformat exon info
-    biomart_exon_raw = h.generateGeneNames(
+    biomart_exon = h.generateGeneNames(
         attributes=[
             "chromosome_name",
             "exon_chrom_start",
@@ -488,7 +490,6 @@ def maskGenes(
         ],
         default_attr=[],
     )
-    biomart_exon = biomart_exon_raw[biomart_exon_raw.ensembl_gene_id.isin(cnmatrix)]
 
     biomart_exon_union = (
         pd.DataFrame(
@@ -575,13 +576,6 @@ def maskGenes(
             overlap_length += v["end"] - v["start"]
         if overlap_length / gene_length > maskthresh:
             masked_genes_segdup.append(g)
-    print(
-        "masking "
-        + str(len(set(masked_genes_segdup) - set(to_rescue)))
-        + " genes from "
-        + matname
-        + " due to segmental duplication"
-    )
 
     # repeat masker
     masked_genes_rm = []
@@ -592,23 +586,13 @@ def maskGenes(
         overlap_length = all_overlaps["end"].sum() - all_overlaps["start"].sum()
         if overlap_length / exon_length > maskthresh:
             masked_genes_rm.append(g)
-    print(
-        "masking "
-        + str(len(set(masked_genes_rm) - set(to_rescue)))
-        + " genes from "
-        + matname
-        + " due to repeat masker, "
-    )
-    print(
-        str(len(set(masked_genes_rm) - set(masked_genes_segdup) - set(to_rescue)))
-        + " of which were not masked by segdup"
-    )
 
-    cnmatrix = cnmatrix.drop(
-        columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue)
-    )
+    gene_list = list(set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
+    with open(save_output + "genes_to_mask_minus_rescue_ensg.txt", "w") as f:
+        for line in gene_list:
+            f.write(f"{line}\n")
 
-    return cnmatrix
+    return gene_list
 
 
 def postProcess(
@@ -716,15 +700,6 @@ def postProcess(
         ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
     ].reset_index(drop=True)
     genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
-
-    # masking
-    genecn = maskGenes(
-        genecn,
-        mybiomart,
-        "relative CN",
-        save_output=save_output,
-        bedtoolspath=bedtoolspath,
-    )
 
     # saving
     print("saving files")
