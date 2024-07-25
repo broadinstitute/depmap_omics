@@ -413,7 +413,12 @@ def vcf_to_df(
 
     data.columns = [i.lower() for i in data.columns]
     samples = [i.lower() for i in colnames[9:]]
-    #print("\nthe samples are:", samples)
+    if samples == ['normal', 'tumor']:
+        pass
+        data = data.drop('normal',axis = 1)
+        colnames = [c for c in colnames if c != 'NORMAL']
+        samples = [i.lower() for i in colnames[9:]]
+    print("\nthe samples are:", samples)
     sorting = data["format"][0].split(":")
     for sample in samples:
         res = data[sample].str.split(":").values.tolist()
