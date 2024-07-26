@@ -447,7 +447,6 @@ def vcf_to_df(
     # cleaning empty cols
     data = data.drop(columns="format")
     dropped_cols.append("format")
-
     todrop = []
     for val in cols_to_drop:
         if val in data.columns.tolist():
@@ -460,7 +459,6 @@ def vcf_to_df(
         print("dropping empty columns:", empty)
         data = data.drop(columns=empty)
         dropped_cols += empty
-
     # weird bug sometimes
     if "SB_1" in data.columns.tolist():
         loc = ~data.SB_1.isna()
