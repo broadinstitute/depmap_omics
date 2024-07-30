@@ -40,7 +40,7 @@ task bedpe_to_depmap {
     }
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible

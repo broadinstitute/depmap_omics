@@ -101,7 +101,7 @@ task pr_sr_filter {
     >>>
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
@@ -177,7 +177,7 @@ task annotate_sv_vep {
     }
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
@@ -212,7 +212,7 @@ task vcf2bedpe {
         docker: "halllab/svtools:v0.5.1"
         cpu: "1"
         memory: "3 GB"
-        disks: "local-disk " +  3*ceil( size(input_vcf, "GB")) + " HDD"
+        disks: "local-disk " +  3*ceil( size(input_vcf, "GB")) + " SSD"
         preemptible: preemptible_tries
     }
 
@@ -267,7 +267,7 @@ task gnomad_filter {
     >>>
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
@@ -372,7 +372,7 @@ task reannotate_genes {
     >>>
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
@@ -417,7 +417,7 @@ task bedpe_to_depmap {
     }
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible

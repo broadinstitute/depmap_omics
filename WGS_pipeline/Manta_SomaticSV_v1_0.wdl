@@ -85,7 +85,7 @@ task Manta {
         docker: "${manta_docker}"
         memory: select_first([mem_size, 100]) + " GB"
         cpu: select_first([cpu_num, 32])
-        disks: "local-disk " + select_first([disk_size, 200]) + " HDD"
+        disks: "local-disk " + select_first([disk_size, 200]) + " SSD"
         preemptible: select_first([preemptible_attempts, 3])
     }
     output {
