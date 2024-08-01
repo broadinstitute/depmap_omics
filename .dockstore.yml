@@ -340,7 +340,7 @@ workflows:
   #   filters: # All tags, no branches
   #     branches:
   #       - master
-- name: vep_sv.wdl
+  - name: vep_sv
     subclass: WDL
     publish: True
     primaryDescriptorPath: /WGS_pipeline/vep_sv.wdl
@@ -349,7 +349,7 @@ workflows:
     filters: # All tags, no branches
       branches:
         - vep-sv
-- name: Manta_SomaticSV_v1_0.wdl
+  - name: Manta_SomaticSV_v1_0
     subclass: WDL
     publish: True
     primaryDescriptorPath: /WGS_pipeline/Manta_SomaticSV_v1_0.wdl
