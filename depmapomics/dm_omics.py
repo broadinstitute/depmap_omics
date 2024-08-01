@@ -161,26 +161,34 @@ async def expressionPostProcessing(
     if run_stranded:
         pr_files_stranded = dict()
         tpm_mat = files_stranded["proteincoding_genes_tpm_stranded"]
-        pr_files_stranded["proteincoding_genes_tpm_profile_stranded"] = tpm_mat[tpm_mat.index.isin(set(renaming_dict.keys()))].rename(
-            index=renaming_dict
-        )
+        pr_files_stranded["proteincoding_genes_tpm_profile_stranded"] = tpm_mat[
+            tpm_mat.index.isin(set(renaming_dict.keys()))
+        ].rename(index=renaming_dict)
         expressions.saveFiles(pr_files_stranded, folder)
 
     if generate_count_matrix:
         print("generating rnaseqc gene count matrix")
-        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, samplesetToLoad, rnaseqc2_gene_count_col)
+        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(
+            refworkspace, samplesetToLoad, rnaseqc2_gene_count_col
+        )
         rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
         rnaseqc_count_mat = rnaseqc_count_mat.T
         rnaseqc_count_mat.to_csv(folder + "rnaseqc_count_mat.csv")
-        rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
+        rnaseqc_count_mat_pr = rnaseqc_count_mat[
+            rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))
+        ].rename(index=renaming_dict)
         rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
         if run_stranded:
             print("generating rnaseqc gene count matrix for stranded subset")
-            rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(refworkspace, strandedSamplesetToLoad, rnaseqc2_gene_count_col_stranded)
+            rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(
+                refworkspace, strandedSamplesetToLoad, rnaseqc2_gene_count_col_stranded
+            )
             rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
             rnaseqc_count_mat = rnaseqc_count_mat.T
             rnaseqc_count_mat.to_csv(folder + "stranded_rnaseqc_count_mat.csv")
-            rnaseqc_count_mat_pr = rnaseqc_count_mat[rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))].rename(index=renaming_dict)
+            rnaseqc_count_mat_pr = rnaseqc_count_mat[
+                rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))
+            ].rename(index=renaming_dict)
             rnaseqc_count_mat_pr.to_csv(folder + "stranded_rnaseqc_count_mat_pr.csv")
 
     if not dry_run:
@@ -327,12 +335,12 @@ async def expressionPostProcessing(
                         "encoding": "utf-8",
                     },
                     {
-                        "path": folder + "proteincoding_genes_tpm_profile_stranded_logp1.csv",
+                        "path": folder
+                        + "proteincoding_genes_tpm_profile_stranded_logp1.csv",
                         "name": "stranded_proteinCoding_genes_tpm_logp1_profile",
                         "format": "NumericMatrixCSV",
                         "encoding": "utf-8",
                     },
-                    
                 ],
                 add_all_existing_files=True,
                 upload_async=False,
@@ -460,7 +468,11 @@ def cnPostProcessing(
     segmentsthresh=constants.SEGMENTSTHR,
     maxYchrom=constants.MAXYCHROM,
     billing_proj=constants.GCS_PAYER_PROJECT,
+    hgnc_mapping_taiga=constants.HGNC_MAPPING_TABLE_TAIGAID,
+    hgnc_mapping_table_name=constants.HGNC_MAPPING_TABLE_NAME,
+    hgnc_mapping_table_version=constants.HGNC_MAPPING_TABLE_VERSION,
     dryrun=False,
+    masked_gene_list=constants.MASKED_GENE_LIST,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -578,6 +590,8 @@ def cnPostProcessing(
     pr_table = mytracker.update_pr_from_seq(["wgs"])
     pr_table = mytracker.update_pr_from_seq(["wes"])
 
+    genes_to_mask = open(masked_gene_list, "r").read().split("\n")
+
     mytracker.close_gumbo_client()
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
@@ -680,21 +694,57 @@ def cnPostProcessing(
         .reset_index(drop=True)
     )
 
+    print("map hugo symbols and entrez ids to gene CN columns")
+    # pull the gene id mapping table from taiga dataset maintained by the portal
+    hgnc_table = tc.get(
+        name=hgnc_mapping_taiga,
+        version=hgnc_mapping_table_version,
+        file=hgnc_mapping_table_name,
+    )
+    # drop genes without entrez ids
+    # drop genes that should be masked
+    hgnc_table = hgnc_table[(~hgnc_table["entrez_id"].isna()) & (~hgnc_table['ensembl_gene_id'].isin(genes_to_mask))]
+    hgnc_table["hugo_entrez"] = (
+        hgnc_table["symbol"].astype(str)
+        + " ("
+        + hgnc_table["entrez_id"].astype("Int64").astype(str)
+        + ")"
+    )
+    ensg2hugo_entrez_dict = dict(zip(hgnc_table["ensembl_gene_id"], hgnc_table["hugo_entrez"]))
+
     # merging wes and wgs
     # CDS-ID level
     print("saving merged files")
     folder = save_dir
     mergedsegments = wgssegments.append(wessegments).reset_index(drop=True)
     mergedsegments.to_csv(folder + "merged_segments.csv", index=False)
-    mergedcn = (wgsgenecn.append(wesgenecn))
+    mergedcn = wgsgenecn.append(wesgenecn)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(mergedcn.columns) & set(hgnc_table["ensembl_gene_id"])
+    mergedcn = mergedcn[cols_in_portal_table].rename(columns=ensg2hugo_entrez_dict)
+
     mergedcn.to_csv(folder + "merged_genecn.csv")
     merged_purecn_segments = wgs_purecn_segments.append(
         wes_purecn_segments
     ).reset_index(drop=True)
     merged_purecn_segments.to_csv(folder + "merged_absolute_segments.csv", index=False)
     merged_purecn_genecn = wgs_purecn_genecn.append(wes_purecn_genecn)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(merged_purecn_genecn.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    merged_purecn_genecn = merged_purecn_genecn[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn.csv")
     merged_loh = wgs_loh.append(wes_loh)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(merged_loh.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    merged_loh = merged_loh[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     merged_loh.to_csv(folder + "merged_loh.csv")
     merged_arm_cna = wes_arm_cna.append(wgs_arm_cna)
     merged_arm_cna.to_csv(folder + "merged_arm_cna.csv")
@@ -704,13 +754,34 @@ def cnPostProcessing(
     # profile-ID level
     mergedsegments_pr.to_csv(folder + "merged_segments_profile.csv", index=False)
     mergedgenecn_pr = wgs_genecn_pr.append(wes_genecn_pr)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(mergedgenecn_pr.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    mergedgenecn_pr = mergedgenecn_pr[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     mergedgenecn_pr.to_csv(folder + "merged_genecn_profile.csv")
     merged_purecn_segments_pr.to_csv(
         folder + "merged_absolute_segments_profile.csv", index=False
     )
     merged_purecn_genecn_pr = wgs_purecn_genecn_pr.append(wes_purecn_genecn_pr)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(merged_purecn_genecn_pr.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    merged_purecn_genecn_pr = merged_purecn_genecn_pr[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     merged_purecn_genecn_pr.to_csv(folder + "merged_absolute_genecn_profile.csv")
     merged_loh_pr = wgs_loh_pr.append(wes_loh_pr)
+    # rename ensg -> hugo (entrez)
+    cols_in_portal_table = set(merged_loh_pr.columns) & set(
+        hgnc_table["ensembl_gene_id"]
+    )
+    merged_loh_pr = merged_loh_pr[cols_in_portal_table].rename(
+        columns=ensg2hugo_entrez_dict
+    )
     merged_loh_pr.to_csv(folder + "merged_loh_profile.csv")
     merged_arm_cna_pr = wes_arm_cna_pr.append(wgs_arm_cna_pr)
     merged_arm_cna_pr.to_csv(folder + "merged_arm_cna_profile.csv")
@@ -860,7 +931,7 @@ async def mutationPostProcessing(
     print("DOING WES")
     folder = constants.WORKING_DIR + samplesetname + "/wes_"
 
-    # TODO: replace with multiprocessing 
+    # TODO: replace with multiprocessing
     # ./sandbox/dna_eval/combine_mafs.py
     wesmutations, wessvs = mutations.postProcess(
         wes_wm,
@@ -881,7 +952,9 @@ async def mutationPostProcessing(
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
+    ].replace(
+        {constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict}
+    )
 
     # doing wgs
     print("DOING WGS")
@@ -901,7 +974,9 @@ async def mutationPostProcessing(
 
     wgsmutations_pr = wgsmutations[
         wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
+    ].replace(
+        {constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict}
+    )
 
     # merge
     print("merging WES and WGS")
@@ -916,7 +991,9 @@ async def mutationPostProcessing(
     mutcol.update(constants.MUTCOL_ADDITIONAL)
     mergedmutations = mergedmutations.rename(columns=mutcol)
 
-    mergedmutations = mutations.addEntrez(mergedmutations, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
+    mergedmutations = mutations.addEntrez(
+        mergedmutations, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID"
+    )
 
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
     # For all columns, convert "Y" to True/False
@@ -926,7 +1003,9 @@ async def mutationPostProcessing(
                 mergedmutations[col].values == "Y", True, False
             )
 
-    mergedmutations[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(folder + "somatic_mutations.csv", index=False)
+    mergedmutations[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(
+        folder + "somatic_mutations.csv", index=False
+    )
 
     if run_sv:
         if wgssvs is not None:
@@ -948,19 +1027,27 @@ async def mutationPostProcessing(
             merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
 
     merged = merged.rename(columns=mutcol)
-    merged = mutations.addEntrez(merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID")
+    merged = mutations.addEntrez(
+        merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID"
+    )
     merged.to_csv(folder + "somatic_mutations_all_cols_profile.csv", index=False)
-    merged[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(folder + "somatic_mutations_profile.csv", index=False)
-    merged[standardmafcol.keys()].to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
+    merged[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(
+        folder + "somatic_mutations_profile.csv", index=False
+    )
+    merged[standardmafcol.keys()].to_csv(
+        folder + "somatic_mutations_profile.maf.csv", index=False
+    )
 
     # making genotyped mutation matrices
     print("creating mutation matrices")
     hotspot_mat, lof_mat = mutations.makeMatrices(merged)
     # add entrez ids to column names
     merged["gene_name"] = [
-        i["HugoSymbol"] + " (" + str(i["EntrezGeneID"]).split(".")[0] + ")"
-        if i["EntrezGeneID"] != ""
-        else i["HugoSymbol"] + " (Unknown)"
+        (
+            i["HugoSymbol"] + " (" + str(i["EntrezGeneID"]).split(".")[0] + ")"
+            if i["EntrezGeneID"] != ""
+            else i["HugoSymbol"] + " (Unknown)"
+        )
         for _, i in merged.iterrows()
     ]
     symbol_to_symbolentrez_dict = dict(zip(merged.HugoSymbol, merged.gene_name))
@@ -976,16 +1063,22 @@ async def mutationPostProcessing(
         # aggregate germline binary matrix
         print("aggregating binary guide mutation matrices")
         print("aggregating wes")
-        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName, save_output=folder)
+        wes_germline_mats = mutations.aggregateGermlineMatrix(
+            wes_wm, AllSamplesetName, save_output=folder
+        )
         print("aggregating wgs")
-        wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName, save_output=folder)
+        wgs_germline_mats = mutations.aggregateGermlineMatrix(
+            wgs_wm, AllSamplesetName, save_output=folder
+        )
 
         for lib, _ in bed_locations.items():
             assert lib in wes_germline_mats, "library missing in wes"
             assert lib in wgs_germline_mats, "library missing in wgs"
             # merging wes and wgs
             print("renaming merged wes and wgs germline matrix for library: ", lib)
-            germline_mat_merged = pd.concat([wes_germline_mats[lib], wgs_germline_mats[lib].iloc[:, 4:]], axis=1)
+            germline_mat_merged = pd.concat(
+                [wes_germline_mats[lib], wgs_germline_mats[lib].iloc[:, 4:]], axis=1
+            )
             germline_mat_merged_noguides = germline_mat_merged.iloc[:, 4:]
 
             # transform from CDSID-level to PR-level
@@ -1044,8 +1137,10 @@ async def mutationPostProcessing(
                     "format": "TableCSV",
                     "encoding": "utf-8",
                 },
-            ], upload_async=False,
-            dataset_description=taiga_description,)
+            ],
+            upload_async=False,
+            dataset_description=taiga_description,
+        )
         if run_guidemat:
             tc.update_dataset(
                 changes_description="new " + samplesetname + " release!",
@@ -1069,15 +1164,16 @@ async def mutationPostProcessing(
                         "format": "TableCSV",
                         "encoding": "utf-8",
                     },
-                ], 
+                ],
                 add_all_existing_files=True,
                 upload_async=False,
-                dataset_description=taiga_description,)
+                dataset_description=taiga_description,
+            )
         if run_sv:
             tc.update_dataset(
                 changes_description="new " + samplesetname + " release!",
                 dataset_permaname=taiga_dataset,
-                upload_files=[           
+                upload_files=[
                     {
                         "path": folder + "svs.csv",
                         "name": "structuralVariants_withReplicates",
@@ -1090,7 +1186,8 @@ async def mutationPostProcessing(
                         "format": "TableCSV",
                         "encoding": "utf-8",
                     },
-                ], 
+                ],
                 add_all_existing_files=True,
                 upload_async=False,
-                dataset_description=taiga_description,)
+                dataset_description=taiga_description,
+            )
