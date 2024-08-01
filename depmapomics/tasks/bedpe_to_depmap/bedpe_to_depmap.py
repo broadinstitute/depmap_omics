@@ -206,8 +206,6 @@ def bedpe_to_df(
                 sorting.append(sorting[-1] + "_" + str(i + 1))
         if len(samples) > 1:
             sorting = [sample + "_" + v for v in sorting]
-        print(sample)
-        print(sorting)
         data = pd.concat(
             [
                 data.drop(columns=sample),
@@ -248,16 +246,49 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
             "NAME_B",
             "GENE_B",
         ],
+    ).astype(
+        {
+            "CHROM_A": "string",
+            "START_A": "int64",
+            "END_A": "int64",
+            "NAME_A": "string",
+            "GENE_A": "string",
+            "CHROM_B": "string",
+            "START_B": "int64",
+            "END_B": "int64",
+            "NAME_B": "string",
+            "GENE_B": "string",
+        }
     )
+
     del_annotation = pd.read_csv(
         del_annotation_path,
         sep="\t",
         names=["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DELGENES"],
+    ).astype(
+        {
+            "CHROM_A": "string",
+            "START_A": "int64",
+            "END_B": "int64",
+            "NAME_A": "string",
+            "NAME_B": "string",
+            "DELGENES": "string",
+        }
     )
+
     dup_annotation = pd.read_csv(
         dup_annotation_path,
         sep="\t",
         names=["CHROM_A", "START_A", "END_B", "NAME_A", "NAME_B", "DUPGENES"],
+    ).astype(
+        {
+            "CHROM_A": "string",
+            "START_A": "int64",
+            "END_B": "int64",
+            "NAME_A": "string",
+            "NAME_B": "string",
+            "DUPGENES": "string",
+        }
     )
 
     # merge annotations to the SV table one by one
@@ -277,13 +308,19 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
             ]
         ],
         on=["CHROM_A", "START_A", "END_A", "NAME_A", "CHROM_B", "START_B", "END_B"],
+        how="outer",
+        indicator=True,
     )
+
+    assert merged["_merge"].eq("both").all()
+
     merged = pd.merge(
-        merged,
+        merged.drop(columns="_merge"),
         del_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DELGENES"]],
         on=["CHROM_A", "START_A", "END_B", "NAME_A"],
         how="left",
     )
+
     merged = pd.merge(
         merged,
         dup_annotation[["CHROM_A", "START_A", "END_B", "NAME_A", "DUPGENES"]],
@@ -302,18 +339,18 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
             ids = ", ".join([elem.split("@")[1] for elem in s])
             return symbols + ";" + ids
 
-    merged.loc[merged["GENE_A"] != ".", "GENE_A"] = merged["GENE_A"].map(split_multi)
+    merged.loc[merged["GENE_A"].ne("."), "GENE_A"] = merged["GENE_A"].map(split_multi)
     merged[["SYMBOL_A", "GENEID_A"]] = merged["GENE_A"].str.split(";", n=1, expand=True)
-    merged.loc[merged["GENE_B"] != ".", "GENE_B"] = merged["GENE_B"].map(split_multi)
+    merged.loc[merged["GENE_B"].ne("."), "GENE_B"] = merged["GENE_B"].map(split_multi)
     merged[["SYMBOL_B", "GENEID_B"]] = merged["GENE_B"].str.split(";", n=1, expand=True)
 
-    merged.loc[merged["DELGENES"] != ".", "DELGENES"] = merged["DELGENES"].map(
+    merged.loc[merged["DELGENES"].ne("."), "DELGENES"] = merged["DELGENES"].map(
         split_multi
     )
     merged[["DEL_SYMBOLS", "DEL_GENEIDS"]] = merged["DELGENES"].str.split(
         ";", n=1, expand=True
     )
-    merged.loc[merged["DUPGENES"] != ".", "DUPGENES"] = merged["DUPGENES"].map(
+    merged.loc[merged["DUPGENES"].ne("."), "DUPGENES"] = merged["DUPGENES"].map(
         split_multi
     )
     merged[["DUP_SYMBOLS", "DUP_GENEIDS"]] = merged["DUPGENES"].str.split(
@@ -350,12 +387,11 @@ def filter_svs(
         df (pd.DataFrame): filtered SVs in bedpe format
 
     """
+
+    df["SVLEN_A"] = df["SVLEN_A"].astype("Int64")
+
     # drop variants shorter than 50
-    df = df[
-        (df["SVLEN_A"].isna())
-        | (df["SVLEN_A"].astype(float).astype("Int64") <= -50)
-        | (df["SVLEN_A"].astype(float).astype("Int64") >= 50)
-    ]
+    df = df.loc[df["SVLEN_A"].isna() | df["SVLEN_A"].abs().ge(50)]
 
     with open(oncogene_list) as f:
         oncogenes = [val[:-1] for val in f.readlines()]
@@ -365,21 +401,14 @@ def filter_svs(
 
     oncogenes_and_ts = set(oncogenes + tumor_suppressors)
 
-    cosmic = pd.read_csv(cosmic_fusion_pairs)
+    cosmic = pd.read_csv(cosmic_fusion_pairs, dtype="string")
     cosmic_pairs = list(zip(cosmic["Gene_A"], cosmic["Gene_B"]))
     cosmic_pairs_sorted = set([tuple(sorted(elem)) for elem in cosmic_pairs])
 
     df["Rescue"] = False
 
     # rescue large SVs
-    df.loc[
-        (~df["SVLEN_A"].isna())
-        & (
-            (df["SVLEN_A"].astype(float).astype("Int64") <= -large_sv_size)
-            | (df["SVLEN_A"].astype(float).astype("Int64") >= large_sv_size)
-        ),
-        "Rescue",
-    ] = True
+    df.loc[df["SVLEN_A"].abs().ge(large_sv_size), "Rescue"] = True
 
     def onco_ts_overlap(s):
         l = s.split(", ")
@@ -388,11 +417,7 @@ def filter_svs(
     # rescue breakpoints that fall on oncogenes or tumor suppressors
     df["onco_ts_overlap_A"] = df["SYMBOL_A"].apply(onco_ts_overlap)
     df["onco_ts_overlap_B"] = df["SYMBOL_B"].apply(onco_ts_overlap)
-
-    df.loc[
-        (df["onco_ts_overlap_A"] == True) | (df["onco_ts_overlap_A"] == True),
-        "Rescue",
-    ] = True
+    df.loc[df["onco_ts_overlap_A"] | df["onco_ts_overlap_A"], "Rescue"] = True
 
     # rescue gene pairs in cosmic
     def list_all_pairs(a, b):
@@ -407,7 +432,7 @@ def filter_svs(
     df["pair_in_cosmic"] = df.apply(
         lambda row: list_all_pairs(row["SYMBOL_A"], row["SYMBOL_B"]), axis=1
     )
-    df.loc[df["pair_in_cosmic"] == True, "Rescue"] = True
+    df.loc[df["pair_in_cosmic"], "Rescue"] = True
 
     # gnomad AF parsing
     df["max_af"] = (
@@ -418,7 +443,7 @@ def filter_svs(
     )
 
     # filter while keeping rescues
-    df = df[(df["Rescue"] == True) | (df["max_af"] < sv_gnomad_cutoff)]
+    df = df[df["Rescue"] | df["max_af"].lt(sv_gnomad_cutoff)]
 
     return df[cols_to_keep]
 
