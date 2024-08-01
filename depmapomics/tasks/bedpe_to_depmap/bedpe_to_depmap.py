@@ -341,26 +341,22 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
             ids = ", ".join([elem.split("@")[1] for elem in s])
             return symbols + ";" + ids
 
-    merged.loc[merged["GENE_A"].ne("."), "GENE_A"] = merged["GENE_A"].map(split_multi)
+    merged["GENE_A"] = merged["GENE_A"].map(split_multi)
     merged[["SYMBOL_A", "GENEID_A"]] = merged["GENE_A"].str.split(";", n=1, expand=True)
-    merged.loc[merged["GENE_B"].ne("."), "GENE_B"] = merged["GENE_B"].map(split_multi)
+    merged["GENE_B"] = merged["GENE_B"].map(split_multi)
     merged[["SYMBOL_B", "GENEID_B"]] = merged["GENE_B"].str.split(";", n=1, expand=True)
 
-    merged.loc[merged["DELGENES"].ne("."), "DELGENES"] = merged["DELGENES"].map(
-        split_multi
-    )
+    merged["DELGENES"] = merged["DELGENES"].map(split_multi)
     merged[["DEL_SYMBOLS", "DEL_GENEIDS"]] = merged["DELGENES"].str.split(
         ";", n=1, expand=True
     )
-    merged.loc[merged["DUPGENES"].ne("."), "DUPGENES"] = merged["DUPGENES"].map(
-        split_multi
-    )
+    merged["DUPGENES"] = merged["DUPGENES"].map(split_multi)
     merged[["DUP_SYMBOLS", "DUP_GENEIDS"]] = merged["DUPGENES"].str.split(
         ";", n=1, expand=True
     )
 
     # drop redundant columns
-    merged = merged.drop(["GENE_A", "GENE_B", "DEL_GENEIDS", "DUP_GENEIDS"], axis=1)
+    merged = merged.drop(["GENE_A", "GENE_B", "DELGENES", "DUPGENES"], axis=1)
 
     return merged
 
