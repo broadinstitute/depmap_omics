@@ -459,7 +459,7 @@ task bedpe_to_depmap {
     >>>
 
     runtime {
-        docker: "us-docker.pkg.dev/depmap-omics/public/bedpe_to_depmap@sha256:aed3bedf9f30426641234c7bd08d486581b24413094fb3c4199c4fea21564521"
+        docker: "us-docker.pkg.dev/depmap-omics/public/bedpe_to_depmap:production"
         memory: "~{mem_gb} GB"
         disks: "local-disk ~{disk_space} SSD"
         preemptible: preemptible
