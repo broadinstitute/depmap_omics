@@ -129,7 +129,7 @@ task annotate_sv_vep {
         Int max_sv_size = 50000000
 
         Int cpu = 2
-        Int mem = 8
+        Int mem_gb = 8
         Int preemptible = 3
         Int max_retries = 0
         Int additional_disk_gb = 0
@@ -409,7 +409,7 @@ task reannotate_genes {
     runtime {
         docker: "us-docker.pkg.dev/depmap-omics/public/bedtools:production"
         disks: "local-disk ~{disk_space} SSD"
-        memory: "~{mem} GB"
+        memory: "~{mem_gb} GB"
         cpu: cpu
         preemptible: preemptible
     }
