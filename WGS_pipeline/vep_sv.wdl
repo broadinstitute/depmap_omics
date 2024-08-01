@@ -39,7 +39,7 @@ workflow VEP_SV_Workflow {
 
     }
 
-    call gnomad_filter {
+    call gnomad_filter_qc {
         input:
             input_vcf = annotate_sv_vep.output_vep_vcf,
             sample_id = sample_id
@@ -240,7 +240,7 @@ task vcf2bedpe {
 }
 
 
-task gnomad_filter {
+task gnomad_filter_qc {
     # !!!!! this task is only for QC evaluations, NOT where the actual gnomad filtering happens !!!!!
     # !!!!! the actual gnomad filtering with rescue enabled happens in bedpe_to_depmap !!!!!
     input {
