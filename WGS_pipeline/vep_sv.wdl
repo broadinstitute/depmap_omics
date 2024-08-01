@@ -435,6 +435,7 @@ task bedpe_to_depmap {
         File gene_annotation
         File del_annotation
         File dup_annotation
+        File cosmic_fusion_pairs = "gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv"
         String sample_id
 
         Int mem_gb = 8
@@ -454,6 +455,7 @@ task bedpe_to_depmap {
             ~{gene_annotation} \
             ~{del_annotation} \
             ~{dup_annotation} \
+            ~{cosmic_fusion_pairs} \
             ~{sample_id}
     >>>
 

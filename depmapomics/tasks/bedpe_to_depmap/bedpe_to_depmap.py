@@ -51,6 +51,7 @@ def main(args=None):
     parser.add_argument("gene_annotation_filename")
     parser.add_argument("annotated_overlap_del")
     parser.add_argument("annotated_overlap_dup")
+    parser.add_argument("cosmic_fusion_pairs")
     parser.add_argument("sample_name")
 
     args = parser.parse_args()
@@ -60,6 +61,7 @@ def main(args=None):
     gene_annotation_filename = args.gene_annotation_filename
     annotated_overlap_del = args.annotated_overlap_del
     annotated_overlap_dup = args.annotated_overlap_dup
+    cosmic_fusion_pairs = args.cosmic_fusion_pairs
 
     print("expanding INFO fields")
     bedpe_df = bedpe_to_df(bedpe_filename)
@@ -73,7 +75,7 @@ def main(args=None):
     )
 
     print("filtering & rescuing")
-    df_filtered = filter_svs(bedpe_reannotated)
+    df_filtered = filter_svs(bedpe_reannotated, cosmic_fusion_pairs=cosmic_fusion_pairs)
     df_filtered.to_csv(
         sample_name + ".svs.expanded.reannotated.filtered.bedpe", index=False, sep="\t"
     )
@@ -365,8 +367,8 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
 
 def filter_svs(
     df,
+    cosmic_fusion_pairs,
     sv_gnomad_cutoff=0.001,
-    cosmic_fusion_pairs="gs://cds-cosmic/cosmic_fusion_gene_pairs_v100.csv",
     oncogene_list="/home/oncogene_oncokb.txt",
     ts_list="/home/tumor_suppressor_oncokb.txt",
     large_sv_size=1e9,
@@ -376,8 +378,8 @@ def filter_svs(
 
     Args:
         df (pd.DataFrame): SVs in bedpe format
-        sv_gnomad_cutoff (float): max gnomad allele frequency for an SV to be considered somatic
         cosmic_fusion_pairs (str): path to file containing cosmic fusion gene pairs
+        sv_gnomad_cutoff (float): max gnomad allele frequency for an SV to be considered somatic
         oncogene_list (str): path to file containing list of oncogenes according to OncoKB
         ts_list (str): path to file containing list of tumor suppressor genes according to OncoKB
         large_sv_size (int): size of SVs beyond which is considered large and needs to be rescued
