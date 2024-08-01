@@ -262,7 +262,10 @@ task gnomad_filter_qc {
 
         bcftools view -h ~{input_vcf} > ~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf
 
-        bcftools view ~{input_vcf} | awk -F"\t" '{
+        # parse the SV_overlap_AF component (overlapping structural variant allele
+        # frequency) in the CSQ annotation and remove variants where the highest
+        # observed frequency is less than gnomad_cutoff
+        awk -F"\t" '{
             split($8, info, ";");
             for (i=1; i<=length(info); i++) {
                 if (info[i] ~ /^CSQ=/) {
@@ -283,7 +286,7 @@ task gnomad_filter_qc {
                     }
                 }
             }
-        }' >> ~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf
+        }' ~{input_vcf} >> ~{sample_id}.pr_sr_filtered.vep_annotated.gnomad_filtered.vcf
     >>>
 
     runtime {
@@ -324,39 +327,43 @@ task reannotate_genes {
         set -euo pipefail
 
         # annotate genes at breakpoint A
-        sed '/^#/d' ~{input_bedpe} |\
-        cut -f1-3,13,16 |\
-        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
-        sed 's/;//g' | sed 's/"//g' | \
-        awk -F"\t" '{ \
-                    if ($5 != ".") { \
-                    split($4,arr,":");  \
-                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
-                    } \
-                    else { \
-                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
-                    } \
-        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
-        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.A.bed # collapse all genes to one row
+        sed '/^#/d' ~{input_bedpe} | \
+            cut -f1-3,13,16 | \
+            bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
+            sed 's/;//g' | sed 's/"//g' | \
+            awk -F"\t" '{
+                if ($5 != ".") {
+                    split($4,arr,":");
+                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1)
+                }
+                else {
+                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9
+                }
+            }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+            bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 \
+            > gene_overlaps.A.bed # collapse all genes to one row
 
         # annotate genes at breakpoint B
         sed '/^#/d' ~{input_bedpe} | \
-        cut -f4,5,6,13,16 | \
-        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
-        sed 's/;//g' | sed 's/"//g' | \
-        awk -F"\t" '{ \
-                    if ($5 != ".") { \
-                    split($4,arr,":");  \
-                print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
-                } \
-                else { \
-                print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
-                } \
-        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
-        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > gene_overlaps.B.bed # collapse all genes to one row
+            cut -f4,5,6,13,16 | \
+            bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
+            sed 's/;//g' | sed 's/"//g' | \
+            awk -F"\t" '{
+                if ($5 != ".") {
+                    split($4,arr,":");
+                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1)
+                }
+                else {
+                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9
+                }
+            }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+            bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 \
+            > gene_overlaps.B.bed # collapse all genes to one row
 
         # join breakpoint A annotations and breakpoint B annotations
-        join -1 5 -2 5 gene_overlaps.A.bed gene_overlaps.B.bed  | sed 's/ /\t/g' | cut -f2- > ~{sample_id}.SV.gene_overlaps.txt
+        join -1 5 -2 5 gene_overlaps.A.bed gene_overlaps.B.bed | \
+            sed 's/ /\t/g' | \
+            cut -f2- > ~{sample_id}.SV.gene_overlaps.txt
 
         # subset DEL and DUP variants
         awk -F"\t" '{ if ($11 == "DEL") print }' ~{input_bedpe} > ~{sample_id}.DEL.bedpe
@@ -364,37 +371,39 @@ task reannotate_genes {
 
         # for DEL, not just look at genes at the breakpoints, but also genes that lie between breakpoints
         # so here intersect (start_a, end_b) with GTF
-        sed '/^#/d'  ~{sample_id}.DEL.bedpe |\
-        cut -f1,2,6,13,16 |\
-        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
-        sed 's/;//g' | sed 's/"//g' | \
-        awk -F"\t" '{ \
-                    if ($5 != ".") { \
-                    split($4,arr,":");  \
-                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
-                    } \
-                    else { \
-                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
-                    } \
-        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
-        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > ~{sample_id}.DEL.overlap.bed
+        sed '/^#/d'  ~{sample_id}.DEL.bedpe | \
+            cut -f1,2,6,13,16 | \
+            bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
+            sed 's/;//g' | sed 's/"//g' | \
+            awk -F"\t" '{ \
+                if ($5 != ".") {
+                    split($4,arr,":");
+                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1)
+                }
+                else {
+                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9
+                }
+            }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+            bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 \
+            > ~{sample_id}.DEL.overlap.bed
 
         # for DUP, not just look at genes at the breakpoints, but also genes that lie between breakpoints
         # so here intersect (start_a, end_b) with GTF
-        sed '/^#/d'  ~{sample_id}.DUP.bedpe |\
-        cut -f1,2,6,13,16 |\
-        bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
-        sed 's/;//g' | sed 's/"//g' | \
-        awk -F"\t" '{ \
-                    if ($5 != ".") { \
-                    split($4,arr,":");  \
-                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1) \
-                    } \
-                    else { \
-                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9 \
-                    } \
-        }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
-        bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 > ~{sample_id}.DUP.overlap.bed
+        sed '/^#/d'  ~{sample_id}.DUP.bedpe | \
+            cut -f1,2,6,13,16 | \
+            bedtools intersect -a stdin -b ~{gtf_bed} -wao | \
+            sed 's/;//g' | sed 's/"//g' | \
+            awk -F"\t" '{
+                if ($5 != ".") {
+                    split($4,arr,":");
+                    print $1"\t"$2"\t"$3"\t"$4"\t"arr[1]":"arr[2]":"arr[3]":"arr[4]":"arr[5]":"arr[6]":"arr[7]"\t.\t"$(NF-1)
+                }
+                else {
+                    print $1"\t"$2"\t"$3"\t"$4"\t"$4"\t.\t"$9
+                }
+            }' | sort -k1,1 -k2,2n -k3,3n -k4,4 -k5,5 | \
+            bedtools groupby -g 1,2,3,4,5 -c 7 -o distinct | sort -k5,5 \
+            > ~{sample_id}.DUP.overlap.bed
     >>>
 
     runtime {
