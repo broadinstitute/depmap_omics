@@ -175,10 +175,10 @@ def vcf_to_df(
     cols_to_drop=[
         "clinvar_vcf_mc",
         "oreganno_build",
-        "gt",
+        #"gt",
         "ad",
         "af",
-        "dp",
+        #"dp",
         "f1r2",
         "f2r1",
         "fad",

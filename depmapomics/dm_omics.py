@@ -14,9 +14,10 @@ from depmapomics import expressions
 from depmapomics import mutations
 from depmapomics import fusions as fusion
 from depmapomics import copynumbers as cn
+import pytest
 
 from .mutations import postprocess_main_steps
-from google.cloud import bigquery # type: ignore
+#from google.cloud import bigquery # type: ignore
 
 
 async def expressionPostProcessing(
@@ -726,19 +727,20 @@ def cnPostProcessing(
 
 
 def job_query_to_dataframe(sql, project_id):
-    client = bigquery.Client(project=project_id)
-    query_job = client.query(sql)
-    df = query_job.to_dataframe()
+    if False:
+        client = bigquery.Client(project=project_id)
+        query_job = client.query(sql)
+        df = query_job.to_dataframe()
     return df
 
 
-async def mutationPostProcessing(
+def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
     vcfdir: str = constants.VCFDIR,
     vcf_colname: str = constants.VCFCOLNAME,
-    samplesetname: str = constants.SAMPLESETNAME,
-    AllSamplesetName: str = "all",
+    samplesetname: str = None,
+    AllSamplesetName: str = None,
     taiga_description: str = constants.Mutationsreadme,
     taiga_dataset: str = env_config.TAIGA_MUTATION,
     bed_locations: dict = constants.GUIDESBED,
@@ -748,9 +750,9 @@ async def mutationPostProcessing(
     standardmafcol: dict = constants.MUTCOL_STANDARDMAF,
     mafcol: str = constants.MAF_COL,
     doCleanup: bool = False,
-    run_sv: bool = True,
-    run_guidemat: bool = True,
-    upload_taiga: bool = True,
+    run_sv: bool = False,
+    run_guidemat: bool = False,
+    upload_taiga: bool = False,
     **kwargs,
 ):
     """The full CCLE mutations post processing pipeline (used only by CCLE)
@@ -768,45 +770,25 @@ async def mutationPostProcessing(
 
     tc = TaigaClient()
 
-    wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
 
     # doing wes
     print("DOING WES")
-    folder = constants.WORKING_DIR + samplesetname + "/wes_"
 
-    # TODO: replace with multiprocessing 
-    # ./sandbox/dna_eval/combine_mafs.py
-    wesmutations, wessvs = mutations.postProcess(
-        wes_wm,
-        AllSamplesetName if AllSamplesetName else samplesetname,
-        save_output=folder,
-        sv_col=sv_col,
-        sv_filename=sv_filename,
-        mafcol=mafcol,
-        run_sv=run_sv,
-        debug=False,
-        **kwargs,
-    )
-    
-    wesmutations.drop(['0915', '0918'], axis=1, inplace=True)
 
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     mytracker.close_gumbo_client()
 
-    wesmutations_pr = wesmutations[
-        wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
 
     # doing wgs
     print("DOING WGS")
-    folder = constants.WORKING_DIR + samplesetname + "/wgs_"
+    folder = constants.WORKING_DIR + 'tcga' + "/wgs_"
 
     wgsmutations, wgssvs = mutations.postProcess(
         wgs_wm,
-        sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
+        sampleset=None,  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
@@ -815,19 +797,18 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-    wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
-
-    wgsmutations_pr = wgsmutations[
-        wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace({constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict})
-
-    # merge
+    # wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
+    print('mutations 1:', wgsmutations.columns)
+    #pytest.set_trace()
+    wgsmutations_pr = wgsmutations
+    print('mutations 2:', wgsmutations_pr.columns)
+    # merge0
     print("merging WES and WGS")
-    folder = constants.WORKING_DIR + samplesetname + "/merged_"
+    folder = constants.WORKING_DIR + 'tcga' + "/merged_"
     # if not os.path.exists(constants.WORKING_DIR + samplesetname):
     #     os.mkdir(constants.WORKING_DIR + samplesetname)
 
-    mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
+    mergedmutations = pd.concat([wgsmutations], axis=0).reset_index(
         drop=True
     )
 
@@ -847,7 +828,7 @@ async def mutationPostProcessing(
 
     if run_sv:
         if wgssvs is not None:
-            mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
+            mergedsvs = wgssvs.reset_index(drop=True)
             mergedsvs.to_csv(folder + "svs.csv", index=False)
             mergedsvs_pr = mergedsvs[
                 mergedsvs[constants.SAMPLEID].isin(renaming_dict.keys())
@@ -855,10 +836,10 @@ async def mutationPostProcessing(
             print("saving somatic svs")
             mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
-    merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
+    merged = pd.concat([wgsmutations_pr], axis=0).reset_index(
         drop=True
     )
-
+    print('mutations 3:', merged)
     # For all columns, convert "Y" to True/False
     for col in merged.columns:
         if "Y" in merged[col].values:
@@ -891,15 +872,13 @@ async def mutationPostProcessing(
 
     if run_guidemat:
         # aggregate germline binary matrix
-        wes_germline_mats = mutations.aggregateGermlineMatrix(wes_wm, AllSamplesetName)
         wgs_germline_mats = mutations.aggregateGermlineMatrix(wgs_wm, AllSamplesetName)
 
         for lib, _ in bed_locations.items():
-            assert lib in wes_germline_mats, "library missing in wes"
             assert lib in wgs_germline_mats, "library missing in wgs"
             # merging wes and wgs
             print("renaming merged wes and wgs germline matrix for library: ", lib)
-            germline_mat_merged = pd.concat([wes_germline_mats[lib], wgs_germline_mats[lib].iloc[:, 4:]], axis=1)
+            germline_mat_merged = pd.concat([wgs_germline_mats[lib].iloc[:, 4:]], axis=1)
             germline_mat_merged_noguides = germline_mat_merged.iloc[:, 4:]
 
             # transform from CDSID-level to PR-level

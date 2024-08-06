@@ -166,7 +166,7 @@ def managingDuplicates(samples, failed, datatype, tracker):
 
 def aggregateMAFs(
     wm,
-    sampleset="all",
+    sampleset=None,
     mafcol=constants.MAF_COL,
     keep_cols=constants.MUTCOL_DEPMAP,
     debug=False,
@@ -175,7 +175,7 @@ def aggregateMAFs(
 
     Args:
         refworkspace (str): the reference workspace
-        sampleset (str, optional): the sample set to use. Defaults to 'all'.
+        sampleset (str, optional): the sample set to use. Defaults to None, which does no filtering based on sample_set.
         mutCol (str, optional): the MAF column name. Defaults to "somatic_maf".
         keep_cols (list, optional): which columns to keep in the aggregate MAF file. Defaults to constants.MUTCOL_DEPMAP
 
@@ -183,8 +183,9 @@ def aggregateMAFs(
         aggregated_maf (df.DataFrame): aggregated MAF
     """
     sample_table = wm.get_samples()
-    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
-    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    if sampleset is not None:
+        samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+        sample_table = sample_table[sample_table.index.isin(samples_in_set)]
     print(mafcol)
     sample_table_valid = sample_table[~sample_table[mafcol].isna()]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
@@ -198,9 +199,11 @@ def aggregateMAFs(
         # >1 because of the hess_signature typo in input mafs
         # can be 0 once the type is fixed upstream
         # TODO: replace hess_signature later
+        #print(maf.columns)
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
-            print(name + " is missing columns:")
-            print(set(keep_cols.keys()) - set(maf.columns))
+            #print(name + " is missing columns:")
+            #print(set(keep_cols.keys()) - set(maf.columns))
+            pass
         all_mafs.append(maf)
         if debug:
             counter += 1
@@ -266,8 +269,9 @@ def aggregateGermlineMatrix(
     """
     print("aggregating binary mutation matrices")
     sample_table = wm.get_samples()
-    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
-    sample_table = sample_table[sample_table.index.isin(samples_in_set)]
+    if sampleset is not None:
+        samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+        sample_table = sample_table[sample_table.index.isin(samples_in_set)]
     all_guide_matrices = dict()
     for lib, colname in binary_mut_colname_dict.items():
         sample_table_valid = sample_table[~sample_table[colname].isna()]
