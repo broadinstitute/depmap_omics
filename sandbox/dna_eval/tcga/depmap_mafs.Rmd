@@ -1,0 +1,500 @@
+---
+title: "DepMap Mutations"
+output: 
+  html_document:
+      toc: true
+      toc_float: true
+---
+
+# Load libraries 
+
+
+``` {r echo=FALSE, message=FALSE}
+library(maftools)
+library(taigr)
+library(tidyverse)
+library(ggpubr)
+library(patchwork)
+library(ggrepel)
+library('pheatmap')
+
+library('NMF')
+```
+
+
+# Overview of somatic mutation using BigQuery
+
+``` {r}
+
+library(reshape2)
+
+bigquery_mutation_stat = read.csv("/Users/golden/Documents/data/omics/tcga_data/tcga_somatic_mafs/23Q4_all_samples_stat.csv")
+
+p <- ggboxplot(melt(bigquery_mutation_stat[, c("gnomad_23Q4", "popaf_23q2_standard")], variable.name='release_and_database'), 
+               x = "release_and_database", y = "value",
+               color = "release_and_database", palette =c("#00AFBB", "#FC4E07"),
+               add = "jitter", shape = "release_and_database") + ylab('Frequency')
+my_comparisons <- list(c('gnomad_23Q4', "popaf_23q2_standard"))
+
+print(p + stat_compare_means(comparisons = my_comparisons, method = "t.test") + ylab("Somatic variants after gnomAD filter") + xlab("")) 
+
+```
+
+# Overview of all the top frequent genes in 23Q4
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+
+# 23Q2
+OmicsSomaticMutationsMatrixDamaging <- load.from.taiga(data.name='internal-23q2-1e49', data.version=98, data.file='OmicsSomaticMutationsMatrixDamaging')
+
+# 23Q2
+OmicsSomaticMutationsMatrixHotspot <- load.from.taiga(data.name='internal-23q2-1e49', data.version=98, data.file='OmicsSomaticMutationsMatrixHotspot')
+
+
+test_23Q4_ccle_maf = read.maf("~/mutation/23Q4_somatic_mutations_profile_drafted_internal_af0.05.maf")
+
+# Patch EGFR
+test_23Q4_ccle_maf@data[test_23Q4_ccle_maf@data$Hugo_Symbol=='EGFR' & test_23Q4_ccle_maf@data$InFrame & grepl("del$", test_23Q4_ccle_maf@data$Protein_Change), 'oncokb_effect'] = 'Gain-of-function'
+
+#oncoplot(test_23Q4_ccle_maf, top = 25)
+
+plotmafSummary(maf = test_23Q4_ccle_maf, rmOutlier = TRUE, 
+               addStat = 'median',
+               dashboard = TRUE, titvRaw = FALSE)
+
+oncoplot(test_23Q4_ccle_maf, genes=names(sort(table(test_23Q4_ccle_maf@data[grepl('^Loss', test_23Q4_ccle_maf@data$oncokb_effect), 'Hugo_Symbol']), decreasing=T)[1:20]),
+         top=20, gene_mar=8)
+
+```
+
+## LoF and GoF printing
+
+```{r}
+oncoplot(test_23Q4_ccle_maf, genes=names(sort(table(test_23Q4_ccle_maf@data[grepl('^Gain', test_23Q4_ccle_maf@data$oncokb_effect), 'Hugo_Symbol']), decreasing=T)[1:20]), top = 20, gene_mar=8)
+```
+
+
+## Hotspot mutation printing 
+
+``` {r}
+oncoplot(test_23Q4_ccle_maf, genes=names(table(test_23Q4_ccle_maf@data[grepl('^Y', test_23Q4_ccle_maf@data$hess_driver) | (test_23Q4_ccle_maf@data$oncokb_hotspot=='Y'), 'Hugo_Symbol'])[1:20]), top = 20)
+```
+
+# Cancer type exploration 
+
+After filtering by the internal cohort af $af < 0.05$. 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+AML_maf = read.maf("~/mutation/23Q4_somatic_mutations_profile_drafted_AML_final.maf")
+#LUSC_maf = read.maf("~/mutation/23Q4_somatic_mutations_profile_drafted_LUSC_final.maf")
+LUAD_maf = read.maf("~/mutation/23Q4_somatic_mutations_profile_drafted_LUAD_final.maf")
+LUAD_TCGA = read.maf("/Users/qqin/Downloads/luad_tcga_pub/data_mutations.txt")
+#ESCA_maf = read.maf("~/mutation/23Q4_somatic_mutations_profile_drafted_ESCA_final.maf")
+SKCM_maf = read.maf("~/mutation/23Q4_somatic_mutations_profile_drafted_SKCM_final.maf")
+SKCM_TCGA = read.maf("/Users/qqin/Downloads/skcm_tcga_pan_can_atlas_2018/data_mutations.txt")
+#BRCA_maf = read.maf("~/mutation/23Q4_somatic_mutations_profile_drafted_BRCA_final.maf")
+
+
+#tcgaCompare(maf = c(AML_maf, ESCA_maf, LUSC_maf, LUAD_maf, SKCM_maf, BRCA_maf), 
+#            cohortName = c('23Q4_AML', '23Q4_ESCA', '23Q4_LUSC', 
+#                           '23Q4_LUAD', '23Q4_SKCM', '23Q4_BRCA'), 
+#            logscale = TRUE, capture_size = 50)
+
+#tcgaCompare(maf = c(LUAD_maf, LUAD_TCGA, SKCM_maf, SKCM_TCGA), 
+#            cohortName = c('23Q4_LUAD', 'cBioPortal_TCGA_LUAD', '23Q4_SKCM', 'cBioPortal_TCGA_SKCM'), 
+#            logscale = TRUE, capture_size = 50)
+
+tcgaCompare(maf = c(LUAD_maf, SKCM_maf, AML_maf), 
+            cohortName = c('23Q4_LUAD', '23Q4_SKCM', '23Q4_AML'), 
+            logscale = TRUE, capture_size = 50)
+
+#oncoplot(AML_maf, top = 25)
+#oncoplot(AML_maf, genes=c('FLT3', 'NPM1', "DNMT3A", 'IDH2', "IDH1", "TET2", "RUNX1", 'NRAS', 'TP53'), top = 30)
+
+# https://www.nature.com/articles/nature11404
+#oncoplot(LUSC_maf, top = 30)
+#oncoplot(LUSC_maf, genes=c("TP53", "CDKN2A", "PTEN", "PIK3CA", "KEAP1", "MLL2", "NOTCH1", "RB", "NFE2L2"), top = 30)
+
+# oncoplot(LUAD_maf, top = 25)
+
+oncoplot(LUAD_maf, genes=c("TP53", "KRAS", "KEAP1",
+                           "STK11", "EGFR", "NF1", 
+                           "BRAF", "SETD2", 
+                           "RBM10", "MGA", 
+                           "MET", "ARID1A", "PIK3CA", "SMARCA4", "RB1", "CDKN2A", "U2AF1", "RIT1"), top = 30, gene_mar = 8)
+
+
+oncoplot(LUAD_TCGA, genes=c("TP53", "KRAS", "KEAP1",
+                           "STK11", "EGFR", "NF1", 
+                           "BRAF", "SETD2", 
+                           "RBM10", "MGA", 
+                           "MET", "ARID1A", "PIK3CA", "SMARCA4", "RB1", "CDKN2A", "U2AF1", "RIT1"), top = 30, gene_mar = 8)
+
+LUAD_maf_selected = LUAD_maf@data[LUAD_maf@data$Hugo_Symbol %in% c("TP53", "KRAS", "KEAP1",
+                                            "STK11", "EGFR", "NF1", 
+                                            "BRAF", "SETD2", 
+                                            "RBM10", "MGA", 
+                                            "MET", "ARID1A", "PIK3CA", "SMARCA4", "RB1", "CDKN2A", "U2AF1", "RIT1"),]
+LUAD_maf_selected_plot_melted_data = melt(table(LUAD_maf_selected$Hugo_Symbol, LUAD_maf_selected$Variant_Classification))
+
+LUAD_TCGA_selected = LUAD_TCGA@data[LUAD_TCGA@data$Hugo_Symbol %in% c("TP53", "KRAS", "KEAP1",
+                                            "STK11", "EGFR", "NF1", 
+                                            "BRAF", "SETD2", 
+                                            "RBM10", "MGA", 
+                                            "MET", "ARID1A", "PIK3CA", "SMARCA4", "RB1", "CDKN2A", "U2AF1", "RIT1"),]
+LUAD_TCGA_selected_plot_melted_data = melt(table(LUAD_TCGA_selected$Hugo_Symbol, LUAD_TCGA_selected$Variant_Classification))
+
+merged.LUAD = merge(LUAD_TCGA_selected_plot_melted_data, LUAD_maf_selected_plot_melted_data,by=c("Var1", "Var2"), all=T)
+colnames(merged.LUAD) = c("Gene", "VariantClassification", "TCGA", "23Q4")
+merged.LUAD$TCGA = -merged.LUAD$TCGA
+
+merged.LUAD.melted = melt(merged.LUAD, id.vars=c("Gene", "VariantClassification"))
+
+merged.LUAD.melted$Gene = factor(merged.LUAD.melted$Gene, levels=as_tibble(merged.LUAD) %>% group_by(Gene) %>% summarise(sum=sum(`23Q4`, na.rm=T)) %>% arrange(desc(-sum)) %>% pull(Gene))
+
+ggplot(merged.LUAD.melted, aes(y=value, x=Gene, fill=VariantClassification))+
+  facet_wrap(~variable, scales = "free_x") +
+  geom_col()+
+  coord_flip()+ 
+  scale_y_continuous(expand = c(0, 0),    
+                     labels = function(x) signif(abs(x), 2))+
+  ylab("Number of samples")+
+  theme(panel.spacing.x = unit(0, "mm"), text = element_text(size=16))
+
+
+# oncoplot(SKCM_maf, top = 30)
+
+oncoplot(SKCM_maf, genes=c("BRAF", "NRAS", "HRAS", "KRAS", "NF1", 
+                           "TP53", "CDKN2A", "PPP6C", "PTEN",
+                           "IDH1", "RB1",
+                           "MAP2K1", "DDX3X", "RAC1", "TET2"), top = 30)
+oncoplot(SKCM_TCGA, genes=c("BRAF", "NRAS", "HRAS", "KRAS", "NF1", 
+                           "TP53", "CDKN2A", "PPP6C", "PTEN",
+                           "IDH1", "RB1",
+                           "MAP2K1", "DDX3X", "RAC1", "TET2"), top = 30)
+
+
+SKCM_maf_selected = SKCM_maf@data[SKCM_maf@data$Hugo_Symbol %in% c("BRAF", "NRAS", "HRAS", "KRAS", "NF1", 
+                           "TP53", "CDKN2A", "PPP6C", "PTEN",
+                           "IDH1", "RB1",
+                           "MAP2K1", "DDX3X", "RAC1", "TET2"),]
+SKCM_maf_selected_plot_melted_data = melt(table(SKCM_maf_selected$Hugo_Symbol, SKCM_maf_selected$Variant_Classification))
+
+SKCM_TCGA_selected = SKCM_TCGA@data[SKCM_TCGA@data$Hugo_Symbol %in% c("BRAF", "NRAS", "HRAS", "KRAS", "NF1", 
+                           "TP53", "CDKN2A", "PPP6C", "PTEN",
+                           "IDH1", "RB1",
+                           "MAP2K1", "DDX3X", "RAC1", "TET2"),]
+SKCM_TCGA_selected_plot_melted_data = melt(table(SKCM_TCGA_selected$Hugo_Symbol, SKCM_TCGA_selected$Variant_Classification))
+
+merged.SKCM = merge(SKCM_TCGA_selected_plot_melted_data, SKCM_maf_selected_plot_melted_data,by=c("Var1", "Var2"), all=T)
+colnames(merged.SKCM) = c("Gene", "VariantClassification", "TCGA", "23Q4")
+merged.SKCM$TCGA = -merged.SKCM$TCGA
+
+merged.SKCM.melted = melt(merged.SKCM, id.vars=c("Gene", "VariantClassification"))
+
+merged.SKCM.melted$Gene = factor(merged.SKCM.melted$Gene, levels=rev(c("BRAF", "NRAS", "HRAS", "KRAS", "NF1", 
+                           "TP53", "CDKN2A", "PPP6C", "PTEN",
+                           "IDH1", "RB1",
+                           "MAP2K1", "DDX3X", "RAC1", "TET2")))
+
+merged.SKCM.melted$Gene = factor(merged.SKCM.melted$Gene, levels=as_tibble(merged.SKCM) %>% group_by(Gene) %>% summarise(sum=sum(`23Q4`, na.rm=T)) %>% arrange(desc(-sum)) %>% pull(Gene))
+
+
+ggplot(merged.SKCM.melted, aes(y=value, x=Gene, fill=VariantClassification))+
+  facet_wrap(~variable, scales = "free_x") +
+  geom_col()+
+  coord_flip()+ 
+  scale_y_continuous(expand = c(0, 0),    
+                     labels = function(x) signif(abs(x), 2))+
+  ylab("Number of samples")+
+  theme(panel.spacing.x = unit(0, "mm"), text = element_text(size=16))
+
+```
+
+
+# Integrate with the CRISPR dependencies
+
+
+```{r}
+mike_biomarkers = read.csv("~/Downloads/bench_corrs_for_mike_new (1).csv")
+mike_biomarkers_mutation = subset(mike_biomarkers, feat_type!='CN' & feat_type!='GE')
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+CRISPRGeneEffect <- read.table("~/Downloads/internal-23q2_v98-crisprgeneeffect.tsv", header=T, sep='\t', row.names=1)
+
+metadata = read.csv("~/Downloads/seq_table.csv", header=T)
+
+test_23Q4_ccle_maf@data$NewModelID = metadata[match(test_23Q4_ccle_maf@data$Tumor_Sample_Barcode, metadata$SequencingID), 'ModelID']
+
+plot_dependency <- function(gene_mutation, gene_crispr, mutation_effect='Loss-of-function', any_mutation=F, old_23q2=F, hotspot=F, plot=T) {
+
+  if (!old_23q2) {
+  if (any_mutation) {
+    if (!hotspot) {
+      TP53_ids = unique(test_23Q4_ccle_maf@data[(test_23Q4_ccle_maf@data$Hugo_Symbol==gene_mutation) & (test_23Q4_ccle_maf@data$vep_impact%in%c("HIGH", "MODERATE")), "NewModelID"] %>% pull())
+    } else {
+      TP53_ids = unique(test_23Q4_ccle_maf@data[(test_23Q4_ccle_maf@data$Hugo_Symbol==gene_mutation) & (test_23Q4_ccle_maf@data$oncokb_hotspot=='Y' | test_23Q4_ccle_maf@data$hess_driver=='Y'), "NewModelID"] %>% pull())
+      print('hotspot--------')
+      print(length(TP53_ids))
+    }
+  }
+  else {
+    if (mutation_effect == 'Loss-of-function') {
+      print(sum((test_23Q4_ccle_maf@data$Hugo_Symbol==gene_mutation) & (test_23Q4_ccle_maf@data$vep_impact == 'HIGH' | grepl(mutation_effect, test_23Q4_ccle_maf@data$oncokb_effect))))
+
+      TP53_ids = unique(test_23Q4_ccle_maf@data[(test_23Q4_ccle_maf@data$Hugo_Symbol==gene_mutation) & (test_23Q4_ccle_maf@data$vep_impact == 'HIGH' | grepl(mutation_effect, test_23Q4_ccle_maf@data$oncokb_effect)), "NewModelID"] %>% pull())
+
+    } else {
+      TP53_ids = unique(test_23Q4_ccle_maf@data[(test_23Q4_ccle_maf@data$Hugo_Symbol==gene_mutation) & (grepl(mutation_effect, test_23Q4_ccle_maf@data$oncokb_effect)), "NewModelID"] %>% pull())
+    }
+  }
+  TP53_ids = unique(TP53_ids)
+  }
+
+  if (old_23q2) {
+    if (hotspot) {
+      OmicsSomaticMutationsMatrixHotspot
+      TP53_ids=rownames(OmicsSomaticMutationsMatrixHotspot)[OmicsSomaticMutationsMatrixHotspot[, grep(gene_mutation, colnames(OmicsSomaticMutationsMatrixHotspot))[1]]>0]
+      
+    } else {
+      TP53_ids=rownames(OmicsSomaticMutationsMatrixDamaging)[OmicsSomaticMutationsMatrixDamaging[, grep(gene_mutation, colnames(OmicsSomaticMutationsMatrixDamaging))[1]]>0]
+    }
+  }
+
+  print(grep(paste0("^", gene_crispr), colnames(CRISPRGeneEffect), value=T)[1])
+  TP53_crispr = CRISPRGeneEffect[intersect(rownames(CRISPRGeneEffect), TP53_ids), grep(paste0("^", gene_crispr), colnames(CRISPRGeneEffect))[1]]
+  Non_crispr = CRISPRGeneEffect[setdiff(rownames(CRISPRGeneEffect), TP53_ids), grep(paste0("^", gene_crispr), colnames(CRISPRGeneEffect))[1]]
+  print(dim(TP53_crispr))
+
+  example = data.frame(CRISPR=c(TP53_crispr, Non_crispr), LoF=c(rep(gene_mutation, length(TP53_crispr)), rep("Non", length(Non_crispr))))
+  print(table(example$LoF))
+  print(head(example))
+  if (plot) {
+  p <- ggboxplot(example, x = "LoF", y = "CRISPR",
+                 color = "LoF", palette =c("#00AFBB", "#FC4E07"),
+                 add = "jitter", shape = "LoF")
+  my_comparisons <- list(c(gene_mutation, "Non"))
+  print(p + stat_compare_means(comparisons = my_comparisons, method = "t.test") + ylab(paste0(gene_crispr, " CRISPR gene effect")) + xlab(mutation_effect)+theme(legend.position = "none", panel.spacing.x = unit(0, "mm"), text = element_text(size=20)))
+  }
+  #return(oneway.test(CRISPR~LoF, example))
+  #return(kruskal.test(CRISPR~LoF, example))
+  example$LoFbinary = factor(as.numeric(example$LoF == gene_mutation))
+  model <- aov(CRISPR~LoFbinary, example)
+  #print(TukeyHSD(model))
+  #print(head(example))
+  #print(example$CRISPR[example$LoF==gene_mutation])
+  #print(mean(example$CRISPR[example$LoF==gene_mutation]), na.rm=T)
+  #print(mean(example$CRISPR[example$LoF!=gene_mutation]), na.rm=T)
+  #print(mean(example$CRISPR[example$LoF==gene_mutation])-mean(example$CRISPR[example$LoF!=gene_mutation]), na.rm=T)
+  cortest = cor.test(example$CRISPR, as.numeric(example$LoFbinary))
+  return(c(coef(model)[2], as.numeric(TukeyHSD(model)$LoFbinary[,'p adj']), cortest$p.value, cortest$estimate))
+}
+
+
+model = plot_dependency("TP53", "MDM2", old_23q2=F)
+
+model = plot_dependency("TP53", "MDM2", old_23q2=T)
+
+model = plot_dependency("TP53", "TP53")
+
+plot_dependency("KRAS", "KRAS", 'Gain-of-function')
+
+plot_dependency("RB1", "E2F3")
+plot_dependency("RB1", "RB1")
+
+# model = plot_dependency("TP53", "TP53", old_23q2=T)
+# 
+# plot_dependency("KRAS", "KRAS", 'Loss-of-function')
+# 
+# 
+# plot_dependency("KRAS", "KRAS", 'Gain-of-function', hotspot = T, any_mutation = T)
+# 
+# plot_dependency("KRAS", "KRAS", 'Loss-of-function', old_23q2=T)
+# 
+# plot_dependency("KRAS", "KRAS", 'Gain-of-function', old_23q2=T, hotspot = T, any_mutation = T)
+# 
+# plot_dependency("JAK2", "JAK2")
+ # not working yet
+
+```
+
+
+# Integrate mike's biomarkers
+
+``` {r}
+
+mike_biomarkers_mutation_nona = mike_biomarkers_mutation[!is.na(mike_biomarkers_mutation$cor),]
+mike_biomarkers_mutation_nona = subset(mike_biomarkers_mutation_nona, model=='CERES_CRISPR')
+
+res = list()
+for (row_index in 1:nrow(mike_biomarkers_mutation_nona)) {
+  feat = mike_biomarkers_mutation_nona[row_index, 'Feat_gene']
+  dep = mike_biomarkers_mutation_nona[row_index, 'Dep_Gene']
+  res[[paste0(feat, "_", dep)]] = tryCatch({
+    model=plot_dependency(feat, dep, any_mutation=T, plot=F)
+    c(model[1], model[2], model[3], model[4])
+  }, error=function(e) c(NA, NA, NA, NA))
+}
+
+mike_biomarkers_mutation_nona[, 'effect_size_23Q4'] = sapply(res, function(x) x[1])
+mike_biomarkers_mutation_nona[, 'FDR_23Q4'] = sapply(res, function(x) x[2])
+mike_biomarkers_mutation_nona[, 'Cor_23Q4'] = sapply(res, function(x) x[4])
+mike_biomarkers_mutation_nona[, 'Corpvalue_23Q4'] = sapply(res, function(x) x[3])
+
+mike_biomarkers_mutation_nona[, 'Significant_23Q4'] <- ifelse(mike_biomarkers_mutation_nona[, 'FDR_23Q4'] < 0.05 & mike_biomarkers_mutation_nona[, 'effect_size_23Q4'] > 0, "Positive FDR < 0.05", "Not Sig")
+mike_biomarkers_mutation_nona[, 'Significant_23Q4'][mike_biomarkers_mutation_nona[, 'FDR_23Q4'] < 0.05 & mike_biomarkers_mutation_nona[, 'effect_size_23Q4'] < 0] <- "Negative FDR < 0.05"
+
+mike_biomarkers_mutation_nona[, 'CRISPR_Mutation'] = paste0(mike_biomarkers_mutation_nona$Dep_Gene, "~", mike_biomarkers_mutation_nona$Feat_gene)
+
+p1 = ggplot(mike_biomarkers_mutation_nona, aes(x = -log10(p.value), y = -log10(Corpvalue_23Q4))) +
+  geom_point(size=5) + xlab("-log 10 Before 23Q2 correlation p value") + ylab("-log 10 23Q4 correlation p value") + geom_abline() + xlim(0, 250) + ylim(0, 250)
+p2 =  ggplot(mike_biomarkers_mutation_nona, aes(x = cor, y = Cor_23Q4)) +
+  geom_point(size=5) + xlab("Before 23Q2 Correlation") + ylab("23Q4 correlation") + geom_abline() + xlim(-1, 1) + ylim(-1, 1)
+
+p1 / p2
+
+ggplot(mike_biomarkers_mutation_nona, aes(x = effect_size_23Q4, y = -log10(FDR_23Q4))) +
+  geom_point(aes(color = Significant_23Q4), size=6) +
+  scale_color_manual(values = c("blue", "grey",  "red" )) +
+  theme_bw(base_size = 20) + theme(legend.position = "bottom") +   xlim(-1.5, 1.5) +
+  geom_text_repel(
+    data = subset(mike_biomarkers_mutation_nona, FDR_23Q4 < 0.05),
+    aes(label = CRISPR_Mutation),
+    size = 6,
+    box.padding = unit(1.5, "lines"),
+    point.padding = unit(0.5, "lines")
+  )
+
+```
+
+
+# Signature analysis and embedding
+
+```{r}
+test_23Q4_ccle_maf.tnm = trinucleotideMatrix(maf = test_23Q4_ccle_maf, prefix = '', add = TRUE, ref_genome = "BSgenome.Hsapiens.UCSC.hg38")
+write.table(test_23Q4_ccle_maf.tnm$nmf_matrix, file="23Q4_nmf_maftools.txt", quote=F, sep='\t')
+```
+
+```{r}
+plotApobecDiff(tnm = test_23Q4_ccle_maf.tnm, maf = test_23Q4_ccle_maf, pVal = 0.2)
+```
+
+## Extract signatures
+
+``` {r}
+#test_23Q4_ccle_maf.tnm.sig = extractSignatures(mat = test_23Q4_ccle_maf.tnm, n = 60)
+
+test_23Q4_ccle_maf.tnm.sig = extractSignatures(mat = test_23Q4_ccle_maf.tnm, n = 60)
+
+```
+
+# Mutation embedding for cell lines
+
+```{r}
+NMF_23Q4_cellline = t(test_23Q4_ccle_maf.tnm.sig$nmfObj@fit@H)
+
+library(umap)
+NMF_23Q4_cellline.umap = umap(NMF_23Q4_cellline)
+
+colnames(NMF_23Q4_cellline.umap$layout) = c("Dim1", "Dim2")
+
+library(reshape2)
+
+NMF_umap_plot.data = data.frame(NMF_23Q4_cellline.umap$layout)
+
+NMF_umap_plot.data$Celltype = metadata[match(rownames(NMF_umap_plot.data), metadata$SequencingID), 'Lineage']
+
+ggplot(NMF_umap_plot.data)+geom_point(aes(x=Dim1, y=Dim2, colour=Celltype))
+
+```
+
+
+
+``` {r}
+test_23Q4_ccle_maf.tnm.sig.cosm = compareSignatures(nmfRes = test_23Q4_ccle_maf.tnm.sig, sig_db = "SBS")
+pheatmap(mat = test_23Q4_ccle_maf.tnm.sig.cosm$cosine_similarities, cluster_rows = FALSE, main = "cosine similarity against validated signatures", width=20)
+
+sig.cosine.vector = sapply(test_23Q4_ccle_maf.tnm.sig.cosm$best_match, function(x) x$best_match)
+sig.cosine.vector = as.numeric(gsub("Best match: SBS.* \\[cosine-similarity: ([0-9].[0-9]*)\\]", "\\1", sig.cosine.vector))
+
+names(sig.cosine.vector) = sapply(test_23Q4_ccle_maf.tnm.sig.cosm$best_match, function(x) x$aetiology)
+
+sig.cosine.df = data.frame(rank=rank(sig.cosine.vector), cosine_similarity=sig.cosine.vector, aetiology=sapply(test_23Q4_ccle_maf.tnm.sig.cosm$best_match, function(x) x$aetiology))
+sig.cosine.df = sig.cosine.df %>%
+  group_by(aetiology) %>%
+  summarise(Cosine=mean(cosine_similarity, na.rm=T)) %>%
+  arrange(desc(Cosine))
+sig.cosine.df$rank = rank(sig.cosine.df$Cosine)
+
+# in total 60 NMF signatures, aggregates to 21 by mean cosine similarity
+
+ggplot(sig.cosine.df, aes(x=rank, y=Cosine, colour=aetiology))+geom_point()+
+  geom_label_repel(aes(label = aetiology,
+                    fill = factor(aetiology)), color = 'white',
+                    size = 3.5) +
+   theme(legend.position = "none", panel.spacing.x = unit(0, "mm"), text = element_text(size=16))
+
+```
+
+
+# Signature frequency by arbitrary cutoffs
+
+``` {r}
+
+hist(c(test_23Q4_ccle_maf.tnm.sig$contributions))
+
+sig.cutoff = 0.01
+sig.freq.samples = t(test_23Q4_ccle_maf.tnm.sig$contributions>sig.cutoff)
+
+sig.freq.samples.lineages = metadata[match(rownames(sig.freq.samples), metadata$SequencingID), 'Lineage']
+
+lineages <- c()
+sig.freq.list <- list()
+for (lineage in unique(sig.freq.samples.lineages)) {
+  if (length(dim(sig.freq.samples[sig.freq.samples.lineages==lineage,]))!=0) {
+    sig.freq.samples.each = sig.freq.samples[sig.freq.samples.lineages==lineage,]
+    print(dim(sig.freq.samples.each))
+    sig.freq.list[[lineage]] <- colSums(sig.freq.samples.each)
+    lineages <- c(lineage, lineages)
+  }
+}
+
+sig.freq.mat = Reduce(rbind, sig.freq.list)
+rownames(sig.freq.mat) = lineages
+colnames(sig.freq.mat) = sapply(test_23Q4_ccle_maf.tnm.sig.cosm$best_match, function(x) x$aetiology)
+
+pheatmap(mat = sig.freq.mat, cluster_rows = FALSE, cluster_cols = FALSE, main = "Mutation signatures in different lineages", width=20, color = colorRampPalette(c("white", "red"))(30))
+
+```
+
+# Lung lineage signature
+
+``` {r}
+LUAD_maf.tnm = trinucleotideMatrix(maf = LUAD_maf, prefix = '', add = TRUE, ref_genome = "BSgenome.Hsapiens.UCSC.hg38")
+
+#LUAD_maf.sign = estimateSignatures(mat = LUAD_maf.tnm, nTry = 5)
+
+#plotCophenetic(res = LUAD_maf.sign)
+
+LUAD_maf.tnm.sig = extractSignatures(mat = LUAD_maf.tnm, n = 2)
+
+plotSignatures(nmfRes = LUAD_maf.tnm.sig, title_size = 1.5,
+               ig_db = "SBS", axis_lwd=2)
+```
+
+# Skin lineage signature
+
+``` {r}
+
+SKCM_maf.tnm = trinucleotideMatrix(maf = SKCM_maf, prefix = '', add = TRUE, ref_genome = "BSgenome.Hsapiens.UCSC.hg38")
+
+#SKCM_maf.sign = estimateSignatures(mat = SKCM_maf.tnm, nTry = 5)
+
+#plotCophenetic(res = SKCM_maf.sign)
+
+SKCM_maf.tnm.sig = extractSignatures(mat = SKCM_maf.tnm, n = 2)
+
+plotSignatures(nmfRes = SKCM_maf.tnm.sig, title_size = 1.5, ig_db = "SBS", axis_lwd=2)
+
+```

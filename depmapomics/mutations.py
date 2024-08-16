@@ -187,11 +187,12 @@ def aggregateMAFs(
         samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
         sample_table = sample_table[sample_table.index.isin(samples_in_set)]
     print(mafcol)
-    sample_table_valid = sample_table[~sample_table[mafcol].isna()]
+    sample_table_valid = sample_table[(~sample_table[mafcol].isna()) & ~(sample_table[mafcol]=='')]
     na_samples = set(sample_table.index) - set(sample_table_valid.index)
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
     all_mafs = []
     counter = 0
+    sample_table_valid = sample_table_valid.iloc[:50]
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
         maf = pd.read_csv(row[mafcol])

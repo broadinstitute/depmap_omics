@@ -360,7 +360,7 @@ TOKEEP_BASE = {
     #"dp": "int",
     "ref_count": "int",
     "alt_count": "int",
-    #"gt": "str",
+    "gt": "str",
     #"ps": "str",
     "variant_type": "str",
     "variant_info": "str",

@@ -314,7 +314,7 @@ MUTCOL_DEPMAP = {
     'ref': 'Ref',
     'alt': 'Alt',
     'af': 'AF',
-    'dp': 'DP',
+    #'dp': 'DP',
     'ref_count': 'RefCount',
     'alt_count': 'AltCount',
     'gt': 'GT',

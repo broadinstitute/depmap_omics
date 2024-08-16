@@ -799,7 +799,7 @@ def mutationPostProcessing(
     )
     # wgsmutations.drop(['0915', '0918'], axis=1, inplace=True)
     print('mutations 1:', wgsmutations.columns)
-    #pytest.set_trace()
+    pytest.set_trace()
     wgsmutations_pr = wgsmutations
     print('mutations 2:', wgsmutations_pr.columns)
     # merge0
@@ -839,6 +839,7 @@ def mutationPostProcessing(
     merged = pd.concat([wgsmutations_pr], axis=0).reset_index(
         drop=True
     )
+    pytest.set_trace()
     print('mutations 3:', merged)
     # For all columns, convert "Y" to True/False
     for col in merged.columns:
@@ -850,7 +851,7 @@ def mutationPostProcessing(
     merged.to_csv(folder + "somatic_mutations_all_cols_profile.csv", index=False)
     merged[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(folder + "somatic_mutations_profile.csv", index=False)
     merged[standardmafcol.keys()].to_csv(folder + "somatic_mutations_profile.maf.csv", index=False)
-
+    pytest.set_trace()
     # making genotyped mutation matrices
     print("creating mutation matrices")
     hotspot_mat, lof_mat = mutations.makeMatrices(merged)
