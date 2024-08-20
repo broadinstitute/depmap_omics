@@ -722,7 +722,6 @@ def cnPostProcessing(
     # rename ensg -> hugo (entrez)
     cols_in_portal_table = set(mergedcn.columns) & set(hgnc_table["ensembl_gene_id"])
     mergedcn = mergedcn[cols_in_portal_table].rename(columns=ensg2hugo_entrez_dict)
-
     mergedcn.to_csv(folder + "merged_genecn.csv")
     merged_purecn_segments = wgs_purecn_segments.append(
         wes_purecn_segments
@@ -905,8 +904,12 @@ async def mutationPostProcessing(
     standardmafcol: dict = constants.MUTCOL_STANDARDMAF,
     mafcol: str = constants.MAF_COL,
     run_sv: bool = True,
+    sv_af_cutoff: float = constants.SV_INTERNAL_AF_CUTOFF,
     run_guidemat: bool = True,
     upload_taiga: bool = True,
+    hgnc_mapping_taiga: str = constants.HGNC_MAPPING_TABLE_TAIGAID,
+    hgnc_mapping_table_name: str = constants.HGNC_MAPPING_TABLE_NAME,
+    hgnc_mapping_table_version: int = constants.HGNC_MAPPING_TABLE_VERSION,
     **kwargs,
 ):
     """The full CCLE mutations post processing pipeline (used only by CCLE)
@@ -933,14 +936,14 @@ async def mutationPostProcessing(
 
     # TODO: replace with multiprocessing
     # ./sandbox/dna_eval/combine_mafs.py
-    wesmutations, wessvs = mutations.postProcess(
+    wesmutations, _, _ = mutations.postProcess(
         wes_wm,
         AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
         mafcol=mafcol,
-        run_sv=run_sv,
+        run_sv=False,
         debug=False,
         **kwargs,
     )
@@ -960,7 +963,7 @@ async def mutationPostProcessing(
     print("DOING WGS")
     folder = constants.WORKING_DIR + samplesetname + "/wgs_"
 
-    wgsmutations, wgssvs = mutations.postProcess(
+    wgsmutations, wgssvs, wgs_sv_mat = mutations.postProcess(
         wgs_wm,
         sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
@@ -968,6 +971,7 @@ async def mutationPostProcessing(
         sv_filename=sv_filename,
         mafcol=mafcol,
         run_sv=run_sv,
+        sv_af_cutoff=sv_af_cutoff,
         debug=False,
         **kwargs,
     )
@@ -1008,14 +1012,46 @@ async def mutationPostProcessing(
     )
 
     if run_sv:
-        if wgssvs is not None:
-            mergedsvs = wgssvs.append(wessvs).reset_index(drop=True)
-            mergedsvs.to_csv(folder + "svs.csv", index=False)
-            mergedsvs_pr = mergedsvs[
-                mergedsvs[constants.SAMPLEID].isin(renaming_dict.keys())
+        if wgssvs is not None and wgs_sv_mat is not None:
+            print("saving WGS svs")
+            wgssvs.to_csv(folder + "svs.csv", index=False)
+            wgssvs_pr = wgssvs[
+                wgssvs[constants.SAMPLEID].isin(renaming_dict.keys())
             ].replace({constants.SAMPLEID: renaming_dict})
-            print("saving somatic svs")
-            mergedsvs_pr.to_csv(folder + "svs_profile.csv", index=False)
+            wgssvs_pr.to_csv(folder + "svs_profile.csv", index=False)
+
+            print("map entrez ids to SV matrix columns")
+            # pull the gene id mapping table from taiga dataset maintained by the portal
+            hgnc_table = tc.get(
+                name=hgnc_mapping_taiga,
+                version=hgnc_mapping_table_version,
+                file=hgnc_mapping_table_name,
+            )
+            # some rows in the table are missing entrez ids, replace them with "Unknown"
+            hgnc_table["entrez_id"] = hgnc_table["entrez_id"].fillna("Unknown")
+            hugo_entrez_pairs = list(zip(hgnc_table.symbol, hgnc_table.entrez_id))
+            # generate a dictionary, key: hugo symbol, value: hugo symbol (entrez id)
+            gene_renaming_dict = dict(
+                [
+                    (
+                        (e[0], e[0] + " (" + str(int(e[1])) + ")")
+                        if e[1] != "Unknown"
+                        else (e[0], e[0] + " (Unknown)")
+                    )
+                    for e in hugo_entrez_pairs
+                ]
+            )
+            wgs_sv_mat[
+                list(set(wgs_sv_mat.columns) & set(gene_renaming_dict.keys()))
+            ].rename(columns=gene_renaming_dict).to_csv(
+                folder + "sv_mat_with_entrez.csv"
+            )
+            wgs_sv_mat_pr = wgs_sv_mat[
+                wgs_sv_mat.index.isin(renaming_dict.keys())
+            ].rename(index=renaming_dict)
+            wgs_sv_mat_pr.to_csv(folder + "sv_mat_with_entrez_profile.csv", index=False)
+        else:
+            print("no WGS SVs processed")
 
     merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
         drop=True
@@ -1183,6 +1219,18 @@ async def mutationPostProcessing(
                     {
                         "path": folder + "svs_profile.csv",
                         "name": "structuralVariants_profile",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "sv_mat_with_entrez.csv",
+                        "name": "structuralVariants_geneLevelMatrix_withReplicates",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "sv_mat_with_entrez_profile.csv",
+                        "name": "structuralVariants_geneLevelMatrix_profile",
                         "format": "TableCSV",
                         "encoding": "utf-8",
                     },
