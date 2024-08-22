@@ -1,8 +1,11 @@
+import pytest
+
 from depmapomics import constants
 import dalmatian as dm
 import pandas as pd
 import os.path
 import seaborn as sns
+from tqdm import tqdm
 
 from mgenepy import terra
 
@@ -133,7 +136,7 @@ def standardizeGeneNames(fusions):
 
 def postProcess(
     refworkspace,
-    sampleCol=constants.SAMPLEID,
+    sampleCol='TCGA_sample_id',
     samplesetToLoad="all",
     colnames=constants.FUSION_COLNAME,
     todrop=[],
@@ -167,14 +170,64 @@ def postProcess(
         (pd.df): fusion dataframe
         (pd.df): filtered fusion dataframe
     """
-    refwm = dm.WorkspaceManager(refworkspace)
 
+    """
+R code for aggregating fusions:
+library(plyr)
+library(dplyr)
+library(readr)
+library(stringr)
+
+## reads selected fields from maf files and aggregates them 
+args <- commandArgs(TRUE)
+print(args)
+
+output_file_name = args[1]
+input_file_names = args[2]
+
+# Load files and ensure that we are only reading in files that exist
+fns = as.character(read.csv(input_file_names, header=FALSE)[,])
+fe = sapply(fns, file.exists)
+samples = fns[which(fe)]
+nsamples = length(samples)
+
+# Iterate across samples, read tsv, add the DepMap_ID column and keep the rest of them
+for(i in 1:nsamples){
+  f <- samples[i]
+  
+  # Extract the arxspan id from the file name
+  # sample <- stringr::str_extract(string = f, pattern = 'ACH\\-[0-9]+')
+  
+  # In this workspace, samples are not indexed by ARXSPAND ID but by CCLE_name. Will need to update script in the future
+  sample <- gsub('\\.fusions.annotated$', '', gsub('.*/', '', f))
+  segs <- read_tsv(f, col_names = TRUE, col_types = cols(.default = "c")) %>%
+    mutate(DepMap_ID=sample) %>% 
+    dplyr::select(DepMap_ID, everything())
+  
+  # Write to the output file
+  write.table(segs,  file=output_file_name,  sep='\t', row.names = FALSE, quote = FALSE, append = (i>1), col.names = !(i>1))
+}
+
+    """
+    refwm = dm.WorkspaceManager(refworkspace)
+    samples = refwm.get_samples()
+    fusions_list = []
     print("loading fusions")
-    aggregated = refwm.get_sample_sets().loc[samplesetToLoad]["fusions_star"]
+    # pytest.set_trace()
+    for i,s in tqdm(samples.iterrows()):
+        sample_df = pd.read_csv(s.fusion_tsv,sep='\t')
+        sample_df[sampleCol] = s.name
+        fusions_list.append(sample_df)
+
+    fusions = pd.concat(fusions_list)
+    # pytest.set_trace()
+    #aggregated = refwm.get_sample_sets().loc[samplesetToLoad]["fusions_star"]
+    """
     fusions = pd.read_csv(
         aggregated, names=[sampleCol] + colnames, skiprows=1, sep="\t"
     )
-
+    """
+    fusions = fusions.rename(columns={'#FusionName':'FusionName'})
     fusions[sampleCol] = fusions[sampleCol].str.split(".").str[0]
     print("postprocessing fusions")
     fusions.RightGene = renameFusionGene(fusions.RightGene)

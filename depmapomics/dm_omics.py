@@ -247,7 +247,7 @@ async def expressionPostProcessing(
         print("done")
 
 
-async def fusionPostProcessing(
+def fusionPostProcessing(
     refworkspace=env_config.RNAWORKSPACE,
     sampleset=constants.SAMPLESETNAME,
     fusionSamplecol=constants.SAMPLEID,
@@ -282,8 +282,8 @@ async def fusionPostProcessing(
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
-    folder = folder + sampleset + "/"
-
+    folder = folder + 'tcga' + "/"
+    # pytest.set_trace()
     fusions, fusions_filtered = fusion.postProcess(
         refworkspace,
         todrop=previousQCfail,
@@ -293,13 +293,8 @@ async def fusionPostProcessing(
 
     # subset, rename from seqid to prid, and save pr-indexed matrices
     pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
-    fusions_pr = fusions[
-        fusions[fusionSamplecol].isin(set(renaming_dict.keys()))
-    ].replace({fusionSamplecol: renaming_dict})
-    fusions_filtered_pr = fusions_filtered[
-        fusions_filtered[fusionSamplecol].isin(set(renaming_dict.keys()))
-    ].replace({fusionSamplecol: renaming_dict})
+    fusions_pr = fusions
+    fusions_filtered_pr = fusions_filtered
 
     fusions_pr.to_csv(os.path.join(folder, "fusions_all_profile.csv"), index=False)
     fusions_filtered_pr.to_csv(
@@ -309,32 +304,7 @@ async def fusionPostProcessing(
     mytracker.close_gumbo_client()
 
     # taiga
-    print("uploading to taiga")
-    tc.update_dataset(
-        dataset_permaname=taiga_dataset,
-        changes_description="new " + sampleset + " release!",
-        upload_files=[
-            {
-                "path": folder + "/fusions_all.csv",
-                "name": "fusions_unfiltered_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "/filteredfusions_latest_profile.csv",
-                "name": "fusions_filtered_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "/fusions_all_profile.csv",
-                "name": "fusions_unfiltered_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-        ],
-        dataset_description=dataset_description,
-    )
+
     print("done")
     return fusions
 
