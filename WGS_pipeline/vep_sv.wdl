@@ -9,6 +9,10 @@ workflow VEP_SV_Workflow {
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
+        # code to generate filtered gnomad vcf and index:
+        # bcftools view -f PASS gs://gcp-public-data--gnomad/release/4.1/genome_sv/gnomad.v4.1.sv.sites.vcf.gz > gnomad.v4.1.sv.sites.pass.vcf
+        # bgzip gnomad.v4.1.sv.sites.pass.vcf
+        # bcftools index -t gnomad.v4.1.sv.sites.pass.vcf.gz
         File gnomad = "gs://ccleparams/gnomad.v4.1.sv.sites.pass.vcf.gz"
         File gnomad_idx = "gs://ccleparams/gnomad.v4.1.sv.sites.pass.vcf.gz.tbi"
         File gtf_bed = "gs://ccleparams/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed"
