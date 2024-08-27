@@ -5,12 +5,12 @@ workflow VEP_SV_Workflow {
         File input_vcf
         String sample_id
 
-        File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
+        File vep_data = "gs://cds-vep-data/homo_sapiens_vep_112_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
-        File gnomad = "gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz"
-        File gnomad_idx = "gs://gcp-public-data--gnomad/papers/2019-sv/gnomad_v2.1_sv.sites.vcf.gz.tbi"
+        File gnomad = "gs://ccleparams/gnomad.v4.1.sv.sites.pass.vcf.gz"
+        File gnomad_idx = "gs://ccleparams/gnomad.v4.1.sv.sites.pass.vcf.gz.tbi"
         File gtf_bed = "gs://ccleparams/gencode.v38.primary_assembly.CORRECTED_MISSING_IDs.annotation.GENES_ONLY.bed"
     }
 
