@@ -125,7 +125,7 @@ workflow WGS_pipeline {
 
     call vep_sv.VEP_SV_Workflow as VEP_SV_Workflow{
         input:
-            sv = MantaSomaticSV.somatic_sv_vcf,
+            input_vcf = MantaSomaticSV.somatic_sv_vcf,
             sample_id = sample_name
     }
 
