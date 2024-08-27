@@ -168,7 +168,8 @@ workflow MantaSomaticSV {
                interval_bed_index = ConvertToBedTabix.out_interval_index,
                manta_docker = manta_docker,
                config_manta = config_manta,
-               is_cram = is_cram
+               is_cram = is_cram,
+               is_major_contigs_only = is_major_contigs_only
     }
     output {
         File germline_sv_vcf = Manta.germline_sv_vcf
