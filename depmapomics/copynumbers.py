@@ -558,7 +558,12 @@ def maskGenes(
         .T.to_dict("list")
     )
 
+    gene2gene_entrez_dict = dict(zip(mybiomart["hgnc_symbol"], mybiomart["gene_name"]))
+
     to_rescue = open(rescue_list, "r").read().split('\n')
+    to_rescue = set(to_rescue) & set(mybiomart["hgnc_symbol"])
+    to_rescue = [gene2gene_entrez_dict[g] for g in to_rescue]
+    print("rescuing " + str(len(to_rescue)) + " genes from oncokb's oncogene list")
 
     # segdup
     masked_genes_segdup = []
