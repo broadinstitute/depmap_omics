@@ -740,7 +740,7 @@ def cnPostProcessing(
     whitelist_ms_mat = ms_mat_merged_no_coords[whitelist_cols]
     mergedmat = whitelist_ms_mat.rename(columns=renaming_dict)
 
-    ms_mat = ms_mat_merged.iloc[:, :4].join(mergedmat)
+    ms_mat = ms_mat_merged.iloc[:, :5].join(mergedmat)
     print("saving microsatellite matrix")
     ms_mat.to_csv(folder + "ms_repeat_profile.csv", index=False)
 
