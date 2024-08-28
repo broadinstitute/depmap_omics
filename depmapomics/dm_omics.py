@@ -733,7 +733,9 @@ def cnPostProcessing(
     ms_mat_merged_no_coords = ms_mat_merged.iloc[:, 5:]
 
     # transform from CDSID-level to PR-level
-    whitelist_cols = [x for x in ms_mat_merged_no_coords.columns if x in renaming_dict]
+    whitelist_cols = [
+        x for x in ms_mat_merged_no_coords.columns if x in set(renaming_dict.keys())
+    ]
     whitelist_ms_mat = ms_mat_merged_no_coords[whitelist_cols]
     mergedmat = whitelist_ms_mat.rename(columns=renaming_dict)
 
@@ -832,6 +834,12 @@ def cnPostProcessing(
                 "path": folder + "merged_arm_cna_profile.csv",
                 "name": "armLevelCNA_profile",
                 "format": "NumericMatrixCSV",
+                "encoding": "utf-8",
+            },
+            {
+                "path": folder + "ms_repeat_profile.csv",
+                "name": "ms_repeat_profile",
+                "format": "TableCSV",
                 "encoding": "utf-8",
             },
         ],
