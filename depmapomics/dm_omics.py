@@ -507,6 +507,7 @@ def cnPostProcessing(
             wes_loh,
             wes_feature_table,
             wes_arm_cna,
+            wes_ms_df,
         ) = cn.postProcess(
             wesrefworkspace,
             setEntity=wessetentity,
@@ -545,6 +546,7 @@ def cnPostProcessing(
         wgs_loh,
         wgs_feature_table,
         wgs_arm_cna,
+        wgs_ms_df,
     ) = cn.postProcess(
         wgsrefworkspace,
         setEntity=wgssetentity,
@@ -724,6 +726,20 @@ def cnPostProcessing(
     merged_arm_cna_pr.to_csv(folder + "merged_arm_cna_profile.csv")
     merged_feature_table_pr = wgs_feature_table_pr.append(wes_feature_table_pr)
     merged_feature_table_pr.to_csv(folder + "merged_feature_table_profile.csv")
+
+    # merging microsatellite repeats
+    assert wes_ms_df.iloc[:, :5].equals(wgs_ms_df.iloc[:, :5])
+    ms_mat_merged = pd.concat([wes_ms_df, wgs_ms_df.iloc[:, 5:]], axis=1)
+    ms_mat_merged_no_coords = ms_mat_merged.iloc[:, 5:]
+
+    # transform from CDSID-level to PR-level
+    whitelist_cols = [x for x in ms_mat_merged_no_coords.columns if x in renaming_dict]
+    whitelist_ms_mat = ms_mat_merged_no_coords[whitelist_cols]
+    mergedmat = whitelist_ms_mat.rename(columns=renaming_dict)
+
+    ms_mat = ms_mat_merged.iloc[:, :4].join(mergedmat)
+    print("saving microsatellite matrix")
+    ms_mat.to_csv(folder + "ms_repeat_profile.csv", index=False)
 
     # uploading to taiga
     print("uploading to taiga")

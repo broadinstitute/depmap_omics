@@ -560,7 +560,7 @@ def maskGenes(
 
     gene2gene_entrez_dict = dict(zip(mybiomart["hgnc_symbol"], mybiomart["gene_name"]))
 
-    to_rescue = open(rescue_list, "r").read().split('\n')
+    to_rescue = open(rescue_list, "r").read().split("\n")
     to_rescue = set(to_rescue) & set(mybiomart["hgnc_symbol"])
     to_rescue = [gene2gene_entrez_dict[g] for g in to_rescue]
     print("rescuing " + str(len(to_rescue)) + " genes from oncokb's oncogene list")
@@ -605,9 +605,28 @@ def maskGenes(
         + " of which were not masked by segdup"
     )
 
-    cnmatrix = cnmatrix.drop(columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
+    cnmatrix = cnmatrix.drop(
+        columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue)
+    )
 
     return cnmatrix
+
+
+def read_ms_repeats(refworkspace, sampleset="all", colname="ms_repeats"):
+    """read aggregated microsatellite repeat table into a dataframe
+
+    Args:
+        refworkspace (str): name of the terra workspace
+        sampleset (str): name of the sample set in refworkspace
+        colname (str): name of the column in the sampleset table where the aggregated file is stored
+
+    Returns:
+        ms_df (pd.DataFrame): dataframe containing MS repeats"""
+
+    wm = dm.WorkspaceManager(refworkspace)
+    ms_df = pd.read_csv(wm.get_sample_sets().loc[sampleset, colname])
+
+    return ms_df
 
 
 def postProcess(
@@ -751,6 +770,7 @@ def postProcess(
         id_col=constants.SAMPLEID,
         save_output=save_output,
     )
+    ms_df = read_ms_repeats(refworkspace)
     return (
         segments,
         genecn,
@@ -760,4 +780,5 @@ def postProcess(
         loh_status,
         feature_table,
         cna_table,
+        ms_df,
     )
