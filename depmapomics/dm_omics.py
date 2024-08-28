@@ -533,6 +533,7 @@ def cnPostProcessing(
         wes_feature_table = pd.read_csv(
             wesfolder + "globalGenomicFeaturesWithAneuploidy_all.csv", index_col=0
         )
+        wes_ms_df = pd.read_csv(wesfolder + "ms_repeats_all.csv")
 
     # doing wgs
     print("doing wgs")
@@ -728,6 +729,7 @@ def cnPostProcessing(
     merged_feature_table_pr.to_csv(folder + "merged_feature_table_profile.csv")
 
     # merging microsatellite repeats
+    assert wes_ms_df
     assert wes_ms_df.iloc[:, :5].equals(wgs_ms_df.iloc[:, :5])
     ms_mat_merged = pd.concat([wes_ms_df, wgs_ms_df.iloc[:, 5:]], axis=1)
     ms_mat_merged_no_coords = ms_mat_merged.iloc[:, 5:]

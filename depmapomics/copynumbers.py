@@ -612,7 +612,9 @@ def maskGenes(
     return cnmatrix
 
 
-def read_ms_repeats(refworkspace, sampleset="all", colname="ms_repeats"):
+def read_ms_repeats(
+    refworkspace, sampleset="all", colname="ms_repeats", save_output=""
+):
     """read aggregated microsatellite repeat table into a dataframe
 
     Args:
@@ -625,6 +627,7 @@ def read_ms_repeats(refworkspace, sampleset="all", colname="ms_repeats"):
 
     wm = dm.WorkspaceManager(refworkspace)
     ms_df = pd.read_csv(wm.get_sample_sets().loc[sampleset, colname])
+    ms_df.to_csv(save_output + "ms_repeats_all.csv", index=False)
 
     return ms_df
 
@@ -770,7 +773,7 @@ def postProcess(
         id_col=constants.SAMPLEID,
         save_output=save_output,
     )
-    ms_df = read_ms_repeats(refworkspace)
+    ms_df = read_ms_repeats(refworkspace, save_output=save_output)
     return (
         segments,
         genecn,
