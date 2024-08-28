@@ -729,8 +729,7 @@ def cnPostProcessing(
     merged_feature_table_pr.to_csv(folder + "merged_feature_table_profile.csv")
 
     # merging microsatellite repeats
-    assert wes_ms_df
-    assert wes_ms_df.iloc[:, :5].equals(wgs_ms_df.iloc[:, :5])
+    pd.testing.assert_frame_equal(wes_ms_df.loc[:, :5], wgs_ms_df.loc[:, :5])
     ms_mat_merged = pd.concat([wes_ms_df, wgs_ms_df.iloc[:, 5:]], axis=1)
     ms_mat_merged_no_coords = ms_mat_merged.iloc[:, 5:]
 
