@@ -357,6 +357,8 @@ MUTCOL_DEPMAP = {
     "dna_change": "DNAChange",
     "protein_change": "ProteinChange",
     "hugo_symbol": "HugoSymbol",
+    "exon": "Exon",
+    "intron": "Intron",
     "ensembl_gene_id": "EnsemblGeneID",
     "ensembl_feature_id": "EnsemblFeatureID",
     "hgnc_name": "HgncName",
