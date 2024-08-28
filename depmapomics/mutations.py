@@ -312,6 +312,9 @@ def generate_sv_matrix(
         sv_mat (pd.DataFrame): sample x gene matrix
     """
 
+    df[del_colname] = df[del_colname].fillna(".")
+    df[dup_colname] = df[dup_colname].fillna(".")
+
     # gather all unique gene symbols in the df
     symbols = (
         df[genea_colname].str.split(", ").tolist()
