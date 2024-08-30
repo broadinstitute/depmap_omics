@@ -338,9 +338,10 @@ def generate_sv_matrix(
 
         # for BNDs, get genes at breakpoint A and breakpoint B
         bnds = subset_bedpe[subset_bedpe[type_colname] == "BND"]
-        bnd_genes = bnds[genea_colname].str.split(
-            ", "
-        ).tolist() + bnds[geneb_colname].str.split(", ").tolist()
+        bnd_genes = (
+            bnds[genea_colname].str.split(", ").tolist()
+            + bnds[geneb_colname].str.split(", ").tolist()
+        )
         bnd_genes = set([x for xs in bnd_genes for x in xs])
         bnd_genes.remove(".")
 
@@ -506,9 +507,9 @@ def postProcess(
     return mutations_with_standard_cols, svs, sv_mat
 
 
-def GetVariantClassification(vep_seq_ontology: str, var_type: str, inframe: bool) -> (
-    str
-):
+def GetVariantClassification(
+    vep_seq_ontology: str, var_type: str, inframe: bool
+) -> str:
     """Map VEP sequence ontology into MAF variant classifications,
     VEP consequences is ordered by http://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
     """
@@ -540,29 +541,23 @@ def GetVariantClassification(vep_seq_ontology: str, var_type: str, inframe: bool
     if re.match(r"^(initiator_codon_variant|start_lost)", vep_seq_ontology):
         return "Translation_Start_Site"
 
-    if (
-        re.match(
-            r"^(inframe_insertion|conservative_inframe_insertion|disruptive_inframe_insertion)",
-            vep_seq_ontology,
-        )
-        or (
-            re.match(r"^(protein_altering_variant)", vep_seq_ontology)
-            and inframe
-            and (var_type == "INS")
-        )
+    if re.match(
+        r"^(inframe_insertion|conservative_inframe_insertion|disruptive_inframe_insertion)",
+        vep_seq_ontology,
+    ) or (
+        re.match(r"^(protein_altering_variant)", vep_seq_ontology)
+        and inframe
+        and (var_type == "INS")
     ):
         return "In_Frame_Ins"
 
-    if (
-        re.match(
-            r"^(inframe_deletion|disruptive_inframe_deletion|conservative_inframe_deletion)",
-            vep_seq_ontology,
-        )
-        or (
-            re.match(r"^(protein_altering_variant)", vep_seq_ontology)
-            and inframe
-            and (var_type == "DEL")
-        )
+    if re.match(
+        r"^(inframe_deletion|disruptive_inframe_deletion|conservative_inframe_deletion)",
+        vep_seq_ontology,
+    ) or (
+        re.match(r"^(protein_altering_variant)", vep_seq_ontology)
+        and inframe
+        and (var_type == "DEL")
     ):
         return "In_Frame_Del"
 
