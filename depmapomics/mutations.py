@@ -858,6 +858,14 @@ def postprocess_main_steps(
         (maf["chrom"] == "chr5") & (maf["pos"] == 1295113) & (maf["alt"] == "A"),
         "hotspot",
     ] = True
+
+    # manually classify MET intron13 PPT mutations
+    maf.loc[
+        (maf["chrom"] == "chr7")
+        & (maf["pos"] >= 116771825)
+        & (maf["pos"] <= 116771840),
+        "hotspot",
+    ] = True
     print("unique hotspot genes: ")
     print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
 
