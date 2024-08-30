@@ -878,10 +878,17 @@ def to_maf(
             | (vcf["oncogene_high_impact"])
             | (vcf["tumor_suppressor_high_impact"])
             | (vcf["hess_driver"] == "Y")
+            # rescue TERT intronic mutations
             | (
                 (vcf["hugo_symbol"] == "TERT")
                 & (vcf["pos"] >= 1295054)
                 & (vcf["pos"] <= 1295365)
+            )
+            # rescue MET intron13 PPT mutations
+            | (
+                (vcf["hugo_symbol"] == "MET")
+                & (vcf["pos"] >= 116771825)
+                & (vcf["pos"] <= 116771840)
             )
         )
     if only_coding:
