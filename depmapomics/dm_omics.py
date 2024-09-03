@@ -1004,11 +1004,10 @@ async def mutationPostProcessing(
                     for e in hugo_entrez_pairs
                 ]
             )
-            wgs_sv_mat[
+            wgs_sv_mat = wgs_sv_mat[
                 list(set(wgs_sv_mat.columns) & set(gene_renaming_dict.keys()))
-            ].rename(columns=gene_renaming_dict).to_csv(
-                folder + "sv_mat_with_entrez.csv"
-            )
+            ].rename(columns=gene_renaming_dict)
+            wgs_sv_mat.to_csv(folder + "sv_mat_with_entrez.csv")
             wgs_sv_mat_pr = wgs_sv_mat[
                 wgs_sv_mat.index.isin(renaming_dict.keys())
             ].rename(index=renaming_dict)
