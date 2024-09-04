@@ -18,19 +18,9 @@ workflow RNAStrandWorkflow {
             docker_image=docker_image,
     }
 
-    call parse_line as parse_1pp1mm {
-        input:
-            line = strand.line_1pp1mm
-    }
-
-    call parse_line as parse_1pm1mp {
-        input:
-            line = strand.line_1pm1mp
-    }
-
     output {
-        Float percentage_1pp1mm = parse_1pp1mm.percentage
-        Float percentage_1pm1mp = parse_1pm1mp.percentage
+        Float percentage_1pp1mm = strand_check_task.line_1pp1mm
+        Float percentage_1pm1mp = strand_check_task.line_1pm1mp
         # If fraction explained by 1+-,1-+,2++,2-- is higher than 0.7, it is stranded 
         Boolean inferred_stranded = percentage_1pm1mp > 0.7
     }
@@ -47,14 +37,19 @@ task strand_check_task {
         String docker_image
         Int preemptible=2
         Int boot_disk_size=60
-        Int disk_space=60
         Int cpu = 10
         Int mem = 80
+        Int additional_disk_gb = 0
     }
 
-    command {
-        infer_experiment.py -r ~{refseq} -i ~{input_bam}
-    }
+    Int disk_space = ceil(size(input_bam, "GiB")) + 10 + additional_disk_gb
+
+    command <<<
+        infer_experiment.py -r ~{refseq} -i ~{input_bam} > results.txt
+        
+        sed -n '4p' results.txt | grep -oE "[^:]+$" > 1pp1mm
+        sed -n '5p' results.txt | grep -oE "[^:]+$" > 1pm1mp
+    >>>
 
     runtime {
         disks: "local-disk ~{disk_space} SSD"
@@ -66,21 +61,7 @@ task strand_check_task {
     }
 
     output {
-        String line_1pp1mm = read_lines(stdout())[4]
-        String line_1pm1mp = read_lines(stdout())[5]
-    }
-}
-
-task parse_line {
-    input {
-        String line
-    }
-
-    command {
-        echo ~{line} | grep -oE "[^:]+$"
-    }
-
-    output {
-        Float percentage = read_float(stdout())
+        Float line_1pp1mm = read_float("1pp1mm")
+        Float line_1pm1mp = read_float("1pm1mp")
     }
 }
