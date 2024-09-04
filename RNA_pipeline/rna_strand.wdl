@@ -8,11 +8,6 @@ workflow RNAStrandWorkflow {
 
         String sample_id
         String docker_image = "us-docker.pkg.dev/depmap-omics/public/strand:24q2"
-
-        Int boot_disk_size=60
-        Int disk_space=60
-        Int cpu = 10
-        Int mem = 80
     }
 
     call strand_check_task as strand {
@@ -20,12 +15,7 @@ workflow RNAStrandWorkflow {
             input_bam=input_bam,
             refseq=refseq,
             sample_id=sample_id,
-
             docker_image=docker_image,
-            boot_disk_size=boot_disk_size,
-            disk_space=disk_space,
-            cpu = cpu,
-            mem = mem
     }
 
     call parse_line as parse_1pp1mm {
@@ -67,7 +57,7 @@ task strand_check_task {
     }
 
     runtime {
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible
