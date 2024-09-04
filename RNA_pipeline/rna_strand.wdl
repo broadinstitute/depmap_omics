@@ -19,8 +19,8 @@ workflow RNAStrandWorkflow {
     }
 
     output {
-        Float percentage_1pp1mm = strand_check_task.line_1pp1mm
-        Float percentage_1pm1mp = strand_check_task.line_1pm1mp
+        Float percentage_1pp1mm = strand.line_1pp1mm
+        Float percentage_1pm1mp = strand.line_1pm1mp
         # If fraction explained by 1+-,1-+,2++,2-- is higher than 0.7, it is stranded 
         Boolean inferred_stranded = percentage_1pm1mp > 0.7
     }
@@ -47,8 +47,8 @@ task strand_check_task {
     command <<<
         infer_experiment.py -r ~{refseq} -i ~{input_bam} > results.txt
         
-        sed -n '4p' results.txt | grep -oE "[^:]+$" > 1pp1mm
-        sed -n '5p' results.txt | grep -oE "[^:]+$" > 1pm1mp
+        sed -n '5p' results.txt | grep -oE "[^:]+$" > 1pp1mm
+        sed -n '6p' results.txt | grep -oE "[^:]+$" > 1pm1mp
     >>>
 
     runtime {
