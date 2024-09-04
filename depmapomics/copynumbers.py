@@ -453,7 +453,6 @@ def maskGenes(
     mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
         {23: "X", 24: "Y", 25: "MT"}
     )
-    mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
     mybiomart["Chromosome"] = "chr" + mybiomart["Chromosome"].astype(str)
 
     mybiomart[["Chromosome", "start", "end", "ensembl_gene_id"]].to_csv(
@@ -561,7 +560,9 @@ def maskGenes(
         .T.to_dict("list")
     )
 
-    to_rescue = open(rescue_list, "r").read().split("\n")
+    with open(rescue_list, "r") as f:
+        to_rescue = f.read().splitlines()
+
     to_rescue = set(to_rescue) & set(mybiomart["ensembl_gene_id"])
 
     print("rescuing " + str(len(to_rescue)) + " genes from oncokb's oncogene list")

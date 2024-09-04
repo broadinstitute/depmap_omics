@@ -593,7 +593,8 @@ def cnPostProcessing(
     pr_table = mytracker.update_pr_from_seq(["wgs"])
     pr_table = mytracker.update_pr_from_seq(["wes"])
 
-    genes_to_mask = open(masked_gene_list, "r").read().split("\n")
+    with open(masked_gene_list, "r") as f:
+        genes_to_mask = f.read().splitlines()
 
     mytracker.close_gumbo_client()
 
@@ -706,14 +707,19 @@ def cnPostProcessing(
     )
     # drop genes without entrez ids
     # drop genes that should be masked
-    hgnc_table = hgnc_table[(~hgnc_table["entrez_id"].isna()) & (~hgnc_table['ensembl_gene_id'].isin(genes_to_mask))]
+    hgnc_table = hgnc_table[
+        (~hgnc_table["entrez_id"].isna())
+        & (~hgnc_table["ensembl_gene_id"].isin(genes_to_mask))
+    ]
     hgnc_table["hugo_entrez"] = (
         hgnc_table["symbol"].astype(str)
         + " ("
         + hgnc_table["entrez_id"].astype("Int64").astype(str)
         + ")"
     )
-    ensg2hugo_entrez_dict = dict(zip(hgnc_table["ensembl_gene_id"], hgnc_table["hugo_entrez"]))
+    ensg2hugo_entrez_dict = dict(
+        zip(hgnc_table["ensembl_gene_id"], hgnc_table["hugo_entrez"])
+    )
 
     # merging wes and wgs
     # CDS-ID level
@@ -741,12 +747,8 @@ def cnPostProcessing(
     merged_purecn_genecn.to_csv(folder + "merged_absolute_genecn.csv")
     merged_loh = wgs_loh.append(wes_loh)
     # rename ensg -> hugo (entrez)
-    cols_in_portal_table = set(merged_loh.columns) & set(
-        hgnc_table["ensembl_gene_id"]
-    )
-    merged_loh = merged_loh[cols_in_portal_table].rename(
-        columns=ensg2hugo_entrez_dict
-    )
+    cols_in_portal_table = set(merged_loh.columns) & set(hgnc_table["ensembl_gene_id"])
+    merged_loh = merged_loh[cols_in_portal_table].rename(columns=ensg2hugo_entrez_dict)
     merged_loh.to_csv(folder + "merged_loh.csv")
     merged_arm_cna = wes_arm_cna.append(wgs_arm_cna)
     merged_arm_cna.to_csv(folder + "merged_arm_cna.csv")
