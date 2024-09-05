@@ -338,9 +338,10 @@ def generate_sv_matrix(
 
         # for BNDs, get genes at breakpoint A and breakpoint B
         bnds = subset_bedpe[subset_bedpe[type_colname] == "BND"]
-        bnd_genes = bnds[genea_colname].str.split(
-            ", "
-        ).tolist() + bnds[geneb_colname].str.split(", ").tolist()
+        bnd_genes = (
+            bnds[genea_colname].str.split(", ").tolist()
+            + bnds[geneb_colname].str.split(", ").tolist()
+        )
         bnd_genes = set([x for xs in bnd_genes for x in xs])
         bnd_genes.remove(".")
 
@@ -506,9 +507,9 @@ def postProcess(
     return mutations_with_standard_cols, svs, sv_mat
 
 
-def GetVariantClassification(vep_seq_ontology: str, var_type: str, inframe: bool) -> (
-    str
-):
+def GetVariantClassification(
+    vep_seq_ontology: str, var_type: str, inframe: bool
+) -> str:
     """Map VEP sequence ontology into MAF variant classifications,
     VEP consequences is ordered by http://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
     """
@@ -540,29 +541,23 @@ def GetVariantClassification(vep_seq_ontology: str, var_type: str, inframe: bool
     if re.match(r"^(initiator_codon_variant|start_lost)", vep_seq_ontology):
         return "Translation_Start_Site"
 
-    if (
-        re.match(
-            r"^(inframe_insertion|conservative_inframe_insertion|disruptive_inframe_insertion)",
-            vep_seq_ontology,
-        )
-        or (
-            re.match(r"^(protein_altering_variant)", vep_seq_ontology)
-            and inframe
-            and (var_type == "INS")
-        )
+    if re.match(
+        r"^(inframe_insertion|conservative_inframe_insertion|disruptive_inframe_insertion)",
+        vep_seq_ontology,
+    ) or (
+        re.match(r"^(protein_altering_variant)", vep_seq_ontology)
+        and inframe
+        and (var_type == "INS")
     ):
         return "In_Frame_Ins"
 
-    if (
-        re.match(
-            r"^(inframe_deletion|disruptive_inframe_deletion|conservative_inframe_deletion)",
-            vep_seq_ontology,
-        )
-        or (
-            re.match(r"^(protein_altering_variant)", vep_seq_ontology)
-            and inframe
-            and (var_type == "DEL")
-        )
+    if re.match(
+        r"^(inframe_deletion|disruptive_inframe_deletion|conservative_inframe_deletion)",
+        vep_seq_ontology,
+    ) or (
+        re.match(r"^(protein_altering_variant)", vep_seq_ontology)
+        and inframe
+        and (var_type == "DEL")
     ):
         return "In_Frame_Del"
 
@@ -781,6 +776,55 @@ def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
         return False
 
 
+def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
+    """add column to indicate why variants are rescued"""
+    # initialize column as empty lists
+    maf[rescue_reason_colname] = [[] for _ in range(maf.shape[0])]
+    maf.loc[
+        (maf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
+        | (maf["oncokb_oncogenic"] == "Oncogenic")
+        | (maf["oncokb_hotspot"] == "Y"),
+        "rescue_reason",
+    ].apply(lambda x: x.append("OncoKB"))
+    maf.loc[(maf["cosmic_tier"] == 1), "rescue_reason"].apply(
+        lambda x: x.append("Cosmic")
+    )
+    maf.loc[(maf["brca1_func_score"].astype(float) <= -1.328), "rescue_reason"].apply(
+        lambda x: x.append("BRCA1_score")
+    )
+    maf.loc[(maf["oncogene_high_impact"] == True), "rescue_reason"].apply(
+        lambda x: x.append("Oncogene_high_impact")
+    )
+    maf.loc[(maf["tumor_suppressor_high_impact"] == True), "rescue_reason"].apply(
+        lambda x: x.append("TS_high_impact")
+    )
+    maf.loc[(maf["hess_driver"] == "Y"), "rescue_reason"].apply(
+        lambda x: x.append("Hess")
+    )
+    maf.loc[
+        (
+            (maf["Hugo_Symbol"] == "TERT")
+            & (maf["pos"] >= 1295054)
+            & (maf["pos"] <= 1295365)
+        ),
+        "rescue_reason",
+    ].apply(lambda x: x.append("TERT"))
+    maf.loc[
+        (
+            (maf["Hugo_Symbol"] == "MET")
+            & (maf["pos"] >= 116771825)
+            & (maf["pos"] <= 116771840)
+        ),
+        "rescue_reason",
+    ].apply(lambda x: x.append("MET"))
+
+    maf[rescue_reason_colname] = maf[rescue_reason_colname].apply(
+        lambda x: ", ".join(x)
+    )
+
+    return maf
+
+
 def postprocess_main_steps(
     maf: pd.DataFrame,
     adjusted_gnomad_af_cutoff: float = 1e-3,
@@ -865,6 +909,9 @@ def postprocess_main_steps(
     ] = True
     print("unique hotspot genes: ")
     print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
+
+    # add rescue reason column
+    maf = addRescueReason(maf)
 
     # step 8: remove high af from DepMap cohort
     internal_afs = maf.loc[
