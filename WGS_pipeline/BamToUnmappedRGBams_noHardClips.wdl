@@ -92,7 +92,7 @@ task RevertSam {
   }
   runtime {
     docker: docker
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
     memory: machine_mem_gb + " GB"
     preemptible: preemptible_attempts
   }
@@ -125,7 +125,7 @@ task SortSam {
   }
   runtime {
     docker: docker
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
     memory: machine_mem_gb + " GB"
     preemptible: preemptible_attempts
   }

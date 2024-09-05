@@ -40,7 +40,7 @@ task msisensor2 {
 	runtime {
 		docker: "davidwu20/msisensor2:1"
 		memory: "${memory}GB"
-		disks: "local-disk ${disk_space} HDD"
+		disks: "local-disk ${disk_space} SSD"
 		cpu: "${num_threads}"
 		preemptible: "${num_preempt}"
 	}

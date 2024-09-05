@@ -514,7 +514,7 @@ task DenoiseReadCounts {
     String gatk_docker
     Int? mem_gb
     Int? disk_space_gb
-    Boolean use_ssd = false
+    Boolean use_ssd = true
     Int? cpu
     Int? preemptible_attempts
 
@@ -579,7 +579,7 @@ task ModelSegments {
     String gatk_docker
     Int? mem_gb
     Int? disk_space_gb
-    Boolean use_ssd = false
+    Boolean use_ssd = true
     Int? cpu
     Int? preemptible_attempts
 
@@ -667,7 +667,7 @@ task CallCopyRatioSegments {
     String gatk_docker
     Int? mem_gb
     Int? disk_space_gb
-    Boolean use_ssd = false
+    Boolean use_ssd = true
     Int? cpu
     Int? preemptible_attempts
 
@@ -714,7 +714,7 @@ task PlotDenoisedCopyRatios {
     String gatk_docker
     Int? mem_gb
     Int? disk_space_gb
-    Boolean use_ssd = false
+    Boolean use_ssd = true
     Int? cpu
     Int? preemptible_attempts
 
@@ -773,7 +773,7 @@ task PlotModeledSegments {
     String gatk_docker
     Int? mem_gb
     Int? disk_space_gb
-    Boolean use_ssd = false
+    Boolean use_ssd = true
     Int? cpu
     Int? preemptible_attempts
 
