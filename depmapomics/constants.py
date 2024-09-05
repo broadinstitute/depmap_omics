@@ -424,6 +424,7 @@ MUTCOL_DEPMAP = {
     "am_class": "AMClass",
     "am_pathogenicity": "AMPathogenicity",
     "rescue": "Rescue",
+    "rescue_reason": "RescueReason",
     "DepMap_ID": "DepMap_ID",
 }
 
