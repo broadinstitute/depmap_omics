@@ -21,7 +21,7 @@ task ExonUsage {
   runtime {
     docker: "us-docker.pkg.dev/depmap-omics/public/ccle_docker_r"
     memory: "10GB"
-    disks: "local-disk 50 HDD"
+    disks: "local-disk 50 SSD"
     preemptible: "5"
   }
 }

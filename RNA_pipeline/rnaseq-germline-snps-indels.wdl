@@ -255,7 +255,7 @@ task SplitNCigarReads {
  	}
 
     runtime {
-    	disks: "local-disk " + sub(((size(input_bam,"GB")+1)*6 + size(ref_fasta,"GB")),"\\..*","") + " HDD"
+    	disks: "local-disk " + sub(((size(input_bam,"GB")+1)*6 + size(ref_fasta,"GB")),"\\..*","") + " SSD"
 		docker: docker
 		memory: select_first([memory,16])+" GB"
     	preemptible: preemptible_count
@@ -293,7 +293,7 @@ task SplitNCigarReads_GATK4 {
         }
 
     runtime {
-        disks: "local-disk " + sub(((size(input_bam,"GB")+1)*6 + size(ref_fasta,"GB")),"\\..*","") + " HDD"
+        disks: "local-disk " + sub(((size(input_bam,"GB")+1)*6 + size(ref_fasta,"GB")),"\\..*","") + " SSD"
         docker: docker
         memory: select_first([memory,16])+" GB"
         preemptible: preemptible_count
@@ -341,7 +341,7 @@ task BaseRecalibrator {
 
     runtime {
         memory: select_first([memory,16])+" GB"
-        disks: "local-disk " + sub((size(input_bam,"GB")*3)+100, "\\..*", "") + " HDD"
+        disks: "local-disk " + sub((size(input_bam,"GB")*3)+100, "\\..*", "") + " SSD"
         docker: docker
         preemptible: preemptible_count
     }
@@ -384,7 +384,7 @@ task ApplyBQSR {
 
     runtime {
         memory: select_first([memory,16])+" GB"
-        disks: "local-disk 300 HDD"
+        disks: "local-disk 300 SSD"
         preemptible: preemptible_count
         docker: docker
     }
@@ -431,7 +431,7 @@ task HaplotypeCaller {
 	runtime {
 		docker: docker
 		memory: select_first([memory,6])+" GB"
-		disks: "local-disk " + sub((size(input_bam,"GB")*2)+100, "\\..*", "") + " HDD"
+		disks: "local-disk " + sub((size(input_bam,"GB")*2)+100, "\\..*", "") + " SSD"
 		preemptible: preemptible_count
 	}
 }
@@ -480,7 +480,7 @@ task HaplotypeCaller_GATK4 {
 	runtime {
 		docker: docker
 		memory: select_first([memory,10])+" GB"
-		disks: "local-disk " + sub((size(input_bam,"GB")*2)+100, "\\..*", "") + " HDD"
+		disks: "local-disk " + sub((size(input_bam,"GB")*2)+100, "\\..*", "") + " SSD"
 		preemptible: preemptible_count
 	}
 }
@@ -523,7 +523,7 @@ task VariantFiltration {
 		docker: docker
         bootDiskSizeGb: "32"
 		memory: select_first([memory,6])+" GB"
-		disks: "local-disk " + sub((size(input_vcf,"GB")*3)+180, "\\..*", "") + " HDD"
+		disks: "local-disk " + sub((size(input_vcf,"GB")*3)+180, "\\..*", "") + " SSD"
 		preemptible: preemptible_count
 	}
 }
@@ -557,7 +557,7 @@ task MergeVCFs {
 
     runtime {
         memory: select_first([memory,6])+" GB"
-        disks: "local-disk " + disk_size + " HDD"
+        disks: "local-disk " + disk_size + " SSD"
         docker: docker
         preemptible: preemptible_count
     }
@@ -602,7 +602,7 @@ task ScatterIntervalList {
     }
 
     runtime {
-        disks: "local-disk 1 HDD"
+        disks: "local-disk 1 SSD"
         memory: select_first([memory,4])+" GB"
         docker: docker
         preemptible: preemptible_count
@@ -651,7 +651,7 @@ task ScatterIntervalList_GATK4 {
     }
 
     runtime {
-        disks: "local-disk 1 HDD"
+        disks: "local-disk 1 SSD"
         memory: select_first([memory,4])+" GB"
         docker: docker
         preemptible: preemptible_count
@@ -685,7 +685,7 @@ task RevertSam {
 
     runtime {
         docker: docker
-        disks: "local-disk " + sub(((size(input_bam,"GB")+1)*5),"\\..*","") + " HDD"
+        disks: "local-disk " + sub(((size(input_bam,"GB")+1)*5),"\\..*","") + " SSD"
         memory: "8 GB"
         preemptible: preemptible_count
     }

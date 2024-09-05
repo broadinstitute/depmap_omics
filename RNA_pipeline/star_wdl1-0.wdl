@@ -127,7 +127,7 @@ task star {
     runtime {
         docker: "gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10"
         memory: "${memory}GB"
-        disks: "local-disk ${disk_space} HDD"
+        disks: "local-disk ${disk_space} SSD"
         cpu: "${num_threads}"
         preemptible: "${num_preempt}"
     }
