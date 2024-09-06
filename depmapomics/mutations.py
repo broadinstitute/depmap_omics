@@ -777,9 +777,18 @@ def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
 
 
 def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
-    """add column to indicate why variants are rescued"""
+    """add column to indicate why variants are rescued
+
+    Args:
+        maf (df): MAF-like dataframe containing variants
+        rescue_reason_colname (str): name of the rescue reason column
+
+    Returns:
+        maf (df): MAF-like dataframe containing variants, with rescue reason"""
     # initialize column as empty lists
     maf[rescue_reason_colname] = [[] for _ in range(maf.shape[0])]
+
+    # go over each possible rescue reason in vcf_to_depmap and append them to the list
     maf.loc[
         (maf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
         | (maf["oncokb_oncogenic"] == "Oncogenic")
@@ -818,6 +827,7 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
         "rescue_reason",
     ].apply(lambda x: x.append("MET"))
 
+    # join list of strings into one big string
     maf[rescue_reason_colname] = maf[rescue_reason_colname].apply(
         lambda x: ", ".join(x)
     )
