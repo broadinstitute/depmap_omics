@@ -394,7 +394,7 @@ task SplitNCigarReads_GATK4 {
   }
 
   runtime {
-    disks: "local-disk "+select_first([disk,200])+" HDD"
+    disks: "local-disk "+select_first([disk,200])+" SSD"
     docker: docker
     memory: select_first([memory,16])+" GB"
     preemptible: select_first([preemptible_count, 10])
@@ -445,7 +445,7 @@ task BaseRecalibrator {
 
   runtime {
     memory: select_first([memory,16])+" GB"
-    disks: "local-disk "+ select_first([disk,200])+" HDD"
+    disks: "local-disk "+ select_first([disk,200])+" SSD"
     docker: docker
     preemptible: select_first([preemptible_count, 10])
   }
@@ -491,7 +491,7 @@ task ApplyBQSR {
 
   runtime {
     memory: select_first([memory,16])+" GB"
-    disks: "local-disk 300 HDD"
+    disks: "local-disk 300 SSD"
     preemptible: select_first([preemptible_count, 10])
     docker: docker
   }
@@ -531,7 +531,7 @@ task MergeVCFs {
 
   runtime {
     memory: select_first([memory,6])+" GB"
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
     docker: docker
     preemptible: select_first([preemptible_count, 10])
   }
@@ -580,7 +580,7 @@ task ScatterIntervalList_GATK4 {
   }
 
   runtime {
-    disks: "local-disk 1 HDD"
+    disks: "local-disk 1 SSD"
     memory: select_first([memory,4])+" GB"
     docker: docker
     preemptible: select_first([preemptible_count, 10])
@@ -620,7 +620,7 @@ task RevertSam {
 
   runtime {
     docker: docker
-    disks: "local-disk "+select_first([disk,200])+" HDD"
+    disks: "local-disk "+select_first([disk,200])+" SSD"
     memory: "8 GB"
     preemptible: select_first([preemptible_count, 10])
   }
@@ -661,7 +661,7 @@ task M2 {
     Int? max_retries
     Int? disk_space
     Int? cpu
-    Boolean use_ssd = false
+    Boolean use_ssd = true
   }
 
   String output_vcf = "output" + if compress then ".vcf.gz" else ".vcf"
@@ -759,7 +759,7 @@ task M2 {
     docker: gatk_docker
     bootDiskSizeGb: 12
     memory: machine_mem + " MB"
-    disks: "local-disk " + select_first([disk_space, 100]) + if use_ssd then " SSD" else " HDD"
+    disks: "local-disk " + select_first([disk_space, 100]) + if use_ssd then " SSD" else " SSD"
     preemptible: select_first([preemptible, 10])
     maxRetries: select_first([max_retries, 0])
     cpu: select_first([cpu, 1])
@@ -796,7 +796,7 @@ task MergeStats {
     docker: runtime_params.gatk_docker
     bootDiskSizeGb: runtime_params.boot_disk_size
     memory: runtime_params.machine_mem + " MB"
-    disks: "local-disk " + runtime_params.disk + " HDD"
+    disks: "local-disk " + runtime_params.disk + " SSD"
     preemptible: runtime_params.preemptible
     maxRetries: runtime_params.max_retries
     cpu: runtime_params.cpu
@@ -856,7 +856,7 @@ task Filter {
     docker: runtime_params.gatk_docker
     bootDiskSizeGb: runtime_params.boot_disk_size
     memory: runtime_params.machine_mem + " MB"
-    disks: "local-disk " + select_first([disk_space, runtime_params.disk]) + " HDD"
+    disks: "local-disk " + select_first([disk_space, runtime_params.disk]) + " SSD"
     preemptible: runtime_params.preemptible
     maxRetries: runtime_params.max_retries
     cpu: runtime_params.cpu
@@ -991,7 +991,7 @@ task Funcotate {
     docker: runtime_params.gatk_docker
     bootDiskSizeGb: runtime_params.boot_disk_size
     memory: runtime_params.machine_mem + " MB"
-    disks: "local-disk " + select_first([disk_space, runtime_params.disk]) + " HDD"
+    disks: "local-disk " + select_first([disk_space, runtime_params.disk]) + " SSD"
     preemptible: runtime_params.preemptible
     maxRetries: runtime_params.max_retries
     cpu: runtime_params.cpu
@@ -1045,7 +1045,7 @@ task VariantFiltration {
     docker: docker
     bootDiskSizeGb: "32"
     memory: select_first([memory,6])+" GB"
-    disks: "local-disk "+select_first([disk, 250])+" HDD"
+    disks: "local-disk "+select_first([disk, 250])+" SSD"
     preemptible: select_first([preemptible_count, 10])
   }
 }
@@ -1109,7 +1109,7 @@ task picard_CleanAfterStar {
     docker: docker
     bootDiskSizeGb: "32"
     memory: select_first([memory,6])+" GB"
-    disks: "local-disk "+select_first([disk, 250])+" HDD"
+    disks: "local-disk "+select_first([disk, 250])+" SSD"
     preemptible: select_first([preemptible_count, 10])
   }
 }
