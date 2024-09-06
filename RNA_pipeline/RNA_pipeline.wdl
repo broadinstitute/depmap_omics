@@ -14,6 +14,7 @@ workflow RNA_pipeline {
   #samtofastq_v1
   File input_bam_cram
   File reference_fasta
+  File reference_fasta_index
 
   #star_v1
   File star_index
@@ -61,7 +62,8 @@ workflow RNA_pipeline {
     input:
       input_bam_cram=input_bam_cram,
       prefix=sample_id,
-      reference_fasta=reference_fasta
+      reference_fasta=reference_fasta,
+      reference_index=reference_fasta_index
   }
 
   call star_v1.star as star {

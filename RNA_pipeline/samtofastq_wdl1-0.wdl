@@ -5,7 +5,8 @@ task samtofastq {
     input {
         File input_bam_cram
         String prefix
-        File? reference_fasta
+        File reference_fasta
+        File reference_index
 
         Float memory = 64
         Int java_memory = floor(memory - 0.5)
