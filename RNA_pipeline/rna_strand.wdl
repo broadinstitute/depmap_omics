@@ -35,10 +35,9 @@ task strand_check_task {
         String sample_id
 
         String docker_image
-        Int preemptible=2
-        Int boot_disk_size=60
-        Int cpu = 10
-        Int mem = 80
+        Int preemptible = 2
+        Int cpu = 1
+        Int mem_gb = 8
         Int additional_disk_gb = 0
     }
 
@@ -53,10 +52,9 @@ task strand_check_task {
 
     runtime {
         disks: "local-disk ~{disk_space} SSD"
-        memory: "~{mem} GB"
+        memory: "~{mem_gb} GB"
         cpu: cpu
         preemptible: preemptible
-        bootDiskSizeGb: boot_disk_size
         docker: docker_image
     }
 
