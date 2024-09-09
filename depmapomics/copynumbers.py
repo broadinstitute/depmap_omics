@@ -314,6 +314,7 @@ def pureCNpostprocess(
         mappingdf,
         style="closest",
         value_colname="SegmentAbsoluteCN",
+        gene_names_col="ensembl_gene_id",
     )
 
     segments = segments[
@@ -328,11 +329,6 @@ def pureCNpostprocess(
         absolute_genecn.values.min(),
         absolute_genecn.values.mean(),
         absolute_genecn.values.max(),
-    )
-
-    # masking
-    absolute_genecn = maskGenes(
-        absolute_genecn, mappingdf, "absolute CN", save_output=save_output + "purecn_"
     )
 
     print("PureCN: saving seg and gene cn files")
@@ -352,11 +348,7 @@ def pureCNpostprocess(
         mappingdf,
         style="closest",
         value_colname="LoHStatus",
-    )
-
-    # masking
-    loh_status = maskGenes(
-        loh_status, mappingdf, "LoH", save_output=save_output + "loh_"
+        gene_names_col="ensembl_gene_id",
     )
 
     loh_status = loh_status[~loh_status.index.isin(set(failed) | set(todrop))]
@@ -424,19 +416,32 @@ def exonUnion(df):
 
 
 def maskGenes(
-    cnmatrix,
-    mybiomart,
-    matname,
     save_output="",
     maskthresh=constants.GENEMASKTHRESH,
     segdup_bed=constants.SEGDUP_BED,
     repeat_bed=constants.RM_BED,
     bedtoolspath=constants.BEDTOOLSPATH,
-    rescue_list=constants.ONCOKB_ONCOGENE_LIST,
+    rescue_list=constants.ONCOKB_ONCOGENE_ENSG_LIST,
 ):
     """given a bed file consisting of highly repeated/duplicated regions, mask
     genes that overlap with those regions (a gene is masked if the portion of its gene
-    body length that overlaps with those regions is higher than maskthresh)"""
+    body length that overlaps with those regions is higher than maskthresh)
+
+    Returns a list of geness to be masked, minus rescue (intersection with oncokb oncogenes)
+    """
+    mybiomart = h.generateGeneNames(
+        ensemble_server=constants.ENSEMBL_SERVER_V,
+        attributes=["start_position", "end_position", "chromosome_name"],
+    )
+    mybiomart = mybiomart.rename(
+        columns={
+            "start_position": "start",
+            "end_position": "end",
+            "chromosome_name": "Chromosome",
+        }
+    )
+    mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
+    mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
 
     # sort and format biomart
     mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
@@ -448,11 +453,9 @@ def maskGenes(
     mybiomart["Chromosome"] = mybiomart["Chromosome"].replace(
         {23: "X", 24: "Y", 25: "MT"}
     )
-    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
     mybiomart["Chromosome"] = "chr" + mybiomart["Chromosome"].astype(str)
 
-    mybiomart = mybiomart[mybiomart.gene_name.isin(cnmatrix)]
-    mybiomart[["Chromosome", "start", "end", "gene_name"]].to_csv(
+    mybiomart[["Chromosome", "start", "end", "ensembl_gene_id"]].to_csv(
         save_output + "biomart_cngenes.bed", sep="\t", header=False, index=False
     )
 
@@ -473,11 +476,11 @@ def maskGenes(
     overlap_segdup = pd.read_csv(
         save_output + "mask_overlap_segdup.bed",
         sep="\t",
-        names=["chrom", "start", "end", "gene_name"],
+        names=["chrom", "start", "end", "ensembl_gene_id"],
     )
 
     # download and reformat exon info
-    biomart_exon_raw = h.generateGeneNames(
+    biomart_exon = h.generateGeneNames(
         attributes=[
             "chromosome_name",
             "exon_chrom_start",
@@ -486,14 +489,11 @@ def maskGenes(
         ],
         default_attr=[],
     )
-    biomart_exon = biomart_exon_raw.merge(
-        mybiomart[["ensembl_gene_id", "gene_name"]], on=["ensembl_gene_id"], how="left"
-    )
-    biomart_exon = biomart_exon[biomart_exon.gene_name.isin(cnmatrix)]
 
     biomart_exon_union = (
         pd.DataFrame(
-            biomart_exon.groupby(["gene_name"]).apply(exonUnion), columns=["exons"]
+            biomart_exon.groupby(["ensembl_gene_id"]).apply(exonUnion),
+            columns=["exons"],
         )
         .reset_index()
         .explode("exons")
@@ -501,13 +501,15 @@ def maskGenes(
     )
     biomart_exon_union = pd.concat(
         [
-            biomart_exon_union[["gene_name"]],
+            biomart_exon_union[["ensembl_gene_id"]],
             pd.DataFrame(biomart_exon_union["exons"].tolist()).add_prefix("col"),
         ],
         axis=1,
     )
     biomart_exon_union = biomart_exon_union.merge(
-        biomart_exon[["gene_name", "chromosome_name"]], on=["gene_name"], how="left"
+        biomart_exon[["ensembl_gene_id", "chromosome_name"]],
+        on=["ensembl_gene_id"],
+        how="left",
     )
     biomart_exon_union["chromosome_name"] = biomart_exon_union[
         "chromosome_name"
@@ -528,7 +530,7 @@ def maskGenes(
         "chromosome_name"
     ].astype(str)
 
-    biomart_exon_union[["chromosome_name", "col0", "col1", "gene_name"]].to_csv(
+    biomart_exon_union[["chromosome_name", "col0", "col1", "ensembl_gene_id"]].to_csv(
         save_output + "biomart_exons.bed", sep="\t", header=False, index=False
     )
 
@@ -549,67 +551,50 @@ def maskGenes(
     overlap_rm = pd.read_csv(
         save_output + "mask_overlap_rm.bed",
         sep="\t",
-        names=["chrom", "start", "end", "gene_name"],
+        names=["chrom", "start", "end", "ensembl_gene_id"],
     )
 
     gene_dict = (
-        mybiomart[["Chromosome", "start", "end", "gene_name"]]
-        .set_index("gene_name")
+        mybiomart[["Chromosome", "start", "end", "ensembl_gene_id"]]
+        .set_index("ensembl_gene_id")
         .T.to_dict("list")
     )
 
-    gene2gene_entrez_dict = dict(zip(mybiomart["hgnc_symbol"], mybiomart["gene_name"]))
+    with open(rescue_list, "r") as f:
+        to_rescue = f.read().splitlines()
 
-    to_rescue = open(rescue_list, "r").read().split("\n")
-    to_rescue = set(to_rescue) & set(mybiomart["hgnc_symbol"])
-    to_rescue = [gene2gene_entrez_dict[g] for g in to_rescue]
+    to_rescue = set(to_rescue) & set(mybiomart["ensembl_gene_id"])
+
     print("rescuing " + str(len(to_rescue)) + " genes from oncokb's oncogene list")
 
     # segdup
     masked_genes_segdup = []
-    for g in overlap_segdup.gene_name.unique().tolist():
+    for g in overlap_segdup.ensembl_gene_id.unique().tolist():
         _, start, end = gene_dict[g]
         gene_length = end - start
         overlap_length = 0
-        overlap_segments = overlap_segdup[overlap_segdup.gene_name == g]
+        overlap_segments = overlap_segdup[overlap_segdup.ensembl_gene_id == g]
         for i, v in overlap_segments.iterrows():
             overlap_length += v["end"] - v["start"]
         if overlap_length / gene_length > maskthresh:
             masked_genes_segdup.append(g)
-    print(
-        "masking "
-        + str(len(set(masked_genes_segdup) - set(to_rescue)))
-        + " genes from "
-        + matname
-        + " due to segmental duplication"
-    )
 
     # repeat masker
     masked_genes_rm = []
-    for g in overlap_rm.gene_name.unique().tolist():
-        all_overlaps = overlap_rm[overlap_rm.gene_name == g]
-        exons = biomart_exon_union[biomart_exon_union.gene_name == g]
+    for g in overlap_rm.ensembl_gene_id.unique().tolist():
+        all_overlaps = overlap_rm[overlap_rm.ensembl_gene_id == g]
+        exons = biomart_exon_union[biomart_exon_union.ensembl_gene_id == g]
         exon_length = exons["col1"].sum() - exons["col0"].sum()
         overlap_length = all_overlaps["end"].sum() - all_overlaps["start"].sum()
         if overlap_length / exon_length > maskthresh:
             masked_genes_rm.append(g)
-    print(
-        "masking "
-        + str(len(set(masked_genes_rm) - set(to_rescue)))
-        + " genes from "
-        + matname
-        + " due to repeat masker, "
-    )
-    print(
-        str(len(set(masked_genes_rm) - set(masked_genes_segdup) - set(to_rescue)))
-        + " of which were not masked by segdup"
-    )
 
-    cnmatrix = cnmatrix.drop(
-        columns=set(masked_genes_segdup + masked_genes_rm) - set(to_rescue)
-    )
+    gene_list = list(set(masked_genes_segdup + masked_genes_rm) - set(to_rescue))
+    with open(save_output + "genes_to_mask_minus_rescue_ensg.txt", "w") as f:
+        for line in gene_list:
+            f.write(f"{line}\n")
 
-    return cnmatrix
+    return gene_list
 
 
 def read_ms_repeats(
@@ -647,7 +632,6 @@ def postProcess(
     source_rename={},
     useCache=False,
     maxYchrom=constants.MAXYCHROM,
-    bedtoolspath=constants.BEDTOOLSPATH,
 ):
     """post process an aggregated CN segment file, the CCLE way
 
@@ -700,14 +684,7 @@ def postProcess(
     mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
     mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
     mybiomart = mybiomart[mybiomart["Chromosome"].isin(set(segments["Chromosome"]))]
-    mybiomart = mybiomart.drop_duplicates("hgnc_symbol", keep="first")
-    mybiomart["gene_name"] = [
-        i["hgnc_symbol"] + " (" + str(i["entrezgene_id"]).split(".")[0] + ")"
-        for _, i in mybiomart.iterrows()
-    ]
-    mybiomart = mybiomart[
-        ~mybiomart.entrezgene_id.isna()
-    ]  # dropping all nan entrez id cols
+    mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
     # drop Ychrom if > maxYchrom
     ychrom = segments[segments.Chromosome.str.contains("Y")]
     countYdrop = [
@@ -722,7 +699,10 @@ def postProcess(
         )
     ]
     genecn = mut.toGeneMatrix(
-        mut.manageGapsInSegments(segments), mybiomart, value_colname="SegmentMean"
+        mut.manageGapsInSegments(segments),
+        mybiomart,
+        value_colname="SegmentMean",
+        gene_names_col="ensembl_gene_id",
     )
     # validation step
     print("summary of the gene cn data:")
@@ -741,15 +721,6 @@ def postProcess(
         ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
     ].reset_index(drop=True)
     genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
-
-    # masking
-    genecn = maskGenes(
-        genecn,
-        mybiomart,
-        "relative CN",
-        save_output=save_output,
-        bedtoolspath=bedtoolspath,
-    )
 
     # saving
     print("saving files")
