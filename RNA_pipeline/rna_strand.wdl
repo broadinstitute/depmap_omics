@@ -62,4 +62,8 @@ task strand_check_task {
         Float line_1pp1mm = read_float("1pp1mm")
         Float line_1pm1mp = read_float("1pm1mp")
     }
+
+    meta {
+        allowNestedInputs: true
+    }
 }
