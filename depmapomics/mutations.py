@@ -779,6 +779,65 @@ def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
         return False
 
 
+def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
+    """add column to indicate why variants are rescued
+
+    Args:
+        maf (df): MAF-like dataframe containing variants
+        rescue_reason_colname (str): name of the rescue reason column
+
+    Returns:
+        maf (df): MAF-like dataframe containing variants, with rescue reason"""
+    # initialize column as empty lists
+    maf[rescue_reason_colname] = [[] for _ in range(maf.shape[0])]
+
+    # go over each possible rescue reason in vcf_to_depmap and append them to the list
+    maf.loc[
+        (maf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
+        | (maf["oncokb_oncogenic"] == "Oncogenic")
+        | (maf["oncokb_hotspot"] == "Y"),
+        "rescue_reason",
+    ].apply(lambda x: x.append("OncoKB"))
+    maf.loc[(maf["cosmic_tier"] == 1), "rescue_reason"].apply(
+        lambda x: x.append("Cosmic")
+    )
+    maf.loc[(maf["brca1_func_score"].astype(float) <= -1.328), "rescue_reason"].apply(
+        lambda x: x.append("BRCA1_score")
+    )
+    maf.loc[(maf["oncogene_high_impact"] == True), "rescue_reason"].apply(
+        lambda x: x.append("Oncogene_high_impact")
+    )
+    maf.loc[(maf["tumor_suppressor_high_impact"] == True), "rescue_reason"].apply(
+        lambda x: x.append("TS_high_impact")
+    )
+    maf.loc[(maf["hess_driver"] == "Y"), "rescue_reason"].apply(
+        lambda x: x.append("Hess")
+    )
+    maf.loc[
+        (
+            (maf["Hugo_Symbol"] == "TERT")
+            & (maf["pos"] >= 1295054)
+            & (maf["pos"] <= 1295365)
+        ),
+        "rescue_reason",
+    ].apply(lambda x: x.append("TERT"))
+    maf.loc[
+        (
+            (maf["Hugo_Symbol"] == "MET")
+            & (maf["pos"] >= 116771825)
+            & (maf["pos"] <= 116771840)
+        ),
+        "rescue_reason",
+    ].apply(lambda x: x.append("MET"))
+
+    # join list of strings into one big string
+    maf[rescue_reason_colname] = maf[rescue_reason_colname].apply(
+        lambda x: ", ".join(x)
+    )
+
+    return maf
+
+
 def postprocess_main_steps(
     maf: pd.DataFrame,
     adjusted_gnomad_af_cutoff: float = 1e-3,
@@ -871,6 +930,9 @@ def postprocess_main_steps(
     ] = True
     print("unique hotspot genes: ")
     print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
+
+    # add rescue reason column
+    maf = addRescueReason(maf)
 
     # step 8: remove high af from DepMap cohort
     internal_afs = maf.loc[
