@@ -14,6 +14,9 @@ task Manta {
         Boolean is_cram
         String manta_docker
         String config_manta
+        Boolean is_major_contigs_only
+        File major_contig_bed="gs://ccleparams/manta_major_contigs.bed.gz"
+        File major_contig_bed_index="gs://ccleparams/manta_major_contigs.bed.gz.tbi"
 
         Int? disk_size
         Int? mem_size
@@ -43,11 +46,19 @@ task Manta {
         # reference links
         ln -vs ${ref_fasta} reference.fasta
         ln -vs ${ref_fasta_index} reference.fasta.fai
+        ln -vs ${major_contig_bed} major_contigs.bed.gz
+        ln -vs ${major_contig_bed_index} major_contigs.bed.gz.tbi
+
+        if [ ${is_major_contigs_only} = true ]
+        then
+            major_contig_line="--callRegions major_contigs.bed.gz"
+        fi
 
         ${config_manta} --tumorBam "tumor.$EXTENSION" \
                         $normal_command_line \
                         --referenceFasta reference.fasta \
-                        --runDir .
+                        --runDir . \
+                        $major_contig_line
 
         ./runWorkflow.py --mode local \
                          --jobs ${default=32 cpu_num} \
@@ -74,7 +85,7 @@ task Manta {
         docker: "${manta_docker}"
         memory: select_first([mem_size, 100]) + " GB"
         cpu: select_first([cpu_num, 32])
-        disks: "local-disk " + select_first([disk_size, 200]) + " HDD"
+        disks: "local-disk " + select_first([disk_size, 200]) + " SSD"
         preemptible: select_first([preemptible_attempts, 3])
     }
     output {
@@ -136,6 +147,7 @@ workflow MantaSomaticSV {
 
         Boolean is_exome = defined(interval_list)
         Boolean is_cram
+        Boolean is_major_contigs_only
     }
 
     if (is_exome) {
@@ -156,7 +168,8 @@ workflow MantaSomaticSV {
                interval_bed_index = ConvertToBedTabix.out_interval_index,
                manta_docker = manta_docker,
                config_manta = config_manta,
-               is_cram = is_cram
+               is_cram = is_cram,
+               is_major_contigs_only = is_major_contigs_only
     }
     output {
         File germline_sv_vcf = Manta.germline_sv_vcf

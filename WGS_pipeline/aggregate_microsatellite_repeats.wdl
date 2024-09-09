@@ -53,7 +53,7 @@ task find_n_repeats {
         docker: "iboylebroad/microsat:latest"
         cpu: "${num_threads}"
         memory: "${memory}GB"
-        disks: "local-disk ${disk_space} HDD"
+        disks: "local-disk ${disk_space} SSD"
         preemptible: "${num_preempt}"
     }
 

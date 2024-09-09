@@ -27,7 +27,7 @@ task aggregate {
         docker: "us-docker.pkg.dev/depmap-omics/public/bcftools:v1.9-1-deb_cv1"
         cpu: "${num_threads}"
         memory: "${memory}GB"
-        disks: "local-disk ${disk_space} HDD"
+        disks: "local-disk ${disk_space} SSD"
         preemptible: "${num_preempt}"
     }
 

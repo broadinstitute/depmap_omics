@@ -79,7 +79,7 @@ task PureCN {
 	runtime {
 		docker: purecn_docker
 		bootDiskSizeGb: 32
-		disks: "local-disk ${hardware_disk_size_GB} HDD"
+		disks: "local-disk ${hardware_disk_size_GB} SSD"
 		memory: "${hardware_memory_GB} GB"
 		cpu: "${num_threads}"
 		continueOnReturnCode: true
