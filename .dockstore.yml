@@ -31,6 +31,7 @@ workflows:
       branches:
         - dev
         - master
+        - update-rna-pipeline-for-crams
   - name: WGS_pipeline
     subclass: WDL
     publish: True
