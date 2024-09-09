@@ -1011,7 +1011,7 @@ async def mutationPostProcessing(
             wgs_sv_mat_pr = wgs_sv_mat[
                 wgs_sv_mat.index.isin(renaming_dict.keys())
             ].rename(index=renaming_dict)
-            wgs_sv_mat_pr.to_csv(folder + "sv_mat_with_entrez_profile.csv", index=False)
+            wgs_sv_mat_pr.to_csv(folder + "sv_mat_with_entrez_profile.csv")
         else:
             print("no WGS SVs processed")
 
