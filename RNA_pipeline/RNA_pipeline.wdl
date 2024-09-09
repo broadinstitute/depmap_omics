@@ -5,7 +5,6 @@ import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_wdl1-0.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
 import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
-import "rna_strand.wdl" as rna_strand
 #import "rnaseq_mutect2_tumor_only.wdl" as rna_mutect2
 
 
@@ -15,6 +14,7 @@ workflow RNA_pipeline {
   #samtofastq_v1
   File input_bam_cram
   File reference_fasta
+  File reference_fasta_index
 
   #star_v1
   File star_index
@@ -62,7 +62,8 @@ workflow RNA_pipeline {
     input:
       input_bam_cram=input_bam_cram,
       prefix=sample_id,
-      reference_fasta=reference_fasta
+      reference_fasta=reference_fasta,
+      reference_index=reference_fasta_index
   }
 
   call star_v1.star as star {
@@ -96,12 +97,6 @@ workflow RNA_pipeline {
       prefix=sample_id,
       ctat_genome_lib_build_dir_files=ctat_genome_lib_build_dir_files,
       ref_genome_fa_star_idx_files=ref_genome_fa_star_idx_files
-  }
-
-  call rna_strand.RNAStrandWorkflow as RNAStrandWorkflow {
-    input:
-      input_bam = star.bam_file,
-      sample_id = sample_id
   }
 
 #   call rna_mutect2.RNAseq_mutect2 as RNAseq_mutect2{
@@ -161,10 +156,6 @@ workflow RNA_pipeline {
     #StarFusion
     File fusion_predictions=StarFusion.fusion_predictions
     File fusion_predictions_abridged=StarFusion.fusion_predictions_abridged
-    # strand inference
-    Float percentage_1pp1mm=RNAStrandWorkflow.percentage_1pp1mm
-    Float percentage_1pm1mp=RNAStrandWorkflow.percentage_1pm1mp
-    Boolean inferred_stranded=RNAStrandWorkflow.inferred_stranded
     #rna_mutect2
     # File merged_vcf = RNAseq_mutect2.merged_vcf
     # File merged_vcf_index = RNAseq_mutect2.merged_vcf_index

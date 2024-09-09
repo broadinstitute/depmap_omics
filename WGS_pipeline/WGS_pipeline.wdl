@@ -2,7 +2,7 @@ version 1.0
 
 import "cnv_somatic_pair_workflow.wdl" as CNV_Somatic_Workflow_on_Sample
 import "Manta_SomaticSV_v1_0.wdl" as Manta_SomaticSV
-import "manta_annot.wdl" as manta_annot
+import "vep_sv.wdl" as vep_sv
 import "mutect2_v4.2.6.1.wdl" as mutect2
 import "bcftools.wdl" as setGT
 import "fix_mutect2.wdl" as fixmutect2
@@ -55,8 +55,8 @@ workflow WGS_pipeline {
         File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz" # same is used in mutect2
         File? blacklist_intervals
 
-        String manta_docker = "wwliao/manta:latest"
-        String config_manta="/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py"
+        String manta_docker = "mgibio/manta_somatic-cwl:1.6.0"
+        String config_manta="/usr/bin/manta/bin/configManta.py"
 
         # mutect2
         Int M2scatter=30
@@ -118,13 +118,15 @@ workflow WGS_pipeline {
             ref_fasta=ref_fasta,
             ref_fasta_index=ref_fasta_index,
             is_cram=false,
+            is_major_contigs_only=true,
             config_manta=config_manta,
             manta_docker=manta_docker
     }
 
-    call manta_annot.run_manta_annotator as manta_annotator{
+    call vep_sv.VEP_SV_Workflow as VEP_SV_Workflow{
         input:
-            sv = MantaSomaticSV.somatic_sv_vcf
+            input_vcf = MantaSomaticSV.somatic_sv_vcf,
+            sample_id = sample_name
     }
 
     call mutect2.Mutect2 as mutect2 {
@@ -252,10 +254,12 @@ workflow WGS_pipeline {
         File germline_sv_vcf_index= MantaSomaticSV.germline_sv_vcf_index
         File somatic_sv_vcf= MantaSomaticSV.somatic_sv_vcf
         File somatic_sv_vcf_index= MantaSomaticSV.somatic_sv_vcf_index
-        #manta_annot
-        File somatic_annotated_sv = manta_annotator.somatic_annotated_sv 
-        File filtered_annotated_sv = manta_annotator.filtered_annotated_sv 
-        File dropped_sv = manta_annotator.dropped 
+        #vep_sv
+        File sv_bedpe = VEP_SV_Workflow.bedpe
+        File expanded_filtered_sv_bedpe = VEP_SV_Workflow.expanded_filtered_sv_bedpe
+        File expanded_sv_bedpe = VEP_SV_Workflow.expanded_sv_bedpe
+        File reannotate_genes_bedpe = VEP_SV_Workflow.reannotate_genes_bedpe
+        File vep_annotated_sv = VEP_SV_Workflow.vep_annotated_sv
         # omics_mutect2
         File omics_mutect2_out_vcf=fix_mutect2.vcf_fixed
         File mutect2_base_vcf = mutect2.base_vcf

@@ -68,7 +68,7 @@ task manta_annotator {
         docker: docker_image
         memory: "${mem_size} GB"
         cpu: "${cores}"
-        disks: "local-disk ${disk_size} HDD"
+        disks: "local-disk ${disk_size} SSD"
     }
 
     output {

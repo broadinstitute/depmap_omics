@@ -81,7 +81,7 @@ task opencravat {
         docker: docker
         bootDiskSizeGb: "${boot_disk_size}"
         memory: "${memory} GB"
-        disks: "local-disk ${disk_space} HDD"
+        disks: "local-disk ${disk_space} SSD"
         cpu: "${num_threads}"
         preemptible: "${num_preempt}"
         maxRetries: "${retries}"

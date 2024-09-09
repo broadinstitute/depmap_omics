@@ -325,7 +325,7 @@ task SamToFastqAndBwaMem {
     docker: docker_image
     memory: mem_size
     cpu: num_cpu
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File output_bam = "${output_bam_basename}.bam"
@@ -386,7 +386,7 @@ task MergeBamAlignment {
     preemptible: preemptible_tries
     docker: docker_image
     memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File output_bam = "${output_bam_basename}.bam"
@@ -434,7 +434,7 @@ task SortAndFixTags {
     preemptible: preemptible_tries
     docker: docker_image
     memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File output_bam = "${output_bam_basename}.bam"
@@ -476,7 +476,7 @@ task MarkDuplicates {
     preemptible: preemptible_tries
     docker: docker_image
     memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File output_bam = "${output_bam_basename}.bam"
@@ -580,7 +580,7 @@ task BaseRecalibrator {
     preemptible: preemptible_tries
     docker: docker_image
     memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File recalibration_report = "${recalibration_report_filename}"
@@ -611,7 +611,7 @@ task GatherBqsrReports {
     preemptible: preemptible_tries
     docker: docker_image
     memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File output_bqsr_report = "${output_report_filename}"
@@ -654,7 +654,7 @@ task ApplyBQSR {
     preemptible: preemptible_tries
     docker: docker_image
     memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File recalibrated_bam = "${output_bam_basename}.bam"
@@ -687,7 +687,7 @@ task GatherBamFiles {
     preemptible: preemptible_tries
     docker: docker_image
     memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
+    disks: "local-disk " + disk_size + " SSD"
   }
   output {
     File output_bam = "${output_bam_basename}.bam"
