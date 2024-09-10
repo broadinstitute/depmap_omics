@@ -1,0 +1,23 @@
+{
+ "inputs": {
+  "rsem_workflow.rsem.calc_ci": "\"true\"",
+  "rsem_workflow.rsem.ci_memory": "5120",
+  "rsem_workflow.rsem.disk_space": "500",
+  "rsem_workflow.rsem.estimate_rspd": "\"true\"",
+  "rsem_workflow.rsem.is_stranded": "\"false\"",
+  "rsem_workflow.rsem.max_frag_len": "1000",
+  "rsem_workflow.rsem.memory": "128",
+  "rsem_workflow.rsem.num_preempt": "1",
+  "rsem_workflow.rsem.num_threads": "32",
+  "rsem_workflow.rsem.paired_end": "\"true\"",
+  "rsem_workflow.rsem.prefix": "this.name",
+  "rsem_workflow.rsem.rsem_reference": "\"gs://ccleparams/rsem_reference_hg38_gencode_38.tar.gz\"",
+  "rsem_workflow.rsem.transcriptome_bam": "this.star_transcriptome_bam"
+ },
+ "outputs": {
+  "rsem_workflow.rsem.genes": "this.rsem_genes",
+  "rsem_workflow.rsem.isoforms": "this.rsem_isoforms"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

@@ -1,0 +1,16 @@
+{
+ "inputs": {
+  "samtofastq_workflow.samtofastq.disk_space": "400",
+  "samtofastq_workflow.samtofastq.input_bam_cram": "this.internal_bam_filepath",
+  "samtofastq_workflow.samtofastq.memory": "64",
+  "samtofastq_workflow.samtofastq.num_preempt": "5",
+  "samtofastq_workflow.samtofastq.num_threads": "8",
+  "samtofastq_workflow.samtofastq.prefix": "this.name"
+ },
+ "outputs": {
+  "samtofastq_workflow.samtofastq.fastq1": "this.fastq1",
+  "samtofastq_workflow.samtofastq.fastq2": "this.fastq2"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

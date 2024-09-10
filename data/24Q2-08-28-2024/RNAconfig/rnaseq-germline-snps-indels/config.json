@@ -1,0 +1,41 @@
+{
+ "inputs": {
+  "RNAseq.ApplyBQSR.memory": "32",
+  "RNAseq.BaseRecalibrator.memory": "16",
+  "RNAseq.HaplotypeCaller.memory": "32",
+  "RNAseq.HaplotypeCaller_GATK4.memory": "32",
+  "RNAseq.MergeVCFs.disk_size": "400",
+  "RNAseq.MergeVCFs.memory": "16",
+  "RNAseq.SplitNCigarReads.memory": "32",
+  "RNAseq.SplitNCigarReads_GATK4.memory": "32",
+  "RNAseq.VariantFiltration.memory": "12",
+  "RNAseq.bai_input": "this.star_bam_file",
+  "RNAseq.bam_input": "this.star_bam_index",
+  "RNAseq.dbSnpVcf": "workspace.dbSnpVcf",
+  "RNAseq.dbSnpVcfIndex": "workspace.dbSnpVcfIndex",
+  "RNAseq.gatk4_docker_override": "\"broadinstitute/gatk:4.1.4.1\"",
+  "RNAseq.gatk_path_override": "",
+  "RNAseq.gitc_docker_override": "",
+  "RNAseq.haplotypeScatterCount": "",
+  "RNAseq.knownVcfs": "workspace.knownVcfs",
+  "RNAseq.knownVcfsIndices": "workspace.knownVcfsIndices",
+  "RNAseq.make_gvcf": "true",
+  "RNAseq.minConfidenceForVariantCalling": "",
+  "RNAseq.preemptible_tries": "2",
+  "RNAseq.refDict": "workspace.ref_dict",
+  "RNAseq.refFasta": "workspace.ref_fasta",
+  "RNAseq.refFastaIndex": "workspace.ref_fasta_fai",
+  "RNAseq.use_gatk4_for_all_tools": "true",
+  "RNAseq.wgsCallingIntervalList": "workspace.wgsCallingIntervalList"
+ },
+ "outputs": {
+  "RNAseq.merged_vcf": "this.merged_vcf",
+  "RNAseq.merged_vcf_index": "this.merged_vcf_index",
+  "RNAseq.recalibrated_bam": "this.recalibrated_bam",
+  "RNAseq.recalibrated_bam_index": "this.recalibrated_bam_index",
+  "RNAseq.variant_filtered_vcf": "this.variant_filtered_vcf",
+  "RNAseq.variant_filtered_vcf_index": "this.variant_filtered_vcf_index"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}
