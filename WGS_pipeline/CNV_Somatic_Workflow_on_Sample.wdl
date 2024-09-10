@@ -30,7 +30,7 @@
 #############
 
 import "https://raw.githubusercontent.com/gatk-workflows/gatk4-somatic-cnvs/1.3.0/cnv_common_tasks.wdl" as CNVTasks
-import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/b362c980e41b49b2b3d1b1b36b8b3788fe6c3e93/cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
+import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/d7ae7c2d072e774a88fedace0ead33e42f8e0673/cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
 
 workflow CNVSomaticPairWorkflow {
 
