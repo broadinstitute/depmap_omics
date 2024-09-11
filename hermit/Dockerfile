@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:24.04
 
 # ----- start of hermit-specific requirements ------
 #
@@ -8,8 +8,9 @@ FROM ubuntu
 # 3. sshd must be installed 
 
 RUN apt-get update && \
-  apt-get install -y openssh-server sudo && \
-  mkdir /run/sshd && \
+  apt-get install -y openssh-server sudo
+RUN mkdir /run/sshd && \
+  deluser ubuntu && \
   adduser ubuntu --disabled-password --uid 2000 --gecos "" && \
   echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers 
 
@@ -42,11 +43,12 @@ RUN ln -s /opt/miniwdl/bin/miniwdl /usr/local/bin/miniwdl
 # also install misc other useful utilities
 # git because we'll need to checkout the code
 # npm because pyright uses it to install some of its dependencies
-RUN apt-get install -y git npm
+# screen because it's generally useful
+RUN apt-get install -y git npm screen
 
 # install poetry. This is perhaps a strangely round about way, but it seems that the python3.9 install
 # above doesn't include pip, but if we create a virtualenv, we get pip in that environment
-RUN python3.9 -m venv /opt/poetry && /opt/poetry/bin/pip install poetry==1.2.2
+RUN python3.9 -m venv /opt/poetry && /opt/poetry/bin/pip install poetry==1.8.2
 RUN ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
 # install google sdk per the debian instructions
