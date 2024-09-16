@@ -38,7 +38,7 @@
 version 1.0
 
 import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.6.1/scripts/cnv_wdl/cnv_common_tasks.wdl" as CNVTasks
-import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/1fc796c9a06599f9233e65efe343a600a2f9b6d0/cnv_somatic_oncotator_workflow.wdl" as CNVFuncotateSegments
+import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/38400adc86e084d8e93408a2a7897ca52820ae4b/cnv_somatic_oncotator_workflow.wdl" as CNVFuncotateSegments
 
 workflow CNVSomaticPairWorkflow {
 
