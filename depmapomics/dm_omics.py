@@ -163,6 +163,10 @@ async def expressionPostProcessing(
         tpm_mat = files_stranded["proteincoding_genes_tpm_stranded"]
         all_genes_mat = files_stranded["genes_tpm_stranded"]
         transcripts_mat = files_stranded["transcripts_tpm_stranded"]
+        all_genes_expected_count_mat = files_stranded["genes_expected_count_stranded"]
+        transcripts_expected_count_mat = files_stranded[
+            "transcripts_expected_count_stranded"
+        ]
         pr_files_stranded["proteincoding_genes_tpm_profile_stranded"] = tpm_mat[
             tpm_mat.index.isin(set(renaming_dict.keys()))
         ].rename(index=renaming_dict)
@@ -172,12 +176,14 @@ async def expressionPostProcessing(
         pr_files_stranded["transcripts_tpm_profile_stranded"] = transcripts_mat[
             transcripts_mat.index.isin(set(renaming_dict.keys()))
         ].rename(index=renaming_dict)
-        pr_files_stranded["genes_expected_count_profile_stranded"] = all_genes_mat[
-            all_genes_mat.index.isin(set(renaming_dict.keys()))
-        ].rename(index=renaming_dict)
+        pr_files_stranded["genes_expected_count_profile_stranded"] = (
+            all_genes_expected_count_mat[
+                all_genes_expected_count_mat.index.isin(set(renaming_dict.keys()))
+            ].rename(index=renaming_dict)
+        )
         pr_files_stranded["transcripts_expected_count_profile_stranded"] = (
-            transcripts_mat[
-                transcripts_mat.index.isin(set(renaming_dict.keys()))
+            transcripts_expected_count_mat[
+                transcripts_expected_count_mat.index.isin(set(renaming_dict.keys()))
             ].rename(index=renaming_dict)
         )
         expressions.saveFiles(pr_files_stranded, folder)
