@@ -192,7 +192,7 @@ def aggregateMAFs(
     print(str(len(na_samples)) + " samples don't have corresponding maf: ", na_samples)
     all_mafs = []
     counter = 0
-    sample_table_valid = sample_table_valid.iloc[:50]
+    #sample_table_valid = sample_table_valid.iloc[:50]
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
         maf = pd.read_csv(row[mafcol])

@@ -7,7 +7,7 @@ import pytest
 
 tc = TaigaClient()
 
-pytest.set_trace()
+# pytest.set_trace()
 mutationPostProcessing(
     wgsrefworkspace = 'broad-firecloud-ccle/tcga_mutation_testing'
 )
