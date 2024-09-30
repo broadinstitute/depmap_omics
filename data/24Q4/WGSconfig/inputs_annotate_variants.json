@@ -1,0 +1,1 @@
+{"annotateVariants.oc_boot_disk_size": "200", "annotateVariants.hgvs_boot_disk_size": "100", "annotateVariants.oc_disk_space": "500", "annotateVariants.hgvs_disk_space": "200", "annotateVariants.oc_mem": "128", "annotateVariants.input_vcf": "this.mutect2_fixed_vcf", "annotateVariants.sample_id": "this.sample_id"}

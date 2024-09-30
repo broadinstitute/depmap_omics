@@ -1,0 +1,1 @@
+{"msisensor2_workflow.num_threads": "2", "msisensor2_workflow.bai": "this.internal_bai_filepath", "msisensor2_workflow.num_preempt": "1", "msisensor2_workflow.sample_id": "this.sample_id", "msisensor2_workflow.disk_space": "500", "msisensor2_workflow.bam": "this.internal_bam_filepath", "msisensor2_workflow.memory": "6"}

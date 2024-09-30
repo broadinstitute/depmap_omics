@@ -1,0 +1,1 @@
+{"VEP_SV_Workflow.gnomad_idx": "\"gs://ccleparams/gnomad.v4.1.sv.sites.pass.vcf.gz.tbi\"", "VEP_SV_Workflow.gnomad": "\"gs://ccleparams/gnomad.v4.1.sv.sites.pass.vcf.gz\"", "VEP_SV_Workflow.vep_data": "\"gs://cds-vep-data/homo_sapiens_vep_112_GRCh38.tar.gz\"", "VEP_SV_Workflow.input_vcf": "this.somatic_sv_vcf", "VEP_SV_Workflow.sample_id": "this.sample_id"}
