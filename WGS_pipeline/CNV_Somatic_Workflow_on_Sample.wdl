@@ -30,7 +30,7 @@
 #############
 
 import "https://raw.githubusercontent.com/gatk-workflows/gatk4-somatic-cnvs/1.3.0/cnv_common_tasks.wdl" as CNVTasks
-import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/b362c980e41b49b2b3d1b1b36b8b3788fe6c3e93/cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
+import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/38400adc86e084d8e93408a2a7897ca52820ae4b/cnv_somatic_oncotator_workflow.wdl" as CNVOncotator
 
 workflow CNVSomaticPairWorkflow {
 
@@ -43,6 +43,7 @@ workflow CNVSomaticPairWorkflow {
     File tumor_bam
     File tumor_bam_idx
     File? normal_bam
+
     File? normal_bam_idx
     File read_count_pon
     File ref_fasta_dict
