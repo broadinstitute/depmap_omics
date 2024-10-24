@@ -143,6 +143,8 @@ async def expressionPostProcessing(
         # subset and rename, include all PRs that have associated CDS-ids
         pr_table = mytracker.update_pr_from_seq(["rna"])
 
+    pr_table = mytracker.read_pr_table()
+    
     mytracker.close_gumbo_client()
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
