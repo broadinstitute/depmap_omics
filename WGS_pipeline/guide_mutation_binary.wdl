@@ -79,8 +79,12 @@ task guide_mutation {
             --format ${bcftools_format} \
             ${vcf} > brunello_${sample_id}.bed
 
-        bcftools query --exclude "FILTER!='PASS'&GT!='mis'&GT\!~'\.'" --regions-file tkov3_guides.bed --format "%CHROM\\t%POS\\t%END\\t%ALT{0}\n" CDS-47Y3Jx.hg38-filtered.vcf.gz > tkov3_CDS-47Y3Jx.bed
-
+        bcftools query\
+            --exclude "FILTER!='PASS'&GT!='mis'&GT!~'\.'"\
+            --regions-file ${TKOv3_bed} \
+            --format ${bcftools_format} \
+            ${vcf} > tkov3_${sample_id}.bed
+            
         python -u /install/depmapomics/tasks/map_to_guides.py \
               --sample_id ~{sample_id} \
               --bed_filenames 'avana_${sample_id}.bed,humagne_${sample_id}.bed,ky_${sample_id}.bed,brunello_${sample_id}.bed,tkov3_${sample_id}.bed'\
