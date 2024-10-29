@@ -1,4 +1,4 @@
-version 1.1
+version 1.0
 
 workflow run_guide_mutation {
     input {
@@ -77,6 +77,8 @@ task guide_mutation {
             --regions-file ~{TKOv3_bed} \
             --format ~{bcftools_format} \
             ~{vcf} > tkov3_~{sample_id}.bed
+
+        touch "~{sample_id}_avana_mut_binary.csv" "~{sample_id}_humagne_mut_binary.csv" "~{sample_id}_ky_mut_binary.csv" "~{sample_id}_brunello_mut_binary.csv" "~{sample_id}_tkov3_mut_binary.csv"
 
         python -u /install/depmapomics/tasks/map_to_guides.py \
               --sample_id ~{sample_id} \
