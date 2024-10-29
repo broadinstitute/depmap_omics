@@ -1,4 +1,4 @@
-version 1.1
+version 1.0
 
 workflow run_guide_mutation {
     input {
@@ -91,11 +91,11 @@ task guide_mutation {
     }
 
     output {
-        File? avana_binary_mut="${sample_id}_avana_mut_binary.csv"
-        File? humagne_binary_mut="${sample_id}_humagne_mut_binary.csv"
-        File? ky_binary_mut="${sample_id}_ky_mut_binary.csv"
-        File? brunello_binary_mut="${sample_id}_brunello_mut_binary.csv"
-        File? tkov3_binary_mut="${sample_id}_tkov3_mut_binary.csv"
+        File avana_binary_mut="${sample_id}_avana_mut_binary.csv"
+        File humagne_binary_mut="${sample_id}_humagne_mut_binary.csv"
+        File ky_binary_mut="${sample_id}_ky_mut_binary.csv"
+        File brunello_binary_mut="${sample_id}_brunello_mut_binary.csv"
+        File tkov3_binary_mut="${sample_id}_tkov3_mut_binary.csv"
     }
 
     runtime {
