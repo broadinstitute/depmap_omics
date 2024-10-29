@@ -83,7 +83,7 @@ task guide_mutation {
             ${vcf} > tkov3_${sample_id}.bed
 
         python -u /install/depmapomics/tasks/map_to_guides.py \
-              --sample_id ~{sample_id} \
+              --sample_id ${sample_id} \
               --bed_filenames 'avana_${sample_id}.bed,humagne_${sample_id}.bed,ky_${sample_id}.bed,brunello_${sample_id}.bed,tkov3_${sample_id}.bed'\
               --libraries 'avana,humagne,ky,brunello,tkov3' \
               --guides '${avana_bed},${humagne_bed},${ky_bed},${brunello_bed},${TKOv3_bed}'
