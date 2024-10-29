@@ -108,6 +108,8 @@ GUIDESBED = {
     "avana": "data/avana_guides.bed",
     "humagne": "data/humagne_guides.bed",
     "ky": "data/ky_score_guides.bed",
+    "tkov3": "data/tkov3_guides.bed",
+    "brunello": "brunello_guides.bed"
 }
 
 VCFCOLNAME = "mutect2_filtered_vcf"
