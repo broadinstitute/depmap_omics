@@ -15,13 +15,14 @@ workflow run_guide_mutation {
     }
 
     output {
-        File avana_binary_mut=guide_mutation.avana_binary_mut
-        File humagne_binary_mut=guide_mutation.humagne_binary_mut
-        File ky_binary_mut=guide_mutation.ky_binary_mut
-        File brunello_binary_mut=guide_mutation.brunello_binary_mut
-        File tkov3_binary_mut=guide_mutation.tkov3_binary_mut
+        # File avana_binary_mut=guide_mutation.avana_binary_mut
+        # File humagne_binary_mut=guide_mutation.humagne_binary_mut
+        # File ky_binary_mut=guide_mutation.ky_binary_mut
+        # File brunello_binary_mut=guide_mutation.brunello_binary_mut
+        # File tkov3_binary_mut=guide_mutation.tkov3_binary_mut
         File brunello_bed_out=guide_mutation.brunello_bed_out
         File tkov3_bed_out=guide_mutation.tkov3_bed_out
+        File avana_bed_out=guide_mutation.avana_bed_out
     }
 }
 
@@ -78,11 +79,7 @@ task guide_mutation {
             --format ${bcftools_format} \
             ${vcf} > brunello_${sample_id}.bed
 
-        bcftools query\
-            --exclude "FILTER!='PASS'&GT!='mis'&GT!~'\.'"\
-            --regions-file ${TKOv3_bed} \
-            --format ${bcftools_format} \
-            ${vcf} > tkov3_${sample_id}.bed
+        bcftools query --exclude "FILTER!='PASS'&GT!='mis'&GT\!~'\.'" --regions-file tkov3_guides.bed --format "%CHROM\\t%POS\\t%END\\t%ALT{0}\n" CDS-47Y3Jx.hg38-filtered.vcf.gz > tkov3_CDS-47Y3Jx.bed
 
         python -u /install/depmapomics/tasks/map_to_guides.py \
               --sample_id ~{sample_id} \
@@ -93,13 +90,14 @@ task guide_mutation {
     }
 
     output {
-        File avana_binary_mut="${sample_id}_avana_mut_binary.csv"
-        File humagne_binary_mut="${sample_id}_humagne_mut_binary.csv"
-        File ky_binary_mut="${sample_id}_ky_mut_binary.csv"
-        File brunello_binary_mut="${sample_id}_brunello_mut_binary.csv"
-        File tkov3_binary_mut="${sample_id}_tkov3_mut_binary.csv"
+        # File avana_binary_mut="${sample_id}_avana_mut_binary.csv"
+        # File humagne_binary_mut="${sample_id}_humagne_mut_binary.csv"
+        # File ky_binary_mut="${sample_id}_ky_mut_binary.csv"
+        # File brunello_binary_mut="${sample_id}_brunello_mut_binary.csv"
+        # File tkov3_binary_mut="${sample_id}_tkov3_mut_binary.csv"
+        File tkov3_bed_out="tkov3_${sample_id}.bed"
         File brunello_bed_out="brunello_${sample_id}.bed"
-        File tkov3_bed_out="tkov3_${sample_id}.bed" 
+        File avana_bed_out="avana_${sample_id}.bed"
     }
 
     runtime {
