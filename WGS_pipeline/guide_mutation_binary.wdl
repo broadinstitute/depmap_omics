@@ -4,14 +4,12 @@ workflow run_guide_mutation {
     input {
         String sample_id
         File vcf
-        File vcf_index=vcf + ".tbi"
         String docker="us-docker.pkg.dev/depmap-omics/public/depmapomics:bcftools"
     }
 
     call guide_mutation {
         input:
             vcf=vcf,
-            vcf_index=vcf_index,
             sample_id=sample_id,
             docker=docker,
     }
@@ -26,7 +24,6 @@ workflow run_guide_mutation {
 task guide_mutation {
     input {
         File vcf
-        File vcf_index
         String sample_id
         String docker
 
@@ -44,7 +41,6 @@ task guide_mutation {
 
     parameter_meta {
         vcf: {localization_optional: false}
-        vcf_index: {localization_optional: false}
     }
 
     command {
