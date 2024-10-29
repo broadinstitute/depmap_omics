@@ -20,6 +20,8 @@ workflow run_guide_mutation {
         File ky_binary_mut=guide_mutation.ky_binary_mut
         File brunello_binary_mut=guide_mutation.brunello_binary_mut
         File tkov3_binary_mut=guide_mutation.tkov3_binary_mut
+        File brunello_bed=guide_mutation.brunello_bed
+        File tkov3_bed=guide_mutation.tkov3_bed
     }
 }
 
@@ -96,6 +98,8 @@ task guide_mutation {
         File ky_binary_mut="${sample_id}_ky_mut_binary.csv"
         File brunello_binary_mut="${sample_id}_brunello_mut_binary.csv"
         File tkov3_binary_mut="${sample_id}_tkov3_mut_binary.csv"
+        File brunello_bed="brunello_${sample_id}.bed"
+        File tkov3_bed="tkov3_${sample_id}.bed" 
     }
 
     runtime {
