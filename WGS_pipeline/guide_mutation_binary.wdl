@@ -50,7 +50,7 @@ task guide_mutation {
     command {
         set -euo pipefail
 
-        tabix -p vcf ${vcf}
+        bcftools index -t ${vcf}
 
         bcftools query \
             --exclude "FILTER!='PASS'&GT!='mis'&GT!~'\.'" \
