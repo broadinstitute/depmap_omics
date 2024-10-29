@@ -35,8 +35,8 @@ task guide_mutation {
         File avana_bed = "gs://ccleparams/avana_guides.bed"
         File humagne_bed = "gs://ccleparams/humagne_guides.bed"
         File ky_bed = "gs://ccleparams/ky_score_guides.bed"
-        File brunello_bed = ""
-        File TKOv3_bed = ""
+        File brunello_bed = "gs://ccleparams/brunello_guides.bed"
+        File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
         String bcftools_format = '"%CHROM\\t%POS\\t%END\\t%ALT{0}\n"'
     
         Int memory = 4
