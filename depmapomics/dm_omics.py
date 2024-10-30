@@ -1275,6 +1275,18 @@ async def mutationPostProcessing(
                         "format": "TableCSV",
                         "encoding": "utf-8",
                     },
+                    {
+                        "path": folder + "binary_germline_brunello.csv",
+                        "name": "binary_mutation_brunello",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "binary_germline_tkov3.csv",
+                        "name": "binary_mutation_tkov3",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
                 ],
                 add_all_existing_files=True,
                 upload_async=False,
