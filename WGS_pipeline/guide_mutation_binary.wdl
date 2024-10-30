@@ -144,15 +144,21 @@ task guide_mutation_intersect {
         bedtools intersect -a ~{ky_bed} -b ~{ky_in_vcf_bed} -c -sorted > ~{sample_id}_ky_mut_binary.bed
         bedtools intersect -a ~{brunello_bed} -b ~{brunello_in_vcf_bed} -c -sorted > ~{sample_id}_brunello_mut_binary.bed
         bedtools intersect -a ~{TKOv3_bed} -b ~{TKOv3_in_vcf_bed} -c -sorted > ~{sample_id}_tkov3_mut_binary.bed
+
+        bedtools sort -i ~{sample_id}_avana_mut_binary.bed > ~{sample_id}_avana_mut_binary.sorted.bed
+        bedtools sort -i ~{sample_id}_humagne_mut_binary.bed > ~{sample_id}_humagne_mut_binary.sorted.bed
+        bedtools sort -i ~{sample_id}_ky_mut_binary.bed > ~{sample_id}_ky_mut_binary.sorted.bed
+        bedtools sort -i ~{sample_id}_brunello_mut_binary.bed > ~{sample_id}_brunello_mut_binary.sorted.bed
+        bedtools sort -i ~{sample_id}_tkov3_mut_binary.bed > ~{sample_id}_tkov3_mut_binary.sorted.bed
         
     >>>
 
     output {
-        File avana_binary_mut="~{sample_id}_avana_mut_binary.bed"
-        File humagne_binary_mut="~{sample_id}_humagne_mut_binary.bed"
-        File ky_binary_mut="~{sample_id}_ky_mut_binary.bed"
-        File brunello_binary_mut="~{sample_id}_brunello_mut_binary.bed"
-        File tkov3_binary_mut="~{sample_id}_tkov3_mut_binary.bed"
+        File avana_binary_mut="~{sample_id}_avana_mut_binary.sorted.bed"
+        File humagne_binary_mut="~{sample_id}_humagne_mut_binary.sorted.bed"
+        File ky_binary_mut="~{sample_id}_ky_mut_binary.sorted.bed"
+        File brunello_binary_mut="~{sample_id}_brunello_mut_binary.sorted.bed"
+        File tkov3_binary_mut="~{sample_id}_tkov3_mut_binary.sorted.bed"
     }
 
     runtime {
