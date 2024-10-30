@@ -91,11 +91,11 @@ task guide_mutation_in_vcf {
     >>>
 
     output {
-        File avana_mut="~{sample_id}_avana_mut_binary.csv"
-        File humagne_mut="~{sample_id}_humagne_mut_binary.csv"
-        File ky_mut="~{sample_id}_ky_mut_binary.csv"
-        File brunello_mut="~{sample_id}_brunello_mut_binary.csv"
-        File tkov3_mut="~{sample_id}_tkov3_mut_binary.csv"
+        File avana_mut="avana_~{sample_id}.bed"
+        File humagne_mut="humagne_~{sample_id}.bed"
+        File ky_mut="ky_~{sample_id}.bed"
+        File brunello_mut="brunello_~{sample_id}.bed"
+        File tkov3_mut="tkov3_~{sample_id}.bed"
     }
 
     runtime {
