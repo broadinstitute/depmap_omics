@@ -102,8 +102,6 @@ STR_LOCI_13 = [
     "TPOX",
 ]
 
-VCFDIR = "/tmp/vcfs/"
-
 GUIDESBED = {
     "avana": "data/avana_guides.bed",
     "humagne": "data/humagne_guides.bed",
@@ -111,8 +109,6 @@ GUIDESBED = {
     "tkov3": "data/tkov3_guides.bed",
     "brunello": "brunello_guides.bed"
 }
-
-VCFCOLNAME = "mutect2_filtered_vcf"
 
 BINARY_MUT_COLNAME_DICT = {
     "avana": "avana_binary_mut",
