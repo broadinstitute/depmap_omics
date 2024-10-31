@@ -424,7 +424,7 @@ def aggregateGermlineMatrix(
         for name, row in tqdm(
             sample_table_valid.iterrows(), total=len(sample_table_valid)
         ):
-            sample_mut = pd.read_csv(row[colname], sep="\t")
+            sample_mut = pd.read_csv(row[colname], names=["chrom", "start", "end", "sgRNA", name], sep="\t")
             if header == False:
                 all_muts.append(sample_mut)
                 header = True
