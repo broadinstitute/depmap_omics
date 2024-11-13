@@ -3,7 +3,7 @@ version 1.0
 # for DRAGEN-aligned cram samples
 import "CramToBam.wdl" as CramToBam
 import "BamToUnmappedRGBams_noHardClips.wdl" as BamToUnmappedRGBams
-import "https://raw.githubusercontent.com/gatk-workflows/gatk4-data-processing/2.1.1/processing-for-variant-discovery-gatk4.wdl" as PreProcessingForVariantDiscovery_GATK4
+import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/e6c994be33c227d48cc81d815006eb5965605646/processing-for-variant-discovery-gatk4.wdl" as PreProcessingForVariantDiscovery_GATK4
 import "ArrayOfFilesToTxt_v1_0.wdl" as ArrayOfFilesToTxt
 
 workflow WGS_preprocessing {

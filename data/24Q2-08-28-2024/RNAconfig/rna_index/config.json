@@ -1,0 +1,21 @@
+{
+ "inputs": {
+  "RNAIndex.fasta": "\"gs://fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta\"",
+  "RNAIndex.gtf": "\"gs://fc-secure-639c94ba-2b0d-4960-92fc-9cd50046a968/gencode.v44.primary_assembly.annotation.gtf\"",
+  "RNAIndex.rsem_build_index.boot_disk_size": "200",
+  "RNAIndex.rsem_build_index.cpu": "64",
+  "RNAIndex.rsem_build_index.disk_space": "200",
+  "RNAIndex.rsem_build_index.mem": "128",
+  "RNAIndex.sample_id": "\"giab_index\"",
+  "RNAIndex.star_build_index.boot_disk_size": "200",
+  "RNAIndex.star_build_index.cpu": "64",
+  "RNAIndex.star_build_index.disk_space": "200",
+  "RNAIndex.star_build_index.mem": "128"
+ },
+ "outputs": {
+  "RNAIndex.rsem_tar": "this.rsem_tar_v44_giab",
+  "RNAIndex.star_tar": "this.star_tar_v44_giab"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

@@ -1,0 +1,33 @@
+{
+ "inputs": {
+  "WGS_preprocessing.PreProcessingForVariantDiscovery_GATK4.agg_large_disk": "800",
+  "WGS_preprocessing.PreProcessingForVariantDiscovery_GATK4.flowcell_medium_disk": "300",
+  "WGS_preprocessing.dbSNP_vcf": "workspace.known_var",
+  "WGS_preprocessing.dbSNP_vcf_index": "workspace.known_var_idx",
+  "WGS_preprocessing.input_cram": "this.internal_bam_filepath",
+  "WGS_preprocessing.input_cram_index": "this.internal_bai_filepath",
+  "WGS_preprocessing.known_indels_sites_VCFs": "workspace.known_indels",
+  "WGS_preprocessing.known_indels_sites_indices": "workspace.known_indels_idx",
+  "WGS_preprocessing.preemptible_tries": "1",
+  "WGS_preprocessing.ref_alt": "workspace.ref_fasta_alt",
+  "WGS_preprocessing.ref_amb": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta.amb\"",
+  "WGS_preprocessing.ref_ann": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta.ann\"",
+  "WGS_preprocessing.ref_bwt": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta.bwt\"",
+  "WGS_preprocessing.ref_dict": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.dict\"",
+  "WGS_preprocessing.ref_fasta": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta\"",
+  "WGS_preprocessing.ref_fasta_index": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta.fai\"",
+  "WGS_preprocessing.ref_name": "\"GIABv3\"",
+  "WGS_preprocessing.ref_pac": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta.pac\"",
+  "WGS_preprocessing.ref_sa": "\"gs://ccleparams/GIAB_hg38_patched_ref/GRCh38_GIABv3_no_alt_analysis_set_maskedGRC_decoys_MAP2K3_KMT2C_KCNJ18.fasta.sa\"",
+  "WGS_preprocessing.sample_name": "this.name"
+ },
+ "outputs": {
+  "WGS_preprocessing.analysis_ready_bam": "this.internal_bam_filepath_GIAB",
+  "WGS_preprocessing.analysis_ready_bam_index": "this.internal_bai_filepath_GIAB",
+  "WGS_preprocessing.analysis_ready_bam_md5": "this.analysis_ready_bam_md5_GIAB",
+  "WGS_preprocessing.bqsr_report": "this.bqsr_report_GIAB",
+  "WGS_preprocessing.duplication_metrics": "this.duplication_metrics_GIAB"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

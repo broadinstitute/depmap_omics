@@ -1,0 +1,20 @@
+{
+ "inputs": {
+  "run_vcf_to_depmap.docker_image": "\"us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:24q2\"",
+  "run_vcf_to_depmap.input_vcf": "this.hgvs_oc_vcf_masked",
+  "run_vcf_to_depmap.sample_id": "this.sample_id",
+  "run_vcf_to_depmap.vcf_to_depmap.cpu": "4",
+  "run_vcf_to_depmap.vcf_to_depmap.disk_space": "100",
+  "run_vcf_to_depmap.vcf_to_depmap.force_keep": "",
+  "run_vcf_to_depmap.vcf_to_depmap.mem": "64",
+  "run_vcf_to_depmap.vcf_to_depmap.n_rows": "400000",
+  "run_vcf_to_depmap.vcf_to_depmap.whitelist": "true",
+  "run_vcf_to_depmap.version": "\"032924\""
+ },
+ "outputs": {
+  "run_vcf_to_depmap.depmap_maf": "this.depmap_maf_23q4",
+  "run_vcf_to_depmap.full_file": "this.full_annotated_parquet"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

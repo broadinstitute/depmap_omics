@@ -58,7 +58,7 @@ def main(args=None):
         ", force_keep:",
         force_keep,
         ", version:",
-        version
+        version,
     )
 
     tobreak = False
@@ -288,6 +288,8 @@ TO_RENAME_BASE = {
     "vep_symbol": "hugo_symbol",
     "vep_hgvsp": "protein_change",
     "vep_gene": "ensembl_gene_id",
+    "vep_exon": "exon",
+    "vep_intron": "intron",
     "vep_uniprot_isoform": "uniprot_id",
     "hgnc_approved_name": "hgnc_name",
     "hgnc_gene_family_name": "hgnc_family",
@@ -306,12 +308,11 @@ TO_RENAME_HGVS = {
     "vep_polyphen": "polyphen",
     "vep_gnomade_af": "gnomade_af",
     "vep_gnomadg_af": "gnomadg_af",
-    "vep_am_class": "am_class", 
+    "vep_am_class": "am_class",
     "vep_am_pathogenicity": "am_pathogenicity",
     "vep_feature": "ensembl_feature_id",
     "rs": "dbsnp_rs_id",
-    "mc": "molecular_consequence"
-    
+    "mc": "molecular_consequence",
 }
 
 
@@ -352,7 +353,7 @@ TO_RENAME_OC = {
     "oc_hess_drivers__is_driver": "hess_driver",
     "oc_hess_drivers__signature": "hess_signture",
     "oc_cosmic_sig__cosmic_tier": "cosmic_tier",
-    "oc_provean__prediction": "provean_prediction"
+    "oc_provean__prediction": "provean_prediction",
 }
 
 TOKEEP_BASE = {
@@ -371,6 +372,8 @@ TOKEEP_BASE = {
     "dna_change": "str",
     "protein_change": "str",
     "hugo_symbol": "str",
+    "exon": "str",
+    "intron": "str",
     "ensembl_gene_id": "str",
     "ensembl_feature_id": "str",
     #"hgnc_name": "str",
@@ -410,7 +413,6 @@ TOKEEP_ADD = {
     "vep_loftool": "str",
     "oncogene_high_impact": "str",
     "tumor_suppressor_high_impact": "str",
-
     ###############
     #"achilles_top_genes": "str",
     #"structural_relation": "str",
@@ -449,7 +451,7 @@ TOKEEP_ADD = {
     "spliceai_dp_dg": "str",
     "spliceai_dp_dl": "str",
     "segdup": "str",
-    "rm": "str"
+    "rm": "str",
 }
 
 
@@ -543,8 +545,12 @@ def improve(
     # replace empty characters:
     print("replacing empty characters:")
     vcf = vcf.replace(replace_empty)
-    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].replace("", np.nan)
-    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].astype('float64')
+    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].replace(
+        "", np.nan
+    )
+    vcf["oc_brca1_func_assay__score"] = vcf["oc_brca1_func_assay__score"].astype(
+        "float64"
+    )
 
     print("re-annotating CIVIC using static dataframe:")
     if civic_df is not None:
@@ -737,14 +743,17 @@ def improve(
     if "vep_impact" in vcf.columns.tolist() and "vep_symbol" in vcf.columns.tolist():
         vcf.loc[:, "oncogene_high_impact"] = False
         vcf.loc[:, "tumor_suppressor_high_impact"] = False
-        onco_loc = ((vcf["vep_impact"] == "HIGH") & (vcf["vep_symbol"].isin(oncogene_list)))
-        ts_loc = ((vcf["vep_impact"] == "HIGH") & (vcf["vep_symbol"].isin(tumor_suppressor_list)))
+        onco_loc = (vcf["vep_impact"] == "HIGH") & (
+            vcf["vep_symbol"].isin(oncogene_list)
+        )
+        ts_loc = (vcf["vep_impact"] == "HIGH") & (
+            vcf["vep_symbol"].isin(tumor_suppressor_list)
+        )
         vcf.loc[onco_loc, "oncogene_high_impact"] = True
         vcf.loc[ts_loc, "tumor_suppressor_high_impact"] = True
-    
+
     vcf["vep_gnomade_af"] = vcf["vep_gnomade_af"].astype(str)
     vcf["vep_gnomadg_af"] = vcf["vep_gnomadg_af"].astype(str)
-
 
     # rename columns
     vcf = vcf.rename(columns=torename)
@@ -837,11 +846,11 @@ def to_maf(
                         "cosmic_tier",
                         "brca1_func_score",
                         "clnsig",
-                        "civic_score"
+                        "civic_score",
                         "hugo_symbol",
                         "hess_driver",
                         "oncogene_high_impact",
-                        "tumor_suppressor_high_impact"
+                        "tumor_suppressor_high_impact",
                     ]
                 )
                 - set(vcf.columns)
@@ -860,9 +869,10 @@ def to_maf(
                         "hugo_symbol",
                         "hess_driver",
                         "oncogene_high_impact",
-                        "tumor_suppressor_high_impact"
+                        "tumor_suppressor_high_impact",
                     ]
-                ) - set(vcf.columns),
+                )
+                - set(vcf.columns),
             )
         print("performing whitelisting")
         important = (
@@ -874,32 +884,50 @@ def to_maf(
             | (vcf["oncogene_high_impact"])
             | (vcf["tumor_suppressor_high_impact"])
             | (vcf["hess_driver"] == "Y")
-            | ((vcf["hugo_symbol"] == "TERT") & (vcf["pos"] >= 1295054) & (vcf["pos"] <= 1295365))
+            # rescue TERT intronic mutations
+            | (
+                (vcf["hugo_symbol"] == "TERT")
+                & (vcf["pos"] >= 1295054)
+                & (vcf["pos"] <= 1295365)
             )
+            # rescue MET intron13 PPT mutations
+            | (
+                (vcf["hugo_symbol"] == "MET")
+                & (vcf["pos"] >= 116771825)
+                & (vcf["pos"] <= 116771840)
+            )
+        )
     if only_coding:
         print("only keeping coding mutations")
         vcf["protein_change"] = vcf["protein_change"].fillna("")
-        loc = (((vcf["variant_info"].str.contains("splice")) & (vcf["vep_impact"].isin(["HIGH", "MODERATE"])))
-            | ((vcf["protein_change"] != "") & (vcf["protein_change"].str.endswith("=") == False))
-            | important
+        loc = (
+            (
+                (vcf["variant_info"].str.contains("splice"))
+                & (vcf["vep_impact"].isin(["HIGH", "MODERATE"]))
             )
+            | (
+                (vcf["protein_change"] != "")
+                & (vcf["protein_change"].str.endswith("=") == False)
+            )
+            | important
+        )
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
-        loc = (
-            (((vcf["segdup"] != "Y") & (vcf["rm"] != "Y"))
-            | important) & loc
-        )
+        loc = (((vcf["segdup"] != "Y") & (vcf["rm"] != "Y")) | important) & loc
 
     # redefine somatic (not germline or pon and a log pop. af of > max_log_pop_af)
     # drops 80% of the variants
     if only_somatic:
         print("only keeping somatic mutations")
-        loc = ((
-            ~(vcf["pon"] == "Y")
-            & (~(vcf["gnomade_af"].astype(float) > max_pop_af))
-            & (~(vcf["gnomadg_af"].astype(float) > max_pop_af))
-        ) | important) & loc
-    
+        loc = (
+            (
+                ~(vcf["pon"] == "Y")
+                & (~(vcf["gnomade_af"].astype(float) > max_pop_af))
+                & (~(vcf["gnomadg_af"].astype(float) > max_pop_af))
+            )
+            | important
+        ) & loc
+
     vcf = vcf[loc]
 
     print(
@@ -935,7 +963,9 @@ def to_maf(
     if version != "":
         vcf.index.name = version
 
-    vcf.to_csv(sample_id + "-maf-coding_somatic-subset.csv.gz", index_label=version, **kwargs)
+    vcf.to_csv(
+        sample_id + "-maf-coding_somatic-subset.csv.gz", index_label=version, **kwargs
+    )
 
 
 if __name__ == "__main__":

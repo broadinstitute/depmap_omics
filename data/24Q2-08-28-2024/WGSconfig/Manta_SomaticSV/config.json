@@ -1,0 +1,32 @@
+{
+ "inputs": {
+  "MantaSomaticSV.ConvertToBedTabix.output_bed": "",
+  "MantaSomaticSV.Manta.cpu_num": "",
+  "MantaSomaticSV.Manta.disk_size": "500",
+  "MantaSomaticSV.Manta.mem_size": "",
+  "MantaSomaticSV.Manta.preemptible_attempts": "",
+  "MantaSomaticSV.config_manta": "\"/opt/conda/pkgs/manta-1.2.1-py27_0/bin/configManta.py\"",
+  "MantaSomaticSV.interval_list": "",
+  "MantaSomaticSV.is_cram": "false",
+  "MantaSomaticSV.manta_docker": "\"wwliao/manta:latest\"",
+  "MantaSomaticSV.normal_bam": "",
+  "MantaSomaticSV.normal_bam_index": "",
+  "MantaSomaticSV.ref_fasta": "workspace.ref_fasta",
+  "MantaSomaticSV.ref_fasta_index": "workspace.ref_fasta_fai",
+  "MantaSomaticSV.sample_name": "this.name",
+  "MantaSomaticSV.tumor_bam": "this.internal_bam_filepath",
+  "MantaSomaticSV.tumor_bam_index": "this.internal_bai_filepath"
+ },
+ "outputs": {
+  "MantaSomaticSV.Manta.candidate_indel_vcf": "this.candidate_indel_vcf",
+  "MantaSomaticSV.Manta.candidate_indel_vcf_index": "this.candidate_indel_vcf_index",
+  "MantaSomaticSV.Manta.candidate_sv_vcf": "this.candidate_sv_vcf",
+  "MantaSomaticSV.Manta.candidate_sv_vcf_index": "this.candidate_sv_vcf_index",
+  "MantaSomaticSV.Manta.germline_sv_vcf": "this.germline_sv_vcf",
+  "MantaSomaticSV.Manta.germline_sv_vcf_index": "this.germline_sv_vcf_index",
+  "MantaSomaticSV.Manta.somatic_sv_vcf": "this.somatic_sv_vcf",
+  "MantaSomaticSV.Manta.somatic_sv_vcf_index": "this.somatic_sv_vcf_index"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

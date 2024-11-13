@@ -222,3 +222,5 @@ modules/
 *tbi
 
 guidemat_test/
+
+.idea
