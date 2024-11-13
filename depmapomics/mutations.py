@@ -218,19 +218,22 @@ def aggregateSV(
     wm,
     sampleset="all",
     sv_colname=constants.SV_COLNAME,
-    sv_renaming=constants.SV_COLRENAME,
-    save_output="",
-    save_filename="",
+    sv_header=constants.SV_HEADER,
+    save_output=constants.WORKING_DIR,
+    save_filename=constants.SV_FILENAME,
 ):
     """aggregate SVs pulled from a terra workspace
 
     Args:
-        refworkspace (str): terra workspace where the ref data is stored
-        sampleids (list[str]): list of sequencing IDs
-        all_sv_colname (str): name of column in terra workspace that contains sv output files. Defaults to "filtered_annotated_sv"
-        save_output (str, optional): whether to save our data. Defaults to "".
+        wm (dm.WorkspaceManager): workspace manager for the workspace where the data is stored
+        sampleset (str, optional): name of the sample set to aggregate
+        sv_colname (str, optional): name of the column in terra workspace where sample-level SVs are stored
+        sv_header (list, optional): columns that are expected in the SV file
+        save_output (str, optional): whether to save our data.
+        save_filename (str, optional): name of the saved file
 
     Returns:
+        all_svs (pd.DataFrame): aggregated SVs in the bedpe format
 
     """
     print("aggregating SVs")
@@ -244,12 +247,148 @@ def aggregateSV(
     for name, row in sample_table_valid.iterrows():
         sv = pd.read_csv(row[sv_colname], sep="\t")
         sv[constants.SAMPLEID] = name
-        sv = sv.rename(columns=sv_renaming)
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
+    # making sure all expected columns are present in the dataframe
+    assert set(sv_header) - set(all_svs.columns) == set()
     print("saving aggregated SVs")
-    all_svs.to_csv(save_output + save_filename, sep="\t", index=False)
+    all_svs.to_csv(save_output + save_filename, index=False)
     return all_svs
+
+
+def sv_internal_af_filter(bedpe, cutoff=constants.SV_INTERNAL_AF_CUTOFF):
+    """In order to filter out artifacts, calculate the allele frequencies of SVs
+    within the sample set. Remove ones that are above the cutoff and not rescued
+
+    Args:
+        bedpe (pd.DataFrame): aggregated SV table in bedpe format
+        cutoff (float): max allele frequency allowed
+
+    Returns:
+        filtered_bedpe (pd.DataFrame): aggregated SV table in bedpe format, with SVs that pass the AF filter only
+    """
+    print("filtering SVs based on internal AF")
+    from collections import Counter
+
+    internal_afs = bedpe.loc[
+        :,
+        ["CHROM_A", "START_A", "END_A", "ALT_A", "CHROM_B", "START_B", "END_B", "TYPE"],
+    ].apply(lambda x: ":".join(map(str, x)), axis=1)
+    total_samples = bedpe[constants.SAMPLEID].unique().shape[0]
+    internal_afs_ratio_dict = {}
+    for k, v in Counter(internal_afs.tolist()).items():
+        internal_afs_ratio_dict[k] = v / total_samples
+    bedpe.loc[:, "internal_afs"] = internal_afs.map(internal_afs_ratio_dict)
+
+    filtered_bedpe = bedpe[
+        (bedpe.internal_afs <= cutoff) | (bedpe.Rescue == True)
+    ].drop(["internal_afs"], axis=1)
+
+    return filtered_bedpe
+
+
+def generate_sv_matrix(
+    df,
+    id_col=constants.SAMPLEID,
+    type_colname="TYPE",
+    genea_colname="SYMBOL_A",
+    geneb_colname="SYMBOL_B",
+    del_colname="DEL_SYMBOLS",
+    dup_colname="DUP_SYMBOLS",
+    save_output=constants.WORKING_DIR,
+    save_filename=constants.SV_MAT_FILENAME,
+):
+    """generate sample x gene matrix indicating which genes are affected by which type(s) of SVs
+
+    Args:
+        df (pd.DataFrame): aggregated SV table in bedpe format
+        id_col (str, optional): name of the column in df that contains sample IDs
+        type_colname (str, optional): name of the column in df that contains SV type annotation
+        genea_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint A
+        geneb_colname (str, optional): name of the column in df that contains the name of the gene at breakpoint B
+        del_colname (str, optional): name of the column in df that contains genes spanned by DELs
+        dup_colname (str, optional): name of the column in df that contains genes spanned by DUPs
+        save_output (str, optional): whether to save our data. Defaults to "".
+        save_filename (str, optional): name of the saved file
+
+    Returns:
+        sv_mat (pd.DataFrame): sample x gene matrix
+    """
+
+    df[del_colname] = df[del_colname].fillna(".")
+    df[dup_colname] = df[dup_colname].fillna(".")
+
+    # gather all unique gene symbols in the df
+    symbols = (
+        df[genea_colname].str.split(", ").tolist()
+        + df[geneb_colname].str.split(", ").tolist()
+        + df[del_colname].str.split(", ").tolist()
+        + df[dup_colname].str.split(", ").tolist()
+    )
+    symbol_flat_list = set([x for xs in symbols for x in xs])
+    symbol_flat_list.remove(".")
+
+    sample_ids = list(df[id_col].unique())
+    le = len(sample_ids)
+
+    # init list of dicts, each dict in this list accounts for one row (one sample)
+    ds = []
+    # iterate over all sample ids
+    for j in range(le):
+        h.showcount(j, le)
+        sample = sample_ids[j]
+        # init a gene: SV type dict for each sample
+        d = {k: [] for k in symbol_flat_list}
+        # subset df to only one sample
+        subset_bedpe = df[df[id_col] == sample]
+
+        # for BNDs, get genes at breakpoint A and breakpoint B
+        bnds = subset_bedpe[subset_bedpe[type_colname] == "BND"]
+        bnd_genes = (
+            bnds[genea_colname].str.split(", ").tolist()
+            + bnds[geneb_colname].str.split(", ").tolist()
+        )
+        bnd_genes = set([x for xs in bnd_genes for x in xs])
+        bnd_genes.remove(".")
+
+        for g in bnd_genes:
+            d[g].append("BND")
+
+        # for INSs, get genes at breakpoint A
+        inss = subset_bedpe[subset_bedpe[type_colname] == "INS"]
+        ins_genes = inss[genea_colname].str.split(", ").tolist()
+        ins_genes = set([x for xs in ins_genes for x in xs])
+        ins_genes.remove(".")
+
+        for g in ins_genes:
+            d[g].append("INS")
+
+        # for DELs, get genes that intersect with the whole segment
+        dels = subset_bedpe[subset_bedpe[type_colname] == "DEL"]
+        del_genes = dels[del_colname].str.split(", ").tolist()
+        del_genes = set([x for xs in del_genes for x in xs])
+        del_genes.remove(".")
+
+        for g in del_genes:
+            d[g].append("DEL")
+
+        # for DUPs, get genes that intersect with the whole segment
+        dups = subset_bedpe[subset_bedpe[type_colname] == "DUP"]
+        dup_genes = dups[dup_colname].str.split(", ").tolist()
+        dup_genes = set([x for xs in dup_genes for x in xs])
+        dup_genes.remove(".")
+
+        for g in dup_genes:
+            d[g].append("DUP")
+
+        ds.append(d)
+
+    sv_mat = pd.DataFrame(ds, index=sample_ids).applymap(lambda x: ", ".join(x))
+    sv_mat.index.name = id_col
+    sv_mat.to_csv(save_output + save_filename)
+
+    return sv_mat
+
 
 def aggregateGermlineMatrix(
     wm,
@@ -262,7 +401,7 @@ def aggregateGermlineMatrix(
     Args:
         wm (str): terra workspace where the data is stored
         sampleset (str): name of the sample set in the workspace
-        binary_mut_colname_dict (dict): dictionary mapping library name to corresponding column name 
+        binary_mut_colname_dict (dict): dictionary mapping library name to corresponding column name
                                         in terra workspace where the binarized mutation calls are stored
         save_output (str, optional): whether to save our data. Defaults to "".
 
@@ -280,7 +419,9 @@ def aggregateGermlineMatrix(
         print(str(len(na_samples)) + " samples don't have corresponding binarized mutation calls for " + lib + ": ", na_samples)
         all_muts = []
         header = False
-        for name, row in sample_table_valid.iterrows():
+        for name, row in tqdm(
+            sample_table_valid.iterrows(), total=len(sample_table_valid)
+        ):
             sample_mut = pd.read_csv(row[colname])
             if header == False:
                 all_muts.append(sample_mut)
@@ -301,8 +442,10 @@ def postProcess(
     save_output=constants.WORKING_DIR,
     sv_col=constants.SV_COLNAME,
     sv_filename=constants.SV_FILENAME,
-    sv_renaming=constants.SV_COLRENAME,
-    run_sv=True,
+    sv_mat_filename=constants.SV_MAT_FILENAME,
+    sv_header=constants.SV_HEADER,
+    run_sv=False,
+    sv_af_cutoff=constants.SV_INTERNAL_AF_CUTOFF,
     debug=False,
 ):
     """Calls functions to aggregate MAF files, annotate likely immortalization status of mutations,
@@ -347,6 +490,7 @@ def postProcess(
     print("done")
 
     svs = None
+    sv_mat = None
     if run_sv:
         svs = aggregateSV(
             wm,
@@ -354,12 +498,14 @@ def postProcess(
             sv_colname=sv_col,
             save_output=save_output,
             save_filename=sv_filename,
-            sv_renaming=sv_renaming,
+            sv_header=sv_header,
         )
-        print("saving svs (all)")
-        svs.to_csv(save_output + "svs_all.csv", index=False)
+        svs = sv_internal_af_filter(svs, cutoff=sv_af_cutoff)
+        sv_mat = generate_sv_matrix(
+            svs, save_output=save_output, save_filename=sv_mat_filename
+        )
 
-    return mutations_with_standard_cols, svs
+    return mutations_with_standard_cols, svs, sv_mat
 
 
 def GetVariantClassification(
@@ -631,6 +777,65 @@ def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
         return False
 
 
+def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
+    """add column to indicate why variants are rescued
+
+    Args:
+        maf (df): MAF-like dataframe containing variants
+        rescue_reason_colname (str): name of the rescue reason column
+
+    Returns:
+        maf (df): MAF-like dataframe containing variants, with rescue reason"""
+    # initialize column as empty lists
+    maf[rescue_reason_colname] = [[] for _ in range(maf.shape[0])]
+
+    # go over each possible rescue reason in vcf_to_depmap and append them to the list
+    maf.loc[
+        (maf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
+        | (maf["oncokb_oncogenic"] == "Oncogenic")
+        | (maf["oncokb_hotspot"] == "Y"),
+        "rescue_reason",
+    ].apply(lambda x: x.append("OncoKB"))
+    maf.loc[(maf["cosmic_tier"] == 1), "rescue_reason"].apply(
+        lambda x: x.append("Cosmic")
+    )
+    maf.loc[(maf["brca1_func_score"].astype(float) <= -1.328), "rescue_reason"].apply(
+        lambda x: x.append("BRCA1_score")
+    )
+    maf.loc[(maf["oncogene_high_impact"] == True), "rescue_reason"].apply(
+        lambda x: x.append("Oncogene_high_impact")
+    )
+    maf.loc[(maf["tumor_suppressor_high_impact"] == True), "rescue_reason"].apply(
+        lambda x: x.append("TS_high_impact")
+    )
+    maf.loc[(maf["hess_driver"] == "Y"), "rescue_reason"].apply(
+        lambda x: x.append("Hess")
+    )
+    maf.loc[
+        (
+            (maf["Hugo_Symbol"] == "TERT")
+            & (maf["pos"] >= 1295054)
+            & (maf["pos"] <= 1295365)
+        ),
+        "rescue_reason",
+    ].apply(lambda x: x.append("TERT"))
+    maf.loc[
+        (
+            (maf["Hugo_Symbol"] == "MET")
+            & (maf["pos"] >= 116771825)
+            & (maf["pos"] <= 116771840)
+        ),
+        "rescue_reason",
+    ].apply(lambda x: x.append("MET"))
+
+    # join list of strings into one big string
+    maf[rescue_reason_colname] = maf[rescue_reason_colname].apply(
+        lambda x: ", ".join(x)
+    )
+
+    return maf
+
+
 def postprocess_main_steps(
     maf: pd.DataFrame,
     adjusted_gnomad_af_cutoff: float = 1e-3,
@@ -692,13 +897,40 @@ def postprocess_main_steps(
     # step 6: add likely LoF column based on vep impact and oncokb mutation effect
     maf["likely_lof"] = maf.apply(addLikelyLoF, axis=1)
 
-    # step 7: add hotspot column based on 
+    # step 7: add hotspot column based on multiplt criteria
     maf["hotspot"] = False
-    maf.loc[((maf[constants.HESS_COL] == "Y")
-        | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
-        | (maf[constants.COSMIC_TIER_COL] == 1)), "hotspot"] = True
+    maf.loc[
+        (
+            (
+                (maf[constants.HESS_COL] == "Y")
+                | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
+                | (maf[constants.COSMIC_TIER_COL] == 1)
+            ),
+            "hotspot",
+        )
+    ] = True
+    # manually classify two TERT promoter mutations
+    maf.loc[
+        (maf["chrom"] == "chr5") & (maf["pos"] == 1295135) & (maf["alt"] == "A"),
+        "hotspot",
+    ] = True
+    maf.loc[
+        (maf["chrom"] == "chr5") & (maf["pos"] == 1295113) & (maf["alt"] == "A"),
+        "hotspot",
+    ] = True
+
+    # manually classify MET intron13 PPT mutations
+    maf.loc[
+        (maf["chrom"] == "chr7")
+        & (maf["pos"] >= 116771825)
+        & (maf["pos"] <= 116771840),
+        "hotspot",
+    ] = True
     print("unique hotspot genes: ")
     print(len(maf[maf["hotspot"] == True]["Hugo_Symbol"].unique()))
+
+    # add rescue reason column
+    maf = addRescueReason(maf)
 
     # step 8: remove high af from DepMap cohort
     internal_afs = maf.loc[
