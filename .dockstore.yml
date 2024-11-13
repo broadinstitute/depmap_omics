@@ -218,6 +218,7 @@ workflows:
         - mutation-annotation-eval
         - update-vcf-to-depmap
         - add-tert-to-wdl
+        - add-aplice-ai
   - name: vcf2maf
     subclass: WDL
     publish: True
@@ -308,3 +309,30 @@ workflows:
     filters: # All tags, no branches
       branches:
         - guidemat-wdl
+- name: WGS_preprocessing_DRAGEN_24Q2
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/WGS_preprocessing_DRAGEN_24Q2.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - master
+- name: CramToBam.wdl
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/CramToBam.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - master
+- name: BamToUnmappedRGBams_noHardClips.wdl
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/BamToUnmappedRGBams_noHardClips.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - master

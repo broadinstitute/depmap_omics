@@ -1,6 +1,6 @@
-SAMPLESETNAME = "23Q4"
+SAMPLESETNAME = "24Q2"
 
-RELEASE = "23q4"
+RELEASE = "24q2"
 
 WORKING_DIR = "output/"
 
@@ -372,7 +372,6 @@ MUTCOL_DEPMAP = {
     # 'popaf': 'Popaf',
     # 'likely_gof': 'LikelyGof',
     'likely_lof': 'LikelyLoF',
-    'hotspot': 'Hotspot',
     'hess_driver': 'HessDriver',
     'hess_signture': 'HessSignature',
     'revel_score': 'RevelScore',
@@ -394,6 +393,9 @@ MUTCOL_DEPMAP = {
     'rescue': 'Rescue',
     'DepMap_ID': 'DepMap_ID',
  }
+
+# columns generated in postprocessing, not in terra
+MUTCOL_ADDITIONAL = {'hotspot': 'Hotspot'}
 
 MUTCOL_STANDARDMAF = {
     "Chromosome": "Chromosome",
@@ -446,15 +448,25 @@ FUSION_MINFFPM = 0.05
 
 FUSION_MAXFFPM = 0.1
 
+SAMPLESETNAME_STRANDED = "all_stranded"
+
 STARBAMCOLTERRA = ["internal_bam_filepath", "internal_bai_filepath"]
 
 RSEM_TRANSCRIPTS = ["rsem_transcripts_expected_count", "rsem_transcripts_tpm"]
 
 RSEMFILENAME_GENE = ["genes_tpm", "genes_expected_count", "genes_effective_length"]
 
+RSEMFILENAME_GENE_STRANDED = ["genes_tpm_stranded", "genes_expected_count_stranded", "genes_effective_length_stranded"]
+
 PROTEINEFILENAMES = ["proteincoding_genes_tpm", "proteincoding_genes_expected_count"]
 
 RSEMFILENAME_TRANSCRIPTS = ["transcripts_tpm", "transcripts_expected_count"]
+
+RSEMFILENAME_TRANSCRIPTS_STRANDED = ["transcripts_tpm_stranded", "transcripts_expected_count_stranded"]
+
+RNASEQC2_GENE_COUNT_COL = "rnaseqc2_gene_counts"
+
+RNASEQC2_GENE_COUNT_COL_STRANDED = "rnaseqc2_gene_counts_stranded"
 
 RSEMFILENAME = [
     "genes_tpm",
@@ -602,6 +614,7 @@ VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
     "genes_expectedCount_profile": "OmicsExpressionGenesExpectedCountProfile",
     "transcripts_expectedCount_profile": "OmicsExpressionTranscriptsExpectedCountProfile",
     "gene_set_enrichment_profile": "OmicsExpressionGeneSetEnrichmentProfile",
+    "rnaseqc_count_mat_profile": "OmicsExpressionRNASeQCGeneCountProfile"
 }
 
 VIRTUAL_FILENAMES_NUMMAT_CN_PR = {
