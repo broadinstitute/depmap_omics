@@ -1020,14 +1020,10 @@ def mutationPostProcessing(
     print('mutations 1:', wgsmutations.columns)
     # pytest.set_trace()
 
-    wgsmutations_pr = wgsmutations[
-        wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace(
-        {constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict}
-    )
+    wgsmutations_pr = wgsmutations.copy(deep=True)
 
     print('mutations 2:', wgsmutations_pr.columns)
-
+    #pytest.set_trace()
     # merge
     print("merging WES and WGS")
     folder = constants.WORKING_DIR + 'tcga' + "/merged_"
@@ -1052,7 +1048,7 @@ def mutationPostProcessing(
             mergedmutations.loc[:, col] = np.where(
                 mergedmutations[col].values == "Y", True, False
             )
-
+    #pytest.set_trace()
     mergedmutations[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(
         folder + "somatic_mutations.csv", index=False
     )
@@ -1097,11 +1093,11 @@ def mutationPostProcessing(
             wgs_sv_mat_pr.to_csv(folder + "sv_mat_with_entrez_profile.csv")
         else:
             print("no WGS SVs processed")
-
+    #pytest.set_trace()
     merged = pd.concat([wgsmutations_pr], axis=0).reset_index(
         drop=True
     )
-    # pytest.set_trace()
+    #pytest.set_trace()
     print('mutations 3:', merged)
     # For all columns, convert "Y" to True/False
     for col in merged.columns:
