@@ -224,3 +224,6 @@ modules/
 guidemat_test/
 
 .idea
+
+*.gtf
+*.hdf5
