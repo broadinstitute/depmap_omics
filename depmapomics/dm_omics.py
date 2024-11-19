@@ -145,8 +145,6 @@ async def expressionPostProcessing(
 
     pr_table = mytracker.read_pr_table()
     
-    mytracker.close_gumbo_client()
-
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
@@ -457,8 +455,6 @@ async def fusionPostProcessing(
         os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
     )
 
-    mytracker.close_gumbo_client()
-
     # taiga
     print("uploading to taiga")
     tc.update_dataset(
@@ -644,8 +640,6 @@ def cnPostProcessing(
 
     with open(masked_gene_list, "r") as f:
         genes_to_mask = f.read().splitlines()
-
-    mytracker.close_gumbo_client()
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
@@ -1027,7 +1021,6 @@ async def mutationPostProcessing(
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
-    mytracker.close_gumbo_client()
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
