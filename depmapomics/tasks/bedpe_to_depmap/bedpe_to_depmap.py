@@ -3,7 +3,7 @@ import gzip
 import argparse
 import itertools
 
-COLS_TO_KEEP = [
+COLS_TO_KEEP_MANTA = [
     "CHROM_A",
     "START_A",
     "END_A",
@@ -44,6 +44,19 @@ COLS_TO_KEEP = [
     "Rescue",
 ]
 
+COLS_TO_KEEP_SVABA = ['chrom1', 'start1', 'end1', 'chrom2', 'start2', 'end2',
+       'name', 'score', 'strand1', 'strand2', 'REF_1', 'ALT_1', 'REF_2',
+       'ALT_2', 'SPAN', 'HOMSEQ', 'INSERTION', 'NDISC', 'FILTER', 'EVDNC',
+       'TUMALT', 'GENO', 'TUMOR', 'MAPQ_1', 'MAPQ_2', 'NALT_SR', 'NALT',
+       'gnomad_dist', 'gnomad_dist_avg', 'gnomad_d_bkpt1', 'gnomad_d_bkpt2',
+       'line_dist', 'sine_dist', 'sv_dist', 'sv_count_5Mbp', 'CN_annot',
+       'exon_annot', 'svtype', 'tp53_status', 'sv_reptime_left',
+       'sv_reptime_right', 'insertion_len', 'homlen', 'hom_gc', 'insertion_gc',
+       'del', 'dup', 'inv', 'inter', 'num_sv_sample', 'log_SPAN', 'log_homlen',
+       'log_insertion_len', 'log_gnomad_d_bkpt1', 'log_gnomad_d_bkpt2',
+       'log_line_dist', 'log_sine_dist', 'log_num_sv_sample', 'log_sv_dist',
+       'log_sv_count_5Mbp', 'predicted_class', 'sample', 'Rescue',
+        "SYMBOL_A", "GENEID_A", "SYMBOL_B", "GENEID_B", "DEL_SYMBOLS", "DEL_GENEIDS", "DUP_SYMBOLS", "DUP_GENEIDS"]
 
 def main(args=None):
     parser = argparse.ArgumentParser()
@@ -80,7 +93,7 @@ def main(args=None):
         sample_name + ".svs.expanded.reannotated.filtered.bedpe", index=False, sep="\t"
     )
 
-
+# not needed for svaba/gatsv
 def bedpe_to_df(
     path,
     additional_cols=[],
@@ -218,7 +231,7 @@ def bedpe_to_df(
 
     return data
 
-
+# needed for both svaba and manta
 def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation_path):
     """since VEP can't reliably give the correct gene symbol annotation, redo it here
 
@@ -360,7 +373,7 @@ def reannotate_genes(bedpe, annotation_path, del_annotation_path, dup_annotation
 
     return merged
 
-
+# gnomad not needed for svaba/gatsv
 def filter_svs(
     df,
     cosmic_fusion_pairs,
