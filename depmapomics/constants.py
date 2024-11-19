@@ -102,20 +102,20 @@ STR_LOCI_13 = [
     "TPOX",
 ]
 
-VCFDIR = "/tmp/vcfs/"
-
 GUIDESBED = {
     "avana": "data/avana_guides.bed",
     "humagne": "data/humagne_guides.bed",
     "ky": "data/ky_score_guides.bed",
+    "tkov3": "data/tkov3_guides.bed",
+    "brunello": "brunello_guides.bed"
 }
-
-VCFCOLNAME = "mutect2_filtered_vcf"
 
 BINARY_MUT_COLNAME_DICT = {
     "avana": "avana_binary_mut",
     "humagne": "humagne_binary_mut",
     "ky": "ky_binary_mut",
+    "brunello": "brunello_binary_mut",
+    "tkov3": "tkov3_binary_mut"
 }
 
 GENECHANGETHR = 0.025
@@ -655,6 +655,8 @@ VIRTUAL_FILENAMES_GUIDEMUT = {
     "binary_mutation_avana": "OmicsGuideMutationsBinaryAvana",
     "binary_mutation_ky": "OmicsGuideMutationsBinaryKY",
     "binary_mutation_humagne": "OmicsGuideMutationsBinaryHumagne",
+    "binary_mutation_brunello": "OmicsGuideMutationsBinaryBrunello",
+    "binary_mutation_tkov3": "OmicsGuideMutationsBinaryTKOv3"
 }
 
 VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {
