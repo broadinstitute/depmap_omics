@@ -253,7 +253,7 @@ def aggregateSV(
     return all_svs
 
 
-def sv_internal_af_filter(bedpe, cutoff=constants.SV_INTERNAL_AF_CUTOFF):
+def sv_internal_af_filter(bedpe, cols=["CHROM_A", "START_A", "END_A", "ALT_A", "CHROM_B", "START_B", "END_B", "TYPE"], cutoff=constants.SV_INTERNAL_AF_CUTOFF):
     """In order to filter out artifacts, calculate the allele frequencies of SVs
     within the sample set. Remove ones that are above the cutoff and not rescued
 
@@ -269,7 +269,7 @@ def sv_internal_af_filter(bedpe, cutoff=constants.SV_INTERNAL_AF_CUTOFF):
 
     internal_afs = bedpe.loc[
         :,
-        ["CHROM_A", "START_A", "END_A", "ALT_A", "CHROM_B", "START_B", "END_B", "TYPE"],
+        cols,
     ].apply(lambda x: ":".join(map(str, x)), axis=1)
     total_samples = bedpe[constants.SAMPLEID].unique().shape[0]
     internal_afs_ratio_dict = {}
