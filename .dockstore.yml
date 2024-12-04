@@ -359,3 +359,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - vep-sv
+  - name: cnv_somatic_pair_workflow
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/cnv_somatic_pair_workflow.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - gatk-cnv-skip-denoising
