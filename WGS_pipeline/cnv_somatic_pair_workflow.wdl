@@ -378,7 +378,6 @@ workflow CNVSomaticPairWorkflow {
         call ModelSegments as ModelSegmentsNormal {
             input:
                 entity_id = CollectCountsNormal.entity_id,
-                denoised_copy_ratios = DenoiseReadCountsNormal.denoised_copy_ratios,
                 allelic_counts = CollectAllelicCountsNormal.allelic_counts,
                 max_num_segments_per_chromosome = max_num_segments_per_chromosome,
                 min_total_allele_count = min_total_allele_count_normal,
