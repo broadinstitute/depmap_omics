@@ -244,6 +244,7 @@ workflow CNVSomaticPairWorkflow {
     call ModelSegments as ModelSegmentsTumor {
         input:
             entity_id = CollectCountsTumor.entity_id,
+            denoised_copy_ratios = DenoiseReadCountsTumor.standardized_copy_ratios,
             allelic_counts = CollectAllelicCountsTumor.allelic_counts,
             normal_allelic_counts = CollectAllelicCountsNormal.allelic_counts,
             max_num_segments_per_chromosome = max_num_segments_per_chromosome,
@@ -378,6 +379,7 @@ workflow CNVSomaticPairWorkflow {
         call ModelSegments as ModelSegmentsNormal {
             input:
                 entity_id = CollectCountsNormal.entity_id,
+                denoised_copy_ratios = DenoiseReadCountsNormal.standardized_copy_ratios,
                 allelic_counts = CollectAllelicCountsNormal.allelic_counts,
                 max_num_segments_per_chromosome = max_num_segments_per_chromosome,
                 min_total_allele_count = min_total_allele_count_normal,
@@ -596,6 +598,7 @@ task DenoiseReadCounts {
 task ModelSegments {
     input {
       String entity_id
+      File denoised_copy_ratios
       File allelic_counts
       File? normal_allelic_counts
       Int? max_num_segments_per_chromosome
@@ -647,6 +650,7 @@ task ModelSegments {
         export GATK_LOCAL_JAR=~{default="/root/gatk.jar" gatk4_jar_override}
 
         gatk --java-options "-Xmx~{command_mem_mb}m" ModelSegments \
+            --denoised-copy-ratios ~{denoised_copy_ratios} \
             --allelic-counts ~{allelic_counts} \
             ~{"--normal-allelic-counts " + normal_allelic_counts} \
             --minimum-total-allele-count-case ~{min_total_allele_count_} \
