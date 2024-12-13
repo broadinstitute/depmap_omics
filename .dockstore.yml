@@ -32,6 +32,7 @@ workflows:
         - dev
         - master
         - update-rna-pipeline-for-crams
+        - tpm-from-fastq
   - name: WGS_pipeline
     subclass: WDL
     publish: True
