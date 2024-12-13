@@ -1,6 +1,5 @@
 version 1.0
 
-import "samtofastq_wdl1-0.wdl" as samtofastq_v1
 import "star_wdl1-0.wdl" as star_v1
 import "rnaseqc2_wdl1-0.wdl" as rnaseqc2_v1
 import "rsem_depmap.wdl" as rsem_v1
@@ -11,8 +10,9 @@ import "hg38_STAR_fusion_wdl1-0.wdl" as hg38_STAR_fusion
 workflow RNA_pipeline {
 
   input {
-  #samtofastq_v1
-  File input_bam_cram
+
+  File fastq1
+  File fastq2
   File reference_fasta
   File reference_fasta_index
 
@@ -58,19 +58,11 @@ workflow RNA_pipeline {
 #   File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
   }
 
-  call samtofastq_v1.samtofastq as samtofastq {
-    input:
-      input_bam_cram=input_bam_cram,
-      prefix=sample_id,
-      reference_fasta=reference_fasta,
-      reference_index=reference_fasta_index
-  }
-
   call star_v1.star as star {
     input:
       prefix=sample_id,
-      fastq1=samtofastq.fastq1,
-      fastq2=samtofastq.fastq2,
+      fastq1=fastq1,
+      fastq2=fastq2,
       star_index=star_index
   }
 
@@ -92,8 +84,8 @@ workflow RNA_pipeline {
 
   call hg38_STAR_fusion.StarFusion as StarFusion {
     input:
-      left_fastq=samtofastq.fastq1,
-      right_fastq=samtofastq.fastq2,
+      left_fastq=fastq1,
+      right_fastq=fastq2,
       prefix=sample_id,
       ctat_genome_lib_build_dir_files=ctat_genome_lib_build_dir_files,
       ref_genome_fa_star_idx_files=ref_genome_fa_star_idx_files
@@ -133,7 +125,6 @@ workflow RNA_pipeline {
 #   }
 
   output {
-    #samtofastq
     #star
     File bam_file=star.bam_file
     File bam_index=star.bam_index
