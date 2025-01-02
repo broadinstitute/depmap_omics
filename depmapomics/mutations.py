@@ -194,7 +194,7 @@ def aggregateMAFs(
     counter = 0
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
-        maf = pd.read_csv(row[mafcol])
+        maf = pd.read_parquet(row[mafcol])
         maf[constants.SAMPLEID] = name
         # >1 because of the hess_signature typo in input mafs
         # can be 0 once the type is fixed upstream
@@ -795,7 +795,7 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[
         (maf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
         | (maf["oncokb_oncogenic"] == "Oncogenic")
-        | (maf["oncokb_hotspot"] == "Y"),
+        | maf["oncokb_hotspot"],
         "rescue_reason",
     ].apply(lambda x: x.append("OncoKB"))
     maf.loc[(maf["cosmic_tier"] == 1), "rescue_reason"].apply(
@@ -810,7 +810,7 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[(maf["tumor_suppressor_high_impact"] == True), "rescue_reason"].apply(
         lambda x: x.append("TS_high_impact")
     )
-    maf.loc[(maf["hess_driver"] == "Y"), "rescue_reason"].apply(
+    maf.loc[maf["hess_driver"], "rescue_reason"].apply(
         lambda x: x.append("Hess")
     )
     maf.loc[
@@ -854,6 +854,9 @@ def postprocess_main_steps(
     # force nan to be zero
     maf.loc[:, "gnomade_af"] = maf.loc[:, "gnomade_af"].fillna(0)
     maf.loc[:, "gnomadg_af"] = maf.loc[:, "gnomadg_af"].fillna(0)
+
+    # fill NAs
+    maf.loc[:, "oncokb_effect"] = maf.loc[:, "oncokb_effect"].fillna("")
 
     # step 1: filter the leftmost synonymous mutation
     maf = maf.query("~variant_info.str.contains('^synony', regex=True)")
@@ -904,9 +907,9 @@ def postprocess_main_steps(
     maf.loc[
         (
             (
-                (maf[constants.HESS_COL] == "Y")
-                | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
-                | (maf[constants.COSMIC_TIER_COL] == 1)
+                maf[constants.HESS_COL]
+                | maf[constants.ONCOKB_HOTSPOT_COL]
+                | maf[constants.COSMIC_TIER_COL].eq(1)
             ),
             "hotspot",
         )
