@@ -18,8 +18,8 @@ workflow SVAnnotate_workflow {
     }
 
     output {
-        File vcf_anno = Standardize.vcf_anno
-        File vcf_anno_tbi = Standardize.vcf_anno_tbi
+        File vcf_anno = SVAnnotate.vcf_anno
+        File vcf_anno_tbi = SVAnnotate.vcf_anno_tbi
     }
 }
 
