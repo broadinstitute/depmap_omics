@@ -8,13 +8,24 @@ workflow SVAnnotate_workflow {
         File coding_gtf
         File noncoding_bed
 
-        String docker="quay.io/ymostovoy/lr-svannotate:latest"
+        # taken from https://app.terra.bio/#workspaces/broad-firecloud-dsde-methods/GATK-Structural-Variants-Joint-Calling/data
+        String standardizeVCF_docker="us.gcr.io/broad-dsde-methods/gatk-sv/sv-pipeline:2024-11-15-v1.0-488d7cb0"
+        String svannotate_docker="quay.io/ymostovoy/lr-svannotate:latest"
+    }
+
+    call StandardizeVCF {
+        input: 
+            raw_vcf=vcf,
+            sample_id=sample_id,
+            caller="manta",
+            contigs="gs://gcp-public-data--broad-references/hg38/v0/sv-resources/resources/v1/contig.fai",
+            sv_pipeline_docker=standardizeVCF_docker,
     }
 
     call SVAnnotate {
         input:
             sample_id=sample_id,
-            vcf=vcf, 
+            vcf=StandardizeVCF.out, 
             coding_gtf=coding_gtf, 
             noncoding_bed=noncoding_bed,
             docker=docker
@@ -23,6 +34,49 @@ workflow SVAnnotate_workflow {
     output {
         File vcf_anno = SVAnnotate.vcf_anno
         File vcf_anno_tbi = SVAnnotate.vcf_anno_tbi
+    }
+}
+
+task StandardizeVCF {
+    input {
+        File raw_vcf
+        String sample_id
+        String caller
+        File contigs
+        String sv_pipeline_docker
+        Int min_svsize=50
+
+        Int cpu = 2
+        Int mem_gb = 8
+        Int preemptible = 3
+        Int max_retries = 0
+        Int additional_disk_gb = 0
+        Int boot_disk_size = 60
+    }
+
+    Int disk_size = 5 + 5*ceil(size(vcf, "GB"))
+
+    command <<<
+        set -euo pipefail
+        mkdir out
+        
+        svtk standardize --sample-names ${sample_id} --prefix ~{caller}_${sample_id} --contigs ~{contigs} --min-size ~{min_svsize} $vcf tmp.vcf ~{caller}
+        bcftools sort tmp.vcf -Oz -o out/std.~{caller}.${sample_id}.vcf.gz
+        tar czf ~{sample_id}.tar.gz -C out/ .
+    >>>
+
+    output {
+        File out = "~{sample_id}.tar.gz"
+    }
+
+    runtime {
+        docker: docker
+        bootDiskSizeGb: boot_disk_size
+        memory: "~{mem_gb} GB"
+        disks: "local-disk ~{disk_size} SSD"
+        preemptible: preemptible
+        maxRetries: max_retries
+        cpu: cpu
     }
 }
 
