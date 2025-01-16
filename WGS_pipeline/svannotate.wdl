@@ -54,13 +54,13 @@ task StandardizeVCF {
         Int boot_disk_size = 60
     }
 
-    Int disk_size = 5 + 5*ceil(size(vcf, "GB"))
+    Int disk_size = 5 + 5*ceil(size(raw_vcf, "GB"))
 
     command <<<
         set -euo pipefail
         mkdir out
         
-        svtk standardize --sample-names ${sample_id} --prefix ~{caller}_${sample_id} --contigs ~{contigs} --min-size ~{min_svsize} $vcf tmp.vcf ~{caller}
+        svtk standardize --sample-names ${sample_id} --prefix ~{caller}_${sample_id} --contigs ~{contigs} --min-size ~{min_svsize} ~{raw_vcf} tmp.vcf ~{caller}
         bcftools sort tmp.vcf -Oz -o out/std.~{caller}.${sample_id}.vcf.gz
         tar czf ~{sample_id}.tar.gz -C out/ .
     >>>
