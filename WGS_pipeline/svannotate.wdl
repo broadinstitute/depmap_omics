@@ -28,6 +28,13 @@ task SVAnnotate {
         File vcf
         File coding_gtf
         File noncoding_bed
+
+        Int cpu = 2
+        Int mem_gb = 8
+        Int preemptible = 3
+        Int max_retries = 0
+        Int additional_disk_gb = 0
+        Int boot_disk_size = 60
     }
 
     Int disk_size = 5 + 5*ceil(size(vcf, "GB"))
@@ -47,24 +54,13 @@ task SVAnnotate {
         File vcf_anno_tbi = "~{sample_id}.anno.vcf.gz.tbi"
     }
 
-    #########################
-    RuntimeAttr default_attr = object {
-        cpu_cores:          2,
-        mem_gb:             2,
-        disk_gb:            disk_size,
-        boot_disk_gb:       10,
-        preemptible_tries:  0,
-        max_retries:        0,
-        docker:             "quay.io/ymostovoy/lr-svannotate:latest"
-    }
-    RuntimeAttr runtime_attr = select_first([runtime_attr_override, default_attr])
     runtime {
-        cpu:                    select_first([runtime_attr.cpu_cores,         default_attr.cpu_cores])
-        memory:                 select_first([runtime_attr.mem_gb,            default_attr.mem_gb]) + " GiB"
-        disks: "local-disk " +  select_first([runtime_attr.disk_gb,           default_attr.disk_gb]) + " HDD"
-        bootDiskSizeGb:         select_first([runtime_attr.boot_disk_gb,      default_attr.boot_disk_gb])
-        preemptible:            select_first([runtime_attr.preemptible_tries, default_attr.preemptible_tries])
-        maxRetries:             select_first([runtime_attr.max_retries,       default_attr.max_retries])
-        docker:                 select_first([runtime_attr.docker,            default_attr.docker])
+        docker: "quay.io/ymostovoy/lr-svannotate:latest"
+        bootDiskSizeGb: boot_disk_size
+        memory: "~{mem_gb} GB"
+        disks: "local-disk ~{disk_size} SSD"
+        preemptible: preemptible
+        maxRetries: max_retries
+        cpu: cpu
     }
 }
