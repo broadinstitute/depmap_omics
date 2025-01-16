@@ -359,3 +359,12 @@ workflows:
     filters: # All tags, no branches
       branches:
         - vep-sv
+  - name: svannotate
+    subclass: WDL
+    publish: True
+    primaryDescriptorPath: /WGS_pipeline/svannotate.wdl
+    testParameterFiles:
+      - /test.json
+    filters: # All tags, no branches
+      branches:
+        - gatk-svannotate
