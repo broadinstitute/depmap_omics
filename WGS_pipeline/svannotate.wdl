@@ -7,6 +7,8 @@ workflow SVAnnotate_workflow {
         File vcf
         File coding_gtf
         File noncoding_bed
+
+        String docker="quay.io/ymostovoy/lr-svannotate:latest"
     }
 
     call SVAnnotate {
@@ -14,7 +16,8 @@ workflow SVAnnotate_workflow {
             sample_id=sample_id,
             vcf=vcf, 
             coding_gtf=coding_gtf, 
-            noncoding_bed=noncoding_bed
+            noncoding_bed=noncoding_bed,
+            docker=docker
     }
 
     output {
@@ -27,6 +30,7 @@ task SVAnnotate {
     input {
         String sample_id
         File vcf
+        String docker
         File coding_gtf="gs://gatk-sv-resources-public/hg38/v0/sv-resources/resources/v1/MANE.GRCh38.v1.2.ensembl_genomic.gtf"
         File noncoding_bed="gs://gcp-public-data--broad-references/hg38/v0/sv-resources/resources/v1/noncoding.sort.hg38.bed"
 
@@ -56,7 +60,7 @@ task SVAnnotate {
     }
 
     runtime {
-        docker: "quay.io/ymostovoy/lr-svannotate:latest"
+        docker: docker
         bootDiskSizeGb: boot_disk_size
         memory: "~{mem_gb} GB"
         disks: "local-disk ~{disk_size} SSD"
