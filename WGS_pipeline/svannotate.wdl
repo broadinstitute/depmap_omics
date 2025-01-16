@@ -27,8 +27,8 @@ task SVAnnotate {
     input {
         String sample_id
         File vcf
-        File coding_gtf
-        File noncoding_bed
+        File coding_gtf="gs://gatk-sv-resources-public/hg38/v0/sv-resources/resources/v1/MANE.GRCh38.v1.2.ensembl_genomic.gtf"
+        File noncoding_bed="gs://gcp-public-data--broad-references/hg38/v0/sv-resources/resources/v1/noncoding.sort.hg38.bed"
 
         Int cpu = 2
         Int mem_gb = 8
