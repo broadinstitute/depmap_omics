@@ -28,7 +28,7 @@ workflow SVAnnotate_workflow {
             vcf=StandardizeVCF.out, 
             coding_gtf=coding_gtf, 
             noncoding_bed=noncoding_bed,
-            docker=docker
+            docker=svannotate_docker
     }
 
     output {
