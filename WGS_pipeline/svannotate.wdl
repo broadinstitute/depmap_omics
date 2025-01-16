@@ -60,8 +60,8 @@ task StandardizeVCF {
         set -euo pipefail
         mkdir out
         
-        svtk standardize --sample-names ${sample_id} --prefix ~{caller}_${sample_id} --contigs ~{contigs} --min-size ~{min_svsize} ~{raw_vcf} tmp.vcf ~{caller}
-        bcftools sort tmp.vcf -Oz -o out/std.~{caller}.${sample_id}.vcf.gz
+        svtk standardize --sample-names ~{sample_id} --prefix ~{caller}_~{sample_id} --contigs ~{contigs} --min-size ~{min_svsize} ~{raw_vcf} tmp.vcf ~{caller}
+        bcftools sort tmp.vcf -Oz -o out/std.~{caller}.~{sample_id}.vcf.gz
         tar czf ~{sample_id}.tar.gz -C out/ .
     >>>
 
