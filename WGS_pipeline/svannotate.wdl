@@ -25,6 +25,7 @@ workflow SVAnnotate_workflow {
 
 task SVAnnotate {
     input {
+        String sample_id
         File vcf
         File coding_gtf
         File noncoding_bed
