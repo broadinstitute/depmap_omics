@@ -70,7 +70,7 @@ task StandardizeVCF {
     }
 
     runtime {
-        docker: docker
+        docker: sv_pipeline_docker
         bootDiskSizeGb: boot_disk_size
         memory: "~{mem_gb} GB"
         disks: "local-disk ~{disk_size} SSD"
