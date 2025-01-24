@@ -773,7 +773,6 @@ def drop_lowqual(
             | (vcf["slippage"] == "Y")
             | (vcf["strand_bias"] == "Y")
             | (vcf["weak_evidence"] == "Y")
-            | (vcf["clustered_events"] == "Y")
             | (vcf["base_qual"] == "Y")
         )
     )
