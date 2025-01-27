@@ -288,7 +288,7 @@ SV_HEADER = [
     SAMPLEID,
 ]
 
-MAF_COL = "depmap_maf"
+MAF_COL = "depmap_maf_23q4"
 
 HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
 
