@@ -13,8 +13,11 @@ workflow annotateVariants {
         File input_vcf
         String sample_id
         String bcftools_exclude_string = 'FILTER~"weak_evidence"||FILTER~"map_qual"||FILTER~"strand_bias"||FILTER~"slippage"||FILTER~"clustered_events"||FILTER~"base_qual"'
+        String vep_pick_order = "mane_select,mane_plus_clinical,canonical,appris,tsl,biotype,ccds,rank,length,ensembl,refseq"
         Int hgvs_boot_disk_size=100
         Int hgvs_disk_space=200
+        String hgvs_vep_data="gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
+        String hgvs_docker_image="us.gcr.io/cds-docker-containers/hgvs"
         Int oc_boot_disk_size=600
         Int oc_disk_space=600
         Int oc_mem=64
@@ -39,6 +42,7 @@ workflow annotateVariants {
             sample_id=sample_id,
             boot_disk_size=hgvs_boot_disk_size,
             disk_space=hgvs_disk_space,
+            vep_pick_order=vep_pick_order
     }
 
     call openCravat.opencravat as open_cravat {
