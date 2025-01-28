@@ -42,7 +42,9 @@ workflow annotateVariants {
             sample_id=sample_id,
             boot_disk_size=hgvs_boot_disk_size,
             disk_space=hgvs_disk_space,
-            vep_pick_order=vep_pick_order
+            vep_pick_order=vep_pick_order,
+            vep_data=hgvs_vep_data,
+            docker_image=hgvs_docker_image
     }
 
     call openCravat.opencravat as open_cravat {
