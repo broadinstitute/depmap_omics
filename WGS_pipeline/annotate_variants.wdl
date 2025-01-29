@@ -16,8 +16,8 @@ workflow annotateVariants {
         String vep_pick_order = "mane_select,mane_plus_clinical,canonical,ccds,biotype,rank"
         Int hgvs_boot_disk_size=100
         Int hgvs_disk_space=200
-        String hgvs_vep_data="gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
-        String hgvs_docker_image="us.gcr.io/cds-docker-containers/hgvs"
+        String hgvs_vep_data="gs://cds-vep-data/homo_sapiens_vep_113_GRCh38.tar.gz"
+        String hgvs_docker_image="us-docker.pkg.dev/depmap-omics/public/hgvs:vep113.3"
         Int oc_boot_disk_size=600
         Int oc_disk_space=600
         Int oc_mem=64

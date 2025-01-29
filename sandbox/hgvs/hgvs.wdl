@@ -6,6 +6,8 @@ workflow HgvsWorkflow {
         File input_vcf
         String sample_id
         String vep_pick_order
+        String docker_images
+        File vep_data
         File pLi = "gs://cds-vep-data/pLI_values.txt"
         File LoF = "gs://cds-vep-data/LoFtool_scores.txt"
 
@@ -19,7 +21,6 @@ workflow HgvsWorkflow {
         File alphamis = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz"
         File alphamis_idx = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz.tbi"
 
-        File vep_data = "gs://cds-vep-data/homo_sapiens_vep_113_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
@@ -27,7 +28,6 @@ workflow HgvsWorkflow {
         Int disk_space=60
         Int cpu = 10
         Int mem = 80
-        String docker_image="us-docker.pkg.dev/depmap-omics/public/hgvs:vep113.3"
     }
 
     call annotate_hgvs_task {
