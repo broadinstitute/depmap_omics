@@ -278,6 +278,7 @@ workflows:
         - master
         - dev-hgvs
         - tcga_mutation_processing
+        - remove-clustered-events-filter
   - name: WGS_preprocessing_DRAGEN_24Q2
     subclass: WDL
     publish: True
