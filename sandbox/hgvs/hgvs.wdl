@@ -27,7 +27,7 @@ workflow HgvsWorkflow {
         Int disk_space=60
         Int cpu = 10
         Int mem = 80
-        String docker_image="us.gcr.io/cds-docker-containers/hgvs"
+        String docker_image="us-docker.pkg.dev/depmap-omics/public/hgvs:vep113.3"
     }
 
     call annotate_hgvs_task {
