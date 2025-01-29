@@ -792,6 +792,7 @@ def to_maf(
     only_coding=True,
     only_somatic=True,
     mask_segdup_and_rm=True,
+    drop_clustered_events=True,
     version="",
     **kwargs,
 ):
@@ -905,6 +906,9 @@ def to_maf(
             )
             | important
         )
+    if drop_clustered_events:
+        print("dropping clustered_events variants")
+        loc = ((vcf["clustered_events"] != "Y") | important) & loc
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
         loc = (((vcf["segdup"] != "Y") & (vcf["rm"] != "Y")) | important) & loc
