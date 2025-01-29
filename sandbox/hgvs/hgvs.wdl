@@ -19,7 +19,7 @@ workflow HgvsWorkflow {
         File alphamis = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz"
         File alphamis_idx = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz.tbi"
 
-        File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
+        File vep_data = "gs://cds-vep-data/homo_sapiens_vep_113_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
