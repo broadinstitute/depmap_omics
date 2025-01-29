@@ -6,7 +6,7 @@ workflow HgvsWorkflow {
         File input_vcf
         String sample_id
         String vep_pick_order
-        String docker_images
+        String docker_image
         File vep_data
         File pLi = "gs://cds-vep-data/pLI_values.txt"
         File LoF = "gs://cds-vep-data/LoFtool_scores.txt"
