@@ -56,11 +56,11 @@ RUN apt-get -qq update && apt-get -qq -y install \
 ENV PATH /opt/conda/bin:${PATH}
 ENV LANG C.UTF-8
 ENV SHELL /bin/bash
-RUN /bin/bash -c "curl -L https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-\$(uname -m).sh > mambaforge.sh && \
+RUN /bin/bash -c "curl -L https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh -o mambaforge.sh && \
     bash mambaforge.sh -b -p /opt/conda && \
     conda config --system --set channel_priority strict && \
     rm mambaforge.sh"
-RUN /bin/bash -c "mamba create -qy -c conda-forge -c bioconda -c defaults -n vep ensembl-vep==110.1 git gh htslib samtools bcftools ucsc-liftover"
+RUN /bin/bash -c "mamba create -qy -c conda-forge -c bioconda -c defaults -n vep ensembl-vep==113.3 git gh htslib samtools bcftools ucsc-liftover"
 RUN echo "source activate vep" > ~/.bashrc
 ENV PATH /opt/conda/envs/vep/bin:${PATH}
 RUN git clone https://github.com/qinqian/vcf2maf
