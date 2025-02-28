@@ -66,9 +66,9 @@ def main(args=None):
     tobreak = False
 
     loc = os.path.dirname(os.path.abspath(__file__))
-    oncogene = h.fileToList(loc + "/oncokb_dm/data/oncogene_oncokb.txt")
+    oncogene = h.fileToList(loc + "/oncokb_dm/data/oncogene_oncokb_20250205.txt")
     tumor_suppressor_list = h.fileToList(
-        loc + "/oncokb_dm/data/tumor_suppressor_oncokb.txt"
+        loc + "/oncokb_dm/data/tumor_suppressor_oncokb_20250205.txt"
     )
     civic_df = pd.read_csv(loc + "/civic_export_09212022.csv").drop(
         columns=["chromosome_37", "start_37"]
