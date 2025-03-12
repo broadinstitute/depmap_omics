@@ -127,7 +127,6 @@ async def expressionPostProcessing(
 
         track.updateTrackerRNA(
             failed,
-            lowqual[lowqual.sum(1) > 3].index.tolist(),
             ccle_refsamples,
             samplesetname,
             refworkspace,
