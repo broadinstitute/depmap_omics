@@ -760,7 +760,7 @@ def improve(
 def drop_lowqual(
     vcf,
     min_freq=0.15,
-    min_depth=2,
+    min_depth=5,
 ):
     loc = (
         # drops 30% of the variants
