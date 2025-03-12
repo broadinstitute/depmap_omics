@@ -29,6 +29,7 @@ def main(args=None):
     parser.add_argument("--use_multi", default=False, type=to_bool)
     parser.add_argument("--force_keep", default=[], type=lambda x: x.split(","))
     parser.add_argument("--whitelist", default=False, type=to_bool)
+    parser.add_argument("--drop_clustered_events", default=True, type=to_bool)
     parser.add_argument("--version", default="", type=str)
     args = parser.parse_args()
 
@@ -42,6 +43,7 @@ def main(args=None):
     use_multi = args.use_multi
     force_keep = args.force_keep
     whitelist = args.whitelist
+    drop_clustered_events = args.drop_clustered_events
     version = args.version
 
     prev_cols = []
@@ -200,6 +202,7 @@ def main(args=None):
                 only_coding=True,
                 whitelist=whitelist,
                 drop_multi=True,
+                drop_clustered_events=drop_clustered_events,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
                 index=True,
                 version=version,
@@ -212,6 +215,7 @@ def main(args=None):
                 only_coding=True,
                 whitelist=whitelist,
                 drop_multi=True,
+                drop_clustered_events=drop_clustered_events,
                 mode="a",
                 header=False,
                 tokeep={**TOKEEP_BASE, **TOKEEP_ADD},
@@ -773,7 +777,6 @@ def drop_lowqual(
             | (vcf["slippage"] == "Y")
             | (vcf["strand_bias"] == "Y")
             | (vcf["weak_evidence"] == "Y")
-            | (vcf["clustered_events"] == "Y")
             | (vcf["base_qual"] == "Y")
         )
     )
@@ -793,6 +796,7 @@ def to_maf(
     only_coding=True,
     only_somatic=True,
     mask_segdup_and_rm=True,
+    drop_clustered_events=True,
     version="",
     **kwargs,
 ):
@@ -906,6 +910,9 @@ def to_maf(
             )
             | important
         )
+    if drop_clustered_events:
+        print("dropping clustered_events variants")
+        loc = ((vcf["clustered_events"] != "Y") | important) & loc
     if mask_segdup_and_rm:
         print("removing variants in segmental duplication and repeatmasker regions")
         loc = (((vcf["segdup"] != "Y") & (vcf["rm"] != "Y")) | important) & loc

@@ -35,6 +35,7 @@ task vcf_to_depmap {
         String sample_id
         Boolean use_multi=false
         Boolean whitelist=true
+        Boolean drop_clustered_events=true
         Array[String] force_keep=['oc_brca1_func_assay__class', 'oc_brca1_func_assay__score', 'clinvar_vcf_ssr', 'clinvar_vcf_clndisdbincl', 'clinvar_vcf_clnsigincl', 'clinvar_vcf_clndnincl', 'oc_oncokb__all', 'oc_oncokb__highestdiagnosticimplicationlevel', 'cgc_other_germline_mut', 'cgc_other_syndrome/disease', 'clinvar_vcf_clnsigconf', 'center', 'cosmicfusion_fusion_id', 'tumor_barcode', 'source"', 'clinvar_vcf_filter', 'clinvar_vcf_dbvarid', 'normal_barcode', 'gencode_34_ncbibuild', 'oc_oncokb_dm__highestprognosticimplicationlevel', 'strandq', 'oc_oncokb_dm__highestsensitivelevel', 'ocm', 'oc_oncokb_dm__all', 'seqq', 'nlod', 'contq', 'nalod', 'oc_base__note', 'oc_cancer_hotspots__samples', 'oc_oncokb_dm__highestresistancelevel', 'oc_oncokb_dm__tumorsummary', 'oc_oncokb_dm__highestdiagnosticimplicationlevel', 'oc_hess_drivers__signature', 'oc_hess_drivers__is_driver']
         Int n_rows=100000
         String version=""
@@ -55,6 +56,7 @@ task vcf_to_depmap {
               --use_multi ~{use_multi} \
               --force_keep '~{sep="," force_keep}' \
               --whitelist ~{whitelist} \
+              --drop_clustered_events ~{drop_clustered_events} \
               --version ~{version} \
     }
 
