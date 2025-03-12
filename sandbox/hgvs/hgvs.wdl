@@ -5,6 +5,9 @@ workflow HgvsWorkflow {
     input {
         File input_vcf
         String sample_id
+        String vep_pick_order
+        String docker_image
+        File vep_data
         File pLi = "gs://cds-vep-data/pLI_values.txt"
         File LoF = "gs://cds-vep-data/LoFtool_scores.txt"
 
@@ -18,7 +21,6 @@ workflow HgvsWorkflow {
         File alphamis = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz"
         File alphamis_idx = "gs://cds-vep-data/AlphaMissense_hg38.tsv.gz.tbi"
 
-        File vep_data = "gs://cds-vep-data/homo_sapiens_vep_110_GRCh38.tar.gz"
         File fasta = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz"
         File fai = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.fai"
         File gzi = "gs://cds-vep-data/Homo_sapiens_assembly38.fasta.gz.gzi"
@@ -49,6 +51,8 @@ workflow HgvsWorkflow {
             disk_space=disk_space,
             cpu = cpu,
             mem = mem,
+            docker_image = docker_image,
+            vep_pick_order=vep_pick_order,
     }
 
     output {
@@ -75,7 +79,8 @@ task annotate_hgvs_task {
         File clinvar_data
         File clinvar_data_tbi
         String sample_id
-        String docker_image="us.gcr.io/cds-docker-containers/hgvs"
+        String docker_image
+        String vep_pick_order
         String assembly="GRCh38"
         Int preemptible=2
         Int boot_disk_size=60
@@ -112,7 +117,7 @@ task annotate_hgvs_task {
             --plugin pLI,/tmp/pLI_values.txt --plugin LoFtool,/tmp/LoFtool_scores.txt \
             --plugin AlphaMissense,file=/tmp/AlphaMissense_hg38.tsv.gz \
             --force_overwrite --offline --fasta /tmp/Homo_sapiens_assembly38.fasta.gz --fork ~{cpu} --vcf \
-            --pick 
+            --pick --pick_order ~{vep_pick_order}
 
         perl /vcf2maf/vcf2maf.pl \
             --input-vcf ~{sample_id}.norm.snpeff.clinvar.vep.vcf \
