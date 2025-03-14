@@ -43,6 +43,7 @@ workflows:
         - dev
         - master
         - guidemat-wdl
+        - wgs-pipeline-no-cn
   - name: WGS_aggregate
     subclass: WDL
     publish: True
