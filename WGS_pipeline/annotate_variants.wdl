@@ -12,7 +12,7 @@ workflow annotateVariants {
     input {
         File input_vcf
         String sample_id
-        String bcftools_exclude_string = 'FILTER~"weak_evidence"||FILTER~"map_qual"||FILTER~"strand_bias"||FILTER~"slippage"||FILTER~"clustered_events"||FILTER~"base_qual"'
+        String bcftools_exclude_string = 'FILTER~"weak_evidence"||FILTER~"map_qual"||FILTER~"strand_bias"||FILTER~"slippage"||FILTER~"base_qual"'
         String vep_pick_order = "mane_select,mane_plus_clinical,canonical,ccds,biotype,rank"
         Int hgvs_boot_disk_size=100
         Int hgvs_disk_space=200

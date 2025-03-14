@@ -222,6 +222,7 @@ workflows:
         - add-tert-to-wdl
         - add-aplice-ai
         - tcga_mutation_processing
+        - remove-clustered-events-filter
   - name: vcf2maf
     subclass: WDL
     publish: True
@@ -278,6 +279,7 @@ workflows:
         - master
         - dev-hgvs
         - tcga_mutation_processing
+        - remove-clustered-events-filter
         - vep-versioning
   - name: WGS_preprocessing_DRAGEN_24Q2
     subclass: WDL
