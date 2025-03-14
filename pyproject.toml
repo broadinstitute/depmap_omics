@@ -2,7 +2,7 @@
 name = "depmap-omics"
 version = "0.1.0"
 description = "CDS-omics pipelines"
-authors = ["CDS-omics <qqin@broadinstitute.org>"]
+authors = ["CDS-omics"]
 readme = "README.md"
 packages = [{include = "depmapomics"}, {include="mgenepy"}]
 
@@ -23,6 +23,8 @@ miniwdl = "^1.10.0"
 ruff = "^0.0.283"
 biomart = "^0.9.2"
 packaging = ">=23.1"
+fsspec = "^2025.3.0"
+gcsfs = "^2025.3.0"
 
 [tool.poetry.scripts]
 depmapomics = 'depmapomics.__main__:main'
