@@ -69,7 +69,7 @@ workflow WGS_pipeline {
         String? m2_filter_args
         File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
         File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
-        String bcftools_exclude_string='FILTER~"weak_evidence" || FILTER~"map_qual" || FILTER~"strand_bias" || FILTER~"slippage" || FILTER~"clustered_events" || FILTER~"base_qual"'
+        String bcftools_exclude_string='FILTER~"weak_evidence" || FILTER~"map_qual" || FILTER~"strand_bias" || FILTER~"slippage" || FILTER~"base_qual"'
 
         # PureCN
         File purecn_intervals = "gs://ccleparams/references/PureCN_intervals/wgs_hg38_2_percent_intervals.txt"
@@ -83,7 +83,7 @@ workflow WGS_pipeline {
 
         #vcf_to_depmap
         String vcf_to_depmap_version
-        String vcf_to_depmap_docker="us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:test"
+        String vcf_to_depmap_docker="us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:25q2"
         Boolean whitelist=true
 
         #guide_mutation_binary
