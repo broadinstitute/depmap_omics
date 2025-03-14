@@ -38,6 +38,7 @@ def listToFile(l, filename):
 
 
 def generateGeneNames(
+    # v104 corresponds to GENCODE v38 https://genome.ucsc.edu/cgi-bin/hgTables?db=hg38&hgta_group=genes&hgta_track=wgEncodeGencodeV38&hgta_table=wgEncodeGencodeCompV38&hgta_doSchema=describe+table+schema
     ensemble_server="http://may2021.archive.ensembl.org/biomart",
     useCache=False,
     cache_folder="/".join(__file__.split("/")[:-3]) + "/",
