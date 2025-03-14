@@ -85,6 +85,7 @@ workflow WGS_pipeline {
         String vcf_to_depmap_version
         String vcf_to_depmap_docker="us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:25q2"
         Boolean whitelist=true
+        Boolean drop_clustered_events=true
 
         #guide_mutation_binary
         String guide_mutation_docker="us-docker.pkg.dev/depmap-omics/public/depmapomics:bcftools"
@@ -212,6 +213,7 @@ workflow WGS_pipeline {
             sample_id=sample_name,
             version=vcf_to_depmap_version,
             whitelist=whitelist,
+            drop_clustered_events=drop_clustered_events,
             docker_image=vcf_to_depmap_docker,
     }
 

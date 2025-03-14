@@ -5,8 +5,8 @@ workflow run_vcf_to_depmap {
     input {
         String sample_id
         File input_vcf
+        String docker_image
         String version=""
-        String docker_image="us-docker.pkg.dev/depmap-omics/public/vcf_to_depmap:test"
     }
 
     call vcf_to_depmap {
