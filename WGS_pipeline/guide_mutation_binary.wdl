@@ -47,7 +47,6 @@ task guide_mutation_in_vcf {
         String bcftools_format = '"%CHROM\\t%POS\\t%END\\t%ALT{0}\n"'
     
         Int memory = 4
-        Int boot_disk_size = 10
         Int num_threads = 1
         Int num_preempt = 5
         Int disk_space = 40
@@ -100,9 +99,8 @@ task guide_mutation_in_vcf {
 
     runtime {
         docker: docker
-        bootDiskSizeGb: "${boot_disk_size}"
         memory: "${memory}GB"
-        disks: "local-disk ${disk_space} HDD"
+        disks: "local-disk ${disk_space} SSD"
         cpu: "${num_threads}"
         preemptible: "${num_preempt}"
     }
@@ -130,7 +128,6 @@ task guide_mutation_intersect {
         # File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
     
         Int memory = 4
-        Int boot_disk_size = 10
         Int num_threads = 1
         Int num_preempt = 5
         Int disk_space = 40
@@ -163,9 +160,8 @@ task guide_mutation_intersect {
 
     runtime {
         docker: docker
-        bootDiskSizeGb: "~{boot_disk_size}"
         memory: "~{memory}GB"
-        disks: "local-disk ~{disk_space} HDD"
+        disks: "local-disk ~{disk_space} SSD"
         cpu: "~{num_threads}"
         preemptible: "~{num_preempt}"
     }
