@@ -20,16 +20,16 @@ workflow run_guide_mutation {
             avana_in_vcf_bed = guide_mutation_in_vcf.avana_mut,
             humagne_in_vcf_bed = guide_mutation_in_vcf.humagne_mut,
             ky_in_vcf_bed = guide_mutation_in_vcf.ky_mut,
-            brunello_in_vcf_bed = guide_mutation_in_vcf.brunello_mut,
-            TKOv3_in_vcf_bed = guide_mutation_in_vcf.tkov3_mut,
+            # brunello_in_vcf_bed = guide_mutation_in_vcf.brunello_mut,
+            # TKOv3_in_vcf_bed = guide_mutation_in_vcf.tkov3_mut,
     }
 
     output {
         File avana_binary_mut=guide_mutation_intersect.avana_binary_mut
         File humagne_binary_mut=guide_mutation_intersect.humagne_binary_mut
         File ky_binary_mut=guide_mutation_intersect.ky_binary_mut
-        File brunello_binary_mut=guide_mutation_intersect.brunello_binary_mut
-        File tkov3_binary_mut=guide_mutation_intersect.tkov3_binary_mut
+        # File brunello_binary_mut=guide_mutation_intersect.brunello_binary_mut
+        # File tkov3_binary_mut=guide_mutation_intersect.tkov3_binary_mut
     }
 }
 
@@ -42,8 +42,8 @@ task guide_mutation_in_vcf {
         File avana_bed = "gs://ccleparams/avana_guides.bed"
         File humagne_bed = "gs://ccleparams/humagne_guides.bed"
         File ky_bed = "gs://ccleparams/ky_score_guides.bed"
-        File brunello_bed = "gs://ccleparams/brunello_guides.bed"
-        File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
+        # File brunello_bed = "gs://ccleparams/brunello_guides.bed"
+        # File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
         String bcftools_format = '"%CHROM\\t%POS\\t%END\\t%ALT{0}\n"'
     
         Int memory = 4
@@ -76,17 +76,17 @@ task guide_mutation_in_vcf {
             --format ~{bcftools_format} \
             ~{vcf} > ky_~{sample_id}.bed
 
-        bcftools query\
-            --exclude "FILTER!='PASS'&GT!='mis'&GT!~'\.'"\
-            --regions-file ~{brunello_bed} \
-            --format ~{bcftools_format} \
-            ~{vcf} > brunello_~{sample_id}.bed
+        # bcftools query\
+        #     --exclude "FILTER!='PASS'&GT!='mis'&GT!~'\.'"\
+        #     --regions-file ~{brunello_bed} \
+        #     --format ~{bcftools_format} \
+        #     ~{vcf} > brunello_~{sample_id}.bed
 
-        bcftools query\
-            --exclude "FILTER!='PASS'&GT!='mis'&GT!~'\.'"\
-            --regions-file ~{TKOv3_bed} \
-            --format ~{bcftools_format} \
-            ~{vcf} > tkov3_~{sample_id}.bed
+        # bcftools query\
+        #     --exclude "FILTER!='PASS'&GT!='mis'&GT!~'\.'"\
+        #     --regions-file ~{TKOv3_bed} \
+        #     --format ~{bcftools_format} \
+        #     ~{vcf} > tkov3_~{sample_id}.bed
         
     >>>
 
@@ -94,8 +94,8 @@ task guide_mutation_in_vcf {
         File avana_mut="avana_~{sample_id}.bed"
         File humagne_mut="humagne_~{sample_id}.bed"
         File ky_mut="ky_~{sample_id}.bed"
-        File brunello_mut="brunello_~{sample_id}.bed"
-        File tkov3_mut="tkov3_~{sample_id}.bed"
+        # File brunello_mut="brunello_~{sample_id}.bed"
+        # File tkov3_mut="tkov3_~{sample_id}.bed"
     }
 
     runtime {
@@ -120,14 +120,14 @@ task guide_mutation_intersect {
         File avana_in_vcf_bed
         File humagne_in_vcf_bed
         File ky_in_vcf_bed
-        File brunello_in_vcf_bed
-        File TKOv3_in_vcf_bed
+        # File brunello_in_vcf_bed
+        # File TKOv3_in_vcf_bed
 
         File avana_bed = "gs://ccleparams/avana_guides.bed"
         File humagne_bed = "gs://ccleparams/humagne_guides.bed"
         File ky_bed = "gs://ccleparams/ky_score_guides.bed"
-        File brunello_bed = "gs://ccleparams/brunello_guides.bed"
-        File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
+        # File brunello_bed = "gs://ccleparams/brunello_guides.bed"
+        # File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
     
         Int memory = 4
         Int boot_disk_size = 10
@@ -142,14 +142,14 @@ task guide_mutation_intersect {
         bedtools intersect -a ~{avana_bed} -b ~{avana_in_vcf_bed} -c > ~{sample_id}_avana_mut_binary.bed
         bedtools intersect -a ~{humagne_bed} -b ~{humagne_in_vcf_bed} -c > ~{sample_id}_humagne_mut_binary.bed
         bedtools intersect -a ~{ky_bed} -b ~{ky_in_vcf_bed} -c > ~{sample_id}_ky_mut_binary.bed
-        bedtools intersect -a ~{brunello_bed} -b ~{brunello_in_vcf_bed} -c > ~{sample_id}_brunello_mut_binary.bed
-        bedtools intersect -a ~{TKOv3_bed} -b ~{TKOv3_in_vcf_bed} -c > ~{sample_id}_tkov3_mut_binary.bed
+        # bedtools intersect -a ~{brunello_bed} -b ~{brunello_in_vcf_bed} -c > ~{sample_id}_brunello_mut_binary.bed
+        # bedtools intersect -a ~{TKOv3_bed} -b ~{TKOv3_in_vcf_bed} -c > ~{sample_id}_tkov3_mut_binary.bed
 
         bedtools sort -i ~{sample_id}_avana_mut_binary.bed > ~{sample_id}_avana_mut_binary.sorted.bed
         bedtools sort -i ~{sample_id}_humagne_mut_binary.bed > ~{sample_id}_humagne_mut_binary.sorted.bed
         bedtools sort -i ~{sample_id}_ky_mut_binary.bed > ~{sample_id}_ky_mut_binary.sorted.bed
-        bedtools sort -i ~{sample_id}_brunello_mut_binary.bed > ~{sample_id}_brunello_mut_binary.sorted.bed
-        bedtools sort -i ~{sample_id}_tkov3_mut_binary.bed > ~{sample_id}_tkov3_mut_binary.sorted.bed
+        # bedtools sort -i ~{sample_id}_brunello_mut_binary.bed > ~{sample_id}_brunello_mut_binary.sorted.bed
+        # bedtools sort -i ~{sample_id}_tkov3_mut_binary.bed > ~{sample_id}_tkov3_mut_binary.sorted.bed
         
     >>>
 
@@ -157,8 +157,8 @@ task guide_mutation_intersect {
         File avana_binary_mut="~{sample_id}_avana_mut_binary.sorted.bed"
         File humagne_binary_mut="~{sample_id}_humagne_mut_binary.sorted.bed"
         File ky_binary_mut="~{sample_id}_ky_mut_binary.sorted.bed"
-        File brunello_binary_mut="~{sample_id}_brunello_mut_binary.sorted.bed"
-        File tkov3_binary_mut="~{sample_id}_tkov3_mut_binary.sorted.bed"
+        # File brunello_binary_mut="~{sample_id}_brunello_mut_binary.sorted.bed"
+        # File tkov3_binary_mut="~{sample_id}_tkov3_mut_binary.sorted.bed"
     }
 
     runtime {
