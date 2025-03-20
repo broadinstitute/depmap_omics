@@ -5,7 +5,8 @@ task samtofastq {
     input {
         File input_bam_cram
         String prefix
-        File? reference_fasta
+        File reference_fasta
+        File reference_index
 
         Float memory = 64
         Int java_memory = floor(memory - 0.5)
@@ -36,7 +37,7 @@ task samtofastq {
     runtime {
         docker: "gcr.io/broad-cga-francois-gtex/gtex_rnaseq:V10"
         memory: "${memory}GB"
-        disks: "local-disk ${disk_space} HDD"
+        disks: "local-disk ${disk_space} SSD"
         cpu: "${num_threads}"
         preemptible: "${num_preempt}"
     }
@@ -51,7 +52,8 @@ workflow samtofastq_workflow {
     input {
         File input_bam_cram
         String prefix
-        File? reference_fasta
+        File reference_fasta
+        File reference_index
 
         Float memory
         Int java_memory = floor(memory - 0.5)
@@ -65,6 +67,7 @@ workflow samtofastq_workflow {
             input_bam_cram = input_bam_cram,
             prefix = prefix,
             reference_fasta = reference_fasta,
+            reference_index = reference_index,
             memory = memory,
             java_memory = java_memory,
             disk_space = disk_space,

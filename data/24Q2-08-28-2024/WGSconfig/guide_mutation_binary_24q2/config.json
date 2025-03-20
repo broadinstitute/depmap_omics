@@ -1,0 +1,13 @@
+{
+ "inputs": {
+  "run_guide_mutation.sample_id": "this.sample_id",
+  "run_guide_mutation.vcf": "this.mutect2_filtered_vcf"
+ },
+ "outputs": {
+  "run_guide_mutation.avana_binary_mut": "this.avana_binary_mut",
+  "run_guide_mutation.humagne_binary_mut": "this.humagne_binary_mut",
+  "run_guide_mutation.ky_binary_mut": "this.ky_binary_mut"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

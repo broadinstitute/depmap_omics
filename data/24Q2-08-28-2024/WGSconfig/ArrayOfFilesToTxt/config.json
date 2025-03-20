@@ -1,0 +1,11 @@
+{
+ "inputs": {
+  "ArrayToTxt_workflow.CreateTxt.array_of_files": "this.readgroup_ubams",
+  "ArrayToTxt_workflow.CreateTxt.list_name": "this.name"
+ },
+ "outputs": {
+  "ArrayToTxt_workflow.CreateTxt.file_list_name": "this.ubam_file_list"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

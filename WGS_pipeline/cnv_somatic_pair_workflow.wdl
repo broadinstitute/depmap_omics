@@ -38,7 +38,7 @@
 version 1.0
 
 import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.6.1/scripts/cnv_wdl/cnv_common_tasks.wdl" as CNVTasks
-import "https://raw.githubusercontent.com/broadinstitute/gatk/4.2.6.1/scripts/cnv_wdl/somatic/cnv_somatic_funcotate_seg_workflow.wdl" as CNVFuncotateSegments
+import "https://gist.githubusercontent.com/cds-github-apps/167613785407905d2590ac51b6670895/raw/6a6cf71b6f815cd8c95e7598011b7fb95218aa14/cnv_somatic_funcotate_seg_workflow.wdl" as CNVFuncotateSegments
 
 workflow CNVSomaticPairWorkflow {
 
@@ -182,7 +182,8 @@ workflow CNVSomaticPairWorkflow {
             gatk_docker = gatk_docker,
             mem_gb = mem_gb_for_preprocess_intervals,
             disk_space_gb = preprocess_intervals_disk,
-            preemptible_attempts = preemptible_attempts
+            preemptible_attempts = preemptible_attempts,
+            use_ssd = true
     }
 
     Int collect_counts_tumor_disk = tumor_bam_size + ceil(size(PreprocessIntervals.preprocessed_intervals, "GB")) + disk_pad
@@ -201,7 +202,8 @@ workflow CNVSomaticPairWorkflow {
             mem_gb = mem_gb_for_collect_counts,
             disk_space_gb = collect_counts_tumor_disk,
             preemptible_attempts = preemptible_attempts,
-            gcs_project_for_requester_pays = gcs_project_for_requester_pays
+            gcs_project_for_requester_pays = gcs_project_for_requester_pays,
+            use_ssd = true
     }
 
     Int collect_allelic_counts_tumor_disk = tumor_bam_size + ref_size + disk_pad
@@ -219,7 +221,8 @@ workflow CNVSomaticPairWorkflow {
             mem_gb = mem_gb_for_collect_allelic_counts,
             disk_space_gb = collect_allelic_counts_tumor_disk,
             preemptible_attempts = preemptible_attempts,
-            gcs_project_for_requester_pays = gcs_project_for_requester_pays
+            gcs_project_for_requester_pays = gcs_project_for_requester_pays,
+            use_ssd = true
     }
 
     Int denoise_read_counts_tumor_disk = read_count_pon_size + ceil(size(CollectCountsTumor.counts, "GB")) + disk_pad
@@ -335,7 +338,8 @@ workflow CNVSomaticPairWorkflow {
                 mem_gb = mem_gb_for_collect_counts,
                 disk_space_gb = collect_counts_normal_disk,
                 preemptible_attempts = preemptible_attempts,
-                gcs_project_for_requester_pays = gcs_project_for_requester_pays
+                gcs_project_for_requester_pays = gcs_project_for_requester_pays,
+                use_ssd = true
         }
 
         Int collect_allelic_counts_normal_disk = normal_bam_size + ref_size + disk_pad
@@ -353,7 +357,8 @@ workflow CNVSomaticPairWorkflow {
                 mem_gb = mem_gb_for_collect_allelic_counts,
                 disk_space_gb = collect_allelic_counts_normal_disk,
                 preemptible_attempts = preemptible_attempts,
-                gcs_project_for_requester_pays = gcs_project_for_requester_pays
+                gcs_project_for_requester_pays = gcs_project_for_requester_pays,
+                use_ssd = true
         }
 
         Int denoise_read_counts_normal_disk = read_count_pon_size + ceil(size(CollectCountsNormal.counts, "GB")) + disk_pad
@@ -556,7 +561,7 @@ task DenoiseReadCounts {
       String gatk_docker
       Int? mem_gb
       Int? disk_space_gb
-      Boolean use_ssd = false
+      Boolean use_ssd = true
       Int? cpu
       Int? preemptible_attempts
     }
@@ -623,7 +628,7 @@ task ModelSegments {
       String gatk_docker
       Int? mem_gb
       Int? disk_space_gb
-      Boolean use_ssd = false
+      Boolean use_ssd = true
       Int? cpu
       Int? preemptible_attempts
     }
@@ -713,7 +718,7 @@ task CallCopyRatioSegments {
       String gatk_docker
       Int? mem_gb
       Int? disk_space_gb
-      Boolean use_ssd = false
+      Boolean use_ssd = true
       Int? cpu
       Int? preemptible_attempts
     }
@@ -762,7 +767,7 @@ task PlotDenoisedCopyRatios {
       String gatk_docker
       Int? mem_gb
       Int? disk_space_gb
-      Boolean use_ssd = false
+      Boolean use_ssd = true
       Int? cpu
       Int? preemptible_attempts
     }
@@ -822,7 +827,7 @@ task PlotModeledSegments {
       String gatk_docker
       Int? mem_gb
       Int? disk_space_gb
-      Boolean use_ssd = false
+      Boolean use_ssd = true
       Int? cpu
       Int? preemptible_attempts
     }

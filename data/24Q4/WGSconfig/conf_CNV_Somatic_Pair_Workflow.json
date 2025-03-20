@@ -1,0 +1,1 @@
+{"deleted": false, "inputs": {}, "methodConfigVersion": 1, "methodRepoMethod": {"methodName": "CNV_Somatic_Pair_Workflow", "methodVersion": 15, "methodNamespace": "gatk", "methodUri": "agora://gatk/CNV_Somatic_Pair_Workflow/15", "sourceRepo": "agora"}, "name": "CNV_Somatic_Pair_Workflow", "namespace": "gatk", "outputs": {}, "prerequisites": {}, "rootEntityType": ""}

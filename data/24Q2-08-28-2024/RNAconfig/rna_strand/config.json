@@ -1,0 +1,18 @@
+{
+ "inputs": {
+  "RNAStrandWorkflow.boot_disk_size": "",
+  "RNAStrandWorkflow.cpu": "1",
+  "RNAStrandWorkflow.disk_space": "",
+  "RNAStrandWorkflow.docker_image": "",
+  "RNAStrandWorkflow.input_bam": "this.internal_bam_filepath",
+  "RNAStrandWorkflow.mem": "",
+  "RNAStrandWorkflow.refseq": "",
+  "RNAStrandWorkflow.sample_id": "this.sample_id",
+  "RNAStrandWorkflow.strand.preemptible": ""
+ },
+ "outputs": {
+  "RNAStrandWorkflow.rna_strand_output": "this.rna_strand_output"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

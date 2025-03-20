@@ -101,7 +101,7 @@ The main postprocessing steps for each pipeline are as followed:
 
 #### Copy Number
 
-`copynumbers.py` contains the main postprocessing function `postProcess()` responsible for postprocessing segments and creating gene-level (relative and absolute) CN files and genomic feature table. Gene mapping information is retrieved from BioMart version `nov2020`. The function also applies the following filters to segment and CN data:
+`copynumbers.py` contains the main postprocessing function `postProcess()` responsible for postprocessing segments and creating gene-level (relative and absolute) CN files and genomic feature table. Gene mapping information is retrieved from BioMart version `may2021`. The function also applies the following filters to segment and CN data:
 
 * Remove chrY segments from cell lines where their chrY segment count is bigger than 150
 * Mark samples that have more than 1500 segments as QC fails and remove them
@@ -119,7 +119,7 @@ _Internal only: `dm_omics.mutationPostProcessing()` calls the above function on 
 
 #### Expression
 
-`expressions.py` contains the main postprocessing function responsible for postprocessing aggregated expression data from RSEM, which removes duplicates and QC failures, renames genes, filters and log transforms values, and generates transcrip-level, gene-level, and protein-coding gene-level expression data files. Gene mapping information is retrieved from BioMart version `nov2020`. Optionally, in addition, it also generates Single-sample GSEA (ssGSEA) data.
+`expressions.py` contains the main postprocessing function responsible for postprocessing aggregated expression data from RSEM, which removes duplicates and QC failures, renames genes, filters and log transforms values, and generates transcrip-level, gene-level, and protein-coding gene-level expression data files. Gene mapping information is retrieved from BioMart version `may2021`. Optionally, in addition, it also generates Single-sample GSEA (ssGSEA) data.
 
 _Internal only: `dm_omics.expressionPostProcessing()` is a wrapper for the above function. It renames the indices into ProfileIDs and uploads the files to taiga._
 

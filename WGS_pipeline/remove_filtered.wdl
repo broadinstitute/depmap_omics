@@ -37,7 +37,7 @@ task RemoveFiltered {
     }
 
     runtime {
-        disks: "local-disk 20 HDD"
+        disks: "local-disk 20 SSD"
         memory: "~{mem} GB"
         cpu: cpu
         preemptible: preemptible

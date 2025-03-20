@@ -1,0 +1,20 @@
+{
+ "inputs": {
+  "rnaseqc2_workflow.rnaseqc2.bam_file": "this.internal_bam_filepath",
+  "rnaseqc2_workflow.rnaseqc2.disk_space": "75",
+  "rnaseqc2_workflow.rnaseqc2.genes_gtf": "workspace.genes_gtf",
+  "rnaseqc2_workflow.rnaseqc2.memory": "8",
+  "rnaseqc2_workflow.rnaseqc2.num_preempt": "1",
+  "rnaseqc2_workflow.rnaseqc2.num_threads": "4",
+  "rnaseqc2_workflow.rnaseqc2.sample_id": "this.name"
+ },
+ "outputs": {
+  "rnaseqc2_workflow.rnaseqc2.exon_counts": "this.rnaseqc2_exon_counts",
+  "rnaseqc2_workflow.rnaseqc2.gene_counts": "this.rnaseqc2_gene_counts",
+  "rnaseqc2_workflow.rnaseqc2.gene_tpm": "this.rnaseqc2_gene_tpm",
+  "rnaseqc2_workflow.rnaseqc2.insertsize_distr": "this.rnaseqc2_insertsize_distr",
+  "rnaseqc2_workflow.rnaseqc2.metrics": "this.rnaseqc2_metrics"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

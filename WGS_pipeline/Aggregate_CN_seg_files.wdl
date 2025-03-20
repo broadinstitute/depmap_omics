@@ -24,7 +24,7 @@ task aggregate_CN_segments {
     runtime {
         docker: "flyingrobin/cds_shiny"
         memory: "${memory}GB"
-        disks: "local-disk ${disk_space} HDD"
+        disks: "local-disk ${disk_space} SSD"
         preemptible: "${num_preempt}"
     }
 

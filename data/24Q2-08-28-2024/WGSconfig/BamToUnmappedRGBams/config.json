@@ -1,0 +1,26 @@
+{
+ "inputs": {
+  "BamToUnmappedRGBamsWf.RevertBamToUnmappedRGBams.disk_size": "800",
+  "BamToUnmappedRGBamsWf.RevertBamToUnmappedRGBams.java_opt": "\"-Xmx9000m\"",
+  "BamToUnmappedRGBamsWf.RevertBamToUnmappedRGBams.mem_size": "\"32 GB\"",
+  "BamToUnmappedRGBamsWf.RevertBamToUnmappedRGBams.output_dir": "\".\"",
+  "BamToUnmappedRGBamsWf.SortBamByQueryname.disk_size": "200",
+  "BamToUnmappedRGBamsWf.SortBamByQueryname.java_opt": "\"-Xmx6000m\"",
+  "BamToUnmappedRGBamsWf.SortBamByQueryname.mem_size": "\"10 GB\"",
+  "BamToUnmappedRGBamsWf.ValidateSamFile.disk_size": "200",
+  "BamToUnmappedRGBamsWf.ValidateSamFile.java_opt": "\"-Xmx9000m\"",
+  "BamToUnmappedRGBamsWf.ValidateSamFile.mem_size": "\"16 GB\"",
+  "BamToUnmappedRGBamsWf.input_bam": "this.legacy_bam_filepath",
+  "BamToUnmappedRGBamsWf.picard_docker": "\"broadinstitute/genomes-in-the-cloud:2.3.1-1504795437\"",
+  "BamToUnmappedRGBamsWf.picard_path": "\"/usr/gitc/\"",
+  "BamToUnmappedRGBamsWf.preemptible_tries": "0",
+  "BamToUnmappedRGBamsWf.ref_fasta": "workspace.ref_fasta",
+  "BamToUnmappedRGBamsWf.ref_fasta_index": "workspace.ref_fasta_fai"
+ },
+ "outputs": {
+  "BamToUnmappedRGBamsWf.sortsam_out": "this.readgroup_ubams",
+  "BamToUnmappedRGBamsWf.validatesam_out": "this.ubam_validation_reports"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

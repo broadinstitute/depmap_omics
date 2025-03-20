@@ -1,0 +1,19 @@
+{
+ "inputs": {
+  "STAR_Fusion_standalone.StarFusion.ctat_genome_lib_build_dir_files": "workspace.hg38_star_fusion_ctat_files_v33",
+  "STAR_Fusion_standalone.StarFusion.disk_space": "500",
+  "STAR_Fusion_standalone.StarFusion.docker_source": "",
+  "STAR_Fusion_standalone.StarFusion.memory": "64",
+  "STAR_Fusion_standalone.StarFusion.num_preempt": "2",
+  "STAR_Fusion_standalone.StarFusion.num_threads": "8",
+  "STAR_Fusion_standalone.StarFusion.prefix": "",
+  "STAR_Fusion_standalone.StarFusion.ref_genome_fa_star_idx_files": "",
+  "STAR_Fusion_standalone.StarFusion.star_chimeric_junctions": ""
+ },
+ "outputs": {
+  "STAR_Fusion_standalone.StarFusion.fusion_predictions": "",
+  "STAR_Fusion_standalone.StarFusion.fusion_predictions_abridged": ""
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

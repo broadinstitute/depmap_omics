@@ -1,0 +1,20 @@
+{
+ "inputs": {
+  "RNA_pipeline.bam_file": "this.internal_bam_filepath",
+  "RNA_pipeline.genes_gtf": "workspace.genes_gtf",
+  "RNA_pipeline.rsem_reference": "\"gs://ccleparams/rsem_reference_hg38_gencode_38_noALT_noHLA_noDecoy_ERCC.tar.gz\"",
+  "RNA_pipeline.sample_id": "this.name",
+  "RNA_pipeline.star_transcriptome_bam": "this.star_transcriptome_bam"
+ },
+ "outputs": {
+  "RNA_pipeline.exon_counts": "this.rnaseqc2_exon_counts_stranded",
+  "RNA_pipeline.gene_counts": "this.rnaseqc2_gene_counts_stranded",
+  "RNA_pipeline.gene_tpm": "this.rnaseqc2_gene_tpm_stranded",
+  "RNA_pipeline.genes": "this.rsem_genes_stranded",
+  "RNA_pipeline.insertsize_distr": "this.rnaseqc2_insertsize_distr_stranded",
+  "RNA_pipeline.isoforms": "this.rsem_isoforms_stranded",
+  "RNA_pipeline.metrics": "this.rnaseqc2_metrics_stranded"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}

@@ -1,0 +1,19 @@
+{
+ "inputs": {
+  "annotateVariants.hgvs_boot_disk_size": "100",
+  "annotateVariants.hgvs_disk_space": "200",
+  "annotateVariants.input_vcf": "this.mutect2_fixed_vcf",
+  "annotateVariants.oc_boot_disk_size": "200",
+  "annotateVariants.oc_disk_space": "500",
+  "annotateVariants.oc_mem": "128",
+  "annotateVariants.sample_id": "this.sample_id"
+ },
+ "outputs": {
+  "annotateVariants.hgvs_maf": "this.hgvs_maf_masked",
+  "annotateVariants.hgvs_oc_vcf": "this.hgvs_oc_vcf_masked",
+  "annotateVariants.oc_error_file": "this.oc_error_files",
+  "annotateVariants.oc_log_file": "this.oc_log_files"
+ },
+ "prerequisites": {},
+ "rootEntityType": "sample"
+}
