@@ -56,6 +56,7 @@ workflow WGS_pipeline {
         String? m2_filter_args
         File pon="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz"
         File pon_idx="gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz.tbi"
+        File funcotator_data_sources_tar_gz = "gs://broad-public-datasets/funcotator/funcotator_dataSources.v1.7.20200521s.tar.gz"
         String bcftools_exclude_string='FILTER~"weak_evidence" || FILTER~"map_qual" || FILTER~"strand_bias" || FILTER~"slippage" || FILTER~"clustered_events" || FILTER~"base_qual"'
 
         # annotation
