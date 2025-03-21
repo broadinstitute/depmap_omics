@@ -555,6 +555,7 @@ def cnPostProcessing(
             wes_ms_df,
         ) = cn.postProcess(
             wesrefworkspace,
+            run_gatk_relative=True,
             setEntity=wessetentity,
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
             save_output=folder,
@@ -595,6 +596,7 @@ def cnPostProcessing(
         wgs_ms_df,
     ) = cn.postProcess(
         wgsrefworkspace,
+        run_gatk_relative=False,
         setEntity=wgssetentity,
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,

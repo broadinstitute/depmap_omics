@@ -618,6 +618,7 @@ def read_ms_repeats(
 
 def postProcess(
     refworkspace,
+    run_gatk_relative=True,
     setEntity="sample_set",
     sampleset="all",
     purecnsampleset=constants.PURECN_SAMPLESET,
@@ -658,15 +659,6 @@ def postProcess(
     """
     h.createFoldersFor(save_output)
     print("loading CN from Terra")
-    segments = loadFromGATKAggregation(
-        refworkspace,
-        setEntity=setEntity,
-        sampleset=sampleset,
-        sortby=sortby,
-        todrop=todrop,
-        doCleanup=doCleanup,
-    )
-    print("making gene level copy number")
 
     mybiomart = h.generateGeneNames(
         ensemble_server=ensemblserver,
@@ -682,50 +674,63 @@ def postProcess(
     )
     mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
     mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
-    mybiomart = mybiomart[mybiomart["Chromosome"].isin(set(segments["Chromosome"]))]
+    mybiomart = mybiomart[mybiomart["Chromosome"].isin([str(x) for x in range(1, 23)] + ['X', 'Y'])]
     mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
-    # drop Ychrom if > maxYchrom
-    ychrom = segments[segments.Chromosome.str.contains("Y")]
-    countYdrop = [
-        i
-        for i in set(ychrom[constants.SAMPLEID])
-        if len(ychrom[ychrom[constants.SAMPLEID] == i]) > maxYchrom
-    ]
-    segments = segments[
-        ~(
-            (segments[constants.SAMPLEID].isin(countYdrop))
-            & (segments.Chromosome == "Y")
+
+    if run_gatk_relative:
+        segments = loadFromGATKAggregation(
+            refworkspace,
+            setEntity=setEntity,
+            sampleset=sampleset,
+            sortby=sortby,
+            todrop=todrop,
+            doCleanup=doCleanup,
         )
-    ]
-    genecn = mut.toGeneMatrix(
-        mut.manageGapsInSegments(segments),
-        mybiomart,
-        value_colname="SegmentMean",
-        gene_names_col="ensembl_gene_id",
-    )
-    # validation step
-    print("summary of the gene cn data:")
-    print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
-    failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
+        print("making gene level copy number")
+        # drop Ychrom if > maxYchrom
+        ychrom = segments[segments.Chromosome.str.contains("Y")]
+        countYdrop = [
+            i
+            for i in set(ychrom[constants.SAMPLEID])
+            if len(ychrom[ychrom[constants.SAMPLEID] == i]) > maxYchrom
+        ]
+        segments = segments[
+            ~(
+                (segments[constants.SAMPLEID].isin(countYdrop))
+                & (segments.Chromosome == "Y")
+            )
+        ]
+        genecn = mut.toGeneMatrix(
+            mut.manageGapsInSegments(segments),
+            mybiomart,
+            value_colname="SegmentMean",
+            gene_names_col="ensembl_gene_id",
+        )
+        # validation step
+        print("summary of the gene cn data:")
+        print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
+        failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
-    print("failed our QC")
-    print(failed)
+        print("failed our QC")
+        print(failed)
 
-    if source_rename:
-        segments = segments.replace({"Source": source_rename})
-    if save_output:
-        h.listToFile(failed, save_output + "failed.txt")
-    # subsetting
-    segments = segments[
-        ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
-    ].reset_index(drop=True)
-    genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
+        if source_rename:
+            segments = segments.replace({"Source": source_rename})
+        if save_output:
+            h.listToFile(failed, save_output + "failed.txt")
+        # subsetting
+        segments = segments[
+            ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
+        ].reset_index(drop=True)
+        genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
 
-    # saving
-    print("saving files")
-    segments.to_csv(save_output + "segments_all.csv", index=False)
-    genecn.to_csv(save_output + "genecn_all.csv")
-    print("done")
+        # saving
+        print("saving files")
+        segments.to_csv(save_output + "segments_all.csv", index=False)
+        genecn.to_csv(save_output + "genecn_all.csv")
+        print("done")
+
+    # absolute CN
     purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
         refworkspace,
         sampleset=purecnsampleset,
