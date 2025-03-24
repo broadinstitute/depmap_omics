@@ -28,7 +28,7 @@ task Manta {
     Float jobs_per_cpu = 1.3
     Int num_jobs = round(cpu * jobs_per_cpu)
     Int mem_gb = ceil(num_jobs * mem_per_job_gb)
-    Int disk_space = ceil(size(bam, "GiB")) + 10 + additional_disk_gb
+    Int disk_space = ceil(size(tumor_bam, "GiB")) + 10 + additional_disk_gb
 
     command {
         EXTENSION="bam"
