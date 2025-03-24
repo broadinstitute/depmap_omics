@@ -155,6 +155,8 @@ workflow MantaSomaticSV {
         Boolean is_exome = defined(interval_list)
         Boolean is_cram
         Boolean is_major_contigs_only
+
+        Int additional_disk_gb = 0
     }
 
     if (is_exome) {
@@ -176,7 +178,8 @@ workflow MantaSomaticSV {
                manta_docker = manta_docker,
                config_manta = config_manta,
                is_cram = is_cram,
-               is_major_contigs_only = is_major_contigs_only
+               is_major_contigs_only = is_major_contigs_only,
+               additional_disk_gb = additional_disk_gb
     }
     output {
         File germline_sv_vcf = Manta.germline_sv_vcf
