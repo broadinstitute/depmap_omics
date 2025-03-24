@@ -1,0 +1,155 @@
+{
+    "table_filters": {
+        "_comment": "Contains the filters to be applied to the tables, the filter_mode can be 'all'(all filters should be true) or 'any' (at least one of the filters should be true)",
+        "omics_sequencing": {
+            "_comment": "Gumbo table name 'omics_sequencing' is block key. Table name MUST exactly match database table name",
+            "exclusion_filters": {
+                "_comment": "Exclude rows where database column 'omics_sequencing.blacklist' has value 1(is True)",
+                "columns": ["blacklist"],
+                "blacklist": [1],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "_comment": "Include rows where db column 'omics_sequencing.expected_type' is rna,wgs or wes",
+                "columns": ["expected_type"],
+                "expected_type": ["rna", "wgs", "wes"],
+                "filter_mode": "any"
+            }
+        },
+        "omics_profile": {
+            "_comment": "Gumbo table name 'omics_profile' is block key. Table name MUST exactly match database table name",
+            "exclusion_filters": {
+                "_comment": "Exclude rows where database column 'omics_profile.blacklist_omics' has value 1(is True)",
+                "columns": ["blacklist_omics"],
+                "blacklist_omics": [1],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "_comment": "Include only rows with db column 'omics_profile.datatype' is rna,wgs or wes",
+                "columns": ["datatype"],
+                "datatype": ["rna", "wgs", "wes"],
+                "filter_mode": "any"
+            },
+            "merge_parameters" : {
+                "_comment" : "Join the table with 'omics_sequencing' table on the column 'profile_id'",
+                "merge_with" : ["omics_sequencing"],
+                "primary" : ["profile_id"],
+                "foreign" : ["profile_id"]
+            }
+        },
+        "model_condition": {
+            "_comment": "Gumbo table name 'model_condition' is block key. Table name MUST exactly match database table name",
+            "exclusion_filters": {
+                "_comment": "Exclude rows where database column 'model_condition.expansion_team' is PRISM",
+                "columns": ["expansion_team"],
+                "expansion_team": ["PRISM"],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "_comment": "Include only rows with db column 'model_condition.drug' is DMSO or None",
+                "columns": ["drug"],
+                "drug": ["None", "DMSO"],
+                "filter_mode": "any"
+            },
+            "merge_parameters" : {
+                "_comment" : "Join the table with 'omics_profile' table on the column 'model_condition_id'",
+                "merge_with" : ["omics_profile"],
+                "primary" : ["model_condition_id"],
+                "foreign" : ["model_condition"]
+            }
+	    },
+	    "model": {
+            "_comment": "Gumbo table name 'model' is block key. Table name MUST exactly match database table name",
+	        "exclusion_filters": {
+                "_comment": "Exclude rows where database column 'model.permission_to_release' is 0(False)",
+	   	        "columns": ["permission_to_release"],
+		        "permission_to_release" : [0],
+		        "filter_mode": "all"
+		    },
+            "merge_parameters" : {
+                "_comment" : "Join the table with 'model_condition' table on the column 'model_id'",
+                "merge_with" : ["model_condition"],
+                "primary" : ["model_id"],
+                "foreign" : ["model_id"]
+            }
+
+	   }
+    },
+    "priority_rankings": {
+        "_comment": "Contains the ranking orders for the tables. Order matters here, groupbys will be iteratively applied in the order they are defined. Ranking order for each tiebreaker is in the following block 'priority_rankings'",
+        "ranking_orders" : {
+            "default_profile_id_for_mc_id": {
+                "_comment": "If there are multiple rows with same 'model_condition_id' and 'expected_type', select the row with minimum value of 'stranded'",
+                "groupbyvar" : ["model_condition_id","expected_type"], 
+                "priorityvar" : ["stranded"], 
+                "select_index": ["idxmin"]
+            },
+            "default_profile_id_for_mc_id2": {
+                "_comment": "If there are multiple rows with same 'model_condition_id' and 'strand', select the row with minimum value of 'expected_type'",
+                "groupbyvar" : ["model_condition_id", "stranded"], 
+                "priorityvar" : ["expected_type"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id1": {
+                "_comment": "If there are multiple rows with same 'model_id', select the row with minimum value of 'expected_type'. We need to do this at the model_condition level AND model level because you could have a model with wgs from BROAD and WES from Sanger, which will have a different model condition id. We ALWAYS pick wgs over wes",
+                "groupbyvar" : ["model_id"], 
+                "priorityvar" : ["expected_type"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id2": {
+                "_comment": "If there are multiple rows with same 'model_id' and 'expected_type', select the row with minimum value of 'source_model_condition'",
+                "groupbyvar" : ["model_id", "expected_type"], 
+                "priorityvar" : ["source_model_condition"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id3": {
+                "_comment": "If there are multiple rows with same 'model_id', 'expected_type' and 'source_model_condition', select the row with minimum value of 'expansion_team'",
+                "groupbyvar" : ["model_id", "expected_type","source_model_condition"], 
+                "priorityvar" : ["expansion_team"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id4": {
+                "_comment": "If there are multiple rows with same 'model_id', 'expected_type', 'source_model_condition' and 'expansion_team', select the row with minimum value of 'drug'",
+                "groupbyvar" : ["model_id", "expected_type","source_model_condition","expansion_team"], 
+                "priorityvar" : ["drug"], 
+                "select_index": ["idxmin"]
+            }
+        },
+        "rankings" : {
+            "_comment": "Ranking order for each tiebreaker. SPECIAL CASE is when the priority ranking value is 0, it means that the column is ALWAYS present in the table and idxmin is not applicable. idxmin is only applicable for rankings >= 1",
+            "expected_type" : {
+                "rna": 0, 
+                "wgs" : 1,
+                "wes" : 2
+            },
+            "drug": {
+                "None": 1,
+                "DMSO": 2
+            },
+            "stranded": {
+                "True": 1,
+                "False": 2
+            },
+            "source_model_condition": {
+                "BROAD": 1,
+                "SANGER": 2,
+                "STJUDE": 3,
+                "OTHER": 4,
+                "DFCI": 5,
+                "Unknown": 6
+            },
+            "expansion_team": {
+                "TDA": 1,
+                "DMX": 2,
+                "GPP": 3,
+                "Other": 4,
+                "CCLF": 5,
+                "STJUDE": 6,
+                "Sanger" : 7,
+                "None" : 8,
+                "Unknown": 9
+            }
+        }
+    }
+}
+

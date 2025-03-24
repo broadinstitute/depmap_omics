@@ -1,0 +1,132 @@
+{
+    "table_filters": {
+        "omics_sequencing": {
+            "exclusion_filters": {
+                "columns": ["blacklist"],
+                "blacklist": [1],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "columns": ["expected_type"],
+                "expected_type": ["rna", "wgs", "wes"],
+                "filter_mode": "any"
+            }
+        },
+        "omics_profile": {
+            "exclusion_filters": {
+                "columns": ["blacklist_omics"],
+                "blacklist_omics": [1],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "columns": ["datatype"],
+                "datatype": ["rna", "wgs", "wes"],
+                "filter_mode": "any"
+            },
+            "merge_parameters" : {
+                "merge_with" : ["omics_sequencing"],
+                "primary" : ["profile_id"],
+                "foreign" : ["profile_id"]
+            }
+        },
+        "model_condition": {
+            "exclusion_filters": {
+                "columns": ["expansion_team"],
+                "expansion_team": ["PRISM"],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "columns": ["drug"],
+                "drug": ["None", "DMSO"],
+                "filter_mode": "any"
+            },
+            "merge_parameters" : {
+                "merge_with" : ["omics_profile"],
+                "primary" : ["model_condition_id"],
+                "foreign" : ["model_condition"]
+            }
+	    },
+	    "model": {
+	        "exclusion_filters": {
+	   	        "columns": ["permission_to_release"],
+		        "permission_to_release" : [0],
+		        "filter_mode": "all"
+		    },
+            "merge_parameters" : {
+                "merge_with" : ["model_condition"],
+                "primary" : ["model_id"],
+                "foreign" : ["model_id"]
+            }
+
+	   }
+    },
+    "priority_rankings": {
+        "ranking_orders" : {
+            "default_profile_id_for_mc_id": {
+                "groupbyvar" : ["model_condition_id","expected_type"], 
+                "priorityvar" : ["stranded"], 
+                "select_index": ["idxmin"]
+            },
+            "default_profile_id_for_mc_id2": {
+                "groupbyvar" : ["model_condition_id", "stranded"], 
+                "priorityvar" : ["expected_type"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id1": {
+                "groupbyvar" : ["model_id"], 
+                "priorityvar" : ["expected_type"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id2": {
+                "groupbyvar" : ["model_id", "expected_type"], 
+                "priorityvar" : ["source_model_condition"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id3": {
+                "groupbyvar" : ["model_id", "expected_type","source_model_condition"], 
+                "priorityvar" : ["expansion_team"], 
+                "select_index": ["idxmin"]
+            },
+            "default_mc_id_for_model_id4": {
+                "groupbyvar" : ["model_id", "expected_type","source_model_condition","expansion_team"], 
+                "priorityvar" : ["drug"], 
+                "select_index": ["idxmin"]
+            }
+        },
+        "rankings" : {
+            "expected_type" : {
+                "rna": 0, 
+                "wgs" : 1,
+                "wes" : 2
+            },
+            "drug": {
+                "None": 1,
+                "DMSO": 2
+            },
+            "stranded": {
+                "True": 1,
+                "False": 2
+            },
+            "source_model_condition": {
+                "BROAD": 1,
+                "SANGER": 2,
+                "STJUDE": 3,
+                "OTHER": 4,
+                "DFCI": 5,
+                "Unknown": 6
+            },
+            "expansion_team": {
+                "TDA": 1,
+                "DMX": 2,
+                "GPP": 3,
+                "Other": 4,
+                "CCLF": 5,
+                "STJUDE": 6,
+                "Sanger" : 7,
+                "None" : 8,
+                "Unknown": 9
+            }
+        }
+    }
+}
+
