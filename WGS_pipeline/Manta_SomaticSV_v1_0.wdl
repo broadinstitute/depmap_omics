@@ -68,7 +68,7 @@ task Manta {
 
         ./runWorkflow.py --mode local \
                          --jobs ${default=32 cpu} \
-                         --memGb ${(${num_jobs} * 2)}
+                         --memGb $((~{num_jobs} * 2))
 
         # change the default names with sample prefix
         if [[ -f "${normal_bam}" ]]; then
