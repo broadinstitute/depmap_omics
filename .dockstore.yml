@@ -44,6 +44,7 @@ workflows:
         - master
         - guidemat-wdl
         - wgs-pipeline-no-cn
+        - manta-dynamic-disk-size
   - name: WGS_aggregate
     subclass: WDL
     publish: True
