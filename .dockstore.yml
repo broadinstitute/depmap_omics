@@ -363,3 +363,4 @@ workflows:
     filters: # All tags, no branches
       branches:
         - vep-sv
+        - manta-dynamic-disk-size
