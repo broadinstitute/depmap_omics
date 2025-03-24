@@ -731,6 +731,8 @@ def postProcess(
         print("done")
 
     # !!! add here (if not run_gatk_relative) for new relative CN aggregation !!!
+    # else: 
+    #############################################################################
     # absolute CN
     purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
         refworkspace,
