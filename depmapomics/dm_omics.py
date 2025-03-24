@@ -877,7 +877,7 @@ def cnPostProcessing(
             },
             {
                 "path": folder + "merged_genecn_profile.csv",
-                "name": "merged_gene_cn_profile",
+                "name": "merged_gene_cn_profile_for_achilles",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
