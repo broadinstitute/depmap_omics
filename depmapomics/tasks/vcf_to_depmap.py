@@ -581,13 +581,13 @@ def improve(
     loc = (vcf["cgc_translocation_partner"] == "") & ~(
         vcf["cosmicfusion_fusion_genes"] == ""
     )
-    vcf.loc[loc, "structural_relation"] = (
-        vcf.loc[loc, "cosmicfusion_fusion_genes"]
-        .str.split("_")
-        .str[2]
-        .str.split("{EN")
-        .str[0]
-    )
+    # vcf.loc[loc, "structural_relation"] = (
+    #     vcf.loc[loc, "cosmicfusion_fusion_genes"]
+    #     .str.split("_")
+    #     .str[2]
+    #     .str.split("{EN")
+    #     .str[0]
+    # )
 
     # DNArepair
     vcf["dna_repair"] = ""
