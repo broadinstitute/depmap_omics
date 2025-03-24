@@ -730,6 +730,7 @@ def postProcess(
         genecn.to_csv(save_output + "genecn_all.csv")
         print("done")
 
+    # !!! add here (if not run_gatk_relative) for new relative CN aggregation !!!
     # absolute CN
     purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
         refworkspace,
