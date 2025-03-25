@@ -17,6 +17,14 @@
             }
         },
         "omics_profile": {
+            "supercede_filter": {
+                "_comment": "Include rows where atleast one of the columns 'internal_release_date', 'consortium_release_date' or 'public_release_date' is not None",
+                "columns": ["internal_release_date", "consortium_release_date", "public_release_date"],
+                "internal_release_date": ["None"],
+                "consortium_release_date": ["None"],
+                "public_release_date": ["None"],
+                "filter_mode": "any"
+            },
             "_comment": "Gumbo table name 'omics_profile' is block key. Table name MUST exactly match database table name",
             "exclusion_filters": {
                 "_comment": "Exclude rows where database column 'omics_profile.blacklist_omics' has value 1(is True)",
@@ -165,6 +173,29 @@
                 "Unknown": 9
             }
         }
+    },
+    "final_output_columns" : {
+        "_comment": "Contains the columns to be included in the final output table",
+        "columns" : ["model_id",
+        "stripped_cell_line_name",
+        "depmap_code",
+        "lineage",
+        "model_condition_id",
+        "source_model_condition",
+        "cell_format",
+        "growth_media",
+        "growth_pattern",
+        "profile_id",
+        "internal_release_date",
+        "consortium_release_date",
+        "public_release_date",
+        "kit_id",
+        "product",
+        "sequencing_id",
+        "datatype",
+        "stranded",
+        "shared_to_dbgap",
+        "is_default_entry"]
     }
 }
 

@@ -26,6 +26,20 @@ filtered_tables_names = [key + "_filtered" for key in tables_to_filter_names]
 for tablename in tables_to_filter_names:
 	print(tablename)
 	globals()[tablename]  = gc.get(tablename)
+	thistableglobal = globals()[tablename]
+	# Fill in missing values with a default value based on the data type of the column
+    # This is to ensure that the filters work correctly
+	for db_column in thistableglobal.columns:
+		if pd.api.types.is_bool_dtype(thistableglobal[db_column]):
+			thistableglobal[db_column].fillna(False, inplace = True)
+		elif pd.api.types.is_integer_dtype(thistableglobal[db_column]):
+			thistableglobal[db_column].fillna(1000, inplace = True)
+		elif pd.api.types.is_string_dtype(thistableglobal[db_column]):
+			thistableglobal[db_column].fillna("None", inplace = True)
+		elif pd.api.types.is_datetime64_any_dtype(thistableglobal[db_column]):
+			thistableglobal[db_column].fillna("None", inplace = True)
+		else:
+			thistableglobal[db_column].fillna("NA", inplace = True)
 
 # The following code block is to filter the tables based on the exclusion and inclusion filters. The filters 
 # are specified in the config file. The filtered tables are stored in a new variable with the same name as the
@@ -35,36 +49,24 @@ for tablename in tables_to_filter_names:
 for thistablename,filteredtablename in zip(tables_to_filter_names, filtered_tables_names):
 	thistable = globals()[thistablename]
 	thistable_filters = configdata.get("table_filters").get(thistablename)
+	superceding_filter = thistable_filters.get("supercede_filter", {})
+	if superceding_filter:
+		columns = superceding_filter.get("columns", [])
+		values = { col: superceding_filter.get(col, []) for col in columns}
+		super_filter_mode = superceding_filter.get("filter_mode")
+		super_filter_string = ''
+		if super_filter_mode == "all" and values:
+			super_filter_string = " & ".join([f"{col} not in {value!r}" for col, value in values.items()])
+		elif super_filter_mode == "any" and values:
+			super_filter_string = " | ".join([f"{col} not in {value!r}" for col, value in values.items()])
+		if super_filter_string:
+			thistable = thistable.query(super_filter_string)
 	exclusion_filters = thistable_filters.get("exclusion_filters", {})
 	exclusion_columns = exclusion_filters.get("columns")
 	exclusion_mode = exclusion_filters.get("filter_mode")
 	inclusion_filters = thistable_filters.get("inclusion_filters", {})
 	inclusion_columns = inclusion_filters.get("columns", [])
 	inclusion_mode = inclusion_filters.get("filter_mode")
-	# Fill in missing values with a default value based on the data type of the column
-	# This is to ensure that the filters work correctly
-	for colname_ex in exclusion_columns:
-		if pd.api.types.is_bool_dtype(thistable[colname_ex]):
-			thistable[colname_ex].fillna(False, inplace = True)
-		elif pd.api.types.is_integer_dtype(thistable[colname_ex]):
-			thistable[colname_ex].fillna(1000, inplace = True)
-		elif pd.api.types.is_string_dtype(thistable[colname_ex]):
-			thistable[colname_ex].fillna("None", inplace = True)
-		elif pd.api.types.is_datetime64_any_dtype(thistable[colname_ex]):
-			thistable[colname_ex].fillna("None", inplace = True)
-		else:
-			thistable[colname_ex].fillna("NA", inplace = True)
-	for colname_inc in inclusion_columns:
-		if pd.api.types.is_bool_dtype(thistable[colname_inc]):
-			thistable[colname_inc].fillna(True, inplace = True)
-		elif pd.api.types.is_integer_dtype(thistable[colname_inc]):
-			thistable[colname_inc].fillna(1000, inplace = True)
-		elif pd.api.types.is_string_dtype(thistable[colname_inc]):
-			thistable[colname_inc].fillna("None", inplace = True)
-		elif pd.api.types.is_datetime64_any_dtype(thistable[colname_inc]):
-			thistable[colname_inc].fillna("None", inplace = True)
-		else:
-			thistable[colname_inc].fillna("NA", inplace = True)
 	# This code block builds the filter string to query on, based on the filter mode and the filters specified in the config file
 	filter_string_ex = ''
 	filter_string_in = ''
@@ -154,24 +156,17 @@ for i, ranking_order in configdata["priority_rankings"]["ranking_orders"].items(
 merged_table["is_default_entry"] = 'False'
 merged_table.loc[idx[len(idx)-1],"is_default_entry"] = 'True'
 
+pd.to_datetime(..., errors='coerce')
+
 # Save the merged table to a csv file
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
 merged_table.to_csv("merged_table." + current_time  + "allcols.csv")
-selcols = ['model_id',
-'stripped_cell_line_name',
-'depmap_code',
-'lineage',
-'model_condition_id',
-'profile_id',
-'sequencing_id',
-'datatype',
-'stranded',
-'shared_to_dbgap',
-'is_default_entry']
+selcols = configdata["final_output_columns"]["columns"]
 
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
 merged_table[selcols].to_csv("merged_table." + current_time  + "selcols.csv",   index=False)
 
 
+
 defaults_grouped_by_model_id = merged_table.loc[merged_table.is_default_entry == 'True'].groupby(["model_id","stripped_cell_line_name","depmap_code","lineage"]).agg({"datatype": lambda x:', '.join(x)})
-defaults_grouped_by_model_id.to_csv("defaults_grouped_by_model_id." + current_time + ".csv", index=False)
+defaults_grouped_by_model_id.to_csv("defaults_grouped_by_model_id." + current_time + ".csv")

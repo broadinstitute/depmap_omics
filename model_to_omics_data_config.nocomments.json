@@ -13,6 +13,13 @@
             }
         },
         "omics_profile": {
+            "supercede_filter": {
+                "columns": ["internal_release_date", "consortium_release_date", "public_release_date"],
+                "internal_release_date": ["None"],
+                "consortium_release_date": ["None"],
+                "public_release_date": ["None"],
+                "filter_mode": "any"
+            },
             "exclusion_filters": {
                 "columns": ["blacklist_omics"],
                 "blacklist_omics": [1],
@@ -139,6 +146,28 @@
                 "Unknown": 9
             }
         }
+    },
+    "final_output_columns" : {
+        "columns" : ["model_id",
+        "stripped_cell_line_name",
+        "depmap_code",
+        "lineage",
+        "model_condition_id",
+        "source_model_condition",
+        "cell_format",
+        "growth_media",
+        "growth_pattern",
+        "profile_id",
+        "internal_release_date",
+        "consortium_release_date",
+        "public_release_date",
+        "kit_id",
+        "product",
+        "sequencing_id",
+        "datatype",
+        "stranded",
+        "shared_to_dbgap",
+        "is_default_entry"]
     }
 }
 
