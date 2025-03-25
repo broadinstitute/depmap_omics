@@ -46,7 +46,7 @@
                 "foreign" : ["model_condition"]
             }
 	    },
-	    "model": {
+	  "model": {
 	        "exclusion_filters": {
 	   	        "columns": ["permission_to_release"],
 		        "permission_to_release" : [0],
@@ -56,6 +56,18 @@
                 "merge_with" : ["model_condition"],
                 "primary" : ["model_id"],
                 "foreign" : ["model_id"]
+              }
+	  },
+	  "depmap_model_type": {
+	        "exclusion_filters": {
+	   	        "columns": ["depmap_code"],
+		        "depmap_code" : ["Unknown"],
+		        "filter_mode": "all"
+		    },
+            "merge_parameters" : {
+                "merge_with" : ["model"],
+                "primary" : ["depmap_code"],
+                "foreign" : ["depmap_model_type"]
             }
 
 	   }

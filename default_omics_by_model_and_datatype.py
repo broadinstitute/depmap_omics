@@ -155,51 +155,23 @@ merged_table["is_default_entry"] = 'False'
 merged_table.loc[idx[len(idx)-1],"is_default_entry"] = 'True'
 
 # Save the merged table to a csv file
-
+current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+merged_table.to_csv("merged_table." + current_time  + "allcols.csv")
 selcols = ['model_id',
-'patient_id',
-'cell_line_name',
+'stripped_cell_line_name',
+'depmap_code',
+'lineage',
 'model_condition_id',
-'condition_only',
-'comments_merged',
-'drug',
-'cell_format',
-'source_model_condition',
-'batch_doubling_time',
-'source_doubling_time',
-'expansion_team',
-'contaminated',
-'contamination_details',
-'passage_number',
-'growth_media',
 'profile_id',
-'registered',
-'blacklist_omics',
-'public_release_date',
-'consortium_release_date',
-'internal_release_date',
-'ibm_release_date',
-'datatype',
-'kit_id',
-'model_condition',
-'profile_source',
-'status',
 'sequencing_id',
-'version_merged',
-'blacklist',
-'expected_type',
+'datatype',
 'stranded',
-'expected_type_priority',
-'drug_priority',
-'stranded_priority',
-'source_model_condition_priority',
-'expansion_team_priority',
+'shared_to_dbgap',
 'is_default_entry']
 
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-merged_table.loc[merged_table.datatype == "rna",selcols].to_csv("merged_table." + current_time  + "rna.csv")
-merged_table.loc[merged_table.datatype == "wgs",selcols].to_csv("merged_table." + current_time  + "wgs.csv")
-merged_table.loc[merged_table.datatype == "wes",selcols].to_csv("merged_table." + current_time  + "wes.csv")
+merged_table[selcols].to_csv("merged_table." + current_time  + "selcols.csv",   index=False)
 
-defaults_grouped_by_model_id = merged_table.loc[merged_table.is_default_entry == 'True'].groupby("model_id").agg({"datatype": lambda x:', '.join(x)})
-defaults_grouped_by_model_id.to_csv("defaults_grouped_by_model_id." + current_time + ".csv")
+
+defaults_grouped_by_model_id = merged_table.loc[merged_table.is_default_entry == 'True'].groupby(["model_id","stripped_cell_line_name","depmap_code","lineage"]).agg({"datatype": lambda x:', '.join(x)})
+defaults_grouped_by_model_id.to_csv("defaults_grouped_by_model_id." + current_time + ".csv", index=False)

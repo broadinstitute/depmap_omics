@@ -58,7 +58,7 @@
                 "foreign" : ["model_condition"]
             }
 	    },
-	    "model": {
+	  "model": {
             "_comment": "Gumbo table name 'model' is block key. Table name MUST exactly match database table name",
 	        "exclusion_filters": {
                 "_comment": "Exclude rows where database column 'model.permission_to_release' is 0(False)",
@@ -71,6 +71,21 @@
                 "merge_with" : ["model_condition"],
                 "primary" : ["model_id"],
                 "foreign" : ["model_id"]
+              }
+	  },
+	  "depmap_model_type": {
+            "_comment": "Dummy",
+	        "exclusion_filters": {
+                "_comment": "Dummy exclusion filter. We need all rows in this table",
+	   	        "columns": ["depmap_code"],
+		        "depmap_code" : ["Unknown"],
+		        "filter_mode": "all"
+		    },
+            "merge_parameters" : {
+                "_comment" : "Join the table with 'model' table on the column 'depmap_model'",
+                "merge_with" : ["model"],
+                "primary" : ["depmap_code"],
+                "foreign" : ["depmap_model_type"]
             }
 
 	   }
