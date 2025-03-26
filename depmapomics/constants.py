@@ -107,7 +107,7 @@ GUIDESBED = {
     "humagne": "data/humagne_guides.bed",
     "ky": "data/ky_score_guides.bed",
     "tkov3": "data/tkov3_guides.bed",
-    "brunello": "brunello_guides.bed"
+    "brunello": "data/brunello_guides.bed"
 }
 
 BINARY_MUT_COLNAME_DICT = {
