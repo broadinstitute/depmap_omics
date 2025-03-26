@@ -2,7 +2,7 @@
 name = "depmap-omics"
 version = "0.1.0"
 description = "CDS-omics pipelines"
-authors = ["CDS-omics <qqin@broadinstitute.org>"]
+authors = ["CDS-omics"]
 readme = "README.md"
 packages = [{include = "depmapomics"}, {include="mgenepy"}]
 
@@ -12,7 +12,7 @@ numpy = "^1.24.1"
 pandas = "^1.5.3"
 taigapy = {git = "https://github.com/broadinstitute/taigapy.git", rev = "0b67741f18fe6e3c2f508ee84b06ca3bed853b82"}
 seaborn = "^0.12.2"
-depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch = "main"}
+depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload"}
 pyright = "1.1.293"
 pandera = "^0.13.4"
 fire = "^0.5.0"
@@ -22,10 +22,17 @@ firecloud_dalmatian= {git = "https://github.com/pgm/dalmatian", rev = "5f37ef9"}
 miniwdl = "^1.10.0"
 ruff = "^0.0.283"
 biomart = "^0.9.2"
-packaging = ">=22.0"
+packaging = ">=23.1"
+fsspec = "^2025.3.0"
+gcsfs = "^2025.3.0"
 
 [tool.poetry.scripts]
 depmapomics = 'depmapomics.__main__:main'
+
+[[tool.poetry.source]]
+name = "public-python"
+url = "https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/"
+priority = "supplemental"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"

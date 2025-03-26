@@ -38,13 +38,14 @@ def listToFile(l, filename):
 
 
 def generateGeneNames(
-    ensemble_server="http://nov2020.archive.ensembl.org/biomart",
+    # v104 corresponds to GENCODE v38 https://genome.ucsc.edu/cgi-bin/hgTables?db=hg38&hgta_group=genes&hgta_track=wgEncodeGencodeV38&hgta_table=wgEncodeGencodeCompV38&hgta_doSchema=describe+table+schema
+    ensemble_server="http://may2021.archive.ensembl.org/biomart",
     useCache=False,
     cache_folder="/".join(__file__.split("/")[:-3]) + "/",
     attributes=[],
     default_attr=[
         "ensembl_gene_id",
-        "clone_based_ensembl_gene",
+        "external_gene_name",
         "hgnc_symbol",
         "gene_biotype",
         "entrezgene_id",
@@ -80,11 +81,11 @@ def generateGeneNames(
     if type(res) is not type(pd.DataFrame()):
         raise ValueError("should be a dataframe")
 
-    if "clone_based_ensembl_gene" in default_attr and "hgnc_symbol" in default_attr:
-        res = res[~(res["clone_based_ensembl_gene"].isna() & res["hgnc_symbol"].isna())]
+    if "external_gene_name" in default_attr and "hgnc_symbol" in default_attr:
+        res = res[~(res["external_gene_name"].isna() & res["hgnc_symbol"].isna())]
         res.loc[res[res.hgnc_symbol.isna()].index, "hgnc_symbol"] = res[
             res.hgnc_symbol.isna()
-        ]["clone_based_ensembl_gene"]
+        ]["external_gene_name"]
 
     return res
 

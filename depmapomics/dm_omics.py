@@ -127,7 +127,6 @@ async def expressionPostProcessing(
 
         track.updateTrackerRNA(
             failed,
-            lowqual[lowqual.sum(1) > 3].index.tolist(),
             ccle_refsamples,
             samplesetname,
             refworkspace,
@@ -145,8 +144,6 @@ async def expressionPostProcessing(
 
     pr_table = mytracker.read_pr_table()
     
-    mytracker.close_gumbo_client()
-
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
@@ -428,8 +425,6 @@ async def fusionPostProcessing(
     mytracker = track.SampleTracker()
     ccle_refsamples = mytracker.read_seq_table()
 
-    previousQCfail = ccle_refsamples[ccle_refsamples.low_quality == 1].index.tolist()
-
     # TODO: include in rna_sample_renaming.json instead
     # lower priority versions of these lines were used
 
@@ -437,7 +432,6 @@ async def fusionPostProcessing(
 
     fusions, fusions_filtered = fusion.postProcess(
         refworkspace,
-        todrop=previousQCfail,
         save_output=folder,
         **kwargs,
     )
@@ -456,8 +450,6 @@ async def fusionPostProcessing(
     fusions_filtered_pr.to_csv(
         os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
     )
-
-    mytracker.close_gumbo_client()
 
     # taiga
     print("uploading to taiga")
@@ -644,8 +636,6 @@ def cnPostProcessing(
 
     with open(masked_gene_list, "r") as f:
         genes_to_mask = f.read().splitlines()
-
-    mytracker.close_gumbo_client()
 
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
@@ -1025,7 +1015,6 @@ async def mutationPostProcessing(
     mytracker = track.SampleTracker()
     pr_table = mytracker.read_pr_table()
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
-    mytracker.close_gumbo_client()
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())

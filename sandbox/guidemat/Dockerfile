@@ -3,7 +3,7 @@ FROM python:3.9-buster
 #RUN pip install pipx && \
 #  pipx install poetry==1.2.0
 
-RUN pip install poetry==1.2.2
+RUN pip install poetry==1.8.3
 
 RUN mkdir /install && mkdir /install/depmapomics && mkdir /install/mgenepy
 # first create these as if they are empty modules, 
