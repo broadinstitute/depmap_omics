@@ -1,7 +1,7 @@
 # pip install gcsfs
 # pip install fsspec
 # pip install biomart
-#fissfc entity_tsv -w depmap-omics-24q4 -p broad-firecloud-ccle -t sample | sed "s/\[\"//g" | sed 's/\"\]//g' > terra_data_table_rnaseq.tsv
+# fissfc entity_tsv -w depmap-omics-24q4 -p broad-firecloud-ccle -t sample | sed "s/\[\"//g" | sed 's/\"\]//g' > terra_data_table_rnaseq.tsv
 
 from taigapy import create_taiga_client_v3
 import gumbo_rest_client 
@@ -9,7 +9,19 @@ import pandas as pd
 import json
 import datetime
 import numpy as np
+import argparse
 
+
+def main():
+	parser = argparse.ArgumentParser(description= "Pull metadata from the command line.")
+	parser.add_argument('--date_on_or_before', type=str, required=True, help="Release date in YYYY-MM-DD format, 'None' if no date filter")
+	args = parser.parse_args()
+	release_date = {args.date_on_or_before}
+	return release_date
+
+
+if __name__ == "__main__":
+	release_date = main() 
 
 #sed '/_comment/d' model_to_omics_data_config.json > model_to_omics_data_config.nocomments.json
 gc = gumbo_rest_client.Client(
@@ -20,7 +32,7 @@ gc = gumbo_rest_client.Client(
 			base_url=gumbo_rest_client.const.prod_url
 		)
 
-configdata = json.load(open("model_to_omics_data_config.nocomments.json"))
+configdata = json.load(open("/localstuff/model_to_omics_data_config.nocomments.json"))
 tables_to_filter_names = list(configdata["table_filters"].keys())
 filtered_tables_names = [key + "_filtered" for key in tables_to_filter_names]
 for tablename in tables_to_filter_names:
@@ -28,7 +40,7 @@ for tablename in tables_to_filter_names:
 	globals()[tablename]  = gc.get(tablename)
 	thistableglobal = globals()[tablename]
 	# Fill in missing values with a default value based on the data type of the column
-    # This is to ensure that the filters work correctly
+	# This is to ensure that the filters work correctly
 	for db_column in thistableglobal.columns:
 		if pd.api.types.is_bool_dtype(thistableglobal[db_column]):
 			thistableglobal[db_column].fillna(False, inplace = True)
@@ -37,7 +49,7 @@ for tablename in tables_to_filter_names:
 		elif pd.api.types.is_string_dtype(thistableglobal[db_column]):
 			thistableglobal[db_column].fillna("None", inplace = True)
 		elif pd.api.types.is_datetime64_any_dtype(thistableglobal[db_column]):
-			thistableglobal[db_column].fillna("None", inplace = True)
+			thistableglobal[db_column].fillna("2262-04-11", inplace = True)
 		else:
 			thistableglobal[db_column].fillna("NA", inplace = True)
 
@@ -49,18 +61,6 @@ for tablename in tables_to_filter_names:
 for thistablename,filteredtablename in zip(tables_to_filter_names, filtered_tables_names):
 	thistable = globals()[thistablename]
 	thistable_filters = configdata.get("table_filters").get(thistablename)
-	superceding_filter = thistable_filters.get("supercede_filter", {})
-	if superceding_filter:
-		columns = superceding_filter.get("columns", [])
-		values = { col: superceding_filter.get(col, []) for col in columns}
-		super_filter_mode = superceding_filter.get("filter_mode")
-		super_filter_string = ''
-		if super_filter_mode == "all" and values:
-			super_filter_string = " & ".join([f"{col} not in {value!r}" for col, value in values.items()])
-		elif super_filter_mode == "any" and values:
-			super_filter_string = " | ".join([f"{col} not in {value!r}" for col, value in values.items()])
-		if super_filter_string:
-			thistable = thistable.query(super_filter_string)
 	exclusion_filters = thistable_filters.get("exclusion_filters", {})
 	exclusion_columns = exclusion_filters.get("columns")
 	exclusion_mode = exclusion_filters.get("filter_mode")
@@ -107,6 +107,16 @@ for thistablename, thisfilteredtablename in zip(tables_to_filter_names, filtered
 						  how = 'inner', 
 						  suffixes=['_' + thistablename,'_merged'])
 
+if release_date != {'None'}:
+	release_date_columns = configdata["release_date_columns"]["columns"]
+	for release_date_column in release_date_columns:
+		merged_table.loc[merged_table[release_date_column] == 'None', [release_date_column]] = "2262-04-11"
+		merged_table[release_date_column] = pd.to_datetime(merged_table[release_date_column])
+	merged_table["include"] = pd.Series.any(merged_table[release_date_columns] <= pd.to_datetime(release_date), axis=1)
+else:	
+	merged_table["include"] = True
+
+merged_table = merged_table.loc[merged_table["include"] == True]
 
 # Add priority columns to the merged table based on the priority rankings specified in the config file
 # The priority columns are added to the merged table with the suffix "_priority"
@@ -122,7 +132,9 @@ for rankingvar, ranking in priority_rankings["rankings"].items():
 		merged_table[rankingvar].fillna("None", inplace = True)
 	else:
 		merged_table[rankingvar].fillna("NA", inplace = True)
-	merged_table[rankingvar + '_priority'] = merged_table[rankingvar].astype(str).map(ranking)
+	rankingvalue = merged_table[rankingvar].astype(str).map(ranking)
+	rankingvalue = rankingvalue.fillna(len(ranking)+1)
+	merged_table[rankingvar + '_priority'] = rankingvalue
 
 # Special case to accommodate for the way gumbo is structured. 
 # You can have the same profile generating two sequences of the same type wgs or rna. This is something GP just delivers without asking
@@ -136,8 +148,10 @@ idx.append(merged_table.loc[idx[0]].groupby(["profile_id"])["version_merged"].id
 all_rankings = list(configdata["priority_rankings"]["rankings"].keys())
 all_rankings_priority_columns = [col + '_priority' for col in all_rankings]
 idxcount = len(idx)
+ops = (configdata["priority_rankings"]["order_of_operations"])
 
-for i, ranking_order in configdata["priority_rankings"]["ranking_orders"].items(): 
+for operation in ops:
+		ranking_order = configdata["priority_rankings"]["ranking_orders"][operation] 
 		groupbyvar = ranking_order["groupbyvar"]
 		for priorityvar, minmax in zip(ranking_order["priorityvar"], ranking_order["select_index"]):
 			zeropriorityrows_index = merged_table.loc[idx[idxcount-1]].loc[merged_table[priorityvar + '_priority'] == 0].index
@@ -150,23 +164,23 @@ for i, ranking_order in configdata["priority_rankings"]["ranking_orders"].items(
 				all_indexes = grouped.apply(minmax).tolist()
 			idx.append(all_indexes)
 			idxcount = idxcount + 1
-		print("***** Done setting selection for " + i + ",**************************************************")
+		merged_table.loc[idx[idxcount-1]].to_csv("/localstuff/" + operation + ".csv")
 
 # Pick one row per model based on the priority rankings set above. This will be default data row for that model+datatype combo
 merged_table["is_default_entry"] = 'False'
 merged_table.loc[idx[len(idx)-1],"is_default_entry"] = 'True'
 
-pd.to_datetime(..., errors='coerce')
+
 
 # Save the merged table to a csv file
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-merged_table.to_csv("merged_table." + current_time  + "allcols.csv")
+merged_table.to_csv("/localstuff/merged_table." + release_date + "." + current_time  + "allcols.csv")
 selcols = configdata["final_output_columns"]["columns"]
 
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-merged_table[selcols].to_csv("merged_table." + current_time  + "selcols.csv",   index=False)
+merged_table[selcols].to_csv("/localstuff/merged_table."  + release_date + "."  + "selcols.csv",   index=False)
 
 
 
 defaults_grouped_by_model_id = merged_table.loc[merged_table.is_default_entry == 'True'].groupby(["model_id","stripped_cell_line_name","depmap_code","lineage"]).agg({"datatype": lambda x:', '.join(x)})
-defaults_grouped_by_model_id.to_csv("defaults_grouped_by_model_id." + current_time + ".csv")
+defaults_grouped_by_model_id.to_csv("/localstuff/defaults_grouped_by_model_id." + current_time + ".csv")

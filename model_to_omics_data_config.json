@@ -1,4 +1,8 @@
 {
+    "release_date_columns" : {
+        "_comment": "Contains the columns that represent the release dates for the data",
+        "columns" : ["internal_release_date", "consortium_release_date", "public_release_date"]
+    },
     "table_filters": {
         "_comment": "Contains the filters to be applied to the tables, the filter_mode can be 'all'(all filters should be true) or 'any' (at least one of the filters should be true)",
         "omics_sequencing": {
@@ -17,14 +21,6 @@
             }
         },
         "omics_profile": {
-            "supercede_filter": {
-                "_comment": "Include rows where atleast one of the columns 'internal_release_date', 'consortium_release_date' or 'public_release_date' is not None",
-                "columns": ["internal_release_date", "consortium_release_date", "public_release_date"],
-                "internal_release_date": ["None"],
-                "consortium_release_date": ["None"],
-                "public_release_date": ["None"],
-                "filter_mode": "any"
-            },
             "_comment": "Gumbo table name 'omics_profile' is block key. Table name MUST exactly match database table name",
             "exclusion_filters": {
                 "_comment": "Exclude rows where database column 'omics_profile.blacklist_omics' has value 1(is True)",
@@ -52,12 +48,6 @@
                 "columns": ["expansion_team"],
                 "expansion_team": ["PRISM"],
                 "filter_mode": "all"
-            },
-            "inclusion_filters": {
-                "_comment": "Include only rows with db column 'model_condition.drug' is DMSO or None",
-                "columns": ["drug"],
-                "drug": ["None", "DMSO"],
-                "filter_mode": "any"
             },
             "merge_parameters" : {
                 "_comment" : "Join the table with 'omics_profile' table on the column 'model_condition_id'",
@@ -100,43 +90,39 @@
     },
     "priority_rankings": {
         "_comment": "Contains the ranking orders for the tables. Order matters here, groupbys will be iteratively applied in the order they are defined. Ranking order for each tiebreaker is in the following block 'priority_rankings'",
+        "order_of_operations" : ["default_datatype_per_model_id", "default_drug_per_model_id", "default_strandedness_per_model_id_and_datatye", "default_source_per_model_id",  "default_expansion_team_per_model_id"],
         "ranking_orders" : {
-            "default_profile_id_for_mc_id": {
-                "_comment": "If there are multiple rows with same 'model_condition_id' and 'expected_type', select the row with minimum value of 'stranded'",
-                "groupbyvar" : ["model_condition_id","expected_type"], 
-                "priorityvar" : ["stranded"], 
-                "select_index": ["idxmin"]
-            },
-            "default_profile_id_for_mc_id2": {
-                "_comment": "If there are multiple rows with same 'model_condition_id' and 'strand', select the row with minimum value of 'expected_type'",
-                "groupbyvar" : ["model_condition_id", "stranded"], 
-                "priorityvar" : ["expected_type"], 
-                "select_index": ["idxmin"]
-            },
-            "default_mc_id_for_model_id1": {
+            "default_datatype_per_model_id": {
                 "_comment": "If there are multiple rows with same 'model_id', select the row with minimum value of 'expected_type'. We need to do this at the model_condition level AND model level because you could have a model with wgs from BROAD and WES from Sanger, which will have a different model condition id. We ALWAYS pick wgs over wes",
                 "groupbyvar" : ["model_id"], 
                 "priorityvar" : ["expected_type"], 
                 "select_index": ["idxmin"]
             },
-            "default_mc_id_for_model_id2": {
-                "_comment": "If there are multiple rows with same 'model_id' and 'expected_type', select the row with minimum value of 'source_model_condition'",
+            "default_drug_per_model_id": {
+                "_comment": "If there are multiple rows with same 'model_id', 'expected_type', select the row with minimum value of 'drug'",
                 "groupbyvar" : ["model_id", "expected_type"], 
+                "priorityvar" : ["drug"], 
+                "select_index": ["idxmin"]
+            },
+            "default_strandedness_per_model_id_and_datatye": {
+                "_comment": "If there are multiple rows with same 'model_condition_id' and 'expected_type', select the row with minimum value of 'stranded'",
+                "groupbyvar" : ["model_id","expected_type","drug"], 
+                "priorityvar" : ["stranded"], 
+                "select_index": ["idxmin"]
+            },
+            "default_source_per_model_id": {
+                "_comment": "If there are multiple rows with same 'model_id' and 'expected_type' and drug, select the row with minimum value of 'source_model_condition'",
+                "groupbyvar" : ["model_id", "expected_type","drug"], 
                 "priorityvar" : ["source_model_condition"], 
                 "select_index": ["idxmin"]
             },
-            "default_mc_id_for_model_id3": {
+            "default_expansion_team_per_model_id": {
                 "_comment": "If there are multiple rows with same 'model_id', 'expected_type' and 'source_model_condition', select the row with minimum value of 'expansion_team'",
-                "groupbyvar" : ["model_id", "expected_type","source_model_condition"], 
+                "groupbyvar" : ["model_id", "expected_type","drug","source_model_condition"], 
                 "priorityvar" : ["expansion_team"], 
                 "select_index": ["idxmin"]
-            },
-            "default_mc_id_for_model_id4": {
-                "_comment": "If there are multiple rows with same 'model_id', 'expected_type', 'source_model_condition' and 'expansion_team', select the row with minimum value of 'drug'",
-                "groupbyvar" : ["model_id", "expected_type","source_model_condition","expansion_team"], 
-                "priorityvar" : ["drug"], 
-                "select_index": ["idxmin"]
             }
+
         },
         "rankings" : {
             "_comment": "Ranking order for each tiebreaker. SPECIAL CASE is when the priority ranking value is 0, it means that the column is ALWAYS present in the table and idxmin is not applicable. idxmin is only applicable for rankings >= 1",
@@ -162,8 +148,8 @@
                 "Unknown": 6
             },
             "expansion_team": {
-                "TDA": 1,
-                "DMX": 2,
+                "DMX": 1,
+                "TDA": 2,
                 "GPP": 3,
                 "Other": 4,
                 "CCLF": 5,
@@ -185,6 +171,7 @@
         "cell_format",
         "growth_media",
         "growth_pattern",
+        "drug",
         "profile_id",
         "internal_release_date",
         "consortium_release_date",

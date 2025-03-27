@@ -1,4 +1,7 @@
 {
+    "release_date_columns" : {
+        "columns" : ["internal_release_date", "consortium_release_date", "public_release_date"]
+    },
     "table_filters": {
         "omics_sequencing": {
             "exclusion_filters": {
@@ -13,13 +16,6 @@
             }
         },
         "omics_profile": {
-            "supercede_filter": {
-                "columns": ["internal_release_date", "consortium_release_date", "public_release_date"],
-                "internal_release_date": ["None"],
-                "consortium_release_date": ["None"],
-                "public_release_date": ["None"],
-                "filter_mode": "any"
-            },
             "exclusion_filters": {
                 "columns": ["blacklist_omics"],
                 "blacklist_omics": [1],
@@ -41,11 +37,6 @@
                 "columns": ["expansion_team"],
                 "expansion_team": ["PRISM"],
                 "filter_mode": "all"
-            },
-            "inclusion_filters": {
-                "columns": ["drug"],
-                "drug": ["None", "DMSO"],
-                "filter_mode": "any"
             },
             "merge_parameters" : {
                 "merge_with" : ["omics_profile"],
@@ -80,37 +71,34 @@
 	   }
     },
     "priority_rankings": {
+        "order_of_operations" : ["default_datatype_per_model_id", "default_drug_per_model_id", "default_strandedness_per_model_id_and_datatye", "default_source_per_model_id",  "default_expansion_team_per_model_id"],
         "ranking_orders" : {
-            "default_profile_id_for_mc_id": {
-                "groupbyvar" : ["model_condition_id","expected_type"], 
-                "priorityvar" : ["stranded"], 
-                "select_index": ["idxmin"]
-            },
-            "default_profile_id_for_mc_id2": {
-                "groupbyvar" : ["model_condition_id", "stranded"], 
-                "priorityvar" : ["expected_type"], 
-                "select_index": ["idxmin"]
-            },
-            "default_mc_id_for_model_id1": {
+            "default_datatype_per_model_id": {
                 "groupbyvar" : ["model_id"], 
                 "priorityvar" : ["expected_type"], 
                 "select_index": ["idxmin"]
             },
-            "default_mc_id_for_model_id2": {
+            "default_drug_per_model_id": {
                 "groupbyvar" : ["model_id", "expected_type"], 
+                "priorityvar" : ["drug"], 
+                "select_index": ["idxmin"]
+            },
+            "default_strandedness_per_model_id_and_datatye": {
+                "groupbyvar" : ["model_id","expected_type","drug"], 
+                "priorityvar" : ["stranded"], 
+                "select_index": ["idxmin"]
+            },
+            "default_source_per_model_id": {
+                "groupbyvar" : ["model_id", "expected_type","drug"], 
                 "priorityvar" : ["source_model_condition"], 
                 "select_index": ["idxmin"]
             },
-            "default_mc_id_for_model_id3": {
-                "groupbyvar" : ["model_id", "expected_type","source_model_condition"], 
+            "default_expansion_team_per_model_id": {
+                "groupbyvar" : ["model_id", "expected_type","drug","source_model_condition"], 
                 "priorityvar" : ["expansion_team"], 
                 "select_index": ["idxmin"]
-            },
-            "default_mc_id_for_model_id4": {
-                "groupbyvar" : ["model_id", "expected_type","source_model_condition","expansion_team"], 
-                "priorityvar" : ["drug"], 
-                "select_index": ["idxmin"]
             }
+
         },
         "rankings" : {
             "expected_type" : {
@@ -135,8 +123,8 @@
                 "Unknown": 6
             },
             "expansion_team": {
-                "TDA": 1,
-                "DMX": 2,
+                "DMX": 1,
+                "TDA": 2,
                 "GPP": 3,
                 "Other": 4,
                 "CCLF": 5,
@@ -157,6 +145,7 @@
         "cell_format",
         "growth_media",
         "growth_pattern",
+        "drug",
         "profile_id",
         "internal_release_date",
         "consortium_release_date",
