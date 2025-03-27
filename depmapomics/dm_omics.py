@@ -521,11 +521,11 @@ def cnPostProcessing(
     """
     tc = TaigaClient()
 
-    mytracker = track.SampleTracker()
-    tracker = mytracker.read_seq_table()
-
-    assert len(tracker) != 0, "broken source for sample tracker"
-    pr_table = mytracker.read_pr_table()
+    # read cds->pr mapping table and construct renaming dictionary
+    # always read latest version
+    print("reading omics ID mapping table from taiga")
+    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
+    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
 
     save_dir = save_dir + samplesetname + "/"
     # doing wes
@@ -592,11 +592,6 @@ def cnPostProcessing(
         purecnsampleset=purecnsampleset,
         **kwargs,
     )
-
-    # read cds->pr mapping table and construct renaming dictionary
-    # always read latest version
-    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
-    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
 
     with open(masked_gene_list, "r") as f:
         genes_to_mask = f.read().splitlines()
@@ -957,6 +952,12 @@ async def mutationPostProcessing(
 
     tc = TaigaClient()
 
+    # read cds->pr mapping table and construct renaming dictionary
+    # always read latest version
+    print("reading omics ID mapping table from taiga")
+    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
+    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
+
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
 
@@ -977,11 +978,6 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-
-    # read cds->pr mapping table and construct renaming dictionary
-    # always read latest version
-    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
-    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
