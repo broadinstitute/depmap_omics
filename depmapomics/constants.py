@@ -706,6 +706,7 @@ HGNC_MAPPING_TABLE_NAME = "hgnc_complete_set"
 
 HGNC_MAPPING_TABLE_VERSION = 3
 
+### !!! for the sake of testing only, need to replace once finalized!!!
 OMICS_ID_MAPPING_TABLE_TAIGAID = 'test-files-for-simone-postproc-ac2c'
 
 OMICS_ID_MAPPING_TABLE_NAME = "merged_table.20250327_1239selcols"
