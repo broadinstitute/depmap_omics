@@ -594,12 +594,12 @@ def cnPostProcessing(
     )
 
     # read cds->pr mapping table and construct renaming dictionary
-
+    # always read latest version
+    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
+    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
 
     with open(masked_gene_list, "r") as f:
         genes_to_mask = f.read().splitlines()
-
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
     # subset and rename to PR-indexed matrices
     wessegments_pr = (
@@ -978,9 +978,10 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    mytracker = track.SampleTracker()
-    pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
+    # read cds->pr mapping table and construct renaming dictionary
+    # always read latest version
+    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
+    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
