@@ -2,6 +2,11 @@ SAMPLESETNAME = "25Q2"
 
 RELEASE = "25q2"
 
+### !!! for the sake of testing only, need to replace once finalized!!!
+OMICS_ID_MAPPING_TABLE_TAIGAID = 'test-files-for-simone-postproc-ac2c'
+
+OMICS_ID_MAPPING_TABLE_NAME = "merged_table.20250327_1239selcols"
+
 WORKING_DIR = "output/"
 
 GCS_PAYER_PROJECT = "broad-firecloud-ccle"
@@ -706,10 +711,6 @@ HGNC_MAPPING_TABLE_NAME = "hgnc_complete_set"
 
 HGNC_MAPPING_TABLE_VERSION = 3
 
-### !!! for the sake of testing only, need to replace once finalized!!!
-OMICS_ID_MAPPING_TABLE_TAIGAID = 'test-files-for-simone-postproc-ac2c'
-
-OMICS_ID_MAPPING_TABLE_NAME = "merged_table.20250327_1239selcols"
 
 # OMICS_ID_MAPPING_TABLE_VERSION = 1
 
