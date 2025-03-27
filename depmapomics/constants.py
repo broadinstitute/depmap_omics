@@ -1,6 +1,6 @@
-SAMPLESETNAME = "24Q4"
+SAMPLESETNAME = "25Q2"
 
-RELEASE = "24q4"
+RELEASE = "25q2"
 
 WORKING_DIR = "output/"
 
@@ -20,7 +20,7 @@ HG38_CRAM_COLNAMES = ["hg38_cram_filepath", "hg38_crai_filepath"]
 
 WGSSETENTITY = "sample_set"
 
-WESSETENTITY = "pair_set"
+WESSETENTITY = "sample_set"
 
 FPALLBATCHPAIRSETS = "all"
 
