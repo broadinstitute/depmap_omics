@@ -492,28 +492,17 @@ def cnPostProcessing(
     AllSamplesetName="all",
     taiga_dataset=env_config.TAIGA_CN,
     dataset_description=constants.CNreadme,
-    subsetsegs=[
-        constants.SAMPLEID,
-        "Chromosome",
-        "Start",
-        "End",
-        "Segment_Mean",
-        "Num_Probes",
-        "Status",
-        "Source",
-    ],
-    bamqc=constants.BAMQC,
-    procqc=constants.PROCQC,
     save_dir=constants.WORKING_DIR,
     wesfolder="",
     segmentsthresh=constants.SEGMENTSTHR,
     maxYchrom=constants.MAXYCHROM,
-    billing_proj=constants.GCS_PAYER_PROJECT,
     hgnc_mapping_taiga=constants.HGNC_MAPPING_TABLE_TAIGAID,
     hgnc_mapping_table_name=constants.HGNC_MAPPING_TABLE_NAME,
     hgnc_mapping_table_version=constants.HGNC_MAPPING_TABLE_VERSION,
     dryrun=False,
     masked_gene_list=constants.MASKED_GENE_LIST,
+    omics_id_mapping_table_taigaid=constants.OMICS_ID_MAPPING_TABLE_TAIGAID,
+    omics_id_mapping_table_name=constants.OMICS_ID_MAPPING_TABLE_NAME,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -604,35 +593,8 @@ def cnPostProcessing(
         **kwargs,
     )
 
-    try:
-        track.updateTrackerWGS(
-            tracker,
-            samplesetname,
-            wgsfailed,
-            datatype=["wgs", "wes"],
-            bamqc=bamqc,
-            procqc=procqc,
-            refworkspace=wgsrefworkspace,
-            dry_run=dryrun,
-            billing_proj=billing_proj,
-        )
-    except:
-        print("no wgs for this sampleset")
+    # read cds->pr mapping table and construct renaming dictionary
 
-    try:
-        track.updateTrackerWGS(
-            tracker,
-            samplesetname,
-            wesfailed,
-            datatype=["wes", "wgs"],
-            dry_run=dryrun,
-            billing_proj=billing_proj,
-        )
-    except:
-        print("no wes for this sampleset")
-
-    pr_table = mytracker.update_pr_from_seq(["wgs"])
-    pr_table = mytracker.update_pr_from_seq(["wes"])
 
     with open(masked_gene_list, "r") as f:
         genes_to_mask = f.read().splitlines()
@@ -976,6 +938,8 @@ async def mutationPostProcessing(
     hgnc_mapping_taiga: str = constants.HGNC_MAPPING_TABLE_TAIGAID,
     hgnc_mapping_table_name: str = constants.HGNC_MAPPING_TABLE_NAME,
     hgnc_mapping_table_version: int = constants.HGNC_MAPPING_TABLE_VERSION,
+    omics_id_mapping_table_taigaid=constants.OMICS_ID_MAPPING_TABLE_TAIGAID,
+    omics_id_mapping_table_name=constants.OMICS_ID_MAPPING_TABLE_NAME,
     **kwargs,
 ):
     """The full CCLE mutations post processing pipeline (used only by CCLE)
