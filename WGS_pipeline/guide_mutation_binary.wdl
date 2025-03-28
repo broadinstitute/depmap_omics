@@ -42,8 +42,8 @@ task guide_mutation_in_vcf {
         File avana_bed = "gs://ccleparams/avana_guides.bed"
         File humagne_bed = "gs://ccleparams/humagne_guides.bed"
         File ky_bed = "gs://ccleparams/ky_score_guides.bed"
-        File brunello_bed = "gs://ccleparams/brunello_guides.bed"
-        File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
+        File brunello_bed = "gs://ccleparams/brunello_25Q2.bed"
+        File TKOv3_bed = "gs://ccleparams/tkov_25Q2.bed"
         String bcftools_format = '"%CHROM\\t%POS\\t%END\\t%ALT{0}\n"'
     
         Int memory = 4
@@ -124,8 +124,8 @@ task guide_mutation_intersect {
         File avana_bed = "gs://ccleparams/avana_guides.bed"
         File humagne_bed = "gs://ccleparams/humagne_guides.bed"
         File ky_bed = "gs://ccleparams/ky_score_guides.bed"
-        File brunello_bed = "gs://ccleparams/brunello_guides.bed"
-        File TKOv3_bed = "gs://ccleparams/tkov3_guides.bed"
+        File brunello_bed = "gs://ccleparams/brunello_25Q2.bed"
+        File TKOv3_bed = "gs://ccleparams/tkov_25Q2.bed"
     
         Int memory = 4
         Int num_threads = 1
