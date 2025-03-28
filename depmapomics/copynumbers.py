@@ -616,6 +616,35 @@ def read_ms_repeats(
     return ms_df
 
 
+def aggregateCN25q2(refworkspace,
+                    save_output="",
+                    setEntity="sample_set",
+                    sampleset="all",
+                    gene_level_colname="cnv_cn_by_gene_weighted_mean",
+                    seg_level_colname="cnv_segments",
+                    header_in_gene_level=['gene_chr', 'gene_start', 'gene_end', 'gene_length', 'weighted_sum', 'n_intervals_combined', 'weighted_CN']):
+    """ aggregate gene- and segment-level CN from the 25Q2 relative CN pipeline
+
+    Returns:
+        segments (pd.DataFrame): concatenated long table containing segments. 
+                                    columns: DepMap_ID,Chromosome,Start,End,NumProbes,SegmentMean,Status
+                                    unlike GATK, this pipeline does not output a "Status", so the column would need to be added and populated with "."
+        genecn (pd.DataFrame): CDS-ID x gene matrix. Columns are ENSG ids without ".*"
+    """
+    h.createFoldersFor(save_output)
+    print("aggregating 25q2 WGS CN from Terra")
+
+    wm = dm.WorkspaceManager(refworkspace)
+    samples_in_set = wm.get_entities(setEntity).loc[sampleset, 'samples']
+    sample_table = wm.get_samples()
+    # aggregate segments, similar to aggregateMAFs in mutation
+
+
+    # aggregate gene-level matrix
+
+    # since copy ratios on gene- and seg-level are log2, we need to undo the transform so the ratios are linear
+    return segments, genecn
+
 def postProcess(
     refworkspace,
     run_gatk_relative=True,
@@ -731,7 +760,8 @@ def postProcess(
         print("done")
 
     # !!! add here (if not run_gatk_relative) for new relative CN aggregation !!!
-    # else: 
+    else: 
+        segments, genecn = aggregateCN25q2()
     #############################################################################
     # absolute CN
     purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
