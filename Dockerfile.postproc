@@ -1,0 +1,31 @@
+FROM python:3.10-slim
+
+RUN apt-get update && apt-get -y install git
+RUN pip install gcsfs
+RUN pip install fsspec
+RUN pip install biomart
+RUN pip install pandas --only-binary=:all:
+RUN apt-get update && \
+    apt-get install -y build-essential \
+                       libssl-dev \
+                       libffi-dev \
+                       python3-dev \
+                       g++ \
+                       gcc \
+                       libpq-dev && \
+    pip install --upgrade pip setuptools wheel
+RUN pip install --index-url=https://pypi.python.org/simple --extra-index-url=https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/ gumbo-rest-client
+
+RUN git clone https://github.com/broadinstitute/fiss.git
+RUN set -ex \
+    && apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir -U --upgrade-strategy eager /fiss \
+    && rm -rf /fiss
+RUN pip install --extra-index-url=https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/ taigapy
+RUN mkdir ~/.taiga && echo "c42843cc-5115-4f41-a2d2-9c13391d5276" > ~/.taiga/token
+# The json credentials file for depmap-gumbo service account be mounted dynamically from depmap-gumbo-7f372e9d8519.json 
+# like so....
+# docker run -v depmap-gumbo-7f372e9d8519.json:/app/service-account-key.json 
+ENV GOOGLE_APPLICATION_CREDENTIALS="/app/service-account-key.json" 
+ENTRYPOINT /bin/bash
