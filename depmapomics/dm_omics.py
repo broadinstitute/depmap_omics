@@ -555,6 +555,7 @@ def cnPostProcessing(
             wes_ms_df,
         ) = cn.postProcess(
             wesrefworkspace,
+            run_gatk_relative=True,
             setEntity=wessetentity,
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
             save_output=folder,
@@ -595,6 +596,7 @@ def cnPostProcessing(
         wgs_ms_df,
     ) = cn.postProcess(
         wgsrefworkspace,
+        run_gatk_relative=False,
         setEntity=wgssetentity,
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
@@ -875,7 +877,7 @@ def cnPostProcessing(
             },
             {
                 "path": folder + "merged_genecn_profile.csv",
-                "name": "merged_gene_cn_profile",
+                "name": "merged_gene_cn_profile_for_achilles",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
