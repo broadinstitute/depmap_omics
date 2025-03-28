@@ -213,7 +213,7 @@ workflow WGS_pipeline {
         File avana_guide_mutation_matrix = run_guide_mutation.avana_binary_mut
         File humagne_guide_mutation_matrix = run_guide_mutation.humagne_binary_mut
         File ky_guide_mutation_matrix = run_guide_mutation.ky_binary_mut
-        # File brunello_guide_mutation_matrix = run_guide_mutation.brunello_binary_mut
-        # File tkov3_guide_mutation_matrix = run_guide_mutation.tkov3_binary_mut
+        File brunello_guide_mutation_matrix = run_guide_mutation.brunello_binary_mut
+        File tkov3_guide_mutation_matrix = run_guide_mutation.tkov3_binary_mut
     }
 }
