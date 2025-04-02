@@ -1,5 +1,4 @@
 # cn.py
-
 import os
 import subprocess
 
@@ -7,6 +6,8 @@ import dalmatian as dm
 import pandas as pd
 from depmap_omics_upload import tracker as track
 from IPython.display import Image, display
+from natsort import natsort_key
+from tqdm import tqdm
 
 from depmapomics import constants
 from mgenepy import mutations as mut
@@ -623,15 +624,6 @@ def aggregateCN25q2(
     sampleset="all",
     gene_level_colname="cnv_cn_by_gene_weighted_mean",
     seg_level_colname="cnv_segments",
-    header_in_gene_level=[
-        "gene_chr",
-        "gene_start",
-        "gene_end",
-        "gene_length",
-        "weighted_sum",
-        "n_intervals_combined",
-        "weighted_CN",
-    ],
 ):
     """aggregate gene- and segment-level CN from the 25Q2 relative CN pipeline
 
@@ -645,14 +637,69 @@ def aggregateCN25q2(
     print("aggregating 25q2 WGS CN from Terra")
 
     wm = dm.WorkspaceManager(refworkspace)
-    wm.get_entities(setEntity).loc[sampleset, "samples"]
-    wm.get_samples()
-    # aggregate segments, similar to aggregateMAFs in mutation
+
+    sample_ids = pd.Series(
+        [x["entityName"] for x in wm.get_entities(setEntity).loc[sampleset, "samples"]],
+        name="sample_id",
+    )
+
+    samples = wm.get_samples()
+
+    cnv_files = samples.loc[sample_ids, [gene_level_colname, seg_level_colname]]
+
+    print("Downloading segment files")
+    seg_files = cnv_files[seg_level_colname].dropna()
+    seg_dfs = []
+
+    for sample_id, f in tqdm(seg_files.items(), total=len(seg_files)):
+        seg_dfs.append(
+            pd.read_csv(
+                f,
+                sep="\t",
+                header=0,
+                usecols=[
+                    "CONTIG",
+                    "START",
+                    "END",
+                    "LOG2_COPY_RATIO_POSTERIOR_50",
+                    "NUM_POINTS_COPY_RATIO",
+                ],
+                dtype={
+                    "CONTIG": "string",
+                    "START": "int64",
+                    "END": "int64",
+                    "LOG2_COPY_RATIO_POSTERIOR_50": "float64",
+                    "NUM_POINTS_COPY_RATIO": "int64",
+                },
+            ).assign(Sample=sample_id)
+        )
+
+    print("Aggregating segments")
+    segments = pd.concat(seg_dfs, ignore_index=True)
+    # TODO: drop Y?
+
+    # exponentiate the log2 relative CNs
+    segments["LOG2_COPY_RATIO_POSTERIOR_50"] = (
+        2 ** segments["LOG2_COPY_RATIO_POSTERIOR_50"]
+    )
+
+    # segmentation algorithm doesn't output a CALL/Status column, so indicate missingness
+    segments["CALL"] = "."
+
+    # fix new columns' dtypes and column order
+    segments[["Sample", "CALL"]] = segments[["Sample", "CALL"]].astype("string")
+    seg_sample_ids = segments.pop("Sample")
+    segments.insert(loc=0, column="Sample", value=seg_sample_ids)
+
+    # sort and rename
+    segments = segments.sort_values(by=["Sample", "CONTIG", "START"], key=natsort_key)
+    segments = segments.rename(columns=constants.COLRENAMING)
 
     # aggregate gene-level matrix
+    gene_files = cnv_files[gene_level_colname].dropna()
+    # TODO
 
-    # since copy ratios on gene- and seg-level are log2, we need to undo the transform so the ratios are linear
-    return None  # segments, genecn
+    return segments  # , genecn
 
 
 def postProcess(
