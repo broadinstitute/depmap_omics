@@ -5,32 +5,24 @@
 
 from collections import defaultdict
 from taigapy import create_taiga_client_v3
+from taigapy.client_v3 import UploadedFile, LocalFormat
 import argparse
 import pandas as pd
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--date_on_or_before", type=str, required=True)
+parser.add_argument("--terra_table", type=str, required=True, help='Terra table to use')
+parser.add_argument("--sample_metadata", type=str, required=True, help='Sample metadata file to use')
 
 args = parser.parse_args()
-release_date = args.date_on_or_before
+terra_samples_file = args.terra_table
+sample_metadata_file = args.sample_metadata
 
-terra_samples = pd.read_table("/localstuff/terra_data_table_rnaseq_25q2.tsv")
-samples_to_process_all = pd.read_csv("/localstuff/merged_table.20250325_2319selcols.csv")
-# Ensure the column is datetime
-samples_to_process_all["internal_release_date"] = pd.to_datetime(samples_to_process_all["internal_release_date"], errors='coerce')
+terra_samples = pd.read_table(terra_samples_file)
+samples_to_process_all = pd.read_csv(sample_metadata_file)
 
-samples_to_process_release = samples_to_process_all.loc[
-	(samples_to_process_all["is_default_entry"]) & 
-	(samples_to_process_all["datatype"] == "rna") & 
-	(samples_to_process_all["internal_release_date"] != "None") &  # Ensure the date is not NA
-	(samples_to_process_all["internal_release_date"] <= pd.Timestamp('2025-05-01'))
-].copy()
-
-
-
-samples = pd.merge(terra_samples, samples_to_process_release, left_on ="entity:sample_id", right_on="sequencing_id", how="inner")
+samples_to_process = samples_to_process_all.loc[(samples_to_process_all["datatype"] == "rna") & (samples_to_process_all["is_default_entry"] == True)]
+samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="sequencing_id", how="inner")
 tc = create_taiga_client_v3()
 
 hgnc_table = tc.get("hgnc-gene-table-e250.3/hgnc_complete_set")
@@ -50,6 +42,7 @@ hgnc_table["hugo_entrez"] = (
 
 ens_to_hugo_entrez = dict(zip(hgnc_table["ensembl_gene_id"], hgnc_table["hugo_entrez"]))
 ens_gene_biotype = dict(zip(hgnc_table["ensembl_gene_id"], hgnc_table["locus_group"]))
+hgnc_gene_biotype = dict(zip(hgnc_table["hugo_entrez"], hgnc_table["locus_group"]))
 
 tpm_dict_human_all_genes = {}
 tpm_dict_human_pc_genes = {}
@@ -58,116 +51,93 @@ tpm_dict_virus = {}
 counts_dict_human_all_genes = {}
 counts_dict_human_pc_genes = {}
 counts_dict_virus = {}
-
 profile_cds_dict = dict(zip(samples["sequencing_id"],samples["profile_id"]))
 model_cds_dict = dict(zip(samples["sequencing_id"],samples["model_id"]))
 cell_line_cds_dict = dict(zip(samples["sequencing_id"],samples["stripped_cell_line_name"]))
 code_cds_dict = dict(zip(samples["sequencing_id"],samples["depmap_code"]))
 lineage_cds_dict = dict(zip(samples["sequencing_id"],samples["lineage"]))
 
-for sample_id, sample_data in list(samples.iterrows())[1:100]:
+df_all_tpms = pd.DataFrame()
+df_all_counts = pd.DataFrame()
+df_all_lengths = pd.DataFrame()
+# Establish the order of genes in output files (by alphabetical order) by anchoring on the first sample
+geneorder = pd.read_table(samples.loc[0,"quant_genes"]).sort_values(by="Name")["Name"].reset_index(drop=True)
+ens_no_suffix = geneorder.str.split(".", n=1).str[0]
+ens_no_suffix.loc[geneorder.str.endswith("_PAR_Y")] = ens_no_suffix.loc[geneorder.str.endswith("_PAR_Y")] + "_PAR_Y"
+gene_biotype = pd.Series(ens_no_suffix.map(ens_gene_biotype))
+hgnc_names = pd.Series(ens_no_suffix.map(ens_to_hugo_entrez))
+hgnc_names = hgnc_names.fillna(geneorder)
+human_genes_all_indexes = geneorder[geneorder.str.startswith("ENSG")].index
+human_genes_pc_indexes = geneorder[(geneorder.str.startswith("ENSG")) & (ens_no_suffix.map(ens_gene_biotype) == "protein-coding gene")].index
+virus_genes_all_indexes = geneorder[~geneorder.str.startswith("ENSG")].index
+
+all_tpms_list = []
+all_counts_list = []
+all_lengths_list = []
+sample_labels = []
+
+for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
+	print(sample_id)
 	if pd.notna(sample_data["quant_genes"]):
-		sample_key = sample_key
-		print(sample_id, sample_key)
-		df = pd.read_table(sample_data["quant_genes"])
-		df_human_all_genes = df[df["Name"].str.startswith("ENSG")].copy()
-		profile_id = profile_cds_dict[sample_key]
-		cellline = cell_line_cds_dict[sample_key]
-		model_id = model_cds_dict[sample_key]
-		depmap_code = code_cds_dict[sample_key]
-		lineage = lineage_cds_dict[sample_key]
-		sample_profile_model = model_id + "@" + cellline + "@" + depmap_code + "@" + lineage + "@" +  profile_id + "@" +sample_key 
-		ens_no_suffix = df_human_all_genes["Name"].str.split(".", n=1).str[0]
-		df_human_all_genes["ens_no_suffix"] = ens_no_suffix
-		df_human_all_genes["hugo_entrez"] = ens_no_suffix.map(ens_to_hugo_entrez).fillna(df_human_all_genes["Name"])
-		df_human_all_genes["gene_biotype"] = ens_no_suffix.map(ens_gene_biotype)
-		df_human_all_genes.set_index("hugo_entrez", inplace=True)
-		df_human_pc_genes = df_human_all_genes[df_human_all_genes["gene_biotype"] == "protein-coding gene"]
-		tpm_dict_human_all_genes[sample_profile_model] = df_human_all_genes["TPM"]
-		tpm_dict_human_pc_genes[sample_profile_model] = df_human_pc_genes["TPM"]
-		counts_dict_human_all_genes[sample_profile_model] = df_human_all_genes["NumReads"].round().astype(int)
-		counts_dict_human_pc_genes[sample_profile_model] = df_human_pc_genes["NumReads"].round().astype(int)
-		df_virus = df[~df["Name"].str.startswith("ENSG")].copy()
-		df_virus.set_index("Name", inplace=True)
-		tpm_dict_virus[sample_profile_model] = df_virus["TPM"]
-		counts_dict_virus[sample_profile_model] = df_virus["NumReads"].round().astype(int)
+		df = pd.read_table(sample_data["quant_genes"]).sort_values(by="Name").reset_index(drop=True)
+		tpms = df["TPM"].values  # Use NumPy arrays for speed
+		counts = df["NumReads"].round().astype(int).values
+		lengths = df["EffectiveLength"].values
+		genenames = df["Name"].values
+		if (genenames != geneorder).any():
+			raise ValueError("Gene order is not the same for " + sample_key)
+		sample_labels.append(sample_key)
+		# Append data to lists
+		all_tpms_list.append(tpms)
+		all_counts_list.append(counts)
+		all_lengths_list.append(lengths)
 	else:
-		print(sample_key + " does not have salmon output")
+		raise ValueError(sample_key + " does not have salmon output")
 
-tpm_df_human_all_genes = pd.DataFrame(tpm_dict_human_all_genes).fillna(0)
-tpm_df_human_pc_genes = pd.DataFrame(tpm_dict_human_pc_genes).fillna(0)
-tpm_df_virus = pd.DataFrame(tpm_dict_virus).fillna(0)
-
-tpm_df_human_all_genes = tpm_df_human_all_genes.T
-log2tpm_df_human_all_genes = np.log2(tpm_df_human_all_genes + 1)
-tpm_df_human_pc_genes = tpm_df_human_pc_genes.T
-log2tpm_df_human_pc_genes = np.log2(tpm_df_human_pc_genes + 1)
-tpm_df_virus = tpm_df_virus.T
-log2tpm_df_virus = np.log2(tpm_df_virus + 1)
-
-counts_df_human_all_genes = pd.DataFrame(counts_dict_human_all_genes).fillna(0)
-counts_df_human_pc_genes = pd.DataFrame(counts_dict_human_pc_genes).fillna(0)
-counts_df_virus = pd.DataFrame(counts_dict_virus).fillna(0)
-
-counts_df_human_all_genes = counts_df_human_all_genes.T
-counts_df_human_pc_genes = counts_df_human_pc_genes.T
-counts_df_virus = counts_df_virus.T
+# Convert lists to DataFrame at the end
+df_all_tpms = pd.DataFrame(np.column_stack(all_tpms_list), columns=sample_labels)
+df_all_tpms.insert(0, 'Name', hgnc_names)
+df_all_counts = pd.DataFrame(np.column_stack(all_counts_list), columns=sample_labels)
+df_all_counts.insert(0, 'Name', hgnc_names)
+df_all_lengths = pd.DataFrame(np.column_stack(all_lengths_list), columns=sample_labels)
+df_all_lengths.insert(0, 'Name', hgnc_names)
 
 
-tpm_df_human_all_genes.to_csv("tpm_df_human_all_genes.csv")
-log2tpm_df_human_all_genes.to_csv("log2tpm_df_human_all_genes.csv")
-tpm_df_human_pc_genes.to_csv("tpm_df_human_pc_genes.csv")
-log2tpm_df_human_pc_genes.to_csv("/localstuff/log2tpm_df_human_pc_genes.csv")
-tpm_df_virus.to_csv("tpm_df_virus.csv")
-log2tpm_df_virus.to_csv("log2tpm_df_virus.csv")
-
-
-
-def process_sample(sample_data):
-	result = defaultdict(dict)
-	if pd.notna(sample_data["quant_genes"]) and sample_data["entity:sample_id"] in profile_cds_dict.keys():
-		#print(sample_data["entity:sample_id"])
-		df = pd.read_table(sample_data["quant_genes"])
-		df_human_all_genes = df[df["Name"].str.startswith("ENSG")].copy()
-		profile_id = profile_cds_dict[sample_data["entity:sample_id"]]
-		cellline = cell_line_cds_dict[sample_data["entity:sample_id"]]
-		model_id = model_cds_dict[sample_data["entity:sample_id"]]
-		depmap_code = code_cds_dict[sample_data["entity:sample_id"]]
-		lineage = lineage_cds_dict[sample_data["entity:sample_id"]]
-		sample_profile_model = f"{model_id}@{cellline}@{depmap_code}@{lineage}@{profile_id}@{sample_data['entity:sample_id']}"
-		df_human_all_genes["ens_no_suffix"] = df_human_all_genes["Name"].str.split(".").str[0]
-		df_human_all_genes["hugo_entrez"] = df_human_all_genes["ens_no_suffix"].map(ens_to_hugo_entrez).fillna(df_human_all_genes["Name"])
-		df_human_all_genes["gene_biotype"] = df_human_all_genes["ens_no_suffix"].map(ens_gene_biotype)
-		df_human_all_genes.set_index("hugo_entrez", inplace=True)
-		df_human_pc_genes = df_human_all_genes[df_human_all_genes["gene_biotype"] == "protein-coding gene"]
-		result['tpm_dict_human_all_genes'][sample_profile_model] = df_human_all_genes["TPM"]
-		result['tpm_dict_human_pc_genes'][sample_profile_model] = df_human_pc_genes["TPM"]
-		result['counts_dict_human_all_genes'][sample_profile_model] = df_human_all_genes["NumReads"].round().astype(int)
-		result['counts_dict_human_pc_genes'][sample_profile_model] = df_human_pc_genes["NumReads"].round().astype(int)
-		df_virus = df[~df["Name"].str.startswith("ENSG")].copy()
-		df_virus.set_index("Name", inplace=True)
-		result['tpm_dict_virus'][sample_profile_model] = df_virus["TPM"]
-		result['counts_dict_virus'][sample_profile_model] = df_virus["NumReads"].round().astype(int)
-	return result
-
-def merge_results(results):
-	merged = defaultdict(dict)
-	for result in results:
-		for key, sub_dict in result.items():
-			merged[key].update(sub_dict)
-	return merged
-
-# Parallel Execution
-results = []
-starttime = time.time()
-with ThreadPoolExecutor() as executor:
-	futures = [executor.submit(process_sample, sample_data) for _, sample_data in samples.iterrows()]
-	for future in as_completed(futures):
-		results.append(future.result())
-
-# Final Merge
-merged_results = merge_results(results)
-endtime = time.time()
-merged_results.to_csv("/localstuff/merged_results.csv")
-print(f"Time taken: {time.time() - starttime}")
+df_all_tpms_cp = df_all_tpms.copy()
+df_all_counts_cp = df_all_counts.copy()
+df_all_lengths_cp = df_all_lengths.copy()
+upload_files = []
+df_dict = {
+	"df_tpms": df_all_tpms_cp,
+	"df_counts": df_all_counts_cp,
+	"df_lengths": df_all_lengths_cp,
+}
+df_outputs = {
+	"human_all_genes":human_genes_all_indexes,
+	"human_pc_genes":human_genes_pc_indexes,
+	"virus_genes":virus_genes_all_indexes
+}
+for thisdfname, thisdf in df_dict.items():
+	thisdf["hgnc_name"] = hgnc_names
+	thisdf["hgnc_name"] = thisdf["hgnc_name"].fillna(thisdf["Name"])
+	print(thisdfname)
+	thisdf.set_index("hgnc_name", inplace=True)
+	thisdf = thisdf.drop(['Name'], axis = 1)
+	if thisdfname == "df_tpms":
+		thisdf = np.log2(thisdf + 1)
+	thisdf = thisdf.T
+	profile_id = thisdf.index.map(profile_cds_dict)
+	cellline = thisdf.index.map(cell_line_cds_dict)
+	model_id = thisdf.index.map(model_cds_dict)
+	depmap_code = thisdf.index.map(code_cds_dict)
+	lineage = thisdf.index.map(lineage_cds_dict)
+	metadatadf = pd.DataFrame({"seqid":thisdf.index, "profile_id":profile_id, "cellline":cellline, "model_id":model_id, "oncotree_code":depmap_code, "lineage":lineage})
+	metadatadf.set_index("seqid", inplace=True)
+	for df_output_name, df_output_indexes in df_outputs.items():
+		globals()[thisdfname + "_"+ df_output_name] = metadatadf.join(thisdf.iloc[:, df_output_indexes])
+		globals()[thisdfname + "_"+ df_output_name].to_parquet(thisdfname + "_"+ df_output_name+".parquet", engine="pyarrow", index=False)
+		upload_files.append(UploadedFile(name=thisdfname + "_"+ df_output_name, local_path=thisdfname + "_"+ df_output_name+".parquet", format=LocalFormat.PARQUET_TABLE))
+	
+tc = create_taiga_client_v3()
+tc.create_dataset(name="25Q2 Expression Data Full Set",description="Testing upload of all expr files from new pipeline", files=upload_files)
