@@ -1,16 +1,16 @@
 # cn.py
 
-from depmapomics import constants
+import os
+import subprocess
 
-from depmap_omics_upload import tracker as track
-
-from IPython.display import Image, display
 import dalmatian as dm
 import pandas as pd
-import os
+from depmap_omics_upload import tracker as track
+from IPython.display import Image, display
+
+from depmapomics import constants
 from mgenepy import mutations as mut
 from mgenepy.utils import helper as h
-import subprocess
 
 
 def renameColumns(df):
@@ -90,7 +90,7 @@ def loadFromGATKAggregation(
     segments.End = segments.End.astype(int)
     segments.loc[
         segments[segments.Chromosome.isin(["X", "Y"])].index, "SegmentMean"
-    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2)
+    ] = segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2
     segments = segments.sort_values(by=sortby)
 
     print("loading " + str(len(set(segments[constants.SAMPLEID]))) + " rows")
@@ -616,17 +616,27 @@ def read_ms_repeats(
     return ms_df
 
 
-def aggregateCN25q2(refworkspace,
-                    save_output="",
-                    setEntity="sample_set",
-                    sampleset="all",
-                    gene_level_colname="cnv_cn_by_gene_weighted_mean",
-                    seg_level_colname="cnv_segments",
-                    header_in_gene_level=['gene_chr', 'gene_start', 'gene_end', 'gene_length', 'weighted_sum', 'n_intervals_combined', 'weighted_CN']):
-    """ aggregate gene- and segment-level CN from the 25Q2 relative CN pipeline
+def aggregateCN25q2(
+    refworkspace,
+    save_output="",
+    setEntity="sample_set",
+    sampleset="all",
+    gene_level_colname="cnv_cn_by_gene_weighted_mean",
+    seg_level_colname="cnv_segments",
+    header_in_gene_level=[
+        "gene_chr",
+        "gene_start",
+        "gene_end",
+        "gene_length",
+        "weighted_sum",
+        "n_intervals_combined",
+        "weighted_CN",
+    ],
+):
+    """aggregate gene- and segment-level CN from the 25Q2 relative CN pipeline
 
     Returns:
-        segments (pd.DataFrame): concatenated long table containing segments. 
+        segments (pd.DataFrame): concatenated long table containing segments.
                                     columns: DepMap_ID,Chromosome,Start,End,NumProbes,SegmentMean,Status
                                     unlike GATK, this pipeline does not output a "Status", so the column would need to be added and populated with "."
         genecn (pd.DataFrame): CDS-ID x gene matrix. Columns are ENSG ids without ".*"
@@ -635,15 +645,15 @@ def aggregateCN25q2(refworkspace,
     print("aggregating 25q2 WGS CN from Terra")
 
     wm = dm.WorkspaceManager(refworkspace)
-    samples_in_set = wm.get_entities(setEntity).loc[sampleset, 'samples']
-    sample_table = wm.get_samples()
+    wm.get_entities(setEntity).loc[sampleset, "samples"]
+    wm.get_samples()
     # aggregate segments, similar to aggregateMAFs in mutation
-
 
     # aggregate gene-level matrix
 
     # since copy ratios on gene- and seg-level are log2, we need to undo the transform so the ratios are linear
-    return segments, genecn
+    return None  # segments, genecn
+
 
 def postProcess(
     refworkspace,
@@ -703,7 +713,9 @@ def postProcess(
     )
     mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
     mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
-    mybiomart = mybiomart[mybiomart["Chromosome"].isin([str(x) for x in range(1, 23)] + ['X', 'Y'])]
+    mybiomart = mybiomart[
+        mybiomart["Chromosome"].isin([str(x) for x in range(1, 23)] + ["X", "Y"])
+    ]
     mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
 
     if run_gatk_relative:
@@ -749,7 +761,9 @@ def postProcess(
             h.listToFile(failed, save_output + "failed.txt")
         # subsetting
         segments = segments[
-            ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
+            ~segments[constants.SAMPLEID].isin(
+                (set(failed) | set(todrop)) - set(priority)
+            )
         ].reset_index(drop=True)
         genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
 
@@ -759,9 +773,9 @@ def postProcess(
         genecn.to_csv(save_output + "genecn_all.csv")
         print("done")
 
-    # !!! add here (if not run_gatk_relative) for new relative CN aggregation !!!
-    else: 
-        segments, genecn = aggregateCN25q2()
+    else:
+        segments, genecn = aggregateCN25q2(refworkspace)
+
     #############################################################################
     # absolute CN
     purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
