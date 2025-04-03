@@ -7,6 +7,7 @@ import pandas as pd
 from depmap_omics_upload import tracker as track
 from IPython.display import Image, display
 from natsort import natsort_key
+from taigapy import TaigaClient
 from tqdm import tqdm
 
 from depmapomics import constants
@@ -617,29 +618,95 @@ def read_ms_repeats(
     return ms_df
 
 
-def aggregateCN25q2(
+def make_hgnc_table(hgnc_taiga_dataset_id="hgnc-gene-table-e250.3/hgnc_complete_set"):
+    """Make a data frame mapping Ensembl IDs to Hugo+Entrez gene IDs and indicate
+    pseudo-autosomal regions.
+
+    Returns:
+        hgnc_table (pd.DataFrame): data frame containing the gene ID mapping"""
+
+    tc = TaigaClient()
+    hgnc_table = tc.get(hgnc_taiga_dataset_id)
+
+    hgnc_table = (
+        hgnc_table[["ensembl_gene_id", "symbol", "entrez_id", "location"]]
+        .dropna()
+        .astype(
+            {
+                "ensembl_gene_id": "string",
+                "symbol": "string",
+                "entrez_id": "int64",
+                "location": "string",
+            }
+        )
+    )
+
+    hgnc_table["hugo_entrez"] = (
+        hgnc_table["symbol"].astype(str)
+        + " ("
+        + hgnc_table["entrez_id"].astype("Int64").astype(str)
+        + ")"
+    )
+
+    hgnc_table = hgnc_table.drop(columns=["symbol", "entrez_id"])
+
+    # ensure there is a one-to-one mapping
+    # (e.g. remove ENSG00000230417->{LINC00595,LINC00856})
+    hgnc_table = hgnc_table.loc[
+        ~(
+            hgnc_table["ensembl_gene_id"].duplicated()
+            | hgnc_table["hugo_entrez"].duplicated()
+        )
+    ]
+
+    # collect genes with multiple locations
+    par_genes = hgnc_table.loc[
+        hgnc_table["location"].str.contains(" and ").fillna(False)
+    ].copy()
+
+    par_genes[["location1", "location2"]] = par_genes["location"].str.split(
+        " and ", expand=True
+    )
+
+    # confirm that we're only looking at PARs here
+    assert bool(par_genes["location1"].str.slice(0, 1).isin(["X", "Y"]).all()) & bool(
+        par_genes["location2"].str.slice(0, 1).isin(["X", "Y"]).all()
+    )
+
+    # indicate all PARs in the table
+    hgnc_table["par"] = hgnc_table["ensembl_gene_id"].isin(par_genes["ensembl_gene_id"])
+    hgnc_table = hgnc_table.drop(columns="location")
+
+    return hgnc_table
+
+
+def aggregate_cnvs_from_hmm(
     refworkspace,
-    save_output="",
-    setEntity="sample_set",
+    set_entity="sample_set",
     sampleset="all",
     gene_level_colname="cnv_cn_by_gene_weighted_mean",
     seg_level_colname="cnv_segments",
 ):
-    """aggregate gene- and segment-level CN from the 25Q2 relative CN pipeline
+    """Aggregate gene- and segment-level CN from the HMM-based relative CN pipeline.
 
     Returns:
         segments (pd.DataFrame): concatenated long table containing segments.
-                                    columns: DepMap_ID,Chromosome,Start,End,NumProbes,SegmentMean,Status
-                                    unlike GATK, this pipeline does not output a "Status", so the column would need to be added and populated with "."
-        genecn (pd.DataFrame): CDS-ID x gene matrix. Columns are ENSG ids without ".*"
+            columns: DepMap_ID,Chromosome,Start,End,NumProbes,SegmentMean,Status
+            unlike GATK, this pipeline does not output a "Status", so the column is
+            populated with "."
+        gene_cn_wide (pd.DataFrame): CDS-ID x gene matrix. Columns are "Hugo (Entrez)"
+            gene IDs
     """
-    h.createFoldersFor(save_output)
-    print("aggregating 25q2 WGS CN from Terra")
+
+    print("aggregating WGS CN (HMM) from Terra")
 
     wm = dm.WorkspaceManager(refworkspace)
 
     sample_ids = pd.Series(
-        [x["entityName"] for x in wm.get_entities(setEntity).loc[sampleset, "samples"]],
+        [
+            x["entityName"]
+            for x in wm.get_entities(set_entity).loc[sampleset, "samples"]
+        ],
         name="sample_id",
     )
 
@@ -656,7 +723,6 @@ def aggregateCN25q2(
             pd.read_csv(
                 f,
                 sep="\t",
-                header=0,
                 usecols=[
                     "CONTIG",
                     "START",
@@ -676,6 +742,7 @@ def aggregateCN25q2(
 
     print("Aggregating segments")
     segments = pd.concat(seg_dfs, ignore_index=True)
+    del seg_dfs
     # TODO: drop Y?
 
     # exponentiate the log2 relative CNs
@@ -696,10 +763,57 @@ def aggregateCN25q2(
     segments = segments.rename(columns=constants.COLRENAMING)
 
     # aggregate gene-level matrix
-    gene_files = cnv_files[gene_level_colname].dropna()
-    # TODO
+    hgnc_table = make_hgnc_table()
 
-    return segments  # , genecn
+    print("Downloading gene copy number files")
+    gene_cn_files = cnv_files[gene_level_colname].dropna()  # [:100]
+    gene_dfs = []
+
+    for sample_id, f in tqdm(gene_cn_files.items(), total=len(gene_cn_files)):
+        gene_cn = pd.read_csv(
+            f,
+            sep="\t",
+            header=None,
+            names=[
+                "chr",
+                "start",
+                "end",
+                "annot",
+                "gene_body_len",
+                "cn_sum_weighted",
+                "num_probes",
+                "log2_rel_cn",
+            ],
+            usecols=["chr", "annot", "log2_rel_cn"],
+            dtype={"chr": "string", "annot": "string", "log2_rel_cn": "float64"},
+        ).assign(sample_id=sample_id)
+
+        gene_dfs.append(gene_cn)
+
+    print("Aggregating gene CNs")
+    gene_cn = pd.concat(gene_dfs, ignore_index=True)
+    del gene_dfs
+
+    # extract the Ensembl ID without suffixes
+    gene_cn["ensembl_gene_id"] = gene_cn["annot"].str.extract(r"(ENSG[0-9]+)")
+    gene_cn = gene_cn.drop(columns="annot")
+
+    # join the Hugo+Entrez ID column
+    gene_cn = gene_cn.merge(hgnc_table, how="inner", on="ensembl_gene_id")
+
+    # remove the PAR chrY CNs, keeping the chrX versions only
+    gene_cn = gene_cn.loc[~(gene_cn["chr"].eq("chrY") & gene_cn["par"])]
+    gene_cn = gene_cn.drop(columns=["chr", "ensembl_gene_id", "par"])
+
+    # exponentiate the log2 relative CNs
+    gene_cn["log2_rel_cn"] = 2 ** gene_cn["log2_rel_cn"]
+
+    # convert to wide format (sample by gene)
+    gene_cn_wide = gene_cn.pivot(
+        index="sample_id", columns="hugo_entrez", values="log2_rel_cn"
+    )
+
+    return segments, gene_cn_wide
 
 
 def postProcess(
@@ -821,7 +935,12 @@ def postProcess(
         print("done")
 
     else:
-        segments, genecn = aggregateCN25q2(refworkspace)
+        segments, genecn = aggregate_cnvs_from_hmm(refworkspace)
+
+        print("saving files")
+        segments.to_csv(save_output + "segments_hmm_all.csv", index=False)
+        genecn.to_csv(save_output + "genecn_hmm_all.csv")
+        print("done")
 
     #############################################################################
     # absolute CN
