@@ -760,7 +760,7 @@ def aggregate_cnvs_from_hmm(
 
     # sort and rename
     segments = segments.sort_values(by=["Sample", "CONTIG", "START"], key=natsort_key)
-    segments = segments.rename(columns=constants.COLRENAMING)
+    segments = segments.rename(columns=constants.CNV_HMM_RENAMING)
 
     # aggregate gene-level matrix
     hgnc_table = make_hgnc_table()

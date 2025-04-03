@@ -133,6 +133,19 @@ COLRENAMING = {
     "start": "Start",
     "Sample": "DepMap_ID",
     "NUM_POINTS_COPY_RATIO": "NumProbes",
+    "MEAN_LOG2_COPY_RATIO": "SegmentMean",
+    "CALL": "Status",
+}
+
+CNV_HMM_RENAMING = {
+    "CONTIG": "Chromosome",
+    "START": "Start",
+    "END": "End",
+    "end": "End",
+    "seqnames": "Chromosome",
+    "start": "Start",
+    "Sample": "DepMap_ID",
+    "NUM_POINTS_COPY_RATIO": "NumProbes",
     "LOG2_COPY_RATIO_POSTERIOR_50": "SegmentMean",
     "CALL": "Status",
 }
