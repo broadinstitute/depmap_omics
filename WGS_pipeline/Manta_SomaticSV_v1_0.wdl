@@ -18,11 +18,17 @@ task Manta {
         File major_contig_bed="gs://ccleparams/manta_major_contigs.bed.gz"
         File major_contig_bed_index="gs://ccleparams/manta_major_contigs.bed.gz.tbi"
 
-        Int? disk_size
-        Int? mem_size
-        Int? cpu_num
-        Int? preemptible_attempts
+        Int preemptible = 2
+        Int max_retries = 0
+        Int cpu = 8
+        Float mem_per_job_gb = 0.4
+        Int additional_disk_gb = 0
     }
+
+    Float jobs_per_cpu = 1.3
+    Int num_jobs = round(cpu * jobs_per_cpu)
+    Int mem_gb = ceil(num_jobs * mem_per_job_gb)
+    Int disk_space = ceil(size(tumor_bam, "GiB")) + 10 + additional_disk_gb
 
     command {
         EXTENSION="bam"
@@ -61,8 +67,8 @@ task Manta {
                         $major_contig_line
 
         ./runWorkflow.py --mode local \
-                         --jobs ${default=32 cpu_num} \
-                         --memGb ${default=100 mem_size}
+                         --jobs ${default=32 cpu} \
+                         --memGb $((~{num_jobs} * 2))
 
         # change the default names with sample prefix
         if [[ -f "${normal_bam}" ]]; then
@@ -83,10 +89,11 @@ task Manta {
     }
     runtime {
         docker: "${manta_docker}"
-        memory: select_first([mem_size, 100]) + " GB"
-        cpu: select_first([cpu_num, 32])
-        disks: "local-disk " + select_first([disk_size, 200]) + " SSD"
-        preemptible: select_first([preemptible_attempts, 3])
+        memory: "~{mem_gb} GiB"
+        cpu: cpu
+        disks: "local-disk ~{disk_space} SSD"
+        preemptible: preemptible
+        maxRetries: max_retries
     }
     output {
         File germline_sv_vcf = "${sample_name}.diploidSV.vcf.gz"
@@ -148,6 +155,8 @@ workflow MantaSomaticSV {
         Boolean is_exome = defined(interval_list)
         Boolean is_cram
         Boolean is_major_contigs_only
+
+        Int additional_disk_gb = 0
     }
 
     if (is_exome) {
@@ -169,7 +178,8 @@ workflow MantaSomaticSV {
                manta_docker = manta_docker,
                config_manta = config_manta,
                is_cram = is_cram,
-               is_major_contigs_only = is_major_contigs_only
+               is_major_contigs_only = is_major_contigs_only,
+               additional_disk_gb = additional_disk_gb
     }
     output {
         File germline_sv_vcf = Manta.germline_sv_vcf
