@@ -743,7 +743,6 @@ def aggregate_cnvs_from_hmm(
     print("Aggregating segments")
     segments = pd.concat(seg_dfs, ignore_index=True)
     del seg_dfs
-    # TODO: drop Y?
 
     # exponentiate the log2 relative CNs
     segments["LOG2_COPY_RATIO_POSTERIOR_50"] = (
@@ -928,19 +927,9 @@ def postProcess(
         ].reset_index(drop=True)
         genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
 
-        # saving
-        print("saving files")
-        segments.to_csv(save_output + "segments_all.csv", index=False)
-        genecn.to_csv(save_output + "genecn_all.csv")
-        print("done")
-
     else:
         segments, genecn = aggregate_cnvs_from_hmm(refworkspace)
-
-        print("saving files")
-        segments.to_csv(save_output + "segments_hmm_all.csv", index=False)
-        genecn.to_csv(save_output + "genecn_hmm_all.csv")
-        print("done")
+        failed = None
 
     #############################################################################
     # absolute CN
