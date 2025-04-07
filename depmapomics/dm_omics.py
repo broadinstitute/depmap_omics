@@ -957,8 +957,6 @@ def cnPostProcessing(
 async def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
-    vcfdir: str = constants.VCFDIR,
-    vcf_colname: str = constants.VCFCOLNAME,
     samplesetname: str = constants.SAMPLESETNAME,
     AllSamplesetName: str = "all",
     taiga_description: str = constants.Mutationsreadme,
@@ -1261,6 +1259,18 @@ async def mutationPostProcessing(
                     {
                         "path": folder + "binary_germline_humagne.csv",
                         "name": "binary_mutation_humagne",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "binary_germline_brunello.csv",
+                        "name": "binary_mutation_brunello",
+                        "format": "TableCSV",
+                        "encoding": "utf-8",
+                    },
+                    {
+                        "path": folder + "binary_germline_tkov3.csv",
+                        "name": "binary_mutation_tkov3",
                         "format": "TableCSV",
                         "encoding": "utf-8",
                     },
