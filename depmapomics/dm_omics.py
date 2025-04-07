@@ -492,28 +492,17 @@ def cnPostProcessing(
     AllSamplesetName="all",
     taiga_dataset=env_config.TAIGA_CN,
     dataset_description=constants.CNreadme,
-    subsetsegs=[
-        constants.SAMPLEID,
-        "Chromosome",
-        "Start",
-        "End",
-        "Segment_Mean",
-        "Num_Probes",
-        "Status",
-        "Source",
-    ],
-    bamqc=constants.BAMQC,
-    procqc=constants.PROCQC,
     save_dir=constants.WORKING_DIR,
     wesfolder="",
     segmentsthresh=constants.SEGMENTSTHR,
     maxYchrom=constants.MAXYCHROM,
-    billing_proj=constants.GCS_PAYER_PROJECT,
     hgnc_mapping_taiga=constants.HGNC_MAPPING_TABLE_TAIGAID,
     hgnc_mapping_table_name=constants.HGNC_MAPPING_TABLE_NAME,
     hgnc_mapping_table_version=constants.HGNC_MAPPING_TABLE_VERSION,
     dryrun=False,
     masked_gene_list=constants.MASKED_GENE_LIST,
+    omics_id_mapping_table_taigaid=constants.OMICS_ID_MAPPING_TABLE_TAIGAID,
+    omics_id_mapping_table_name=constants.OMICS_ID_MAPPING_TABLE_NAME,
     **kwargs,
 ):
     """the full CCLE Copy Number post processing pipeline (used only by CCLE)
@@ -532,11 +521,11 @@ def cnPostProcessing(
     """
     tc = TaigaClient()
 
-    mytracker = track.SampleTracker()
-    tracker = mytracker.read_seq_table()
-
-    assert len(tracker) != 0, "broken source for sample tracker"
-    pr_table = mytracker.read_pr_table()
+    # read cds->pr mapping table and construct renaming dictionary
+    # always read latest version
+    print("reading omics ID mapping table from taiga")
+    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
+    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
 
     save_dir = save_dir + samplesetname + "/"
     # doing wes
@@ -604,40 +593,8 @@ def cnPostProcessing(
         **kwargs,
     )
 
-    try:
-        track.updateTrackerWGS(
-            tracker,
-            samplesetname,
-            wgsfailed,
-            datatype=["wgs", "wes"],
-            bamqc=bamqc,
-            procqc=procqc,
-            refworkspace=wgsrefworkspace,
-            dry_run=dryrun,
-            billing_proj=billing_proj,
-        )
-    except:
-        print("no wgs for this sampleset")
-
-    try:
-        track.updateTrackerWGS(
-            tracker,
-            samplesetname,
-            wesfailed,
-            datatype=["wes", "wgs"],
-            dry_run=dryrun,
-            billing_proj=billing_proj,
-        )
-    except:
-        print("no wes for this sampleset")
-
-    pr_table = mytracker.update_pr_from_seq(["wgs"])
-    pr_table = mytracker.update_pr_from_seq(["wes"])
-
     with open(masked_gene_list, "r") as f:
         genes_to_mask = f.read().splitlines()
-
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
     # subset and rename to PR-indexed matrices
     wessegments_pr = (
@@ -974,6 +931,8 @@ async def mutationPostProcessing(
     hgnc_mapping_taiga: str = constants.HGNC_MAPPING_TABLE_TAIGAID,
     hgnc_mapping_table_name: str = constants.HGNC_MAPPING_TABLE_NAME,
     hgnc_mapping_table_version: int = constants.HGNC_MAPPING_TABLE_VERSION,
+    omics_id_mapping_table_taigaid=constants.OMICS_ID_MAPPING_TABLE_TAIGAID,
+    omics_id_mapping_table_name=constants.OMICS_ID_MAPPING_TABLE_NAME,
     **kwargs,
 ):
     """The full CCLE mutations post processing pipeline (used only by CCLE)
@@ -990,6 +949,12 @@ async def mutationPostProcessing(
     """
 
     tc = TaigaClient()
+
+    # read cds->pr mapping table and construct renaming dictionary
+    # always read latest version
+    print("reading omics ID mapping table from taiga")
+    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
+    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
@@ -1011,10 +976,6 @@ async def mutationPostProcessing(
         debug=False,
         **kwargs,
     )
-
-    mytracker = track.SampleTracker()
-    pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
 
     wesmutations_pr = wesmutations[
         wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
