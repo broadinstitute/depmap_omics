@@ -1,16 +1,18 @@
 # cn.py
+import os
+import subprocess
 
-from depmapomics import constants
-
-from depmap_omics_upload import tracker as track
-
-from IPython.display import Image, display
 import dalmatian as dm
 import pandas as pd
-import os
+from depmap_omics_upload import tracker as track
+from IPython.display import Image, display
+from natsort import natsort_key
+from taigapy import TaigaClient
+from tqdm import tqdm
+
+from depmapomics import constants
 from mgenepy import mutations as mut
 from mgenepy.utils import helper as h
-import subprocess
 
 
 def renameColumns(df):
@@ -90,7 +92,7 @@ def loadFromGATKAggregation(
     segments.End = segments.End.astype(int)
     segments.loc[
         segments[segments.Chromosome.isin(["X", "Y"])].index, "SegmentMean"
-    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2)
+    ] = segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2
     segments = segments.sort_values(by=sortby)
 
     print("loading " + str(len(set(segments[constants.SAMPLEID]))) + " rows")
@@ -616,8 +618,218 @@ def read_ms_repeats(
     return ms_df
 
 
+def make_hgnc_table(taiga_id, dataset_version, dataset_file):
+    """Make a data frame mapping Ensembl IDs to Hugo+Entrez gene IDs and indicate
+    pseudo-autosomal regions.
+
+    Args:
+      taiga_id: the Taiga dataset name
+      dataset_version: the dataset version number
+      dataset_file: the file name in the dataset
+
+    Returns:
+        hgnc_table (pd.DataFrame): data frame containing the gene ID mapping"""
+
+    print("Making HGNC mapping table")
+
+    tc = TaigaClient()
+    hgnc_table = tc.get(name=taiga_id, version=dataset_version, file=dataset_file)
+
+    hgnc_table = (
+        hgnc_table[["ensembl_gene_id", "symbol", "entrez_id", "location"]]
+        .dropna()
+        .astype(
+            {
+                "ensembl_gene_id": "string",
+                "symbol": "string",
+                "entrez_id": "int64",
+                "location": "string",
+            }
+        )
+    )
+
+    hgnc_table["hugo_entrez"] = (
+        hgnc_table["symbol"].astype(str)
+        + " ("
+        + hgnc_table["entrez_id"].astype(str)
+        + ")"
+    )
+
+    hgnc_table = hgnc_table.drop(columns=["symbol", "entrez_id"])
+
+    # ensure there is a one-to-one mapping
+    # (e.g. remove ENSG00000230417->{LINC00595,LINC00856})
+    hgnc_table = hgnc_table.loc[
+        ~(
+            hgnc_table["ensembl_gene_id"].duplicated()
+            | hgnc_table["hugo_entrez"].duplicated()
+        )
+    ]
+
+    # collect genes with multiple locations
+    par_genes = hgnc_table.loc[
+        hgnc_table["location"].str.contains(" and ").fillna(False)
+    ].copy()
+
+    par_genes[["location1", "location2"]] = par_genes["location"].str.split(
+        " and ", expand=True
+    )
+
+    # confirm that we're only looking at PARs here
+    assert bool(par_genes["location1"].str.slice(0, 1).isin(["X", "Y"]).all()) & bool(
+        par_genes["location2"].str.slice(0, 1).isin(["X", "Y"]).all()
+    )
+
+    # indicate all PARs in the table
+    hgnc_table["par"] = hgnc_table["ensembl_gene_id"].isin(par_genes["ensembl_gene_id"])
+    hgnc_table = hgnc_table.drop(columns="location")
+
+    return hgnc_table
+
+
+def aggregate_cnvs_from_hmm(
+    refworkspace,
+    set_entity="sample_set",
+    sampleset="all",
+    gene_level_colname="cnv_cn_by_gene_weighted_mean",
+    seg_level_colname="cnv_segments",
+):
+    """Aggregate gene- and segment-level CN from the HMM-based relative CN pipeline.
+
+    Returns:
+        segments (pd.DataFrame): concatenated long table containing segments.
+            columns: DepMap_ID,Chromosome,Start,End,NumProbes,SegmentMean,Status
+            unlike GATK, this pipeline does not output a "Status", so the column is
+            populated with "."
+        gene_cn_wide (pd.DataFrame): CDS-ID x gene matrix. Columns are "Hugo (Entrez)"
+            gene IDs
+    """
+
+    print("aggregating WGS CN (HMM) from Terra")
+
+    wm = dm.WorkspaceManager(refworkspace)
+
+    sample_ids = pd.Series(
+        [
+            x["entityName"]
+            for x in wm.get_entities(set_entity).loc[sampleset, "samples"]
+        ],
+        name="sample_id",
+    )
+
+    samples = wm.get_samples()
+
+    cnv_files = samples.loc[sample_ids, [gene_level_colname, seg_level_colname]]
+
+    # concat CN segments
+    print("Downloading segment files")
+    seg_files = cnv_files[seg_level_colname].dropna()
+    seg_dfs = []
+
+    for sample_id, f in tqdm(seg_files.items(), total=len(seg_files)):
+        seg_dfs.append(
+            pd.read_csv(
+                f,
+                sep="\t",
+                usecols=[
+                    "CONTIG",
+                    "START",
+                    "END",
+                    "LOG2_COPY_RATIO_POSTERIOR_50",
+                    "NUM_POINTS_COPY_RATIO",
+                ],
+                dtype={
+                    "CONTIG": "string",
+                    "START": "int64",
+                    "END": "int64",
+                    "LOG2_COPY_RATIO_POSTERIOR_50": "float64",
+                    "NUM_POINTS_COPY_RATIO": "int64",
+                },
+            ).assign(Sample=sample_id)
+        )
+
+    print("Aggregating segments")
+    segments = pd.concat(seg_dfs, ignore_index=True)
+    del seg_dfs
+
+    # exponentiate the log2 relative CNs
+    segments["LOG2_COPY_RATIO_POSTERIOR_50"] = (
+        2 ** segments["LOG2_COPY_RATIO_POSTERIOR_50"]
+    )
+
+    # segmentation algorithm doesn't output a CALL/Status column, so indicate missingness
+    segments["CALL"] = "."
+
+    # fix new columns' dtypes and column order
+    segments[["Sample", "CALL"]] = segments[["Sample", "CALL"]].astype("string")
+    seg_sample_ids = segments.pop("Sample")
+    segments.insert(loc=0, column="Sample", value=seg_sample_ids)
+
+    # sort and rename
+    segments = segments.sort_values(by=["Sample", "CONTIG", "START"], key=natsort_key)
+    segments = segments.rename(columns=constants.CNV_HMM_RENAMING)
+
+    # aggregate gene-level matrix
+    print("Downloading gene copy number files")
+    gene_cn_files = cnv_files[gene_level_colname].dropna()
+    gene_dfs = []
+
+    for sample_id, f in tqdm(gene_cn_files.items(), total=len(gene_cn_files)):
+        gene_cn = pd.read_csv(
+            f,
+            sep="\t",
+            header=None,
+            names=[
+                "chr",
+                "start",
+                "end",
+                "annot",
+                "gene_body_len",
+                "cn_sum_weighted",
+                "num_probes",
+                "log2_rel_cn",
+            ],
+            usecols=["chr", "annot", "log2_rel_cn"],
+            dtype={"chr": "string", "annot": "string", "log2_rel_cn": "float64"},
+        ).assign(sample_id=sample_id)
+
+        gene_dfs.append(gene_cn)
+
+    print("Aggregating gene CNs")
+    gene_cn = pd.concat(gene_dfs, ignore_index=True)
+    del gene_dfs
+
+    # extract the Ensembl ID without suffixes
+    gene_cn["ensembl_gene_id"] = gene_cn["annot"].str.extract(r"(ENSG[0-9]+)")
+    gene_cn = gene_cn.drop(columns="annot")
+
+    # use the HGNC table to identify pseudo-autosomal Ensembl gene IDs
+    hgnc_table = make_hgnc_table(
+        taiga_id=constants.HGNC_MAPPING_TABLE_TAIGAID,
+        dataset_version=constants.HGNC_MAPPING_TABLE_VERSION,
+        dataset_file=constants.HGNC_MAPPING_TABLE_NAME,
+    ).drop(columns=["symbol", "entrez_id", "hugo_entrez"])
+
+    gene_cn = gene_cn.merge(hgnc_table, how="inner", on="ensembl_gene_id")
+
+    # remove the PAR chrY CNs, keeping the chrX versions only
+    gene_cn = gene_cn.loc[~(gene_cn["chr"].eq("chrY") & gene_cn["par"])]
+    gene_cn = gene_cn.drop(columns=["chr", "ensembl_gene_id", "par"])
+
+    # exponentiate the log2 relative CNs
+    gene_cn["log2_rel_cn"] = 2 ** gene_cn["log2_rel_cn"]
+
+    # convert to wide format (sample by gene)
+    gene_cn_wide = gene_cn.pivot(
+        index="sample_id", columns="ensembl_gene_id", values="log2_rel_cn"
+    )
+
+    return segments, gene_cn_wide
+
+
 def postProcess(
     refworkspace,
+    run_gatk_relative=True,
     setEntity="sample_set",
     sampleset="all",
     purecnsampleset=constants.PURECN_SAMPLESET,
@@ -658,15 +870,6 @@ def postProcess(
     """
     h.createFoldersFor(save_output)
     print("loading CN from Terra")
-    segments = loadFromGATKAggregation(
-        refworkspace,
-        setEntity=setEntity,
-        sampleset=sampleset,
-        sortby=sortby,
-        todrop=todrop,
-        doCleanup=doCleanup,
-    )
-    print("making gene level copy number")
 
     mybiomart = h.generateGeneNames(
         ensemble_server=ensemblserver,
@@ -682,50 +885,66 @@ def postProcess(
     )
     mybiomart["Chromosome"] = mybiomart["Chromosome"].astype(str)
     mybiomart = mybiomart.sort_values(by=["Chromosome", "start", "end"])
-    mybiomart = mybiomart[mybiomart["Chromosome"].isin(set(segments["Chromosome"]))]
+    mybiomart = mybiomart[
+        mybiomart["Chromosome"].isin([str(x) for x in range(1, 23)] + ["X", "Y"])
+    ]
     mybiomart = mybiomart.drop_duplicates("ensembl_gene_id", keep="first")
-    # drop Ychrom if > maxYchrom
-    ychrom = segments[segments.Chromosome.str.contains("Y")]
-    countYdrop = [
-        i
-        for i in set(ychrom[constants.SAMPLEID])
-        if len(ychrom[ychrom[constants.SAMPLEID] == i]) > maxYchrom
-    ]
-    segments = segments[
-        ~(
-            (segments[constants.SAMPLEID].isin(countYdrop))
-            & (segments.Chromosome == "Y")
+
+    if run_gatk_relative:
+        segments = loadFromGATKAggregation(
+            refworkspace,
+            setEntity=setEntity,
+            sampleset=sampleset,
+            sortby=sortby,
+            todrop=todrop,
+            doCleanup=doCleanup,
         )
-    ]
-    genecn = mut.toGeneMatrix(
-        mut.manageGapsInSegments(segments),
-        mybiomart,
-        value_colname="SegmentMean",
-        gene_names_col="ensembl_gene_id",
-    )
-    # validation step
-    print("summary of the gene cn data:")
-    print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
-    failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
+        print("making gene level copy number")
+        # drop Ychrom if > maxYchrom
+        ychrom = segments[segments.Chromosome.str.contains("Y")]
+        countYdrop = [
+            i
+            for i in set(ychrom[constants.SAMPLEID])
+            if len(ychrom[ychrom[constants.SAMPLEID] == i]) > maxYchrom
+        ]
+        segments = segments[
+            ~(
+                (segments[constants.SAMPLEID].isin(countYdrop))
+                & (segments.Chromosome == "Y")
+            )
+        ]
+        genecn = mut.toGeneMatrix(
+            mut.manageGapsInSegments(segments),
+            mybiomart,
+            value_colname="SegmentMean",
+            gene_names_col="ensembl_gene_id",
+        )
+        # validation step
+        print("summary of the gene cn data:")
+        print(genecn.values.min(), genecn.values.mean(), genecn.values.max())
+        failed = mut.checkAmountOfSegments(segments, thresh=segmentsthresh)
 
-    print("failed our QC")
-    print(failed)
+        print("failed our QC")
+        print(failed)
 
-    if source_rename:
-        segments = segments.replace({"Source": source_rename})
-    if save_output:
-        h.listToFile(failed, save_output + "failed.txt")
-    # subsetting
-    segments = segments[
-        ~segments[constants.SAMPLEID].isin((set(failed) | set(todrop)) - set(priority))
-    ].reset_index(drop=True)
-    genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
+        if source_rename:
+            segments = segments.replace({"Source": source_rename})
+        if save_output:
+            h.listToFile(failed, save_output + "failed.txt")
+        # subsetting
+        segments = segments[
+            ~segments[constants.SAMPLEID].isin(
+                (set(failed) | set(todrop)) - set(priority)
+            )
+        ].reset_index(drop=True)
+        genecn = genecn[~genecn.index.isin((set(failed) | set(todrop)) - set(priority))]
 
-    # saving
-    print("saving files")
-    segments.to_csv(save_output + "segments_all.csv", index=False)
-    genecn.to_csv(save_output + "genecn_all.csv")
-    print("done")
+    else:
+        segments, genecn = aggregate_cnvs_from_hmm(refworkspace)
+        failed = None
+
+    #############################################################################
+    # absolute CN
     purecn_segments, purecn_genecn, loh_status, purecn_failed = pureCNpostprocess(
         refworkspace,
         sampleset=purecnsampleset,

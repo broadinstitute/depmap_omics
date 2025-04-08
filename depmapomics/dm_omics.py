@@ -1,19 +1,15 @@
-from depmapomics import constants
-from depmapomics import env_config
 import os.path
+
 import dalmatian as dm
-import pandas as pd
 import numpy as np
+import pandas as pd
+from depmap_omics_upload import tracker as track
 from taigapy import TaigaClient, create_taiga_client_v3
 
-from mgenepy.utils import helper as h
-
-from depmap_omics_upload import tracker as track
-
-from depmapomics import expressions
-from depmapomics import mutations
-from depmapomics import fusions as fusion
+from depmapomics import constants, env_config, expressions, mutations
 from depmapomics import copynumbers as cn
+from depmapomics import fusions as fusion
+from mgenepy.utils import helper as h
 
 from .mutations import postprocess_main_steps
 
@@ -554,6 +550,7 @@ def cnPostProcessing(
             wes_ms_df,
         ) = cn.postProcess(
             wesrefworkspace,
+            run_gatk_relative=True,
             setEntity=wessetentity,
             sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
             save_output=folder,
@@ -594,6 +591,7 @@ def cnPostProcessing(
         wgs_ms_df,
     ) = cn.postProcess(
         wgsrefworkspace,
+        run_gatk_relative=False,
         setEntity=wgssetentity,
         sampleset=AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
@@ -706,23 +704,13 @@ def cnPostProcessing(
 
     print("map hugo symbols and entrez ids to gene CN columns")
     # pull the gene id mapping table from taiga dataset maintained by the portal
-    hgnc_table = tc.get(
-        name=hgnc_mapping_taiga,
-        version=hgnc_mapping_table_version,
-        file=hgnc_mapping_table_name,
-    )
-    # drop genes without entrez ids
+    hgnc_table = cn.make_hgnc_table(
+        taiga_id=hgnc_mapping_taiga,
+        dataset_version=hgnc_mapping_table_version,
+        dataset_file=hgnc_mapping_table_name,
+    ).drop(columns="par")
     # drop genes that should be masked
-    hgnc_table = hgnc_table[
-        (~hgnc_table["entrez_id"].isna())
-        & (~hgnc_table["ensembl_gene_id"].isin(genes_to_mask))
-    ]
-    hgnc_table["hugo_entrez"] = (
-        hgnc_table["symbol"].astype(str)
-        + " ("
-        + hgnc_table["entrez_id"].astype("Int64").astype(str)
-        + ")"
-    )
+    hgnc_table = hgnc_table[~hgnc_table["ensembl_gene_id"].isin(genes_to_mask)]
     ensg2hugo_entrez_dict = dict(
         zip(hgnc_table["ensembl_gene_id"], hgnc_table["hugo_entrez"])
     )
@@ -842,7 +830,7 @@ def cnPostProcessing(
             },
             {
                 "path": folder + "merged_genecn_profile.csv",
-                "name": "merged_gene_cn_profile",
+                "name": "merged_gene_cn_profile_for_achilles",
                 "format": "NumericMatrixCSV",
                 "encoding": "utf-8",
             },
