@@ -4,7 +4,7 @@ import os.path
 import dalmatian as dm
 import pandas as pd
 import numpy as np
-from taigapy import TaigaClient
+from taigapy import TaigaClient, create_taiga_client_v3
 
 from mgenepy.utils import helper as h
 
@@ -143,7 +143,7 @@ async def expressionPostProcessing(
         pr_table = mytracker.update_pr_from_seq(["rna"])
 
     pr_table = mytracker.read_pr_table()
-    
+
     renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
     h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
     pr_files = dict()
@@ -520,12 +520,22 @@ def cnPostProcessing(
         source_rename ([type], optional): @see managing duplicates. Defaults to constants.SOURCE_RENAME.
     """
     tc = TaigaClient()
+    client = create_taiga_client_v3()
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
     print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
-    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
+    omics_id_mapping_table = client.get(
+        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
+    )
+    renaming_dict = dict(
+        list(
+            zip(
+                omics_id_mapping_table["sequencing_id"],
+                omics_id_mapping_table["profile_id"],
+            )
+        )
+    )
 
     save_dir = save_dir + samplesetname + "/"
     # doing wes
@@ -949,12 +959,22 @@ async def mutationPostProcessing(
     """
 
     tc = TaigaClient()
+    client = create_taiga_client_v3()
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
     print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
-    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
+    omics_id_mapping_table = client.get(
+        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
+    )
+    renaming_dict = dict(
+        list(
+            zip(
+                omics_id_mapping_table["sequencing_id"],
+                omics_id_mapping_table["profile_id"],
+            )
+        )
+    )
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
