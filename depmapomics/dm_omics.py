@@ -4,7 +4,8 @@ import dalmatian as dm
 import numpy as np
 import pandas as pd
 from depmap_omics_upload import tracker as track
-from taigapy import TaigaClient
+from taigapy import TaigaClient, create_taiga_client_v3
+from taigapy.client_v3 import UploadedFile, LocalFormat
 
 from depmapomics import constants, env_config, expressions, mutations
 from depmapomics import copynumbers as cn
@@ -12,470 +13,6 @@ from depmapomics import fusions as fusion
 from mgenepy.utils import helper as h
 
 from .mutations import postprocess_main_steps
-
-
-async def expressionPostProcessing(
-    refworkspace=env_config.RNAWORKSPACE,
-    samplesetname=constants.SAMPLESETNAME,
-    samplesetname_stranded=constants.SAMPLESETNAME_STRANDED,
-    colstoclean=["fastq1", "fastq2", "recalibrated_bam", "recalibrated_bam_index"],
-    ensemblserver=constants.ENSEMBL_SERVER_V,
-    doCleanup=True,
-    samplesetToLoad="all",
-    strandedSamplesetToLoad="all_stranded",
-    taiga_dataset=env_config.TAIGA_EXPRESSION,
-    save_output=constants.WORKING_DIR,
-    minsimi=constants.RNAMINSIMI,
-    dropNonMatching=True,
-    dataset_description=constants.RNAseqreadme,
-    dry_run=False,
-    samplesinset=[],
-    rsemfilelocs=None,
-    rnaqclocs={},
-    starlogs={},
-    compute_enrichment=False,
-    billing_proj=constants.GCS_PAYER_PROJECT,
-    generate_count_matrix=True,
-    run_stranded=True,
-    rnaseqc2_gene_count_col=constants.RNASEQC2_GENE_COUNT_COL,
-    rnaseqc2_gene_count_col_stranded=constants.RNASEQC2_GENE_COUNT_COL_STRANDED,
-    **kwargs,
-):
-    """the full CCLE Expression post processing pipeline (used only by CCLE)
-    @see postprocessing() to reproduce our analysis and for parameters
-    Args:
-        refworkspace (str): terra workspace where the ref data is stored
-        sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
-        save_output (str, optional): whether to save our data. Defaults to "".
-        doCleanup (bool, optional): whether to clean the Terra workspaces from their unused output and lo. Defaults to True.
-        colstoclean (list, optional): the columns to clean in the terra workspace. Defaults to [].
-        ensemblserver (str, optional): ensembl server biomart version . Defaults to constants.ENSEMBL_SERVER_V.
-        todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
-        priority (list, optional): if some samples have to not be dropped when failing QC . Defaults to [].
-        useCache (bool, optional): whether to cache the ensembl server data. Defaults to False.
-        samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        geneLevelCols (list, optional): the columns that contain the gene level
-        expression data in the workspace. Defaults to constants.RSEMFILENAME_GENE.
-        trancriptLevelCols (list, optional): the columns that contain the transcript
-        level expression data in the workspacce. Defaults to constants.RSEMFILENAME_TRANSCRIPTS.
-        ssGSEAcol (str, optional): the rna file on which to compute ssGSEA. Defaults to "genes_tpm".
-        renamingFunc (function, optional): the function to use to rename the sample columns
-        (takes colnames and todrop as input, outputs a renaming dict). Defaults to None.
-        compute_enrichment (bool, optional): do SSgSEA or not. Defaults to True.
-        dropNonMatching (bool, optional): whether to drop the non matching genes
-        between entrez and ensembl. Defaults to False.
-        recompute_ssgsea (bool, optional): whether to recompute ssGSEA or not. Defaults to True.
-        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to env_config.TAIGA_EXPRESSION.
-        minsimi (float, optional): the minimum similarity to use for comparison to previous dataset. Defaults to 0.95.
-        dataset_description (str, optional): the taiga dataset description to use. Defaults to constants.RNAseqreadme.
-        tocompare (dict, optional): the columns to compare. Defaults to {"genes_expected_count": "CCLE_RNAseq_reads", "genes_tpm": "CCLE_expression_full", "proteincoding_genes_tpm": "CCLE_expression"}.
-        rsemfilelocs (pd.DataFrame, optional): locations of RSEM output files if refworkspace is not provided (bypass interaction with terra)
-        samplesinset (list[str], optional): list of samples in the sampleset if refworkspace is not provided (bypass interaction with terra)
-        rnaqclocs (dict(str:list[str]), optional): dict(sample_id:list[QC_filepaths]) of rna qc file locations if refworkspace is not provided (bypass interaction with terra)
-    """
-    tc = TaigaClient()
-
-    mytracker = track.SampleTracker()
-
-    ccle_refsamples = mytracker.read_seq_table()
-
-    folder = save_output + samplesetname + "/"
-
-    if dry_run:
-        folder = save_output + "dryrun/"
-
-    h.createFoldersFor(folder)
-    files, failed, _, renaming, lowqual, enrichments = await expressions.postProcess(
-        refworkspace,
-        samplesetname,
-        save_output=folder,
-        doCleanup=doCleanup,
-        colstoclean=colstoclean,
-        ensemblserver=ensemblserver,
-        samplesetToLoad=samplesetToLoad,
-        geneLevelCols=constants.RSEMFILENAME_GENE,
-        trancriptLevelCols=constants.RSEMFILENAME_TRANSCRIPTS,
-        ssGSEAcol="genes_tpm",
-        dropNonMatching=dropNonMatching,
-        dry_run=dry_run,
-        samplesinset=samplesinset,
-        rsemfilelocs=rsemfilelocs,
-        rnaqclocs=rnaqclocs,
-        compute_enrichment=compute_enrichment,
-        **kwargs,
-    )
-
-    files_stranded = dict()
-    if run_stranded:
-        files_stranded = await expressions.postProcessStranded(
-            refworkspace,
-            samplesetname_stranded,
-            failed,
-            save_output=folder,
-            ensemblserver=ensemblserver,
-            samplesetToLoad=samplesetname_stranded,
-            geneLevelCols=constants.RSEMFILENAME_GENE_STRANDED,
-            trancriptLevelCols=constants.RSEMFILENAME_TRANSCRIPTS_STRANDED,
-        )
-
-    if not dry_run:
-        print("updating the tracker")
-
-        track.updateTrackerRNA(
-            failed,
-            ccle_refsamples,
-            samplesetname,
-            refworkspace,
-            samplesinset=samplesinset,
-            starlogs=starlogs,
-            dry_run=dry_run,
-            billing_proj=billing_proj,
-        )
-
-    pr_table = mytracker.read_pr_table()
-
-    if not dry_run:
-        # subset and rename, include all PRs that have associated CDS-ids
-        pr_table = mytracker.update_pr_from_seq(["rna"])
-
-    pr_table = mytracker.read_pr_table()
-
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
-    h.dictToFile(renaming_dict, folder + "rna_seq2pr_renaming.json")
-    pr_files = dict()
-    for k, v in files.items():
-        pr_files[k + "_profile"] = v[v.index.isin(set(renaming_dict.keys()))].rename(
-            index=renaming_dict
-        )
-    if enrichments is not None:
-        enrichments = enrichments[
-            enrichments.index.isin(set(renaming_dict.keys()))
-        ].rename(index=renaming_dict)
-        enrichments.to_csv(folder + "gene_sets_profile.csv")
-    expressions.saveFiles(pr_files, folder)
-    if run_stranded:
-        pr_files_stranded = dict()
-        tpm_mat = files_stranded["proteincoding_genes_tpm_stranded"]
-        all_genes_mat = files_stranded["genes_tpm_stranded"]
-        transcripts_mat = files_stranded["transcripts_tpm_stranded"]
-        all_genes_expected_count_mat = files_stranded["genes_expected_count_stranded"]
-        transcripts_expected_count_mat = files_stranded[
-            "transcripts_expected_count_stranded"
-        ]
-        pr_files_stranded["proteincoding_genes_tpm_profile_stranded"] = tpm_mat[
-            tpm_mat.index.isin(set(renaming_dict.keys()))
-        ].rename(index=renaming_dict)
-        pr_files_stranded["genes_tpm_profile_stranded"] = all_genes_mat[
-            all_genes_mat.index.isin(set(renaming_dict.keys()))
-        ].rename(index=renaming_dict)
-        pr_files_stranded["transcripts_tpm_profile_stranded"] = transcripts_mat[
-            transcripts_mat.index.isin(set(renaming_dict.keys()))
-        ].rename(index=renaming_dict)
-        pr_files_stranded["genes_expected_count_profile_stranded"] = (
-            all_genes_expected_count_mat[
-                all_genes_expected_count_mat.index.isin(set(renaming_dict.keys()))
-            ].rename(index=renaming_dict)
-        )
-        pr_files_stranded["transcripts_expected_count_profile_stranded"] = (
-            transcripts_expected_count_mat[
-                transcripts_expected_count_mat.index.isin(set(renaming_dict.keys()))
-            ].rename(index=renaming_dict)
-        )
-        expressions.saveFiles(pr_files_stranded, folder)
-
-    if generate_count_matrix:
-        print("generating rnaseqc gene count matrix")
-        rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(
-            refworkspace, samplesetToLoad, rnaseqc2_gene_count_col
-        )
-        rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
-        rnaseqc_count_mat = rnaseqc_count_mat.T
-        rnaseqc_count_mat.to_csv(folder + "rnaseqc_count_mat.csv")
-        rnaseqc_count_mat_pr = rnaseqc_count_mat[
-            rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))
-        ].rename(index=renaming_dict)
-        rnaseqc_count_mat_pr.to_csv(folder + "rnaseqc_count_mat_pr.csv")
-        if run_stranded:
-            print("generating rnaseqc gene count matrix for stranded subset")
-            rnaseqc_count_dfs = expressions.parse_rnaseqc_counts(
-                refworkspace, strandedSamplesetToLoad, rnaseqc2_gene_count_col_stranded
-            )
-            rnaseqc_count_mat = pd.concat(rnaseqc_count_dfs, axis=1)
-            rnaseqc_count_mat = rnaseqc_count_mat.T
-            rnaseqc_count_mat.to_csv(folder + "stranded_rnaseqc_count_mat.csv")
-            rnaseqc_count_mat_pr = rnaseqc_count_mat[
-                rnaseqc_count_mat.index.isin(set(renaming_dict.keys()))
-            ].rename(index=renaming_dict)
-            rnaseqc_count_mat_pr.to_csv(folder + "stranded_rnaseqc_count_mat_pr.csv")
-
-    if not dry_run:
-        print("uploading to taiga")
-        tc.update_dataset(
-            changes_description="new " + samplesetname + " release!",
-            dataset_permaname=taiga_dataset,
-            upload_files=[
-                {
-                    "path": folder + "transcripts_expected_count.csv",
-                    "name": "transcripts_expectedCount_withReplicates",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_expected_count.csv",
-                    "name": "genes_expectedCount_withReplicates",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "proteincoding_genes_tpm_logp1.csv",
-                    "name": "proteinCoding_genes_tpm_logp1_withReplicates",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "proteincoding_genes_tpm_profile_logp1.csv",
-                    "name": "proteinCoding_genes_tpm_logp1_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "transcripts_tpm_profile_logp1.csv",
-                    "name": "transcripts_tpm_logp1_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_tpm_profile_logp1.csv",
-                    "name": "genes_tpm_logp1_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "transcripts_expected_count_profile.csv",
-                    "name": "transcripts_expectedCount_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "proteincoding_genes_expected_count_profile.csv",
-                    "name": "proteinCoding_genes_expectedCount_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_expected_count_profile.csv",
-                    "name": "genes_expectedCount_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_effective_length_profile.csv",
-                    "name": "genes_effectiveLength_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "genes_effective_length.csv",
-                    "name": "genes_effectiveLength_withReplicates",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "rna_qcs/all_qc.csv",
-                    "name": "all_samples_qc",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-            ],
-            upload_async=False,
-            dataset_description=dataset_description,
-        )
-        if enrichments is not None:
-            tc.update_dataset(
-                changes_description="adding enrichments for new "
-                + samplesetname
-                + " release!",
-                dataset_permaname=taiga_dataset,
-                upload_files=[
-                    {
-                        "path": folder + "gene_sets_all.csv",
-                        "name": "gene_set_enrichment_withReplicates",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "gene_sets_profile.csv",
-                        "name": "gene_set_enrichment_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                ],
-                add_all_existing_files=True,
-                upload_async=False,
-                dataset_description=dataset_description,
-            )
-        if generate_count_matrix:
-            tc.update_dataset(
-                changes_description="adding rnaseqc2 gene counts for new "
-                + samplesetname
-                + " release!",
-                dataset_permaname=taiga_dataset,
-                upload_files=[
-                    {
-                        "path": folder + "rnaseqc_count_mat.csv",
-                        "name": "rnaseqc_count_mat_withReplicates",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "rnaseqc_count_mat_pr.csv",
-                        "name": "rnaseqc_count_mat_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                ],
-                add_all_existing_files=True,
-                upload_async=False,
-                dataset_description=dataset_description,
-            )
-        if run_stranded:
-            tc.update_dataset(
-                changes_description="adding stranded data sets for "
-                + samplesetname
-                + " release!",
-                dataset_permaname=taiga_dataset,
-                upload_files=[
-                    {
-                        "path": folder + "stranded_rnaseqc_count_mat_pr.csv",
-                        "name": "stranded_rnaseqc_count_mat_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder
-                        + "proteincoding_genes_tpm_profile_stranded_logp1.csv",
-                        "name": "stranded_proteinCoding_genes_tpm_logp1_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "genes_tpm_profile_stranded_logp1.csv",
-                        "name": "stranded_genes_tpm_logp1_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "transcripts_tpm_profile_stranded_logp1.csv",
-                        "name": "stranded_transcripts_tpm_logp1_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "genes_expected_count_profile_stranded.csv",
-                        "name": "stranded_genes_expected_count_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder
-                        + "transcripts_expected_count_profile_stranded.csv",
-                        "name": "stranded_transcripts_expected_count_profile",
-                        "format": "NumericMatrixCSV",
-                        "encoding": "utf-8",
-                    },
-                ],
-                add_all_existing_files=True,
-                upload_async=False,
-                dataset_description=dataset_description,
-            )
-        print("done")
-
-
-async def fusionPostProcessing(
-    refworkspace=env_config.RNAWORKSPACE,
-    sampleset=constants.SAMPLESETNAME,
-    fusionSamplecol=constants.SAMPLEID,
-    taiga_dataset=env_config.TAIGA_FUSION,
-    dataset_description=constants.FUSIONreadme,
-    folder=constants.WORKING_DIR,
-    **kwargs,
-):
-    """the full CCLE Fusion post processing pipeline (used only by CCLE)
-    see postprocessing() to reproduce our analysis
-    Args:
-        refworkspace (str): terra workspace where the ref data is stored
-        sampleset (str, optional): sampleset where the red data is stored. Defaults to 'all'.
-        save_output (str, optional): whether and where to save our data. Defaults to "".
-        todrop (list, optional): if some samples have to be dropped whatever happens. Defaults to [].
-        samplesetToLoad (str, optional): the sampleset to load in the terra workspace. Defaults to "all".
-        fusionSamplecol ([type], optional): [description]. Defaults to constants.SAMPLEID.
-        taiga_dataset (str, optional): the taiga dataset path to use for uploading results. Defaults to env_config.TAIGA_EXPRESSION.
-        dataset_description (str, optional): the taiga dataset description to use. Defaults to constants.RNAseqreadme.
-
-    Returns:
-        (pd.df): fusion dataframe
-        (pd.df): filtered fusion dataframe
-    """
-    tc = TaigaClient()
-
-    mytracker = track.SampleTracker()
-    ccle_refsamples = mytracker.read_seq_table()
-
-    # TODO: include in rna_sample_renaming.json instead
-    # lower priority versions of these lines were used
-
-    folder = folder + sampleset + "/"
-
-    fusions, fusions_filtered = fusion.postProcess(
-        refworkspace,
-        save_output=folder,
-        **kwargs,
-    )
-
-    # subset, rename from seqid to prid, and save pr-indexed matrices
-    pr_table = mytracker.read_pr_table()
-    renaming_dict = dict(list(zip(pr_table.MainSequencingID, pr_table.index)))
-    fusions_pr = fusions[
-        fusions[fusionSamplecol].isin(set(renaming_dict.keys()))
-    ].replace({fusionSamplecol: renaming_dict})
-    fusions_filtered_pr = fusions_filtered[
-        fusions_filtered[fusionSamplecol].isin(set(renaming_dict.keys()))
-    ].replace({fusionSamplecol: renaming_dict})
-
-    fusions_pr.to_csv(os.path.join(folder, "fusions_all_profile.csv"), index=False)
-    fusions_filtered_pr.to_csv(
-        os.path.join(folder, "filteredfusions_latest_profile.csv"), index=False
-    )
-
-    # taiga
-    print("uploading to taiga")
-    tc.update_dataset(
-        dataset_permaname=taiga_dataset,
-        changes_description="new " + sampleset + " release!",
-        upload_files=[
-            {
-                "path": folder + "/fusions_all.csv",
-                "name": "fusions_unfiltered_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "/filteredfusions_latest_profile.csv",
-                "name": "fusions_filtered_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "/fusions_all_profile.csv",
-                "name": "fusions_unfiltered_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-        ],
-        dataset_description=dataset_description,
-    )
-    print("done")
-    return fusions
 
 
 def cnPostProcessing(
@@ -516,12 +53,22 @@ def cnPostProcessing(
         source_rename ([type], optional): @see managing duplicates. Defaults to constants.SOURCE_RENAME.
     """
     tc = TaigaClient()
+    client = create_taiga_client_v3()
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
     print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
-    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
+    omics_id_mapping_table = client.get(
+        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
+    )
+    renaming_dict = dict(
+        list(
+            zip(
+                omics_id_mapping_table["sequencing_id"],
+                omics_id_mapping_table["profile_id"],
+            )
+        )
+    )
 
     save_dir = save_dir + samplesetname + "/"
     # doing wes
@@ -794,106 +341,104 @@ def cnPostProcessing(
 
     # uploading to taiga
     print("uploading to taiga")
-    tc.update_dataset(
-        changes_description="new "
+
+    client.update_dataset(
+        reason="new "
         + samplesetname
         + " release! (removed misslabellings, see changelog)",
-        dataset_permaname=taiga_dataset,
-        upload_files=[
-            {
-                "path": folder + "merged_segments.csv",
-                "name": "merged_segments_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_genecn.csv",
-                "name": "merged_gene_cn_withReplicates",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_segments_profile.csv",
-                "name": "merged_segments_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_genecn_profile.csv",
-                "name": "merged_gene_cn_profile_for_achilles",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            # Pure CN outputs
-            {
-                "path": folder + "merged_absolute_segments.csv",
-                "name": "merged_absolute_segments_withReplicates",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_absolute_genecn.csv",
-                "name": "merged_absolute_gene_cn_withReplicates",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_loh.csv",
-                "name": "merged_loh_withReplicates",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_feature_table.csv",
-                "name": "globalGenomicFeatures_withReplicates",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_arm_cna.csv",
-                "name": "armLevelCNA_withReplicates",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_absolute_segments_profile.csv",
-                "name": "merged_absolute_segments_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_absolute_genecn_profile.csv",
-                "name": "merged_absolute_gene_cn_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_loh_profile.csv",
-                "name": "merged_loh_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_feature_table_profile.csv",
-                "name": "globalGenomicFeatures_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "merged_arm_cna_profile.csv",
-                "name": "armLevelCNA_profile",
-                "format": "NumericMatrixCSV",
-                "encoding": "utf-8",
-            },
-            {
-                "path": folder + "ms_repeat_profile.csv",
-                "name": "ms_repeat_profile",
-                "format": "TableCSV",
-                "encoding": "utf-8",
-            },
+        permaname=taiga_dataset,
+        additions=[
+            UploadedFile(
+                local_path=folder + "merged_segments.csv",
+                name="merged_segments_withReplicates",
+                format=LocalFormat.CSV_TABLE,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_genecn.csv",
+                name="merged_gene_cn_withReplicates",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_segments_profile.csv",
+                name="merged_segments_profile",
+                format=LocalFormat.CSV_TABLE,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_genecn_profile.csv",
+                name="merged_gene_cn_profile_for_achilles",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_absolute_segments.csv",
+                name="merged_absolute_segments_withReplicates",
+                format=LocalFormat.CSV_TABLE,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_absolute_genecn.csv",
+                name="merged_absolute_gene_cn_withReplicates",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_loh.csv",
+                name="merged_loh_withReplicates",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_feature_table.csv",
+                name="globalGenomicFeatures_withReplicates",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_arm_cna.csv",
+                name="armLevelCNA_withReplicates",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_absolute_segments_profile.csv",
+                name="merged_absolute_segments_profile",
+                format=LocalFormat.CSV_TABLE,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_absolute_genecn_profile.csv",
+                name="merged_absolute_gene_cn_profile",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_loh_profile.csv",
+                name="merged_loh_profile",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_feature_table_profile.csv",
+                name="globalGenomicFeatures_profile",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "merged_arm_cna_profile.csv",
+                name="armLevelCNA_profile",
+                format=LocalFormat.CSV_MATRIX,
+                encoding="utf8",
+            ),
+            UploadedFile(
+                local_path=folder + "ms_repeat_profile.csv",
+                name="ms_repeat_profile",
+                format=LocalFormat.CSV_TABLE,
+                encoding="utf8",
+            ),
         ],
-        dataset_description=dataset_description,
-        upload_async=False,
     )
     print("done")
     return wessegments, wgssegments
@@ -937,12 +482,22 @@ async def mutationPostProcessing(
     """
 
     tc = TaigaClient()
+    client = create_taiga_client_v3()
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
     print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = tc.get(name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name)
-    renaming_dict = dict(list(zip(omics_id_mapping_table['sequencing_id'], omics_id_mapping_table['profile_id'])))
+    omics_id_mapping_table = client.get(
+        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
+    )
+    renaming_dict = dict(
+        list(
+            zip(
+                omics_id_mapping_table["sequencing_id"],
+                omics_id_mapping_table["profile_id"],
+            )
+        )
+    )
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
@@ -1034,7 +589,7 @@ async def mutationPostProcessing(
 
             print("map entrez ids to SV matrix columns")
             # pull the gene id mapping table from taiga dataset maintained by the portal
-            hgnc_table = tc.get(
+            hgnc_table = client.get(
                 name=hgnc_mapping_taiga,
                 version=hgnc_mapping_table_version,
                 file=hgnc_mapping_table_name,
@@ -1144,121 +699,115 @@ async def mutationPostProcessing(
             )
     # uploading to taiga
     if upload_taiga:
-        tc.update_dataset(
-            changes_description="new " + samplesetname + " release!",
-            dataset_permaname=taiga_dataset,
-            upload_files=[
-                {
-                    "path": folder + "somatic_mutations_genotyped_hotspot_profile.csv",
-                    "name": "somaticMutations_genotypedMatrix_hotspot_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "somatic_mutations_genotyped_damaging_profile.csv",
-                    "name": "somaticMutations_genotypedMatrix_damaging_profile",
-                    "format": "NumericMatrixCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "somatic_mutations_profile.csv",
-                    "name": "somaticMutations_profile",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "somatic_mutations_profile.maf.csv",
-                    "name": "somaticMutations_profile_maf",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "somatic_mutations_all_cols_profile.csv",
-                    "name": "somaticMutations_profile_all_cols",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
-                {
-                    "path": folder + "somatic_mutations.csv",
-                    "name": "somaticMutations_withReplicates",
-                    "format": "TableCSV",
-                    "encoding": "utf-8",
-                },
+        client.update_dataset(
+            reason="new " + samplesetname + " release!",
+            permaname=taiga_dataset,
+            additions=[
+                UploadedFile(
+                    local_path=folder
+                    + "somatic_mutations_genotyped_hotspot_profile.csv",
+                    name="somaticMutations_genotypedMatrix_hotspot_profile",
+                    format=LocalFormat.CSV_MATRIX,
+                    encoding="utf8",
+                ),
+                UploadedFile(
+                    local_path=folder
+                    + "somatic_mutations_genotyped_damaging_profile.csv",
+                    name="somaticMutations_genotypedMatrix_damaging_profile",
+                    format=LocalFormat.CSV_MATRIX,
+                    encoding="utf8",
+                ),
+                UploadedFile(
+                    local_path=folder + "somatic_mutations_profile.csv",
+                    name="somaticMutations_profile",
+                    format=LocalFormat.CSV_TABLE,
+                    encoding="utf8",
+                ),
+                UploadedFile(
+                    local_path=folder + "somatic_mutations_profile.maf.csv",
+                    name="somaticMutations_profile_maf",
+                    format=LocalFormat.CSV_TABLE,
+                    encoding="utf8",
+                ),
+                UploadedFile(
+                    local_path=folder + "somatic_mutations_all_cols_profile.csv",
+                    name="somaticMutations_profile_all_cols",
+                    format=LocalFormat.CSV_TABLE,
+                    encoding="utf8",
+                ),
+                UploadedFile(
+                    local_path=folder + "somatic_mutations.csv",
+                    name="somaticMutations_withReplicates",
+                    format=LocalFormat.CSV_TABLE,
+                    encoding="utf8",
+                ),
             ],
-            upload_async=False,
-            dataset_description=taiga_description,
         )
         if run_guidemat:
-            tc.update_dataset(
-                changes_description="new " + samplesetname + " release!",
-                dataset_permaname=taiga_dataset,
-                upload_files=[
-                    {
-                        "path": folder + "binary_germline_avana.csv",
-                        "name": "binary_mutation_avana",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "binary_germline_ky.csv",
-                        "name": "binary_mutation_ky",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "binary_germline_humagne.csv",
-                        "name": "binary_mutation_humagne",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "binary_germline_brunello.csv",
-                        "name": "binary_mutation_brunello",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "binary_germline_tkov3.csv",
-                        "name": "binary_mutation_tkov3",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
+            client.update_dataset(
+                reason="new " + samplesetname + " release!",
+                permaname=taiga_dataset,
+                additions=[
+                    UploadedFile(
+                        local_path=folder + "binary_germline_avana.csv",
+                        name="binary_mutation_avana",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
+                    UploadedFile(
+                        local_path=folder + "binary_germline_ky.csv",
+                        name="binary_mutation_ky",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
+                    UploadedFile(
+                        local_path=folder + "binary_germline_humagne.csv",
+                        name="binary_mutation_humagne",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
+                    UploadedFile(
+                        local_path=folder + "binary_germline_brunello.csv",
+                        name="binary_mutation_brunello",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
+                    UploadedFile(
+                        local_path=folder + "binary_germline_tkov3.csv",
+                        name="binary_mutation_tkov3",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
                 ],
-                add_all_existing_files=True,
-                upload_async=False,
-                dataset_description=taiga_description,
             )
         if run_sv:
-            tc.update_dataset(
-                changes_description="new " + samplesetname + " release!",
-                dataset_permaname=taiga_dataset,
-                upload_files=[
-                    {
-                        "path": folder + "svs.csv",
-                        "name": "structuralVariants_withReplicates",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "svs_profile.csv",
-                        "name": "structuralVariants_profile",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "sv_mat_with_entrez.csv",
-                        "name": "structuralVariants_geneLevelMatrix_withReplicates",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
-                    {
-                        "path": folder + "sv_mat_with_entrez_profile.csv",
-                        "name": "structuralVariants_geneLevelMatrix_profile",
-                        "format": "TableCSV",
-                        "encoding": "utf-8",
-                    },
+            client.update_dataset(
+                reason="new " + samplesetname + " release!",
+                permaname=taiga_dataset,
+                additions=[
+                    UploadedFile(
+                        local_path=folder + "svs.csv",
+                        name="structuralVariants_withReplicates",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
+                    UploadedFile(
+                        local_path=folder + "svs_profile.csv",
+                        name="structuralVariants_profile",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
+                    UploadedFile(
+                        local_path=folder + "sv_mat_with_entrez.csv",
+                        name="structuralVariants_geneLevelMatrix_withReplicates",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
+                    UploadedFile(
+                        local_path=folder + "sv_mat_with_entrez_profile.csv",
+                        name="structuralVariants_geneLevelMatrix_profile",
+                        format=LocalFormat.CSV_TABLE,
+                        encoding="utf8",
+                    ),
                 ],
-                add_all_existing_files=True,
-                upload_async=False,
-                dataset_description=taiga_description,
             )

@@ -7,7 +7,7 @@ import pandas as pd
 from depmap_omics_upload import tracker as track
 from IPython.display import Image, display
 from natsort import natsort_key
-from taigapy import TaigaClient
+from taigapy import TaigaClient, create_taiga_client_v3
 from tqdm import tqdm
 
 from depmapomics import constants
@@ -92,7 +92,7 @@ def loadFromGATKAggregation(
     segments.End = segments.End.astype(int)
     segments.loc[
         segments[segments.Chromosome.isin(["X", "Y"])].index, "SegmentMean"
-    ] = segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2
+    ] = (segments[segments.Chromosome.isin(["X", "Y"])]["SegmentMean"] / 2)
     segments = segments.sort_values(by=sortby)
 
     print("loading " + str(len(set(segments[constants.SAMPLEID]))) + " rows")
@@ -632,8 +632,8 @@ def make_hgnc_table(taiga_id, dataset_version, dataset_file):
 
     print("Making HGNC mapping table")
 
-    tc = TaigaClient()
-    hgnc_table = tc.get(name=taiga_id, version=dataset_version, file=dataset_file)
+    client = create_taiga_client_v3()
+    hgnc_table = client.get(name=taiga_id, version=dataset_version, file=dataset_file)
 
     hgnc_table = (
         hgnc_table[["ensembl_gene_id", "symbol", "entrez_id", "location"]]

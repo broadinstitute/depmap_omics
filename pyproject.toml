@@ -10,9 +10,9 @@ packages = [{include = "depmapomics"}, {include="mgenepy"}]
 python = "^3.9"
 numpy = "^1.24.1"
 pandas = "^1.5.3"
-taigapy = {git = "https://github.com/broadinstitute/taigapy.git", rev = "0b67741f18fe6e3c2f508ee84b06ca3bed853b82"}
+taigapy = {version = "^3.13.0", source = "public-python"}
 seaborn = "^0.12.2"
-depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload"}
+depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch="25q2-update-taigapy"}
 pyright = "1.1.293"
 pandera = "^0.13.4"
 fire = "0.7.0"
