@@ -625,6 +625,8 @@ def make_hgnc_table(hgnc_taiga_dataset_id="hgnc-gene-table-e250.3/hgnc_complete_
     Returns:
         hgnc_table (pd.DataFrame): data frame containing the gene ID mapping"""
 
+    print("Making HGNC mapping table")
+
     tc = TaigaClient()
     hgnc_table = tc.get(hgnc_taiga_dataset_id)
 
@@ -714,6 +716,7 @@ def aggregate_cnvs_from_hmm(
 
     cnv_files = samples.loc[sample_ids, [gene_level_colname, seg_level_colname]]
 
+    # concat CN segments
     print("Downloading segment files")
     seg_files = cnv_files[seg_level_colname].dropna()
     seg_dfs = []
@@ -762,10 +765,8 @@ def aggregate_cnvs_from_hmm(
     segments = segments.rename(columns=constants.CNV_HMM_RENAMING)
 
     # aggregate gene-level matrix
-    hgnc_table = make_hgnc_table()
-
     print("Downloading gene copy number files")
-    gene_cn_files = cnv_files[gene_level_colname].dropna()  # [:100]
+    gene_cn_files = cnv_files[gene_level_colname].dropna()
     gene_dfs = []
 
     for sample_id, f in tqdm(gene_cn_files.items(), total=len(gene_cn_files)):
@@ -797,7 +798,8 @@ def aggregate_cnvs_from_hmm(
     gene_cn["ensembl_gene_id"] = gene_cn["annot"].str.extract(r"(ENSG[0-9]+)")
     gene_cn = gene_cn.drop(columns="annot")
 
-    # join the Hugo+Entrez ID column
+    # use the HGNC table to identify pseudo-autosomal Ensembl gene IDs
+    hgnc_table = make_hgnc_table().drop(columns="hugo_entrez")
     gene_cn = gene_cn.merge(hgnc_table, how="inner", on="ensembl_gene_id")
 
     # remove the PAR chrY CNs, keeping the chrX versions only
@@ -809,7 +811,7 @@ def aggregate_cnvs_from_hmm(
 
     # convert to wide format (sample by gene)
     gene_cn_wide = gene_cn.pivot(
-        index="sample_id", columns="hugo_entrez", values="log2_rel_cn"
+        index="sample_id", columns="ensembl_gene_id", values="log2_rel_cn"
     )
 
     return segments, gene_cn_wide
