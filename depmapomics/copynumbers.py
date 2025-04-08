@@ -618,9 +618,14 @@ def read_ms_repeats(
     return ms_df
 
 
-def make_hgnc_table(hgnc_taiga_dataset_id="hgnc-gene-table-e250.3/hgnc_complete_set"):
+def make_hgnc_table(taiga_id, dataset_version, dataset_file):
     """Make a data frame mapping Ensembl IDs to Hugo+Entrez gene IDs and indicate
     pseudo-autosomal regions.
+
+    Args:
+      taiga_id: the Taiga dataset name
+      dataset_version: the dataset version number
+      dataset_file: the file name in the dataset
 
     Returns:
         hgnc_table (pd.DataFrame): data frame containing the gene ID mapping"""
@@ -628,7 +633,7 @@ def make_hgnc_table(hgnc_taiga_dataset_id="hgnc-gene-table-e250.3/hgnc_complete_
     print("Making HGNC mapping table")
 
     tc = TaigaClient()
-    hgnc_table = tc.get(hgnc_taiga_dataset_id)
+    hgnc_table = tc.get(name=taiga_id, version=dataset_version, file=dataset_file)
 
     hgnc_table = (
         hgnc_table[["ensembl_gene_id", "symbol", "entrez_id", "location"]]
@@ -799,7 +804,12 @@ def aggregate_cnvs_from_hmm(
     gene_cn = gene_cn.drop(columns="annot")
 
     # use the HGNC table to identify pseudo-autosomal Ensembl gene IDs
-    hgnc_table = make_hgnc_table().drop(columns="hugo_entrez")
+    hgnc_table = make_hgnc_table(
+        taiga_id=constants.HGNC_MAPPING_TABLE_TAIGAID,
+        dataset_version=constants.HGNC_MAPPING_TABLE_VERSION,
+        dataset_file=constants.HGNC_MAPPING_TABLE_NAME,
+    ).drop(columns=["symbol", "entrez_id", "hugo_entrez"])
+
     gene_cn = gene_cn.merge(hgnc_table, how="inner", on="ensembl_gene_id")
 
     # remove the PAR chrY CNs, keeping the chrX versions only
