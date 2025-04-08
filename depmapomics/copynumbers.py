@@ -808,7 +808,7 @@ def aggregate_cnvs_from_hmm(
         taiga_id=constants.HGNC_MAPPING_TABLE_TAIGAID,
         dataset_version=constants.HGNC_MAPPING_TABLE_VERSION,
         dataset_file=constants.HGNC_MAPPING_TABLE_NAME,
-    ).drop(columns=["symbol", "entrez_id", "hugo_entrez"])
+    ).drop(columns=["hugo_entrez"])
 
     gene_cn = gene_cn.merge(hgnc_table, how="inner", on="ensembl_gene_id")
 
