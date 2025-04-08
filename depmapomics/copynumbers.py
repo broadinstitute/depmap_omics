@@ -646,7 +646,7 @@ def make_hgnc_table(hgnc_taiga_dataset_id="hgnc-gene-table-e250.3/hgnc_complete_
     hgnc_table["hugo_entrez"] = (
         hgnc_table["symbol"].astype(str)
         + " ("
-        + hgnc_table["entrez_id"].astype("Int64").astype(str)
+        + hgnc_table["entrez_id"].astype(str)
         + ")"
     )
 
