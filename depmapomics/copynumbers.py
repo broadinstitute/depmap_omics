@@ -814,7 +814,7 @@ def aggregate_cnvs_from_hmm(
 
     # remove the PAR chrY CNs, keeping the chrX versions only
     gene_cn = gene_cn.loc[~(gene_cn["chr"].eq("chrY") & gene_cn["par"])]
-    gene_cn = gene_cn.drop(columns=["chr", "ensembl_gene_id", "par"])
+    gene_cn = gene_cn.drop(columns=["chr", "par"])
 
     # exponentiate the log2 relative CNs
     gene_cn["log2_rel_cn"] = 2 ** gene_cn["log2_rel_cn"]
