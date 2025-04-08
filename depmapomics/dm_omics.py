@@ -55,6 +55,9 @@ def cnPostProcessing(
     tc = TaigaClient()
     client = create_taiga_client_v3()
 
+    with open(masked_gene_list, "r") as f:
+        genes_to_mask = f.read().splitlines()
+
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
     print("reading omics ID mapping table from taiga")
@@ -113,6 +116,15 @@ def cnPostProcessing(
         )
         wes_ms_df = pd.read_csv(wesfolder + "ms_repeats_all.csv")
 
+    print("masking wes")
+    cols_to_drop = [col for col in genes_to_mask if col in wesgenecn.columns]
+    print("dropping " + str(len(cols_to_drop)) + " genes from WES relative CN")
+    wesgenecn = wesgenecn.drop(columns=cols_to_drop)
+    cols_to_drop = [col for col in genes_to_mask if col in wes_purecn_genecn.columns]
+    wes_purecn_genecn = wes_purecn_genecn.drop(columns=cols_to_drop)
+    cols_to_drop = [col for col in genes_to_mask if col in wes_loh.columns]
+    wes_loh = wes_loh.drop(columns=cols_to_drop)
+
     # doing wgs
     print("doing wgs")
     folder = save_dir + "wgs_"
@@ -137,9 +149,6 @@ def cnPostProcessing(
         purecnsampleset=purecnsampleset,
         **kwargs,
     )
-
-    with open(masked_gene_list, "r") as f:
-        genes_to_mask = f.read().splitlines()
 
     # subset and rename to PR-indexed matrices
     wessegments_pr = (
@@ -246,8 +255,6 @@ def cnPostProcessing(
         dataset_version=hgnc_mapping_table_version,
         dataset_file=hgnc_mapping_table_name,
     ).drop(columns="par")
-    # drop genes that should be masked
-    hgnc_table = hgnc_table[~hgnc_table["ensembl_gene_id"].isin(genes_to_mask)]
     ensg2hugo_entrez_dict = dict(
         zip(hgnc_table["ensembl_gene_id"], hgnc_table["hugo_entrez"])
     )
