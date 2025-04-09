@@ -52,7 +52,6 @@ def cnPostProcessing(
         procqc ([type], optional): @see updateTracker. Defaults to constants.PROCQC.
         source_rename ([type], optional): @see managing duplicates. Defaults to constants.SOURCE_RENAME.
     """
-    tc = TaigaClient()
     client = create_taiga_client_v3()
 
     with open(masked_gene_list, "r") as f:
@@ -331,7 +330,7 @@ def cnPostProcessing(
     merged_feature_table_pr.to_csv(folder + "merged_feature_table_profile.csv")
 
     # merging microsatellite repeats
-    pd.testing.assert_frame_equal(wes_ms_df.loc[:, :5], wgs_ms_df.loc[:, :5])
+    pd.testing.assert_frame_equal(wes_ms_df.iloc[:, :5], wgs_ms_df.iloc[:, :5])
     ms_mat_merged = pd.concat([wes_ms_df, wgs_ms_df.iloc[:, 5:]], axis=1)
     ms_mat_merged_no_coords = ms_mat_merged.iloc[:, 5:]
 
