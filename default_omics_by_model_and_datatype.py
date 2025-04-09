@@ -110,14 +110,12 @@ for thistablename, thisfilteredtablename in zip(tables_to_filter_names, filtered
 						  how = 'inner', 
 						  suffixes=['_' + thistablename,'_merged'])
 
-retraction_date_columns = configdata["retraction_date_columns"].get('columns')
-merged_table["include"] = merged_table[retraction_date_columns] == 'None'
 if release_date != {'None'}:
 	release_date_columns = configdata["release_date_columns"]["columns"]
 	for release_date_column in release_date_columns:
 		merged_table.loc[merged_table[release_date_column] == 'None', [release_date_column]] = "2262-04-11"
 		merged_table[release_date_column] = pd.to_datetime(merged_table[release_date_column])
-	merged_table["include"] = merged_table["include"] & pd.Series.any(merged_table[release_date_columns] <= pd.to_datetime(release_date), axis=1)
+	merged_table["include"] = pd.Series.any(merged_table[release_date_columns] <= pd.to_datetime(release_date), axis=1)
 
 merged_table = merged_table.loc[merged_table["include"] == True]
 

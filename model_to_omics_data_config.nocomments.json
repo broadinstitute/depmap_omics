@@ -2,9 +2,6 @@
     "release_date_columns" : {
         "columns" : ["internal_release_date", "consortium_release_date", "public_release_date"]
     },
-    "retraction_date_columns" : {
-        "columns" : ["internal_retracted_date"]
-    },
     "table_filters": {
         "omics_sequencing": {
             "exclusion_filters": {

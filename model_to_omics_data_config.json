@@ -3,10 +3,6 @@
         "_comment": "Contains the columns that represent the release dates for the data",
         "columns" : ["internal_release_date", "consortium_release_date", "public_release_date"]
     },
-    "retraction_date_columns" : {
-        "_comment": "Contains the columns that represent the retraction dates for the data. Hope to change this to a single flag column",
-        "columns" : ["internal_retracted_date"]
-    },
     "table_filters": {
         "_comment": "Contains the filters to be applied to the tables, the filter_mode can be 'all'(all filters should be true) or 'any' (at least one of the filters should be true)",
         "omics_sequencing": {
