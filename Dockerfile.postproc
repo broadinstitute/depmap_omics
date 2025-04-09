@@ -24,8 +24,33 @@ RUN set -ex \
     && rm -rf /fiss
 RUN pip install --extra-index-url=https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/ taigapy
 RUN mkdir ~/.taiga && echo "c42843cc-5115-4f41-a2d2-9c13391d5276" > ~/.taiga/token
-# The json credentials file for depmap-gumbo service account be mounted dynamically from depmap-gumbo-7f372e9d8519.json 
-# like so....
-# docker run -v depmap-gumbo-7f372e9d8519.json:/app/service-account-key.json 
 ENV GOOGLE_APPLICATION_CREDENTIALS="/app/service-account-key.json" 
+RUN apt-get update && apt-get install -y software-properties-common && \
+    apt-get update && apt-get install -y \
+        apt-transport-https \
+        build-essential \
+        cmake \
+        curl \
+        libboost-all-dev \
+        libbz2-dev \
+        libcurl3-dev \
+        liblzma-dev \
+        libncurses5-dev \
+        libssl-dev \
+        python3 \
+        python3-pip \
+        sudo \
+        unzip \
+        wget \
+        zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    apt-get clean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+RUN python3 -m pip install --upgrade setuptools
+RUN git clone --recursive https://github.com/broadinstitute/getzlab-SignatureAnalyzer.git
+RUN cd getzlab-SignatureAnalyzer && python3 -m pip install -e ./
+RUN pip install pyarrow
+RUN pip install fastparquet
 ENTRYPOINT /bin/bash

@@ -23,6 +23,7 @@ samples_to_process_all = pd.read_csv(sample_metadata_file)
 
 samples_to_process = samples_to_process_all.loc[(samples_to_process_all["datatype"] == "rna") & (samples_to_process_all["is_default_entry"] == True)]
 samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="sequencing_id", how="inner")
+
 tc = create_taiga_client_v3()
 
 hgnc_table = tc.get("hgnc-gene-table-e250.3/hgnc_complete_set")
@@ -75,6 +76,7 @@ all_tpms_list = []
 all_counts_list = []
 all_lengths_list = []
 sample_labels = []
+bigfusiontable = pd.DataFrame()
 
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
@@ -94,6 +96,27 @@ for sample_id, sample_data in list(samples.iterrows()):
 		all_lengths_list.append(lengths)
 	else:
 		raise ValueError(sample_key + " does not have salmon output")
+	if pd.notna(sample_data["fusions"]):
+		fusiondf = pd.read_table(sample_data["fusions"])
+		if fusiondf.shape[0] > 0:
+			fusiondf["sample_id"] = sample_key
+			fusiondf["profile_id"] = sample_data["profile_id"]
+			bigfusiontable = pd.concat([bigfusiontable, fusiondf], ignore_index=True)
+			# Take gene1 and gene2 columns and use hgnc term for it
+		else:
+			print("No fusions for " + sample_key)
+
+
+bigfusiontable["gene1"] = bigfusiontable["#gene1"].map(hgnc_names)
+bigfusiontable["gene2"] = bigfusiontable["gene2"].map(hgnc_names)
+bigfusiontable["gene1"] = bigfusiontable["gene1"].fillna(bigfusiontable["gene1"])
+bigfusiontable["gene2"] = bigfusiontable["gene2"].fillna(bigfusiontable["gene2"])
+# Create fused genename column by combining gene1 and gene2 separated by two hyphens
+bigfusiontable["fused_genename"] = bigfusiontable["gene1"] + "--" + bigfusiontable["gene2"]
+
+# Calculate FFPM by summing (split_reads1+split_reads2)/(coverage1 + coverage2)
+bigfusiontable["FFPM"] = (bigfusiontable["split_reads1"] + bigfusiontable["split_reads2"]) / (bigfusiontable["coverage1"] + bigfusiontable["coverage2"])
+
 
 # Convert lists to DataFrame at the end
 df_all_tpms = pd.DataFrame(np.column_stack(all_tpms_list), columns=sample_labels)
@@ -134,6 +157,10 @@ for thisdfname, thisdf in df_dict.items():
 	lineage = thisdf.index.map(lineage_cds_dict)
 	metadatadf = pd.DataFrame({"seqid":thisdf.index, "profile_id":profile_id, "cellline":cellline, "model_id":model_id, "oncotree_code":depmap_code, "lineage":lineage})
 	metadatadf.set_index("seqid", inplace=True)
+	# Create an upload file for the full dataset, human and virus genes
+	thisdf.to_parquet(thisdfname + ".parquet", engine="pyarrow", index=False)
+	upload_files.append(UploadedFile(name=thisdfname, local_path=thisdfname + ".parquet", format=LocalFormat.PARQUET_TABLE))
+	# Create an upload file for the human and virus genes
 	for df_output_name, df_output_indexes in df_outputs.items():
 		globals()[thisdfname + "_"+ df_output_name] = metadatadf.join(thisdf.iloc[:, df_output_indexes])
 		globals()[thisdfname + "_"+ df_output_name].to_parquet(thisdfname + "_"+ df_output_name+".parquet", engine="pyarrow", index=False)

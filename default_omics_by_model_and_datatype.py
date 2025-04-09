@@ -110,14 +110,14 @@ for thistablename, thisfilteredtablename in zip(tables_to_filter_names, filtered
 						  how = 'inner', 
 						  suffixes=['_' + thistablename,'_merged'])
 
+retraction_date_columns = configdata["retraction_date_columns"].get('columns')
+merged_table["include"] = merged_table[retraction_date_columns] == 'None'
 if release_date != {'None'}:
 	release_date_columns = configdata["release_date_columns"]["columns"]
 	for release_date_column in release_date_columns:
 		merged_table.loc[merged_table[release_date_column] == 'None', [release_date_column]] = "2262-04-11"
 		merged_table[release_date_column] = pd.to_datetime(merged_table[release_date_column])
-	merged_table["include"] = pd.Series.any(merged_table[release_date_columns] <= pd.to_datetime(release_date), axis=1)
-else:	
-	merged_table["include"] = True
+	merged_table["include"] = merged_table["include"] & pd.Series.any(merged_table[release_date_columns] <= pd.to_datetime(release_date), axis=1)
 
 merged_table = merged_table.loc[merged_table["include"] == True]
 
@@ -178,12 +178,16 @@ upload_files = list()
 # Save the merged table to a csv file
 #current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
 selcols = configdata["final_output_columns"]["columns"]
-current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-#merged_table[selcols].to_csv("merged_table."  + release_date + "."  + "selcols.csv",   index = False)
-merged_table[selcols].to_parquet(release_date + ".master_mapping_table.parquet", index = False)
-upload_files.append(UploadedFile(name=release_date + ".master_mapping_table", local_path = release_date + ".master_mapping_table.parquet", format=LocalFormat.PARQUET_TABLE))
+for datecol in release_date_columns:
+	datesub = merged_table.loc[merged_table[datecol] <= pd.to_datetime(release_date), selcols]
+	datesub.to_parquet(datecol + "." + release_date + ".master_mapping_table.parquet", index=False)
+	upload_files.append(UploadedFile(name=datecol + "." + release_date + ".master_mapping_table", local_path = datecol + "." + release_date + ".master_mapping_table.parquet", format=LocalFormat.PARQUET_TABLE))
+
+#merged_table[selcols].to_csv(release_date + ".master_mapping_table.csv",   index = False)
+#merged_table[selcols].to_parquet(release_date + ".master_mapping_table.parquet", index = False)
+#upload_files.append(UploadedFile(name=release_date + ".master_mapping_table", local_path = release_date + ".master_mapping_table.parquet", format=LocalFormat.PARQUET_TABLE))
 
 #defaults_grouped_by_model_id = merged_table.loc[merged_table.is_default_entry == 'True'].groupby(["model_id","stripped_cell_line_name","depmap_code","lineage"]).agg({"datatype": lambda x:', '.join(x)})
 
 tc = create_taiga_client_v3()
-tc.create_dataset(name=release_date + ".master_mapping_table",description="Master mapping table for release" + release_date, files=upload_files)
+tc.update_dataset(permaname="2025-05-01-master-mapping-table-28c2",reason="Updated  columns to exclude release dates", additions=upload_files)

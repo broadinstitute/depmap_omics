@@ -2,6 +2,9 @@
     "release_date_columns" : {
         "columns" : ["internal_release_date", "consortium_release_date", "public_release_date"]
     },
+    "retraction_date_columns" : {
+        "columns" : ["internal_retracted_date"]
+    },
     "table_filters": {
         "omics_sequencing": {
             "exclusion_filters": {
@@ -147,9 +150,6 @@
         "growth_pattern",
         "drug",
         "profile_id",
-        "internal_release_date",
-        "consortium_release_date",
-        "public_release_date",
         "kit_id",
         "product",
         "sequencing_id",
