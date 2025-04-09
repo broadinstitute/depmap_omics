@@ -177,9 +177,12 @@ upload_files = list()
 #current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
 selcols = configdata["final_output_columns"]["columns"]
 for datecol in release_date_columns:
-	datesub = merged_table.loc[merged_table[datecol] <= pd.to_datetime(release_date), selcols]
-	datesub.to_parquet(datecol + "." + release_date + ".master_mapping_table.parquet", index=False)
-	upload_files.append(UploadedFile(name=datecol + "." + release_date + ".master_mapping_table", local_path = datecol + "." + release_date + ".master_mapping_table.parquet", format=LocalFormat.PARQUET_TABLE))
+    datesub = merged_table.loc[merged_table[datecol] <= pd.to_datetime(release_date), selcols]
+    datesub = datesub[datesub.is_default_entry == "True"][['model_condition_id', 'profile_id', 'datatype']]
+    datesub['datatype'] = datesub['datatype'].replace({'wes': 'dna', 'wgs': 'dna'})
+    datesub = datesub.rename(columns={'model_condition_id': 'ModelConditionID', 'profile_id': 'ProfileID', 'datatype': 'ProfileType'})
+    datesub.to_csv(datecol + "." + release_date + ".master_mapping_table.csv", index=False)
+    upload_files.append(UploadedFile(name=datecol + "." + release_date + ".default_mc_profiles", local_path = datecol + "." + release_date + ".master_mapping_table.csv", format=LocalFormat.CSV_TABLE))
 
 #merged_table[selcols].to_csv(release_date + ".master_mapping_table.csv",   index = False)
 #merged_table[selcols].to_parquet(release_date + ".master_mapping_table.parquet", index = False)
