@@ -59,10 +59,8 @@ def cnPostProcessing(
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
-    print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = client.get(
-        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
-    )
+    print("reading seq -> pr ID mapping table locally")
+    omics_id_mapping_table = pd.read_csv("data/25Q2/omics_profile_to_sequencing_id.csv")
     renaming_dict = dict(
         list(
             zip(
@@ -492,10 +490,8 @@ async def mutationPostProcessing(
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
-    print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = client.get(
-        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
-    )
+    print("reading seq -> pr ID mapping table locally")
+    omics_id_mapping_table = pd.read_csv("data/25Q2/omics_profile_to_sequencing_id.csv")
     renaming_dict = dict(
         list(
             zip(
