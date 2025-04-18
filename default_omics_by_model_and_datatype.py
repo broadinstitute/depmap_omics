@@ -94,64 +94,75 @@ for thistablename,filteredtablename in zip(tables_to_filter_names, filtered_tabl
 
 
 # Merge tables based on merge parameters specified in the config file
-# The merged table is stored in the variable "merged_table"
-merged_table = None
+merged_table_all = None
 for thistablename, thisfilteredtablename in zip(tables_to_filter_names, filtered_tables_names):
 	merge_params = configdata["table_filters"][thistablename].get("merge_parameters", None)
-	if merged_table is None:
-		merged_table = globals()[thisfilteredtablename]
+	if merged_table_all is None:
+		merged_table_all = globals()[thisfilteredtablename]
 	if merge_params:
 		primary_key = merge_params["primary"][0]
 		foreign_key = merge_params["foreign"][0]
-		merged_table = pd.merge(globals()[thisfilteredtablename], 
-						  merged_table, 
+		merged_table_all = pd.merge(globals()[thisfilteredtablename], 
+						  merged_table_all, 
 						  left_on = primary_key, 
 						  right_on = foreign_key, 
 						  how = 'inner', 
 						  suffixes=['_' + thistablename,'_merged'])
 
+merged_all = dict()
+
 if release_date != {'None'}:
 	release_date_columns = configdata["release_date_columns"]["columns"]
 	for release_date_column in release_date_columns:
-		merged_table.loc[merged_table[release_date_column] == 'None', [release_date_column]] = "2262-04-11"
-		merged_table[release_date_column] = pd.to_datetime(merged_table[release_date_column])
-	merged_table["include"] = pd.Series.any(merged_table[release_date_columns] <= pd.to_datetime(release_date), axis=1)
+		merged_table_all.loc[merged_table_all[release_date_column] == 'None', [release_date_column]] = "2262-04-11"
+		merged_table_all[release_date_column] = pd.to_datetime(merged_table_all[release_date_column])
+		#Separate data tables by release date
+		filtered = merged_table_all.loc[merged_table_all[release_date_column] <= pd.to_datetime(release_date)]
+		merged_all[release_date_column] = filtered
 
-merged_table = merged_table.loc[merged_table["include"] == True]
+
+#merged_table = merged_table.loc[merged_table["include"] == True]
 
 # Add priority columns to the merged table based on the priority rankings specified in the config file
 # The priority columns are added to the merged table with the suffix "_priority"
 # The priority ladder is used for a final outcome of selecing the best row for each model, building from the bottom up.
 
 priority_rankings = configdata["priority_rankings"]
-for rankingvar, ranking in priority_rankings["rankings"].items():
-	if pd.api.types.is_bool_dtype(merged_table[rankingvar]):
-		merged_table[rankingvar].fillna(False, inplace = True)
-	elif pd.api.types.is_integer_dtype(merged_table[rankingvar]):
-		merged_table[rankingvar].fillna(1000, inplace = True)
-	elif pd.api.types.is_string_dtype(merged_table[rankingvar]):
-		merged_table[rankingvar].fillna("None", inplace = True)
-	else:
-		merged_table[rankingvar].fillna("NA", inplace = True)
-	rankingvalue = merged_table[rankingvar].astype(str).map(ranking)
-	rankingvalue = rankingvalue.fillna(len(ranking)+1)
-	merged_table[rankingvar + '_priority'] = rankingvalue
+for release_date_column, merged_table in merged_all.items():
+	merged_table = merged_all[release_date_column].copy()
+	for rankingvar, ranking in priority_rankings["rankings"].items():
+		if pd.api.types.is_bool_dtype(merged_table[rankingvar]):
+			merged_table[rankingvar] = merged_table[rankingvar].fillna(False)
+		elif pd.api.types.is_integer_dtype(merged_table[rankingvar]):
+			merged_table[rankingvar] = merged_table[rankingvar].fillna(1000)
+		elif pd.api.types.is_string_dtype(merged_table[rankingvar]):
+			merged_table[rankingvar] = merged_table[rankingvar].fillna("None")
+		else:
+			merged_table[rankingvar] = merged_table[rankingvar].fillna("NA")
+		rankingvalue = merged_table[rankingvar].astype(str).map(ranking)
+		rankingvalue = rankingvalue.fillna(len(ranking)+1)
+		merged_table[rankingvar + '_priority'] = rankingvalue
+		merged_all[release_date_column] = merged_table
+
 
 # Special case to accommodate for the way gumbo is structured. 
 # You can have the same profile generating two sequences of the same type wgs or rna. This is something GP just delivers without asking
 # You can also have two different profiles for each CDS - this would have happened when Sam manually gave each CDS ID its own profile_id 
 # for clarity. At the moment it is unclear how many fall under each case, so filtering twice with same parameters (version)
 # Wish I could have found a way to not hardcode column names these next 3 lines, but I am not sure how to go about that.
-idx = []
-idx.append(merged_table.groupby(["sequencing_id"])["version_merged"].idxmax()) # indexes with latest version in seq_table
-idx.append(merged_table.loc[idx[0]].groupby(["profile_id"])["version_merged"].idxmax()) # indexes with latest version in seq_table
 
-all_rankings = list(configdata["priority_rankings"]["rankings"].keys())
-all_rankings_priority_columns = [col + '_priority' for col in all_rankings]
-idxcount = len(idx)
-ops = (configdata["priority_rankings"]["order_of_operations"])
-
-for operation in ops:
+selcols = configdata["final_output_columns"]["columns"]
+for release_date_column, merged_table in merged_all.items():
+	merged_table = merged_all[release_date_column].copy()
+	idx = []
+	idx.append(merged_table.groupby(["sequencing_id"])["version_merged"].idxmax()) # indexes with latest version in seq_table
+	idx.append(merged_table.loc[idx[0]].groupby(["profile_id"])["version_merged"].idxmax()) # indexes with latest version in seq_table
+	# Profile_ID:Sequencing_ID 1:1 mapping at this stage, if we filter indexes as merged_table.loc[idx[1]]
+	all_rankings = list(configdata["priority_rankings"]["rankings"].keys())
+	all_rankings_priority_columns = [col + '_priority' for col in all_rankings]
+	idxcount = len(idx)
+	ops = (configdata["priority_rankings"]["order_of_operations"])
+	for operation in ops:
 		ranking_order = configdata["priority_rankings"]["ranking_orders"][operation] 
 		groupbyvar = ranking_order["groupbyvar"]
 		for priorityvar, minmax in zip(ranking_order["priorityvar"], ranking_order["select_index"]):
@@ -166,26 +177,16 @@ for operation in ops:
 			idx.append(all_indexes)
 			idxcount = idxcount + 1
 		#merged_table.loc[idx[idxcount-1]].to_csv("" + operation + ".csv")
+		# Pick one row per model based on the priority rankings set above. This will be default data row for that model+datatype combo
+	merged_table["is_default_entry"] = 'False'
+	merged_table.loc[idx[len(idx)-1],"is_default_entry"] = 'True'
+	merged_table["public_release_date"] = pd.to_str(merged_table["public_release_date"])
+	merged_table["internal_release_date"] = pd.to_str(merged_table["internal_release_date"])
+	merged_all[release_date_column] = merged_table
+	print(release_date_column +"***"+release_date)
+	merged_all[release_date_column].loc[:,selcols].to_csv(release_date_column + "." + str(release_date) + ".master_mapping_table.csv", index=False)
 
-# Pick one row per model based on the priority rankings set above. This will be default data row for that model+datatype combo
-merged_table["is_default_entry"] = 'False'
-merged_table.loc[idx[len(idx)-1],"is_default_entry"] = 'True'
 
 
-upload_files = list()
-# Save the merged table to a csv file
-#current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-selcols = configdata["final_output_columns"]["columns"]
-for datecol in release_date_columns:
-	datesub = merged_table.loc[merged_table[datecol] <= pd.to_datetime(release_date), selcols]
-	datesub.to_parquet(datecol + "." + release_date + ".master_mapping_table.parquet", index=False)
-	upload_files.append(UploadedFile(name=datecol + "." + release_date + ".master_mapping_table", local_path = datecol + "." + release_date + ".master_mapping_table.parquet", format=LocalFormat.PARQUET_TABLE))
-
-#merged_table[selcols].to_csv(release_date + ".master_mapping_table.csv",   index = False)
-#merged_table[selcols].to_parquet(release_date + ".master_mapping_table.parquet", index = False)
-#upload_files.append(UploadedFile(name=release_date + ".master_mapping_table", local_path = release_date + ".master_mapping_table.parquet", format=LocalFormat.PARQUET_TABLE))
-
-#defaults_grouped_by_model_id = merged_table.loc[merged_table.is_default_entry == 'True'].groupby(["model_id","stripped_cell_line_name","depmap_code","lineage"]).agg({"datatype": lambda x:', '.join(x)})
-
-tc = create_taiga_client_v3()
-tc.update_dataset(permaname="2025-05-01-master-mapping-table-28c2",reason="Updated  columns to exclude release dates", additions=upload_files)
+#tc = create_taiga_client_v3()
+#tc.update_dataset(permaname="2025-05-01-master-mapping-table-28c2",reason="Updated  columns to exclude release dates", additions=upload_files)
