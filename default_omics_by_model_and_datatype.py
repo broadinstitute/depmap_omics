@@ -152,6 +152,7 @@ for release_date_column, merged_table in merged_all.items():
 # Wish I could have found a way to not hardcode column names these next 3 lines, but I am not sure how to go about that.
 
 selcols = configdata["final_output_columns"]["columns"]
+upload_files = list()
 for release_date_column, merged_table in merged_all.items():
 	merged_table = merged_all[release_date_column].copy()
 	idx = []
@@ -180,13 +181,13 @@ for release_date_column, merged_table in merged_all.items():
 		# Pick one row per model based on the priority rankings set above. This will be default data row for that model+datatype combo
 	merged_table["is_default_entry"] = 'False'
 	merged_table.loc[idx[len(idx)-1],"is_default_entry"] = 'True'
-	merged_table["public_release_date"] = pd.to_str(merged_table["public_release_date"])
-	merged_table["internal_release_date"] = pd.to_str(merged_table["internal_release_date"])
 	merged_all[release_date_column] = merged_table
 	print(release_date_column +"***"+release_date)
 	merged_all[release_date_column].loc[:,selcols].to_csv(release_date_column + "." + str(release_date) + ".master_mapping_table.csv", index=False)
+	upload_files.append(UploadedFile(name="OmicsProfiles", local_path=release_date_column + "." + str(release_date) + ".master_mapping_table.csv", format=LocalFormat.CSV_TABLE))
+	
 
 
 
-#tc = create_taiga_client_v3()
-#tc.update_dataset(permaname="2025-05-01-master-mapping-table-28c2",reason="Updated  columns to exclude release dates", additions=upload_files)
+tc = create_taiga_client_v3()
+tc.create_dataset(name="2025-05-01-master-mapping-table-V2",description="Updated for bug fix pertaining to public datasets", files=upload_files)
