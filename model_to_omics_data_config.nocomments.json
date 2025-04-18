@@ -1,6 +1,6 @@
 {
     "release_date_columns" : {
-        "columns" : ["internal_release_date", "consortium_release_date", "public_release_date"]
+        "columns" : ["internal_release_date", "public_release_date"]
     },
     "table_filters": {
         "omics_sequencing": {
@@ -145,9 +145,7 @@
         "cell_format",
         "growth_media",
         "growth_pattern",
-        "drug",
         "profile_id",
-        "kit_id",
         "product",
         "sequencing_id",
         "datatype",
@@ -156,4 +154,3 @@
         "is_default_entry"]
     }
 }
-
