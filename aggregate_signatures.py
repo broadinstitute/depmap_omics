@@ -43,20 +43,22 @@ for sample_id, sample_data in list(samples.iterrows()):
 		raise ValueError(sample_key + " does not have signature output")
 
 bigsigtable.rename(columns={"Unnamed: 0": "sequencing_id"}, inplace=True)
-bigsigtable.drop(columns=["max","max_id","max_norm", "sequencing_id"], inplace=True)
+#bigsigtable.drop(columns=["max","max_id","max_norm", "sequencing_id"], inplace=True)
 bigsigtable.columns = [
     col.split("_")[0] if col.startswith("SBS") else col
     for col in bigsigtable.columns
 ]
-bigsigtable.to_parquet("/localstuff/25Q2_signature_matrix.parquet", engine="pyarrow", index=True)
+bigsigtable = bigsigtable.rename(columns={"model_id": "ModelID"})
+#bigsigtable = bigsigtable.groupby(["ModelID"]).mean()
+bigsigtable.to_csv("/localstuff/MolecularSignatureMatrix.csv", index=True)
 tc = create_taiga_client_v3()
 uploadfiles = []
-uploadfiles.append(UploadedFile(name="25Q2_signature_matrix",local_path="/localstuff/25Q2_signature_matrix.parquet", format=LocalFormat.PARQUET_TABLE))
+#uploadfiles.append(UploadedFile(name="MolecularSignatureMatrix",local_path="/localstuff/MolecularSignatureMatrix.csv", format=LocalFormat.CSV_MATRIX))
 etiologies = sa.context.signature_composite
 etiologies_df = pd.DataFrame.from_dict(etiologies, orient='index').reset_index()
-etiologies_df.columns = ['Signature label', 'Etiology']
-etiologies_df.to_parquet("/localstuff/25Q2_signature_matrix_etiologies.parquet", engine="pyarrow", index=False)
-uploadfiles.append(UploadedFile(name="25Q2_signature_matrix_etiologies", local_path="/localstuff/25Q2_signature_matrix_etiologies.parquet", format=LocalFormat.PARQUET_TABLE))
-tc.update_dataset(permaname=release_date, reason="25Q2 molecular signature matrix", additions=uploadfiles)
+etiologies_df.columns = ['Signature_ID', 'label']
+etiologies_df.to_csv("/localstuff/MolecularSignatureEtiologies.csv", index=False)
+#uploadfiles.append(UploadedFile(name="MolecularSignatureEtiologies", local_path="/localstuff/MolecularSignatureEtiologies.csv", format=LocalFormat.CSV_TABLE))
+#tc.update_dataset(permaname=release_date, reason="25Q2 molecular signature matrix", additions=uploadfiles)
 
 

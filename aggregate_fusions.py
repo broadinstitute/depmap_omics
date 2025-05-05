@@ -91,9 +91,11 @@ bigfusiontable['CanonicalFusionName'] = bigfusiontable.apply(lambda row: '--'.jo
 bigfusiontable['gene1_clean'] = bigfusiontable['gene1_clean'].replace(r'^DUX4L.*', 'DUX4', regex=True)
 bigfusiontable['gene2_clean'] = bigfusiontable['gene2_clean'].replace(r'^DUX4L.*', 'DUX4', regex=True)
 bigfusiontable['CanonicalFusionName'] = bigfusiontable['CanonicalFusionName'].replace(r'^CIC--DUX4L.*', 'CIC--DUX4', regex=True)
+bigfusiontable['gene1_withid'] = bigfusiontable['gene1_clean'] + " (" + bigfusiontable["gene_id1"] + ")"
+bigfusiontable['gene2_withid'] = bigfusiontable['gene2_clean'] + " (" + bigfusiontable["gene_id2"] + ")"
 bigfusiontable['TotalFusionCoverage'] = bigfusiontable['coverage1'] + bigfusiontable['coverage2']
 bigfusiontable_defaults_only = bigfusiontable.loc[(bigfusiontable['IsDefaultEntry']) & ((bigfusiontable['confidence'] == "high") | (bigfusiontable['confidence'] == "medium")) & ((bigfusiontable['site1'] != 'intergenic') | (bigfusiontable['site2'] != 'intergenic'))] 
-fusion_grouped_by_sample_and_genes = bigfusiontable_defaults_only.groupby(['ModelID', 'ProfileID', 'CanonicalFusionName', 'gene1_clean', 'gene2_clean', 'strand1(gene/fusion)', 'strand2(gene/fusion)','reading_frame', 'TotalReadsInSample']).apply(
+fusion_grouped_by_sample_and_genes = bigfusiontable_defaults_only.groupby(['ModelID', 'ProfileID', 'CanonicalFusionName', 'gene1_clean', 'gene2_clean', 'gene1_withid', 'gene2_withid',  'strand1(gene/fusion)', 'strand2(gene/fusion)','reading_frame', 'TotalReadsInSample']).apply(
     lambda g: pd.Series({
 		'SplitReads1' : g['split_reads1'].sum(),
 		'SplitReads2' : g['split_reads2'].sum(),
@@ -102,7 +104,7 @@ fusion_grouped_by_sample_and_genes = bigfusiontable_defaults_only.groupby(['Mode
 		'TotalFusionCoverage': g['TotalFusionCoverage'].sum()})).reset_index()
 
 fusion_grouped_by_sample_and_genes['FFPM'] = 1e6*fusion_grouped_by_sample_and_genes["TotalReadsSupportingFusion"]/fusion_grouped_by_sample_and_genes["TotalReadsInSample"]
-fusion_grouped_by_sample_and_genes.rename(columns={"gene1_clean":"Gene1", "gene2_clean": "Gene2", "strand1(gene/fusion)":"Strand1", "strand2(gene/fusion)":"Strand2", "reading_frame":"ReadingFrame"}, inplace=True)
+fusion_grouped_by_sample_and_genes.rename(columns={"gene1_withid":"Gene1", "gene2_withid": "Gene2", "strand1(gene/fusion)":"Strand1", "strand2(gene/fusion)":"Strand2", "reading_frame":"ReadingFrame"}, inplace=True)
 
 selcols = [
 'CanonicalFusionName',
@@ -123,9 +125,9 @@ fusion_by_model_df = fusion_grouped_by_sample_and_genes[selcols]
 fusion_by_model_df.to_parquet("OmicsFusionFiltered.parquet", index=True)
 upload_files = []
 
-bigfusiontable.rename(columns={"#gene1":"gene1(HGNC ID)", "gene2":"gene2(HGNC ID)"}, inplace=True)
+bigfusiontable.rename(columns={"gene1_withid":"gene1(ENS ID)", "gene2_withid":"gene2(ENS ID)"}, inplace=True)
 fusion_output_columns = ['ProfileID', 'ModelID',  
-						 'CanonicalFusionName', 'gene1(HGNC ID)','gene2(HGNC ID)', 
+						 'CanonicalFusionName', 'gene1(ENS ID)','gene2(ENS ID)', 
 						 'TotalReadsInSample', 
 						 'TotalReadsSupportingFusion',  'FFPM', 
 						 'confidence','split_reads1','split_reads2', 'discordant_mates', 
@@ -135,7 +137,7 @@ fusion_output_columns = ['ProfileID', 'ModelID',
 						 'direction1', 'direction2']
 upload_files.append(UploadedFile(name="OmicsFusionFiltered", local_path="OmicsFusionFiltered.parquet", format=LocalFormat.PARQUET_TABLE))
 bigfusiontable[fusion_output_columns].to_parquet("OmicsFusionFiltered_supplementary.parquet", engine="pyarrow", index=False) 
-upload_files.append(UploadedFile(name="OmicsFusionFiltered_supplementary", local_path="OmicsFusionFiltered_supplementary.parquet", format=LocalFormat.PARQUET_TABLE))
+upload_files.append(UploadedFile(name="OmicsFusionFilteredSupplementary", local_path="OmicsFusionFiltered_supplementary.parquet", format=LocalFormat.PARQUET_TABLE))
 
 tc = create_taiga_client_v3()
 tc.update_dataset(permaname=release_date, reason="Changed column names to CamelCase", additions=upload_files)

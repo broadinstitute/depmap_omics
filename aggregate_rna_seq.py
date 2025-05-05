@@ -20,8 +20,8 @@ parser.add_argument("--release_permaname", type=str, required=True, help='Perman
 parser.add_argument("--stranded", type=str2bool, default=False, help="Whether the data is stranded")
 
 args = parser.parse_args()
-terra_table = args.terra_table # test with terra_samples_file="/localstuff/terra_data_table_rnaseq_25q2.tsv"
-sample_metadata = args.sample_metadata # test with sample_metadata_file="/localstuff/2025-05-01-master-mapping-table_v4-internal-release-date-2025-05-01-master-mapping-table.csv"
+terra_table = args.terra_table # test with terra_table="/localstuff/terra_data_table_rnaseq_25q2_FINAL.tsv"
+sample_metadata = args.sample_metadata # test with sample_metadata="/localstuff/2025-05-01-master-mapping-table_v4-internal-release-date-2025-05-01-master-mapping-table.csv"
 release_date = args.release_permaname # Permaname to use for release
 stranded = args.stranded # not used for any logic, just used to know whether to add "Stranded" suffix
 if (stranded):
@@ -91,7 +91,6 @@ all_counts_list = []
 all_lengths_list = []
 all_raw_counts_list = []
 sample_labels = []
-bigfusiontable = pd.DataFrame()
 
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
@@ -114,59 +113,6 @@ for sample_id, sample_data in list(samples.iterrows()):
 		all_lengths_list.append(lengths)
 	else:
 		raise ValueError(sample_key + " does not have salmon output")
-	if pd.notna(sample_data["fusions"]):
-		fusiondf = pd.read_table(sample_data["fusions"])
-		# Use STAR read output to get total reads for normalization later
-		if fusiondf.shape[0] > 0:
-			#fusiondf["sample_id"] = sample_key
-			fusiondf["profile_id"] = sample_data["profile_id"]
-			fusiondf["model_id"] = sample_data["model_id"]
-			fusiondf["cellline"] = sample_data["stripped_cell_line_name"]
-			fusiondf["oncotree_code"] = sample_data["depmap_code"]
-			fusiondf["lineage"] = sample_data["lineage"]
-			fusiondf["is_default_entry"] = sample_data["is_default_entry"]
-			fusiondf["total_reads_in_sample"] = total_reads_for_sample
-			bigfusiontable = pd.concat([bigfusiontable, fusiondf], ignore_index=True)
-		else:
-			print("No fusions for " + sample_key)
-
-# Calculate FFPM by summing (split_reads1+split_reads2)/total reads for sample and multiplying by 1e6
-bigfusiontable["total_reads_supporting_fusion"] = bigfusiontable["split_reads1"] + bigfusiontable["split_reads2"] + bigfusiontable["discordant_mates"]
-bigfusiontable["FFPM"] = 1e6*bigfusiontable["total_reads_supporting_fusion"]/bigfusiontable["total_reads_in_sample"]
-# Canonicalize gene fusion names, making it easier to group by
-bigfusiontable['gene1_clean'] = bigfusiontable['#gene1'].str.split(',').str[0].str.extract(r'^([^\(]+)')[0]
-bigfusiontable['gene2_clean'] = bigfusiontable['gene2'].str.split(',').str[0].str.extract(r'^([^\(]+)')[0]
-bigfusiontable['Canonical_FusionName'] = bigfusiontable.apply(lambda row: '--'.join(sorted([row['gene1_clean'], row['gene2_clean']])), axis=1)
-bigfusiontable['total_fusion_coverage'] = bigfusiontable['coverage1'] + bigfusiontable['coverage2']
-bigfusiontable_defaults_only = bigfusiontable.loc[(bigfusiontable['is_default_entry']) & (bigfusiontable['confidence'] == "high") & (bigfusiontable['site1'] != 'intergenic') & (bigfusiontable['site2'] != 'intergenic')] 
-fusion_grouped_by_sample_and_genes = bigfusiontable_defaults_only.groupby(['model_id', 'profile_id', 'Canonical_FusionName', 'gene1_clean', 'gene2_clean', 'strand1(gene/fusion)', 'strand2(gene/fusion)','reading_frame', 'total_reads_in_sample']).apply(
-    lambda g: pd.Series({
-		'split_reads1' : g['split_reads1'].sum(),
-		'split_reads2' : g['split_reads2'].sum(),
-		'discordant_mates' : g['discordant_mates'].sum(),
-		'total_reads_supporting_fusion' : g['total_reads_supporting_fusion'].sum(),
-		'total_fusion_coverage': g['total_fusion_coverage'].sum()})).reset_index()
-
-fusion_grouped_by_sample_and_genes['FFPM'] = 1e6*fusion_grouped_by_sample_and_genes["total_reads_supporting_fusion"]/fusion_grouped_by_sample_and_genes["total_reads_in_sample"]
-fusion_grouped_by_sample_and_genes.rename(columns={"gene1_clean":"gene1", "gene2_clean": "gene2"}, inplace=True)
-
-selcols = [
-'Canonical_FusionName',
-'gene1',
-'gene2',
-'profile_id',
-'model_id',
-'total_reads_supporting_fusion',
-'total_fusion_coverage',
-'FFPM',
-'split_reads1',
-'split_reads2',
-'discordant_mates',
-'strand1(gene/fusion)',
-'strand2(gene/fusion)',
-'reading_frame']
-fusion_by_model_df = fusion_grouped_by_sample_and_genes[selcols]
-fusion_by_model_df.to_parquet("OmicsFusionFiltered.parquet", index=True)
 
 # Convert lists to DataFrame at the end
 df_all_tpms = pd.DataFrame(np.column_stack(all_tpms_list), columns=sample_labels)
@@ -203,41 +149,27 @@ for thisdfname, thisdf in df_dict.items():
 	print(thisdfname)
 	thisdf.set_index("hgnc_name", inplace=True)
 	thisdf = thisdf.drop(['Name'], axis = 1)
-	if thisdfname == "HumanProteinCodingGenes"+stranded_suffix:
+	if thisdfname == "OmicsExpressionTPMLogp1":
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
-	profile_id = thisdf.index.map(profile_cds_dict)
-	model_id = thisdf.index.map(model_cds_dict)
+	ProfileID = thisdf.index.map(profile_cds_dict)
+	ModelID = thisdf.index.map(model_cds_dict)
 	is_default_entry = thisdf.index.map(is_default_cds_dict)
-	metadatadf = pd.DataFrame({"seqid":thisdf.index, "profile_id":profile_id, "is_default_entry":is_default_entry, "model_id":model_id})
+	metadatadf = pd.DataFrame({"seqid":thisdf.index, "ProfileID":ProfileID, "is_default_entry":is_default_entry, "ModelID":ModelID})
 	metadatadf.set_index("seqid", inplace=True)
-	# Create an upload file for the full dataset, human and virus genes
-	#thisdf.to_parquet(thisdfname + ".parquet", engine="pyarrow", index=False)
-	#upload_files.append(UploadedFile(name=thisdfname, local_path=thisdfname + ".parquet", format=LocalFormat.PARQUET_TABLE))
-	# Create an upload file for the human and virus genes
+	# Create upload files for the human and virus genes, for counts, TPMs, effective lengths and raw counts
 	for df_output_name, df_output_indexes in df_outputs.items():
 		globals()[thisdfname + df_output_name] = metadatadf.join(thisdf.iloc[:, df_output_indexes])
 		globals()[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=False)
 		upload_files.append(UploadedFile(name=thisdfname + df_output_name, local_path=thisdfname + df_output_name+".parquet", format=LocalFormat.PARQUET_TABLE))
+# This is for model level data. Select only the default entry for each model (is_default_entry =- True)
 OmicsExpressionTPMLogp1_primary = globals()['OmicsExpressionTPMLogp1HumanProteinCodingGenes'+stranded_suffix].loc[globals()['OmicsExpressionTPMLogp1HumanProteinCodingGenes'+stranded_suffix]["is_default_entry"]]
-OmicsExpressionTPMLogp1_primary = OmicsExpressionTPMLogp1_primary.drop(['profile_id', 'is_default_entry'], axis=1)
-OmicsExpressionTPMLogp1_primary.to_parquet("OmicsExpressionTPMLogp1_primary.parquet", engine="pyarrow", index=False)
-upload_files.append(UploadedFile(name="OmicsExpressionTPMLogp1"+stranded_suffix, local_path="OmicsExpressionTPMLogp1_primary.parquet", format=LocalFormat.PARQUET_TABLE))
+OmicsExpressionTPMLogp1_primary.set_index("ModelID", inplace=True, verify_integrity=True)
+OmicsExpressionTPMLogp1_primary = OmicsExpressionTPMLogp1_primary.drop(['ProfileID', 'is_default_entry'], axis=1)
+OmicsExpressionTPMLogp1_primary.to_csv("OmicsExpressionTPMLogp1_primary.csv", index=True)
+upload_files.append(UploadedFile(name="OmicsExpressionProteinCodingGenesTPMLogp1"+stranded_suffix, local_path="OmicsExpressionTPMLogp1_primary.csv", format=LocalFormat.CSV_MATRIX))
 
-bigfusiontable.rename(columns={"#gene1":"gene1(HGNC ID)", "gene2":"gene2(HGNC ID)"}, inplace=True)
-fusion_output_columns = ['profile_id', 'model_id',  
-						 'Canonical_FusionName', 'gene1(HGNC ID)','gene2(HGNC ID)', 
-						 'total_reads_in_sample', 
-						 'total_reads_supporting_fusion',  'FFPM', 
-						 'confidence','split_reads1', 'split_reads2', 'discordant_mates', 
-						 'strand1(gene/fusion)', 'strand2(gene/fusion)',  'reading_frame',
-						 'breakpoint1', 'breakpoint2', 'site1', 'site2', 'type', 'coverage1', 'coverage2',
-						 'tags', 'retained_protein_domains',
-						 'direction1', 'direction2']
-upload_files.append(UploadedFile(name="OmicsFusionFiltered", local_path="OmicsFusionFiltered.parquet", format=LocalFormat.PARQUET_TABLE))
-bigfusiontable[fusion_output_columns].to_parquet("OmicsFusionFiltered_supplementary.parquet", engine="pyarrow", index=False) 
-upload_files.append(UploadedFile(name="OmicsFusionFiltered_supplementary", local_path="OmicsFusionFiltered_supplementary.parquet", format=LocalFormat.PARQUET_TABLE))
 
 tc = create_taiga_client_v3()
-tc.update_dataset(permaname=release_date, reason="First upload of all output files from new RNA-seq pipeline", additions=upload_files)
-#tc.create_dataset(name="test_all_rna", description="dryrun", files=upload_files)
+tc.update_dataset(permaname=release_date, reason="Fresh upload of all output files from new RNA-seq pipeline to resolve version conflicts on taiga internal", additions=upload_files)
+#tc.update_dataset(permaname="test-all-rna-c62c", reason="Test upload of all output files from new RNA-seq pipeline", additions=upload_files)
