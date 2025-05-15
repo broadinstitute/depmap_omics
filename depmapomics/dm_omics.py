@@ -661,18 +661,18 @@ async def mutationPostProcessing(
     hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
     lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
 
-    # TODO: add pandera type validation
+    # # TODO: add pandera type validation
 
     if run_guidemat:
         # aggregate germline binary matrix
         print("aggregating binary guide mutation matrices")
         print("aggregating wes")
         wes_germline_mats = mutations.aggregateGermlineMatrix(
-            wes_wm, AllSamplesetName, save_output=folder
+            wes_wm, AllSamplesetName, save_output=folder+"wes_"
         )
         print("aggregating wgs")
         wgs_germline_mats = mutations.aggregateGermlineMatrix(
-            wgs_wm, AllSamplesetName, save_output=folder
+            wgs_wm, AllSamplesetName, save_output=folder+"wgs_"
         )
 
         for lib, _ in bed_locations.items():

@@ -390,6 +390,7 @@ def generate_sv_matrix(
 def aggregateGermlineMatrix(
     wm,
     sampleset="all",
+    samples_in_set=None,
     binary_mut_colname_dict=constants.BINARY_MUT_COLNAME_DICT,
     save_output="",
 ):
@@ -406,7 +407,8 @@ def aggregateGermlineMatrix(
     """
     print("aggregating binary mutation matrices")
     sample_table = wm.get_samples()
-    samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
+    if samples_in_set == None:
+        samples_in_set = wm.get_sample_sets().loc[sampleset]["samples"]
     sample_table = sample_table[sample_table.index.isin(samples_in_set)]
     all_guide_matrices = dict()
     for lib, colname in binary_mut_colname_dict.items():
