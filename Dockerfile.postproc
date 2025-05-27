@@ -1,10 +1,6 @@
-FROM python:3.10-slim
+FROM python:3.10.16
 
 RUN apt-get update && apt-get -y install git
-RUN pip install gcsfs
-RUN pip install fsspec
-RUN pip install biomart
-RUN pip install pandas --only-binary=:all:
 RUN apt-get update && \
     apt-get install -y build-essential \
                        libssl-dev \
@@ -12,8 +8,9 @@ RUN apt-get update && \
                        python3-dev \
                        g++ \
                        gcc \
-                       libpq-dev && \
-    pip install --upgrade pip setuptools wheel
+                       libpq-dev
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 RUN pip install --index-url=https://pypi.python.org/simple --extra-index-url=https://us-central1-python.pkg.dev/cds-artifacts/public-python/simple/ gumbo-rest-client
 
 RUN git clone https://github.com/broadinstitute/fiss.git
@@ -48,9 +45,7 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     apt-get autoremove -y && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/
 
-RUN python3 -m pip install --upgrade setuptools
 RUN git clone --recursive https://github.com/broadinstitute/getzlab-SignatureAnalyzer.git
 RUN cd getzlab-SignatureAnalyzer && python3 -m pip install -e ./
-RUN pip install pyarrow
-RUN pip install fastparquet
+COPY aggregate_longreads.py aggregate_longreads.py
 ENTRYPOINT /bin/bash

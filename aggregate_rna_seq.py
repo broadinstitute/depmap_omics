@@ -37,8 +37,8 @@ terra_samples = pd.read_table(terra_table)
 terra_samples['quant_genes_auto'].fillna(terra_samples['quant_genes_iu'], inplace=True)
 samples_to_process_all = pd.read_csv(sample_metadata)
 
-samples_to_process = samples_to_process_all.loc[(samples_to_process_all["datatype"] == "rna")]
-samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="sequencing_id", how="inner")
+samples_to_process = samples_to_process_all.loc[(samples_to_process_all["sequence_type"] == "rna")]
+samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="omics_sequencing_id", how="inner")
 
 tc = create_taiga_client_v3()
 
@@ -68,9 +68,10 @@ tpm_dict_virus = {}
 counts_dict_human_all_genes = {}
 counts_dict_human_pc_genes = {}
 counts_dict_virus = {}
-profile_cds_dict = dict(zip(samples["sequencing_id"],samples["profile_id"]))
-model_cds_dict = dict(zip(samples["sequencing_id"],samples["model_id"]))
-is_default_cds_dict = dict(zip(samples["sequencing_id"],samples["is_default_entry"]))
+model_cds_dict = dict(zip(samples["omics_sequencing_id"],samples["ModelID"]))
+mc_cds_dict = dict(zip(samples["omics_sequencing_id"],samples["ModelConditionID"]))
+is_default_cds_dict_mc = dict(zip(samples["omics_sequencing_id"],samples["isDefaultEntryForMC"]))
+is_default_cds_dict_model = dict(zip(samples["omics_sequencing_id"],samples["isDefaultEntryForModel"]))
 
 df_all_tpms = pd.DataFrame()
 df_all_counts = pd.DataFrame()
@@ -101,7 +102,7 @@ for sample_id, sample_data in list(samples.iterrows()):
 	if pd.notna(sample_data[quant_genes_column]):
 		df = pd.read_table(sample_data[quant_genes_column]).sort_values(by="Name").reset_index(drop=True)
 		tpms = df["TPM"].values  # Use NumPy arrays for speed
-		counts = df["NumReads"].round().astype(int).values
+		counts = df["NumReads"].round().astype('int').values
 		lengths = df["EffectiveLength"].values
 		genenames = df["Name"].values
 		if (genenames != geneorder).any():
@@ -143,6 +144,7 @@ df_outputs = {
 	"HumanProteinCodingGenes"+stranded_suffix:human_genes_pc_indexes,
 	"VirusAllGenes"+stranded_suffix:virus_genes_all_indexes
 }
+all_tables = {}
 for thisdfname, thisdf in df_dict.items():
 	thisdf["hgnc_name"] = hgnc_names
 	thisdf["hgnc_name"] = thisdf["hgnc_name"].fillna(thisdf["Name"])
@@ -152,24 +154,35 @@ for thisdfname, thisdf in df_dict.items():
 	if thisdfname == "OmicsExpressionTPMLogp1":
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
-	ProfileID = thisdf.index.map(profile_cds_dict)
+	ModelConditionID = thisdf.index.map(mc_cds_dict)
 	ModelID = thisdf.index.map(model_cds_dict)
-	is_default_entry = thisdf.index.map(is_default_cds_dict)
-	metadatadf = pd.DataFrame({"seqid":thisdf.index, "ProfileID":ProfileID, "is_default_entry":is_default_entry, "ModelID":ModelID})
-	metadatadf.set_index("seqid", inplace=True)
+	isDefaultEntryMC = thisdf.index.map(is_default_cds_dict_mc)
+	isDefaultEntryModel = thisdf.index.map(is_default_cds_dict_model)
+	#metadatadf.set_index("seqid", inplace=True)
 	# Create upload files for the human and virus genes, for counts, TPMs, effective lengths and raw counts
 	for df_output_name, df_output_indexes in df_outputs.items():
-		globals()[thisdfname + df_output_name] = metadatadf.join(thisdf.iloc[:, df_output_indexes])
-		globals()[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=False)
+		all_tables[thisdfname + df_output_name] = thisdf.iloc[:, df_output_indexes].copy()
+		all_tables[thisdfname + df_output_name].loc[:,'ModelConditionID'] = ModelConditionID
+		all_tables[thisdfname + df_output_name].loc[:,'isDefaultEntryForMC'] = isDefaultEntryMC
+		all_tables[thisdfname + df_output_name].set_index(["ModelConditionID","isDefaultEntryForMC"], inplace=True, verify_integrity=True)
+		all_tables[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=True)
 		upload_files.append(UploadedFile(name=thisdfname + df_output_name, local_path=thisdfname + df_output_name+".parquet", format=LocalFormat.PARQUET_TABLE))
-# This is for model level data. Select only the default entry for each model (is_default_entry =- True)
-OmicsExpressionTPMLogp1_primary = globals()['OmicsExpressionTPMLogp1HumanProteinCodingGenes'+stranded_suffix].loc[globals()['OmicsExpressionTPMLogp1HumanProteinCodingGenes'+stranded_suffix]["is_default_entry"]]
-OmicsExpressionTPMLogp1_primary.set_index("ModelID", inplace=True, verify_integrity=True)
-OmicsExpressionTPMLogp1_primary = OmicsExpressionTPMLogp1_primary.drop(['ProfileID', 'is_default_entry'], axis=1)
-OmicsExpressionTPMLogp1_primary.to_csv("OmicsExpressionTPMLogp1_primary.csv", index=True)
-upload_files.append(UploadedFile(name="OmicsExpressionProteinCodingGenesTPMLogp1"+stranded_suffix, local_path="OmicsExpressionTPMLogp1_primary.csv", format=LocalFormat.CSV_MATRIX))
+# This is for model level data. Select only the default entry for each model (isDefaultEntry =- True)
+OmicsExpressionTPMLogp1_primary = all_tables['OmicsExpressionTPMLogp1HumanProteinCodingGenes'+stranded_suffix]
+OmicsExpressionTPMLogp1_primary.loc[:,'ModelID'] = ModelID
+OmicsExpressionTPMLogp1_primary.loc[:,'isDefaultEntryForModel'] = isDefaultEntryModel
+OmicsExpressionTPMLogp1_primary = OmicsExpressionTPMLogp1_primary.loc[OmicsExpressionTPMLogp1_primary['isDefaultEntryForModel'] == "Yes"]
+OmicsExpressionTPMLogp1_primary.set_index(["ModelID","isDefaultEntryForModel"], inplace=True, verify_integrity=True)
+OmicsExpressionTPMLogp1_primary.to_parquet("OmicsExpressionTPMLogp1_primary.parquet", index=True)
+upload_files.append(UploadedFile(name="OmicsExpressionProteinCodingGenesTPMLogp1"+stranded_suffix, local_path="OmicsExpressionTPMLogp1_primary.parquet", format=LocalFormat.PARQUET_TABLE))
+OmicsExpressionTPMLogp1_virus = all_tables['OmicsExpressionTPMLogp1VirusAllGenes'+stranded_suffix]
+OmicsExpressionTPMLogp1_virus.loc[:,'ModelID'] = ModelID
+OmicsExpressionTPMLogp1_virus.loc[:,'isDefaultEntryForModel'] = isDefaultEntryModel
+OmicsExpressionTPMLogp1_virus = OmicsExpressionTPMLogp1_virus.loc[OmicsExpressionTPMLogp1_virus['isDefaultEntryForModel'] == "Yes"]
+OmicsExpressionTPMLogp1_virus.set_index(["ModelID","isDefaultEntryForModel"], inplace=True, verify_integrity=True)
+OmicsExpressionTPMLogp1_virus.to_parquet("OmicsExpressionTPMLogp1Virus.parquet", index=True)
+upload_files.append(UploadedFile(name="OmicsExpressionTPMLogp1Virus"+stranded_suffix, local_path="OmicsExpressionTPMLogp1Virus.parquet", format=LocalFormat.PARQUET_TABLE))
 
 
 tc = create_taiga_client_v3()
-tc.update_dataset(permaname=release_date, reason="Fresh upload of all output files from new RNA-seq pipeline to resolve version conflicts on taiga internal", additions=upload_files)
-#tc.update_dataset(permaname="test-all-rna-c62c", reason="Test upload of all output files from new RNA-seq pipeline", additions=upload_files)
+tc.update_dataset(permaname="test-all-rna-c62c", reason="Test upload of all output files from new RNA-seq pipeline", additions=upload_files)
