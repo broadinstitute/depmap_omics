@@ -62,7 +62,7 @@ command <<<
     preemptible: select_first([preemptible_attempts, 3])
     cpu: select_first([cpu, 1])
     zones: "us-central1-b" # Needs to be a zone that guarantees CPUs with AVX see (https://cloud.google.com/compute/docs/regions-zones/)
-    bootDiskSizeGb: "16"
+    bootDiskSizeGb: 16
   }
 
   output {
@@ -124,7 +124,7 @@ task RunHC4 {
         disks: "local-disk " + sub(disk_space_gb, "\\..*", "") + " SSD"
         preemptible: select_first([preemptible_attempts, 3])
         cpu: select_first([cpu, 1])
-        bootDiskSizeGb: "16"
+        bootDiskSizeGb: 16
     }
 }
 
@@ -181,7 +181,7 @@ command <<<
     disks: "local-disk " + select_first([disk_space_gb, default_disk_space_gb]) + " SSD"
     preemptible: select_first([preemptible_attempts, 3])
     cpu: select_first([cpu, 1])
-    bootDiskSizeGb: "16"
+    bootDiskSizeGb: 16
   }
 
   output {
@@ -231,7 +231,7 @@ task SplitIntervals {
         disks: "local-disk " + select_first([disk_space, 100]) + " SSD"
         preemptible: select_first([preemptible_attempts, 10])
         cpu: select_first([cpu, 1])
-        bootDiskSizeGb: "16"
+        bootDiskSizeGb: 16
     }
 
     output {
@@ -273,7 +273,7 @@ task MergeVCFs {
         disks: "local-disk " + select_first([disk_space_gb, default_disk_space_gb]) + " SSD"
         preemptible: select_first([preemptible_attempts, 10])
         cpu: select_first([cpu, 1])
-        bootDiskSizeGb: "16"
+        bootDiskSizeGb: 16
     }
 
     output {

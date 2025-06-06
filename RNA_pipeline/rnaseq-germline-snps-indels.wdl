@@ -521,7 +521,7 @@ task VariantFiltration {
 
 	runtime {
 		docker: docker
-        bootDiskSizeGb: "32"
+        bootDiskSizeGb: 32
 		memory: select_first([memory,6])+" GB"
 		disks: "local-disk " + sub((size(input_vcf,"GB")*3)+180, "\\..*", "") + " SSD"
 		preemptible: preemptible_count
