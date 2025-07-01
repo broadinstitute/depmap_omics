@@ -12,13 +12,13 @@ numpy = "^1.24.1"
 pandas = "^1.5.3"
 taigapy = {version = "^3.13.0", source = "public-python"}
 seaborn = "^0.12.2"
-depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch="25q2-update-taigapy"}
+depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch="25q3-mut-upload"}
 pyright = "1.1.293"
 pandera = "^0.13.4"
 fire = "0.7.0"
 tqdm = "^4.64.1"
 scipy="^1.0.0"
-firecloud_dalmatian= {git = "https://github.com/pgm/dalmatian", branch="25q3-mut-upload"}
+firecloud_dalmatian= {git = "https://github.com/pgm/dalmatian", rev = "5f37ef9"}
 miniwdl = "^1.10.0"
 ruff = "^0.4.10"
 biomart = "^0.9.2"
