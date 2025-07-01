@@ -10,7 +10,7 @@ packages = [{include = "depmapomics"}, {include="mgenepy"}]
 python = "^3.9"
 numpy = "^1.24.1"
 pandas = "^1.5.3"
-taigapy = {version = "^3.13.0", source = "public-python"}
+taigapy = {version = "^3.18.0", source = "public-python"}
 seaborn = "^0.12.2"
 depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch="25q3-mut-upload"}
 pyright = "1.1.293"
