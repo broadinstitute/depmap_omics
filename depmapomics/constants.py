@@ -3,9 +3,9 @@ SAMPLESETNAME = "25Q2"
 RELEASE = "25q2"
 
 ### !!! for the sake of testing only, need to replace once finalized!!!
-OMICS_ID_MAPPING_TABLE_TAIGAID = 'test-files-for-simone-postproc-ac2c'
+OMICS_ID_MAPPING_TABLE_TAIGAID = "2025-05-01-master-mapping-table-28c2"
 
-OMICS_ID_MAPPING_TABLE_NAME = "merged_table.20250327_1239selcols"
+OMICS_ID_MAPPING_TABLE_NAME = "internal_release_date.2025-05-01.master_mapping_table"
 
 WORKING_DIR = "output/"
 
@@ -112,7 +112,7 @@ GUIDESBED = {
     "humagne": "data/humagne_guides.bed",
     "ky": "data/ky_score_guides.bed",
     "tkov3": "data/tkov_25Q2.bed",
-    "brunello": "data/brunello_25Q2.bed"
+    "brunello": "data/brunello_25Q2.bed",
 }
 
 BINARY_MUT_COLNAME_DICT = {
@@ -120,7 +120,7 @@ BINARY_MUT_COLNAME_DICT = {
     "humagne": "humagne_binary_mut",
     "ky": "ky_binary_mut",
     "brunello": "brunello_binary_mut",
-    "tkov3": "tkov3_binary_mut"
+    "tkov3": "tkov3_binary_mut",
 }
 
 GENECHANGETHR = 0.025
@@ -678,7 +678,7 @@ VIRTUAL_FILENAMES_GUIDEMUT = {
     "binary_mutation_ky": "OmicsGuideMutationsBinaryKY",
     "binary_mutation_humagne": "OmicsGuideMutationsBinaryHumagne",
     "binary_mutation_brunello": "OmicsGuideMutationsBinaryBrunello",
-    "binary_mutation_tkov3": "OmicsGuideMutationsBinaryTKOv3"
+    "binary_mutation_tkov3": "OmicsGuideMutationsBinaryTKOv3",
 }
 
 VIRTUAL_FILENAMES_NUMMAT_EXP_PR = {

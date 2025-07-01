@@ -723,7 +723,7 @@ def aggregate_cnvs_from_hmm(
 
     # concat CN segments
     print("Downloading segment files")
-    seg_files = cnv_files[seg_level_colname].dropna()
+    seg_files = cnv_files[cnv_files[seg_level_colname] != ""][seg_level_colname].dropna()
     seg_dfs = []
 
     for sample_id, f in tqdm(seg_files.items(), total=len(seg_files)):
@@ -771,7 +771,7 @@ def aggregate_cnvs_from_hmm(
 
     # aggregate gene-level matrix
     print("Downloading gene copy number files")
-    gene_cn_files = cnv_files[gene_level_colname].dropna()
+    gene_cn_files = cnv_files[cnv_files[gene_level_colname] != ""][gene_level_colname].dropna()
     gene_dfs = []
 
     for sample_id, f in tqdm(gene_cn_files.items(), total=len(gene_cn_files)):
@@ -808,13 +808,13 @@ def aggregate_cnvs_from_hmm(
         taiga_id=constants.HGNC_MAPPING_TABLE_TAIGAID,
         dataset_version=constants.HGNC_MAPPING_TABLE_VERSION,
         dataset_file=constants.HGNC_MAPPING_TABLE_NAME,
-    ).drop(columns=["symbol", "entrez_id", "hugo_entrez"])
+    ).drop(columns=["hugo_entrez"])
 
     gene_cn = gene_cn.merge(hgnc_table, how="inner", on="ensembl_gene_id")
 
     # remove the PAR chrY CNs, keeping the chrX versions only
     gene_cn = gene_cn.loc[~(gene_cn["chr"].eq("chrY") & gene_cn["par"])]
-    gene_cn = gene_cn.drop(columns=["chr", "ensembl_gene_id", "par"])
+    gene_cn = gene_cn.drop(columns=["chr", "par"])
 
     # exponentiate the log2 relative CNs
     gene_cn["log2_rel_cn"] = 2 ** gene_cn["log2_rel_cn"]

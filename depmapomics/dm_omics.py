@@ -52,15 +52,15 @@ def cnPostProcessing(
         procqc ([type], optional): @see updateTracker. Defaults to constants.PROCQC.
         source_rename ([type], optional): @see managing duplicates. Defaults to constants.SOURCE_RENAME.
     """
-    tc = TaigaClient()
     client = create_taiga_client_v3()
+
+    with open(masked_gene_list, "r") as f:
+        genes_to_mask = f.read().splitlines()
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
-    print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = client.get(
-        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
-    )
+    print("reading seq -> pr ID mapping table locally")
+    omics_id_mapping_table = pd.read_csv("data/25Q2/omics_profile_to_sequencing_id.csv")
     renaming_dict = dict(
         list(
             zip(
@@ -113,6 +113,15 @@ def cnPostProcessing(
         )
         wes_ms_df = pd.read_csv(wesfolder + "ms_repeats_all.csv")
 
+    print("masking wes")
+    cols_to_drop = [col for col in genes_to_mask if col in wesgenecn.columns]
+    print("dropping " + str(len(cols_to_drop)) + " genes from WES relative CN")
+    wesgenecn = wesgenecn.drop(columns=cols_to_drop)
+    cols_to_drop = [col for col in genes_to_mask if col in wes_purecn_genecn.columns]
+    wes_purecn_genecn = wes_purecn_genecn.drop(columns=cols_to_drop)
+    cols_to_drop = [col for col in genes_to_mask if col in wes_loh.columns]
+    wes_loh = wes_loh.drop(columns=cols_to_drop)
+
     # doing wgs
     print("doing wgs")
     folder = save_dir + "wgs_"
@@ -137,9 +146,6 @@ def cnPostProcessing(
         purecnsampleset=purecnsampleset,
         **kwargs,
     )
-
-    with open(masked_gene_list, "r") as f:
-        genes_to_mask = f.read().splitlines()
 
     # subset and rename to PR-indexed matrices
     wessegments_pr = (
@@ -246,8 +252,6 @@ def cnPostProcessing(
         dataset_version=hgnc_mapping_table_version,
         dataset_file=hgnc_mapping_table_name,
     ).drop(columns="par")
-    # drop genes that should be masked
-    hgnc_table = hgnc_table[~hgnc_table["ensembl_gene_id"].isin(genes_to_mask)]
     ensg2hugo_entrez_dict = dict(
         zip(hgnc_table["ensembl_gene_id"], hgnc_table["hugo_entrez"])
     )
@@ -324,7 +328,7 @@ def cnPostProcessing(
     merged_feature_table_pr.to_csv(folder + "merged_feature_table_profile.csv")
 
     # merging microsatellite repeats
-    pd.testing.assert_frame_equal(wes_ms_df.loc[:, :5], wgs_ms_df.loc[:, :5])
+    pd.testing.assert_frame_equal(wes_ms_df.iloc[:, :5], wgs_ms_df.iloc[:, :5])
     ms_mat_merged = pd.concat([wes_ms_df, wgs_ms_df.iloc[:, 5:]], axis=1)
     ms_mat_merged_no_coords = ms_mat_merged.iloc[:, 5:]
 
@@ -486,10 +490,8 @@ async def mutationPostProcessing(
 
     # read cds->pr mapping table and construct renaming dictionary
     # always read latest version
-    print("reading omics ID mapping table from taiga")
-    omics_id_mapping_table = client.get(
-        name=omics_id_mapping_table_taigaid, file=omics_id_mapping_table_name
-    )
+    print("reading seq -> pr ID mapping table locally")
+    omics_id_mapping_table = pd.read_csv("data/25Q2/omics_profile_to_sequencing_id.csv")
     renaming_dict = dict(
         list(
             zip(
@@ -659,18 +661,18 @@ async def mutationPostProcessing(
     hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
     lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
 
-    # TODO: add pandera type validation
+    # # TODO: add pandera type validation
 
     if run_guidemat:
         # aggregate germline binary matrix
         print("aggregating binary guide mutation matrices")
         print("aggregating wes")
         wes_germline_mats = mutations.aggregateGermlineMatrix(
-            wes_wm, AllSamplesetName, save_output=folder
+            wes_wm, AllSamplesetName, save_output=folder+"wes_"
         )
         print("aggregating wgs")
         wgs_germline_mats = mutations.aggregateGermlineMatrix(
-            wgs_wm, AllSamplesetName, save_output=folder
+            wgs_wm, AllSamplesetName, save_output=folder+"wgs_"
         )
 
         for lib, _ in bed_locations.items():
