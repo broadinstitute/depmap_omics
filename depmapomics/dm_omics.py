@@ -481,7 +481,8 @@ async def mutationPostProcessing(
         upload_taiga (bool, optional): whether to upload to taiga. Defaults to False.
     """
 
-    tc = TaigaClient()
+    print("only saving seqid-leveled matrices")
+
     client = create_taiga_client_v3()
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
@@ -535,9 +536,22 @@ async def mutationPostProcessing(
     mutcol.update(constants.MUTCOL_ADDITIONAL)
     merged = merged.rename(columns=mutcol)
 
-    merged = mutations.addEntrez(
-        merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID"
+    # pull gene table, fill in entrez id column based on ensg id
+    hgnc_table = client.get(
+                name=hgnc_mapping_taiga,
+                version=hgnc_mapping_table_version,
+                file=hgnc_mapping_table_name,
+            )
+    hgnc_table = hgnc_table[~hgnc_table['entrez_id'].isna()]
+    ensg_to_entrez_dict = dict(
+        zip(
+            hgnc_table.ensembl_gene_id,
+            hgnc_table.entrez_id.astype("Int64").astype(str),
+        )
     )
+
+    merged["EntrezGeneID"] = merged["EnsemblGeneID"].map(ensg_to_entrez_dict)
+    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("")
 
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
     # For all columns, convert "Y" to True/False
@@ -554,22 +568,12 @@ async def mutationPostProcessing(
             wgssvs.to_csv(folder + "svs.csv", index=False)
 
             print("map entrez ids to SV matrix columns")
-            # pull the gene id mapping table from taiga dataset maintained by the portal
-            hgnc_table = client.get(
-                name=hgnc_mapping_taiga,
-                version=hgnc_mapping_table_version,
-                file=hgnc_mapping_table_name,
-            )
-            # some rows in the table are missing entrez ids, replace them with "Unknown"
-            hgnc_table["entrez_id"] = hgnc_table["entrez_id"].fillna("Unknown")
             hugo_entrez_pairs = list(zip(hgnc_table.symbol, hgnc_table.entrez_id))
             # generate a dictionary, key: hugo symbol, value: hugo symbol (entrez id)
             gene_renaming_dict = dict(
                 [
                     (
                         (e[0], e[0] + " (" + str(int(e[1])) + ")")
-                        if e[1] != "Unknown"
-                        else (e[0], e[0] + " (Unknown)")
                     )
                     for e in hugo_entrez_pairs
                 ]
