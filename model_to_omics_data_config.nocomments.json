@@ -1,0 +1,156 @@
+{
+    "release_date_columns" : {
+        "columns" : ["internal_release_date", "public_release_date"]
+    },
+    "table_filters": {
+        "omics_sequencing": {
+            "exclusion_filters": {
+                "columns": ["blacklist"],
+                "blacklist": [1],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "columns": ["expected_type"],
+                "expected_type": ["rna", "wgs", "wes"],
+                "filter_mode": "any"
+            }
+        },
+        "omics_profile": {
+            "exclusion_filters": {
+                "columns": ["blacklist_omics"],
+                "blacklist_omics": [1],
+                "filter_mode": "all"
+            },
+            "inclusion_filters": {
+                "columns": ["datatype"],
+                "datatype": ["rna", "wgs", "wes"],
+                "filter_mode": "any"
+            },
+            "merge_parameters" : {
+                "merge_with" : ["omics_sequencing"],
+                "primary" : ["profile_id"],
+                "foreign" : ["profile_id"]
+            }
+        },
+        "model_condition": {
+            "exclusion_filters": {
+                "columns": ["expansion_team"],
+                "expansion_team": ["PRISM"],
+                "filter_mode": "all"
+            },
+            "merge_parameters" : {
+                "merge_with" : ["omics_profile"],
+                "primary" : ["model_condition_id"],
+                "foreign" : ["model_condition"]
+            }
+	    },
+	  "model": {
+	        "exclusion_filters": {
+	   	        "columns": ["permission_to_release"],
+		        "permission_to_release" : [0],
+		        "filter_mode": "all"
+		    },
+            "merge_parameters" : {
+                "merge_with" : ["model_condition"],
+                "primary" : ["model_id"],
+                "foreign" : ["model_id"]
+              }
+	  },
+	  "depmap_model_type": {
+	        "exclusion_filters": {
+	   	        "columns": ["depmap_code"],
+		        "depmap_code" : ["Unknown"],
+		        "filter_mode": "all"
+		    },
+            "merge_parameters" : {
+                "merge_with" : ["model"],
+                "primary" : ["depmap_code"],
+                "foreign" : ["depmap_model_type"]
+            }
+
+	   }
+    },
+    "priority_rankings": {
+        "order_of_operations" : ["default_datatype_per_model_id", "default_drug_per_model_id", "default_strandedness_per_model_id_and_datatye", "default_source_per_model_id",  "default_expansion_team_per_model_id"],
+        "ranking_orders" : {
+            "default_datatype_per_model_id": {
+                "groupbyvar" : ["model_id"], 
+                "priorityvar" : ["expected_type"], 
+                "select_index": ["idxmin"]
+            },
+            "default_drug_per_model_id": {
+                "groupbyvar" : ["model_id", "expected_type"], 
+                "priorityvar" : ["drug"], 
+                "select_index": ["idxmin"]
+            },
+            "default_strandedness_per_model_id_and_datatye": {
+                "groupbyvar" : ["model_id","expected_type","drug"], 
+                "priorityvar" : ["stranded"], 
+                "select_index": ["idxmin"]
+            },
+            "default_source_per_model_id": {
+                "groupbyvar" : ["model_id", "expected_type","drug"], 
+                "priorityvar" : ["source_model_condition"], 
+                "select_index": ["idxmin"]
+            },
+            "default_expansion_team_per_model_id": {
+                "groupbyvar" : ["model_id", "expected_type","drug","source_model_condition"], 
+                "priorityvar" : ["expansion_team"], 
+                "select_index": ["idxmin"]
+            }
+
+        },
+        "rankings" : {
+            "expected_type" : {
+                "rna": 0, 
+                "wgs" : 1,
+                "wes" : 2
+            },
+            "drug": {
+                "None": 1,
+                "DMSO": 2
+            },
+            "stranded": {
+                "True": 1,
+                "False": 2
+            },
+            "source_model_condition": {
+                "BROAD": 1,
+                "SANGER": 2,
+                "STJUDE": 3,
+                "OTHER": 4,
+                "DFCI": 5,
+                "Unknown": 6
+            },
+            "expansion_team": {
+                "DMX": 1,
+                "TDA": 2,
+                "GPP": 3,
+                "Other": 4,
+                "CCLF": 5,
+                "STJUDE": 6,
+                "Sanger" : 7,
+                "None" : 8,
+                "Unknown": 9
+            }
+        }
+    },
+    "final_output_columns" : {
+        "columns" : ["model_id",
+        "stripped_cell_line_name",
+        "depmap_code",
+        "lineage",
+        "model_condition_id",
+        "source_model_condition",
+        "cell_format",
+        "growth_media",
+        "growth_pattern",
+        "profile_id",
+        "product",
+        "sequencing_id",
+        "datatype",
+        "stranded",
+        "shared_to_dbgap",
+        "is_default_entry"]
+    }
+}
