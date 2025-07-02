@@ -749,24 +749,6 @@ def convertProteinChange(
     return maf
 
 
-def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
-    """pull gene mapping info from biomart, add column for entrez gene id
-    by mapping from ensembl ids"""
-    mybiomart = h.generateGeneNames()
-    mybiomart = mybiomart[~mybiomart.entrezgene_id.isna()]
-    renaming_dict = dict(
-        zip(
-            mybiomart.ensembl_gene_id,
-            mybiomart.entrezgene_id.astype("Int64").astype(str),
-        )
-    )
-    print("adding entrez id column")
-    maf[entrez_col] = maf[ensembl_col].map(renaming_dict)
-    maf[entrez_col] = maf[entrez_col].fillna("")
-
-    return maf
-
-
 def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
     """add likely LoF column: true if a variant is high vep impact or likely lof according to oncoKB"""
     if (
