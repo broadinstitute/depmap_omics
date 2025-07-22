@@ -194,7 +194,7 @@ def aggregateMAFs(
     counter = 0
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
-        maf = pd.read_csv(row[mafcol])
+        maf = pd.read_parquet(row[mafcol]) if row[mafcol].endswith(".parquet") else pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
         # >1 because of the hess_signature typo in input mafs
         # can be 0 once the type is fixed upstream
