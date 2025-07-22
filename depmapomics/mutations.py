@@ -196,9 +196,7 @@ def aggregateMAFs(
         # prints out progress bar
         maf = pd.read_parquet(row[mafcol]) if row[mafcol].endswith(".parquet") else pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
-        # >1 because of the hess_signature typo in input mafs
-        # can be 0 once the type is fixed upstream
-        # TODO: replace hess_signature later
+        maf = maf.rename(columns={'hess_signture': 'hess_signature'})
         if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
             print(name + " is missing columns:")
             print(set(keep_cols.keys()) - set(maf.columns))
