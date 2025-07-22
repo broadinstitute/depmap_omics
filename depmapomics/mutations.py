@@ -197,7 +197,7 @@ def aggregateMAFs(
         maf = pd.read_parquet(row[mafcol]) if row[mafcol].endswith(".parquet") else pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
         maf = maf.rename(columns={'hess_signture': 'hess_signature'})
-        if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
+        if len(set(keep_cols.keys()) - set(maf.columns)) > 2:
             print(name + " is missing columns:")
             print(set(keep_cols.keys()) - set(maf.columns))
         all_mafs.append(maf)
