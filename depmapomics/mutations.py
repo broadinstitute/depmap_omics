@@ -240,7 +240,7 @@ def aggregateSV(
     print(str(len(na_samples)) + " samples don't have corresponding sv: ", na_samples)
     all_svs = []
     for name, row in sample_table_valid.iterrows():
-        sv = pd.read_csv(row[sv_colname], sep="\t")
+        sv = pd.read_parquet(row[sv_colname], sep="\t")
         sv[constants.SAMPLEID] = name
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
