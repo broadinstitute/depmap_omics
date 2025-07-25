@@ -449,6 +449,7 @@ async def mutationPostProcessing(
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
     samplesetname: str = constants.SAMPLESETNAME,
     AllSamplesetName: str = "all",
+    AllSamplesetName_wgs: str = "all_25q3",
     taiga_description: str = constants.Mutationsreadme,
     taiga_dataset: str = env_config.TAIGA_MUTATION,
     bed_locations: dict = constants.GUIDESBED,
@@ -512,7 +513,7 @@ async def mutationPostProcessing(
 
     wgsmutations, wgssvs, wgs_sv_mat = mutations.postProcess(
         wgs_wm,
-        sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
+        sampleset=AllSamplesetName_wgs,  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
@@ -558,7 +559,7 @@ async def mutationPostProcessing(
     for col in merged.columns:
         if "Y" in merged[col].values:
             merged.loc[:, col] = np.where(
-                merged[col].values == "Y", True, False
+                ((merged[col].values == "Y") | (merged[col].values == True)), True, False
             )
 
 
@@ -623,7 +624,7 @@ async def mutationPostProcessing(
         )
         print("aggregating wgs")
         wgs_germline_mats = mutations.aggregateGermlineMatrix(
-            wgs_wm, AllSamplesetName, save_output=folder
+            wgs_wm, AllSamplesetName_wgs, save_output=folder
         )
 
         for lib, _ in bed_locations.items():

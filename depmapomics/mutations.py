@@ -240,7 +240,7 @@ def aggregateSV(
     print(str(len(na_samples)) + " samples don't have corresponding sv: ", na_samples)
     all_svs = []
     for name, row in sample_table_valid.iterrows():
-        sv = pd.read_parquet(row[sv_colname], sep="\t")
+        sv = pd.read_parquet(row[sv_colname])
         sv[constants.SAMPLEID] = name
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
@@ -477,6 +477,8 @@ def postProcess(
         keep_cols=constants.MUTCOL_DEPMAP,
         debug=debug,
     )
+
+    mutations = mutations.replace({pd.NA: np.nan})
 
     print("further filtering and standardizing maf")
     mutations_with_standard_cols = postprocess_main_steps(mutations)
@@ -775,7 +777,8 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[
         (maf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
         | (maf["oncokb_oncogenic"] == "Oncogenic")
-        | (maf["oncokb_hotspot"] == "Y"),
+        | (maf["oncokb_hotspot"] == "Y")
+        | (maf["oncokb_hotspot"] == True),
         "rescue_reason",
     ].apply(lambda x: x.append("OncoKB"))
     maf.loc[(maf["cosmic_tier"] == 1), "rescue_reason"].apply(
@@ -790,7 +793,7 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[(maf["tumor_suppressor_high_impact"] == True), "rescue_reason"].apply(
         lambda x: x.append("TS_high_impact")
     )
-    maf.loc[(maf["hess_driver"] == "Y"), "rescue_reason"].apply(
+    maf.loc[((maf["hess_driver"] == "Y") | (maf["hess_driver"] == True)), "rescue_reason"].apply(
         lambda x: x.append("Hess")
     )
     maf.loc[
@@ -884,8 +887,8 @@ def postprocess_main_steps(
     maf.loc[
         (
             (
-                (maf[constants.HESS_COL] == "Y")
-                | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
+                (maf[constants.HESS_COL] == "Y") | (maf[constants.HESS_COL] == True)
+                | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y") | (maf[constants.ONCOKB_HOTSPOT_COL] == True)
                 | (maf[constants.COSMIC_TIER_COL] == 1)
             ),
             "hotspot",

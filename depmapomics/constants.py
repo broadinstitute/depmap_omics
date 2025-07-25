@@ -1,6 +1,6 @@
-SAMPLESETNAME = "25Q2"
+SAMPLESETNAME = "25Q3"
 
-RELEASE = "25q2"
+RELEASE = "25q3"
 
 ### !!! for the sake of testing only, need to replace once finalized!!!
 OMICS_ID_MAPPING_TABLE_TAIGAID = 'test-files-for-simone-postproc-ac2c'
@@ -430,7 +430,7 @@ MUTCOL_DEPMAP = {
     # 'likely_gof': 'LikelyGof',
     "likely_lof": "LikelyLoF",
     "hess_driver": "HessDriver",
-    "hess_signture": "HessSignature",
+    "hess_signature": "HessSignature",
     "revel_score": "RevelScore",
     "pharmgkb_id": "PharmgkbId",
     "gwas_disease": "GwasDisease",
