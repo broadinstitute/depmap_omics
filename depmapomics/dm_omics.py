@@ -444,7 +444,7 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
-async def mutationPostProcessing(
+def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
     samplesetname: str = constants.SAMPLESETNAME,

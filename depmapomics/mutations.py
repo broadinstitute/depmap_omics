@@ -440,6 +440,7 @@ def postProcess(
     sampleset="all",
     mafcol=constants.MAF_COL,
     save_output=constants.WORKING_DIR,
+    snv_af_cutoff=constants.SNV_INTERNAL_AF_CUTOFF,
     sv_col=constants.SV_COLNAME,
     sv_filename=constants.SV_FILENAME,
     sv_mat_filename=constants.SV_MAT_FILENAME,
@@ -481,8 +482,7 @@ def postProcess(
     mutations = mutations.replace({pd.NA: np.nan})
 
     print("further filtering and standardizing maf")
-    mutations_with_standard_cols = postprocess_main_steps(mutations)
-
+    mutations_with_standard_cols = postprocess_main_steps(mutations, max_recurrence=snv_af_cutoff)
     print("saving somatic mutations (all)")
     #  /home/ubuntu/depmap_omics/depmapomics/mutations.py:314:71 - error: Argument of type "None" cannot be assigned to parameter "index" of type "_bool" in function "to_csv"
     #      Type "None" cannot be assigned to type "_bool" (reportGeneralTypeIssues)
@@ -724,12 +724,12 @@ def patchEGFR(
     oncohotspot_col="oncokb_hotspot",
 ):
     """mark EGFR in frame deletions as hotspots"""
-    topatch = maf[
-        (maf[hugo_col] == "EGFR")
+    maf.loc[
+        ((maf[hugo_col] == "EGFR")
         & (maf[protein_col].str.endswith("del"))
-        & (maf[inframe_col])
-    ].index.tolist()
-    maf.loc[topatch, oncohotspot_col] = True
+        & (maf[inframe_col])),
+        oncohotspot_col
+    ] = "Y"
     return maf
 
 
@@ -824,7 +824,7 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
 def postprocess_main_steps(
     maf: pd.DataFrame,
     adjusted_gnomad_af_cutoff: float = 1e-3,
-    max_recurrence: float = 0.1,
+    max_recurrence: float = constants.SNV_INTERNAL_AF_CUTOFF,
 ) -> pd.DataFrame:
     """DepMap postprocessing steps after vcf_to_depmap
 

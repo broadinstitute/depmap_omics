@@ -256,6 +256,8 @@ BEDTOOLSPATH = "~/bin/bedtools2/bin/"
 
 MINFREQTOCALL = 0.25
 
+SNV_INTERNAL_AF_CUTOFF = 0.1
+
 SV_COLNAME = "expanded_filtered_sv_bedpe"
 
 SV_FILENAME = "all_sv.csv"
