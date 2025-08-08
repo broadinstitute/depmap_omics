@@ -26,8 +26,8 @@ release_date = args.release_permaname # Permaname to use for release
 stranded = args.stranded # not used for any logic, just used to know whether to add "Stranded" suffix
 if (stranded):
 	stranded_suffix="Stranded"
-	quant_genes_column = "quant_genes_auto"
-	quant_trancripts_column = "quant_transcripts_auto"
+	quant_genes_column = "quant_genes"
+	quant_trancripts_column = "quant_transcripts"
 else:
 	stranded_suffix=""
 	quant_genes_column = "quant_genes_iu"
@@ -37,12 +37,12 @@ terra_samples = pd.read_table(terra_table)
 terra_samples['quant_transcripts_auto'].fillna(terra_samples['quant_transcripts_iu'], inplace=True)
 samples_to_process_all = pd.read_csv(sample_metadata)
 
-samples_to_process = samples_to_process_all.loc[(samples_to_process_all["datatype"] == "rna")]
-samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="sequencing_id", how="inner")
+samples_to_process = samples_to_process_all.loc[(samples_to_process_all["DataType"] == "rna")]
+samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="SequencingID", how="inner")
 
 tc = create_taiga_client_v3()
 
-hgnc_table = tc.get("hgnc-gene-table-e250.3/hgnc_complete_set")
+hgnc_table = tc.get("hgnc-gene-table-e250.4/hgnc_complete_set")
 hgnc_table = hgnc_table[
 		(~hgnc_table["entrez_id"].isna())
 	]
@@ -64,9 +64,10 @@ tpm_dict_virus = {}
 
 counts_dict_human_all_genes = {}
 counts_dict_virus = {}
-profile_cds_dict = dict(zip(samples["sequencing_id"],samples["profile_id"]))
-model_cds_dict = dict(zip(samples["sequencing_id"],samples["model_id"]))
-is_default_cds_dict = dict(zip(samples["sequencing_id"],samples["is_default_entry"]))
+mc_cds_dict = dict(zip(samples["SequencingID"],samples["ModelConditionID"]))
+model_cds_dict = dict(zip(samples["SequencingID"],samples["ModelID"]))
+is_default_cds_dict_mc = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForMC"]))
+is_default_cds_dict_model = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForModel"]))
 
 df_all_tpms = pd.DataFrame()
 df_all_counts = pd.DataFrame()
@@ -80,7 +81,6 @@ all_tpms_list = []
 all_counts_list = []
 all_lengths_list = []
 sample_labels = []
-bigfusiontable = pd.DataFrame()
 
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
@@ -116,35 +116,38 @@ df_all_lengths_cp = df_all_lengths.copy()
 upload_files = []
 
 df_dict = {
-	"OmicsExpressionTranscriptTPMLogp1": df_all_tpms_cp,
-	"OmicsExpressionTranscriptExpectedCount": df_all_counts_cp,
-	"OmicsExpressionTranscriptEffectiveLength": df_all_lengths_cp,
+	"OmicsExpressionTranscriptTPMLogp1_MC_": df_all_tpms_cp,
+	"OmicsExpressionTranscriptExpectedCount_MC_": df_all_counts_cp,
+	"OmicsExpressionTranscriptEffectiveLength_MC_": df_all_lengths_cp,
 }
 df_outputs = {
 	"HumanAllGenes"+stranded_suffix:human_genes_all_indexes,
 	"VirusAllGenes"+stranded_suffix:virus_genes_all_indexes
 }
 for thisdfname, thisdf in df_dict.items():
-	thisdf["transcript_id"] = geneorder
+	thisdf["TranscriptID"] = geneorder
 	print(thisdfname)
-	thisdf.set_index("transcript_id", inplace=True)
+	thisdf.set_index("TranscriptID", inplace=True)
 	thisdf = thisdf.drop(['Name'], axis = 1)
-	if thisdfname == "OmicsExpressionTranscriptTPMLogp1"+stranded_suffix:
+	if thisdfname == "OmicsExpressionTranscriptTPMLogp1_MC_"+stranded_suffix:
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
-	profile_id = thisdf.index.map(profile_cds_dict)
+	model_condition_id = thisdf.index.map(mc_cds_dict)
 	model_id = thisdf.index.map(model_cds_dict)
-	is_default_entry = thisdf.index.map(is_default_cds_dict)
-	metadatadf = pd.DataFrame({"seqid":thisdf.index, "profile_id":profile_id, "is_default_entry":is_default_entry, "model_id":model_id})
-	metadatadf.set_index("seqid", inplace=True)
+	is_default_entry_mc = thisdf.index.map(is_default_cds_dict_mc)
+	is_default_entry_model = thisdf.index.map(is_default_cds_dict_model)
+	metadatadf = pd.DataFrame({"SequencingID":thisdf.index,  "IsDefaultEntryForMC":is_default_entry_mc, "IsDefaultEntryForModel":is_default_entry_model, "ModelID":model_id,"ModelConditionID":model_condition_id})
+	#metadatadf.set_index("SequencingID", inplace=True)
 	# Create an upload file for the human and virus genes
 	for df_output_name, df_output_indexes in df_outputs.items():
 		globals()[thisdfname + df_output_name] = metadatadf.join(thisdf.iloc[:, df_output_indexes])
+		globals()[thisdfname + df_output_name].set_index(["ModelConditionID","IsDefaultEntryForMC"], inplace=True, verify_integrity=True)
 		globals()[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=False)
 		upload_files.append(UploadedFile(name=thisdfname + df_output_name, local_path=thisdfname + df_output_name+".parquet", format=LocalFormat.PARQUET_TABLE))
-
+OmicsExpressionTranscriptTPMLogp1_MC = globals("OmicsExpressionTranscriptTPMLogp1_MC_HumanAllGenes")
+OmicsExpressionTranscriptTPMLogp1_Model = OmicsExpressionTranscriptTPMLogp1_MC.loc[OmicsExpressionTranscriptTPMLogp1_MC['isDefaultEntryForModel'] == "Yes"]
 tc = create_taiga_client_v3()
-tc.update_dataset(permaname=release_date, reason="Add transcript level output files from new RNA-seq pipeline", additions=upload_files)
+tc.update_dataset(permaname=release_date, reason="Add transcript level output files from RNA-seq pipeline", additions=upload_files)
 #tc.create_dataset(name="test_all_rna", description="dryrun", files=upload_files)
 
 
