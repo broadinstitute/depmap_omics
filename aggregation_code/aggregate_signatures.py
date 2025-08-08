@@ -25,32 +25,38 @@ release_date = args.release_permaname # Permaname to use for release
 terra_samples = pd.read_table(terra_table)
 samples_to_process_all = pd.read_csv(sample_metadata)
 
-samples_to_process = samples_to_process_all.loc[(samples_to_process_all["datatype"] == "wgs") & (samples_to_process_all["is_default_entry"] == True)]
-samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="sequencing_id", how="inner")
+samples_to_process = samples_to_process_all.loc[(samples_to_process_all["DataType"] == "wgs")]
+samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="SequencingID", how="inner")
 
-tc = create_taiga_client_v3()
+model_cds_dict = dict(zip(samples["SequencingID"],samples["ModelID"]))
+mc_cds_dict = dict(zip(samples["SequencingID"],samples["ModelConditionID"]))
+is_default_cds_dict_mc = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForMC"]))
+is_default_cds_dict_model = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForModel"]))
 
 bigsigtable = pd.DataFrame()
 
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
-	print(sample_id)
-	if pd.notna(sample_data["mutational_sig_row"]):
-		df = pd.read_csv(sample_data["mutational_sig_row"],)
-		df['model_id'] = sample_data["model_id"]
-		bigsigtable = pd.concat([bigsigtable, df], axis=0)
+	print(sample_key)
+	if pd.notna(sample_data["mutational_sig_row_new"]):
+		df = pd.read_csv(sample_data["mutational_sig_row_new"])
+		df = df.iloc[:,1:]
+		df['SequencingID'] = sample_key
+		bigsigtable = pd.concat([bigsigtable, df])
 	else:
 		raise ValueError(sample_key + " does not have signature output")
-
-bigsigtable.rename(columns={"Unnamed: 0": "sequencing_id"}, inplace=True)
-#bigsigtable.drop(columns=["max","max_id","max_norm", "sequencing_id"], inplace=True)
 bigsigtable.columns = [
     col.split("_")[0] if col.startswith("SBS") else col
     for col in bigsigtable.columns
 ]
-bigsigtable = bigsigtable.rename(columns={"model_id": "ModelID"})
-#bigsigtable = bigsigtable.groupby(["ModelID"]).mean()
-bigsigtable.to_csv("/localstuff/MolecularSignatureMatrix.csv", index=True)
+
+bigsigtable.loc[:,'ModelID'] = bigsigtable['SequencingID'].map(model_cds_dict)
+bigsigtable.loc[:,'IsDefaultEntryForModel'] = bigsigtable['SequencingID'].map(is_default_cds_dict_model)
+bigsigtable.loc[:,'ModelConditionID'] = bigsigtable['SequencingID'].map(mc_cds_dict)
+bigsigtable.loc[:,'IsDefaultEntryForMC'] = bigsigtable['SequencingID'].map(is_default_cds_dict_mc)
+id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
+bigsigtable = bigsigtable[id_columns + [col for col in bigsigtable.columns if col not in id_columns]]
+bigsigtable.to_parquet("OmicsMolecularSignatureMatrix", index=False)
 tc = create_taiga_client_v3()
 uploadfiles = []
 #uploadfiles.append(UploadedFile(name="MolecularSignatureMatrix",local_path="/localstuff/MolecularSignatureMatrix.csv", format=LocalFormat.CSV_MATRIX))

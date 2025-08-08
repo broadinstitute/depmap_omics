@@ -117,7 +117,7 @@ selcols = id_columns + [
 'DiscordantMates'
 ]
 fusion_filtered = fusion_grouped_by_sample_and_genes[selcols]
-fusion_filtered.to_parquet("OmicsFusionFiltered.parquet", index=True)
+fusion_filtered.to_parquet("OmicsFusionFiltered.parquet", index=False)
 upload_files = []
 
 bigfusiontable.rename(columns={"gene1_withid":"gene1(ENS ID)", "gene2_withid":"gene2(ENS ID)"}, inplace=True)
