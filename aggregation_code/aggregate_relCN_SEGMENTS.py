@@ -37,16 +37,19 @@ mc_cds_dict = dict(zip(samples["SequencingID"],samples["ModelConditionID"]))
 is_default_cds_dict_mc = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForMC"]))
 
 bigsegmentstable = pd.DataFrame()
-
+id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
 	model_id = sample_data["ModelID"]
 	model_condition_id = sample_data["ModelConditionID"]
+	is_default_entry_model = sample_data["IsDefaultEntryForModel"]
 	is_default_entry_mc = sample_data["IsDefaultEntryForMC"]
 	print(sample_id)
 	if pd.notna(sample_data[relcn_column]):
 		df = pd.read_table(sample_data[relcn_column])
+		df['SequencingID'] = sample_key
 		df['ModelID'] = model_id
+		df['IsDefaultEntryForModel'] = is_default_entry_model
 		df['ModelConditionID'] = model_condition_id
 		df['IsDefaultEntryForMC'] = is_default_entry_mc
 		bigsegmentstable = pd.concat([bigsegmentstable, df], ignore_index=True)
@@ -56,6 +59,7 @@ for sample_id, sample_data in list(samples.iterrows()):
 upload_files = []
 bigsegmentstable['SEGMENT_COPY_NUMBER'] = np.exp2(bigsegmentstable['LOG2_COPY_RATIO_POSTERIOR_50'])
 bigsegmentstable = bigsegmentstable.drop(columns=['LOG2_COPY_RATIO_POSTERIOR_50']) 
+bigsegmentstable = bigsegmentstable[id_columns + [col for col in bigsegmentstable.columns if col not in id_columns]]
 bigsegmentstable.to_parquet("OmicsCNSegments_MC_WGS.parquet",engine="pyarrow",  index=True)
 
 upload_files.append(UploadedFile(name="OmicsCNSegments_MC_WGS", local_path="OmicsCNSegments_MC_WGS.parquet", format=LocalFormat.PARQUET_TABLE))

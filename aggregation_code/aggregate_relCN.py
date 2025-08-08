@@ -61,7 +61,7 @@ is_default_cds_dict_mc = dict(zip(samples["SequencingID"],samples["IsDefaultEntr
 is_default_cds_dict_model = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForModel"]))
 
 df_all_relcns = pd.DataFrame()
-
+id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
 # Establish the order of genes in output files (by alphabetical order) by anchoring on the first sample
 geneorder = pd.read_table(samples.loc[0,relcn_column],header=None, sep="\t", names=["chr","start", "end", "ensid", "genelength", "cnfull", "nbins", "relcn_gene"])
 geneorder = geneorder["ensid"].sort_values().reset_index(drop=True)
@@ -102,23 +102,20 @@ df_all_relcns_cp["hgnc_name"] = hgnc_names
 df_all_relcns_cp.set_index("hgnc_name", inplace=True)
 df_all_relcns_cp = df_all_relcns_cp.drop(['GeneName'], axis = 1)
 df_all_relcns_cp = df_all_relcns_cp.T
+SequencingID = df_all_relcns_cp.index.to_series()
 ModelConditionID = df_all_relcns_cp.index.map(mc_cds_dict)
 ModelID = df_all_relcns_cp.index.map(model_cds_dict)
-isDefaultEntryMC = df_all_relcns_cp.index.map(is_default_cds_dict_mc)
-isDefaultEntryModel = df_all_relcns_cp.index.map(is_default_cds_dict_model)
-df_all_relcns_cp.loc[:,'ModelConditionID'] = ModelConditionID
-df_all_relcns_cp.loc[:,'IsDefaultEntryForMC'] = isDefaultEntryMC
-df_all_relcns_cp.set_index(["ModelConditionID","IsDefaultEntryForMC"], inplace=True, verify_integrity=True)
-df_all_relcns_cp.to_parquet("OmicsCNGeneMC_WGS.parquet",engine="pyarrow",  index=True)
-
-upload_files.append(UploadedFile(name="OmicsCNGeneMC_WGS", local_path="OmicsCNGeneMC_WGS.parquet", format=LocalFormat.PARQUET_TABLE))
-# This is for model level data. Select only the default entry for each model (isDefaultEntry =- True)
+isDefaultEntryForMC = df_all_relcns_cp.index.map(is_default_cds_dict_mc)
+isDefaultEntryForModel = df_all_relcns_cp.index.map(is_default_cds_dict_model)
+df_all_relcns_cp.loc[:,'SequencingID'] = SequencingID
 df_all_relcns_cp.loc[:,'ModelID'] = ModelID
-df_all_relcns_cp.loc[:,'IsDefaultEntryForModel'] = isDefaultEntryModel
-df_all_relcns_cp_primary = df_all_relcns_cp.loc[df_all_relcns_cp['IsDefaultEntryForModel'] == "Yes"]
-df_all_relcns_cp_primary.set_index(["ModelID","IsDefaultEntryForModel"], inplace=True, verify_integrity=True)
-df_all_relcns_cp_primary.to_parquet("OmicsCNGeneModel_WGS.parquet", engine="pyarrow", index=True)
-upload_files.append(UploadedFile(name="OmicsCNGeneModel_WGS", local_path="OmicsCNGeneModel_WGS.parquet", format=LocalFormat.PARQUET_TABLE))
+df_all_relcns_cp.loc[:,'IsDefaultEntryForModel'] = isDefaultEntryForModel
+df_all_relcns_cp.loc[:,'ModelConditionID'] = ModelConditionID
+df_all_relcns_cp.loc[:,'IsDefaultEntryForMC'] = isDefaultEntryForMC
+df_all_relcns_cp = df_all_relcns_cp[id_columns + [col for col in df_all_relcns_cp.columns if col not in id_columns]]
+df_all_relcns_cp.to_parquet("OmicsCNGeneWGS.parquet",engine="pyarrow",  index=True)
+
+upload_files.append(UploadedFile(name="OmicsCNGeneMCWGS", local_path="OmicsCNGeneWGS.parquet", format=LocalFormat.PARQUET_TABLE))
 
 tc = create_taiga_client_v3()
 tc.update_dataset(permaname=release_date, reason="CN aggregated table", additions=upload_files)

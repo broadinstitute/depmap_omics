@@ -54,7 +54,7 @@ hgnc_gene_biotype = dict(zip(hgnc_table["hugo_entrez"], hgnc_table["locus_group"
 
 sample_labels = []
 bigfusiontable = pd.DataFrame()
-
+id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
 	print(sample_id)
@@ -64,7 +64,7 @@ for sample_id, sample_data in list(samples.iterrows()):
 		fusiondf = pd.read_table(sample_data["fusions"])
 		# Use STAR read output to get total reads for normalization later
 		if fusiondf.shape[0] > 0:
-			#fusiondf["sample_id"] = sample_key
+			fusiondf["SequencingID"] = sample_key
 			fusiondf["ModelID"] = sample_data["ModelID"]
 			fusiondf["ModelConditionID"] = sample_data["ModelConditionID"]
 			fusiondf["CellLine"] = sample_data["StrippedCellLineName"]
@@ -73,6 +73,7 @@ for sample_id, sample_data in list(samples.iterrows()):
 			fusiondf["IsDefaultEntryForModel"] = sample_data["IsDefaultEntryForModel"]
 			fusiondf["IsDefaultEntryForMC"] = sample_data["IsDefaultEntryForMC"]
 			fusiondf["TotalReadsInSample"] = total_reads_for_sample
+			fusiondf = fusiondf[id_columns + [col for col in fusiondf.columns if col not in id_columns]]
 			bigfusiontable = pd.concat([bigfusiontable, fusiondf], ignore_index=True)
 		else:
 			print("No fusions for " + sample_key)
@@ -91,8 +92,8 @@ bigfusiontable['CanonicalFusionName'] = bigfusiontable['CanonicalFusionName'].re
 bigfusiontable['gene1_withid'] = bigfusiontable['gene1_clean'] + " (" + bigfusiontable["gene_id1"] + ")"
 bigfusiontable['gene2_withid'] = bigfusiontable['gene2_clean'] + " (" + bigfusiontable["gene_id2"] + ")"
 bigfusiontable['TotalFusionCoverage'] = bigfusiontable['coverage1'] + bigfusiontable['coverage2']
-bigfusiontable_defaults_only = bigfusiontable.loc[(bigfusiontable['IsDefaultEntryForModel'] == "Yes") & ((bigfusiontable['confidence'] == "high") | (bigfusiontable['confidence'] == "medium")) & ((bigfusiontable['site1'] != 'intergenic') | (bigfusiontable['site2'] != 'intergenic'))] 
-fusion_grouped_by_sample_and_genes = bigfusiontable_defaults_only.groupby(['ModelID', 'ModelConditionID', 'CanonicalFusionName', 'gene1_clean', 'gene2_clean', 'gene1_withid', 'gene2_withid','TotalReadsInSample']).apply(
+bigfusiontable_filtered = bigfusiontable.loc[((bigfusiontable['confidence'] == "high") | (bigfusiontable['confidence'] == "medium")) & ((bigfusiontable['site1'] != 'intergenic') | (bigfusiontable['site2'] != 'intergenic'))] 
+fusion_grouped_by_sample_and_genes = bigfusiontable_filtered.groupby(id_columns + ['CanonicalFusionName', 'gene1_clean', 'gene2_clean', 'gene1_withid', 'gene2_withid','TotalReadsInSample']).apply(
     lambda g: pd.Series({
 		'SplitReads1' : g['split_reads1'].sum(),
 		'SplitReads2' : g['split_reads2'].sum(),
@@ -103,7 +104,7 @@ fusion_grouped_by_sample_and_genes = bigfusiontable_defaults_only.groupby(['Mode
 fusion_grouped_by_sample_and_genes['FFPM'] = 1e6*fusion_grouped_by_sample_and_genes["TotalReadsSupportingFusion"]/fusion_grouped_by_sample_and_genes["TotalReadsInSample"]
 fusion_grouped_by_sample_and_genes.rename(columns={"gene1_withid":"Gene1", "gene2_withid": "Gene2", "strand1(gene/fusion)":"Strand1", "strand2(gene/fusion)":"Strand2", "reading_frame":"ReadingFrame"}, inplace=True)
 
-selcols = [
+selcols = id_columns + [
 'CanonicalFusionName',
 'Gene1',
 'Gene2',
@@ -115,16 +116,12 @@ selcols = [
 'SplitReads2',
 'DiscordantMates'
 ]
-fusion_by_model_df = fusion_grouped_by_sample_and_genes[selcols]
-fusion_by_model_df.to_parquet("OmicsFusionFiltered.parquet", index=True)
+fusion_filtered = fusion_grouped_by_sample_and_genes[selcols]
+fusion_filtered.to_parquet("OmicsFusionFiltered.parquet", index=True)
 upload_files = []
 
 bigfusiontable.rename(columns={"gene1_withid":"gene1(ENS ID)", "gene2_withid":"gene2(ENS ID)"}, inplace=True)
-fusion_output_columns = ['ModelID',  
-						 'IsDefaultEntryForModel',
-						 'ModelConditionID', 
-						 'IsDefaultEntryForMC',
-						 'CanonicalFusionName', 'gene1(ENS ID)','gene2(ENS ID)', 
+fusion_output_columns = id_columns + ['CanonicalFusionName', 'gene1(ENS ID)','gene2(ENS ID)', 
 						 'TotalReadsInSample', 
 						 'TotalReadsSupportingFusion',  'FFPM', 
 						 'confidence','split_reads1','split_reads2', 'discordant_mates', 
@@ -132,7 +129,7 @@ fusion_output_columns = ['ModelID',
 						 'breakpoint1', 'breakpoint2', 'site1', 'site2', 'type', 'coverage1', 'coverage2',
 						 'tags', 'retained_protein_domains',
 						 'direction1', 'direction2']
-upload_files.append(UploadedFile(name="OmicsFusionFiltered", local_path="OmicsFusionFiltered.parquet", format=LocalFormat.PARQUET_TABLE))
+upload_files.append(UploadedFile(name="OmicsFusionFiltered", local_path="aggregate_relCN_SEGMENTS.py.parquet", format=LocalFormat.PARQUET_TABLE))
 bigfusiontable[fusion_output_columns].to_parquet("OmicsFusionFiltered_supplementary.parquet", engine="pyarrow", index=False) 
 upload_files.append(UploadedFile(name="OmicsFusionFilteredSupplementary", local_path="OmicsFusionFiltered_supplementary.parquet", format=LocalFormat.PARQUET_TABLE))
 
