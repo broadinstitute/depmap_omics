@@ -59,11 +59,6 @@ hgnc_table["hugo_entrez"] = (
 
 ens_gene_biotype = dict(zip(hgnc_table["ensembl_gene_id"], hgnc_table["locus_group"]))
 
-tpm_dict_human_all_genes = {}
-tpm_dict_virus = {}
-
-counts_dict_human_all_genes = {}
-counts_dict_virus = {}
 mc_cds_dict = dict(zip(samples["SequencingID"],samples["ModelConditionID"]))
 model_cds_dict = dict(zip(samples["SequencingID"],samples["ModelID"]))
 is_default_cds_dict_mc = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForMC"]))
@@ -76,6 +71,7 @@ df_all_lengths = pd.DataFrame()
 geneorder = pd.read_table(samples.loc[0,quant_trancripts_column]).sort_values(by="Name")["Name"].reset_index(drop=True)
 human_genes_all_indexes = geneorder[geneorder.str.startswith("ENST")].index
 virus_genes_all_indexes = geneorder[~geneorder.str.startswith("ENST")].index
+
 
 all_tpms_list = []
 all_counts_list = []
@@ -116,38 +112,48 @@ df_all_lengths_cp = df_all_lengths.copy()
 upload_files = []
 
 df_dict = {
-	"OmicsExpressionTranscriptTPMLogp1_MC_": df_all_tpms_cp,
-	"OmicsExpressionTranscriptExpectedCount_MC_": df_all_counts_cp,
-	"OmicsExpressionTranscriptEffectiveLength_MC_": df_all_lengths_cp,
+	"OmicsExpressionTranscriptTPMLogp1": df_all_tpms_cp,
+	"OmicsExpressionTranscriptExpectedCount": df_all_counts_cp,
+	"OmicsExpressionTranscriptEffectiveLength": df_all_lengths_cp,
 }
 df_outputs = {
 	"HumanAllGenes"+stranded_suffix:human_genes_all_indexes,
 	"VirusAllGenes"+stranded_suffix:virus_genes_all_indexes
 }
+all_tables = {}
+
 for thisdfname, thisdf in df_dict.items():
+	SequencingID = thisdf.index.to_series()
+	ModelConditionID = thisdf.index.map(mc_cds_dict)
+	ModelID = thisdf.index.map(model_cds_dict)
+	isDefaultEntryMC = thisdf.index.map(is_default_cds_dict_mc)
+	isDefaultEntryModel = thisdf.index.map(is_default_cds_dict_model)
+	id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
 	thisdf["TranscriptID"] = geneorder
 	print(thisdfname)
 	thisdf.set_index("TranscriptID", inplace=True)
 	thisdf = thisdf.drop(['Name'], axis = 1)
-	if thisdfname == "OmicsExpressionTranscriptTPMLogp1_MC_"+stranded_suffix:
+	if thisdfname == "OmicsExpressionTranscriptTPMLogp1"+stranded_suffix:
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
 	model_condition_id = thisdf.index.map(mc_cds_dict)
 	model_id = thisdf.index.map(model_cds_dict)
 	is_default_entry_mc = thisdf.index.map(is_default_cds_dict_mc)
 	is_default_entry_model = thisdf.index.map(is_default_cds_dict_model)
-	metadatadf = pd.DataFrame({"SequencingID":thisdf.index,  "IsDefaultEntryForMC":is_default_entry_mc, "IsDefaultEntryForModel":is_default_entry_model, "ModelID":model_id,"ModelConditionID":model_condition_id})
-	#metadatadf.set_index("SequencingID", inplace=True)
 	# Create an upload file for the human and virus genes
 	for df_output_name, df_output_indexes in df_outputs.items():
-		globals()[thisdfname + df_output_name] = metadatadf.join(thisdf.iloc[:, df_output_indexes])
-		globals()[thisdfname + df_output_name].set_index(["ModelConditionID","IsDefaultEntryForMC"], inplace=True, verify_integrity=True)
-		globals()[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=False)
+		all_tables[thisdfname + df_output_name] = thisdf.iloc[:, df_output_indexes].copy()
+		all_tables[thisdfname + df_output_name].loc[:,'SequencingID'] = SequencingID
+		all_tables[thisdfname + df_output_name].loc[:,'ModelID'] = ModelID
+		all_tables[thisdfname + df_output_name].loc[:,'IsDefaultEntryForModel'] = isDefaultEntryModel
+		all_tables[thisdfname + df_output_name].loc[:,'ModelConditionID'] = ModelConditionID
+		all_tables[thisdfname + df_output_name].loc[:,'IsDefaultEntryForMC'] = isDefaultEntryMC
+		all_tables[thisdfname + df_output_name] = all_tables[thisdfname + df_output_name][id_columns + [col for col in all_tables[thisdfname + df_output_name].columns if col not in id_columns]]
+		all_tables[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=False)
 		upload_files.append(UploadedFile(name=thisdfname + df_output_name, local_path=thisdfname + df_output_name+".parquet", format=LocalFormat.PARQUET_TABLE))
-OmicsExpressionTranscriptTPMLogp1_MC = globals("OmicsExpressionTranscriptTPMLogp1_MC_HumanAllGenes")
-OmicsExpressionTranscriptTPMLogp1_Model = OmicsExpressionTranscriptTPMLogp1_MC.loc[OmicsExpressionTranscriptTPMLogp1_MC['isDefaultEntryForModel'] == "Yes"]
-tc = create_taiga_client_v3()
-tc.update_dataset(permaname=release_date, reason="Add transcript level output files from RNA-seq pipeline", additions=upload_files)
+
+tc1 = create_taiga_client_v3()
+tc1.update_dataset(permaname=release_date, reason="Add transcript level output files from RNA-seq pipeline", additions=upload_files)
 #tc.create_dataset(name="test_all_rna", description="dryrun", files=upload_files)
 
 

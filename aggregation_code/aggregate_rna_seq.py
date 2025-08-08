@@ -18,7 +18,11 @@ parser.add_argument("--terra_table", type=str, required=True, help='Terra table 
 parser.add_argument("--sample_metadata", type=str, required=True, help='Sample metadata file to use')
 parser.add_argument("--release_permaname", type=str, required=True, help='Permaname to use for release')
 parser.add_argument("--stranded", type=str2bool, default=False, help="Whether the data is stranded")
-
+#Test with this
+#terra_table="/localstuff/terra_table_rnaseq_25Q3.tsv"
+#sample_metadata="/localstuff/internal_release_date_2025-09-01.OmicsMappingByModelAndModelCondition.csv"
+#release_permaname="test-all-rna-c62c"
+#stranded=False
 args = parser.parse_args()
 terra_table = args.terra_table # test with terra_table="/localstuff/terra_data_table_rnaseq_25q2_FINAL.tsv"
 sample_metadata = args.sample_metadata # test with sample_metadata="/localstuff/2025-05-01-master-mapping-table_v4-internal-release-date-2025-05-01-master-mapping-table.csv"
@@ -38,6 +42,14 @@ terra_samples['quant_genes_auto'].fillna(terra_samples['quant_genes_iu'], inplac
 samples_to_process_all = pd.read_csv(sample_metadata)
 
 samples_to_process = samples_to_process_all.loc[(samples_to_process_all["DataType"] == "rna")]
+samples_to_process.loc[
+    samples_to_process['IsDefaultEntryForModel'].str.startswith("No_", na=False),
+    'IsDefaultEntryForModel'
+] = "No"
+samples_to_process.loc[
+    samples_to_process['IsDefaultEntryForMC'].str.startswith("No_", na=False),
+    'IsDefaultEntryForMC'
+] = "No"
 samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="SequencingID", how="inner")
 
 tc = create_taiga_client_v3()
@@ -137,10 +149,10 @@ df_all_raw_counts_cp = df_all_raw_counts.copy()
 upload_files = []
 
 df_dict = {
-	"OmicsExpressionTPMLogp1_MC_": df_all_tpms_cp,
-	"OmicsExpressionExpectedCount_MC_": df_all_counts_cp,
-	"OmicsExpressionEffectiveLength_MC_": df_all_lengths_cp,
-	"OmicsExpressionRawReadCount_MC_": df_all_raw_counts_cp
+	"OmicsExpressionTPMLogp1": df_all_tpms_cp,
+	"OmicsExpressionExpectedCount": df_all_counts_cp,
+	"OmicsExpressionEffectiveLength": df_all_lengths_cp,
+	"OmicsExpressionRawReadCount": df_all_raw_counts_cp
 }
 df_outputs = {
 	"HumanAllGenes"+stranded_suffix:human_genes_all_indexes,
@@ -157,35 +169,23 @@ for thisdfname, thisdf in df_dict.items():
 	if thisdfname == "OmicsExpressionTPMLogp1_MC_":
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
+	SequencingID = thisdf.index.to_series()
 	ModelConditionID = thisdf.index.map(mc_cds_dict)
 	ModelID = thisdf.index.map(model_cds_dict)
 	isDefaultEntryMC = thisdf.index.map(is_default_cds_dict_mc)
 	isDefaultEntryModel = thisdf.index.map(is_default_cds_dict_model)
+	id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
 	#metadatadf.set_index("seqid", inplace=True)
 	# Create upload files for the human and virus genes, for counts, TPMs, effective lengths and raw counts
 	for df_output_name, df_output_indexes in df_outputs.items():
 		all_tables[thisdfname + df_output_name] = thisdf.iloc[:, df_output_indexes].copy()
+		all_tables[thisdfname + df_output_name].loc[:,'SequencingID'] = SequencingID
+		all_tables[thisdfname + df_output_name].loc[:,'ModelID'] = ModelID
+		all_tables[thisdfname + df_output_name].loc[:,'IsDefaultEntryForModel'] = isDefaultEntryModel
 		all_tables[thisdfname + df_output_name].loc[:,'ModelConditionID'] = ModelConditionID
 		all_tables[thisdfname + df_output_name].loc[:,'IsDefaultEntryForMC'] = isDefaultEntryMC
-		all_tables[thisdfname + df_output_name].set_index(["ModelConditionID","IsDefaultEntryForMC"], inplace=True, verify_integrity=True)
-		all_tables[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=True)
+		all_tables[thisdfname + df_output_name] = all_tables[thisdfname + df_output_name][id_columns + [col for col in all_tables[thisdfname + df_output_name].columns if col not in id_columns]]
+		all_tables[thisdfname + df_output_name].to_parquet(thisdfname + df_output_name+".parquet", engine="pyarrow", index=False)
 		upload_files.append(UploadedFile(name=thisdfname + df_output_name, local_path=thisdfname + df_output_name+".parquet", format=LocalFormat.PARQUET_TABLE))
-# This is for model level data. Select only the default entry for each model (isDefaultEntry == "Yes")
-OmicsExpressionTPMLogp1_primary = all_tables['OmicsExpressionTPMLogp1_MC_HumanProteinCodingGenes'+stranded_suffix]
-OmicsExpressionTPMLogp1_primary.loc[:,'ModelID'] = ModelID 
-OmicsExpressionTPMLogp1_primary.loc[:,'IsDefaultEntryForModel'] = isDefaultEntryModel
-OmicsExpressionTPMLogp1_primary = OmicsExpressionTPMLogp1_primary.loc[OmicsExpressionTPMLogp1_primary['IsDefaultEntryForModel'] == "Yes"]
-OmicsExpressionTPMLogp1_primary.set_index(["ModelID","IsDefaultEntryForModel"], inplace=True, verify_integrity=True)
-OmicsExpressionTPMLogp1_primary.to_parquet("OmicsExpressionTPMLogp1_Model.parquet", index=True)
-upload_files.append(UploadedFile(name="OmicsExpressionProteinCodingGenesTPMLogp1_Model"+stranded_suffix, local_path="OmicsExpressionTPMLogp1_Model.parquet", format=LocalFormat.PARQUET_TABLE))
-OmicsExpressionTPMLogp1_virus = all_tables['OmicsExpressionTPMLogp1_MC_VirusAllGenes'+stranded_suffix]
-OmicsExpressionTPMLogp1_virus.loc[:,'ModelID'] = ModelID
-OmicsExpressionTPMLogp1_virus.loc[:,'IsDefaultEntryForModel'] = isDefaultEntryModel
-OmicsExpressionTPMLogp1_virus = OmicsExpressionTPMLogp1_virus.loc[OmicsExpressionTPMLogp1_virus['IsDefaultEntryForModel'] == "Yes"]
-OmicsExpressionTPMLogp1_virus.set_index(["ModelID","IsDefaultEntryForModel"], inplace=True, verify_integrity=True)
-OmicsExpressionTPMLogp1_virus.to_parquet("OmicsExpressionTPMLogp1Virus_Model.parquet", index=True)
-upload_files.append(UploadedFile(name="OmicsExpressionTPMLogp1Virus_Model"+stranded_suffix, local_path="OmicsExpressionTPMLogp1Virus_Model.parquet", format=LocalFormat.PARQUET_TABLE))
-
-
-tc = create_taiga_client_v3()
-tc.update_dataset(permaname=release_date, reason="All output files from RNA-seq pipeline", additions=upload_files)
+tc1 = create_taiga_client_v3()
+tc1.update_dataset(permaname=release_date, reason="All output files from RNA-seq pipeline", additions=upload_files)
