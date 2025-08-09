@@ -108,7 +108,6 @@ selcols = id_columns + [
 'CanonicalFusionName',
 'Gene1',
 'Gene2',
-'ModelID',
 'TotalReadsSupportingFusion',
 'TotalFusionCoverage',
 'FFPM',
