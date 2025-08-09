@@ -128,10 +128,10 @@ fusion_output_columns = id_columns + ['CanonicalFusionName', 'gene1(ENS ID)','ge
 						 'breakpoint1', 'breakpoint2', 'site1', 'site2', 'type', 'coverage1', 'coverage2',
 						 'tags', 'retained_protein_domains',
 						 'direction1', 'direction2']
-upload_files.append(UploadedFile(name="OmicsFusionFiltered", local_path="aggregate_relCN_SEGMENTS.py.parquet", format=LocalFormat.PARQUET_TABLE))
+upload_files.append(UploadedFile(name="OmicsFusionFiltered", local_path="OmicsFusionFiltered.parquet", format=LocalFormat.PARQUET_TABLE))
 bigfusiontable[fusion_output_columns].to_parquet("OmicsFusionFiltered_supplementary.parquet", engine="pyarrow", index=False) 
 upload_files.append(UploadedFile(name="OmicsFusionFilteredSupplementary", local_path="OmicsFusionFiltered_supplementary.parquet", format=LocalFormat.PARQUET_TABLE))
 
 tc = create_taiga_client_v3()
-tc.update_dataset(permaname=release_date, reason="Changed column names to CamelCase", additions=upload_files)
+tc.update_dataset(permaname=release_date, reason="", additions=upload_files)
 

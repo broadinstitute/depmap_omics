@@ -1,6 +1,7 @@
 inputvcf=$1
 sampleid=$2
 hg38_mapp=$3
+cds_bed=$4
 awk '{ if ($4 > 0.99) print }' ${hg38_mapp} > ${hg38_mapp}.high_map.bed
 echo ",Hugo_Symbol,Tumor_Sample_Barcode,Chromosome,Start_Position,Reference_Allele,Tumor_Seq_Allele2" > header.csv
 bcftools +split-vep -f '%CHROM\t%POS\t%REF\t%ALT\t%DP\t[%AD]\t%AF\t%RS\t%gnomADe_AF\t%gnomADg_AF\n' ${inputvcf} | \
@@ -28,10 +29,22 @@ awk -vsampleid=${sampleid} '{
 	}
 }' > ${sampleid}.somatic_maf_noheader.csv
 
+# Prep format to call signatureanalyzer - comma separated maf format
 cat header.csv ${sampleid}.somatic_maf_noheader.csv > ${sampleid}.somatic_maf.csv
 
+# TMB whole genome
 mappable_genome_size=$(awk 'BEGIN{sum_bases=0} {sum_bases += ($3 - $2)} END{print sum_bases}' "${hg38_mapp}.high_map.bed")
 n_mutations=$(wc -l < "${sampleid}.somatic_maf_noheader.csv")
 tmb=$(awk -v n_mutations="$n_mutations" -v mappable_genome_size="$mappable_genome_size" \
     'BEGIN {tmb = 1e6 * n_mutations / mappable_genome_size; print tmb}')
-echo "$tmb"
+
+# TMB CDS only
+awk -F"," '{ print "chr"$4"\t"$5"\t"$5}' ${sampleid}.somatic_maf_noheader.csv > ${sampleid}.somatic_maf.bed
+n_mutations_cds=`bedtools intersect -a ${sampleid}.somatic_maf.bed -b ${cds_bed} -u | wc -l`
+cds_size=$(awk 'BEGIN{sum=0} {sum += ($3 - $2)} END {print sum}' "${cds_bed}")
+tmb_cds=$(awk -v n_mutations="$n_mutations" -v cds_size="$cds_size" 'BEGIN {tmb = 1e6 * n_mutations / cds_size; print tmb}')
+
+echo ${tmb} > tmb.out
+echo ${tmb_cds} > tmb_cds.out
+echo ${n_mutations} > n_mutations.out
+echo ${n_mutations_cds} > n_mutations_cds.out
