@@ -37,7 +37,7 @@ bigsigtable = pd.DataFrame()
 
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
-	print(sample_key)
+	print(sample_id)
 	if pd.notna(sample_data["mutational_sig_row_new"]):
 		df = pd.read_csv(sample_data["mutational_sig_row_new"])
 		df = df.iloc[:,1:]
@@ -63,7 +63,7 @@ uploadfiles = []
 etiologies = sa.context.signature_composite
 etiologies_df = pd.DataFrame.from_dict(etiologies, orient='index').reset_index()
 etiologies_df.columns = ['Signature_ID', 'label']
-etiologies_df.to_csv("/localstuff/MolecularSignatureEtiologies.csv", index=False)
+etiologies_df.to_csv("MolecularSignatureEtiologies.csv", index=False)
 #uploadfiles.append(UploadedFile(name="MolecularSignatureEtiologies", local_path="/localstuff/MolecularSignatureEtiologies.csv", format=LocalFormat.CSV_TABLE))
 #tc.update_dataset(permaname=release_date, reason="25Q2 molecular signature matrix", additions=uploadfiles)
 

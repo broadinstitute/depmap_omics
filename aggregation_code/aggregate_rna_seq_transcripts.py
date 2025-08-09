@@ -40,25 +40,6 @@ samples_to_process_all = pd.read_csv(sample_metadata)
 samples_to_process = samples_to_process_all.loc[(samples_to_process_all["DataType"] == "rna")]
 samples = pd.merge(terra_samples, samples_to_process, left_on ="entity:sample_id", right_on="SequencingID", how="inner")
 
-tc = create_taiga_client_v3()
-
-hgnc_table = tc.get("hgnc-gene-table-e250.4/hgnc_complete_set")
-hgnc_table = hgnc_table[
-		(~hgnc_table["entrez_id"].isna())
-	]
-hgnc_table = hgnc_table[
-		(~hgnc_table["symbol"].isna())
-	]
-hgnc_table["hugo_entrez"] = (
-		hgnc_table["symbol"].astype(str)
-		+ " ("
-		+ hgnc_table["entrez_id"].astype("Int64").astype(str)
-		+ ")"
-	)
-
-
-ens_gene_biotype = dict(zip(hgnc_table["ensembl_gene_id"], hgnc_table["locus_group"]))
-
 mc_cds_dict = dict(zip(samples["SequencingID"],samples["ModelConditionID"]))
 model_cds_dict = dict(zip(samples["SequencingID"],samples["ModelID"]))
 is_default_cds_dict_mc = dict(zip(samples["SequencingID"],samples["IsDefaultEntryForMC"]))
@@ -123,23 +104,17 @@ df_outputs = {
 all_tables = {}
 
 for thisdfname, thisdf in df_dict.items():
+	print(thisdfname)
+	thisdf = thisdf.set_index('Name')
+	if thisdfname == "OmicsExpressionTranscriptTPMLogp1"+stranded_suffix:
+		thisdf = np.log2(thisdf + 1)
+	thisdf = thisdf.T
 	SequencingID = thisdf.index.to_series()
 	ModelConditionID = thisdf.index.map(mc_cds_dict)
 	ModelID = thisdf.index.map(model_cds_dict)
 	isDefaultEntryMC = thisdf.index.map(is_default_cds_dict_mc)
 	isDefaultEntryModel = thisdf.index.map(is_default_cds_dict_model)
 	id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
-	thisdf["TranscriptID"] = geneorder
-	print(thisdfname)
-	thisdf.set_index("TranscriptID", inplace=True)
-	thisdf = thisdf.drop(['Name'], axis = 1)
-	if thisdfname == "OmicsExpressionTranscriptTPMLogp1"+stranded_suffix:
-		thisdf = np.log2(thisdf + 1)
-	thisdf = thisdf.T
-	model_condition_id = thisdf.index.map(mc_cds_dict)
-	model_id = thisdf.index.map(model_cds_dict)
-	is_default_entry_mc = thisdf.index.map(is_default_cds_dict_mc)
-	is_default_entry_model = thisdf.index.map(is_default_cds_dict_model)
 	# Create an upload file for the human and virus genes
 	for df_output_name, df_output_indexes in df_outputs.items():
 		all_tables[thisdfname + df_output_name] = thisdf.iloc[:, df_output_indexes].copy()

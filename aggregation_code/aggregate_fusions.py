@@ -69,7 +69,7 @@ for sample_id, sample_data in list(samples.iterrows()):
 			fusiondf["ModelConditionID"] = sample_data["ModelConditionID"]
 			fusiondf["CellLine"] = sample_data["StrippedCellLineName"]
 			fusiondf["OncotreeCode"] = sample_data["DepMapCode"]
-			fusiondf["lineage"] = sample_data["Lineage"]
+			fusiondf["Lineage"] = sample_data["Lineage"]
 			fusiondf["IsDefaultEntryForModel"] = sample_data["IsDefaultEntryForModel"]
 			fusiondf["IsDefaultEntryForMC"] = sample_data["IsDefaultEntryForMC"]
 			fusiondf["TotalReadsInSample"] = total_reads_for_sample
