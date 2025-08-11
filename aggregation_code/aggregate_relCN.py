@@ -113,9 +113,9 @@ df_all_relcns_cp.loc[:,'IsDefaultEntryForModel'] = isDefaultEntryForModel
 df_all_relcns_cp.loc[:,'ModelConditionID'] = ModelConditionID
 df_all_relcns_cp.loc[:,'IsDefaultEntryForMC'] = isDefaultEntryForMC
 df_all_relcns_cp = df_all_relcns_cp[id_columns + [col for col in df_all_relcns_cp.columns if col not in id_columns]]
-df_all_relcns_cp.to_parquet("OmicsCNGeneWGS.parquet",engine="pyarrow",  index=True)
+df_all_relcns_cp.to_parquet("OmicsCNGeneWGS.parquet",engine="pyarrow",  index=False)
 
-upload_files.append(UploadedFile(name="OmicsCNGeneMCWGS", local_path="OmicsCNGeneWGS.parquet", format=LocalFormat.PARQUET_TABLE))
+upload_files.append(UploadedFile(name="OmicsCNGeneWGS", local_path="OmicsCNGeneWGS.parquet", format=LocalFormat.PARQUET_TABLE))
 
 tc = create_taiga_client_v3()
 tc.update_dataset(permaname=release_date, reason="CN aggregated table", additions=upload_files)

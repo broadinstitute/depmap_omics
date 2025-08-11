@@ -60,8 +60,8 @@ upload_files = []
 bigsegmentstable['SEGMENT_COPY_NUMBER'] = np.exp2(bigsegmentstable['LOG2_COPY_RATIO_POSTERIOR_50'])
 bigsegmentstable = bigsegmentstable.drop(columns=['LOG2_COPY_RATIO_POSTERIOR_50']) 
 bigsegmentstable = bigsegmentstable[id_columns + [col for col in bigsegmentstable.columns if col not in id_columns]]
-bigsegmentstable.to_parquet("OmicsCNSegments_MC_WGS.parquet",engine="pyarrow",  index=True)
+bigsegmentstable.to_parquet("OmicsCNSegmentsWGS.parquet",engine="pyarrow",  index=False)
 
-upload_files.append(UploadedFile(name="OmicsCNSegments_MC_WGS", local_path="OmicsCNSegments_MC_WGS.parquet", format=LocalFormat.PARQUET_TABLE))
+upload_files.append(UploadedFile(name="OmicsCNSegmentsWGS", local_path="OmicsCNSegmentsWGS.parquet", format=LocalFormat.PARQUET_TABLE))
 tc = create_taiga_client_v3()
 tc.update_dataset(permaname=release_date, reason="CN aggregated table", additions=upload_files)
