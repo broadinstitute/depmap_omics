@@ -106,7 +106,7 @@ all_tables = {}
 for thisdfname, thisdf in df_dict.items():
 	print(thisdfname)
 	thisdf = thisdf.set_index('Name')
-	if thisdfname == "OmicsExpressionTranscriptTPMLogp1"+stranded_suffix:
+	if thisdfname == "OmicsExpressionTranscriptTPMLogp1":
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
 	SequencingID = thisdf.index.to_series()
