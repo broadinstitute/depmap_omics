@@ -166,7 +166,7 @@ for thisdfname, thisdf in df_dict.items():
 	print(thisdfname)
 	thisdf.set_index("hgnc_name", inplace=True)
 	thisdf = thisdf.drop(['Name'], axis = 1)
-	if thisdfname == "OmicsExpressionTPMLogp1_MC_":
+	if thisdfname == "OmicsExpressionTPMLogp1":
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
 	SequencingID = thisdf.index.to_series()
