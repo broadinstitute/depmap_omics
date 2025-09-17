@@ -108,12 +108,15 @@ sample_labels = []
 for sample_id, sample_data in list(samples.iterrows()):
 	sample_key = sample_data["entity:sample_id"]
 	print(sample_key)
-	star_read_counts_df = pd.read_table(sample_data["reads_per_gene"], sep='\t',names=["colname","unstranded_counts","forward_stranded_counts","reverse_stranded_counts"])
-	if star_read_counts_df.shape[0] == 0:
+	star_read_counts_df_raw = pd.read_table(sample_data["reads_per_gene"], sep='\t',names=["colname","unstranded_counts","forward_stranded_counts","reverse_stranded_counts"])
+	if star_read_counts_df_raw.shape[0] == 0:
 		all_raw_counts_list.append(pd.Series(dtype='float64'))
 	else:
-		all_raw_counts_list.append(star_read_counts_df["unstranded_counts"][4:])
-		total_reads_for_sample = pd.Series.sum(star_read_counts_df["unstranded_counts"][4:])
+		star_read_counts_df_raw = star_read_counts_df_raw[4:] # First 4 lines are summaries of ambiguous reads, etc
+		star_read_counts_df_raw.set_index(['colname'], inplace=True)
+		star_read_counts_df = star_read_counts_df_raw.loc[geneorder].reset_index()
+		all_raw_counts_list.append(star_read_counts_df["unstranded_counts"])
+		total_reads_for_sample = pd.Series.sum(star_read_counts_df["unstranded_counts"])
 	if pd.notna(sample_data[quant_genes_column]):
 		df = pd.read_table(sample_data[quant_genes_column]).sort_values(by="Name").reset_index(drop=True)
 		tpms = df["TPM"].values  # Use NumPy arrays for speed
@@ -170,7 +173,7 @@ for thisdfname, thisdf in df_dict.items():
 		thisdf = np.log2(thisdf + 1)
 	thisdf = thisdf.T
 	SequencingID = thisdf.index.to_series()
-	ModelConditionID = thisdf.index.map(mc_cds_dict)
+	ModelConditionID = thisdf.index.map(mc_cds_dict) 
 	ModelID = thisdf.index.map(model_cds_dict)
 	isDefaultEntryMC = thisdf.index.map(is_default_cds_dict_mc)
 	isDefaultEntryModel = thisdf.index.map(is_default_cds_dict_model)

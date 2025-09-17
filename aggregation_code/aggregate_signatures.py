@@ -56,15 +56,13 @@ bigsigtable.loc[:,'ModelConditionID'] = bigsigtable['SequencingID'].map(mc_cds_d
 bigsigtable.loc[:,'IsDefaultEntryForMC'] = bigsigtable['SequencingID'].map(is_default_cds_dict_mc)
 id_columns = ['SequencingID','ModelID','IsDefaultEntryForModel','ModelConditionID','IsDefaultEntryForMC']
 bigsigtable = bigsigtable[id_columns + [col for col in bigsigtable.columns if col not in id_columns]]
-bigsigtable.to_parquet("OmicsMolecularSignatureMatrix", index=False)
+bigsigtable.to_parquet("OmicsMolecularSignatureMatrix.parquet", index=False)
 tc = create_taiga_client_v3()
 uploadfiles = []
-#uploadfiles.append(UploadedFile(name="MolecularSignatureMatrix",local_path="/localstuff/MolecularSignatureMatrix.csv", format=LocalFormat.CSV_MATRIX))
+uploadfiles.append(UploadedFile(name="OmicsMolecularSignatureMatrix",local_path="OmicsMolecularSignatureMatrix.parquet", format=LocalFormat.PARQUET_TABLE))
 etiologies = sa.context.signature_composite
 etiologies_df = pd.DataFrame.from_dict(etiologies, orient='index').reset_index()
 etiologies_df.columns = ['Signature_ID', 'label']
 etiologies_df.to_csv("MolecularSignatureEtiologies.csv", index=False)
-#uploadfiles.append(UploadedFile(name="MolecularSignatureEtiologies", local_path="/localstuff/MolecularSignatureEtiologies.csv", format=LocalFormat.CSV_TABLE))
-#tc.update_dataset(permaname=release_date, reason="25Q2 molecular signature matrix", additions=uploadfiles)
-
-
+uploadfiles.append(UploadedFile(name="MolecularSignatureEtiologies", local_path="MolecularSignatureEtiologies.csv", format=LocalFormat.CSV_TABLE))
+tc.update_dataset(permaname=release_date, reason="molecular signature matrix", additions=uploadfiles)
