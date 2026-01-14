@@ -1043,7 +1043,7 @@ task VariantFiltration {
 
   runtime {
     docker: docker
-    bootDiskSizeGb: "32"
+    bootDiskSizeGb: 32
     memory: select_first([memory,6])+" GB"
     disks: "local-disk "+select_first([disk, 250])+" SSD"
     preemptible: select_first([preemptible_count, 10])
@@ -1107,7 +1107,7 @@ task picard_CleanAfterStar {
 
   runtime {
     docker: docker
-    bootDiskSizeGb: "32"
+    bootDiskSizeGb: 32
     memory: select_first([memory,6])+" GB"
     disks: "local-disk "+select_first([disk, 250])+" SSD"
     preemptible: select_first([preemptible_count, 10])
