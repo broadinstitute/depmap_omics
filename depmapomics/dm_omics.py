@@ -448,11 +448,12 @@ def cnPostProcessing(
     return wessegments, wgssegments
 
 
-async def mutationPostProcessing(
+def mutationPostProcessing(
     wesrefworkspace: str = env_config.WESCNWORKSPACE,
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
     samplesetname: str = constants.SAMPLESETNAME,
     AllSamplesetName: str = "all",
+    AllSamplesetName_wgs: str = "all_25q3",
     taiga_description: str = constants.Mutationsreadme,
     taiga_dataset: str = env_config.TAIGA_MUTATION,
     bed_locations: dict = constants.GUIDESBED,
@@ -485,21 +486,9 @@ async def mutationPostProcessing(
         upload_taiga (bool, optional): whether to upload to taiga. Defaults to False.
     """
 
-    tc = TaigaClient()
-    client = create_taiga_client_v3()
+    print("only saving seqid-leveled matrices")
 
-    # read cds->pr mapping table and construct renaming dictionary
-    # always read latest version
-    print("reading seq -> pr ID mapping table locally")
-    omics_id_mapping_table = pd.read_csv("data/25Q2/omics_profile_to_sequencing_id.csv")
-    renaming_dict = dict(
-        list(
-            zip(
-                omics_id_mapping_table["sequencing_id"],
-                omics_id_mapping_table["profile_id"],
-            )
-        )
-    )
+    client = create_taiga_client_v3()
 
     wes_wm = dm.WorkspaceManager(wesrefworkspace)
     wgs_wm = dm.WorkspaceManager(wgsrefworkspace)
@@ -522,19 +511,13 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    wesmutations_pr = wesmutations[
-        wesmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace(
-        {constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict}
-    )
-
     # doing wgs
     print("DOING WGS")
     folder = constants.WORKING_DIR + samplesetname + "/wgs_"
 
     wgsmutations, wgssvs, wgs_sv_mat = mutations.postProcess(
         wgs_wm,
-        sampleset="all",  # AllSamplesetName if AllSamplesetName else samplesetname,
+        sampleset=AllSamplesetName_wgs,  # AllSamplesetName if AllSamplesetName else samplesetname,
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
@@ -545,67 +528,57 @@ async def mutationPostProcessing(
         **kwargs,
     )
 
-    wgsmutations_pr = wgsmutations[
-        wgsmutations[constants.SAMPLEID].isin(renaming_dict.keys())
-    ].replace(
-        {constants.SAMPLEID: renaming_dict, "Tumor_Sample_Barcode": renaming_dict}
-    )
-
     # merge
     print("merging WES and WGS")
     folder = constants.WORKING_DIR + samplesetname + "/merged_"
     # if not os.path.exists(constants.WORKING_DIR + samplesetname):
     #     os.mkdir(constants.WORKING_DIR + samplesetname)
 
-    mergedmutations = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
+    merged = pd.concat([wgsmutations, wesmutations], axis=0).reset_index(
         drop=True
     )
 
     mutcol.update(constants.MUTCOL_ADDITIONAL)
-    mergedmutations = mergedmutations.rename(columns=mutcol)
+    merged = merged.rename(columns=mutcol)
 
-    mergedmutations = mutations.addEntrez(
-        mergedmutations, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID"
+    # pull gene table, fill in entrez id column based on ensg id
+    hgnc_table = client.get(
+                name=hgnc_mapping_taiga,
+                version=hgnc_mapping_table_version,
+                file=hgnc_mapping_table_name,
+            )
+    hgnc_table = hgnc_table[~hgnc_table['entrez_id'].isna()]
+    ensg_to_entrez_dict = dict(
+        zip(
+            hgnc_table.ensembl_gene_id,
+            hgnc_table.entrez_id.astype("Int64").astype(str),
+        )
     )
+
+    merged["EntrezGeneID"] = merged["EnsemblGeneID"].map(ensg_to_entrez_dict)
+    merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("")
 
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
     # For all columns, convert "Y" to True/False
-    for col in mergedmutations.columns:
-        if "Y" in mergedmutations[col].values:
-            mergedmutations.loc[:, col] = np.where(
-                mergedmutations[col].values == "Y", True, False
+    for col in merged.columns:
+        if "Y" in merged[col].values:
+            merged.loc[:, col] = np.where(
+                ((merged[col].values == "Y") | (merged[col].values == True)), True, False
             )
 
-    mergedmutations[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(
-        folder + "somatic_mutations.csv", index=False
-    )
 
     if run_sv:
         if wgssvs is not None and wgs_sv_mat is not None:
             print("saving WGS svs")
             wgssvs.to_csv(folder + "svs.csv", index=False)
-            wgssvs_pr = wgssvs[
-                wgssvs[constants.SAMPLEID].isin(renaming_dict.keys())
-            ].replace({constants.SAMPLEID: renaming_dict})
-            wgssvs_pr.to_csv(folder + "svs_profile.csv", index=False)
 
             print("map entrez ids to SV matrix columns")
-            # pull the gene id mapping table from taiga dataset maintained by the portal
-            hgnc_table = client.get(
-                name=hgnc_mapping_taiga,
-                version=hgnc_mapping_table_version,
-                file=hgnc_mapping_table_name,
-            )
-            # some rows in the table are missing entrez ids, replace them with "Unknown"
-            hgnc_table["entrez_id"] = hgnc_table["entrez_id"].fillna("Unknown")
             hugo_entrez_pairs = list(zip(hgnc_table.symbol, hgnc_table.entrez_id))
             # generate a dictionary, key: hugo symbol, value: hugo symbol (entrez id)
             gene_renaming_dict = dict(
                 [
                     (
                         (e[0], e[0] + " (" + str(int(e[1])) + ")")
-                        if e[1] != "Unknown"
-                        else (e[0], e[0] + " (Unknown)")
                     )
                     for e in hugo_entrez_pairs
                 ]
@@ -614,32 +587,15 @@ async def mutationPostProcessing(
                 list(set(wgs_sv_mat.columns) & set(gene_renaming_dict.keys()))
             ].rename(columns=gene_renaming_dict)
             wgs_sv_mat.to_csv(folder + "sv_mat_with_entrez.csv")
-            wgs_sv_mat_pr = wgs_sv_mat[
-                wgs_sv_mat.index.isin(renaming_dict.keys())
-            ].rename(index=renaming_dict)
-            wgs_sv_mat_pr.to_csv(folder + "sv_mat_with_entrez_profile.csv")
         else:
             print("no WGS SVs processed")
 
-    merged = pd.concat([wgsmutations_pr, wesmutations_pr], axis=0).reset_index(
-        drop=True
-    )
-
-    # For all columns, convert "Y" to True/False
-    for col in merged.columns:
-        if "Y" in merged[col].values:
-            merged.loc[:, col] = np.where(merged[col].values == "Y", True, False)
-
-    merged = merged.rename(columns=mutcol)
-    merged = mutations.addEntrez(
-        merged, ensembl_col="EnsemblGeneID", entrez_col="EntrezGeneID"
-    )
-    merged.to_csv(folder + "somatic_mutations_all_cols_profile.csv", index=False)
+    merged.to_csv(folder + "somatic_mutations_all_cols.csv", index=False)
     merged[list(mutcol.values()) + ["EntrezGeneID"]].to_csv(
-        folder + "somatic_mutations_profile.csv", index=False
+        folder + "somatic_mutations.csv", index=False
     )
     merged[standardmafcol.keys()].to_csv(
-        folder + "somatic_mutations_profile.maf.csv", index=False
+        folder + "somatic_mutations.maf.csv", index=False
     )
 
     # making genotyped mutation matrices
@@ -658,8 +614,8 @@ async def mutationPostProcessing(
     hotspot_mat = hotspot_mat.rename(columns=symbol_to_symbolentrez_dict)
     lof_mat = lof_mat.rename(columns=symbol_to_symbolentrez_dict)
 
-    hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot_profile.csv")
-    lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging_profile.csv")
+    hotspot_mat.to_csv(folder + "somatic_mutations_genotyped_hotspot.csv")
+    lof_mat.to_csv(folder + "somatic_mutations_genotyped_damaging.csv")
 
     # # TODO: add pandera type validation
 
@@ -672,7 +628,7 @@ async def mutationPostProcessing(
         )
         print("aggregating wgs")
         wgs_germline_mats = mutations.aggregateGermlineMatrix(
-            wgs_wm, AllSamplesetName, save_output=folder+"wgs_"
+            wgs_wm, AllSamplesetName_wgs, save_output=folder
         )
 
         for lib, _ in bed_locations.items():
@@ -684,16 +640,8 @@ async def mutationPostProcessing(
                 [wes_germline_mats[lib], wgs_germline_mats[lib].iloc[:, 4:]], axis=1
             )
             germline_mat_merged_noguides = germline_mat_merged.iloc[:, 4:]
-
-            # transform from CDSID-level to PR-level
-            whitelist_cols = [
-                x for x in germline_mat_merged_noguides.columns if x in renaming_dict
-            ]
-            whitelist_germline_mat = germline_mat_merged_noguides[whitelist_cols]
-            mergedmat = whitelist_germline_mat.rename(columns=renaming_dict)
-
-            mergedmat = mergedmat.astype(bool).astype(int)
-            sorted_mat = germline_mat_merged.iloc[:, :4].join(mergedmat)
+            germline_mat_merged_noguides = germline_mat_merged_noguides.astype(bool).astype(int)
+            sorted_mat = germline_mat_merged.iloc[:, :4].join(germline_mat_merged_noguides)
             sorted_mat["end"] = sorted_mat["end"].astype(int)
             print("saving merged binary matrix for library: ", lib)
             sorted_mat.to_csv(
@@ -707,33 +655,27 @@ async def mutationPostProcessing(
             additions=[
                 UploadedFile(
                     local_path=folder
-                    + "somatic_mutations_genotyped_hotspot_profile.csv",
-                    name="somaticMutations_genotypedMatrix_hotspot_profile",
+                    + "somatic_mutations_genotyped_hotspot.csv",
+                    name="somaticMutations_genotypedMatrix_hotspot_withReplicates",
                     format=LocalFormat.CSV_MATRIX,
                     encoding="utf8",
                 ),
                 UploadedFile(
                     local_path=folder
-                    + "somatic_mutations_genotyped_damaging_profile.csv",
-                    name="somaticMutations_genotypedMatrix_damaging_profile",
+                    + "somatic_mutations_genotyped_damaging.csv",
+                    name="somaticMutations_genotypedMatrix_damaging_withReplicates",
                     format=LocalFormat.CSV_MATRIX,
                     encoding="utf8",
                 ),
                 UploadedFile(
-                    local_path=folder + "somatic_mutations_profile.csv",
-                    name="somaticMutations_profile",
+                    local_path=folder + "somatic_mutations.maf.csv",
+                    name="somaticMutations_withReplicates_maf",
                     format=LocalFormat.CSV_TABLE,
                     encoding="utf8",
                 ),
                 UploadedFile(
-                    local_path=folder + "somatic_mutations_profile.maf.csv",
-                    name="somaticMutations_profile_maf",
-                    format=LocalFormat.CSV_TABLE,
-                    encoding="utf8",
-                ),
-                UploadedFile(
-                    local_path=folder + "somatic_mutations_all_cols_profile.csv",
-                    name="somaticMutations_profile_all_cols",
+                    local_path=folder + "somatic_mutations_all_cols.csv",
+                    name="somaticMutations_profile_all_cols_withReplicates",
                     format=LocalFormat.CSV_TABLE,
                     encoding="utf8",
                 ),
@@ -794,20 +736,8 @@ async def mutationPostProcessing(
                         encoding="utf8",
                     ),
                     UploadedFile(
-                        local_path=folder + "svs_profile.csv",
-                        name="structuralVariants_profile",
-                        format=LocalFormat.CSV_TABLE,
-                        encoding="utf8",
-                    ),
-                    UploadedFile(
                         local_path=folder + "sv_mat_with_entrez.csv",
                         name="structuralVariants_geneLevelMatrix_withReplicates",
-                        format=LocalFormat.CSV_TABLE,
-                        encoding="utf8",
-                    ),
-                    UploadedFile(
-                        local_path=folder + "sv_mat_with_entrez_profile.csv",
-                        name="structuralVariants_geneLevelMatrix_profile",
                         format=LocalFormat.CSV_TABLE,
                         encoding="utf8",
                     ),

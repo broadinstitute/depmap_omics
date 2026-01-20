@@ -194,12 +194,10 @@ def aggregateMAFs(
     counter = 0
     for name, row in tqdm(sample_table_valid.iterrows(), total=len(sample_table_valid)):
         # prints out progress bar
-        maf = pd.read_csv(row[mafcol])
+        maf = pd.read_parquet(row[mafcol]) if row[mafcol].endswith(".parquet") else pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
-        # >1 because of the hess_signature typo in input mafs
-        # can be 0 once the type is fixed upstream
-        # TODO: replace hess_signature later
-        if len(set(keep_cols.keys()) - set(maf.columns)) > 1:
+        maf = maf.rename(columns={'hess_signture': 'hess_signature'})
+        if len(set(keep_cols.keys()) - set(maf.columns)) > 2:
             print(name + " is missing columns:")
             print(set(keep_cols.keys()) - set(maf.columns))
         all_mafs.append(maf)
@@ -242,7 +240,7 @@ def aggregateSV(
     print(str(len(na_samples)) + " samples don't have corresponding sv: ", na_samples)
     all_svs = []
     for name, row in sample_table_valid.iterrows():
-        sv = pd.read_csv(row[sv_colname], sep="\t")
+        sv = pd.read_parquet(row[sv_colname])
         sv[constants.SAMPLEID] = name
         all_svs.append(sv)
     all_svs = pd.concat(all_svs)
@@ -444,6 +442,7 @@ def postProcess(
     sampleset="all",
     mafcol=constants.MAF_COL,
     save_output=constants.WORKING_DIR,
+    snv_af_cutoff=constants.SNV_INTERNAL_AF_CUTOFF,
     sv_col=constants.SV_COLNAME,
     sv_filename=constants.SV_FILENAME,
     sv_mat_filename=constants.SV_MAT_FILENAME,
@@ -482,9 +481,10 @@ def postProcess(
         debug=debug,
     )
 
-    print("further filtering and standardizing maf")
-    mutations_with_standard_cols = postprocess_main_steps(mutations)
+    mutations = mutations.replace({pd.NA: np.nan})
 
+    print("further filtering and standardizing maf")
+    mutations_with_standard_cols = postprocess_main_steps(mutations, max_recurrence=snv_af_cutoff)
     print("saving somatic mutations (all)")
     #  /home/ubuntu/depmap_omics/depmapomics/mutations.py:314:71 - error: Argument of type "None" cannot be assigned to parameter "index" of type "_bool" in function "to_csv"
     #      Type "None" cannot be assigned to type "_bool" (reportGeneralTypeIssues)
@@ -726,12 +726,12 @@ def patchEGFR(
     oncohotspot_col="oncokb_hotspot",
 ):
     """mark EGFR in frame deletions as hotspots"""
-    topatch = maf[
-        (maf[hugo_col] == "EGFR")
+    maf.loc[
+        ((maf[hugo_col] == "EGFR")
         & (maf[protein_col].str.endswith("del"))
-        & (maf[inframe_col])
-    ].index.tolist()
-    maf.loc[topatch, oncohotspot_col] = True
+        & (maf[inframe_col])),
+        oncohotspot_col
+    ] = "Y"
     return maf
 
 
@@ -747,24 +747,6 @@ def convertProteinChange(
         maf[protein_col] = maf[protein_col].fillna("")
         maf[protein_col] = maf[protein_col].replace(protein_dict, regex=True)
         maf[protein_col] = maf[protein_col].replace(r"^\s*$", np.nan, regex=True)
-
-    return maf
-
-
-def addEntrez(maf, ensembl_col="ensembl_gene_id", entrez_col="EntrezGeneID"):
-    """pull gene mapping info from biomart, add column for entrez gene id
-    by mapping from ensembl ids"""
-    mybiomart = h.generateGeneNames()
-    mybiomart = mybiomart[~mybiomart.entrezgene_id.isna()]
-    renaming_dict = dict(
-        zip(
-            mybiomart.ensembl_gene_id,
-            mybiomart.entrezgene_id.astype("Int64").astype(str),
-        )
-    )
-    print("adding entrez id column")
-    maf[entrez_col] = maf[ensembl_col].map(renaming_dict)
-    maf[entrez_col] = maf[entrez_col].fillna("")
 
     return maf
 
@@ -797,7 +779,8 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[
         (maf["oncokb_effect"].isin(["Loss-of-function", "Gain-of-function"]))
         | (maf["oncokb_oncogenic"] == "Oncogenic")
-        | (maf["oncokb_hotspot"] == "Y"),
+        | (maf["oncokb_hotspot"] == "Y")
+        | (maf["oncokb_hotspot"] == True),
         "rescue_reason",
     ].apply(lambda x: x.append("OncoKB"))
     maf.loc[(maf["cosmic_tier"] == 1), "rescue_reason"].apply(
@@ -812,7 +795,7 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[(maf["tumor_suppressor_high_impact"] == True), "rescue_reason"].apply(
         lambda x: x.append("TS_high_impact")
     )
-    maf.loc[(maf["hess_driver"] == "Y"), "rescue_reason"].apply(
+    maf.loc[((maf["hess_driver"] == "Y") | (maf["hess_driver"] == True)), "rescue_reason"].apply(
         lambda x: x.append("Hess")
     )
     maf.loc[
@@ -843,7 +826,7 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
 def postprocess_main_steps(
     maf: pd.DataFrame,
     adjusted_gnomad_af_cutoff: float = 1e-3,
-    max_recurrence: float = 0.1,
+    max_recurrence: float = constants.SNV_INTERNAL_AF_CUTOFF,
 ) -> pd.DataFrame:
     """DepMap postprocessing steps after vcf_to_depmap
 
@@ -906,8 +889,8 @@ def postprocess_main_steps(
     maf.loc[
         (
             (
-                (maf[constants.HESS_COL] == "Y")
-                | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y")
+                (maf[constants.HESS_COL] == "Y") | (maf[constants.HESS_COL] == True)
+                | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y") | (maf[constants.ONCOKB_HOTSPOT_COL] == True)
                 | (maf[constants.COSMIC_TIER_COL] == 1)
             ),
             "hotspot",

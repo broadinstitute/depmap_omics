@@ -1,6 +1,6 @@
-SAMPLESETNAME = "25Q2"
+SAMPLESETNAME = "25Q3"
 
-RELEASE = "25q2"
+RELEASE = "25q3"
 
 ### !!! for the sake of testing only, need to replace once finalized!!!
 OMICS_ID_MAPPING_TABLE_TAIGAID = "2025-05-01-master-mapping-table-28c2"
@@ -256,6 +256,8 @@ BEDTOOLSPATH = "~/bin/bedtools2/bin/"
 
 MINFREQTOCALL = 0.25
 
+SNV_INTERNAL_AF_CUTOFF = 0.1
+
 SV_COLNAME = "expanded_filtered_sv_bedpe"
 
 SV_FILENAME = "all_sv.csv"
@@ -392,10 +394,6 @@ MUTCOL_DEPMAP = {
     "uniprot_id": "UniprotID",
     "dbsnp_rs_id": "DbsnpRsID",
     "gc_content": "GcContent",
-    "lof_gene_name": "LofGeneName",
-    "lof_gene_id": "LofGeneId",
-    "lof_number_of_transcripts_in_gene": "LofNumberOfTranscriptsInGene",
-    "lof_percent_of_transcripts_affected": "LofPercentOfTranscriptsAffected",
     "nmd": "NMD",
     # 'clnsig': 'ClnSig',
     "molecular_consequence": "MolecularConsequence",
@@ -434,11 +432,9 @@ MUTCOL_DEPMAP = {
     # 'likely_gof': 'LikelyGof',
     "likely_lof": "LikelyLoF",
     "hess_driver": "HessDriver",
-    "hess_signture": "HessSignature",
+    "hess_signature": "HessSignature",
     "revel_score": "RevelScore",
     "pharmgkb_id": "PharmgkbId",
-    "dida_id": "DidaID",
-    "dida_name": "DidaName",
     "gwas_disease": "GwasDisease",
     "gwas_pmid": "GwasPmID",
     "gtex_gene": "GtexGene",
@@ -726,7 +722,7 @@ HGNC_MAPPING_TABLE_TAIGAID = "hgnc-gene-table-e250"
 
 HGNC_MAPPING_TABLE_NAME = "hgnc_complete_set"
 
-HGNC_MAPPING_TABLE_VERSION = 3
+HGNC_MAPPING_TABLE_VERSION = 4
 
 
 # OMICS_ID_MAPPING_TABLE_VERSION = 1
