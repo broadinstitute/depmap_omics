@@ -22,13 +22,11 @@ sig_list = list()
 
 REF = "pcawg_COMPOSITE"
 
-#MAF_PATH = "/Users/siyer/code/signatures/mafs_022025/chord/CDS-zd7hFv.maf"
-#HG_PATH = "/localstuff/hg38.2bit"
-
 MAX_ITER = 30000
 
-ref_df, ref_idx = sa.utils.load_reference_signatures(REF, verbose=False)
+
 maf = pd.read_csv(maf_input_file)
+ref_df, ref_idx = sa.utils.load_reference_signatures(REF, verbose=False)
 spectra_df = sa.spectra.get_spectra_from_maf(maf, hgfile=HG_PATH, reference=REF, real_snps = True)[1]
 Wref_df = ref_df.set_index('Somatic Mutation Type').iloc[:,:-2]
 # Run supervised NMF
