@@ -453,7 +453,7 @@ def mutationPostProcessing(
     wgsrefworkspace: str = env_config.WGSWORKSPACE,
     samplesetname: str = constants.SAMPLESETNAME,
     AllSamplesetName: str = "all",
-    AllSamplesetName_wgs: str = "all_25q3",
+    AllSamplesetName_wgs: str = "all_26q1",
     taiga_description: str = constants.Mutationsreadme,
     taiga_dataset: str = env_config.TAIGA_MUTATION,
     bed_locations: dict = constants.GUIDESBED,
@@ -505,7 +505,7 @@ def mutationPostProcessing(
         save_output=folder,
         sv_col=sv_col,
         sv_filename=sv_filename,
-        mafcol=mafcol,
+        mafcol='depmap_maf_25q2',
         run_sv=False,
         debug=False,
         **kwargs,
@@ -557,15 +557,6 @@ def mutationPostProcessing(
 
     merged["EntrezGeneID"] = merged["EnsemblGeneID"].map(ensg_to_entrez_dict)
     merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("")
-
-    # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
-    # For all columns, convert "Y" to True/False
-    for col in merged.columns:
-        if "Y" in merged[col].values:
-            merged.loc[:, col] = np.where(
-                ((merged[col].values == "Y") | (merged[col].values == True)), True, False
-            )
-
 
     if run_sv:
         if wgssvs is not None and wgs_sv_mat is not None:

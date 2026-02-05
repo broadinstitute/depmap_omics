@@ -731,7 +731,7 @@ def patchEGFR(
         & (maf[protein_col].str.endswith("del"))
         & (maf[inframe_col])),
         oncohotspot_col
-    ] = "Y"
+    ] = True
     return maf
 
 
@@ -755,8 +755,9 @@ def addLikelyLoF(row, vep_col="vep_impact", oncoimpact_col="oncokb_effect"):
     """add likely LoF column: true if a variant is high vep impact or likely lof according to oncoKB"""
     if (
         row[vep_col] == "HIGH"
-        or row[oncoimpact_col] == "Likely Loss-of-function"
-        or row[oncoimpact_col] == "Loss-of-function"
+        or (pd.notna(row[oncoimpact_col])
+            and (row[oncoimpact_col] == "Likely Loss-of-function"
+            or row[oncoimpact_col] == "Loss-of-function"))
     ):
         return True
     else:

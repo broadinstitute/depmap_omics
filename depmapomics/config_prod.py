@@ -28,7 +28,7 @@ VIRTUAL_FOLDER = "8d9c4c0691154a1f86b1b6e67c3fb683"
 
 RNAWORKSPACE = "broad-firecloud-ccle/DepMap_hg38_RNAseq"
 
-WGSWORKSPACE = "broad-firecloud-ccle/DepMap_WGS_CN"
+WGSWORKSPACE = "broad-firecloud-ccle/depmap-omics-wgs"
 
 WESCNWORKSPACE = "broad-firecloud-ccle/DepMap_WES_CN_hg38"
 

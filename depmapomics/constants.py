@@ -1,6 +1,6 @@
-SAMPLESETNAME = "25Q3"
+SAMPLESETNAME = "26Q1"
 
-RELEASE = "25q3"
+RELEASE = "26Q1"
 
 ### !!! for the sake of testing only, need to replace once finalized!!!
 OMICS_ID_MAPPING_TABLE_TAIGAID = "2025-05-01-master-mapping-table-28c2"
@@ -258,7 +258,7 @@ MINFREQTOCALL = 0.25
 
 SNV_INTERNAL_AF_CUTOFF = 0.1
 
-SV_COLNAME = "expanded_filtered_sv_bedpe"
+SV_COLNAME = "sv_selected_somatic"
 
 SV_FILENAME = "all_sv.csv"
 
@@ -308,7 +308,7 @@ SV_HEADER = [
     SAMPLEID,
 ]
 
-MAF_COL = "depmap_maf_25q2"
+MAF_COL = "mut_somatic_variants"
 
 HGNC_MAPPING = "data/new_and_old_hgnc_symbols.txt"
 
