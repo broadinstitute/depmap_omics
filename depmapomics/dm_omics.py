@@ -469,8 +469,6 @@ def mutationPostProcessing(
     hgnc_mapping_taiga: str = constants.HGNC_MAPPING_TABLE_TAIGAID,
     hgnc_mapping_table_name: str = constants.HGNC_MAPPING_TABLE_NAME,
     hgnc_mapping_table_version: int = constants.HGNC_MAPPING_TABLE_VERSION,
-    omics_id_mapping_table_taigaid=constants.OMICS_ID_MAPPING_TABLE_TAIGAID,
-    omics_id_mapping_table_name=constants.OMICS_ID_MAPPING_TABLE_NAME,
     **kwargs,
 ):
     """The full CCLE mutations post processing pipeline (used only by CCLE)
