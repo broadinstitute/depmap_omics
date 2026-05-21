@@ -927,7 +927,7 @@ description = "load, subset, and upload DepMap data"
 optional = false
 python-versions = "^3.9"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 biomart = "^0.9.2"
@@ -938,8 +938,10 @@ pandas = "^1.5.3"
 taigapy = "^6.1.0"
 
 [package.source]
-type = "directory"
-url = "../depmap_omics_upload"
+type = "git"
+url = "https://github.com/broadinstitute/depmap_omics_upload"
+reference = "25q3-mut-upload"
+resolved_reference = "5b077adb6205509b6c3aab4bf45f573182737d20"
 
 [[package]]
 name = "dill"
@@ -5256,4 +5258,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "d8eddffb180df7803e2a39c2d570d3fbc2ede460c86f207cf9fb35bab3b95177"
+content-hash = "29cd5fe207c793b577e72737e84cde94f59f5e2e8a57afdf6ab49937feec7b77"

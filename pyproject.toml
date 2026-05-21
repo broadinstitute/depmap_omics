@@ -12,8 +12,8 @@ numpy = "^1.24.1"
 pandas = "^1.5.3"
 taigapy = {version = "^6.1.0", source = "public-python"}
 seaborn = "^0.12.2"
-# depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", rev="ccabf56"}
-depmap_omics_upload = {path = "../depmap_omics_upload", develop = true}
+depmap_omics_upload = {git = "https://github.com/broadinstitute/depmap_omics_upload", branch='25q3-mut-upload'}
+# depmap_omics_upload = {path = "../depmap_omics_upload", develop = true}
 pyright = "1.1.293"
 pandera = "^0.13.4"
 fire = "0.7.0"
