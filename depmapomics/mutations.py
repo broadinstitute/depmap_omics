@@ -196,7 +196,6 @@ def aggregateMAFs(
         # prints out progress bar
         maf = pd.read_parquet(row[mafcol]) if row[mafcol].endswith(".parquet") else pd.read_csv(row[mafcol])
         maf[constants.SAMPLEID] = name
-        maf = maf.rename(columns={'hess_signture': 'hess_signature'})
         if len(set(keep_cols.keys()) - set(maf.columns)) > 2:
             print(name + " is missing columns:")
             print(set(keep_cols.keys()) - set(maf.columns))
@@ -796,9 +795,6 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[(maf["tumor_suppressor_high_impact"] == True), "rescue_reason"].apply(
         lambda x: x.append("TS_high_impact")
     )
-    maf.loc[((maf["hess_driver"] == "Y") | (maf["hess_driver"] == True)), "rescue_reason"].apply(
-        lambda x: x.append("Hess")
-    )
     maf.loc[
         (
             (maf["Hugo_Symbol"] == "TERT")
@@ -890,8 +886,7 @@ def postprocess_main_steps(
     maf.loc[
         (
             (
-                (maf[constants.HESS_COL] == "Y") | (maf[constants.HESS_COL] == True)
-                | (maf[constants.ONCOKB_HOTSPOT_COL] == "Y") | (maf[constants.ONCOKB_HOTSPOT_COL] == True)
+                (maf[constants.ONCOKB_HOTSPOT_COL] == "Y") | (maf[constants.ONCOKB_HOTSPOT_COL] == True)
                 | (maf[constants.COSMIC_TIER_COL] == 1)
             ),
             "hotspot",

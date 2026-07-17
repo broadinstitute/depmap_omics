@@ -556,6 +556,12 @@ def mutationPostProcessing(
     merged["EntrezGeneID"] = merged["EnsemblGeneID"].map(ensg_to_entrez_dict)
     merged["EntrezGeneID"] = merged["EntrezGeneID"].fillna("")
 
+    # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
+    # For all columns, convert "Y" to True/False
+    for col in merged.columns:
+        if "Y" in merged[col].values:
+            merged.loc[:, col] = np.where(
+                ((merged[col].values == "Y") | (merged[col].values == True)), True, False
     if run_sv:
         if wgssvs is not None and wgs_sv_mat is not None:
             print("saving WGS svs")
