@@ -559,9 +559,10 @@ def mutationPostProcessing(
     # https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/#somatic-maf-file-generation
     # For all columns, convert "Y" to True/False
     for col in merged.columns:
-        if "Y" in merged[col].values:
-            merged.loc[:, col] = np.where(
-                ((merged[col].values == "Y") | (merged[col].values == True)), True, False
+        if merged[col].isin(["Y"]).any():
+            merged.loc[:, col] = merged[col].isin(["Y", True])
+
+
     if run_sv:
         if wgssvs is not None and wgs_sv_mat is not None:
             print("saving WGS svs")

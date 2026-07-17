@@ -786,9 +786,6 @@ def addRescueReason(maf, rescue_reason_colname="rescue_reason"):
     maf.loc[(maf["cosmic_tier"] == 1), "rescue_reason"].apply(
         lambda x: x.append("Cosmic")
     )
-    maf.loc[(maf["brca1_func_score"].astype(float) <= -1.328), "rescue_reason"].apply(
-        lambda x: x.append("BRCA1_score")
-    )
     maf.loc[(maf["oncogene_high_impact"] == True), "rescue_reason"].apply(
         lambda x: x.append("Oncogene_high_impact")
     )
@@ -886,8 +883,8 @@ def postprocess_main_steps(
     maf.loc[
         (
             (
-                (maf[constants.ONCOKB_HOTSPOT_COL] == "Y") | (maf[constants.ONCOKB_HOTSPOT_COL] == True)
-                | (maf[constants.COSMIC_TIER_COL] == 1)
+                ((maf[constants.ONCOKB_HOTSPOT_COL] == "Y") | (maf[constants.ONCOKB_HOTSPOT_COL] == True)
+                | (maf[constants.COSMIC_TIER_COL] == 1)) & (~maf['Hugo_Symbol'].str.startswith("HLA-"))
             ),
             "hotspot",
         )
